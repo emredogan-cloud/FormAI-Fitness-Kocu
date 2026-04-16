@@ -50,7 +50,7 @@ class PosePainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     final jointRing = Paint()
-      ..color = Colors.white.withOpacity(0.85)
+      ..color = Colors.white.withValues(alpha: 0.85)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.2;
 
@@ -61,7 +61,7 @@ class PosePainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     final boneGlow = Paint()
-      ..color = _neonCyan.withOpacity(0.35)
+      ..color = _neonCyan.withValues(alpha: 0.35)
       ..strokeWidth = 12
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round

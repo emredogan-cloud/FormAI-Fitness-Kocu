@@ -67,19 +67,19 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
   }
 
   void setCurrentReps(int reps) {
-    final current = state.valueOrNull;
+    final current = state.value;
     if (current == null) return;
     state = AsyncData(current.copyWith(currentReps: reps));
   }
 
   void acknowledgeSessionComplete() {
-    final current = state.valueOrNull;
+    final current = state.value;
     if (current == null || !current.isSessionComplete) return;
     state = AsyncData(current.copyWith(isSessionComplete: false));
   }
 
   Future<void> startDay(int dayNumber) async {
-    final current = state.valueOrNull;
+    final current = state.value;
     if (current == null) return;
     final day = current.days.firstWhere(
       (d) => d.dayNumber == dayNumber,
@@ -94,7 +94,7 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
   }
 
   Future<void> completeCurrentExercise() async {
-    final current = state.valueOrNull;
+    final current = state.value;
     final day = current?.activeDay;
     if (current == null || day == null) return;
 

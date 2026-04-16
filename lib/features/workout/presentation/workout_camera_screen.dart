@@ -4,6 +4,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -129,7 +130,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
           notifier.setCurrentReps(result.reps);
           final target = ref
               .read(workoutSessionProvider)
-              .valueOrNull
+              .value
               ?.activeExercise
               ?.targetReps;
           if (target != null && result.reps >= target) {
@@ -235,7 +236,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     // Reset the analyzer whenever the active exercise changes underneath us.
     ref.listen<AsyncValue<WorkoutSessionState>>(workoutSessionProvider,
         (previous, next) {
-      final id = next.valueOrNull?.activeExercise?.id;
+      final id = next.value?.activeExercise?.id;
       if (id != _activeExerciseId) {
         _activeExerciseId = id;
         _analyzer.reset();
@@ -314,18 +315,22 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     final day = session.activeDay;
     final exercise = session.activeExercise;
     return Positioned(
-      top: 16,
-      left: 16,
-      right: 16,
+      top: 8,
+      left: 8,
+      right: 8,
       child: Row(
         children: [
+          _BackButton(onPressed: () => _exit(context)),
+          const SizedBox(width: 8),
           _pill(
             day == null ? 'No day selected' : 'Day ${day.dayNumber}',
             icon: Icons.calendar_today,
           ),
           const SizedBox(width: 8),
           if (exercise != null)
-            _pill(exercise.name, icon: Icons.fitness_center),
+            Flexible(
+              child: _pill(exercise.name, icon: Icons.fitness_center),
+            ),
           const Spacer(),
           _pill(
             _poses.isEmpty ? 'Searching…' : _state.name.toUpperCase(),
@@ -335,11 +340,19 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     );
   }
 
+  void _exit(BuildContext context) {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/');
+    }
+  }
+
   Widget _pill(String text, {IconData? icon}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.55),
+        color: Colors.black.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: _neon, width: 1),
       ),
@@ -413,12 +426,12 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.red.shade900.withOpacity(0.85),
+          color: Colors.red.shade900.withValues(alpha: 0.85),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.redAccent, width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: Colors.redAccent.withOpacity(0.5),
+              color: Colors.redAccent.withValues(alpha: 0.5),
               blurRadius: 20,
               spreadRadius: 2,
             ),
@@ -451,7 +464,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     final day = session.activeDay;
     return Positioned.fill(
       child: Container(
-        color: Colors.black.withOpacity(0.75),
+        color: Colors.black.withValues(alpha: 0.75),
         alignment: Alignment.center,
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -477,9 +490,12 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
               ),
               const SizedBox(height: 24),
               FilledButton(
-                onPressed: () => ref
-                    .read(workoutSessionProvider.notifier)
-                    .acknowledgeSessionComplete(),
+                onPressed: () {
+                  ref
+                      .read(workoutSessionProvider.notifier)
+                      .acknowledgeSessionComplete();
+                  _exit(context);
+                },
                 style: FilledButton.styleFrom(
                   backgroundColor: _neon,
                   foregroundColor: Colors.black,
@@ -490,6 +506,34 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
                     style: TextStyle(fontWeight: FontWeight.w900)),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BackButton extends StatelessWidget {
+  const _BackButton({required this.onPressed});
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.black.withValues(alpha: 0.55),
+      shape: const CircleBorder(
+        side: BorderSide(color: Color(0xFF00F0FF), width: 1),
+      ),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onPressed,
+        child: const SizedBox(
+          width: 36,
+          height: 36,
+          child: Icon(
+            Icons.arrow_back_ios_new,
+            color: Color(0xFF00F0FF),
+            size: 16,
           ),
         ),
       ),

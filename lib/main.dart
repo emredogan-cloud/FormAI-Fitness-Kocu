@@ -3,7 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'features/workout/presentation/workout_camera_screen.dart';
+import 'core/routing/app_router.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,12 +18,13 @@ Future<void> main() async {
   runApp(const ProviderScope(child: SixPackApp()));
 }
 
-class SixPackApp extends StatelessWidget {
+class SixPackApp extends ConsumerWidget {
   const SixPackApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(appRouterProvider);
+    return MaterialApp.router(
       title: 'SixPack AI',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -34,7 +35,7 @@ class SixPackApp extends StatelessWidget {
         scaffoldBackgroundColor: Colors.black,
         useMaterial3: true,
       ),
-      home: const WorkoutCameraScreen(),
+      routerConfig: router,
     );
   }
 }
