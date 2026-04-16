@@ -55,8 +55,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
 
   Timer? _workoutTimer;
   int _secondsRemaining = 0;
-
-  Offset? _pipOffset; // null → default top-right placement.
+  bool _isPaused = false;
 
   @override
   void initState() {
@@ -113,13 +112,44 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
   }
 
   void _onCameraImage(CameraImage image) {
-    if (_isBusy) return;
+    if (_isBusy || _isPaused) return;
     // Skip pose work entirely while resting so we don't count phantom reps
     // or trigger form-warning TTS while the user is recovering.
     final session = ref.read(workoutSessionProvider).value;
     if (session?.isResting ?? false) return;
     _isBusy = true;
     _processImage(image).whenComplete(() => _isBusy = false);
+  }
+
+  void _togglePause() {
+    setState(() => _isPaused = !_isPaused);
+    if (_isPaused) {
+      _workoutTimer?.cancel();
+      _workoutTimer = null;
+      return;
+    }
+    final exercise = ref.read(workoutSessionProvider).value?.activeExercise;
+    if (exercise?.type == ExerciseType.timeBased && _secondsRemaining > 0) {
+      _resumeWorkoutTimer();
+    }
+  }
+
+  void _resumeWorkoutTimer() {
+    _workoutTimer?.cancel();
+    _workoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      if (_secondsRemaining <= 1) {
+        timer.cancel();
+        _workoutTimer = null;
+        setState(() => _secondsRemaining = 0);
+        _onTimerComplete();
+      } else {
+        setState(() => _secondsRemaining -= 1);
+      }
+    });
   }
 
   Future<void> _processImage(CameraImage image) async {
@@ -260,20 +290,8 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       _onTimerComplete();
       return;
     }
-    _workoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      if (_secondsRemaining <= 1) {
-        timer.cancel();
-        _workoutTimer = null;
-        setState(() => _secondsRemaining = 0);
-        _onTimerComplete();
-      } else {
-        setState(() => _secondsRemaining -= 1);
-      }
-    });
+    if (_isPaused) return;
+    _resumeWorkoutTimer();
   }
 
   Future<void> _onTimerComplete() async {
@@ -369,75 +387,156 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       );
     }
 
-    final camera = _camera!;
-    final imageSize = _imageSize;
     final exercise = session.activeExercise;
-    final target = exercise?.targetReps;
-    final completedReps = session.currentReps;
+    final totalExercises = session.activeDay?.exercises.length ?? 0;
+    final exerciseProgress = totalExercises == 0
+        ? 0.0
+        : ((session.activeExerciseIndex + 1) / totalExercises).clamp(0.0, 1.0);
 
     return Stack(
       fit: StackFit.expand,
       children: [
-        CameraPreview(controller),
-        if (_poses.isNotEmpty && imageSize != null)
-          CustomPaint(
-            painter: PosePainter(
-              pose: _poses.first,
-              imageSize: imageSize,
-              rotation: _currentRotation(),
-              cameraLensDirection: camera.lensDirection,
+        Column(
+          children: [
+            Expanded(
+              flex: 6,
+              child: _buildCameraSection(
+                controller: controller,
+                exercise: exercise,
+                exerciseProgress: exerciseProgress,
+                exerciseIndex: session.activeExerciseIndex,
+                totalExercises: totalExercises,
+              ),
             ),
-          ),
-        _buildTopBar(session),
-        _buildMetricDisplay(completedReps, target, exercise),
-        if (_formWarning != null) _buildFormWarning(_formWarning!),
-        if (exercise != null)
-          LayoutBuilder(
-            builder: (context, constraints) => _PipGuide(
-              exercise: exercise,
-              parentSize: Size(constraints.maxWidth, constraints.maxHeight),
-              offset: _pipOffset,
-              onMoved: (offset) => setState(() => _pipOffset = offset),
+            Expanded(
+              flex: 4,
+              child: _buildControlPanel(session, exercise),
             ),
-          ),
+          ],
+        ),
         if (session.isSessionComplete) _buildDayCompleteOverlay(session),
       ],
     );
   }
 
-  Widget _buildTopBar(WorkoutSessionState session) {
-    final day = session.activeDay;
-    final exercise = session.activeExercise;
-    return Positioned(
-      top: 8,
-      left: 8,
-      right: 8,
-      child: Row(
+  Widget _buildCameraSection({
+    required CameraController controller,
+    required Exercise? exercise,
+    required double exerciseProgress,
+    required int exerciseIndex,
+    required int totalExercises,
+  }) {
+    final camera = _camera!;
+    final imageSize = _imageSize;
+    return ClipRRect(
+      borderRadius: const BorderRadius.only(
+        bottomLeft: Radius.circular(28),
+        bottomRight: Radius.circular(28),
+      ),
+      child: Stack(
+        fit: StackFit.expand,
         children: [
-          _BackButton(onPressed: () => _exit(context)),
-          const SizedBox(width: 8),
-          _pill(
-            day == null ? 'No day selected' : 'Gün ${day.dayNumber}',
-            icon: Icons.calendar_today,
-          ),
-          const SizedBox(width: 8),
-          if (exercise != null)
-            Flexible(
-              child: _pill(exercise.name, icon: Icons.fitness_center),
+          CameraPreview(controller),
+          if (_poses.isNotEmpty && imageSize != null)
+            CustomPaint(
+              painter: PosePainter(
+                pose: _poses.first,
+                imageSize: imageSize,
+                rotation: _currentRotation(),
+                cameraLensDirection: camera.lensDirection,
+              ),
             ),
-          const SizedBox(width: 8),
-          if (exercise != null)
-            _pill(
-              'Set ${session.currentSet}/${exercise.sets}',
-              icon: Icons.repeat,
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: _ExerciseProgressBar(
+              progress: exerciseProgress,
+              currentIndex: exerciseIndex,
+              total: totalExercises,
             ),
-          const Spacer(),
-          _pill(
-            _poses.isEmpty ? 'Searching…' : _state.name.toUpperCase(),
           ),
+          Positioned(
+            top: 18,
+            left: 16,
+            child: _BackButton(onPressed: () => _exit(context)),
+          ),
+          if (exercise != null)
+            Positioned(
+              top: 18,
+              right: 16,
+              child: _PipPanel(exercise: exercise),
+            ),
+          if (_formWarning != null)
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 16,
+              child: _FormWarning(message: _formWarning!),
+            ),
+          if (_isPaused)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 16,
+              child: _PausedBadge(),
+            ),
         ],
       ),
     );
+  }
+
+  Widget _buildControlPanel(
+    WorkoutSessionState session,
+    Exercise? exercise,
+  ) {
+    final isTimeBased = exercise?.type == ExerciseType.timeBased;
+    final reps = session.currentReps;
+    final target = exercise?.targetReps;
+
+    final metric = isTimeBased
+        ? _formatMmSs(_secondsRemaining)
+        : (target == null ? 'x $reps' : 'x $reps / $target');
+
+    return _ControlPanel(
+      currentSet: session.currentSet,
+      totalSets: exercise?.sets ?? 0,
+      metric: metric,
+      exerciseName: exercise?.name ?? '—',
+      detectorState: _state,
+      isPaused: _isPaused,
+      onPrev: _onPrev,
+      onTogglePlay: exercise == null ? null : _togglePause,
+      onNext: exercise == null ? null : _onNext,
+    );
+  }
+
+  String _formatMmSs(int seconds) {
+    final mm = (seconds ~/ 60).toString().padLeft(2, '0');
+    final ss = (seconds % 60).toString().padLeft(2, '0');
+    return '$mm:$ss';
+  }
+
+  void _onPrev() {
+    // Provider doesn't expose backwards navigation yet — surface intent via
+    // a transient snackbar so the control feels responsive.
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text('Önceki egzersize geçiş yakında'),
+          backgroundColor: Color(0xFF0A3A50),
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(milliseconds: 1400),
+        ),
+      );
+  }
+
+  Future<void> _onNext() async {
+    if (_isPaused) {
+      setState(() => _isPaused = false);
+    }
+    await ref.read(workoutSessionProvider.notifier).completeCurrentExercise();
   }
 
   void _exit(BuildContext context) {
@@ -446,138 +545,6 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     } else {
       context.go('/');
     }
-  }
-
-  Widget _pill(String text, {IconData? icon}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _neon, width: 1),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, size: 14, color: _neon),
-            const SizedBox(width: 6),
-          ],
-          Text(
-            text,
-            style: const TextStyle(
-              color: _neon,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMetricDisplay(int completed, int? target, Exercise? exercise) {
-    if (exercise?.type == ExerciseType.timeBased) {
-      return _buildCountdown(exercise!);
-    }
-    return _buildRepCounter(completed, target, exercise);
-  }
-
-  Widget _buildRepCounter(int completed, int? target, Exercise? exercise) {
-    final showTarget = target != null;
-    final display = showTarget ? '$completed / $target' : '$completed';
-    final subtitle = showTarget
-        ? 'REPS · ${exercise?.name.toUpperCase() ?? ''}'
-        : exercise?.name.toUpperCase() ?? 'REPS';
-    return _bigNeonStat(display: display, subtitle: subtitle);
-  }
-
-  Widget _buildCountdown(Exercise exercise) {
-    final minutes = (_secondsRemaining ~/ 60).toString().padLeft(2, '0');
-    final seconds = (_secondsRemaining % 60).toString().padLeft(2, '0');
-    return _bigNeonStat(
-      display: '$minutes:$seconds',
-      subtitle: 'SÜRE · ${exercise.name.toUpperCase()}',
-    );
-  }
-
-  Widget _bigNeonStat({required String display, required String subtitle}) {
-    return Positioned(
-      bottom: 32,
-      left: 0,
-      right: 0,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            display,
-            style: const TextStyle(
-              fontSize: 96,
-              fontWeight: FontWeight.w900,
-              color: _neon,
-              height: 1.0,
-              shadows: [
-                Shadow(blurRadius: 30, color: _neon),
-                Shadow(blurRadius: 60, color: _neon),
-              ],
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: const TextStyle(
-              fontSize: 16,
-              letterSpacing: 5,
-              fontWeight: FontWeight.w700,
-              color: Colors.white70,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFormWarning(String message) {
-    return Positioned(
-      bottom: 250,
-      left: 24,
-      right: 24,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.red.shade900.withValues(alpha: 0.85),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.redAccent, width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.redAccent.withValues(alpha: 0.5),
-              blurRadius: 20,
-              spreadRadius: 2,
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.warning_amber_rounded, color: Colors.white),
-            const SizedBox(width: 8),
-            Flexible(
-              child: Text(
-                message,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   Widget _buildDayCompleteOverlay(WorkoutSessionState session) {
@@ -837,108 +804,466 @@ class _SkipButton extends StatelessWidget {
   }
 }
 
-class _PipGuide extends StatelessWidget {
-  const _PipGuide({
-    required this.exercise,
-    required this.parentSize,
-    required this.offset,
-    required this.onMoved,
-  });
+class _PipPanel extends StatelessWidget {
+  const _PipPanel({required this.exercise});
 
   static const Color _neon = Color(0xFF00F0FF);
   static const double _width = 140;
-  static const double _height = 105;
-  static const double _margin = 12;
-  static const double _topPad = 56; // leave room below the top pill bar
+  static const double _height = 180;
 
   final Exercise exercise;
-  final Size parentSize;
-  final Offset? offset;
-  final ValueChanged<Offset> onMoved;
-
-  Offset get _resolvedOffset {
-    final current = offset;
-    if (current != null) return current;
-    return Offset(parentSize.width - _width - _margin, _topPad);
-  }
-
-  Offset _clamp(Offset proposed) {
-    final maxX = parentSize.width - _width - _margin;
-    final maxY = parentSize.height - _height - _margin;
-    final dx = proposed.dx.clamp(_margin, maxX < _margin ? _margin : maxX);
-    final dy = proposed.dy.clamp(_margin, maxY < _margin ? _margin : maxY);
-    return Offset(dx.toDouble(), dy.toDouble());
-  }
 
   @override
   Widget build(BuildContext context) {
-    final pos = _clamp(_resolvedOffset);
-    return Positioned(
-      left: pos.dx,
-      top: pos.dy,
-      child: GestureDetector(
-        onPanUpdate: (details) {
-          onMoved(_clamp(pos + details.delta));
-        },
-        child: Container(
-          width: _width,
-          height: _height,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: _neon, width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: _neon.withValues(alpha: 0.45),
-                blurRadius: 16,
-                spreadRadius: 1,
-              ),
-            ],
+    return Container(
+      width: _width,
+      height: _height,
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _neon, width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: _neon.withValues(alpha: 0.45),
+            blurRadius: 18,
+            spreadRadius: 1,
           ),
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(13),
-                  child: ExerciseGuidePlayer(
-                    key: ValueKey('guide-${exercise.id}'),
-                    assetPath: exercise.videoAsset,
-                    exerciseName: exercise.name,
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(15),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            FittedBox(
+              fit: BoxFit.cover,
+              child: SizedBox(
+                width: 160,
+                height: 200,
+                child: ExerciseGuidePlayer(
+                  key: ValueKey('pip-${exercise.id}'),
+                  assetPath: exercise.videoAsset,
+                  exerciseName: exercise.name,
+                ),
+              ),
+            ),
+            Positioned(
+              top: 6,
+              left: 6,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: _neon.withValues(alpha: 0.6),
+                    width: 0.6,
+                  ),
+                ),
+                child: const Text(
+                  'ÖRNEK',
+                  style: TextStyle(
+                    color: _neon,
+                    fontSize: 9,
+                    letterSpacing: 2,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
-              Positioned(
-                top: 4,
-                left: 4,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.65),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                      color: _neon.withValues(alpha: 0.6),
-                      width: 0.6,
-                    ),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.drag_indicator, color: _neon, size: 11),
-                      SizedBox(width: 4),
-                      Text(
-                        'ÖRNEK',
-                        style: TextStyle(
-                          color: _neon,
-                          fontSize: 9,
-                          letterSpacing: 2,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
+            ),
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.85),
                     ],
                   ),
                 ),
+                child: Text(
+                  exercise.name,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ExerciseProgressBar extends StatelessWidget {
+  const _ExerciseProgressBar({
+    required this.progress,
+    required this.currentIndex,
+    required this.total,
+  });
+
+  static const Color _neon = Color(0xFF00F0FF);
+
+  final double progress;
+  final int currentIndex;
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        SizedBox(
+          height: 4,
+          child: ClipRRect(
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(0),
+              topRight: Radius.circular(0),
+            ),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 4,
+              backgroundColor: Colors.black.withValues(alpha: 0.5),
+              valueColor: const AlwaysStoppedAnimation(_neon),
+            ),
+          ),
+        ),
+        if (total > 0)
+          Positioned(
+            top: 6,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.55),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: _neon.withValues(alpha: 0.5),
+                    width: 0.6,
+                  ),
+                ),
+                child: Text(
+                  'EGZERSİZ ${currentIndex + 1} / $total',
+                  style: const TextStyle(
+                    color: _neon,
+                    fontSize: 10,
+                    letterSpacing: 2,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _FormWarning extends StatelessWidget {
+  const _FormWarning({required this.message});
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.red.shade900.withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.redAccent, width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.redAccent.withValues(alpha: 0.45),
+            blurRadius: 18,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.warning_amber_rounded, color: Colors.white),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PausedBadge extends StatelessWidget {
+  static const Color _neon = Color(0xFF00F0FF);
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.7),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: _neon.withValues(alpha: 0.6), width: 1),
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.pause_circle_filled, color: _neon, size: 18),
+            SizedBox(width: 8),
+            Text(
+              'DURAKLATILDI',
+              style: TextStyle(
+                color: _neon,
+                fontSize: 11,
+                letterSpacing: 3,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ControlPanel extends StatelessWidget {
+  const _ControlPanel({
+    required this.currentSet,
+    required this.totalSets,
+    required this.metric,
+    required this.exerciseName,
+    required this.detectorState,
+    required this.isPaused,
+    required this.onPrev,
+    required this.onTogglePlay,
+    required this.onNext,
+  });
+
+  static const Color _neon = Color(0xFF00F0FF);
+  static const Color _panel = Color(0xFF101010);
+
+  final int currentSet;
+  final int totalSets;
+  final String metric;
+  final String exerciseName;
+  final CrunchState detectorState;
+  final bool isPaused;
+  final VoidCallback onPrev;
+  final VoidCallback? onTogglePlay;
+  final VoidCallback? onNext;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: _panel,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(28),
+          topRight: Radius.circular(28),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black54,
+            blurRadius: 18,
+            offset: Offset(0, -4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+      child: Column(
+        children: [
+          _SetIndicator(
+            currentSet: currentSet,
+            totalSets: totalSets,
+            detectorLabel: detectorState.name.toUpperCase(),
+          ),
+          const Spacer(),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              metric,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 64,
+                fontWeight: FontWeight.w900,
+                height: 1,
+                letterSpacing: 1,
+                shadows: [Shadow(blurRadius: 18, color: _neon)],
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            exerciseName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const Spacer(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              _ControlIconButton(
+                icon: Icons.skip_previous_rounded,
+                onTap: onPrev,
+              ),
+              _CenterPlayButton(
+                isPaused: isPaused,
+                onTap: onTogglePlay,
+              ),
+              _ControlIconButton(
+                icon: Icons.skip_next_rounded,
+                onTap: onNext,
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SetIndicator extends StatelessWidget {
+  const _SetIndicator({
+    required this.currentSet,
+    required this.totalSets,
+    required this.detectorLabel,
+  });
+
+  static const Color _neon = Color(0xFF00F0FF);
+
+  final int currentSet;
+  final int totalSets;
+  final String detectorLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: _neon.withValues(alpha: 0.14),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: _neon.withValues(alpha: 0.5),
+              width: 0.8,
+            ),
+          ),
+          child: Text(
+            totalSets > 0 ? 'SET $currentSet / $totalSets' : 'SET —',
+            style: const TextStyle(
+              color: _neon,
+              fontSize: 11,
+              letterSpacing: 2.4,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+        Text(
+          detectorLabel,
+          style: const TextStyle(
+            color: Colors.white38,
+            fontSize: 10,
+            letterSpacing: 2,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ControlIconButton extends StatelessWidget {
+  const _ControlIconButton({required this.icon, required this.onTap});
+  final IconData icon;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white.withValues(alpha: 0.05),
+      shape: const CircleBorder(
+        side: BorderSide(color: Colors.white24, width: 1),
+      ),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Icon(icon, color: Colors.white, size: 28),
+        ),
+      ),
+    );
+  }
+}
+
+class _CenterPlayButton extends StatelessWidget {
+  const _CenterPlayButton({required this.isPaused, required this.onTap});
+
+  static const Color _neon = Color(0xFF00F0FF);
+
+  final bool isPaused;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: _neon.withValues(alpha: 0.6),
+            blurRadius: 24,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Material(
+        color: _neon,
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: SizedBox(
+            width: 76,
+            height: 76,
+            child: Icon(
+              isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded,
+              color: Colors.black,
+              size: 40,
+            ),
           ),
         ),
       ),
