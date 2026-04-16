@@ -60,8 +60,8 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     final status = await Permission.camera.request();
     if (!status.isGranted) {
       if (!mounted) return;
-      setState(() =>
-          _error = 'Camera permission is required to analyze your form.');
+      setState(
+          () => _error = 'Camera permission is required to analyze your form.');
       return;
     }
 
@@ -127,8 +127,11 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         if (result.repJustCompleted) {
           final notifier = ref.read(workoutSessionProvider.notifier);
           notifier.setCurrentReps(result.reps);
-          final target =
-              ref.read(workoutSessionProvider).valueOrNull?.activeExercise?.targetReps;
+          final target = ref
+              .read(workoutSessionProvider)
+              .valueOrNull
+              ?.activeExercise
+              ?.targetReps;
           if (target != null && result.reps >= target) {
             await notifier.completeCurrentExercise();
             _analyzer.reset();
@@ -198,7 +201,8 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       return InputImageRotationValue.fromRawValue(camera.sensorOrientation) ??
           InputImageRotation.rotation0deg;
     }
-    final deviceRotation = _orientations[controller.value.deviceOrientation] ?? 0;
+    final deviceRotation =
+        _orientations[controller.value.deviceOrientation] ?? 0;
     final compensated = camera.lensDirection == CameraLensDirection.front
         ? (camera.sensorOrientation + deviceRotation) % 360
         : (camera.sensorOrientation - deviceRotation + 360) % 360;
@@ -267,7 +271,8 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     final sessionAsync = ref.watch(workoutSessionProvider);
 
     return sessionAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator(color: _neon)),
+      loading: () =>
+          const Center(child: CircularProgressIndicator(color: _neon)),
       error: (err, _) => Center(
         child: Text('Workout load failed: $err',
             style: const TextStyle(color: Colors.white)),
@@ -276,7 +281,8 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     );
   }
 
-  Widget _buildSession(CameraController controller, WorkoutSessionState session) {
+  Widget _buildSession(
+      CameraController controller, WorkoutSessionState session) {
     final camera = _camera!;
     final imageSize = _imageSize;
     final exercise = session.activeExercise;
@@ -452,13 +458,10 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.military_tech,
-                  size: 96, color: _neon),
+              const Icon(Icons.military_tech, size: 96, color: _neon),
               const SizedBox(height: 16),
               Text(
-                day == null
-                    ? 'Program Tamam!'
-                    : 'Gün ${day.dayNumber} Tamam!',
+                day == null ? 'Program Tamam!' : 'Gün ${day.dayNumber} Tamam!',
                 style: const TextStyle(
                   color: _neon,
                   fontSize: 32,
@@ -480,8 +483,8 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
                 style: FilledButton.styleFrom(
                   backgroundColor: _neon,
                   foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 28, vertical: 14),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
                 ),
                 child: const Text('Tamam',
                     style: TextStyle(fontWeight: FontWeight.w900)),

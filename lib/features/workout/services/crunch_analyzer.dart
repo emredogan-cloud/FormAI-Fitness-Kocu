@@ -50,8 +50,8 @@ class CrunchAnalyzer {
   }
 
   CrunchResult analyze(Pose pose) {
-    final shoulder = _pick(pose, PoseLandmarkType.leftShoulder,
-        PoseLandmarkType.rightShoulder);
+    final shoulder = _pick(
+        pose, PoseLandmarkType.leftShoulder, PoseLandmarkType.rightShoulder);
     final hip =
         _pick(pose, PoseLandmarkType.leftHip, PoseLandmarkType.rightHip);
     final knee =
@@ -104,7 +104,8 @@ class CrunchAnalyzer {
   }
 
   /// Prefer the landmark with higher likelihood to tolerate partial visibility.
-  PoseLandmark? _pick(Pose pose, PoseLandmarkType left, PoseLandmarkType right) {
+  PoseLandmark? _pick(
+      Pose pose, PoseLandmarkType left, PoseLandmarkType right) {
     final l = pose.landmarks[left];
     final r = pose.landmarks[right];
     if (l == null) return r;

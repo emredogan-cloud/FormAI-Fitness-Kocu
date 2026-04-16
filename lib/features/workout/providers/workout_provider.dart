@@ -23,7 +23,8 @@ class WorkoutSessionState {
   Exercise? get activeExercise {
     final day = activeDay;
     if (day == null) return null;
-    if (activeExerciseIndex < 0 || activeExerciseIndex >= day.exercises.length) {
+    if (activeExerciseIndex < 0 ||
+        activeExerciseIndex >= day.exercises.length) {
       return null;
     }
     return day.exercises[activeExerciseIndex];
