@@ -1,0 +1,35 @@
+name: sixpack_ai
+description: "SixPack AI - 30 Günde Karın Kası. AI-powered fitness coaching."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+  flutter: ">=3.22.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # State management
+  flutter_riverpod: ^2.5.1
+
+  # Backend / Auth
+  supabase_flutter: ^2.5.6
+
+  # Routing
+  go_router: ^14.2.0
+
+  # Environment variables
+  flutter_dotenv: ^5.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - .env

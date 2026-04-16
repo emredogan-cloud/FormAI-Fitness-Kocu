@@ -1,0 +1,1 @@
+# features — modular feature folders (auth, home, workout, ...). Each feature owns its data / domain / presentation layers.
