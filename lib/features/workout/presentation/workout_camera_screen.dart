@@ -48,11 +48,15 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
   String? _error;
 
   String? _activeExerciseId;
+  int? _activeSet;
+  bool _wasResting = false;
   String? _formWarning;
   CrunchState _state = CrunchState.unknown;
 
   Timer? _workoutTimer;
   int _secondsRemaining = 0;
+
+  Offset? _pipOffset; // null → default top-right placement.
 
   @override
   void initState() {
@@ -110,6 +114,10 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
 
   void _onCameraImage(CameraImage image) {
     if (_isBusy) return;
+    // Skip pose work entirely while resting so we don't count phantom reps
+    // or trigger form-warning TTS while the user is recovering.
+    final session = ref.read(workoutSessionProvider).value;
+    if (session?.isResting ?? false) return;
     _isBusy = true;
     _processImage(image).whenComplete(() => _isBusy = false);
   }
@@ -277,13 +285,33 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
   @override
   Widget build(BuildContext context) {
     // Reset the analyzer and re-sync the countdown whenever the active
-    // exercise changes underneath us.
+    // exercise, set, or resting state changes.
     ref.listen<AsyncValue<WorkoutSessionState>>(workoutSessionProvider,
         (previous, next) {
-      final exercise = next.value?.activeExercise;
+      final session = next.value;
+      if (session == null) return;
+      final exercise = session.activeExercise;
       final id = exercise?.id;
-      if (id != _activeExerciseId) {
-        _activeExerciseId = id;
+      final set = session.currentSet;
+      final resting = session.isResting;
+      final justFinishedRest = _wasResting && !resting;
+      final exerciseChanged = id != _activeExerciseId;
+      final setChanged = set != _activeSet;
+
+      _activeExerciseId = id;
+      _activeSet = set;
+      _wasResting = resting;
+
+      if (resting) {
+        _workoutTimer?.cancel();
+        _workoutTimer = null;
+        if (_secondsRemaining != 0) {
+          setState(() => _secondsRemaining = 0);
+        }
+        return;
+      }
+
+      if (exerciseChanged || setChanged || justFinishedRest) {
         _analyzer.reset();
         _syncExerciseTimer(exercise);
       }
@@ -330,6 +358,17 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
 
   Widget _buildSession(
       CameraController controller, WorkoutSessionState session) {
+    if (session.isResting) {
+      return _RestOverlay(
+        secondsRemaining: session.restSecondsRemaining,
+        upcomingExercise: session.upcomingExercise,
+        upcomingSet: session.currentSet,
+        totalSets: session.upcomingExercise?.sets ?? 0,
+        onSkip: () => ref.read(workoutSessionProvider.notifier).skipRest(),
+        onExit: () => _exit(context),
+      );
+    }
+
     final camera = _camera!;
     final imageSize = _imageSize;
     final exercise = session.activeExercise;
@@ -350,9 +389,17 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
             ),
           ),
         _buildTopBar(session),
-        if (exercise != null) _buildGuidePlayer(exercise),
         _buildMetricDisplay(completedReps, target, exercise),
         if (_formWarning != null) _buildFormWarning(_formWarning!),
+        if (exercise != null)
+          LayoutBuilder(
+            builder: (context, constraints) => _PipGuide(
+              exercise: exercise,
+              parentSize: Size(constraints.maxWidth, constraints.maxHeight),
+              offset: _pipOffset,
+              onMoved: (offset) => setState(() => _pipOffset = offset),
+            ),
+          ),
         if (session.isSessionComplete) _buildDayCompleteOverlay(session),
       ],
     );
@@ -370,13 +417,19 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
           _BackButton(onPressed: () => _exit(context)),
           const SizedBox(width: 8),
           _pill(
-            day == null ? 'No day selected' : 'Day ${day.dayNumber}',
+            day == null ? 'No day selected' : 'Gün ${day.dayNumber}',
             icon: Icons.calendar_today,
           ),
           const SizedBox(width: 8),
           if (exercise != null)
             Flexible(
               child: _pill(exercise.name, icon: Icons.fitness_center),
+            ),
+          const SizedBox(width: 8),
+          if (exercise != null)
+            _pill(
+              'Set ${session.currentSet}/${exercise.sets}',
+              icon: Icons.repeat,
             ),
           const Spacer(),
           _pill(
@@ -417,45 +470,6 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
               fontSize: 12,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGuidePlayer(Exercise exercise) {
-    return Positioned(
-      top: 60,
-      right: 12,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.6),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: _neon, width: 0.8),
-            ),
-            child: const Text(
-              'ÖRNEK',
-              style: TextStyle(
-                color: _neon,
-                fontSize: 9,
-                letterSpacing: 2,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-          const SizedBox(height: 4),
-          SizedBox(
-            width: 130,
-            height: 95,
-            child: ExerciseGuidePlayer(
-              key: ValueKey('guide-${exercise.id}'),
-              assetPath: exercise.videoAsset,
-              exerciseName: exercise.name,
             ),
           ),
         ],
@@ -640,6 +654,291 @@ class _BackButton extends StatelessWidget {
             Icons.arrow_back_ios_new,
             color: Color(0xFF00F0FF),
             size: 16,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RestOverlay extends StatelessWidget {
+  const _RestOverlay({
+    required this.secondsRemaining,
+    required this.upcomingExercise,
+    required this.upcomingSet,
+    required this.totalSets,
+    required this.onSkip,
+    required this.onExit,
+  });
+
+  static const Color _neon = Color(0xFF00F0FF);
+
+  final int secondsRemaining;
+  final Exercise? upcomingExercise;
+  final int upcomingSet;
+  final int totalSets;
+  final VoidCallback onSkip;
+  final VoidCallback onExit;
+
+  @override
+  Widget build(BuildContext context) {
+    final minutes = (secondsRemaining ~/ 60).toString().padLeft(2, '0');
+    final seconds = (secondsRemaining % 60).toString().padLeft(2, '0');
+    final exerciseName = upcomingExercise?.name ?? '—';
+
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: RadialGradient(
+          center: Alignment.center,
+          radius: 1.2,
+          colors: [Color(0xFF001823), Colors.black],
+        ),
+      ),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Positioned(
+            top: 8,
+            left: 8,
+            child: _BackButton(onPressed: onExit),
+          ),
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _neon.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: _neon.withValues(alpha: 0.6),
+                      width: 1,
+                    ),
+                  ),
+                  child: const Text(
+                    'DİNLENME ZAMANI',
+                    style: TextStyle(
+                      color: _neon,
+                      fontSize: 12,
+                      letterSpacing: 4,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 28),
+                Text(
+                  '$minutes:$seconds',
+                  style: const TextStyle(
+                    color: _neon,
+                    fontSize: 120,
+                    fontWeight: FontWeight.w900,
+                    height: 1,
+                    letterSpacing: 2,
+                    shadows: [
+                      Shadow(blurRadius: 32, color: _neon),
+                      Shadow(blurRadius: 64, color: _neon),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'SIRADAKİ',
+                  style: TextStyle(
+                    color: Colors.white54,
+                    fontSize: 11,
+                    letterSpacing: 4,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  exerciseName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 26,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  totalSets > 0 ? 'Set $upcomingSet / $totalSets' : '',
+                  style: const TextStyle(
+                    color: Colors.white60,
+                    fontSize: 14,
+                    letterSpacing: 1.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 40),
+                _SkipButton(onTap: onSkip),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SkipButton extends StatelessWidget {
+  const _SkipButton({required this.onTap});
+  final VoidCallback onTap;
+
+  static const Color _neon = Color(0xFF00F0FF);
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(40),
+        boxShadow: [
+          BoxShadow(
+            color: _neon.withValues(alpha: 0.65),
+            blurRadius: 28,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Material(
+        color: _neon,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(40),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(40),
+          onTap: onTap,
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 36, vertical: 14),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'GEÇ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 4,
+                  ),
+                ),
+                SizedBox(width: 8),
+                Icon(Icons.skip_next_rounded, color: Colors.black, size: 22),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PipGuide extends StatelessWidget {
+  const _PipGuide({
+    required this.exercise,
+    required this.parentSize,
+    required this.offset,
+    required this.onMoved,
+  });
+
+  static const Color _neon = Color(0xFF00F0FF);
+  static const double _width = 140;
+  static const double _height = 105;
+  static const double _margin = 12;
+  static const double _topPad = 56; // leave room below the top pill bar
+
+  final Exercise exercise;
+  final Size parentSize;
+  final Offset? offset;
+  final ValueChanged<Offset> onMoved;
+
+  Offset get _resolvedOffset {
+    final current = offset;
+    if (current != null) return current;
+    return Offset(parentSize.width - _width - _margin, _topPad);
+  }
+
+  Offset _clamp(Offset proposed) {
+    final maxX = parentSize.width - _width - _margin;
+    final maxY = parentSize.height - _height - _margin;
+    final dx = proposed.dx.clamp(_margin, maxX < _margin ? _margin : maxX);
+    final dy = proposed.dy.clamp(_margin, maxY < _margin ? _margin : maxY);
+    return Offset(dx.toDouble(), dy.toDouble());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pos = _clamp(_resolvedOffset);
+    return Positioned(
+      left: pos.dx,
+      top: pos.dy,
+      child: GestureDetector(
+        onPanUpdate: (details) {
+          onMoved(_clamp(pos + details.delta));
+        },
+        child: Container(
+          width: _width,
+          height: _height,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: _neon, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: _neon.withValues(alpha: 0.45),
+                blurRadius: 16,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(13),
+                  child: ExerciseGuidePlayer(
+                    key: ValueKey('guide-${exercise.id}'),
+                    assetPath: exercise.videoAsset,
+                    exerciseName: exercise.name,
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 4,
+                left: 4,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.65),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: _neon.withValues(alpha: 0.6),
+                      width: 0.6,
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.drag_indicator, color: _neon, size: 11),
+                      SizedBox(width: 4),
+                      Text(
+                        'ÖRNEK',
+                        style: TextStyle(
+                          color: _neon,
+                          fontSize: 9,
+                          letterSpacing: 2,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

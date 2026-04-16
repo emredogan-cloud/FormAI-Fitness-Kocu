@@ -8,6 +8,8 @@ class Exercise {
     this.targetReps,
     this.targetDurationInSeconds,
     this.videoAsset,
+    this.sets = 1,
+    this.restDurationInSeconds = 30,
   });
 
   final String id;
@@ -16,6 +18,8 @@ class Exercise {
   final int? targetReps;
   final int? targetDurationInSeconds;
   final String? videoAsset;
+  final int sets;
+  final int restDurationInSeconds;
 
   bool get isRepBased => type == ExerciseType.repBased;
   bool get isTimeBased => type == ExerciseType.timeBased;
@@ -28,7 +32,9 @@ class Exercise {
       other.type == type &&
       other.targetReps == targetReps &&
       other.targetDurationInSeconds == targetDurationInSeconds &&
-      other.videoAsset == videoAsset;
+      other.videoAsset == videoAsset &&
+      other.sets == sets &&
+      other.restDurationInSeconds == restDurationInSeconds;
 
   @override
   int get hashCode => Object.hash(
@@ -38,5 +44,7 @@ class Exercise {
         targetReps,
         targetDurationInSeconds,
         videoAsset,
+        sets,
+        restDurationInSeconds,
       );
 }

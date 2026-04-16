@@ -14,46 +14,56 @@ class WorkoutRepository {
   static const String _completedKey = 'sixpack.completed_days';
   static const String _progressTable = 'user_progress';
 
-  static const Exercise _crunch10 = Exercise(
+  static const Exercise _crunch3x10 = Exercise(
     id: 'crunch',
     name: 'Mekik',
     type: ExerciseType.repBased,
     targetReps: 10,
+    sets: 3,
+    restDurationInSeconds: 30,
     videoAsset: 'assets/videos/crunch_demo.mp4',
   );
-  static const Exercise _crunch12 = Exercise(
+  static const Exercise _crunch3x12 = Exercise(
     id: 'crunch',
     name: 'Mekik',
     type: ExerciseType.repBased,
     targetReps: 12,
+    sets: 3,
+    restDurationInSeconds: 30,
     videoAsset: 'assets/videos/crunch_demo.mp4',
   );
-  static const Exercise _crunch15 = Exercise(
+  static const Exercise _crunch4x12 = Exercise(
     id: 'crunch',
     name: 'Mekik',
     type: ExerciseType.repBased,
-    targetReps: 15,
+    targetReps: 12,
+    sets: 4,
+    restDurationInSeconds: 30,
     videoAsset: 'assets/videos/crunch_demo.mp4',
   );
-  static const Exercise _plank20 = Exercise(
+  static const Exercise _plank3x20 = Exercise(
     id: 'plank',
     name: 'Plank',
     type: ExerciseType.timeBased,
     targetDurationInSeconds: 20,
+    sets: 3,
+    restDurationInSeconds: 45,
     videoAsset: 'assets/videos/plank_demo.mp4',
   );
-  static const Exercise _legRaise10 = Exercise(
+  static const Exercise _legRaise3x10 = Exercise(
     id: 'leg_raise',
     name: 'Bacak Kaldırma',
     type: ExerciseType.repBased,
     targetReps: 10,
+    sets: 3,
+    restDurationInSeconds: 30,
     videoAsset: 'assets/videos/leg_raise_demo.mp4',
   );
 
   static const List<WorkoutDay> _staticProgram = [
-    WorkoutDay(dayNumber: 1, exercises: [_crunch10]),
-    WorkoutDay(dayNumber: 2, exercises: [_crunch12, _plank20]),
-    WorkoutDay(dayNumber: 3, exercises: [_crunch15, _legRaise10]),
+    WorkoutDay(dayNumber: 1, exercises: [_crunch3x10]),
+    WorkoutDay(dayNumber: 2, exercises: [_crunch3x12, _plank3x20]),
+    WorkoutDay(dayNumber: 3, exercises: [_crunch4x12, _legRaise3x10]),
   ];
 
   Future<List<WorkoutDay>> loadProgram() async {
