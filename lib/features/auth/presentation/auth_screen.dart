@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/services/app_preferences.dart';
+import '../../onboarding/providers/wizard_provider.dart';
+
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
 
@@ -30,6 +33,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   SupabaseClient get _client => Supabase.instance.client;
 
+  Future<void> _persistWizardMetrics() async {
+    final wizard = ref.read(wizardProvider);
+    if (wizard.gender == null && wizard.age == null) return;
+    await ref.read(appPreferencesProvider).saveUserMetrics(wizard.toJson());
+  }
+
   Future<void> _submit() async {
     if (_busy) return;
     if (!_formKey.currentState!.validate()) return;
@@ -41,8 +50,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     try {
       if (_mode == _Mode.signIn) {
         await _client.auth.signInWithPassword(email: email, password: password);
+        await _persistWizardMetrics();
       } else {
         final res = await _client.auth.signUp(email: email, password: password);
+        await _persistWizardMetrics();
         if (res.session == null && mounted) {
           _toast('E-posta adresine doğrulama bağlantısı gönderildi.');
         }
@@ -61,6 +72,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     setState(() => _busy = true);
     try {
       await _client.auth.signInAnonymously();
+      await _persistWizardMetrics();
     } on AuthException catch (e) {
       if (mounted) _toast(e.message);
     } catch (e) {
