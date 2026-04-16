@@ -3,22 +3,26 @@ import 'dart:io' show Platform;
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../../core/utils/audio_feedback.dart';
+import '../models/exercise_model.dart';
+import '../providers/workout_provider.dart';
 import '../services/crunch_analyzer.dart';
 import '../services/pose_detector_service.dart';
 import 'pose_painter.dart';
 
-class WorkoutCameraScreen extends StatefulWidget {
+class WorkoutCameraScreen extends ConsumerStatefulWidget {
   const WorkoutCameraScreen({super.key});
 
   @override
-  State<WorkoutCameraScreen> createState() => _WorkoutCameraScreenState();
+  ConsumerState<WorkoutCameraScreen> createState() =>
+      _WorkoutCameraScreenState();
 }
 
-class _WorkoutCameraScreenState extends State<WorkoutCameraScreen>
+class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     with WidgetsBindingObserver {
   final PoseDetectorService _poseService = PoseDetectorService();
   final CrunchAnalyzer _analyzer = CrunchAnalyzer();
@@ -31,6 +35,8 @@ class _WorkoutCameraScreenState extends State<WorkoutCameraScreen>
     DeviceOrientation.landscapeRight: 270,
   };
 
+  static const Color _neon = Color(0xFF00F0FF);
+
   CameraController? _controller;
   CameraDescription? _camera;
   List<Pose> _poses = const [];
@@ -38,7 +44,7 @@ class _WorkoutCameraScreenState extends State<WorkoutCameraScreen>
   bool _isBusy = false;
   String? _error;
 
-  int _reps = 0;
+  String? _activeExerciseId;
   String? _formWarning;
   CrunchState _state = CrunchState.unknown;
 
@@ -112,9 +118,21 @@ class _WorkoutCameraScreenState extends State<WorkoutCameraScreen>
       CrunchResult? result;
       if (poses.isNotEmpty) {
         result = _analyzer.analyze(poses.first);
+
         final warning = result.formWarning;
         if (warning != null) {
           _audio.speak(warning);
+        }
+
+        if (result.repJustCompleted) {
+          final notifier = ref.read(workoutSessionProvider.notifier);
+          notifier.setCurrentReps(result.reps);
+          final target =
+              ref.read(workoutSessionProvider).valueOrNull?.activeExercise?.targetReps;
+          if (target != null && result.reps >= target) {
+            await notifier.completeCurrentExercise();
+            _analyzer.reset();
+          }
         }
       }
 
@@ -122,7 +140,6 @@ class _WorkoutCameraScreenState extends State<WorkoutCameraScreen>
         _poses = poses;
         _imageSize = Size(image.width.toDouble(), image.height.toDouble());
         if (result != null) {
-          _reps = result.reps;
           _state = result.state;
           _formWarning = result.formWarning;
         } else {
@@ -211,6 +228,16 @@ class _WorkoutCameraScreenState extends State<WorkoutCameraScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Reset the analyzer whenever the active exercise changes underneath us.
+    ref.listen<AsyncValue<WorkoutSessionState>>(workoutSessionProvider,
+        (previous, next) {
+      final id = next.valueOrNull?.activeExercise?.id;
+      if (id != _activeExerciseId) {
+        _activeExerciseId = id;
+        _analyzer.reset();
+      }
+    });
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(child: _buildBody()),
@@ -233,12 +260,28 @@ class _WorkoutCameraScreenState extends State<WorkoutCameraScreen>
     final controller = _controller;
     if (controller == null || !controller.value.isInitialized) {
       return const Center(
-        child: CircularProgressIndicator(color: Color(0xFF00F0FF)),
+        child: CircularProgressIndicator(color: _neon),
       );
     }
 
+    final sessionAsync = ref.watch(workoutSessionProvider);
+
+    return sessionAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator(color: _neon)),
+      error: (err, _) => Center(
+        child: Text('Workout load failed: $err',
+            style: const TextStyle(color: Colors.white)),
+      ),
+      data: (session) => _buildSession(controller, session),
+    );
+  }
+
+  Widget _buildSession(CameraController controller, WorkoutSessionState session) {
     final camera = _camera!;
     final imageSize = _imageSize;
+    final exercise = session.activeExercise;
+    final target = exercise?.targetReps;
+    final completedReps = session.currentReps;
 
     return Stack(
       fit: StackFit.expand,
@@ -253,40 +296,74 @@ class _WorkoutCameraScreenState extends State<WorkoutCameraScreen>
               cameraLensDirection: camera.lensDirection,
             ),
           ),
-        _buildStatusBadge(),
-        _buildRepCounter(),
+        _buildTopBar(session),
+        _buildRepCounter(completedReps, target, exercise),
         if (_formWarning != null) _buildFormWarning(_formWarning!),
+        if (session.isSessionComplete) _buildDayCompleteOverlay(session),
       ],
     );
   }
 
-  Widget _buildStatusBadge() {
+  Widget _buildTopBar(WorkoutSessionState session) {
+    final day = session.activeDay;
+    final exercise = session.activeExercise;
     return Positioned(
       top: 16,
       left: 16,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.5),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFF00F0FF), width: 1),
-        ),
-        child: Text(
-          _poses.isEmpty
-              ? 'Searching for you…'
-              : 'State: ${_state.name.toUpperCase()}',
-          style: const TextStyle(
-            color: Color(0xFF00F0FF),
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
+      right: 16,
+      child: Row(
+        children: [
+          _pill(
+            day == null ? 'No day selected' : 'Day ${day.dayNumber}',
+            icon: Icons.calendar_today,
           ),
-        ),
+          const SizedBox(width: 8),
+          if (exercise != null)
+            _pill(exercise.name, icon: Icons.fitness_center),
+          const Spacer(),
+          _pill(
+            _poses.isEmpty ? 'Searching…' : _state.name.toUpperCase(),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildRepCounter() {
-    const neon = Color(0xFF00F0FF);
+  Widget _pill(String text, {IconData? icon}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.55),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _neon, width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 14, color: _neon),
+            const SizedBox(width: 6),
+          ],
+          Text(
+            text,
+            style: const TextStyle(
+              color: _neon,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRepCounter(int completed, int? target, Exercise? exercise) {
+    final showTarget = target != null;
+    final display = showTarget ? '$completed / $target' : '$completed';
+    final subtitle = showTarget
+        ? 'REPS · ${exercise?.name.toUpperCase() ?? ''}'
+        : exercise?.name.toUpperCase() ?? 'REPS';
     return Positioned(
       bottom: 32,
       left: 0,
@@ -295,24 +372,24 @@ class _WorkoutCameraScreenState extends State<WorkoutCameraScreen>
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            '$_reps',
+            display,
             style: const TextStyle(
-              fontSize: 120,
+              fontSize: 96,
               fontWeight: FontWeight.w900,
-              color: neon,
+              color: _neon,
               height: 1.0,
               shadows: [
-                Shadow(blurRadius: 30, color: neon),
-                Shadow(blurRadius: 60, color: neon),
+                Shadow(blurRadius: 30, color: _neon),
+                Shadow(blurRadius: 60, color: _neon),
               ],
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
-            'REPS',
-            style: TextStyle(
-              fontSize: 18,
-              letterSpacing: 6,
+          Text(
+            subtitle,
+            style: const TextStyle(
+              fontSize: 16,
+              letterSpacing: 5,
               fontWeight: FontWeight.w700,
               color: Colors.white70,
             ),
@@ -324,7 +401,7 @@ class _WorkoutCameraScreenState extends State<WorkoutCameraScreen>
 
   Widget _buildFormWarning(String message) {
     return Positioned(
-      bottom: 230,
+      bottom: 250,
       left: 24,
       right: 24,
       child: Container(
@@ -359,6 +436,58 @@ class _WorkoutCameraScreenState extends State<WorkoutCameraScreen>
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDayCompleteOverlay(WorkoutSessionState session) {
+    final day = session.activeDay;
+    return Positioned.fill(
+      child: Container(
+        color: Colors.black.withOpacity(0.75),
+        alignment: Alignment.center,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.military_tech,
+                  size: 96, color: _neon),
+              const SizedBox(height: 16),
+              Text(
+                day == null
+                    ? 'Program Tamam!'
+                    : 'Gün ${day.dayNumber} Tamam!',
+                style: const TextStyle(
+                  color: _neon,
+                  fontSize: 32,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.5,
+                  shadows: [Shadow(blurRadius: 30, color: _neon)],
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Harika iş çıkardın, yarın görüşürüz.',
+                style: TextStyle(color: Colors.white70, fontSize: 16),
+              ),
+              const SizedBox(height: 24),
+              FilledButton(
+                onPressed: () => ref
+                    .read(workoutSessionProvider.notifier)
+                    .acknowledgeSessionComplete(),
+                style: FilledButton.styleFrom(
+                  backgroundColor: _neon,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 28, vertical: 14),
+                ),
+                child: const Text('Tamam',
+                    style: TextStyle(fontWeight: FontWeight.w900)),
+              ),
+            ],
+          ),
         ),
       ),
     );
