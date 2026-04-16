@@ -24,6 +24,11 @@ dependencies:
   # Environment variables
   flutter_dotenv: ^5.1.0
 
+  # Camera & AI / Computer Vision
+  camera: ^0.10.5
+  google_mlkit_pose_detection: ^0.13.0
+  permission_handler: ^11.3.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
