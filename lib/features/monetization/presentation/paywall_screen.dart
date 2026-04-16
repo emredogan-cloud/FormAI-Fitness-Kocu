@@ -8,11 +8,11 @@ class PaywallScreen extends StatefulWidget {
   State<PaywallScreen> createState() => _PaywallScreenState();
 }
 
-enum _Plan { monthly, yearly }
+enum _Plan { weekly, yearly, monthly }
 
 class _PaywallScreenState extends State<PaywallScreen> {
-  static const Color _neon = Color(0xFF00F0FF);
-  static const Color _gold = Color(0xFFFFD166);
+  static const Color _neon = Color(0xFF8E5BFF);
+  static const Color _neonAccent = Color(0xFF4DA6FF);
 
   _Plan _selected = _Plan.yearly;
 
@@ -23,52 +23,78 @@ class _PaywallScreenState extends State<PaywallScreen> {
       body: SafeArea(
         child: Stack(
           children: [
-            SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(24, 64, 24, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildHero(),
-                  const SizedBox(height: 24),
-                  _buildFeatures(),
-                  const SizedBox(height: 28),
-                  _PlanCard(
-                    plan: _Plan.monthly,
-                    isSelected: _selected == _Plan.monthly,
-                    onTap: () => setState(() => _selected = _Plan.monthly),
-                  ),
-                  const SizedBox(height: 12),
-                  _PlanCard(
-                    plan: _Plan.yearly,
-                    isSelected: _selected == _Plan.yearly,
-                    onTap: () => setState(() => _selected = _Plan.yearly),
-                  ),
-                  const SizedBox(height: 24),
-                  FilledButton(
-                    onPressed: _simulatePurchase,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: _gold,
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      textStyle: const TextStyle(
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 2,
-                        fontSize: 15,
+            DecoratedBox(
+              decoration: const BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment.topCenter,
+                  radius: 1.4,
+                  colors: [Color(0xFF1A0B3D), Colors.black],
+                ),
+              ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 60, 20, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildHero(),
+                    const SizedBox(height: 24),
+                    _buildFeatures(),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      height: 230,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        children: [
+                          _PlanCard(
+                            plan: _Plan.weekly,
+                            isSelected: _selected == _Plan.weekly,
+                            onTap: () =>
+                                setState(() => _selected = _Plan.weekly),
+                          ),
+                          const SizedBox(width: 12),
+                          _PlanCard(
+                            plan: _Plan.yearly,
+                            isSelected: _selected == _Plan.yearly,
+                            onTap: () =>
+                                setState(() => _selected = _Plan.yearly),
+                          ),
+                          const SizedBox(width: 12),
+                          _PlanCard(
+                            plan: _Plan.monthly,
+                            isSelected: _selected == _Plan.monthly,
+                            onTap: () =>
+                                setState(() => _selected = _Plan.monthly),
+                          ),
+                        ],
                       ),
                     ),
-                    child: Text(
-                      _selected == _Plan.yearly
-                          ? "YILLIK PLAN'A BAŞLA"
-                          : "AYLIK PLAN'A BAŞLA",
+                    const SizedBox(height: 16),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        '7 gün boyunca hiçbir ücret alınmayacaktır. '
+                        'İstediğin zaman iptal edebilirsin.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white60,
+                          fontSize: 12,
+                          height: 1.4,
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'İstediğin zaman iptal edebilirsin. Otomatik yenilenir.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white38, fontSize: 11),
-                  ),
-                ],
+                    const SizedBox(height: 20),
+                    _buildCta(),
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: () => _close(context),
+                      child: const Text(
+                        'Şimdilik geç',
+                        style: TextStyle(color: Colors.white38, fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             Positioned(
@@ -84,24 +110,48 @@ class _PaywallScreenState extends State<PaywallScreen> {
 
   Widget _buildHero() {
     return Column(
-      children: const [
-        Icon(Icons.workspace_premium, color: _gold, size: 56),
-        SizedBox(height: 10),
-        Text(
-          'SixPack AI Pro',
+      children: [
+        Container(
+          width: 64,
+          height: 64,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: const LinearGradient(
+              colors: [_neon, _neonAccent],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: _neon.withValues(alpha: 0.5),
+                blurRadius: 22,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+          child: const Icon(
+            Icons.workspace_premium,
+            color: Colors.white,
+            size: 32,
+          ),
+        ),
+        const SizedBox(height: 14),
+        const Text(
+          'FormAI Premium',
           textAlign: TextAlign.center,
           style: TextStyle(
             color: Colors.white,
-            fontSize: 32,
+            fontSize: 26,
             fontWeight: FontWeight.w900,
-            letterSpacing: 1,
+            letterSpacing: 0.6,
           ),
         ),
-        SizedBox(height: 6),
-        Text(
-          'Daha hızlı sonuç için AI seni yanlış formdan korusun.',
+        const SizedBox(height: 6),
+        const Text(
+          'Tam yapay zeka koçluğunun kilidini aç. '
+          'Her tekrar, her gün — hep yanında.',
           textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.white60, fontSize: 13),
+          style: TextStyle(color: Colors.white60, fontSize: 13, height: 1.4),
         ),
       ],
     );
@@ -109,17 +159,49 @@ class _PaywallScreenState extends State<PaywallScreen> {
 
   Widget _buildFeatures() {
     const items = [
-      ('Tam Yapay Zeka Form Kontrolü', Icons.auto_awesome),
-      ('Sınırsız Program', Icons.all_inclusive),
-      ('Reklamsız Deneyim', Icons.block),
+      ('Sınırsız AI Form Kontrolü', Icons.auto_awesome),
+      ('Tüm Vücut Programları', Icons.fitness_center),
+      ('Reklamsız, kesintisiz deneyim', Icons.block),
     ];
     return Column(
       children: [
         for (final item in items) ...[
           _FeatureRow(text: item.$1, icon: item.$2),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
         ],
       ],
+    );
+  }
+
+  Widget _buildCta() {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: _neon.withValues(alpha: 0.55),
+            blurRadius: 26,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: FilledButton(
+        onPressed: _simulatePurchase,
+        style: FilledButton.styleFrom(
+          backgroundColor: _neon,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w900,
+            letterSpacing: 2.5,
+            fontSize: 15,
+          ),
+        ),
+        child: const Text('7 GÜN ÜCRETSİZ BAŞLA'),
+      ),
     );
   }
 
@@ -128,23 +210,19 @@ class _PaywallScreenState extends State<PaywallScreen> {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         const SnackBar(
-          content: Text('Satın alma simüle edildi'),
-          backgroundColor: Color(0xFF0A3A50),
+          content: Text('Deneme süresi başlatıldı'),
+          backgroundColor: Color(0xFF2A1B5C),
           behavior: SnackBarBehavior.floating,
         ),
       );
-    Future<void>.delayed(const Duration(milliseconds: 900), () {
+    Future<void>.delayed(const Duration(milliseconds: 800), () {
       if (!mounted) return;
       _close(context);
     });
   }
 
   void _close(BuildContext context) {
-    if (context.canPop()) {
-      context.pop();
-    } else {
-      context.go('/');
-    }
+    context.go('/');
   }
 }
 
@@ -158,17 +236,21 @@ class _FeatureRow extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 36,
-          height: 36,
+          width: 34,
+          height: 34,
           decoration: BoxDecoration(
-            color: _PaywallScreenState._neon.withValues(alpha: 0.14),
+            color: _PaywallScreenState._neon.withValues(alpha: 0.16),
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
               color: _PaywallScreenState._neon.withValues(alpha: 0.6),
               width: 0.8,
             ),
           ),
-          child: Icon(icon, color: _PaywallScreenState._neon, size: 18),
+          child: Icon(
+            icon,
+            color: _PaywallScreenState._neon,
+            size: 18,
+          ),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -176,7 +258,7 @@ class _FeatureRow extends StatelessWidget {
             text,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 15,
+              fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -197,111 +279,183 @@ class _PlanCard extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
 
+  String get _title => switch (plan) {
+        _Plan.weekly => 'Haftalık',
+        _Plan.yearly => 'Yıllık',
+        _Plan.monthly => 'Aylık',
+      };
+
+  String get _price => switch (plan) {
+        _Plan.weekly => '99 TL',
+        _Plan.yearly => '999 TL',
+        _Plan.monthly => '249 TL',
+      };
+
+  String get _perUnit => switch (plan) {
+        _Plan.weekly => 'haftalık',
+        _Plan.yearly => 'yıllık',
+        _Plan.monthly => 'aylık',
+      };
+
+  String? get _accent => plan == _Plan.yearly ? '7 GÜN ÜCRETSİZ DENE' : null;
+
+  String? get _hint => switch (plan) {
+        _Plan.weekly => 'Kısa süreli deneme',
+        _Plan.yearly => 'Ayda yalnızca ~83 TL',
+        _Plan.monthly => 'Esnek aylık plan',
+      };
+
   @override
   Widget build(BuildContext context) {
     final isYearly = plan == _Plan.yearly;
-    final accent =
-        isYearly ? _PaywallScreenState._gold : _PaywallScreenState._neon;
-    final borderColor = isSelected ? accent : Colors.white24;
+    final scale = isYearly ? 1.0 : 0.92;
+    final width = isYearly ? 180.0 : 150.0;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? accent.withValues(alpha: 0.08)
-                : Colors.white.withValues(alpha: 0.02),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: borderColor,
-              width: isSelected ? 2 : 1,
-            ),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: accent.withValues(alpha: 0.35),
-                      blurRadius: 18,
-                      spreadRadius: 1,
-                    ),
-                  ]
-                : null,
-          ),
-          child: Row(
-            children: [
-              Icon(
-                isSelected
-                    ? Icons.radio_button_checked
-                    : Icons.radio_button_off,
-                color: isSelected ? accent : Colors.white30,
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          isYearly ? 'Yıllık' : 'Aylık',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                          ),
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedScale(
+        scale: scale,
+        duration: const Duration(milliseconds: 220),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              width: width,
+              padding: const EdgeInsets.fromLTRB(14, 22, 14, 16),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? _PaywallScreenState._neon.withValues(alpha: 0.12)
+                    : Colors.white.withValues(alpha: 0.04),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color:
+                      isSelected ? _PaywallScreenState._neon : Colors.white24,
+                  width: isSelected ? 2 : 1,
+                ),
+                boxShadow: isYearly || isSelected
+                    ? [
+                        BoxShadow(
+                          color: _PaywallScreenState._neon
+                              .withValues(alpha: isYearly ? 0.55 : 0.3),
+                          blurRadius: isYearly ? 22 : 14,
+                          spreadRadius: 1,
                         ),
-                        if (isYearly) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: _PaywallScreenState._gold,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Text(
-                              '%60 İNDİRİM',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.2,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
+                      ]
+                    : null,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _title,
+                    style: TextStyle(
+                      color:
+                          isSelected ? _PaywallScreenState._neon : Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
                     ),
-                    const SizedBox(height: 4),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    _price,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 26,
+                      fontWeight: FontWeight.w900,
+                      height: 1,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _perUnit,
+                    style: const TextStyle(
+                      color: Colors.white54,
+                      fontSize: 11,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  if (_accent != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [
+                            _PaywallScreenState._neon,
+                            _PaywallScreenState._neonAccent,
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        _accent!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    )
+                  else if (_hint != null)
                     Text(
-                      isYearly
-                          ? 'Yılda yalnızca 349 TL · ayda ~29 TL'
-                          : 'Aylık yenilenir, istediğin zaman iptal et',
+                      _hint!,
                       style: const TextStyle(
-                        color: Colors.white60,
-                        fontSize: 12,
+                        color: Colors.white54,
+                        fontSize: 11,
+                        height: 1.3,
                       ),
                     ),
-                  ],
+                ],
+              ),
+            ),
+            if (isYearly)
+              Positioned(
+                top: -10,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          _PaywallScreenState._neon,
+                          _PaywallScreenState._neonAccent,
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color:
+                              _PaywallScreenState._neon.withValues(alpha: 0.6),
+                          blurRadius: 14,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                    child: const Text(
+                      'TAVSİYE EDİLEN',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(width: 8),
-              Text(
-                isYearly ? '349 TL' : '79 TL',
-                style: TextStyle(
-                  color: isSelected ? accent : Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ],
-          ),
+          ],
         ),
       ),
     );

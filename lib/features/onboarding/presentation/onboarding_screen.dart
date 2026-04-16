@@ -8,8 +8,10 @@ import '../../../core/routing/app_router.dart';
 import '../../../core/services/app_preferences.dart';
 import '../providers/wizard_provider.dart';
 
-const Color _neon = Color(0xFF00F0FF);
-const int _totalSteps = 7;
+const Color _neon = Color(0xFF8E5BFF);
+const Color _neonAccent = Color(0xFF4DA6FF);
+const int _totalSteps = 9;
+const int _hookSteps = 2;
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -53,22 +55,26 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final showHeader = _index >= _hookSteps;
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
         child: Column(
           children: [
-            _WizardHeader(
-              step: _index + 1,
-              total: _totalSteps,
-              onBack: _index == 0 ? null : _back,
-            ),
+            if (showHeader)
+              _WizardHeader(
+                step: _index - _hookSteps + 1,
+                total: _totalSteps - _hookSteps,
+                onBack: _index == 0 ? null : _back,
+              ),
             Expanded(
               child: PageView(
                 controller: _controller,
                 physics: const NeverScrollableScrollPhysics(),
                 onPageChanged: (i) => setState(() => _index = i),
                 children: [
+                  _WelcomeStep(onStart: _next),
+                  _CoachIntroStep(onContinue: _next),
                   _GenderStep(onSelected: _next),
                   _AgeStep(onContinue: _next),
                   _BodyMetricsStep(onContinue: _next),
@@ -82,6 +88,274 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _WelcomeStep extends StatelessWidget {
+  const _WelcomeStep({required this.onStart});
+  final VoidCallback onStart;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: RadialGradient(
+          center: Alignment.topCenter,
+          radius: 1.4,
+          colors: [Color(0xFF1A0B3D), Colors.black],
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(28, 24, 28, 28),
+        child: Column(
+          children: [
+            const Spacer(),
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  width: 220,
+                  height: 220,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        _neon.withValues(alpha: 0.45),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+                Container(
+                  width: 140,
+                  height: 140,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: _neon, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _neon.withValues(alpha: 0.7),
+                        blurRadius: 28,
+                        spreadRadius: 4,
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.fitness_center,
+                    color: Colors.white,
+                    size: 64,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 40),
+            ShaderMask(
+              shaderCallback: (rect) => const LinearGradient(
+                colors: [_neon, _neonAccent],
+              ).createShader(rect),
+              child: const Text(
+                'Vücudunu Yapay Zeka İle Şekillendir',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 30,
+                  fontWeight: FontWeight.w900,
+                  height: 1.15,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Telefonunun kamerası ile her tekrarını izleyen, '
+              'formunu düzelten ve seni gerçek bir koç gibi motive eden '
+              'kişisel yapay zeka asistanın.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+            const Spacer(),
+            SizedBox(
+              width: double.infinity,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _neon.withValues(alpha: 0.5),
+                      blurRadius: 28,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+                child: FilledButton(
+                  onPressed: onStart,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: _neon,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 22),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    textStyle: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 4,
+                      fontSize: 18,
+                    ),
+                  ),
+                  child: const Text('BAŞLA'),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Devam ederek Kullanım Şartları ve Gizlilik Politikasını kabul edersin.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white38, fontSize: 11),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CoachIntroStep extends StatelessWidget {
+  const _CoachIntroStep({required this.onContinue});
+  final VoidCallback onContinue;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(28, 24, 28, 28),
+      child: Column(
+        children: [
+          const Spacer(),
+          _PulsingCoachAvatar(),
+          const SizedBox(height: 32),
+          const Text(
+            'Merhaba 👋',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 12),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+              'Ben senin kişisel yapay zeka koçunum. '
+              'Şimdi sana birkaç hızlı soru soracağım ve '
+              'tamamen sana özel bir program çıkaracağım.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 15,
+                height: 1.55,
+              ),
+            ),
+          ),
+          const Spacer(),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: onContinue,
+              icon: const Icon(Icons.arrow_forward_rounded),
+              label: const Text('DEVAM ET'),
+              style: FilledButton.styleFrom(
+                backgroundColor: _neon,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 3,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PulsingCoachAvatar extends StatefulWidget {
+  @override
+  State<_PulsingCoachAvatar> createState() => _PulsingCoachAvatarState();
+}
+
+class _PulsingCoachAvatarState extends State<_PulsingCoachAvatar>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1800),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _c,
+      builder: (context, _) {
+        final glow = 0.35 + _c.value * 0.4;
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: 200,
+              height: 200,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    _neon.withValues(alpha: glow),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  colors: [_neon, _neonAccent],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: _neon.withValues(alpha: 0.6),
+                    blurRadius: 24,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.smart_toy,
+                color: Colors.white,
+                size: 56,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -127,7 +401,7 @@ class _WizardHeader extends StatelessWidget {
                       ),
               ),
               const Text(
-                'SixPack AI',
+                'FormAI',
                 style: TextStyle(
                   color: _neon,
                   fontSize: 14,

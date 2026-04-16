@@ -24,19 +24,19 @@ Future<void> main() async {
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
       ],
-      child: const SixPackApp(),
+      child: const FormAIApp(),
     ),
   );
 }
 
-class SixPackApp extends ConsumerWidget {
-  const SixPackApp({super.key});
+class FormAIApp extends ConsumerWidget {
+  const FormAIApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
     return MaterialApp.router(
-      title: 'SixPack AI',
+      title: 'FormAI',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(

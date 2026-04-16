@@ -215,7 +215,7 @@ class _Header extends StatelessWidget {
             children: [
               const Expanded(
                 child: Text(
-                  'SixPack AI',
+                  'FormAI',
                   style: TextStyle(
                     color: Color(0xFF00F0FF),
                     fontSize: 24,

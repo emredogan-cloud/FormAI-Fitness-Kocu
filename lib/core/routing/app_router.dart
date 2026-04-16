@@ -32,7 +32,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return path == AppRoutes.auth ? null : AppRoutes.auth;
     }
     if (path == AppRoutes.auth || path == AppRoutes.onboarding) {
-      return AppRoutes.dashboard;
+      return AppRoutes.paywall;
     }
     return null;
   }

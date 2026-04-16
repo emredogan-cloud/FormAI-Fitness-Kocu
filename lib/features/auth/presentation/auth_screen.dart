@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/routing/app_router.dart';
 import '../../../core/services/app_preferences.dart';
 import '../../onboarding/providers/wizard_provider.dart';
 
@@ -39,6 +41,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     await ref.read(appPreferencesProvider).saveUserMetrics(wizard.toJson());
   }
 
+  void _goToPaywall() {
+    if (!mounted) return;
+    context.pushReplacement(AppRoutes.paywall);
+  }
+
   Future<void> _submit() async {
     if (_busy) return;
     if (!_formKey.currentState!.validate()) return;
@@ -51,11 +58,14 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       if (_mode == _Mode.signIn) {
         await _client.auth.signInWithPassword(email: email, password: password);
         await _persistWizardMetrics();
+        _goToPaywall();
       } else {
         final res = await _client.auth.signUp(email: email, password: password);
         await _persistWizardMetrics();
         if (res.session == null && mounted) {
           _toast('E-posta adresine doğrulama bağlantısı gönderildi.');
+        } else {
+          _goToPaywall();
         }
       }
     } on AuthException catch (e) {
@@ -73,6 +83,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     try {
       await _client.auth.signInAnonymously();
       await _persistWizardMetrics();
+      _goToPaywall();
     } on AuthException catch (e) {
       if (mounted) _toast(e.message);
     } catch (e) {
@@ -205,7 +216,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     return Column(
       children: const [
         Text(
-          'SixPack AI',
+          'FormAI',
           textAlign: TextAlign.center,
           style: TextStyle(
             color: _neon,
@@ -217,7 +228,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         ),
         SizedBox(height: 6),
         Text(
-          '30 GÜNDE KARIN KASI',
+          'AI DESTEKLİ FORM KOÇU',
           textAlign: TextAlign.center,
           style: TextStyle(
             color: Colors.white54,
