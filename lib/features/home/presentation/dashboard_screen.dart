@@ -6,6 +6,58 @@ import '../../../core/routing/app_router.dart';
 import '../../workout/models/workout_day_model.dart';
 import '../../workout/providers/workout_provider.dart';
 
+class _ProButton extends StatelessWidget {
+  const _ProButton();
+
+  @override
+  Widget build(BuildContext context) {
+    const gold = Color(0xFFFFD166);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: () => context.push(AppRoutes.paywall),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: gold, width: 1),
+            gradient: LinearGradient(
+              colors: [
+                gold.withValues(alpha: 0.25),
+                gold.withValues(alpha: 0.05),
+              ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: gold.withValues(alpha: 0.35),
+                blurRadius: 12,
+                spreadRadius: 0.5,
+              ),
+            ],
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('👑', style: TextStyle(fontSize: 14)),
+              SizedBox(width: 6),
+              Text(
+                'PRO',
+                style: TextStyle(
+                  color: gold,
+                  fontSize: 12,
+                  letterSpacing: 2,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
@@ -160,20 +212,23 @@ class _Header extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'SixPack AI',
-                style: TextStyle(
-                  color: Color(0xFF00F0FF),
-                  fontSize: 24,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.2,
-                  shadows: [
-                    Shadow(blurRadius: 14, color: Color(0xFF00F0FF)),
-                  ],
+              const Expanded(
+                child: Text(
+                  'SixPack AI',
+                  style: TextStyle(
+                    color: Color(0xFF00F0FF),
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.2,
+                    shadows: [
+                      Shadow(blurRadius: 14, color: Color(0xFF00F0FF)),
+                    ],
+                  ),
                 ),
               ),
+              const _ProButton(),
+              const SizedBox(width: 8),
               _StreakBadge(streak: streak),
             ],
           ),

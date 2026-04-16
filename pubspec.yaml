@@ -38,6 +38,9 @@ dependencies:
   # Video playback for exercise guides
   video_player: ^2.8.6
 
+  # In-app purchases & subscriptions (RevenueCat)
+  purchases_flutter: ^8.1.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

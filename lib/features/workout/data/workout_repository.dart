@@ -1,14 +1,18 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/exercise_model.dart';
 import '../models/workout_day_model.dart';
 
 class WorkoutRepository {
-  WorkoutRepository(this._prefs);
+  WorkoutRepository(this._prefs, {SupabaseClient? client})
+      : _client = client ?? Supabase.instance.client;
 
   final SharedPreferences _prefs;
+  final SupabaseClient _client;
 
   static const String _completedKey = 'sixpack.completed_days';
+  static const String _progressTable = 'user_progress';
 
   static const Exercise _crunch10 = Exercise(
     id: 'crunch',
@@ -53,7 +57,7 @@ class WorkoutRepository {
   ];
 
   Future<List<WorkoutDay>> loadProgram() async {
-    final completed = _completedSet();
+    final completed = await _completedDays();
     return _staticProgram
         .map((day) =>
             day.copyWith(isCompleted: completed.contains(day.dayNumber)))
@@ -61,19 +65,64 @@ class WorkoutRepository {
   }
 
   Future<void> markDayCompleted(int dayNumber) async {
-    final completed = _completedSet()..add(dayNumber);
-    await _prefs.setStringList(
-      _completedKey,
-      completed.map((e) => e.toString()).toList(),
-    );
+    final merged = _localCompleted()..add(dayNumber);
+    await _saveLocal(merged);
+
+    final user = _client.auth.currentUser;
+    if (user == null) return;
+    try {
+      await _client.from(_progressTable).upsert(
+        {
+          'user_id': user.id,
+          'day_number': dayNumber,
+          'is_completed': true,
+          'completed_at': DateTime.now().toUtc().toIso8601String(),
+        },
+        onConflict: 'user_id,day_number',
+      );
+    } catch (_) {
+      // Offline or network error — local cache will re-sync on next load.
+    }
   }
 
   Future<void> resetProgress() async {
     await _prefs.remove(_completedKey);
   }
 
-  Set<int> _completedSet() {
+  Future<Set<int>> _completedDays() async {
+    final local = _localCompleted();
+    final user = _client.auth.currentUser;
+    if (user == null) return local;
+
+    try {
+      final rows = await _client
+          .from(_progressTable)
+          .select('day_number, is_completed')
+          .eq('user_id', user.id)
+          .eq('is_completed', true);
+      final remote = <int>{
+        for (final row in rows)
+          if (row['day_number'] is int) row['day_number'] as int,
+      };
+      final merged = {...local, ...remote};
+      if (merged.length != local.length) {
+        await _saveLocal(merged);
+      }
+      return merged;
+    } catch (_) {
+      return local;
+    }
+  }
+
+  Set<int> _localCompleted() {
     final raw = _prefs.getStringList(_completedKey) ?? const <String>[];
     return raw.map(int.tryParse).whereType<int>().toSet();
+  }
+
+  Future<void> _saveLocal(Set<int> days) async {
+    await _prefs.setStringList(
+      _completedKey,
+      days.map((e) => e.toString()).toList(),
+    );
   }
 }
