@@ -29,6 +29,9 @@ dependencies:
   google_mlkit_pose_detection: ^0.13.0
   permission_handler: ^11.3.0
 
+  # Text-to-speech voice feedback
+  flutter_tts: ^4.0.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
