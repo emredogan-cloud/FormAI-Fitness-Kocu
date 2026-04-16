@@ -32,14 +32,20 @@ class CrunchAnalyzer {
     this.downThreshold = 140.0,
     this.upThreshold = 90.0,
     this.neckWarningThreshold = 120.0,
+    this.minRepInterval = const Duration(milliseconds: 1200),
   });
 
   final double downThreshold;
   final double upThreshold;
   final double neckWarningThreshold;
 
+  /// Minimum time between two counted reps. Faster transitions are treated as
+  /// false positives (phone shake, jitter in the pose stream) and ignored.
+  final Duration minRepInterval;
+
   int _reps = 0;
   CrunchState _state = CrunchState.unknown;
+  DateTime? _lastRepTime;
 
   int get reps => _reps;
   CrunchState get state => _state;
@@ -47,6 +53,7 @@ class CrunchAnalyzer {
   void reset() {
     _reps = 0;
     _state = CrunchState.unknown;
+    _lastRepTime = null;
   }
 
   CrunchResult analyze(Pose pose) {
@@ -78,8 +85,14 @@ class CrunchAnalyzer {
       _state = CrunchState.down;
     } else if (torsoAngle < upThreshold) {
       if (previousState == CrunchState.down) {
-        _reps += 1;
-        repJustCompleted = true;
+        final now = DateTime.now();
+        final last = _lastRepTime;
+        final tooFast = last != null && now.difference(last) < minRepInterval;
+        if (!tooFast) {
+          _reps += 1;
+          repJustCompleted = true;
+          _lastRepTime = now;
+        }
       }
       _state = CrunchState.up;
     }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:camera/camera.dart';
@@ -49,6 +50,9 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
   String? _activeExerciseId;
   String? _formWarning;
   CrunchState _state = CrunchState.unknown;
+
+  Timer? _workoutTimer;
+  int _secondsRemaining = 0;
 
   @override
   void initState() {
@@ -226,21 +230,62 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _workoutTimer?.cancel();
     _controller?.dispose();
     _poseService.dispose();
     _audio.dispose();
     super.dispose();
   }
 
+  void _syncExerciseTimer(Exercise? exercise) {
+    _workoutTimer?.cancel();
+    _workoutTimer = null;
+    if (exercise == null || exercise.type != ExerciseType.timeBased) {
+      if (_secondsRemaining != 0) {
+        setState(() => _secondsRemaining = 0);
+      }
+      return;
+    }
+    final duration = exercise.targetDurationInSeconds ?? 0;
+    setState(() => _secondsRemaining = duration);
+    if (duration <= 0) {
+      _onTimerComplete();
+      return;
+    }
+    _workoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      if (_secondsRemaining <= 1) {
+        timer.cancel();
+        _workoutTimer = null;
+        setState(() => _secondsRemaining = 0);
+        _onTimerComplete();
+      } else {
+        setState(() => _secondsRemaining -= 1);
+      }
+    });
+  }
+
+  Future<void> _onTimerComplete() async {
+    _audio.speak('Süre doldu, harika!');
+    if (!mounted) return;
+    await ref.read(workoutSessionProvider.notifier).completeCurrentExercise();
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Reset the analyzer whenever the active exercise changes underneath us.
+    // Reset the analyzer and re-sync the countdown whenever the active
+    // exercise changes underneath us.
     ref.listen<AsyncValue<WorkoutSessionState>>(workoutSessionProvider,
         (previous, next) {
-      final id = next.value?.activeExercise?.id;
+      final exercise = next.value?.activeExercise;
+      final id = exercise?.id;
       if (id != _activeExerciseId) {
         _activeExerciseId = id;
         _analyzer.reset();
+        _syncExerciseTimer(exercise);
       }
     });
 
@@ -306,7 +351,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
           ),
         _buildTopBar(session),
         if (exercise != null) _buildGuidePlayer(exercise),
-        _buildRepCounter(completedReps, target, exercise),
+        _buildMetricDisplay(completedReps, target, exercise),
         if (_formWarning != null) _buildFormWarning(_formWarning!),
         if (session.isSessionComplete) _buildDayCompleteOverlay(session),
       ],
@@ -418,12 +463,32 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     );
   }
 
+  Widget _buildMetricDisplay(int completed, int? target, Exercise? exercise) {
+    if (exercise?.type == ExerciseType.timeBased) {
+      return _buildCountdown(exercise!);
+    }
+    return _buildRepCounter(completed, target, exercise);
+  }
+
   Widget _buildRepCounter(int completed, int? target, Exercise? exercise) {
     final showTarget = target != null;
     final display = showTarget ? '$completed / $target' : '$completed';
     final subtitle = showTarget
         ? 'REPS · ${exercise?.name.toUpperCase() ?? ''}'
         : exercise?.name.toUpperCase() ?? 'REPS';
+    return _bigNeonStat(display: display, subtitle: subtitle);
+  }
+
+  Widget _buildCountdown(Exercise exercise) {
+    final minutes = (_secondsRemaining ~/ 60).toString().padLeft(2, '0');
+    final seconds = (_secondsRemaining % 60).toString().padLeft(2, '0');
+    return _bigNeonStat(
+      display: '$minutes:$seconds',
+      subtitle: 'SÜRE · ${exercise.name.toUpperCase()}',
+    );
+  }
+
+  Widget _bigNeonStat({required String display, required String subtitle}) {
     return Positioned(
       bottom: 32,
       left: 0,

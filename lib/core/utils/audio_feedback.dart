@@ -1,8 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
 class AudioFeedback {
-  AudioFeedback(
-      {this.language = 'tr-TR', this.speechRate = 0.5, this.pitch = 1.0});
+  AudioFeedback({
+    this.language = 'tr-TR',
+    this.speechRate = 0.5,
+    this.pitch = 1.0,
+  });
 
   final String language;
   final double speechRate;
@@ -15,10 +19,20 @@ class AudioFeedback {
 
   Future<void> init() async {
     if (_ready) return;
-    await _tts.setLanguage(language);
-    await _tts.setSpeechRate(speechRate);
-    await _tts.setPitch(pitch);
-    await _tts.awaitSpeakCompletion(true);
+    try {
+      await _tts.setLanguage(language);
+    } catch (e, st) {
+      debugPrint('AudioFeedback: setLanguage("$language") failed: $e\n$st');
+      // Don't abort init — TTS engine will fall back to the device default.
+    }
+    try {
+      await _tts.setSpeechRate(speechRate);
+      await _tts.setPitch(pitch);
+      await _tts.setVolume(1.0);
+      await _tts.awaitSpeakCompletion(true);
+    } catch (e, st) {
+      debugPrint('AudioFeedback: init tuning failed: $e\n$st');
+    }
     _ready = true;
   }
 
@@ -37,11 +51,20 @@ class AudioFeedback {
     }
     _lastPhrase = phrase;
     _lastSpokenAt = now;
-    await _tts.stop();
-    await _tts.speak(phrase);
+    try {
+      await _tts.stop();
+      await _tts.setVolume(1.0);
+      await _tts.speak(phrase);
+    } catch (e, st) {
+      debugPrint('AudioFeedback: speak("$phrase") failed: $e\n$st');
+    }
   }
 
   Future<void> dispose() async {
-    await _tts.stop();
+    try {
+      await _tts.stop();
+    } catch (e, st) {
+      debugPrint('AudioFeedback: stop on dispose failed: $e\n$st');
+    }
   }
 }
