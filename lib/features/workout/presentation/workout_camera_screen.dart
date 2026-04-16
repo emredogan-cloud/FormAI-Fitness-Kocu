@@ -14,6 +14,7 @@ import '../providers/workout_provider.dart';
 import '../services/crunch_analyzer.dart';
 import '../services/pose_detector_service.dart';
 import 'pose_painter.dart';
+import 'widgets/exercise_guide_player.dart';
 
 class WorkoutCameraScreen extends ConsumerStatefulWidget {
   const WorkoutCameraScreen({super.key});
@@ -304,6 +305,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
             ),
           ),
         _buildTopBar(session),
+        if (exercise != null) _buildGuidePlayer(exercise),
         _buildRepCounter(completedReps, target, exercise),
         if (_formWarning != null) _buildFormWarning(_formWarning!),
         if (session.isSessionComplete) _buildDayCompleteOverlay(session),
@@ -370,6 +372,45 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
               fontSize: 12,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGuidePlayer(Exercise exercise) {
+    return Positioned(
+      top: 60,
+      right: 12,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.6),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: _neon, width: 0.8),
+            ),
+            child: const Text(
+              'ÖRNEK',
+              style: TextStyle(
+                color: _neon,
+                fontSize: 9,
+                letterSpacing: 2,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          SizedBox(
+            width: 130,
+            height: 95,
+            child: ExerciseGuidePlayer(
+              key: ValueKey('guide-${exercise.id}'),
+              assetPath: exercise.videoAsset,
+              exerciseName: exercise.name,
             ),
           ),
         ],

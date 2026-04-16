@@ -7,6 +7,7 @@ class Exercise {
     required this.type,
     this.targetReps,
     this.targetDurationInSeconds,
+    this.videoAsset,
   });
 
   final String id;
@@ -14,6 +15,7 @@ class Exercise {
   final ExerciseType type;
   final int? targetReps;
   final int? targetDurationInSeconds;
+  final String? videoAsset;
 
   bool get isRepBased => type == ExerciseType.repBased;
   bool get isTimeBased => type == ExerciseType.timeBased;
@@ -25,9 +27,16 @@ class Exercise {
       other.name == name &&
       other.type == type &&
       other.targetReps == targetReps &&
-      other.targetDurationInSeconds == targetDurationInSeconds;
+      other.targetDurationInSeconds == targetDurationInSeconds &&
+      other.videoAsset == videoAsset;
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, type, targetReps, targetDurationInSeconds);
+  int get hashCode => Object.hash(
+        id,
+        name,
+        type,
+        targetReps,
+        targetDurationInSeconds,
+        videoAsset,
+      );
 }
