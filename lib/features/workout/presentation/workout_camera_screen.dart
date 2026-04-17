@@ -176,7 +176,22 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
               .value
               ?.activeExercise
               ?.targetReps;
-          if (target != null && result.reps >= target) {
+
+          // Milestone + pacing voice coach. Priority: 2-left > halfway >
+          // analyzer pacing. AudioFeedback's own 3s per-phrase dedupe and
+          // the analyzer's 7s pacing throttle prevent overlap.
+          final reps = result.reps;
+          if (target != null && target > 1 && reps == target - 2) {
+            _audio.speak('Son iki tekrar, sık dişini!');
+          } else if (target != null &&
+              target >= 4 &&
+              reps == (target / 2).floor()) {
+            _audio.speak('Yarıladın! Aynen böyle devam et.');
+          } else if (result.pacingFeedback != null) {
+            _audio.speak(result.pacingFeedback!);
+          }
+
+          if (target != null && reps >= target) {
             await notifier.completeCurrentExercise();
             _analyzer.reset();
           }
@@ -308,17 +323,37 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         (previous, next) {
       final session = next.value;
       if (session == null) return;
+      final prevSession = previous?.value;
       final exercise = session.activeExercise;
       final id = exercise?.id;
       final set = session.currentSet;
       final resting = session.isResting;
       final justFinishedRest = _wasResting && !resting;
+      final justStartedRest = !_wasResting && resting;
       final exerciseChanged = id != _activeExerciseId;
       final setChanged = set != _activeSet;
+      final sessionJustCompleted = (prevSession?.isSessionComplete == false) &&
+          session.isSessionComplete;
 
       _activeExerciseId = id;
       _activeSet = set;
       _wasResting = resting;
+
+      // Voice coach lifecycle announcements. Priority:
+      //   session complete > rest entry > exercise start.
+      // Else-if prevents doubling up when multiple flags flip on the same
+      // state emission (e.g., rest start also changes `currentSet`).
+      if (sessionJustCompleted) {
+        _audio.speak('Antrenman tamamlandı! Harika bir iş çıkardın.');
+      } else if (justStartedRest && exercise != null) {
+        _audio.speak(
+          'Harika! Şimdi ${exercise.restDurationInSeconds} saniye dinlenme.',
+        );
+      } else if (!resting &&
+          exercise != null &&
+          (exerciseChanged || setChanged || justFinishedRest)) {
+        _audio.speak('Sıradaki hareket: ${exercise.name}. Başlayın!');
+      }
 
       if (resting) {
         _workoutTimer?.cancel();

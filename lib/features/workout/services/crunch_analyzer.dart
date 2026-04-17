@@ -12,6 +12,7 @@ class CrunchResult {
     required this.neckAngle,
     required this.formWarning,
     required this.repJustCompleted,
+    this.pacingFeedback,
   });
 
   final int reps;
@@ -20,6 +21,11 @@ class CrunchResult {
   final double? neckAngle;
   final String? formWarning;
   final bool repJustCompleted;
+
+  /// Motivational coaching line emitted when the user's pacing is extreme
+  /// (too fast or too slow). Null on most reps — only surfaces after the
+  /// analyzer's cooldown has elapsed.
+  final String? pacingFeedback;
 }
 
 /// State machine for crunches ("mekik"):
@@ -33,6 +39,9 @@ class CrunchAnalyzer {
     this.upThreshold = 90.0,
     this.neckWarningThreshold = 120.0,
     this.minRepInterval = const Duration(milliseconds: 1200),
+    this.tooFastThreshold = const Duration(milliseconds: 1500),
+    this.strugglingThreshold = const Duration(milliseconds: 4500),
+    this.feedbackCooldown = const Duration(seconds: 7),
   });
 
   final double downThreshold;
@@ -43,9 +52,19 @@ class CrunchAnalyzer {
   /// false positives (phone shake, jitter in the pose stream) and ignored.
   final Duration minRepInterval;
 
+  /// Reps faster than this trigger the "slow down" coaching line.
+  final Duration tooFastThreshold;
+
+  /// Reps slower than this trigger the "keep going" coaching line.
+  final Duration strugglingThreshold;
+
+  /// Minimum gap between two spoken pacing lines. Prevents back-to-back TTS.
+  final Duration feedbackCooldown;
+
   int _reps = 0;
   CrunchState _state = CrunchState.unknown;
   DateTime? _lastRepTime;
+  DateTime? _lastFeedbackTime;
 
   int get reps => _reps;
   CrunchState get state => _state;
@@ -54,6 +73,7 @@ class CrunchAnalyzer {
     _reps = 0;
     _state = CrunchState.unknown;
     _lastRepTime = null;
+    _lastFeedbackTime = null;
   }
 
   CrunchResult analyze(Pose pose) {
@@ -80,6 +100,7 @@ class CrunchAnalyzer {
     final torsoAngle = AngleCalculator.between(shoulder, hip, knee);
     final previousState = _state;
     var repJustCompleted = false;
+    String? pacingFeedback;
 
     if (torsoAngle > downThreshold) {
       _state = CrunchState.down;
@@ -89,9 +110,29 @@ class CrunchAnalyzer {
         final last = _lastRepTime;
         final tooFast = last != null && now.difference(last) < minRepInterval;
         if (!tooFast) {
+          // Capture the per-rep duration BEFORE we overwrite _lastRepTime,
+          // so pacing feedback can judge how long this rep took.
+          final repDuration = last == null ? null : now.difference(last);
           _reps += 1;
           repJustCompleted = true;
           _lastRepTime = now;
+
+          // Pacing coach. Skipped on the very first rep (no baseline yet)
+          // and throttled by feedbackCooldown so we don't narrate every set.
+          if (repDuration != null) {
+            final lastFb = _lastFeedbackTime;
+            final cooldownElapsed =
+                lastFb == null || now.difference(lastFb) >= feedbackCooldown;
+            if (cooldownElapsed) {
+              if (repDuration < tooFastThreshold) {
+                pacingFeedback = 'Biraz yavaşla, kaslarını hisset.';
+                _lastFeedbackTime = now;
+              } else if (repDuration > strugglingThreshold) {
+                pacingFeedback = 'Hadi, pes etme! Çok iyi gidiyorsun.';
+                _lastFeedbackTime = now;
+              }
+            }
+          }
         }
       }
       _state = CrunchState.up;
@@ -113,6 +154,7 @@ class CrunchAnalyzer {
       neckAngle: neckAngle,
       formWarning: formWarning,
       repJustCompleted: repJustCompleted,
+      pacingFeedback: pacingFeedback,
     );
   }
 
