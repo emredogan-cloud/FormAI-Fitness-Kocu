@@ -21,8 +21,9 @@ class ExerciseGuidePlayer extends StatefulWidget {
 
 class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
   VideoPlayerController? _controller;
-  bool _failed = false;
+  bool _hasError = false;
   bool _ready = false;
+  VoidCallback? _errorListener;
 
   @override
   void initState() {
@@ -50,14 +51,14 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
         '"${widget.exerciseName}" — showing fallback tile.',
       );
       setState(() {
-        _failed = true;
+        _hasError = true;
         _ready = false;
       });
       return;
     }
 
     setState(() {
-      _failed = false;
+      _hasError = false;
       _ready = false;
     });
 
@@ -65,6 +66,22 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
     _controller = controller;
     try {
       await controller.initialize();
+
+      // Watch for runtime Exoplayer errors (e.g., decoder failures that
+      // surface AFTER initialize() completes). Without this, the native
+      // thread logs the error and the widget stays stuck on a broken frame.
+      _errorListener = () {
+        if (!mounted) return;
+        if (controller.value.hasError && !_hasError) {
+          debugPrint(
+            '🎥 VIDEO ERROR: runtime failure on $path — '
+            '${controller.value.errorDescription}',
+          );
+          setState(() => _hasError = true);
+        }
+      };
+      controller.addListener(_errorListener!);
+
       await controller.setLooping(true);
       await controller.setVolume(0);
       await controller.play();
@@ -77,13 +94,18 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
     } catch (e, st) {
       debugPrint('🎥 VIDEO ERROR: Failed to load $path. Error: $e\n$st');
       if (!mounted) return;
-      setState(() => _failed = true);
+      setState(() => _hasError = true);
     }
   }
 
   Future<void> _disposeController() async {
     final controller = _controller;
+    final listener = _errorListener;
     _controller = null;
+    _errorListener = null;
+    if (controller != null && listener != null) {
+      controller.removeListener(listener);
+    }
     await controller?.dispose();
   }
 
@@ -96,7 +118,7 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
   @override
   Widget build(BuildContext context) {
     final controller = _controller;
-    if (_failed || controller == null || !_ready) {
+    if (_hasError || controller == null || !_ready) {
       return _FallbackTile(exerciseName: widget.exerciseName);
     }
     return ClipRRect(

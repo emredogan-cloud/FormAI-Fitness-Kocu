@@ -66,6 +66,12 @@ class CrunchAnalyzer {
   DateTime? _lastRepTime;
   DateTime? _lastFeedbackTime;
 
+  /// Last time we emitted a posture warning. Seeded 10 seconds in the past
+  /// so the very first bad-form frame can fire the warning immediately
+  /// instead of being swallowed by an empty cooldown window.
+  DateTime _lastPostureWarning =
+      DateTime.now().subtract(const Duration(seconds: 10));
+
   int get reps => _reps;
   CrunchState get state => _state;
 
@@ -74,6 +80,7 @@ class CrunchAnalyzer {
     _state = CrunchState.unknown;
     _lastRepTime = null;
     _lastFeedbackTime = null;
+    _lastPostureWarning = DateTime.now().subtract(const Duration(seconds: 10));
   }
 
   CrunchResult analyze(Pose pose) {
@@ -143,7 +150,13 @@ class CrunchAnalyzer {
     if (ear != null) {
       neckAngle = AngleCalculator.between(ear, shoulder, hip);
       if (_state == CrunchState.up && neckAngle < neckWarningThreshold) {
-        formWarning = 'Boynunu düz tut!';
+        // Pose detection runs ~30 fps, so a raw posture warning would fire
+        // on every frame and spam TTS. Debounce to one warning per 10s.
+        final now = DateTime.now();
+        if (now.difference(_lastPostureWarning).inSeconds > 10) {
+          formWarning = 'Boynunu düz tut!';
+          _lastPostureWarning = now;
+        }
       }
     }
 
