@@ -124,6 +124,25 @@ class AudioFeedback {
     }
   }
 
+  /// Manual smoke test for the TTS pipeline — tap-to-invoke from dev UI.
+  /// Forces the engine open, re-applies volume, and speaks a fixed phrase.
+  Future<void> testAudio() async {
+    debugPrint('🔊 TTS DEBUG: Starting audio test...');
+    try {
+      if (!_ready) {
+        debugPrint('🔊 TTS DEBUG: engine not ready, running init() first.');
+        await init();
+      }
+      debugPrint('🔊 TTS DEBUG: active language = $_activeLanguage');
+      await _tts.stop();
+      await _tts.setVolume(1.0);
+      final result = await _tts.speak('Ses testi başarılı, sistem çalışıyor.');
+      debugPrint('🔊 TTS DEBUG: speak() returned $result');
+    } catch (e, st) {
+      debugPrint('🔊 TTS ERROR: testAudio failed: $e\n$st');
+    }
+  }
+
   Future<void> dispose() async {
     try {
       await _tts.stop();

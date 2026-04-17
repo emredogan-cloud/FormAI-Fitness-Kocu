@@ -43,7 +43,12 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
     if (!mounted) return;
 
     final path = widget.assetPath;
+    debugPrint('🎥 VIDEO DEBUG: Trying to load asset: $path');
     if (path == null || path.isEmpty) {
+      debugPrint(
+        '🎥 VIDEO ERROR: assetPath is null or empty for '
+        '"${widget.exerciseName}" — showing fallback tile.',
+      );
       setState(() {
         _failed = true;
         _ready = false;
@@ -67,8 +72,10 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
         await controller.dispose();
         return;
       }
+      debugPrint('🎥 VIDEO DEBUG: Successfully loaded $path');
       setState(() => _ready = true);
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('🎥 VIDEO ERROR: Failed to load $path. Error: $e\n$st');
       if (!mounted) return;
       setState(() => _failed = true);
     }

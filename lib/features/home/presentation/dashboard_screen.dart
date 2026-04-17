@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/routing/app_router.dart';
 import '../../../core/services/app_preferences.dart';
+import '../../../core/utils/audio_feedback.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../workout/models/workout_day_model.dart';
 import '../../workout/providers/workout_provider.dart';
@@ -212,10 +213,66 @@ class _PlanHeader extends StatelessWidget {
               ),
             ),
           ),
+          const _TtsTestButton(),
+          const SizedBox(width: 8),
           _ProButton(),
         ],
       ),
     );
+  }
+}
+
+class _TtsTestButton extends StatelessWidget {
+  const _TtsTestButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => _run(context),
+        child: Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: _neonAccent.withValues(alpha: 0.15),
+            border: Border.all(
+              color: _neonAccent.withValues(alpha: 0.6),
+              width: 1,
+            ),
+          ),
+          child: const Icon(
+            Icons.volume_up,
+            color: _neonAccent,
+            size: 18,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _run(BuildContext context) async {
+    final audio = AudioFeedback();
+    try {
+      await audio.init();
+      await audio.testAudio();
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('🔊 TTS test tetiklendi — logları kontrol et'),
+            backgroundColor: Color(0xFF2A1B5C),
+            behavior: SnackBarBehavior.floating,
+            duration: Duration(milliseconds: 1800),
+          ),
+        );
+    } finally {
+      // Don't dispose immediately — stop() would cut off playback. The engine
+      // releases naturally when the widget tree rebuilds.
+    }
   }
 }
 
