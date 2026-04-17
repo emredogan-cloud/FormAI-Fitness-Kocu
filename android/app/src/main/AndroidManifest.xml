@@ -44,5 +44,12 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- Android 11+ (R / API 30) package visibility: required so
+             flutter_tts can discover and bind to any installed TTS engine
+             (Google, Samsung, Xiaomi/MIUI, etc.). Without this, getLanguages
+             returns empty and speak() fails with "not bound to TTS engine". -->
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
     </queries>
 </manifest>
