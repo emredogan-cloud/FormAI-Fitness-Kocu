@@ -399,7 +399,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         Column(
           children: [
             Expanded(
-              flex: 6,
+              flex: 75,
               child: _buildCameraSection(
                 controller: controller,
                 exercise: exercise,
@@ -409,7 +409,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
               ),
             ),
             Expanded(
-              flex: 4,
+              flex: 25,
               child: _buildControlPanel(session, exercise),
             ),
           ],
@@ -1093,7 +1093,7 @@ class _ControlPanel extends StatelessWidget {
           ),
         ],
       ),
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+      padding: const EdgeInsets.fromLTRB(18, 10, 18, 12),
       child: Column(
         children: [
           _SetIndicator(
@@ -1108,22 +1108,22 @@ class _ControlPanel extends StatelessWidget {
               metric,
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 64,
+                fontSize: 40,
                 fontWeight: FontWeight.w900,
                 height: 1,
                 letterSpacing: 1,
-                shadows: [Shadow(blurRadius: 18, color: _neon)],
+                shadows: [Shadow(blurRadius: 14, color: _neon)],
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 2),
           Text(
             exerciseName,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               color: Colors.white70,
-              fontSize: 18,
+              fontSize: 14,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.5,
             ),
@@ -1221,8 +1221,8 @@ class _ControlIconButton extends StatelessWidget {
         customBorder: const CircleBorder(),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Icon(icon, color: Colors.white, size: 28),
+          padding: const EdgeInsets.all(9),
+          child: Icon(icon, color: Colors.white, size: 22),
         ),
       ),
     );
@@ -1244,8 +1244,8 @@ class _CenterPlayButton extends StatelessWidget {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: _neon.withValues(alpha: 0.6),
-            blurRadius: 24,
+            color: _neon.withValues(alpha: 0.55),
+            blurRadius: 18,
             spreadRadius: 1,
           ),
         ],
@@ -1257,12 +1257,12 @@ class _CenterPlayButton extends StatelessWidget {
           customBorder: const CircleBorder(),
           onTap: onTap,
           child: SizedBox(
-            width: 76,
-            height: 76,
+            width: 58,
+            height: 58,
             child: Icon(
               isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded,
               color: Colors.black,
-              size: 40,
+              size: 30,
             ),
           ),
         ),
