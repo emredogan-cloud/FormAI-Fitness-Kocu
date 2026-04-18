@@ -755,12 +755,12 @@ class _StickyTextHeader extends SliverPersistentHeaderDelegate {
   }
 }
 
-class _PlanStartCta extends StatelessWidget {
+class _PlanStartCta extends ConsumerWidget {
   const _PlanStartCta({required this.plan});
   final WorkoutPlan plan;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
@@ -785,17 +785,14 @@ class _PlanStartCta extends StatelessWidget {
           child: InkWell(
             borderRadius: BorderRadius.circular(20),
             onTap: () {
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      '${plan.title} — yakında doğrudan başlatılabilir.',
-                    ),
-                    backgroundColor: const Color(0xFF2A1B5C),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
+              // Seed the session with this plan's exercises (ad-hoc
+              // day, won't persist to the 30-day ledger) then hand off to
+              // the camera screen so the user drops straight into the
+              // first rep.
+              ref
+                  .read(workoutSessionProvider.notifier)
+                  .initializeWorkout(plan.exercises);
+              context.push(AppRoutes.workout);
             },
             child: const Padding(
               padding: EdgeInsets.symmetric(vertical: 16),

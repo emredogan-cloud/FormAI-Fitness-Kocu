@@ -589,6 +589,77 @@ class WorkoutRepository {
   );
 
   // ==========================================================================
+  // "SINIRLARINI ZORLA" DASHBOARD CARDS
+  // Exposed as top-level static const so the dashboard strip can reference
+  // them directly (and push them into /plan-detail via `extra:`).
+  // ==========================================================================
+
+  static const WorkoutPlan pushLimitsAbsHiit = WorkoutPlan(
+    id: 'push_limits_abs_hiit',
+    title: 'Belirgin Karın Kasları HIIT',
+    category: ExerciseCategory.core,
+    level: 'Orta düzey',
+    durationMinutes: 19,
+    exercises: [
+      _mountainClimber,
+      _bicycleCrunch,
+      _crunch,
+      _legRaise,
+      _plank,
+    ],
+    image: 'photos/sınırlarınızorlabelirginkarınkarınkaslarıHIITnewfoto.webp',
+  );
+
+  static const WorkoutPlan pushLimitsStrongerCore = WorkoutPlan(
+    id: 'push_limits_stronger_core',
+    title: 'Daha Güçlü Şekil ve Çekirdek',
+    category: ExerciseCategory.core,
+    level: 'Orta düzey',
+    durationMinutes: 24,
+    exercises: [
+      _russianTwist,
+      _legRaise,
+      _plank,
+      _situp,
+      _bicycleCrunch,
+    ],
+    image:
+        'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80',
+  );
+
+  static const WorkoutPlan pushLimitsIronPack = WorkoutPlan(
+    id: 'push_limits_iron_pack',
+    title: 'Demir Altı Paket Gücü',
+    category: ExerciseCategory.core,
+    level: 'İleri',
+    durationMinutes: 18,
+    exercises: [
+      _hangingLegRaise,
+      _crunch,
+      _russianTwist,
+      _plank,
+      _flutterKick,
+    ],
+    image: 'photos/sınırlarınızorlademiraltıpaketgücünewfoto.webp',
+  );
+
+  static const WorkoutPlan pushLimitsAthleticCore = WorkoutPlan(
+    id: 'push_limits_athletic_core',
+    title: 'Atletik Core Kontrolü',
+    category: ExerciseCategory.core,
+    level: 'Başlangıç',
+    durationMinutes: 15,
+    exercises: [
+      _plank,
+      _bicycleCrunch,
+      _crunch,
+      _flutterKick,
+    ],
+    image:
+        'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=600&q=80',
+  );
+
+  // ==========================================================================
   // REGIONAL PLANS — surfaced on the dashboard's category filter strip.
   // Each plan groups the exercises above by body region. Empty exercise
   // lists render as "coming soon" tiles so the chip layout stays
@@ -596,6 +667,10 @@ class WorkoutRepository {
   // ==========================================================================
 
   static const List<WorkoutPlan> allPlans = [
+    pushLimitsAbsHiit,
+    pushLimitsStrongerCore,
+    pushLimitsIronPack,
+    pushLimitsAthleticCore,
     // ---- Core ----
     WorkoutPlan(
       id: 'core_steel_abs',

@@ -138,6 +138,26 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
     ));
   }
 
+  /// Starts an ad-hoc session from a dashboard/plan-detail entry point.
+  /// Stamps a synthetic [WorkoutDay] with `dayNumber: 0` so the completion
+  /// logic below knows NOT to persist this run as a real program-day
+  /// completion — ad-hoc plans don't move the 30-day needle.
+  void initializeWorkout(List<Exercise> exercises) {
+    final current = state.value;
+    if (current == null || exercises.isEmpty) return;
+    _cancelRestTimer();
+    final adHocDay = WorkoutDay(dayNumber: 0, exercises: exercises);
+    state = AsyncData(current.copyWith(
+      activeDay: adHocDay,
+      activeExerciseIndex: 0,
+      currentReps: 0,
+      currentSet: 1,
+      isResting: false,
+      restSecondsRemaining: 0,
+      isSessionComplete: false,
+    ));
+  }
+
   /// Called when a single set finishes (reps target hit OR time elapsed).
   /// Advances the set/exercise pointer and starts the rest timer between
   /// pieces of work. Marking the day complete only happens after the LAST
@@ -175,12 +195,20 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
       return;
     }
 
-    await _repository.markDayCompleted(day.dayNumber);
-    final refreshed = await _repository.loadProgram();
-    final updatedDay = refreshed.firstWhere(
-      (d) => d.dayNumber == day.dayNumber,
-      orElse: () => day.copyWith(isCompleted: true),
-    );
+    // dayNumber == 0 indicates an ad-hoc plan started via
+    // `initializeWorkout` — those runs don't persist to the 30-day program
+    // completion ledger, so skip markDayCompleted + loadProgram for them.
+    final isAdHoc = day.dayNumber <= 0;
+    if (!isAdHoc) {
+      await _repository.markDayCompleted(day.dayNumber);
+    }
+    final refreshed = isAdHoc ? current.days : await _repository.loadProgram();
+    final updatedDay = isAdHoc
+        ? day.copyWith(isCompleted: true)
+        : refreshed.firstWhere(
+            (d) => d.dayNumber == day.dayNumber,
+            orElse: () => day.copyWith(isCompleted: true),
+          );
     _cancelRestTimer();
     state = AsyncData(current.copyWith(
       days: refreshed,

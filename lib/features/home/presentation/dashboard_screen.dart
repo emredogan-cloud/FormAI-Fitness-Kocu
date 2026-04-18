@@ -9,20 +9,13 @@ import '../../../core/utils/audio_feedback.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../workout/models/exercise_model.dart';
 import '../../workout/models/workout_day_model.dart';
+import '../../workout/data/workout_repository.dart';
 import '../../workout/models/workout_plan_model.dart';
 import '../../workout/providers/workout_provider.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonAccent = Color(0xFF4DA6FF);
 const Color _surface = Color(0xFF111118);
-
-// Aesthetic Unsplash placeholders. The first one matches the muscular
-// reference in the docs/ screenshots; the second one is the lean
-// alternative used on lighter cards.
-const String _muscularPhotoUrl =
-    'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80';
-const String _leanPhotoUrl =
-    'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=600&q=80';
 
 const List<String> _trDayLabels = [
   'Pzt',
@@ -853,7 +846,7 @@ class _ChallengeHeroCard extends StatelessWidget {
                       BlendMode.softLight,
                     ),
                     child: Image.asset(
-                      'photos/günlükmeydanokumayenifoto.png',
+                      'photos/günlükmeydanokumayenifoto.webp',
                       fit: BoxFit.cover,
                       alignment: Alignment.centerRight,
                       errorBuilder: (_, __, ___) => const SizedBox.shrink(),
@@ -951,43 +944,18 @@ class _ChallengeHeroCard extends StatelessWidget {
 class _PushLimitsStrip extends StatelessWidget {
   const _PushLimitsStrip();
 
-  // Cards 1 and 3 point at bespoke local webp/png assets (dropped into
-  // photos/ in Phase 23.1/24); cards 2 and 4 still ride on the Unsplash
-  // placeholders until bespoke art lands for those routines.
-  static const List<
-      ({
-        String title,
-        String level,
-        int minutes,
-        String image,
-        Color tint,
-      })> _items = [
+  // Real WorkoutPlan refs (instead of synthetic tuples) so tapping a card
+  // can push /plan-detail with `extra:` wired correctly. Tint is kept on
+  // the item because it's purely presentational, not plan metadata.
+  static const List<({WorkoutPlan plan, Color tint})> _items = [
+    (plan: WorkoutRepository.pushLimitsAbsHiit, tint: _neon),
     (
-      title: 'Belirgin Karın Kasları HIIT',
-      level: 'Orta düzey',
-      minutes: 19,
-      image: 'photos/sınırlarınızorlabelirginkarınkarınkaslarıHIITnewfoto.png',
-      tint: _neon,
-    ),
-    (
-      title: 'Daha Güçlü Şekil ve Çekirdek',
-      level: 'Orta düzey',
-      minutes: 24,
-      image: _muscularPhotoUrl,
+      plan: WorkoutRepository.pushLimitsStrongerCore,
       tint: Color(0xFF1FBF8F),
     ),
+    (plan: WorkoutRepository.pushLimitsIronPack, tint: _neonAccent),
     (
-      title: 'Demir Altı Paket Gücü',
-      level: 'İleri',
-      minutes: 18,
-      image: 'photos/sınırlarınızorlademiraltıpaketgücünewfoto.png',
-      tint: _neonAccent,
-    ),
-    (
-      title: 'Atletik Core Kontrolü',
-      level: 'Başlangıç',
-      minutes: 15,
-      image: _leanPhotoUrl,
+      plan: WorkoutRepository.pushLimitsAthleticCore,
       tint: Color(0xFFFF6FB5),
     ),
   ];
@@ -1003,13 +971,7 @@ class _PushLimitsStrip extends StatelessWidget {
         separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
           final item = _items[index];
-          return _PushLimitsCard(
-            title: item.title,
-            level: item.level,
-            minutes: item.minutes,
-            image: item.image,
-            tint: item.tint,
-          );
+          return _PushLimitsCard(plan: item.plan, tint: item.tint);
         },
       ),
     );
@@ -1017,122 +979,128 @@ class _PushLimitsStrip extends StatelessWidget {
 }
 
 class _PushLimitsCard extends StatelessWidget {
-  const _PushLimitsCard({
-    required this.title,
-    required this.level,
-    required this.minutes,
-    required this.image,
-    required this.tint,
-  });
+  const _PushLimitsCard({required this.plan, required this.tint});
 
-  final String title;
-  final String level;
-  final int minutes;
-
-  /// Either an http(s) URL or a bundled asset path — routed through the
-  /// file-level `_resolveImage` helper so both work side-by-side.
-  final String image;
+  final WorkoutPlan plan;
   final Color tint;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: 240,
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-      decoration: BoxDecoration(
+      child: Material(
+        color: Colors.transparent,
+        clipBehavior: Clip.antiAlias,
         borderRadius: BorderRadius.circular(20),
-        gradient: LinearGradient(
-          colors: [
-            tint.withValues(alpha: 0.85),
-            tint.withValues(alpha: 0.45),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: tint.withValues(alpha: 0.35),
-            blurRadius: 16,
-            spreadRadius: 0.5,
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            right: -10,
-            top: -8,
-            bottom: 50,
-            width: 130,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: ColorFiltered(
-                colorFilter: ColorFilter.mode(
-                  Colors.black.withValues(alpha: 0.15),
-                  BlendMode.darken,
-                ),
-                child: _resolveImage(image),
-              ),
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              colors: [
+                tint.withValues(alpha: 0.85),
+                tint.withValues(alpha: 0.45),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: tint.withValues(alpha: 0.35),
+                blurRadius: 16,
+                spreadRadius: 0.5,
+              ),
+            ],
           ),
-          // Positioned.fill gives the inner column an explicit height so
-          // `mainAxisAlignment: spaceBetween` can actually push the
-          // title up and the BAŞLA pill to the bottom. The right-side
-          // padding reserves 90 px of safe space for the illustration
-          // so long titles never bleed into the photo.
-          Positioned.fill(
-            child: Padding(
-              padding: const EdgeInsets.only(right: 90),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Flexible(
-                    child: Text(
-                      title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                        height: 1.15,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(20),
+            onTap: () => _openPlan(context),
+            child: Stack(
+              children: [
+                // Full-bleed artwork behind everything so the card feels
+                // photographic instead of boxed.
+                if (plan.image != null)
+                  Positioned.fill(
+                    child: ColorFiltered(
+                      colorFilter: ColorFilter.mode(
+                        Colors.black.withValues(alpha: 0.2),
+                        BlendMode.darken,
+                      ),
+                      child: _resolveImage(plan.image!),
+                    ),
+                  ),
+                // Dark bottom-to-top gradient — text legibility without
+                // hiding the upper half of the photo.
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withValues(alpha: 0.45),
+                          Colors.black.withValues(alpha: 0.88),
+                        ],
+                        stops: const [0.35, 0.6, 1.0],
                       ),
                     ),
                   ),
-                  Column(
+                ),
+                Positioned(
+                  left: 14,
+                  right: 14,
+                  bottom: 14,
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        '$level · $minutes Dk',
-                        maxLines: 1,
+                        plan.title,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           color: Colors.white,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w900,
+                          height: 1.15,
+                          shadows: [
+                            Shadow(blurRadius: 10, color: Colors.black87),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        plan.summary,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white70,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Material(
-                        color: Colors.white,
-                        shape: const StadiumBorder(),
-                        child: InkWell(
-                          customBorder: const StadiumBorder(),
-                          onTap: () {},
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 18,
-                              vertical: 9,
-                            ),
-                            child: Text(
-                              'BAŞLA',
-                              style: TextStyle(
-                                color: tint,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.4,
+                      const SizedBox(height: 10),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Material(
+                          color: Colors.white,
+                          shape: const StadiumBorder(),
+                          child: InkWell(
+                            customBorder: const StadiumBorder(),
+                            onTap: () => _openPlan(context),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 18,
+                                vertical: 9,
+                              ),
+                              child: Text(
+                                'BAŞLA',
+                                style: TextStyle(
+                                  color: tint,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1.4,
+                                ),
                               ),
                             ),
                           ),
@@ -1140,13 +1108,17 @@ class _PushLimitsCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
+  }
+
+  void _openPlan(BuildContext context) {
+    context.push(AppRoutes.planDetail, extra: plan);
   }
 }
 
