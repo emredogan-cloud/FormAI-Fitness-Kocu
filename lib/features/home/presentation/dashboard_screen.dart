@@ -7,7 +7,9 @@ import '../../../core/routing/app_router.dart';
 import '../../../core/services/app_preferences.dart';
 import '../../../core/utils/audio_feedback.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../workout/models/exercise_model.dart';
 import '../../workout/models/workout_day_model.dart';
+import '../../workout/models/workout_plan_model.dart';
 import '../../workout/providers/workout_provider.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
@@ -90,7 +92,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           index: _index,
           children: const [
             _AntrenmanTab(),
-            _BolgelerTab(),
+            _GelisimTab(),
             _ProfileTab(),
           ],
         ),
@@ -135,9 +137,9 @@ class _BottomNav extends StatelessWidget {
             label: 'Antrenman',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.grid_view_outlined),
-            activeIcon: Icon(Icons.grid_view_rounded),
-            label: 'Bölgeler',
+            icon: Icon(Icons.insights_outlined),
+            activeIcon: Icon(Icons.insights),
+            label: 'Gelişim',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
@@ -154,11 +156,27 @@ class _BottomNav extends StatelessWidget {
 // Tab 1 — Antrenman (Dashboard)
 // ============================================================================
 
-class _AntrenmanTab extends ConsumerWidget {
+class _AntrenmanTab extends ConsumerStatefulWidget {
   const _AntrenmanTab();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_AntrenmanTab> createState() => _AntrenmanTabState();
+}
+
+class _AntrenmanTabState extends ConsumerState<_AntrenmanTab> {
+  // Order matches the spec's chip order: Core leads, full-body trails.
+  static const List<({String label, ExerciseCategory category})> _chipDefs = [
+    (label: 'Core', category: ExerciseCategory.core),
+    (label: 'Göğüs', category: ExerciseCategory.chest),
+    (label: 'Kol', category: ExerciseCategory.arms),
+    (label: 'Bacak', category: ExerciseCategory.legs),
+    (label: 'Tüm Vücut', category: ExerciseCategory.fullBody),
+  ];
+
+  ExerciseCategory _selectedCategory = ExerciseCategory.core;
+
+  @override
+  Widget build(BuildContext context) {
     final sessionAsync = ref.watch(workoutSessionProvider);
 
     return sessionAsync.when(
@@ -170,15 +188,11 @@ class _AntrenmanTab extends ConsumerWidget {
           style: const TextStyle(color: Colors.white70),
         ),
       ),
-      data: (session) => _buildContent(context, ref, session),
+      data: (session) => _buildContent(context, session),
     );
   }
 
-  Widget _buildContent(
-    BuildContext context,
-    WidgetRef ref,
-    WorkoutSessionState session,
-  ) {
+  Widget _buildContent(BuildContext context, WorkoutSessionState session) {
     final completed = session.days.where((d) => d.isCompleted).length;
     final streak = _streakOf(session.days);
     final nextDay = _firstIncomplete(session.days);
@@ -190,6 +204,10 @@ class _AntrenmanTab extends ConsumerWidget {
       7,
       (i) => DateTime(weekStart.year, weekStart.month, weekStart.day + i),
     );
+
+    final allPlans = ref.watch(workoutPlansProvider);
+    final filteredPlans =
+        allPlans.where((p) => p.category == _selectedCategory).toList();
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(0, 12, 0, 32),
@@ -224,6 +242,20 @@ class _AntrenmanTab extends ConsumerWidget {
         const _SectionTitle(title: 'Sınırlarını Zorla'),
         const SizedBox(height: 12),
         const _PushLimitsStrip(),
+        // ---------- Flattened Bölgeler section (was Tab 2) ----------
+        const SizedBox(height: 28),
+        const _SectionTitle(
+          title: 'Bölgeler',
+          trailingIcon: Icons.search_rounded,
+        ),
+        const SizedBox(height: 12),
+        _CategoryChipsRow(
+          chips: _chipDefs,
+          selected: _selectedCategory,
+          onSelect: (c) => setState(() => _selectedCategory = c),
+        ),
+        const SizedBox(height: 14),
+        _RegionalPlansList(plans: filteredPlans),
       ],
     );
   }
@@ -245,6 +277,177 @@ class _AntrenmanTab extends ConsumerWidget {
       if (!day.isCompleted) return day;
     }
     return null;
+  }
+}
+
+class _CategoryChipsRow extends StatelessWidget {
+  const _CategoryChipsRow({
+    required this.chips,
+    required this.selected,
+    required this.onSelect,
+  });
+
+  final List<({String label, ExerciseCategory category})> chips;
+  final ExerciseCategory selected;
+  final ValueChanged<ExerciseCategory> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 38,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: chips.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 18),
+        itemBuilder: (context, index) {
+          final chip = chips[index];
+          return _CategoryChip(
+            label: chip.label,
+            selected: chip.category == selected,
+            onTap: () => onSelect(chip.category),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _RegionalPlansList extends StatelessWidget {
+  const _RegionalPlansList({required this.plans});
+  final List<WorkoutPlan> plans;
+
+  @override
+  Widget build(BuildContext context) {
+    if (plans.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            color: Colors.white.withValues(alpha: 0.03),
+            border: Border.all(color: Colors.white12),
+          ),
+          child: const Text(
+            'Bu bölge için plan yakında eklenecek.',
+            style: TextStyle(color: Colors.white54, fontSize: 13),
+          ),
+        ),
+      );
+    }
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      itemCount: plans.length,
+      separatorBuilder: (_, __) => const Divider(
+        color: Colors.white12,
+        height: 18,
+        thickness: 1,
+      ),
+      itemBuilder: (context, index) => _PlanTile(plan: plans[index]),
+    );
+  }
+}
+
+class _PlanTile extends StatelessWidget {
+  const _PlanTile({required this.plan});
+  final WorkoutPlan plan;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: () => _open(context),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: SizedBox(
+                width: 64,
+                height: 64,
+                child: plan.image == null
+                    ? Container(
+                        color: Colors.white10,
+                        alignment: Alignment.center,
+                        child: const Icon(
+                          Icons.fitness_center,
+                          color: Colors.white54,
+                        ),
+                      )
+                    : _resolveImage(plan.image!),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    plan.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      height: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    plan.summary,
+                    style: const TextStyle(
+                      color: Colors.white54,
+                      fontSize: 12.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Material(
+              color: Colors.black,
+              shape: const CircleBorder(
+                side: BorderSide(color: Colors.white24, width: 1),
+              ),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: () => _open(context),
+                child: const Padding(
+                  padding: EdgeInsets.all(8),
+                  child: Icon(
+                    Icons.arrow_forward_rounded,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _open(BuildContext context) {
+    final message = plan.isComingSoon
+        ? '${plan.title} — yakında ekleniyor.'
+        : '${plan.title} — yakında doğrudan başlatılabilir olacak.';
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: const Color(0xFF2A1B5C),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(milliseconds: 1600),
+        ),
+      );
   }
 }
 
@@ -938,149 +1141,156 @@ class _PushLimitsCard extends StatelessWidget {
 }
 
 // ============================================================================
-// Tab 2 — Bölgeler (Categories / Explore)
+// Tab 2 — Gelişim (Progress / Reports placeholder)
 // ============================================================================
+//
+// We deliberately repurpose this slot rather than mirror the Bölgeler list
+// from Tab 1. The category filter now lives on the main dashboard, so this
+// tab focuses on long-term progress and acts as the landing pad for future
+// graphs / streak history / body-composition charts.
 
-class _BolgelerTab extends StatefulWidget {
-  const _BolgelerTab();
+class _GelisimTab extends ConsumerWidget {
+  const _GelisimTab();
 
   @override
-  State<_BolgelerTab> createState() => _BolgelerTabState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final session = ref.watch(workoutSessionProvider).value;
+    final completed = session?.days.where((d) => d.isCompleted).length ?? 0;
+    final streak = _streakOf(session?.days ?? const []);
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+      children: [
+        const Text(
+          'Gelişim',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0.4,
+          ),
+        ),
+        const SizedBox(height: 6),
+        const Text(
+          'İlerlemen bir bakışta.',
+          style: TextStyle(color: Colors.white54, fontSize: 13),
+        ),
+        const SizedBox(height: 22),
+        Row(
+          children: [
+            Expanded(
+              child: _StatTile(
+                label: 'SERİ',
+                value: '$streak gün',
+                icon: Icons.local_fire_department,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _StatTile(
+                label: 'TAMAMLANAN',
+                value: '$completed / 30',
+                icon: Icons.check_circle_outline,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 22),
+        const _ComingSoonCard(
+          title: 'Detaylı Raporlar Yakında',
+          body: 'Haftalık aktivite grafiği, güç artışı eğrileri ve vücut '
+              'değişim takibi yakında bu sekmede açılacak.',
+        ),
+      ],
+    );
+  }
+
+  int _streakOf(List<WorkoutDay> days) {
+    var streak = 0;
+    for (final day in days) {
+      if (day.isCompleted) {
+        streak += 1;
+      } else {
+        break;
+      }
+    }
+    return streak;
+  }
 }
 
-class _BolgelerTabState extends State<_BolgelerTab> {
-  static const List<String> _categories = [
-    'Core',
-    'Göğüs',
-    'Kol',
-    'Bacak',
-    'Arka',
-    'Tüm vücut',
-  ];
-
-  // Per-category image. Core + Göğüs point at the local reference shots
-  // shipped in docs/ (declared under `flutter.assets` in pubspec.yaml);
-  // the others still fall back to Unsplash placeholders until bespoke
-  // artwork lands.
-  static const Map<String, String> _categoryImage = {
-    'Core': 'docs/Core (Karın & Stabilite)/1.jpeg',
-    'Göğüs':
-        'docs/Göğüs (Chest)/E9CjEna37nJKbG4xizXoq8r0-UFei_q8TvZdsf28rQ2PdTO6IBfn3JcyHsTjZ0ajMUdYONm0IeJQWI9pooHrWaGFoom5UFezanHoyFq6HfhXF9ogvwCKCavQTTFbWRmW4I4VNSHWuUtdTSnr2EOND47p9xBtkeBs-gckcnCkkL4.jpeg',
-    'Kol': _muscularPhotoUrl,
-    'Bacak': _leanPhotoUrl,
-    'Arka': _muscularPhotoUrl,
-    'Tüm vücut': _leanPhotoUrl,
-  };
-
-  // Synthetic catalogue per category. Real workout discovery lives in the
-  // Antrenman tab; this is a content placeholder until the backend surface
-  // is built.
-  static const Map<String, List<({String title, String level, int minutes})>>
-      _catalogue = {
-    'Core': [
-      (title: 'Mekik Temel Seti', level: 'Başlangıç', minutes: 8),
-      (title: 'Plank Zincir Challenge', level: 'Orta düzey', minutes: 12),
-      (title: 'Bisiklet & Rus Dönüşü Combo', level: 'Orta düzey', minutes: 14),
-      (title: 'Mountain Climber Burst', level: 'İleri', minutes: 16),
-    ],
-    'Göğüs': [
-      (title: 'Dambıl Hızlı Göğüs Yapma', level: 'Orta düzey', minutes: 14),
-      (title: 'Göğüs Aktivasyonu ve Büyüme', level: 'Başlangıç', minutes: 6),
-      (title: 'Tam Göğüs Büyümesi ve Patlaması', level: 'İleri', minutes: 22),
-      (title: 'Süper Set Göğüs Pres', level: 'Orta düzey', minutes: 18),
-    ],
-    'Kol': [
-      (title: 'Biseps Kıvırma Tekniği', level: 'Başlangıç', minutes: 10),
-      (title: 'Triceps Patlama Setleri', level: 'Orta düzey', minutes: 12),
-      (title: 'Önkol Sıkılaştırma', level: 'Orta düzey', minutes: 9),
-      (title: 'Kol Hacim Süper Set', level: 'İleri', minutes: 20),
-    ],
-    'Bacak': [
-      (title: 'Squat Patlama Serisi', level: 'Orta düzey', minutes: 16),
-      (title: 'Bacak Yakma HIIT', level: 'İleri', minutes: 22),
-      (title: 'Kalça ve But Şekillendirme', level: 'Başlangıç', minutes: 11),
-      (title: 'Aktif Bacak Esnetme', level: 'Başlangıç', minutes: 7),
-    ],
-    'Arka': [
-      (title: 'Sırt Genişletme Setleri', level: 'Orta düzey', minutes: 15),
-      (title: 'Postür Düzeltici Egzersizler', level: 'Başlangıç', minutes: 8),
-      (title: 'Ağır Sırt Çekiş', level: 'İleri', minutes: 19),
-      (title: 'Üst Sırt Aktivasyonu', level: 'Orta düzey', minutes: 12),
-    ],
-    'Tüm vücut': [
-      (title: 'Tam Vücut Yağ Yakma HIIT', level: 'İleri', minutes: 25),
-      (title: 'Sabah Aktif Uyanış', level: 'Başlangıç', minutes: 10),
-      (title: 'Atletik Performans Devresi', level: 'Orta düzey', minutes: 20),
-      (title: 'Mobilite ve Kor Akışı', level: 'Başlangıç', minutes: 12),
-    ],
-  };
-
-  String _selected = 'Core';
+class _ComingSoonCard extends StatelessWidget {
+  const _ComingSoonCard({required this.title, required this.body});
+  final String title;
+  final String body;
 
   @override
   Widget build(BuildContext context) {
-    final items = _catalogue[_selected] ?? const [];
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-          child: Row(
-            children: const [
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        gradient: LinearGradient(
+          colors: [
+            _neon.withValues(alpha: 0.18),
+            _neonAccent.withValues(alpha: 0.06),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(
+          color: _neon.withValues(alpha: 0.45),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: _neon.withValues(alpha: 0.25),
+            blurRadius: 18,
+            spreadRadius: 0.5,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _neon.withValues(alpha: 0.25),
+                ),
+                child: const Icon(
+                  Icons.insights,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Bölgeler',
-                  style: TextStyle(
+                  title,
+                  style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 24,
+                    fontSize: 16,
                     fontWeight: FontWeight.w900,
-                    letterSpacing: 0.4,
                   ),
                 ),
               ),
-              Icon(Icons.search_rounded, color: Colors.white60, size: 22),
             ],
           ),
-        ),
-        const SizedBox(height: 14),
-        SizedBox(
-          height: 38,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            itemCount: _categories.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 18),
-            itemBuilder: (context, index) {
-              final c = _categories[index];
-              return _CategoryChip(
-                label: c,
-                selected: c == _selected,
-                onTap: () => setState(() => _selected = c),
-              );
-            },
-          ),
-        ),
-        const SizedBox(height: 4),
-        Expanded(
-          child: ListView.separated(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-            itemCount: items.length,
-            separatorBuilder: (_, __) => const Divider(
-              color: Colors.white12,
-              height: 18,
-              thickness: 1,
+          const SizedBox(height: 10),
+          Text(
+            body,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 13,
+              height: 1.4,
             ),
-            itemBuilder: (context, index) {
-              final item = items[index];
-              final image = _categoryImage[_selected] ?? _muscularPhotoUrl;
-              return _CategoryWorkoutTile(
-                title: item.title,
-                subtitle: '${item.level} · ${item.minutes} Dk',
-                image: image,
-              );
-            },
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -1130,84 +1340,6 @@ class _CategoryChip extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _CategoryWorkoutTile extends StatelessWidget {
-  const _CategoryWorkoutTile({
-    required this.title,
-    required this.subtitle,
-    required this.image,
-  });
-
-  final String title;
-  final String subtitle;
-
-  /// Either an http(s) URL (rendered via Image.network) or a bundled asset
-  /// path (Image.asset). Detected at render time.
-  final String image;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: SizedBox(
-            width: 64,
-            height: 64,
-            child: _resolveImage(image),
-          ),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                  height: 1.2,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: const TextStyle(
-                  color: Colors.white54,
-                  fontSize: 12.5,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 8),
-        Material(
-          color: Colors.black,
-          shape: const CircleBorder(
-            side: BorderSide(color: Colors.white24, width: 1),
-          ),
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: () {},
-            child: const Padding(
-              padding: EdgeInsets.all(8),
-              child: Icon(
-                Icons.arrow_forward_rounded,
-                color: Colors.white,
-                size: 18,
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

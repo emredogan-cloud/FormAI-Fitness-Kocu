@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/exercise_model.dart';
 import '../models/workout_day_model.dart';
+import '../models/workout_plan_model.dart';
 
 class WorkoutRepository {
   WorkoutRepository(this._prefs, {SupabaseClient? client})
@@ -205,6 +206,103 @@ class WorkoutRepository {
     startCommand:
         'Sıradaki hareket: Chest Fly. Kollarını yana aç ve göğüs üstünde kontrollü kapat.',
   );
+
+  // ==========================================================================
+  // REGIONAL PLANS — surfaced on the dashboard's category filter strip.
+  // Each plan groups the exercises above by body region. Empty exercise
+  // lists render as "coming soon" tiles so the chip layout stays
+  // populated even before bespoke routines exist for those regions.
+  // ==========================================================================
+
+  static const List<WorkoutPlan> allPlans = [
+    WorkoutPlan(
+      id: 'core_steel_abs',
+      title: 'Çelik Gibi Karın',
+      category: ExerciseCategory.core,
+      level: 'Başlangıç',
+      durationMinutes: 15,
+      exercises: [
+        _plank,
+        _russianTwist,
+        _legRaise,
+        _mountainClimber,
+        _bicycleCrunch,
+      ],
+      image: 'docs/Core (Karın & Stabilite)/1.jpeg',
+    ),
+    WorkoutPlan(
+      id: 'core_athletic',
+      title: 'Atletik Core',
+      category: ExerciseCategory.core,
+      level: 'Orta düzey',
+      durationMinutes: 20,
+      exercises: [
+        _crunch,
+        _bicycleCrunch,
+        _legRaise,
+        _flutterKick,
+        _plank,
+      ],
+      image:
+          'docs/Core (Karın & Stabilite)/4h-GfJgN9a4wzOi5dyPr4KKzTpZDl4vlTe5qrgdfbu-YomsCs9IxRfwX4C59yrMzFmdH7q33bMBU1PJYM5epPdc577HOU-8pc5rS85ayDzJXt4fVp-wlwgBGgugxDyqag-U0zX4sqMe7Y9QendQX0aT-fDYsYfdHW73PvxmVmUQ.jpeg',
+    ),
+    WorkoutPlan(
+      id: 'chest_home_pump',
+      title: 'Evde Göğüs Pompası',
+      category: ExerciseCategory.chest,
+      level: 'Başlangıç',
+      durationMinutes: 18,
+      exercises: [
+        _pushUp,
+        _inclinePushUp,
+        _declinePushUp,
+        _chestDip,
+        _chestFly,
+      ],
+      image:
+          'docs/Göğüs (Chest)/E9CjEna37nJKbG4xizXoq8r0-UFei_q8TvZdsf28rQ2PdTO6IBfn3JcyHsTjZ0ajMUdYONm0IeJQWI9pooHrWaGFoom5UFezanHoyFq6HfhXF9ogvwCKCavQTTFbWRmW4I4VNSHWuUtdTSnr2EOND47p9xBtkeBs-gckcnCkkL4.jpeg',
+    ),
+    WorkoutPlan(
+      id: 'chest_dumbbell_fast',
+      title: 'Dambıl Hızlı Göğüs Yapma',
+      category: ExerciseCategory.chest,
+      level: 'Orta düzey',
+      durationMinutes: 14,
+      exercises: [_benchPress, _chestFly, _pushUp],
+      image:
+          'docs/Göğüs (Chest)/JpJrp6V8ApIDIbjyWcwl8EJd2H7nBHQIFvkwuTE19rWpeyzFxljASLhwIZdMn13phGSSHZ0pZDF7h-y4fNyuxtQs5OW9jOZvbRZbhmvfukC8TsmQU2iU39rgs_HHtlWvfOY5VNWriZxRvjHn5TRdDT_MmlFpFWkfNHlfABZm4oY.jpeg',
+    ),
+    WorkoutPlan(
+      id: 'arms_super_set',
+      title: 'Kol Hacim Süper Set',
+      category: ExerciseCategory.arms,
+      level: 'Orta düzey',
+      durationMinutes: 20,
+      exercises: [],
+      image:
+          'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80',
+    ),
+    WorkoutPlan(
+      id: 'legs_squat_burst',
+      title: 'Squat Patlama Serisi',
+      category: ExerciseCategory.legs,
+      level: 'Orta düzey',
+      durationMinutes: 16,
+      exercises: [],
+      image:
+          'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=600&q=80',
+    ),
+    WorkoutPlan(
+      id: 'full_body_hiit',
+      title: 'Tam Vücut Yağ Yakma HIIT',
+      category: ExerciseCategory.fullBody,
+      level: 'İleri',
+      durationMinutes: 25,
+      exercises: [],
+      image:
+          'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80',
+    ),
+  ];
 
   // ==========================================================================
   // PROGRAM

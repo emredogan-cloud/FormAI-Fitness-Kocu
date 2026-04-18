@@ -6,6 +6,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../data/workout_repository.dart';
 import '../models/exercise_model.dart';
 import '../models/workout_day_model.dart';
+import '../models/workout_plan_model.dart';
+
+/// Catalogue of region-tagged plans surfaced on the dashboard's filter
+/// strip. Currently a static list; promote to AsyncNotifier when plans
+/// move behind a Supabase-backed catalogue.
+final workoutPlansProvider = Provider<List<WorkoutPlan>>((ref) {
+  return WorkoutRepository.allPlans;
+});
 
 class WorkoutSessionState {
   const WorkoutSessionState({
