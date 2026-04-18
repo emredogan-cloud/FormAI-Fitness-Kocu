@@ -14,6 +14,7 @@ class CrunchResult {
     required this.formWarning,
     required this.repJustCompleted,
     this.pacingFeedback,
+    this.contextualCue,
   });
 
   final int reps;
@@ -27,6 +28,12 @@ class CrunchResult {
   /// (too fast or too slow). Null on most reps — only surfaces after the
   /// analyzer's cooldown has elapsed.
   final String? pacingFeedback;
+
+  /// Forward-looking instruction spoken at a specific phase of an exercise
+  /// (e.g. Burpee step-2 cue "Şimdi aşağı in ve plank pozisyonu al").
+  /// Null on most frames; analyzers throttle it internally so the camera
+  /// screen can speak it as-is when present.
+  final String? contextualCue;
 }
 
 /// State machine for crunches ("mekik"):
@@ -154,9 +161,11 @@ class CrunchAnalyzer implements PoseAnalyzer {
       neckAngle = AngleCalculator.between(ear, shoulder, hip);
       if (_state == CrunchState.up && neckAngle < neckWarningThreshold) {
         // Pose detection runs ~30 fps, so a raw posture warning would fire
-        // on every frame and spam TTS. Debounce to one warning per 10s.
+        // on every frame and spam TTS. Debounce to one warning per 15 s —
+        // crunches and sit-ups naturally vary head position rep-to-rep so
+        // a longer window keeps the cue useful without nagging.
         final now = DateTime.now();
-        if (now.difference(_lastPostureWarning).inSeconds > 10) {
+        if (now.difference(_lastPostureWarning).inSeconds > 15) {
           formWarning = 'Boynunu düz tut!';
           _lastPostureWarning = now;
         }

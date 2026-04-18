@@ -170,6 +170,15 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
           _audio.speak(warning);
         }
 
+        // Mid-rep coaching cue (e.g. Burpee step-2 "Şimdi aşağı in…").
+        // Analyzers throttle this internally so we just speak whenever it
+        // shows up. Won't fight `formWarning` since the analyzer that emits
+        // a cue doesn't also emit a warning on the same frame.
+        final cue = result.contextualCue;
+        if (cue != null) {
+          _audio.speak(cue);
+        }
+
         if (result.repJustCompleted) {
           final notifier = ref.read(workoutSessionProvider.notifier);
           notifier.setCurrentReps(result.reps);

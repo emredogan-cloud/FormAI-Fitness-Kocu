@@ -4,6 +4,7 @@ import 'chest_analyzers.dart';
 import 'core_analyzers.dart';
 import 'crunch_analyzer.dart';
 import 'pose_analyzer.dart';
+import 'shoulders_arms_cardio_analyzers.dart';
 
 /// Returns a fresh [PoseAnalyzer] tuned for [exercise]. Always returns a
 /// new instance so set transitions don't carry rep state across boundaries.
@@ -56,6 +57,33 @@ PoseAnalyzer analyzerFor(Exercise exercise) {
     case 'barbell_row':
       return PullUpAnalyzer();
     case 'superman':
+      return PlankAnalyzer();
+    // ---- Shoulders ----
+    case 'shoulder_press':
+    case 'arnold_press':
+      return ShoulderPressAnalyzer();
+    case 'lateral_raise':
+    case 'front_raise':
+      return LateralRaiseAnalyzer();
+    case 'pike_push_up':
+      return PushUpAnalyzer();
+    // ---- Arms ----
+    case 'biceps_curl':
+    case 'hammer_curl':
+    case 'triceps_pushdown':
+      return BicepsCurlAnalyzer();
+    case 'triceps_dip':
+    case 'close_grip_push_up':
+      return PushUpAnalyzer();
+    // ---- Cardio / Full Body ----
+    case 'burpee':
+      return BurpeeAnalyzer();
+    case 'jumping_jack':
+      return JumpingJackAnalyzer();
+    case 'jump_squat':
+      return SquatAnalyzer();
+    case 'high_knees':
+    case 'skipping_rope':
       return PlankAnalyzer();
     default:
       return CrunchAnalyzer();

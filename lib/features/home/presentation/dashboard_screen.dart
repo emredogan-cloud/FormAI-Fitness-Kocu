@@ -164,15 +164,18 @@ class _AntrenmanTab extends ConsumerStatefulWidget {
 }
 
 class _AntrenmanTabState extends ConsumerState<_AntrenmanTab> {
-  // Order matches the spec's chip order with Sırt added between Göğüs and
-  // Kol so the new Phase 21 plans are visible from the dashboard.
+  // Seven regions in the final Phase 22 shape. Omuz slots between Sırt and
+  // Kol; the old "Tüm Vücut" chip is re-labelled "Kardiyo" because the
+  // plans under ExerciseCategory.fullBody are now cardio-focused (burpee,
+  // jumping jack, high knees, jump squat, skipping rope).
   static const List<({String label, ExerciseCategory category})> _chipDefs = [
     (label: 'Core', category: ExerciseCategory.core),
     (label: 'Göğüs', category: ExerciseCategory.chest),
     (label: 'Sırt', category: ExerciseCategory.back),
+    (label: 'Omuz', category: ExerciseCategory.shoulders),
     (label: 'Kol', category: ExerciseCategory.arms),
     (label: 'Bacak', category: ExerciseCategory.legs),
-    (label: 'Tüm Vücut', category: ExerciseCategory.fullBody),
+    (label: 'Kardiyo', category: ExerciseCategory.fullBody),
   ];
 
   ExerciseCategory _selectedCategory = ExerciseCategory.core;
