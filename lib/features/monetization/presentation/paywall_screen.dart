@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class PaywallScreen extends StatefulWidget {
+import '../../onboarding/providers/wizard_provider.dart';
+
+class PaywallScreen extends ConsumerStatefulWidget {
   const PaywallScreen({super.key});
 
   @override
-  State<PaywallScreen> createState() => _PaywallScreenState();
+  ConsumerState<PaywallScreen> createState() => _PaywallScreenState();
 }
 
 enum _Plan { monthly, yearly, quarterly }
 
-class _PaywallScreenState extends State<PaywallScreen> {
+class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   static const Color _neon = Color(0xFF8E5BFF);
   static const Color _neonAccent = Color(0xFF4DA6FF);
 
@@ -37,7 +40,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const _HeroSection(),
+                    _HeroSection(gender: ref.watch(wizardProvider).gender),
                     const SizedBox(height: 24),
                     _buildPlansRow(),
                     const SizedBox(height: 18),
@@ -169,7 +172,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
 }
 
 class _HeroSection extends StatelessWidget {
-  const _HeroSection();
+  const _HeroSection({required this.gender});
+
+  final Gender? gender;
 
   @override
   Widget build(BuildContext context) {
@@ -199,7 +204,10 @@ class _HeroSection extends StatelessWidget {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(24),
-              child: const _TransformationPlaceholder(),
+              // Male/female users see a personalised before/after composite
+              // from the photos/ bundle; "Diğer" and null fall through to
+              // the original stylised silhouette placeholder.
+              child: _heroContent(gender),
             ),
           ),
         ),
@@ -231,6 +239,192 @@ class _HeroSection extends StatelessWidget {
           style: TextStyle(color: Colors.white60, fontSize: 13, height: 1.45),
         ),
       ],
+    );
+  }
+}
+
+Widget _heroContent(Gender? gender) {
+  switch (gender) {
+    case Gender.male:
+      return const _GenderBeforeAfter(
+        todayAsset: 'photos/kişiselleştirilmişplandabugünkühalERKEK.webp',
+        thirtyDayAsset: 'photos/kişiselleştirilmiş planda30.günERKEK.webp',
+      );
+    case Gender.female:
+      return const _GenderBeforeAfter(
+        todayAsset: 'photos/kişiselleştirilmişplandabugünkühalKADIN.webp',
+        thirtyDayAsset: 'photos/kişiselleştirilmişplanda30.günKADIN.webp',
+      );
+    case Gender.other:
+    case null:
+      return const _TransformationPlaceholder();
+  }
+}
+
+/// Side-by-side today-vs-30-day composite with a glowing arrow in the
+/// middle and a bold "30 Günlük Değişimin!" ribbon across the bottom.
+/// Shipped images live in photos/ (converted to webp in Phase 23.1).
+class _GenderBeforeAfter extends StatelessWidget {
+  const _GenderBeforeAfter({
+    required this.todayAsset,
+    required this.thirtyDayAsset,
+  });
+
+  final String todayAsset;
+  final String thirtyDayAsset;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Row(
+          children: [
+            Expanded(child: _buildSide(todayAsset, dim: true)),
+            Expanded(child: _buildSide(thirtyDayAsset, dim: false)),
+          ],
+        ),
+        // Dark gradient at the bottom so the ribbon text stays readable
+        // regardless of which part of the photo sits behind it.
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.center,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  Colors.black.withValues(alpha: 0.82),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const Positioned(
+          top: 10,
+          left: 10,
+          child: _HeroTag(label: 'BUGÜN', color: Colors.white70),
+        ),
+        const Positioned(
+          top: 10,
+          right: 10,
+          child: _HeroTag(
+            label: '30. GÜN',
+            color: _PaywallScreenState._neonAccent,
+          ),
+        ),
+        Center(child: _GlowingArrow()),
+        const Positioned(
+          bottom: 12,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: Text(
+              '30 Günlük Değişimin!',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.4,
+                shadows: [
+                  Shadow(blurRadius: 18, color: Colors.black),
+                  Shadow(
+                    blurRadius: 32,
+                    color: _PaywallScreenState._neon,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSide(String asset, {required bool dim}) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(
+          asset,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => const ColoredBox(
+            color: Color(0xFF1A0B3D),
+          ),
+        ),
+        if (dim)
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.3),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _HeroTag extends StatelessWidget {
+  const _HeroTag({required this.label, required this.color});
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.6), width: 0.6),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 10,
+          letterSpacing: 2,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+  }
+}
+
+class _GlowingArrow extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: _PaywallScreenState._neon.withValues(alpha: 0.85),
+            blurRadius: 28,
+            spreadRadius: 3,
+          ),
+        ],
+      ),
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            colors: [
+              _PaywallScreenState._neon,
+              _PaywallScreenState._neonAccent,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: const Icon(
+          Icons.arrow_forward_rounded,
+          color: Colors.white,
+          size: 28,
+        ),
+      ),
     );
   }
 }

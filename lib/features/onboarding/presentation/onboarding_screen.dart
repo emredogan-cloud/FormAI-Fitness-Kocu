@@ -120,7 +120,7 @@ class _WelcomeStep extends StatelessWidget {
       fit: StackFit.expand,
       children: [
         Image.asset(
-          'photos/onboarding_ilk_karşılama_metninin_arkaplanı.jpeg',
+          'photos/onboarding_ilk_karşılama_metninin_arkaplanı.webp',
           fit: BoxFit.cover,
           errorBuilder: (_, __, ___) => const DecoratedBox(
             decoration: BoxDecoration(
@@ -247,7 +247,7 @@ class _CoachIntroStep extends StatelessWidget {
       fit: StackFit.expand,
       children: [
         Image.asset(
-          'photos/kişiselkoçarkaplanfoto.jpeg',
+          'photos/kişiselkoçarkaplanfoto.webp',
           fit: BoxFit.cover,
           errorBuilder: (_, __, ___) =>
               const ColoredBox(color: Color(0xFF0E0729)),
@@ -596,7 +596,7 @@ class _GenderStep extends ConsumerWidget {
                     subtitle: 'Kadın için optimize edilmiş plan.',
                     selected: selected == Gender.female,
                     onTap: () => pick(Gender.female),
-                    image: 'photos/cinsiyetseçimikadın.png',
+                    image: 'photos/cinsiyetseçimikadın.webp',
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -607,7 +607,7 @@ class _GenderStep extends ConsumerWidget {
                     subtitle: 'Erkek için optimize edilmiş plan.',
                     selected: selected == Gender.male,
                     onTap: () => pick(Gender.male),
-                    image: 'photos/cinsiyetseçimierkek.png',
+                    image: 'photos/cinsiyetseçimierkek.webp',
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -938,7 +938,7 @@ class _CurrentPhysiqueStep extends ConsumerWidget {
               children: [
                 Expanded(
                   child: _PhotoOptionCard(
-                    image: 'photos/vücutseçimiZayıf.png',
+                    image: 'photos/vücutseçimiZayıf.webp',
                     fallbackIcon: Icons.accessibility,
                     title: 'Zayıf',
                     subtitle: 'Düşük yağ, ince yapı.',
@@ -952,7 +952,7 @@ class _CurrentPhysiqueStep extends ConsumerWidget {
                     // Filename carries a "vucüt" typo that ships from the
                     // user's asset export; keep the path verbatim so the
                     // manifest lookup actually matches.
-                    image: 'photos/vucütseçimiNormal.png',
+                    image: 'photos/vucütseçimiNormal.webp',
                     fallbackIcon: Icons.accessibility_new,
                     title: 'Normal',
                     subtitle: 'Ortalama yapı.',
@@ -963,7 +963,7 @@ class _CurrentPhysiqueStep extends ConsumerWidget {
                 const SizedBox(height: 12),
                 Expanded(
                   child: _PhotoOptionCard(
-                    image: 'photos/vücutseçimikiloluhacimli.png',
+                    image: 'photos/vücutseçimikiloluhacimli.webp',
                     fallbackIcon: Icons.airline_seat_recline_extra,
                     title: 'Kilolu / Hacimli',
                     subtitle: 'Fazla yağ veya hacimli yapı.',
@@ -1007,7 +1007,7 @@ class _TargetPhysiqueStep extends ConsumerWidget {
               children: [
                 Expanded(
                   child: _PhotoOptionCard(
-                    image: 'photos/hedefinneSıkılaşmak.png',
+                    image: 'photos/hedefinneSıkılaşmak.webp',
                     fallbackIcon: Icons.local_fire_department,
                     title: 'Sıkılaşmak',
                     subtitle: 'Yağ yak, kasları sıkılaştır.',
@@ -1018,7 +1018,7 @@ class _TargetPhysiqueStep extends ConsumerWidget {
                 const SizedBox(height: 12),
                 Expanded(
                   child: _PhotoOptionCard(
-                    image: 'photos/hedefinneHacimKazanmak.png',
+                    image: 'photos/hedefinneHacimKazanmak.webp',
                     fallbackIcon: Icons.fitness_center,
                     title: 'Hacim Kazanmak',
                     subtitle: 'Daha kalın, daha güçlü.',
@@ -1029,7 +1029,7 @@ class _TargetPhysiqueStep extends ConsumerWidget {
                 const SizedBox(height: 12),
                 Expanded(
                   child: _PhotoOptionCard(
-                    image: 'photos/hedefinneSadeceSix-Pack.png',
+                    image: 'photos/hedefinneSadeceSix-Pack.webp',
                     fallbackIcon: Icons.bolt,
                     title: 'Sadece Six-Pack',
                     subtitle: 'Net çizgiler, belirgin karın.',
@@ -1141,30 +1141,57 @@ class _PhotoOptionCard extends StatelessWidget {
                   ),
                 ),
               ),
-              if (image != null)
-                Expanded(
-                  flex: 4,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      _buildPhoto(image!, fallbackIcon),
-                      // Left-to-right fade so text stays readable when the
-                      // photo's left edge is bright.
-                      DecoratedBox(
+              Expanded(
+                flex: 4,
+                child: image != null
+                    ? Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          _buildPhoto(image!, fallbackIcon),
+                          // Left-to-right fade so text stays readable when
+                          // the photo's left edge is bright.
+                          DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                                colors: [
+                                  Colors.black.withValues(alpha: 0.35),
+                                  Colors.transparent,
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    // Decorative panel used when no photo ships for this
+                    // option (e.g. the "Diğer" gender card). Fills the
+                    // same flex:4 slot as the image so the three cards in
+                    // the column stay visually balanced.
+                    : DecoratedBox(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                             colors: [
-                              Colors.black.withValues(alpha: 0.35),
-                              Colors.transparent,
+                              _neon.withValues(
+                                alpha: selected ? 0.45 : 0.22,
+                              ),
+                              _neonAccent.withValues(
+                                alpha: selected ? 0.25 : 0.08,
+                              ),
                             ],
                           ),
                         ),
+                        child: Center(
+                          child: Icon(
+                            fallbackIcon,
+                            color: Colors.white.withValues(alpha: 0.85),
+                            size: 56,
+                          ),
+                        ),
                       ),
-                    ],
-                  ),
-                ),
+              ),
             ],
           ),
         ),
@@ -1222,7 +1249,7 @@ class _ActivityStep extends ConsumerWidget {
               children: [
                 Expanded(
                   child: _PhotoOptionCard(
-                    image: 'photos/günlükaktivitenmasabaşı.png',
+                    image: 'photos/günlükaktivitenmasabaşı.webp',
                     fallbackIcon: Icons.chair,
                     title: 'Masa Başı',
                     subtitle: 'Çoğunlukla otururum, az hareket ederim.',
@@ -1233,7 +1260,7 @@ class _ActivityStep extends ConsumerWidget {
                 const SizedBox(height: 12),
                 Expanded(
                   child: _PhotoOptionCard(
-                    image: 'photos/günlükaktivitenhafifhareketli.png',
+                    image: 'photos/günlükaktivitenhafifhareketli.webp',
                     fallbackIcon: Icons.directions_walk,
                     title: 'Hafif Hareketli',
                     subtitle: 'Düzenli yürüyüş, hafif egzersiz.',
@@ -1244,7 +1271,7 @@ class _ActivityStep extends ConsumerWidget {
                 const SizedBox(height: 12),
                 Expanded(
                   child: _PhotoOptionCard(
-                    image: 'photos/günlükaktivitenneÇokAktif.png',
+                    image: 'photos/günlükaktivitenneÇokAktif.webp',
                     fallbackIcon: Icons.directions_run,
                     title: 'Çok Aktif',
                     subtitle: 'Düzenli antrenman, yüksek tempo.',
