@@ -1,5 +1,7 @@
 enum ExerciseType { repBased, timeBased }
 
+enum ExerciseCategory { core, chest, legs, back, arms, shoulders, fullBody }
+
 class Exercise {
   const Exercise({
     required this.id,
@@ -10,6 +12,8 @@ class Exercise {
     this.videoAsset,
     this.sets = 1,
     this.restDurationInSeconds = 30,
+    this.category = ExerciseCategory.core,
+    this.startCommand,
   });
 
   final String id;
@@ -20,6 +24,12 @@ class Exercise {
   final String? videoAsset;
   final int sets;
   final int restDurationInSeconds;
+  final ExerciseCategory category;
+
+  /// Optional full-phrase override spoken at the start of this exercise.
+  /// When null, the lifecycle announcer falls back to the generic
+  /// "Sıradaki hareket: NAME. Başlayın!" pattern.
+  final String? startCommand;
 
   bool get isRepBased => type == ExerciseType.repBased;
   bool get isTimeBased => type == ExerciseType.timeBased;
@@ -34,7 +44,9 @@ class Exercise {
       other.targetDurationInSeconds == targetDurationInSeconds &&
       other.videoAsset == videoAsset &&
       other.sets == sets &&
-      other.restDurationInSeconds == restDurationInSeconds;
+      other.restDurationInSeconds == restDurationInSeconds &&
+      other.category == category &&
+      other.startCommand == startCommand;
 
   @override
   int get hashCode => Object.hash(
@@ -46,5 +58,7 @@ class Exercise {
         videoAsset,
         sets,
         restDurationInSeconds,
+        category,
+        startCommand,
       );
 }

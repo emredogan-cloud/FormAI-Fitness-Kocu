@@ -1,6 +1,7 @@
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 
 import '../../../core/utils/angle_calculator.dart';
+import 'pose_analyzer.dart';
 
 enum CrunchState { unknown, down, up }
 
@@ -33,7 +34,7 @@ class CrunchResult {
 ///   torso angle < [upThreshold] and was DOWN          ⇒ UP, rep + 1
 /// Form check while in UP: ear-shoulder-hip angle too acute means the user is
 /// yanking their neck forward.
-class CrunchAnalyzer {
+class CrunchAnalyzer implements PoseAnalyzer {
   CrunchAnalyzer({
     this.downThreshold = 140.0,
     this.upThreshold = 90.0,
@@ -75,6 +76,7 @@ class CrunchAnalyzer {
   int get reps => _reps;
   CrunchState get state => _state;
 
+  @override
   void reset() {
     _reps = 0;
     _state = CrunchState.unknown;
@@ -83,6 +85,7 @@ class CrunchAnalyzer {
     _lastPostureWarning = DateTime.now().subtract(const Duration(seconds: 10));
   }
 
+  @override
   CrunchResult analyze(Pose pose) {
     final shoulder = _pick(
         pose, PoseLandmarkType.leftShoulder, PoseLandmarkType.rightShoulder);

@@ -12,7 +12,9 @@ import 'package:permission_handler/permission_handler.dart';
 import '../../../core/utils/audio_feedback.dart';
 import '../models/exercise_model.dart';
 import '../providers/workout_provider.dart';
+import '../services/analyzer_factory.dart';
 import '../services/crunch_analyzer.dart';
+import '../services/pose_analyzer.dart';
 import '../services/pose_detector_service.dart';
 import 'pose_painter.dart';
 import 'widgets/exercise_guide_player.dart';
@@ -28,7 +30,7 @@ class WorkoutCameraScreen extends ConsumerStatefulWidget {
 class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     with WidgetsBindingObserver {
   final PoseDetectorService _poseService = PoseDetectorService();
-  final CrunchAnalyzer _analyzer = CrunchAnalyzer();
+  PoseAnalyzer _analyzer = CrunchAnalyzer();
   final AudioFeedback _audio = AudioFeedback();
 
   static const Map<DeviceOrientation, int> _orientations = {
@@ -352,7 +354,13 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       } else if (!resting &&
           exercise != null &&
           (exerciseChanged || setChanged || justFinishedRest)) {
-        _audio.speak('Sıradaki hareket: ${exercise.name}. Başlayın!');
+        // Exercise-specific cue takes priority over the generic "Başlayın!"
+        // line so push-ups get push-up coaching, russian twists get twist
+        // coaching, etc. Falls back to the generic phrase when not set.
+        _audio.speak(
+          exercise.startCommand ??
+              'Sıradaki hareket: ${exercise.name}. Başlayın!',
+        );
       }
 
       if (resting) {
@@ -364,7 +372,12 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         return;
       }
 
-      if (exerciseChanged || setChanged || justFinishedRest) {
+      if (exerciseChanged) {
+        // Swap in the right analyzer for the new exercise. A fresh instance
+        // gives us clean state without having to call reset() explicitly.
+        _analyzer = exercise == null ? CrunchAnalyzer() : analyzerFor(exercise);
+        _syncExerciseTimer(exercise);
+      } else if (setChanged || justFinishedRest) {
         _analyzer.reset();
         _syncExerciseTimer(exercise);
       }

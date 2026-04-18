@@ -51,3 +51,8 @@ flutter:
   assets:
     - .env
     - assets/videos/
+    # Reference photography for per-category cards. Folder names contain
+    # spaces and Turkish characters so the paths MUST stay quoted below
+    # for the YAML parser to round-trip them as-is to the asset manifest.
+    - "docs/Core (Karın & Stabilite)/"
+    - "docs/Göğüs (Chest)/"

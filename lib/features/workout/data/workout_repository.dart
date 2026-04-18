@@ -14,16 +14,11 @@ class WorkoutRepository {
   static const String _completedKey = 'sixpack.completed_days';
   static const String _progressTable = 'user_progress';
 
-  static const Exercise _crunch3x10 = Exercise(
-    id: 'crunch',
-    name: 'Mekik',
-    type: ExerciseType.repBased,
-    targetReps: 10,
-    sets: 3,
-    restDurationInSeconds: 30,
-    videoAsset: 'assets/videos/crunch_demo.mp4',
-  );
-  static const Exercise _crunch3x12 = Exercise(
+  // ==========================================================================
+  // CORE (Karın & Stabilite)
+  // ==========================================================================
+
+  static const Exercise _crunch = Exercise(
     id: 'crunch',
     name: 'Mekik',
     type: ExerciseType.repBased,
@@ -31,39 +26,224 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     videoAsset: 'assets/videos/crunch_demo.mp4',
+    category: ExerciseCategory.core,
+    startCommand:
+        'Sıradaki hareket: Mekik. Yere uzan, ellerini başının arkasına koy ve başla.',
   );
-  static const Exercise _crunch4x12 = Exercise(
-    id: 'crunch',
-    name: 'Mekik',
+
+  static const Exercise _situp = Exercise(
+    id: 'situp',
+    name: 'Sit-up',
     type: ExerciseType.repBased,
     targetReps: 12,
-    sets: 4,
-    restDurationInSeconds: 30,
+    sets: 3,
+    restDurationInSeconds: 35,
     videoAsset: 'assets/videos/crunch_demo.mp4',
+    category: ExerciseCategory.core,
+    startCommand:
+        'Sıradaki hareket: Sit-up. Tüm gövdeni yukarı kaldır, dizlerine kadar gel.',
   );
-  static const Exercise _plank3x20 = Exercise(
+
+  static const Exercise _plank = Exercise(
     id: 'plank',
     name: 'Plank',
     type: ExerciseType.timeBased,
-    targetDurationInSeconds: 20,
+    targetDurationInSeconds: 40,
     sets: 3,
     restDurationInSeconds: 45,
     videoAsset: 'assets/videos/plank_demo.mp4',
+    category: ExerciseCategory.core,
+    startCommand:
+        'Sıradaki hareket: Plank. Dirseklerin üzerinde sabit kal, kalçanı düz tut.',
   );
-  static const Exercise _legRaise3x10 = Exercise(
+
+  static const Exercise _legRaise = Exercise(
     id: 'leg_raise',
     name: 'Bacak Kaldırma',
     type: ExerciseType.repBased,
-    targetReps: 10,
+    targetReps: 12,
     sets: 3,
     restDurationInSeconds: 30,
     videoAsset: 'assets/videos/leg_raise_demo.mp4',
+    category: ExerciseCategory.core,
+    startCommand:
+        'Sıradaki hareket: Bacak Kaldırma. Bacaklarını 90 dereceye kaldır.',
   );
 
+  static const Exercise _hangingLegRaise = Exercise(
+    id: 'hanging_leg_raise',
+    name: 'Asılı Bacak Kaldırma',
+    type: ExerciseType.repBased,
+    targetReps: 10,
+    sets: 3,
+    restDurationInSeconds: 45,
+    category: ExerciseCategory.core,
+    startCommand:
+        'Sıradaki hareket: Asılı Bacak Kaldırma. Bara tutun ve bacaklarını yukarı çek.',
+  );
+
+  static const Exercise _russianTwist = Exercise(
+    id: 'russian_twist',
+    name: 'Rus Dönüşü',
+    type: ExerciseType.repBased,
+    targetReps: 20,
+    sets: 3,
+    restDurationInSeconds: 30,
+    category: ExerciseCategory.core,
+    startCommand:
+        'Sıradaki hareket: Rus Dönüşü. Otur, hafif geri yaslan ve gövdeni sağa sola döndür.',
+  );
+
+  static const Exercise _mountainClimber = Exercise(
+    id: 'mountain_climber',
+    name: 'Mountain Climber',
+    type: ExerciseType.repBased,
+    targetReps: 30,
+    sets: 3,
+    restDurationInSeconds: 30,
+    category: ExerciseCategory.core,
+    startCommand:
+        'Sıradaki hareket: Mountain Climber. Plank pozisyonunda dizlerini hızla göğsüne çek.',
+  );
+
+  static const Exercise _bicycleCrunch = Exercise(
+    id: 'bicycle_crunch',
+    name: 'Bisiklet Mekiği',
+    type: ExerciseType.repBased,
+    targetReps: 16,
+    sets: 3,
+    restDurationInSeconds: 30,
+    category: ExerciseCategory.core,
+    startCommand:
+        'Sıradaki hareket: Bisiklet Mekiği. Karşıt dirsek ve dizini birleştir.',
+  );
+
+  static const Exercise _flutterKick = Exercise(
+    id: 'flutter_kick',
+    name: 'Flutter Kick',
+    type: ExerciseType.timeBased,
+    targetDurationInSeconds: 30,
+    sets: 3,
+    restDurationInSeconds: 30,
+    category: ExerciseCategory.core,
+    startCommand:
+        'Sıradaki hareket: Flutter Kick. Sırt üstü uzan ve bacaklarını kısa, hızlı tempoda değiştir.',
+  );
+
+  // ==========================================================================
+  // GÖĞÜS (Chest)
+  // ==========================================================================
+
+  static const Exercise _pushUp = Exercise(
+    id: 'push_up',
+    name: 'Şınav',
+    type: ExerciseType.repBased,
+    targetReps: 12,
+    sets: 3,
+    restDurationInSeconds: 45,
+    category: ExerciseCategory.chest,
+    startCommand:
+        'Sıradaki hareket: Şınav. Şınav pozisyonu al, eller omuz hizasında ve başla.',
+  );
+
+  static const Exercise _inclinePushUp = Exercise(
+    id: 'incline_push_up',
+    name: 'Yokuş Yukarı Şınav',
+    type: ExerciseType.repBased,
+    targetReps: 14,
+    sets: 3,
+    restDurationInSeconds: 45,
+    category: ExerciseCategory.chest,
+    startCommand:
+        'Sıradaki hareket: Yokuş Yukarı Şınav. Ellerin yüksek bir yüzeye dayalı, şınava başla.',
+  );
+
+  static const Exercise _declinePushUp = Exercise(
+    id: 'decline_push_up',
+    name: 'Yokuş Aşağı Şınav',
+    type: ExerciseType.repBased,
+    targetReps: 10,
+    sets: 3,
+    restDurationInSeconds: 50,
+    category: ExerciseCategory.chest,
+    startCommand:
+        'Sıradaki hareket: Yokuş Aşağı Şınav. Ayaklarını yüksek tut, kontrollü in ve çık.',
+  );
+
+  static const Exercise _chestDip = Exercise(
+    id: 'chest_dip',
+    name: 'Göğüs Dip',
+    type: ExerciseType.repBased,
+    targetReps: 10,
+    sets: 3,
+    restDurationInSeconds: 60,
+    category: ExerciseCategory.chest,
+    startCommand:
+        'Sıradaki hareket: Göğüs Dip. Paralel barlarda göğsünü öne eğerek aşağı in.',
+  );
+
+  static const Exercise _benchPress = Exercise(
+    id: 'bench_press',
+    name: 'Dambıl Bench Press',
+    type: ExerciseType.repBased,
+    targetReps: 12,
+    sets: 3,
+    restDurationInSeconds: 60,
+    category: ExerciseCategory.chest,
+    startCommand:
+        'Sıradaki hareket: Dambıl Bench Press. Bench üzerinde uzan ve dambılları yukarı it.',
+  );
+
+  static const Exercise _chestFly = Exercise(
+    id: 'chest_fly',
+    name: 'Chest Fly',
+    type: ExerciseType.repBased,
+    targetReps: 12,
+    sets: 3,
+    restDurationInSeconds: 50,
+    category: ExerciseCategory.chest,
+    startCommand:
+        'Sıradaki hareket: Chest Fly. Kollarını yana aç ve göğüs üstünde kontrollü kapat.',
+  );
+
+  // ==========================================================================
+  // PROGRAM
+  // ==========================================================================
+
   static const List<WorkoutDay> _staticProgram = [
-    WorkoutDay(dayNumber: 1, exercises: [_crunch3x10]),
-    WorkoutDay(dayNumber: 2, exercises: [_crunch3x12, _plank3x20]),
-    WorkoutDay(dayNumber: 3, exercises: [_crunch4x12, _legRaise3x10]),
+    WorkoutDay(
+      dayNumber: 1,
+      exercises: [_crunch, _plank, _legRaise],
+    ),
+    WorkoutDay(
+      dayNumber: 2,
+      exercises: [_situp, _bicycleCrunch, _plank],
+    ),
+    WorkoutDay(
+      dayNumber: 3,
+      exercises: [_crunch, _russianTwist, _legRaise],
+    ),
+    WorkoutDay(
+      dayNumber: 4,
+      exercises: [_pushUp, _inclinePushUp, _chestFly],
+    ),
+    WorkoutDay(
+      dayNumber: 5,
+      exercises: [_mountainClimber, _flutterKick, _plank],
+    ),
+    WorkoutDay(
+      dayNumber: 6,
+      exercises: [_benchPress, _chestDip, _declinePushUp],
+    ),
+    WorkoutDay(
+      dayNumber: 7,
+      exercises: [
+        _crunch,
+        _bicycleCrunch,
+        _hangingLegRaise,
+        _flutterKick,
+      ],
+    ),
   ];
 
   Future<List<WorkoutDay>> loadProgram() async {

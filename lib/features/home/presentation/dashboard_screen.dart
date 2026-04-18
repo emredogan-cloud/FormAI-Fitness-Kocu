@@ -32,6 +32,44 @@ const List<String> _trDayLabels = [
   'Paz',
 ];
 
+/// Renders [image] as either a network image (when it starts with `http`)
+/// or a bundled asset. Shared by dashboard tiles so one attribute can
+/// mix Unsplash placeholders and local reference shots.
+Widget _resolveImage(String image) {
+  final fallback = Container(
+    color: Colors.white10,
+    alignment: Alignment.center,
+    child: const Icon(Icons.fitness_center, color: Colors.white54),
+  );
+  if (image.startsWith('http')) {
+    return Image.network(
+      image,
+      fit: BoxFit.cover,
+      loadingBuilder: (_, child, progress) {
+        if (progress == null) return child;
+        return Container(
+          color: Colors.white10,
+          alignment: Alignment.center,
+          child: const SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Colors.white54,
+            ),
+          ),
+        );
+      },
+      errorBuilder: (_, __, ___) => fallback,
+    );
+  }
+  return Image.asset(
+    image,
+    fit: BoxFit.cover,
+    errorBuilder: (_, __, ___) => fallback,
+  );
+}
+
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
@@ -912,6 +950,7 @@ class _BolgelerTab extends StatefulWidget {
 
 class _BolgelerTabState extends State<_BolgelerTab> {
   static const List<String> _categories = [
+    'Core',
     'Göğüs',
     'Kol',
     'Bacak',
@@ -919,11 +958,31 @@ class _BolgelerTabState extends State<_BolgelerTab> {
     'Tüm vücut',
   ];
 
+  // Per-category image. Core + Göğüs point at the local reference shots
+  // shipped in docs/ (declared under `flutter.assets` in pubspec.yaml);
+  // the others still fall back to Unsplash placeholders until bespoke
+  // artwork lands.
+  static const Map<String, String> _categoryImage = {
+    'Core': 'docs/Core (Karın & Stabilite)/1.jpeg',
+    'Göğüs':
+        'docs/Göğüs (Chest)/E9CjEna37nJKbG4xizXoq8r0-UFei_q8TvZdsf28rQ2PdTO6IBfn3JcyHsTjZ0ajMUdYONm0IeJQWI9pooHrWaGFoom5UFezanHoyFq6HfhXF9ogvwCKCavQTTFbWRmW4I4VNSHWuUtdTSnr2EOND47p9xBtkeBs-gckcnCkkL4.jpeg',
+    'Kol': _muscularPhotoUrl,
+    'Bacak': _leanPhotoUrl,
+    'Arka': _muscularPhotoUrl,
+    'Tüm vücut': _leanPhotoUrl,
+  };
+
   // Synthetic catalogue per category. Real workout discovery lives in the
   // Antrenman tab; this is a content placeholder until the backend surface
   // is built.
   static const Map<String, List<({String title, String level, int minutes})>>
       _catalogue = {
+    'Core': [
+      (title: 'Mekik Temel Seti', level: 'Başlangıç', minutes: 8),
+      (title: 'Plank Zincir Challenge', level: 'Orta düzey', minutes: 12),
+      (title: 'Bisiklet & Rus Dönüşü Combo', level: 'Orta düzey', minutes: 14),
+      (title: 'Mountain Climber Burst', level: 'İleri', minutes: 16),
+    ],
     'Göğüs': [
       (title: 'Dambıl Hızlı Göğüs Yapma', level: 'Orta düzey', minutes: 14),
       (title: 'Göğüs Aktivasyonu ve Büyüme', level: 'Başlangıç', minutes: 6),
@@ -956,7 +1015,7 @@ class _BolgelerTabState extends State<_BolgelerTab> {
     ],
   };
 
-  String _selected = 'Göğüs';
+  String _selected = 'Core';
 
   @override
   Widget build(BuildContext context) {
@@ -1012,11 +1071,11 @@ class _BolgelerTabState extends State<_BolgelerTab> {
             ),
             itemBuilder: (context, index) {
               final item = items[index];
-              final imageUrl = index.isEven ? _muscularPhotoUrl : _leanPhotoUrl;
+              final image = _categoryImage[_selected] ?? _muscularPhotoUrl;
               return _CategoryWorkoutTile(
                 title: item.title,
                 subtitle: '${item.level} · ${item.minutes} Dk',
-                imageUrl: imageUrl,
+                image: image,
               );
             },
           ),
@@ -1079,12 +1138,15 @@ class _CategoryWorkoutTile extends StatelessWidget {
   const _CategoryWorkoutTile({
     required this.title,
     required this.subtitle,
-    required this.imageUrl,
+    required this.image,
   });
 
   final String title;
   final String subtitle;
-  final String imageUrl;
+
+  /// Either an http(s) URL (rendered via Image.network) or a bundled asset
+  /// path (Image.asset). Detected at render time.
+  final String image;
 
   @override
   Widget build(BuildContext context) {
@@ -1096,33 +1158,7 @@ class _CategoryWorkoutTile extends StatelessWidget {
           child: SizedBox(
             width: 64,
             height: 64,
-            child: Image.network(
-              imageUrl,
-              fit: BoxFit.cover,
-              loadingBuilder: (_, child, progress) {
-                if (progress == null) return child;
-                return Container(
-                  color: Colors.white10,
-                  alignment: Alignment.center,
-                  child: const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white54,
-                    ),
-                  ),
-                );
-              },
-              errorBuilder: (_, __, ___) => Container(
-                color: Colors.white10,
-                alignment: Alignment.center,
-                child: const Icon(
-                  Icons.fitness_center,
-                  color: Colors.white54,
-                ),
-              ),
-            ),
+            child: _resolveImage(image),
           ),
         ),
         const SizedBox(width: 14),
