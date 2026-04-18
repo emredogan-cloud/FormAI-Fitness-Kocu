@@ -14,13 +14,6 @@ const Color _neonAccent = Color(0xFF4DA6FF);
 const int _totalSteps = 9;
 const int _hookSteps = 2;
 
-// Aesthetic Unsplash placeholders supplied by Phase 18 spec. Mapped onto
-// the lean→muscular gradient so users see "current vs. target" framing.
-const String _leanPhotoUrl =
-    'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=300&q=80';
-const String _muscularPhotoUrl =
-    'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=300&q=80';
-
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -120,128 +113,126 @@ class _WelcomeStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: RadialGradient(
-          center: Alignment.topCenter,
-          radius: 1.4,
-          colors: [Color(0xFF1A0B3D), Colors.black],
+    // Full-bleed background shot + dark gradient overlay so the neon copy
+    // stays readable against whatever photo ships in photos/. The overlay
+    // is stronger at the bottom so the CTA sits on a solid patch.
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(
+          'photos/onboarding_ilk_karşılama_metninin_arkaplanı.jpeg',
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                center: Alignment.topCenter,
+                radius: 1.4,
+                colors: [Color(0xFF1A0B3D), Colors.black],
+              ),
+            ),
+          ),
         ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(28, 24, 28, 28),
-        child: Column(
-          children: [
-            const Spacer(),
-            Stack(
-              alignment: Alignment.center,
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.black.withValues(alpha: 0.35),
+                Colors.black.withValues(alpha: 0.55),
+                Colors.black.withValues(alpha: 0.9),
+              ],
+              stops: const [0.0, 0.55, 1.0],
+            ),
+          ),
+        ),
+        SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(28, 24, 28, 28),
+            child: Column(
               children: [
-                Container(
-                  width: 220,
-                  height: 220,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        _neon.withValues(alpha: 0.45),
-                        Colors.transparent,
+                const Spacer(flex: 3),
+                ShaderMask(
+                  shaderCallback: (rect) => const LinearGradient(
+                    colors: [_neon, _neonAccent],
+                  ).createShader(rect),
+                  child: const Text(
+                    'Vücudunu Yapay Zeka İle Şekillendir',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 30,
+                      fontWeight: FontWeight.w900,
+                      height: 1.15,
+                      letterSpacing: 0.5,
+                      shadows: [
+                        Shadow(blurRadius: 24, color: Colors.black87),
                       ],
                     ),
                   ),
                 ),
-                Container(
-                  width: 140,
-                  height: 140,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: _neon, width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                        color: _neon.withValues(alpha: 0.7),
-                        blurRadius: 28,
-                        spreadRadius: 4,
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.fitness_center,
+                const SizedBox(height: 16),
+                const Text(
+                  'Telefonunun kamerası ile her tekrarını izleyen, '
+                  'formunu düzelten ve seni gerçek bir koç gibi motive '
+                  'eden kişisel yapay zeka asistanın.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
                     color: Colors.white,
-                    size: 64,
+                    fontSize: 14,
+                    height: 1.5,
+                    shadows: [Shadow(blurRadius: 18, color: Colors.black87)],
+                  ),
+                ),
+                const Spacer(flex: 2),
+                SizedBox(
+                  width: double.infinity,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _neon.withValues(alpha: 0.55),
+                          blurRadius: 28,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                    child: FilledButton(
+                      onPressed: onStart,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: _neon,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 22),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        textStyle: const TextStyle(
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 4,
+                          fontSize: 18,
+                        ),
+                      ),
+                      child: const Text('BAŞLA'),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Devam ederek Kullanım Şartları ve Gizlilik Politikasını '
+                  'kabul edersin.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 11,
+                    shadows: [Shadow(blurRadius: 12, color: Colors.black)],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 40),
-            ShaderMask(
-              shaderCallback: (rect) => const LinearGradient(
-                colors: [_neon, _neonAccent],
-              ).createShader(rect),
-              child: const Text(
-                'Vücudunu Yapay Zeka İle Şekillendir',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 30,
-                  fontWeight: FontWeight.w900,
-                  height: 1.15,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Telefonunun kamerası ile her tekrarını izleyen, '
-              'formunu düzelten ve seni gerçek bir koç gibi motive eden '
-              'kişisel yapay zeka asistanın.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 14,
-                height: 1.5,
-              ),
-            ),
-            const Spacer(),
-            SizedBox(
-              width: double.infinity,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _neon.withValues(alpha: 0.5),
-                      blurRadius: 28,
-                      spreadRadius: 1,
-                    ),
-                  ],
-                ),
-                child: FilledButton(
-                  onPressed: onStart,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: _neon,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 22),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    textStyle: const TextStyle(
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 4,
-                      fontSize: 18,
-                    ),
-                  ),
-                  child: const Text('BAŞLA'),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'Devam ederek Kullanım Şartları ve Gizlilik Politikasını kabul edersin.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white38, fontSize: 11),
-            ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -252,66 +243,97 @@ class _CoachIntroStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(28, 24, 28, 28),
-      child: Column(
-        children: [
-          const Spacer(),
-          _PulsingCoachAvatar(),
-          const SizedBox(height: 32),
-          const Text(
-            'Merhaba 👋',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.w900,
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(
+          'photos/kişiselkoçarkaplanfoto.jpeg',
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) =>
+              const ColoredBox(color: Color(0xFF0E0729)),
+        ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.black.withValues(alpha: 0.2),
+                Colors.black.withValues(alpha: 0.55),
+                Colors.black.withValues(alpha: 0.9),
+              ],
+              stops: const [0.0, 0.5, 1.0],
             ),
           ),
-          const SizedBox(height: 12),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8),
-            child: Text(
-              'Ben senin kişisel yapay zeka koçunum. '
-              'Şimdi sana birkaç hızlı soru soracağım ve '
-              'tamamen sana özel bir program çıkaracağım.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 15,
-                height: 1.55,
-              ),
-            ),
-          ),
-          const Spacer(),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: onContinue,
-              icon: const Icon(Icons.arrow_forward_rounded),
-              label: const Text('DEVAM ET'),
-              style: FilledButton.styleFrom(
-                backgroundColor: _neon,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 18),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
+        ),
+        SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(28, 24, 28, 28),
+            child: Column(
+              children: [
+                const Spacer(flex: 2),
+                const _PulsingCoachAvatar(),
+                const SizedBox(height: 28),
+                const Text(
+                  'Merhaba 👋',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    shadows: [Shadow(blurRadius: 20, color: Colors.black)],
+                  ),
                 ),
-                textStyle: const TextStyle(
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 3,
-                  fontSize: 14,
+                const SizedBox(height: 12),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8),
+                  child: Text(
+                    'Ben senin kişisel yapay zeka koçunum. '
+                    'Şimdi sana birkaç hızlı soru soracağım ve '
+                    'tamamen sana özel bir program çıkaracağım.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      height: 1.55,
+                      shadows: [Shadow(blurRadius: 16, color: Colors.black87)],
+                    ),
+                  ),
                 ),
-              ),
+                const Spacer(flex: 2),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: onContinue,
+                    icon: const Icon(Icons.arrow_forward_rounded),
+                    label: const Text('DEVAM ET'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: _neon,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      textStyle: const TextStyle(
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 3,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
 class _PulsingCoachAvatar extends StatefulWidget {
+  const _PulsingCoachAvatar();
+
   @override
   State<_PulsingCoachAvatar> createState() => _PulsingCoachAvatarState();
 }
@@ -339,8 +361,8 @@ class _PulsingCoachAvatarState extends State<_PulsingCoachAvatar>
           alignment: Alignment.center,
           children: [
             Container(
-              width: 200,
-              height: 200,
+              width: 220,
+              height: 220,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
@@ -352,27 +374,41 @@ class _PulsingCoachAvatarState extends State<_PulsingCoachAvatar>
               ),
             ),
             Container(
-              width: 120,
-              height: 120,
+              width: 140,
+              height: 140,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: const LinearGradient(
-                  colors: [_neon, _neonAccent],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                border: Border.all(color: _neon, width: 2),
                 boxShadow: [
                   BoxShadow(
                     color: _neon.withValues(alpha: 0.6),
-                    blurRadius: 24,
+                    blurRadius: 26,
                     spreadRadius: 2,
                   ),
                 ],
               ),
-              child: const Icon(
-                Icons.smart_toy,
-                color: Colors.white,
-                size: 56,
+              child: ClipOval(
+                child: Image.asset(
+                  'photos/kişiselyapayzekakoçfoto.webp',
+                  fit: BoxFit.cover,
+                  // Center-fit the face and lean into the dark halo when the
+                  // webp can't be decoded so we don't flash a grey circle.
+                  errorBuilder: (_, __, ___) => Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [_neon, _neonAccent],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Icon(
+                      Icons.smart_toy,
+                      color: Colors.white,
+                      size: 56,
+                    ),
+                  ),
+                ),
               ),
             ),
           ],
@@ -526,101 +562,6 @@ class _PrimaryButton extends StatelessWidget {
   }
 }
 
-class _OptionCard extends StatelessWidget {
-  const _OptionCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final borderColor = selected ? _neon : Colors.white24;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            border: Border.all(color: borderColor, width: selected ? 2 : 1),
-            borderRadius: BorderRadius.circular(16),
-            color: selected
-                ? _neon.withValues(alpha: 0.08)
-                : Colors.white.withValues(alpha: 0.02),
-            boxShadow: selected
-                ? [
-                    BoxShadow(
-                      color: _neon.withValues(alpha: 0.35),
-                      blurRadius: 18,
-                      spreadRadius: 1,
-                    ),
-                  ]
-                : null,
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  color: borderColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(
-                  icon,
-                  color: selected ? _neon : Colors.white70,
-                  size: 28,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    if (subtitle.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        style: const TextStyle(
-                          color: Colors.white54,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              Icon(
-                selected ? Icons.check_circle : Icons.chevron_right,
-                color: selected ? _neon : Colors.white24,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _GenderStep extends ConsumerWidget {
   const _GenderStep({required this.onSelected});
   final VoidCallback onSelected;
@@ -640,35 +581,48 @@ class _GenderStep extends ConsumerWidget {
           title: 'Cinsiyetin?',
           subtitle: 'Programını sana göre kalibre edelim.',
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 16),
+        // Fills the full remaining step height: three Expanded cards
+        // share the column evenly so there's no dead space at the bottom.
         Expanded(
-          child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            children: [
-              _OptionCard(
-                icon: Icons.female,
-                title: 'Kadın',
-                subtitle: 'Kadın için optimize edilmiş plan.',
-                selected: selected == Gender.female,
-                onTap: () => pick(Gender.female),
-              ),
-              const SizedBox(height: 12),
-              _OptionCard(
-                icon: Icons.male,
-                title: 'Erkek',
-                subtitle: 'Erkek için optimize edilmiş plan.',
-                selected: selected == Gender.male,
-                onTap: () => pick(Gender.male),
-              ),
-              const SizedBox(height: 12),
-              _OptionCard(
-                icon: Icons.transgender,
-                title: 'Diğer',
-                subtitle: 'Tarafsız bir plan oluşturalım.',
-                selected: selected == Gender.other,
-                onTap: () => pick(Gender.other),
-              ),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: Column(
+              children: [
+                Expanded(
+                  child: _PhotoOptionCard(
+                    fallbackIcon: Icons.female,
+                    title: 'Kadın',
+                    subtitle: 'Kadın için optimize edilmiş plan.',
+                    selected: selected == Gender.female,
+                    onTap: () => pick(Gender.female),
+                    image: 'photos/cinsiyetseçimikadın.png',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: _PhotoOptionCard(
+                    fallbackIcon: Icons.male,
+                    title: 'Erkek',
+                    subtitle: 'Erkek için optimize edilmiş plan.',
+                    selected: selected == Gender.male,
+                    onTap: () => pick(Gender.male),
+                    image: 'photos/cinsiyetseçimierkek.png',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: _PhotoOptionCard(
+                    fallbackIcon: Icons.transgender,
+                    title: 'Diğer',
+                    subtitle: 'Tarafsız bir plan oluşturalım.',
+                    selected: selected == Gender.other,
+                    onTap: () => pick(Gender.other),
+                    // No bespoke artwork shipped for "Diğer" — text only.
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -976,38 +930,49 @@ class _CurrentPhysiqueStep extends ConsumerWidget {
           title: 'Şu anki vücudun?',
           subtitle: 'Sana en yakın olanı seç.',
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 16),
         Expanded(
-          child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            children: [
-              _PhotoOptionCard(
-                imageUrl: _leanPhotoUrl,
-                fallbackIcon: Icons.accessibility,
-                title: 'Zayıf',
-                subtitle: 'Düşük yağ, ince yapı.',
-                selected: selected == Physique.slim,
-                onTap: () => pick(Physique.slim),
-              ),
-              const SizedBox(height: 12),
-              _PhotoOptionCard(
-                imageUrl: _leanPhotoUrl,
-                fallbackIcon: Icons.accessibility_new,
-                title: 'Normal',
-                subtitle: 'Ortalama yapı.',
-                selected: selected == Physique.normal,
-                onTap: () => pick(Physique.normal),
-              ),
-              const SizedBox(height: 12),
-              _PhotoOptionCard(
-                imageUrl: _muscularPhotoUrl,
-                fallbackIcon: Icons.airline_seat_recline_extra,
-                title: 'Kilolu / Hacimli',
-                subtitle: 'Fazla yağ veya hacimli yapı.',
-                selected: selected == Physique.heavy,
-                onTap: () => pick(Physique.heavy),
-              ),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: Column(
+              children: [
+                Expanded(
+                  child: _PhotoOptionCard(
+                    image: 'photos/vücutseçimiZayıf.png',
+                    fallbackIcon: Icons.accessibility,
+                    title: 'Zayıf',
+                    subtitle: 'Düşük yağ, ince yapı.',
+                    selected: selected == Physique.slim,
+                    onTap: () => pick(Physique.slim),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: _PhotoOptionCard(
+                    // Filename carries a "vucüt" typo that ships from the
+                    // user's asset export; keep the path verbatim so the
+                    // manifest lookup actually matches.
+                    image: 'photos/vucütseçimiNormal.png',
+                    fallbackIcon: Icons.accessibility_new,
+                    title: 'Normal',
+                    subtitle: 'Ortalama yapı.',
+                    selected: selected == Physique.normal,
+                    onTap: () => pick(Physique.normal),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: _PhotoOptionCard(
+                    image: 'photos/vücutseçimikiloluhacimli.png',
+                    fallbackIcon: Icons.airline_seat_recline_extra,
+                    title: 'Kilolu / Hacimli',
+                    subtitle: 'Fazla yağ veya hacimli yapı.',
+                    selected: selected == Physique.heavy,
+                    onTap: () => pick(Physique.heavy),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -1034,38 +999,46 @@ class _TargetPhysiqueStep extends ConsumerWidget {
           title: 'Hedefin ne?',
           subtitle: '30 gün sonra nereye varmak istersin?',
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 16),
         Expanded(
-          child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            children: [
-              _PhotoOptionCard(
-                imageUrl: _leanPhotoUrl,
-                fallbackIcon: Icons.local_fire_department,
-                title: 'Sıkılaşmak',
-                subtitle: 'Yağ yak, kasları sıkılaştır.',
-                selected: selected == GoalPhysique.tone,
-                onTap: () => pick(GoalPhysique.tone),
-              ),
-              const SizedBox(height: 12),
-              _PhotoOptionCard(
-                imageUrl: _muscularPhotoUrl,
-                fallbackIcon: Icons.fitness_center,
-                title: 'Hacim Kazanmak',
-                subtitle: 'Daha kalın, daha güçlü.',
-                selected: selected == GoalPhysique.bulk,
-                onTap: () => pick(GoalPhysique.bulk),
-              ),
-              const SizedBox(height: 12),
-              _PhotoOptionCard(
-                imageUrl: _muscularPhotoUrl,
-                fallbackIcon: Icons.bolt,
-                title: 'Sadece Six-Pack',
-                subtitle: 'Net çizgiler, belirgin karın.',
-                selected: selected == GoalPhysique.sixpack,
-                onTap: () => pick(GoalPhysique.sixpack),
-              ),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: Column(
+              children: [
+                Expanded(
+                  child: _PhotoOptionCard(
+                    image: 'photos/hedefinneSıkılaşmak.png',
+                    fallbackIcon: Icons.local_fire_department,
+                    title: 'Sıkılaşmak',
+                    subtitle: 'Yağ yak, kasları sıkılaştır.',
+                    selected: selected == GoalPhysique.tone,
+                    onTap: () => pick(GoalPhysique.tone),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: _PhotoOptionCard(
+                    image: 'photos/hedefinneHacimKazanmak.png',
+                    fallbackIcon: Icons.fitness_center,
+                    title: 'Hacim Kazanmak',
+                    subtitle: 'Daha kalın, daha güçlü.',
+                    selected: selected == GoalPhysique.bulk,
+                    onTap: () => pick(GoalPhysique.bulk),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: _PhotoOptionCard(
+                    image: 'photos/hedefinneSadeceSix-Pack.png',
+                    fallbackIcon: Icons.bolt,
+                    title: 'Sadece Six-Pack',
+                    subtitle: 'Net çizgiler, belirgin karın.',
+                    selected: selected == GoalPhysique.sixpack,
+                    onTap: () => pick(GoalPhysique.sixpack),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -1073,17 +1046,23 @@ class _TargetPhysiqueStep extends ConsumerWidget {
   }
 }
 
+/// Tall option card with text on the left and a photo filling the right
+/// third. Designed to be wrapped in an [Expanded] so three cards can fill
+/// the available step height — no more 50 % whitespace under the list.
+/// [image] accepts either an http(s) URL or a bundled asset path; the
+/// loader picks the right Image constructor automatically. When null the
+/// card renders text-only (used for the "Diğer" gender option).
 class _PhotoOptionCard extends StatelessWidget {
   const _PhotoOptionCard({
-    required this.imageUrl,
     required this.title,
     required this.subtitle,
     required this.selected,
     required this.onTap,
     required this.fallbackIcon,
+    this.image,
   });
 
-  final String imageUrl;
+  final String? image;
   final String title;
   final String subtitle;
   final bool selected;
@@ -1096,22 +1075,22 @@ class _PhotoOptionCard extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.all(12),
+          clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             border: Border.all(color: borderColor, width: selected ? 2 : 1),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(20),
             color: selected
                 ? _neon.withValues(alpha: 0.08)
-                : Colors.white.withValues(alpha: 0.02),
+                : Colors.white.withValues(alpha: 0.03),
             boxShadow: selected
                 ? [
                     BoxShadow(
                       color: _neon.withValues(alpha: 0.35),
-                      blurRadius: 18,
+                      blurRadius: 20,
                       spreadRadius: 1,
                     ),
                   ]
@@ -1119,52 +1098,66 @@ class _PhotoOptionCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: SizedBox(
-                  width: 76,
-                  height: 92,
+              Expanded(
+                flex: 5,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 18, 12, 18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        fallbackIcon,
+                        color: selected ? _neon : Colors.white70,
+                        size: 26,
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      if (subtitle.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          subtitle,
+                          style: const TextStyle(
+                            color: Colors.white54,
+                            fontSize: 13,
+                            height: 1.3,
+                          ),
+                        ),
+                      ],
+                      const Spacer(),
+                      Icon(
+                        selected ? Icons.check_circle : Icons.chevron_right,
+                        color: selected ? _neon : Colors.white24,
+                        size: 22,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (image != null)
+                Expanded(
+                  flex: 4,
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      Image.network(
-                        imageUrl,
-                        fit: BoxFit.cover,
-                        loadingBuilder: (_, child, progress) {
-                          if (progress == null) return child;
-                          return Container(
-                            color: Colors.white10,
-                            alignment: Alignment.center,
-                            child: const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white54,
-                              ),
-                            ),
-                          );
-                        },
-                        errorBuilder: (_, __, ___) => Container(
-                          color: Colors.white10,
-                          alignment: Alignment.center,
-                          child: Icon(
-                            fallbackIcon,
-                            color: Colors.white54,
-                            size: 32,
-                          ),
-                        ),
-                      ),
-                      // Dark gradient overlay so the neon UI stays readable
-                      // even on the brightest Unsplash highlights.
+                      _buildPhoto(image!, fallbackIcon),
+                      // Left-to-right fade so text stays readable when the
+                      // photo's left edge is bright.
                       DecoratedBox(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
                             colors: [
-                              Colors.black.withValues(alpha: 0.05),
-                              Colors.black.withValues(alpha: 0.55),
+                              Colors.black.withValues(alpha: 0.35),
+                              Colors.transparent,
                             ],
                           ),
                         ),
@@ -1172,41 +1165,32 @@ class _PhotoOptionCard extends StatelessWidget {
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    if (subtitle.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        style: const TextStyle(
-                          color: Colors.white54,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              Icon(
-                selected ? Icons.check_circle : Icons.chevron_right,
-                color: selected ? _neon : Colors.white24,
-              ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildPhoto(String src, IconData fallbackIcon) {
+    final fb = Container(
+      color: Colors.white10,
+      alignment: Alignment.center,
+      child: Icon(fallbackIcon, color: Colors.white54, size: 36),
+    );
+    if (src.startsWith('http')) {
+      return Image.network(
+        src,
+        fit: BoxFit.cover,
+        loadingBuilder: (_, child, progress) =>
+            progress == null ? child : Container(color: Colors.white10),
+        errorBuilder: (_, __, ___) => fb,
+      );
+    }
+    return Image.asset(
+      src,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => fb,
     );
   }
 }
@@ -1230,35 +1214,46 @@ class _ActivityStep extends ConsumerWidget {
           title: 'Günlük aktiviten?',
           subtitle: 'Programın yoğunluğunu buna göre dengeleyeceğiz.',
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 16),
         Expanded(
-          child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            children: [
-              _OptionCard(
-                icon: Icons.chair,
-                title: 'Masa Başı',
-                subtitle: 'Çoğunlukla otururum, az hareket ederim.',
-                selected: selected == ActivityLevel.sedentary,
-                onTap: () => pick(ActivityLevel.sedentary),
-              ),
-              const SizedBox(height: 12),
-              _OptionCard(
-                icon: Icons.directions_walk,
-                title: 'Hafif Hareketli',
-                subtitle: 'Düzenli yürüyüş, hafif egzersiz.',
-                selected: selected == ActivityLevel.light,
-                onTap: () => pick(ActivityLevel.light),
-              ),
-              const SizedBox(height: 12),
-              _OptionCard(
-                icon: Icons.directions_run,
-                title: 'Çok Aktif',
-                subtitle: 'Düzenli antrenman, yüksek tempo.',
-                selected: selected == ActivityLevel.active,
-                onTap: () => pick(ActivityLevel.active),
-              ),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: Column(
+              children: [
+                Expanded(
+                  child: _PhotoOptionCard(
+                    image: 'photos/günlükaktivitenmasabaşı.png',
+                    fallbackIcon: Icons.chair,
+                    title: 'Masa Başı',
+                    subtitle: 'Çoğunlukla otururum, az hareket ederim.',
+                    selected: selected == ActivityLevel.sedentary,
+                    onTap: () => pick(ActivityLevel.sedentary),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: _PhotoOptionCard(
+                    image: 'photos/günlükaktivitenhafifhareketli.png',
+                    fallbackIcon: Icons.directions_walk,
+                    title: 'Hafif Hareketli',
+                    subtitle: 'Düzenli yürüyüş, hafif egzersiz.',
+                    selected: selected == ActivityLevel.light,
+                    onTap: () => pick(ActivityLevel.light),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: _PhotoOptionCard(
+                    image: 'photos/günlükaktivitenneÇokAktif.png',
+                    fallbackIcon: Icons.directions_run,
+                    title: 'Çok Aktif',
+                    subtitle: 'Düzenli antrenman, yüksek tempo.',
+                    selected: selected == ActivityLevel.active,
+                    onTap: () => pick(ActivityLevel.active),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -1266,115 +1261,303 @@ class _ActivityStep extends ConsumerWidget {
   }
 }
 
-class _IllusionStep extends StatefulWidget {
+class _IllusionStep extends ConsumerStatefulWidget {
   const _IllusionStep({required this.onComplete});
   final VoidCallback onComplete;
 
   @override
-  State<_IllusionStep> createState() => _IllusionStepState();
+  ConsumerState<_IllusionStep> createState() => _IllusionStepState();
 }
 
-class _IllusionStepState extends State<_IllusionStep>
+class _IllusionStepState extends ConsumerState<_IllusionStep>
     with SingleTickerProviderStateMixin {
-  static const List<String> _phrases = [
-    'Vücut metrikleri analiz ediliyor…',
-    'Hedeflerine uygun egzersizler seçiliyor…',
-    'Sana özel 30 günlük plan oluşturuluyor…',
-    'Program Hazır!',
+  // Per-metric row shown in the animated progress card. The first two
+  // finish quickly (BMI and basic profile math are "cheap"); the analysis
+  // rows take longer on purpose for the illusion of depth.
+  static const List<_MetricRowData> _rows = [
+    _MetricRowData(label: 'Hedefin', startAt: 0.00, endAt: 0.18),
+    _MetricRowData(label: 'Senin Hakkında', startAt: 0.14, endAt: 0.44),
+    _MetricRowData(label: 'Form Durumu Analizi', startAt: 0.36, endAt: 0.62),
+    _MetricRowData(label: 'Yaşam Tarzı Analizi', startAt: 0.55, endAt: 0.82),
+    _MetricRowData(label: 'Plan Kurulumu', startAt: 0.72, endAt: 1.00),
   ];
 
-  late final AnimationController _spin = AnimationController(
-    vsync: this,
-    duration: const Duration(seconds: 2),
-  )..repeat();
-
-  int _phraseIndex = 0;
-  Timer? _timer;
-  bool _started = false;
+  late final AnimationController _controller;
+  bool _completionScheduled = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _start());
-  }
-
-  void _start() {
-    if (_started) return;
-    _started = true;
-    _timer = Timer.periodic(const Duration(milliseconds: 1200), (t) {
-      if (!mounted) {
-        t.cancel();
-        return;
-      }
-      if (_phraseIndex >= _phrases.length - 1) {
-        t.cancel();
-        _spin.stop();
-        Future<void>.delayed(const Duration(milliseconds: 900), () {
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 8500),
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _controller.forward().whenComplete(() {
+        if (_completionScheduled || !mounted) return;
+        _completionScheduled = true;
+        Future<void>.delayed(const Duration(milliseconds: 650), () {
           if (mounted) widget.onComplete();
         });
-        return;
-      }
-      setState(() => _phraseIndex += 1);
+      });
     });
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
-    _spin.dispose();
+    _controller.dispose();
     super.dispose();
+  }
+
+  double _progressFor(_MetricRowData row, double t) {
+    if (t <= row.startAt) return 0;
+    if (t >= row.endAt) return 1;
+    return ((t - row.startAt) / (row.endAt - row.startAt)).clamp(0.0, 1.0);
+  }
+
+  String _predictedCalories() {
+    final w = ref.read(wizardProvider);
+    final weight = w.weightKg ?? 72;
+    final height = w.heightCm ?? 172;
+    final age = w.age ?? 28;
+    // Quick Mifflin-St Jeor for a rough display number — this is a hook,
+    // not a clinical calculation.
+    final base = 10 * weight + 6.25 * height - 5 * age + 5;
+    final active = (base * 1.45).round();
+    return '$active kcal';
+  }
+
+  String _predictedBmi() {
+    final w = ref.read(wizardProvider);
+    final weight = w.weightKg ?? 72;
+    final height = w.heightCm ?? 172;
+    final hm = height / 100.0;
+    if (hm <= 0) return '—';
+    return (weight / (hm * hm)).toStringAsFixed(1);
   }
 
   @override
   Widget build(BuildContext context) {
-    final done = _phraseIndex == _phrases.length - 1;
-    final color = done ? const Color(0xFF39FF14) : _neon;
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: 140,
-            height: 140,
-            child: done
-                ? Icon(Icons.check_circle, color: color, size: 140)
-                : Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      RotationTransition(
-                        turns: _spin,
-                        child: SizedBox(
-                          width: 140,
-                          height: 140,
-                          child: CircularProgressIndicator(
-                            color: color,
-                            strokeWidth: 3,
-                            backgroundColor: Colors.white12,
-                          ),
-                        ),
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        final t = _controller.value;
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 8),
+                ShaderMask(
+                  shaderCallback: (rect) => const LinearGradient(
+                    colors: [_neon, _neonAccent],
+                  ).createShader(rect),
+                  child: const Text(
+                    'Gerçek sonuçlar için planlar',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 26,
+                      fontWeight: FontWeight.w900,
+                      height: 1.2,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'sana özel',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: _neonAccent,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+                const SizedBox(height: 26),
+                Container(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.04),
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(
+                      color: _neon.withValues(alpha: 0.35),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _neon.withValues(alpha: 0.15),
+                        blurRadius: 22,
+                        spreadRadius: 0.5,
                       ),
-                      Icon(Icons.auto_awesome, color: color, size: 48),
                     ],
                   ),
+                  child: Column(
+                    children: [
+                      for (final row in _rows) ...[
+                        _IllusionProgressRow(
+                          label: row.label,
+                          progress: _progressFor(row, t),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _MetricBubble(
+                        label: 'BMI',
+                        value: _predictedBmi(),
+                        icon: Icons.monitor_weight_outlined,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _MetricBubble(
+                        label: 'GÜNLÜK KAL.',
+                        value: _predictedCalories(),
+                        icon: Icons.local_fire_department,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _MetricBubble(
+                        label: 'KAS PAYI',
+                        value: '${(38 + t * 6).toStringAsFixed(1)}%',
+                        icon: Icons.fitness_center,
+                      ),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                Text(
+                  t < 1
+                      ? 'AI kişisel planını hazırlıyor, bir an bekle…'
+                      : 'Hazır! Plan güvenli şekilde kaydedildi.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white60,
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 36),
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 350),
-            transitionBuilder: (child, animation) =>
-                FadeTransition(opacity: animation, child: child),
-            child: Padding(
-              key: ValueKey(_phraseIndex),
-              padding: const EdgeInsets.symmetric(horizontal: 32),
+        );
+      },
+    );
+  }
+}
+
+class _MetricRowData {
+  const _MetricRowData({
+    required this.label,
+    required this.startAt,
+    required this.endAt,
+  });
+  final String label;
+  final double startAt;
+  final double endAt;
+}
+
+class _IllusionProgressRow extends StatelessWidget {
+  const _IllusionProgressRow({required this.label, required this.progress});
+  final String label;
+  final double progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final percent = (progress * 100).round();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
               child: Text(
-                _phrases[_phraseIndex],
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: color,
-                  fontSize: 18,
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
                   fontWeight: FontWeight.w700,
-                  letterSpacing: 0.5,
                 ),
               ),
+            ),
+            Text(
+              '$percent%',
+              style: TextStyle(
+                color: percent == 100 ? _neonAccent : Colors.white70,
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: progress,
+            minHeight: 5,
+            backgroundColor: Colors.white.withValues(alpha: 0.08),
+            valueColor: const AlwaysStoppedAnimation(_neonAccent),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MetricBubble extends StatelessWidget {
+  const _MetricBubble({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+  final String label;
+  final String value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        color: Colors.white.withValues(alpha: 0.04),
+        border: Border.all(
+          color: _neon.withValues(alpha: 0.25),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: _neon, size: 18),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 9.5,
+              letterSpacing: 1.4,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+              fontWeight: FontWeight.w900,
             ),
           ),
         ],

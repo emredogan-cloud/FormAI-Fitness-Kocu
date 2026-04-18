@@ -61,3 +61,6 @@ flutter:
     - "docs/Kol (Arms)/"
     - "docs/Omuz (Shoulders)/"
     - "docs/Kardiyo & Full Body/"
+    # Bespoke onboarding + prediction artwork (all Turkish-named PNG/JPEG/
+    # WEBP files live at the photos/ root). Folder is quoted for safety.
+    - "photos/"
