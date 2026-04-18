@@ -8,6 +8,7 @@ import '../../features/home/presentation/dashboard_screen.dart';
 import '../../features/monetization/presentation/paywall_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/onboarding/presentation/prediction_screen.dart';
+import '../../features/workout/presentation/plan_detail_screen.dart';
 import '../../features/workout/presentation/workout_camera_screen.dart';
 import '../services/app_preferences.dart';
 
@@ -19,6 +20,7 @@ class AppRoutes {
   static const String workout = '/workout';
   static const String paywall = '/paywall';
   static const String prediction = '/prediction';
+  static const String planDetail = '/plan-detail';
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -79,6 +81,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.prediction,
         name: 'prediction',
         builder: (context, state) => const PredictionScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.planDetail,
+        name: 'planDetail',
+        builder: (context, state) => const PlanDetailScreen(),
       ),
     ],
   );
