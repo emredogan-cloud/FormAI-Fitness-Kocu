@@ -162,6 +162,13 @@ class _PlanTab extends ConsumerWidget {
             },
           ),
         ),
+        const SizedBox(height: 28),
+        const _SectionTitle(
+          title: 'BAŞARI HİKAYELERİ',
+          subtitle: 'Senin gibi binlerce kişi başardı',
+        ),
+        const SizedBox(height: 14),
+        const _SuccessStoriesStrip(),
       ],
     );
   }
@@ -528,6 +535,148 @@ class _SectionTitle extends StatelessWidget {
               style: const TextStyle(color: Colors.white38, fontSize: 12),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _SuccessStoriesStrip extends StatelessWidget {
+  const _SuccessStoriesStrip();
+
+  static const List<({String name, String body, int stars})> _reviews = [
+    (
+      name: 'Ahmet K.',
+      body: '3 ayda 8 kilo verdim ve karın kaslarım belirginleşti!',
+      stars: 5,
+    ),
+    (
+      name: 'Caner T.',
+      body: 'Sadece evde çalışarak inanılmaz sonuç aldım. Yapay zeka formu '
+          'mükemmel takip ediyor.',
+      stars: 5,
+    ),
+    (
+      name: 'Selin A.',
+      body: '30 günde toplam 6 cm bel inceldim. Sesli koç motivasyonu harika.',
+      stars: 5,
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 140,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: _reviews.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        itemBuilder: (context, index) {
+          final r = _reviews[index];
+          return _ReviewCard(name: r.name, body: r.body, stars: r.stars);
+        },
+      ),
+    );
+  }
+}
+
+class _ReviewCard extends StatelessWidget {
+  const _ReviewCard({
+    required this.name,
+    required this.body,
+    required this.stars,
+  });
+
+  final String name;
+  final String body;
+  final int stars;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 280,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        // Glassmorphism: layered translucent fill on top of the dark
+        // background, with a faint neon-tinted border to tie it in.
+        gradient: LinearGradient(
+          colors: [
+            Colors.white.withValues(alpha: 0.07),
+            Colors.white.withValues(alpha: 0.02),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(
+          color: _neon.withValues(alpha: 0.25),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: _neon.withValues(alpha: 0.12),
+            blurRadius: 14,
+            spreadRadius: 0.5,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: _neon.withValues(alpha: 0.25),
+                child: Text(
+                  name.isEmpty ? '?' : name[0],
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(
+                  stars.clamp(0, 5),
+                  (_) => const Icon(
+                    Icons.star_rounded,
+                    color: Color(0xFFFFD24A),
+                    size: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Expanded(
+            child: Text(
+              body,
+              maxLines: 4,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 12.5,
+                height: 1.4,
+              ),
+            ),
+          ),
         ],
       ),
     );

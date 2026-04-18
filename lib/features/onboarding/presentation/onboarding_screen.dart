@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/routing/app_router.dart';
 import '../../../core/services/app_preferences.dart';
@@ -12,6 +13,13 @@ const Color _neon = Color(0xFF8E5BFF);
 const Color _neonAccent = Color(0xFF4DA6FF);
 const int _totalSteps = 9;
 const int _hookSteps = 2;
+
+// Aesthetic Unsplash placeholders supplied by Phase 18 spec. Mapped onto
+// the lean→muscular gradient so users see "current vs. target" framing.
+const String _leanPhotoUrl =
+    'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=300&q=80';
+const String _muscularPhotoUrl =
+    'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=300&q=80';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -50,7 +58,21 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     await ref.read(appPreferencesProvider).completeOnboarding(
         goal: ref.read(wizardProvider).targetPhysique?.name);
     if (!mounted) return;
-    context.go(AppRoutes.auth);
+
+    // Frictionless auth: silently create an anonymous Supabase session so
+    // the user can preview their personalized prediction without being
+    // shoved into a sign-up form. If anon auth is disabled in the project
+    // (or the network is offline), fall back to the explicit /auth screen.
+    try {
+      await Supabase.instance.client.auth.signInAnonymously();
+    } catch (e, st) {
+      debugPrint('Anonymous sign-in failed, falling back to /auth: $e\n$st');
+      if (!mounted) return;
+      context.go(AppRoutes.auth);
+      return;
+    }
+    if (!mounted) return;
+    context.go(AppRoutes.prediction);
   }
 
   @override
@@ -959,24 +981,27 @@ class _CurrentPhysiqueStep extends ConsumerWidget {
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             children: [
-              _OptionCard(
-                icon: Icons.accessibility,
+              _PhotoOptionCard(
+                imageUrl: _leanPhotoUrl,
+                fallbackIcon: Icons.accessibility,
                 title: 'Zayıf',
                 subtitle: 'Düşük yağ, ince yapı.',
                 selected: selected == Physique.slim,
                 onTap: () => pick(Physique.slim),
               ),
               const SizedBox(height: 12),
-              _OptionCard(
-                icon: Icons.accessibility_new,
+              _PhotoOptionCard(
+                imageUrl: _leanPhotoUrl,
+                fallbackIcon: Icons.accessibility_new,
                 title: 'Normal',
                 subtitle: 'Ortalama yapı.',
                 selected: selected == Physique.normal,
                 onTap: () => pick(Physique.normal),
               ),
               const SizedBox(height: 12),
-              _OptionCard(
-                icon: Icons.airline_seat_recline_extra,
+              _PhotoOptionCard(
+                imageUrl: _muscularPhotoUrl,
+                fallbackIcon: Icons.airline_seat_recline_extra,
                 title: 'Kilolu / Hacimli',
                 subtitle: 'Fazla yağ veya hacimli yapı.',
                 selected: selected == Physique.heavy,
@@ -1014,24 +1039,27 @@ class _TargetPhysiqueStep extends ConsumerWidget {
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             children: [
-              _OptionCard(
-                icon: Icons.local_fire_department,
+              _PhotoOptionCard(
+                imageUrl: _leanPhotoUrl,
+                fallbackIcon: Icons.local_fire_department,
                 title: 'Sıkılaşmak',
                 subtitle: 'Yağ yak, kasları sıkılaştır.',
                 selected: selected == GoalPhysique.tone,
                 onTap: () => pick(GoalPhysique.tone),
               ),
               const SizedBox(height: 12),
-              _OptionCard(
-                icon: Icons.fitness_center,
+              _PhotoOptionCard(
+                imageUrl: _muscularPhotoUrl,
+                fallbackIcon: Icons.fitness_center,
                 title: 'Hacim Kazanmak',
                 subtitle: 'Daha kalın, daha güçlü.',
                 selected: selected == GoalPhysique.bulk,
                 onTap: () => pick(GoalPhysique.bulk),
               ),
               const SizedBox(height: 12),
-              _OptionCard(
-                icon: Icons.bolt,
+              _PhotoOptionCard(
+                imageUrl: _muscularPhotoUrl,
+                fallbackIcon: Icons.bolt,
                 title: 'Sadece Six-Pack',
                 subtitle: 'Net çizgiler, belirgin karın.',
                 selected: selected == GoalPhysique.sixpack,
@@ -1041,6 +1069,144 @@ class _TargetPhysiqueStep extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _PhotoOptionCard extends StatelessWidget {
+  const _PhotoOptionCard({
+    required this.imageUrl,
+    required this.title,
+    required this.subtitle,
+    required this.selected,
+    required this.onTap,
+    required this.fallbackIcon,
+  });
+
+  final String imageUrl;
+  final String title;
+  final String subtitle;
+  final bool selected;
+  final VoidCallback onTap;
+  final IconData fallbackIcon;
+
+  @override
+  Widget build(BuildContext context) {
+    final borderColor = selected ? _neon : Colors.white24;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            border: Border.all(color: borderColor, width: selected ? 2 : 1),
+            borderRadius: BorderRadius.circular(16),
+            color: selected
+                ? _neon.withValues(alpha: 0.08)
+                : Colors.white.withValues(alpha: 0.02),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: _neon.withValues(alpha: 0.35),
+                      blurRadius: 18,
+                      spreadRadius: 1,
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: SizedBox(
+                  width: 76,
+                  height: 92,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (_, child, progress) {
+                          if (progress == null) return child;
+                          return Container(
+                            color: Colors.white10,
+                            alignment: Alignment.center,
+                            child: const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white54,
+                              ),
+                            ),
+                          );
+                        },
+                        errorBuilder: (_, __, ___) => Container(
+                          color: Colors.white10,
+                          alignment: Alignment.center,
+                          child: Icon(
+                            fallbackIcon,
+                            color: Colors.white54,
+                            size: 32,
+                          ),
+                        ),
+                      ),
+                      // Dark gradient overlay so the neon UI stays readable
+                      // even on the brightest Unsplash highlights.
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.black.withValues(alpha: 0.05),
+                              Colors.black.withValues(alpha: 0.55),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    if (subtitle.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: const TextStyle(
+                          color: Colors.white54,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Icon(
+                selected ? Icons.check_circle : Icons.chevron_right,
+                color: selected ? _neon : Colors.white24,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

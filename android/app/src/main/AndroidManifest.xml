@@ -1,6 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Required for Image.network (Unsplash onboarding photos) and any
+         remote asset/REST traffic in release builds. The debug manifest
+         already declares this for the Flutter dev tools. -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:label="sixpack_ai"

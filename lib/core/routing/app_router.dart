@@ -7,6 +7,7 @@ import '../../features/auth/providers/auth_provider.dart';
 import '../../features/home/presentation/dashboard_screen.dart';
 import '../../features/monetization/presentation/paywall_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
+import '../../features/onboarding/presentation/prediction_screen.dart';
 import '../../features/workout/presentation/workout_camera_screen.dart';
 import '../services/app_preferences.dart';
 
@@ -17,6 +18,7 @@ class AppRoutes {
   static const String auth = '/auth';
   static const String workout = '/workout';
   static const String paywall = '/paywall';
+  static const String prediction = '/prediction';
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -31,7 +33,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     if (user == null) {
       return path == AppRoutes.auth ? null : AppRoutes.auth;
     }
-    if (path == AppRoutes.auth || path == AppRoutes.onboarding) {
+    // First-time anon sign-in lands users at /onboarding momentarily before
+    // we punt them to the prediction hook. /auth (explicit sign-in fallback)
+    // still flows straight to the paywall as before.
+    if (path == AppRoutes.onboarding) {
+      return AppRoutes.prediction;
+    }
+    if (path == AppRoutes.auth) {
       return AppRoutes.paywall;
     }
     return null;
@@ -66,6 +74,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.paywall,
         name: 'paywall',
         builder: (context, state) => const PaywallScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.prediction,
+        name: 'prediction',
+        builder: (context, state) => const PredictionScreen(),
       ),
     ],
   );

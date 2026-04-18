@@ -125,7 +125,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Ücretsiz Denemeyi Başlatın',
+                  '₺0,00 karşılığında dene',
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w900,
