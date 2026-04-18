@@ -16,6 +16,41 @@ class WorkoutRepository {
   static const String _progressTable = 'user_progress';
 
   // ==========================================================================
+  // ASSET PATH SHORTCUTS — keeps the plans list below readable. Each value
+  // resolves to a file inside one of the docs/<region>/ folders declared
+  // under flutter.assets in pubspec.yaml; the long base64-ish basenames
+  // come straight from the cloud-storage exports the user dropped in.
+  // ==========================================================================
+
+  static const String _coreImg1 = 'docs/Core (Karın & Stabilite)/1.jpeg';
+  static const String _coreImg2 =
+      'docs/Core (Karın & Stabilite)/4h-GfJgN9a4wzOi5dyPr4KKzTpZDl4vlTe5qrgdfbu-YomsCs9IxRfwX4C59yrMzFmdH7q33bMBU1PJYM5epPdc577HOU-8pc5rS85ayDzJXt4fVp-wlwgBGgugxDyqag-U0zX4sqMe7Y9QendQX0aT-fDYsYfdHW73PvxmVmUQ.jpeg';
+  static const String _chestImg1 =
+      'docs/Göğüs (Chest)/E9CjEna37nJKbG4xizXoq8r0-UFei_q8TvZdsf28rQ2PdTO6IBfn3JcyHsTjZ0ajMUdYONm0IeJQWI9pooHrWaGFoom5UFezanHoyFq6HfhXF9ogvwCKCavQTTFbWRmW4I4VNSHWuUtdTSnr2EOND47p9xBtkeBs-gckcnCkkL4.jpeg';
+  static const String _chestImg2 =
+      'docs/Göğüs (Chest)/JpJrp6V8ApIDIbjyWcwl8EJd2H7nBHQIFvkwuTE19rWpeyzFxljASLhwIZdMn13phGSSHZ0pZDF7h-y4fNyuxtQs5OW9jOZvbRZbhmvfukC8TsmQU2iU39rgs_HHtlWvfOY5VNWriZxRvjHn5TRdDT_MmlFpFWkfNHlfABZm4oY.jpeg';
+  static const String _chestImg3 =
+      'docs/Göğüs (Chest)/QrerRX4gKZal4Q9UdGhjHMhe2DzMZRnPy_xPSArSoSdTnlDM-vQVcrCRsVxrtc_Hw71PYdlclsmuFmQH7len4atYL2PGluwc_MziOps4Cotfrh7tLxpFCm1IEzFlvEOYwJnYjRs4PRGXc2gxWZvN-gbX6pwV7M2_ato-6QG2Axv90-TUqpnr2eYw_X5FYcWe.jpeg';
+  static const String _chestImg4 =
+      'docs/Göğüs (Chest)/uigcgXRDQbphmZcD8AMJWlg-3h0BYRX1MI9oVj3WH8PNKgTSg_XzebzZ-avafXT8SoNbqw5bOcmvK6XyGoTakHAVzAfzA1GfjXwaHWffCwD9gXxuIRTdXNKYP3krRR-8Mkx0BqD9iErK7digcfORT0WYCFD4pVs9QFPIyrew20SvvD_DIke6uGROLFxxIqmJ.jpeg';
+  static const String _backImg1 =
+      'docs/Sırt (Back)/DkFE86-g1pS0UaNntjAY3IhaCb3hfF5FekQ0gN893pveagV3LGBjzihc_ld5V0aCEK8OPrrfoJu16CKXdUTFUWo4dpHCXJ3ZbBGTNNExEW9bJIEGUpbK6WNuvWq2487WAcT6dLkmSGml6s_ePD-eKi_ZzGQYL-mRcXkXcFWm8LRmdJAgxrurFP1xzG4Hgu8C.jpeg';
+  static const String _backImg2 =
+      'docs/Sırt (Back)/w4hPxE1QE3qK9OO5j67xk8JC_oRqz7zsfq187sTHrrlyCKAgSJsU7rTCzQvXjRtdXc7FCw6o04lEq039fzeemachfR6vbCyoNctqNRMNDDGkj0Sl7-D81DyG3sd167H2HQ6xLZu3AokrngJnwk2udZO-Q_JesVDmdmcUhb393YKUjfSL7ikBOXM1RKuG9DX2.jpeg';
+  static const String _legsImg1 =
+      'docs/Bacak (Legs)/eWCp_hOV3FeP_erhHbLTS0w6Pakbs-zsH-UnvBu9gg8vuU1jbNU6zD9Qp5SP3ZrBefkEJCbSRjSTp-LxUOKxu8DXVk_48yoAKE3ZpO9eauuKRQCmKyxaEwdcbk6oLUOtQev6uEPhWf7VbcUdBvcCyhjOom6sAfz-WvDrV2qqCqhS0U925QACge33ReoCk7M9.jpeg';
+  static const String _legsImg2 =
+      'docs/Bacak (Legs)/FZyPUHF5w9TgElI1Kw16ybexSiSrCRiB7df4hpPOidOpdT6Cx5u0x7fLVgDrm9uc1sP08OCBFzwt8Son5ltNtOlVnfO6tJqm7Dv37y0x_58Xq44pOfSqWYDBnVpYZy9nWy1oMNLyGBBtQ5YymatFD5sXltkC-ZMrMJlVtmFAUc_kAoN7LON64py17VwT2Yhv.jpeg';
+  static const String _legsImg3 =
+      'docs/Bacak (Legs)/KaA4Q9qGOCwN0JArCU6QJyZ6_q8cLE90vhWZuR_HjqCF6EEziCkyKM1F2KbuahMkyQLC9su_lOdog-2IBklawVhoR3vvlm72kTzKzfAD43cs6c8Le-xGiV0Ypzhv5wwTGU4ng9CnWkleAU5XSD7wGDGvBUAYYsNUdeQxgwiZhGRZOnQ7aTS5MhmOI9gf71vU.jpeg';
+  static const String _legsImg4 =
+      'docs/Bacak (Legs)/sjz2Ldz3yNj2c7FGkLTGjcPWnchkO_6VAYmu1Z6spiiFrM-LmwREsOseQ7lWCcMfESKItiRHZp6oa1HxyZxFfj4KCyo3PQN3-2p6hwSFlHNRfcHeyrVcJNWi0fVClqm1d9-r8_Tqz011bzj0qSfUnxynWxHfRXOXhn0c6mF7kxr2BlLamVxyVMD9-428zHl_.jpeg';
+  static const String _armsImg =
+      'docs/Kol (Arms)/bSLUGrV7-P_4L6oIyHstsUMJkYGDxDxsQXJ_JGTR7cTF8xmadysiHCF8k5rfBQLq2X1UuHpCKc-J6SL0wB41a9BCLWc5s_-jFSXp8Mf1B0WqsrB-nFrgl6cHO18e03gAyuhRA8ssqpqXh34-1v8aFvEXIc6nG0ZEyOeRLjkPXyCY6InQ2hBwtLtrQ2LuQsW5.jpeg';
+  static const String _fullBodyImg =
+      'docs/Kardiyo & Full Body/9HOfBbb87p7h6T5pJE0EL8cPdPegtFKeMIf2E6kcLIwKxci8E5vhrqTHpM_wU_L_-3MOZ726uxkSAlgoWckfpLVfm03A1RoQSfHaWwwG2WXiyddOCPjwK6cUUGLe9B3EwJZxWaKApR0jCAzlNzdIhsSSjMKlniBvTv-B0IIfFPo8gNJ7ZtLMyyq5pBXgl4le.jpeg';
+
+  // ==========================================================================
   // CORE (Karın & Stabilite)
   // ==========================================================================
 
@@ -208,6 +243,146 @@ class WorkoutRepository {
   );
 
   // ==========================================================================
+  // BACAK (Legs)
+  // ==========================================================================
+
+  static const Exercise _squat = Exercise(
+    id: 'squat',
+    name: 'Squat',
+    type: ExerciseType.repBased,
+    targetReps: 15,
+    sets: 3,
+    restDurationInSeconds: 45,
+    category: ExerciseCategory.legs,
+    startCommand:
+        'Sıradaki hareket: Squat. Ayakların omuz hizasında, dizlerini bük ve kontrollü çık.',
+  );
+
+  static const Exercise _lunge = Exercise(
+    id: 'lunge',
+    name: 'Lunge',
+    type: ExerciseType.repBased,
+    targetReps: 12,
+    sets: 3,
+    restDurationInSeconds: 45,
+    category: ExerciseCategory.legs,
+    startCommand:
+        'Sıradaki hareket: Lunge. Geniş bir adım at, ön diz dik açıya kadar in.',
+  );
+
+  static const Exercise _bulgarianSplitSquat = Exercise(
+    id: 'bulgarian_split_squat',
+    name: 'Bulgar Split Squat',
+    type: ExerciseType.repBased,
+    targetReps: 10,
+    sets: 3,
+    restDurationInSeconds: 50,
+    category: ExerciseCategory.legs,
+    startCommand:
+        'Sıradaki hareket: Bulgar Split Squat. Arka ayağını yüksek bir yere koy ve in çık.',
+  );
+
+  static const Exercise _legPress = Exercise(
+    id: 'leg_press',
+    name: 'Leg Press',
+    type: ExerciseType.repBased,
+    targetReps: 12,
+    sets: 3,
+    restDurationInSeconds: 60,
+    category: ExerciseCategory.legs,
+    startCommand:
+        'Sıradaki hareket: Leg Press. Sırtını desteğe yasla, dizlerini kilitlemeden it.',
+  );
+
+  static const Exercise _calfRaise = Exercise(
+    id: 'calf_raise',
+    name: 'Calf Raise',
+    type: ExerciseType.timeBased,
+    targetDurationInSeconds: 35,
+    sets: 3,
+    restDurationInSeconds: 30,
+    category: ExerciseCategory.legs,
+    startCommand:
+        'Sıradaki hareket: Calf Raise. Parmak ucunda yüksel ve yavaşça in.',
+  );
+
+  static const Exercise _wallSit = Exercise(
+    id: 'wall_sit',
+    name: 'Wall Sit',
+    type: ExerciseType.timeBased,
+    targetDurationInSeconds: 45,
+    sets: 3,
+    restDurationInSeconds: 45,
+    category: ExerciseCategory.legs,
+    startCommand:
+        'Sıradaki hareket: Wall Sit. Sırtını duvara yasla, dizler 90 derecede sabit kal.',
+  );
+
+  // ==========================================================================
+  // SIRT (Back)
+  // ==========================================================================
+
+  static const Exercise _pullUp = Exercise(
+    id: 'pull_up',
+    name: 'Pull-up',
+    type: ExerciseType.repBased,
+    targetReps: 8,
+    sets: 3,
+    restDurationInSeconds: 60,
+    category: ExerciseCategory.back,
+    startCommand:
+        'Sıradaki hareket: Pull-up. Bara avuçlar dışta tutun, çeneni bara çek.',
+  );
+
+  static const Exercise _chinUp = Exercise(
+    id: 'chin_up',
+    name: 'Chin-up',
+    type: ExerciseType.repBased,
+    targetReps: 8,
+    sets: 3,
+    restDurationInSeconds: 60,
+    category: ExerciseCategory.back,
+    startCommand:
+        'Sıradaki hareket: Chin-up. Avuç içlerin sana dönük, kontrollü çek ve in.',
+  );
+
+  static const Exercise _latPulldown = Exercise(
+    id: 'lat_pulldown',
+    name: 'Lat Pulldown',
+    type: ExerciseType.repBased,
+    targetReps: 12,
+    sets: 3,
+    restDurationInSeconds: 50,
+    category: ExerciseCategory.back,
+    startCommand:
+        'Sıradaki hareket: Lat Pulldown. Barı göğüs hizasına çek, kürek kemiklerini sık.',
+  );
+
+  static const Exercise _barbellRow = Exercise(
+    id: 'barbell_row',
+    name: 'Barbell Row',
+    type: ExerciseType.repBased,
+    targetReps: 12,
+    sets: 3,
+    restDurationInSeconds: 60,
+    category: ExerciseCategory.back,
+    startCommand:
+        'Sıradaki hareket: Barbell Row. Sırtın düz, halteri göbek hizana çek.',
+  );
+
+  static const Exercise _superman = Exercise(
+    id: 'superman',
+    name: 'Superman',
+    type: ExerciseType.timeBased,
+    targetDurationInSeconds: 25,
+    sets: 3,
+    restDurationInSeconds: 30,
+    category: ExerciseCategory.back,
+    startCommand:
+        'Sıradaki hareket: Superman. Yüz üstü uzan, kollar ve bacakları kaldır, sabit tut.',
+  );
+
+  // ==========================================================================
   // REGIONAL PLANS — surfaced on the dashboard's category filter strip.
   // Each plan groups the exercises above by body region. Empty exercise
   // lists render as "coming soon" tiles so the chip layout stays
@@ -215,6 +390,7 @@ class WorkoutRepository {
   // ==========================================================================
 
   static const List<WorkoutPlan> allPlans = [
+    // ---- Core ----
     WorkoutPlan(
       id: 'core_steel_abs',
       title: 'Çelik Gibi Karın',
@@ -228,7 +404,7 @@ class WorkoutRepository {
         _mountainClimber,
         _bicycleCrunch,
       ],
-      image: 'docs/Core (Karın & Stabilite)/1.jpeg',
+      image: _coreImg1,
     ),
     WorkoutPlan(
       id: 'core_athletic',
@@ -236,32 +412,10 @@ class WorkoutRepository {
       category: ExerciseCategory.core,
       level: 'Orta düzey',
       durationMinutes: 20,
-      exercises: [
-        _crunch,
-        _bicycleCrunch,
-        _legRaise,
-        _flutterKick,
-        _plank,
-      ],
-      image:
-          'docs/Core (Karın & Stabilite)/4h-GfJgN9a4wzOi5dyPr4KKzTpZDl4vlTe5qrgdfbu-YomsCs9IxRfwX4C59yrMzFmdH7q33bMBU1PJYM5epPdc577HOU-8pc5rS85ayDzJXt4fVp-wlwgBGgugxDyqag-U0zX4sqMe7Y9QendQX0aT-fDYsYfdHW73PvxmVmUQ.jpeg',
+      exercises: [_crunch, _bicycleCrunch, _legRaise, _flutterKick, _plank],
+      image: _coreImg2,
     ),
-    WorkoutPlan(
-      id: 'chest_home_pump',
-      title: 'Evde Göğüs Pompası',
-      category: ExerciseCategory.chest,
-      level: 'Başlangıç',
-      durationMinutes: 18,
-      exercises: [
-        _pushUp,
-        _inclinePushUp,
-        _declinePushUp,
-        _chestDip,
-        _chestFly,
-      ],
-      image:
-          'docs/Göğüs (Chest)/E9CjEna37nJKbG4xizXoq8r0-UFei_q8TvZdsf28rQ2PdTO6IBfn3JcyHsTjZ0ajMUdYONm0IeJQWI9pooHrWaGFoom5UFezanHoyFq6HfhXF9ogvwCKCavQTTFbWRmW4I4VNSHWuUtdTSnr2EOND47p9xBtkeBs-gckcnCkkL4.jpeg',
-    ),
+    // ---- Göğüs (Chest) ----
     WorkoutPlan(
       id: 'chest_dumbbell_fast',
       title: 'Dambıl Hızlı Göğüs Yapma',
@@ -269,9 +423,62 @@ class WorkoutRepository {
       level: 'Orta düzey',
       durationMinutes: 14,
       exercises: [_benchPress, _chestFly, _pushUp],
-      image:
-          'docs/Göğüs (Chest)/JpJrp6V8ApIDIbjyWcwl8EJd2H7nBHQIFvkwuTE19rWpeyzFxljASLhwIZdMn13phGSSHZ0pZDF7h-y4fNyuxtQs5OW9jOZvbRZbhmvfukC8TsmQU2iU39rgs_HHtlWvfOY5VNWriZxRvjHn5TRdDT_MmlFpFWkfNHlfABZm4oY.jpeg',
+      image: _chestImg2,
     ),
+    WorkoutPlan(
+      id: 'chest_activation_growth',
+      title: 'Göğüs Aktivasyonu ve Büyüme',
+      category: ExerciseCategory.chest,
+      level: 'Başlangıç',
+      durationMinutes: 6,
+      exercises: [_inclinePushUp, _pushUp],
+      image: _chestImg1,
+    ),
+    WorkoutPlan(
+      id: 'chest_full_growth_burst',
+      title: 'Tam Göğüs Büyümesi ve Patlaması',
+      category: ExerciseCategory.chest,
+      level: 'İleri',
+      durationMinutes: 22,
+      exercises: [
+        _pushUp,
+        _inclinePushUp,
+        _declinePushUp,
+        _chestDip,
+        _benchPress,
+        _chestFly,
+      ],
+      image: _chestImg3,
+    ),
+    WorkoutPlan(
+      id: 'chest_fat_burn_basic',
+      title: 'Göğüs Yağ Yakma Temel Planı',
+      category: ExerciseCategory.chest,
+      level: 'Orta düzey',
+      durationMinutes: 18,
+      exercises: [_pushUp, _declinePushUp, _chestDip, _chestFly],
+      image: _chestImg4,
+    ),
+    // ---- Sırt (Back) ----
+    WorkoutPlan(
+      id: 'back_v_taper',
+      title: 'Geniş V-Taper Sırt',
+      category: ExerciseCategory.back,
+      level: 'Orta düzey',
+      durationMinutes: 22,
+      exercises: [_pullUp, _chinUp, _latPulldown, _barbellRow],
+      image: _backImg1,
+    ),
+    WorkoutPlan(
+      id: 'back_posture_basic',
+      title: 'Duruş Düzeltici Temel Sırt',
+      category: ExerciseCategory.back,
+      level: 'Başlangıç',
+      durationMinutes: 12,
+      exercises: [_superman, _latPulldown, _barbellRow],
+      image: _backImg2,
+    ),
+    // ---- Kol (Arms) ----
     WorkoutPlan(
       id: 'arms_super_set',
       title: 'Kol Hacim Süper Set',
@@ -279,19 +486,52 @@ class WorkoutRepository {
       level: 'Orta düzey',
       durationMinutes: 20,
       exercises: [],
-      image:
-          'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80',
+      image: _armsImg,
     ),
+    // ---- Bacak (Legs) ----
     WorkoutPlan(
-      id: 'legs_squat_burst',
-      title: 'Squat Patlama Serisi',
+      id: 'legs_quad_strength',
+      title: 'Büyük ve Güçlü Quadriceps Şekli',
       category: ExerciseCategory.legs,
       level: 'Orta düzey',
-      durationMinutes: 16,
-      exercises: [],
-      image:
-          'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=600&q=80',
+      durationMinutes: 18,
+      exercises: [_squat, _lunge, _legPress, _calfRaise],
+      image: _legsImg1,
     ),
+    WorkoutPlan(
+      id: 'legs_power_day',
+      title: 'Bacak Gücü Artışı Günü',
+      category: ExerciseCategory.legs,
+      level: 'İleri',
+      durationMinutes: 25,
+      exercises: [_squat, _bulgarianSplitSquat, _legPress, _calfRaise],
+      image: _legsImg2,
+    ),
+    WorkoutPlan(
+      id: 'legs_cardio_strength',
+      title: 'Alt Vücut Kardiyo ve Güç',
+      category: ExerciseCategory.legs,
+      level: 'Orta düzey',
+      durationMinutes: 20,
+      exercises: [_squat, _lunge, _calfRaise, _wallSit],
+      image: _legsImg3,
+    ),
+    WorkoutPlan(
+      id: 'legs_elite_sculpt',
+      title: 'Elit Bacak Şekillendirme',
+      category: ExerciseCategory.legs,
+      level: 'İleri',
+      durationMinutes: 28,
+      exercises: [
+        _bulgarianSplitSquat,
+        _legPress,
+        _wallSit,
+        _lunge,
+        _calfRaise,
+      ],
+      image: _legsImg4,
+    ),
+    // ---- Tüm Vücut (Full Body) ----
     WorkoutPlan(
       id: 'full_body_hiit',
       title: 'Tam Vücut Yağ Yakma HIIT',
@@ -299,8 +539,7 @@ class WorkoutRepository {
       level: 'İleri',
       durationMinutes: 25,
       exercises: [],
-      image:
-          'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80',
+      image: _fullBodyImg,
     ),
   ];
 

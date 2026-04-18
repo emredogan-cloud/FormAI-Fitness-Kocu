@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/routing/app_router.dart';
+import '../models/exercise_model.dart';
 import '../models/workout_day_model.dart';
+import '../models/workout_plan_model.dart';
 import '../providers/workout_provider.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
@@ -14,16 +16,48 @@ const String _heroImageUrl =
 
 const int _programLength = 30;
 
-/// Full 30-day plan view, opened from the dashboard's "Günlük Meydan Okuma"
-/// hero card. Mirrors the reference design (hero header → sticky "X gün
-/// kaldı" → list of day tiles with the current day expanded into a CTA
-/// card and weekly rest days swapped for a coffee-cup tile) but tinted
-/// into our dark/neon-purple FormAI palette.
+/// Renders [src] as either a network image (when it starts with `http`) or
+/// a bundled asset. Local copy of the dashboard helper so plan-detail can
+/// honour the same mixed-source pattern (Unsplash placeholders + local
+/// docs/ reference shots) without leaking dashboard internals.
+Widget _resolveImage(String src) {
+  final fallback = Container(
+    color: Colors.white10,
+    alignment: Alignment.center,
+    child: const Icon(Icons.fitness_center, color: Colors.white54),
+  );
+  if (src.startsWith('http')) {
+    return Image.network(
+      src,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => fallback,
+    );
+  }
+  return Image.asset(
+    src,
+    fit: BoxFit.cover,
+    errorBuilder: (_, __, ___) => fallback,
+  );
+}
+
+/// Two faces:
+///   • [plan] non-null  → renders that plan's hero + exercise list.
+///   • [plan] null      → renders the legacy 30-day program view (the
+///                        dashboard's "Günlük Meydan Okuma" hero card
+///                        opens this mode).
+/// The router decides which mode based on whether `state.extra` carries
+/// a [WorkoutPlan].
 class PlanDetailScreen extends ConsumerWidget {
-  const PlanDetailScreen({super.key});
+  const PlanDetailScreen({super.key, this.plan});
+
+  final WorkoutPlan? plan;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final p = plan;
+    if (p != null) {
+      return _PlanView(plan: p);
+    }
     final sessionAsync = ref.watch(workoutSessionProvider);
     return Scaffold(
       backgroundColor: Colors.black,
@@ -518,6 +552,374 @@ class _StandardDayCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// Plan-specific view (used when PlanDetailScreen is opened with a non-null
+// WorkoutPlan in state.extra). Mirrors the program view's hero + sticky
+// summary + list shape so the two share the same scroll feel.
+// ============================================================================
+
+class _PlanView extends StatelessWidget {
+  const _PlanView({required this.plan});
+  final WorkoutPlan plan;
+
+  @override
+  Widget build(BuildContext context) {
+    final exercises = plan.exercises;
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 280,
+            pinned: true,
+            backgroundColor: const Color(0xFF1A0B3D),
+            elevation: 0,
+            leading: const _BackButton(),
+            flexibleSpace: FlexibleSpaceBar(
+              background: _PlanHeroHeader(plan: plan),
+            ),
+          ),
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _StickyTextHeader(
+              text: '${exercises.length} egzersiz · '
+                  '${plan.durationMinutes} Dk · ${plan.level}',
+            ),
+          ),
+          if (exercises.isEmpty)
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+              sliver: SliverToBoxAdapter(
+                child: _ComingSoonNote(plan: plan),
+              ),
+            )
+          else ...[
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+              sliver: SliverToBoxAdapter(child: _PlanStartCta(plan: plan)),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+              sliver: SliverList.builder(
+                itemCount: exercises.length,
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _ExerciseTile(exercise: exercises[index]),
+                  );
+                },
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _PlanHeroHeader extends StatelessWidget {
+  const _PlanHeroHeader({required this.plan});
+  final WorkoutPlan plan;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF6A3DFF), Color(0xFF4DA6FF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (plan.image != null)
+            Positioned(
+              right: -10,
+              top: 50,
+              bottom: 0,
+              width: 220,
+              child: ColorFiltered(
+                colorFilter: ColorFilter.mode(
+                  _neon.withValues(alpha: 0.55),
+                  BlendMode.softLight,
+                ),
+                child: _resolveImage(plan.image!),
+              ),
+            ),
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.25),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 90, 20, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.4),
+                      width: 0.6,
+                    ),
+                  ),
+                  child: Text(
+                    plan.level.toUpperCase(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      letterSpacing: 1.6,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  plan.title,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    height: 1.05,
+                    letterSpacing: 0.2,
+                    shadows: [Shadow(blurRadius: 18, color: Colors.black45)],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StickyTextHeader extends SliverPersistentHeaderDelegate {
+  _StickyTextHeader({required this.text});
+  final String text;
+
+  @override
+  double get minExtent => 56;
+  @override
+  double get maxExtent => 56;
+
+  @override
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {
+    return oldDelegate is! _StickyTextHeader || oldDelegate.text != text;
+  }
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(
+      color: Colors.black,
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 10),
+      alignment: Alignment.centerLeft,
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white70,
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+class _PlanStartCta extends StatelessWidget {
+  const _PlanStartCta({required this.plan});
+  final WorkoutPlan plan;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: _neon.withValues(alpha: 0.45),
+            blurRadius: 24,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(20),
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: const LinearGradient(
+              colors: [Color(0xFF6A3DFF), Color(0xFF4DA6FF)],
+            ),
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(20),
+            onTap: () {
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      '${plan.title} — yakında doğrudan başlatılabilir.',
+                    ),
+                    backgroundColor: const Color(0xFF2A1B5C),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+            },
+            child: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: Text(
+                  'PLANI BAŞLAT',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 2,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ExerciseTile extends StatelessWidget {
+  const _ExerciseTile({required this.exercise});
+  final Exercise exercise;
+
+  @override
+  Widget build(BuildContext context) {
+    final subtitle = exercise.isTimeBased
+        ? '${exercise.sets} × ${exercise.targetDurationInSeconds ?? 0} sn'
+        : '${exercise.sets} set · ${exercise.targetReps ?? 0} tekrar';
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 14, 14, 14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        color: Colors.white.withValues(alpha: 0.04),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: _neon.withValues(alpha: 0.18),
+            ),
+            child: Icon(
+              exercise.isTimeBased
+                  ? Icons.timer_outlined
+                  : Icons.repeat_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  exercise.name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    color: Colors.white54,
+                    fontSize: 12.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Icon(
+            Icons.chevron_right_rounded,
+            color: Colors.white38,
+            size: 22,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ComingSoonNote extends StatelessWidget {
+  const _ComingSoonNote({required this.plan});
+  final WorkoutPlan plan;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        color: Colors.white.withValues(alpha: 0.04),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.hourglass_top, color: _neon, size: 28),
+          const SizedBox(height: 10),
+          Text(
+            '${plan.title} — yakında',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Bu bölge için bespoke egzersiz seti yolda. Şimdilik diğer '
+            'planları deneyebilirsin.',
+            style: TextStyle(color: Colors.white60, fontSize: 13, height: 1.4),
+          ),
+        ],
       ),
     );
   }

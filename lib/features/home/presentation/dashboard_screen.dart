@@ -164,10 +164,12 @@ class _AntrenmanTab extends ConsumerStatefulWidget {
 }
 
 class _AntrenmanTabState extends ConsumerState<_AntrenmanTab> {
-  // Order matches the spec's chip order: Core leads, full-body trails.
+  // Order matches the spec's chip order with Sırt added between Göğüs and
+  // Kol so the new Phase 21 plans are visible from the dashboard.
   static const List<({String label, ExerciseCategory category})> _chipDefs = [
     (label: 'Core', category: ExerciseCategory.core),
     (label: 'Göğüs', category: ExerciseCategory.chest),
+    (label: 'Sırt', category: ExerciseCategory.back),
     (label: 'Kol', category: ExerciseCategory.arms),
     (label: 'Bacak', category: ExerciseCategory.legs),
     (label: 'Tüm Vücut', category: ExerciseCategory.fullBody),
@@ -435,19 +437,11 @@ class _PlanTile extends StatelessWidget {
   }
 
   void _open(BuildContext context) {
-    final message = plan.isComingSoon
-        ? '${plan.title} — yakında ekleniyor.'
-        : '${plan.title} — yakında doğrudan başlatılabilir olacak.';
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: const Color(0xFF2A1B5C),
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(milliseconds: 1600),
-        ),
-      );
+    // Push the unified plan-detail route with the WorkoutPlan attached as
+    // `extra`; the screen renders an empty-state for plans whose exercise
+    // list hasn't been populated yet, so coming-soon plans still reach a
+    // real screen instead of a snackbar dead-end.
+    context.push(AppRoutes.planDetail, extra: plan);
   }
 }
 

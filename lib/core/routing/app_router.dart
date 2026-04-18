@@ -8,6 +8,7 @@ import '../../features/home/presentation/dashboard_screen.dart';
 import '../../features/monetization/presentation/paywall_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/onboarding/presentation/prediction_screen.dart';
+import '../../features/workout/models/workout_plan_model.dart';
 import '../../features/workout/presentation/plan_detail_screen.dart';
 import '../../features/workout/presentation/workout_camera_screen.dart';
 import '../services/app_preferences.dart';
@@ -85,7 +86,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.planDetail,
         name: 'planDetail',
-        builder: (context, state) => const PlanDetailScreen(),
+        builder: (context, state) {
+          // The dashboard's regional plan tiles push us with a WorkoutPlan
+          // attached as `extra`; the daily-challenge hero card pushes us
+          // with no extra and falls through to the legacy 30-day program
+          // view. Anything else goes to the program view too.
+          final extra = state.extra;
+          return PlanDetailScreen(
+            plan: extra is WorkoutPlan ? extra : null,
+          );
+        },
       ),
     ],
   );

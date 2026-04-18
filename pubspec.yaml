@@ -56,3 +56,8 @@ flutter:
     # for the YAML parser to round-trip them as-is to the asset manifest.
     - "docs/Core (Karın & Stabilite)/"
     - "docs/Göğüs (Chest)/"
+    - "docs/Sırt (Back)/"
+    - "docs/Bacak (Legs)/"
+    - "docs/Kol (Arms)/"
+    - "docs/Omuz (Shoulders)/"
+    - "docs/Kardiyo & Full Body/"
