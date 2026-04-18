@@ -45,6 +45,9 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  # Native app-icon generator. Pinned to ^0.14.x so the config block
+  # below (flutter_launcher_icons:) keeps parsing on future upgrades.
+  flutter_launcher_icons: ^0.14.1
 
 flutter:
   uses-material-design: true
@@ -64,3 +67,13 @@ flutter:
     # Bespoke onboarding + prediction artwork (all Turkish-named PNG/JPEG/
     # WEBP files live at the photos/ root). Folder is quoted for safety.
     - "photos/"
+
+# Launcher icon source. Uses a square PNG (derived from the onboarding
+# webp by ImageMagick convert) because flutter_launcher_icons needs PNG
+# input. Regenerate native icons whenever this file changes via:
+#   flutter pub run flutter_launcher_icons
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "photos/app_icon.png"
+  remove_alpha_ios: true

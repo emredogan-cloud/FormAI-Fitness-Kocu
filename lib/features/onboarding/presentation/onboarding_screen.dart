@@ -120,7 +120,7 @@ class _WelcomeStep extends StatelessWidget {
       fit: StackFit.expand,
       children: [
         Image.asset(
-          'photos/onboarding_ilk_karşılama_metninin_arkaplanı.webp',
+          'photos/ilkkarşılamaanaekranarkaplanı.webp',
           fit: BoxFit.cover,
           errorBuilder: (_, __, ___) => const DecoratedBox(
             decoration: BoxDecoration(
@@ -247,7 +247,7 @@ class _CoachIntroStep extends StatelessWidget {
       fit: StackFit.expand,
       children: [
         Image.asset(
-          'photos/kişiselkoçarkaplanfoto.webp',
+          'photos/merhababenseninkişiselyapayzekakoçunumyeniarkaplan.webp',
           fit: BoxFit.cover,
           errorBuilder: (_, __, ___) =>
               const ColoredBox(color: Color(0xFF0E0729)),

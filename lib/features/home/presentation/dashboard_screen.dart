@@ -852,8 +852,8 @@ class _ChallengeHeroCard extends StatelessWidget {
                       _neon.withValues(alpha: 0.35),
                       BlendMode.softLight,
                     ),
-                    child: Image.network(
-                      _muscularPhotoUrl,
+                    child: Image.asset(
+                      'photos/günlükmeydanokumayenifoto.png',
                       fit: BoxFit.cover,
                       alignment: Alignment.centerRight,
                       errorBuilder: (_, __, ___) => const SizedBox.shrink(),
@@ -951,40 +951,43 @@ class _ChallengeHeroCard extends StatelessWidget {
 class _PushLimitsStrip extends StatelessWidget {
   const _PushLimitsStrip();
 
+  // Cards 1 and 3 point at bespoke local webp/png assets (dropped into
+  // photos/ in Phase 23.1/24); cards 2 and 4 still ride on the Unsplash
+  // placeholders until bespoke art lands for those routines.
   static const List<
       ({
         String title,
         String level,
         int minutes,
-        String imageUrl,
+        String image,
         Color tint,
       })> _items = [
     (
       title: 'Belirgin Karın Kasları HIIT',
       level: 'Orta düzey',
       minutes: 19,
-      imageUrl: _muscularPhotoUrl,
+      image: 'photos/sınırlarınızorlabelirginkarınkarınkaslarıHIITnewfoto.png',
       tint: _neon,
     ),
     (
       title: 'Daha Güçlü Şekil ve Çekirdek',
       level: 'Orta düzey',
       minutes: 24,
-      imageUrl: _muscularPhotoUrl,
+      image: _muscularPhotoUrl,
       tint: Color(0xFF1FBF8F),
     ),
     (
       title: 'Demir Altı Paket Gücü',
       level: 'İleri',
       minutes: 18,
-      imageUrl: _muscularPhotoUrl,
+      image: 'photos/sınırlarınızorlademiraltıpaketgücünewfoto.png',
       tint: _neonAccent,
     ),
     (
       title: 'Atletik Core Kontrolü',
       level: 'Başlangıç',
       minutes: 15,
-      imageUrl: _leanPhotoUrl,
+      image: _leanPhotoUrl,
       tint: Color(0xFFFF6FB5),
     ),
   ];
@@ -1004,7 +1007,7 @@ class _PushLimitsStrip extends StatelessWidget {
             title: item.title,
             level: item.level,
             minutes: item.minutes,
-            imageUrl: item.imageUrl,
+            image: item.image,
             tint: item.tint,
           );
         },
@@ -1018,14 +1021,17 @@ class _PushLimitsCard extends StatelessWidget {
     required this.title,
     required this.level,
     required this.minutes,
-    required this.imageUrl,
+    required this.image,
     required this.tint,
   });
 
   final String title;
   final String level;
   final int minutes;
-  final String imageUrl;
+
+  /// Either an http(s) URL or a bundled asset path — routed through the
+  /// file-level `_resolveImage` helper so both work side-by-side.
+  final String image;
   final Color tint;
 
   @override
@@ -1065,71 +1071,78 @@ class _PushLimitsCard extends StatelessWidget {
                   Colors.black.withValues(alpha: 0.15),
                   BlendMode.darken,
                 ),
-                child: Image.network(
-                  imageUrl,
-                  fit: BoxFit.cover,
-                  alignment: Alignment.centerRight,
-                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                ),
+                child: _resolveImage(image),
               ),
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              SizedBox(
-                width: 130,
-                child: Text(
-                  title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w900,
-                    height: 1.15,
-                  ),
-                ),
-              ),
-              Column(
+          // Positioned.fill gives the inner column an explicit height so
+          // `mainAxisAlignment: spaceBetween` can actually push the
+          // title up and the BAŞLA pill to the bottom. The right-side
+          // padding reserves 90 px of safe space for the illustration
+          // so long titles never bleed into the photo.
+          Positioned.fill(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 90),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    '$level · $minutes Dk',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Material(
-                    color: Colors.white,
-                    shape: const StadiumBorder(),
-                    child: InkWell(
-                      customBorder: const StadiumBorder(),
-                      onTap: () {},
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 18,
-                          vertical: 9,
-                        ),
-                        child: Text(
-                          'BAŞLA',
-                          style: TextStyle(
-                            color: tint,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.4,
-                          ),
-                        ),
+                  Flexible(
+                    child: Text(
+                      title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        height: 1.15,
                       ),
                     ),
                   ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '$level · $minutes Dk',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Material(
+                        color: Colors.white,
+                        shape: const StadiumBorder(),
+                        child: InkWell(
+                          customBorder: const StadiumBorder(),
+                          onTap: () {},
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 9,
+                            ),
+                            child: Text(
+                              'BAŞLA',
+                              style: TextStyle(
+                                color: tint,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1.4,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
-            ],
+            ),
           ),
         ],
       ),
