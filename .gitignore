@@ -3,6 +3,10 @@
 .env.*
 !.env.example
 
+# Local-only API miner script — embeds a RapidAPI key, must NEVER ship.
+# Run `python3 exercise_miner.py` locally to refresh assets/videos/*.gif.
+exercise_miner.py
+
 # Dart / Flutter
 .dart_tool/
 .flutter-plugins
