@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/routing/app_router.dart';
+import '../../../core/utils/placeholder_images.dart';
 import '../models/exercise_model.dart';
 import '../models/workout_day_model.dart';
 import '../models/workout_plan_model.dart';
@@ -10,9 +11,6 @@ import '../providers/workout_provider.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _success = Color(0xFF39FF14);
-
-const String _heroImageUrl =
-    'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80';
 
 const int _programLength = 30;
 
@@ -215,7 +213,7 @@ class _HeroHeader extends StatelessWidget {
                 BlendMode.softLight,
               ),
               child: Image.network(
-                _heroImageUrl,
+                defaultMuscularPhotoUrl,
                 fit: BoxFit.cover,
                 alignment: Alignment.centerRight,
                 errorBuilder: (_, __, ___) => const SizedBox.shrink(),

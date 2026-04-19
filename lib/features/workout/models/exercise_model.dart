@@ -13,7 +13,6 @@ class Exercise {
     this.sets = 1,
     this.restDurationInSeconds = 30,
     this.category = ExerciseCategory.core,
-    this.startCommand,
     this.description = '',
     this.shortTip = '',
   });
@@ -27,11 +26,6 @@ class Exercise {
   final int sets;
   final int restDurationInSeconds;
   final ExerciseCategory category;
-
-  /// Optional full-phrase override spoken at the start of this exercise.
-  /// When null, the lifecycle announcer falls back to the generic
-  /// "Sıradaki hareket: NAME. Başlayın!" pattern.
-  final String? startCommand;
 
   /// Long-form Turkish instructions shown on the "HAZIRLAN!" overlay and
   /// spoken by the voice coach at exercise start. Empty by default so
@@ -57,7 +51,6 @@ class Exercise {
       other.sets == sets &&
       other.restDurationInSeconds == restDurationInSeconds &&
       other.category == category &&
-      other.startCommand == startCommand &&
       other.description == description &&
       other.shortTip == shortTip;
 
@@ -72,7 +65,6 @@ class Exercise {
         sets,
         restDurationInSeconds,
         category,
-        startCommand,
         description,
         shortTip,
       );

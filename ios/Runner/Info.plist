@@ -46,7 +46,7 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>We need camera access to analyze your workout form using AI.</string>
+	<string>FormAI needs camera access to analyze your workout form in real-time using on-device ML.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Microphone access is used when recording workout sessions.</string>
 </dict>

@@ -369,11 +369,12 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
           'Harika! Şimdi ${exercise.restDurationInSeconds} saniye dinlenme.',
         );
       } else if (justStartedPrep && exercise != null) {
-        // Prefer the rich `description` field (Phase 26); fall back to
-        // the legacy `startCommand`, then to a generic "Başlayın!".
+        // Every shipped exercise has a non-empty `description` (Phase 26).
+        // `'Başlayın!'` is a last-resort fallback for any future Exercise
+        // instance that forgets to populate it.
         final desc = exercise.description.isNotEmpty
             ? exercise.description
-            : (exercise.startCommand ?? 'Başlayın!');
+            : 'Başlayın!';
         _audio.speak('Sıradaki hareket: ${exercise.name}. $desc');
       }
 

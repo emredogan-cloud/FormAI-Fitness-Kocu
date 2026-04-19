@@ -15,7 +15,6 @@ exercise_miner.py
 .pub-cache/
 .pub/
 build/
-pubspec.lock
 
 # IDE
 .idea/

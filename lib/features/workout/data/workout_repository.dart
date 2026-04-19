@@ -1,6 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/utils/placeholder_images.dart';
 import '../models/exercise_model.dart';
 import '../models/workout_day_model.dart';
 import '../models/workout_plan_model.dart';
@@ -77,8 +78,6 @@ class WorkoutRepository {
     restDurationInSeconds: 30,
     category: ExerciseCategory.core,
     videoAsset: 'assets/videos/crunch.jpg',
-    startCommand:
-        'Sıradaki hareket: Mekik. Yere uzan, ellerini başının arkasına koy ve başla.',
     description:
         'Sırt üstü uzan, dizlerini bük ve omuzlarını kontrollü olarak yukarı kaldır.',
     shortTip: 'Boyuna asma, karnınla çek.',
@@ -93,8 +92,6 @@ class WorkoutRepository {
     restDurationInSeconds: 35,
     category: ExerciseCategory.core,
     videoAsset: 'assets/videos/situp.jpg',
-    startCommand:
-        'Sıradaki hareket: Sit-up. Tüm gövdeni yukarı kaldır, dizlerine kadar gel.',
     description:
         'Sırt üstü uzan, gövdeni dizlerine kadar tam olarak kaldır ve kontrollü in.',
     shortTip: 'Karnını sık, hızı abartma.',
@@ -109,8 +106,6 @@ class WorkoutRepository {
     restDurationInSeconds: 45,
     category: ExerciseCategory.core,
     videoAsset: 'assets/videos/plank.jpg',
-    startCommand:
-        'Sıradaki hareket: Plank. Dirseklerin üzerinde sabit kal, kalçanı düz tut.',
     description:
         'Dirseklerin üstünde sabit dur, vücudunu omuzdan topuğa düz bir çizgi tut.',
     shortTip: 'Kalçanı düşürme.',
@@ -125,8 +120,6 @@ class WorkoutRepository {
     restDurationInSeconds: 30,
     category: ExerciseCategory.core,
     videoAsset: 'assets/videos/leg_raise.jpg',
-    startCommand:
-        'Sıradaki hareket: Bacak Kaldırma. Bacaklarını 90 dereceye kaldır.',
     description:
         'Sırt üstü uzan, bacaklarını düz tutarak yavaşça 90 dereceye kadar kaldır.',
     shortTip: 'Belini yere bastır.',
@@ -141,8 +134,6 @@ class WorkoutRepository {
     restDurationInSeconds: 45,
     category: ExerciseCategory.core,
     videoAsset: 'assets/videos/hanging_leg_raise.jpg',
-    startCommand:
-        'Sıradaki hareket: Asılı Bacak Kaldırma. Bara tutun ve bacaklarını yukarı çek.',
     description:
         'Bara tutun, bacaklarını birleştirip kontrollü olarak göğsüne doğru çek.',
     shortTip: 'Salınımdan kaçın.',
@@ -157,8 +148,6 @@ class WorkoutRepository {
     restDurationInSeconds: 30,
     category: ExerciseCategory.core,
     videoAsset: 'assets/videos/russian_twist.jpg',
-    startCommand:
-        'Sıradaki hareket: Rus Dönüşü. Otur, hafif geri yaslan ve gövdeni sağa sola döndür.',
     description:
         'Otur, hafifçe geri yaslan ve gövdeni sağdan sola tempolu biçimde döndür.',
     shortTip: 'Karnını sıkı tut.',
@@ -173,8 +162,6 @@ class WorkoutRepository {
     restDurationInSeconds: 30,
     category: ExerciseCategory.core,
     videoAsset: 'assets/videos/mountain_climber.jpg',
-    startCommand:
-        'Sıradaki hareket: Mountain Climber. Plank pozisyonunda dizlerini hızla göğsüne çek.',
     description:
         'Plank pozisyonunda kal, dizlerini sırayla göğsüne hızla çekiştir.',
     shortTip: 'Kalçayı sabit tut.',
@@ -189,8 +176,6 @@ class WorkoutRepository {
     restDurationInSeconds: 30,
     category: ExerciseCategory.core,
     videoAsset: 'assets/videos/bicycle_crunch.jpg',
-    startCommand:
-        'Sıradaki hareket: Bisiklet Mekiği. Karşıt dirsek ve dizini birleştir.',
     description:
         'Sırt üstü uzan, karşıt dirsek ve dizini havada birleştir, taraf değiştir.',
     shortTip: 'Tempolu ama kontrollü.',
@@ -205,8 +190,6 @@ class WorkoutRepository {
     restDurationInSeconds: 30,
     category: ExerciseCategory.core,
     videoAsset: 'assets/videos/flutter_kick.jpg',
-    startCommand:
-        'Sıradaki hareket: Flutter Kick. Sırt üstü uzan ve bacaklarını kısa, hızlı tempoda değiştir.',
     description:
         'Sırt üstü uzan, bacaklarını kısa ve hızlı kanat çırpar gibi değiştir.',
     shortTip: 'Karnını gevşetme.',
@@ -225,8 +208,6 @@ class WorkoutRepository {
     restDurationInSeconds: 45,
     category: ExerciseCategory.chest,
     videoAsset: 'assets/videos/push_up.jpg',
-    startCommand:
-        'Sıradaki hareket: Şınav. Şınav pozisyonu al, eller omuz hizasında ve başla.',
     description:
         'Eller omuz hizasında, gövdeni düz tutarak yere kadar in ve geri it.',
     shortTip: 'Dirseğini gövdene yakın tut.',
@@ -241,8 +222,6 @@ class WorkoutRepository {
     restDurationInSeconds: 45,
     category: ExerciseCategory.chest,
     videoAsset: 'assets/videos/incline_push_up.jpg',
-    startCommand:
-        'Sıradaki hareket: Yokuş Yukarı Şınav. Ellerin yüksek bir yüzeye dayalı, şınava başla.',
     description:
         'Ellerini yüksek bir yüzeye dayalı tutarak şınav hareketini uygula.',
     shortTip: 'Sırtını düz tut.',
@@ -256,8 +235,6 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 50,
     category: ExerciseCategory.chest,
-    startCommand:
-        'Sıradaki hareket: Yokuş Aşağı Şınav. Ayaklarını yüksek tut, kontrollü in ve çık.',
     description:
         'Ayaklarını yüksek bir yere koy, üst göğsünü hedefleyerek şınav yap.',
     shortTip: 'Yavaş in, hızlı çık.',
@@ -272,8 +249,6 @@ class WorkoutRepository {
     restDurationInSeconds: 60,
     category: ExerciseCategory.chest,
     videoAsset: 'assets/videos/chest_dip.jpg',
-    startCommand:
-        'Sıradaki hareket: Göğüs Dip. Paralel barlarda göğsünü öne eğerek aşağı in.',
     description:
         'Paralel barlarda göğsünü öne eğ, dirseklerini kontrollü olarak büküp aşağı in.',
     shortTip: 'Omuzları çukurlaştırma.',
@@ -288,8 +263,6 @@ class WorkoutRepository {
     restDurationInSeconds: 60,
     category: ExerciseCategory.chest,
     videoAsset: 'assets/videos/bench_press.jpg',
-    startCommand:
-        'Sıradaki hareket: Dambıl Bench Press. Bench üzerinde uzan ve dambılları yukarı it.',
     description:
         'Sırtın bench üstünde, dambılları göğsünden başlayıp yukarı doğru kontrollü it.',
     shortTip: 'Bilek düz, dirsek 45°.',
@@ -304,8 +277,6 @@ class WorkoutRepository {
     restDurationInSeconds: 50,
     category: ExerciseCategory.chest,
     videoAsset: 'assets/videos/chest_fly.jpg',
-    startCommand:
-        'Sıradaki hareket: Chest Fly. Kollarını yana aç ve göğüs üstünde kontrollü kapat.',
     description:
         'Sırt üstü uzan, kollarını yana aç ve göğsünün üstünde kontrollü olarak kapat.',
     shortTip: 'Dirseğin hafif bükülü kalsın.',
@@ -324,8 +295,6 @@ class WorkoutRepository {
     restDurationInSeconds: 45,
     category: ExerciseCategory.legs,
     videoAsset: 'assets/videos/squat.jpg',
-    startCommand:
-        'Sıradaki hareket: Squat. Ayakların omuz hizasında, dizlerini bük ve kontrollü çık.',
     description:
         'Ayakların omuz hizasında; kalçanı geriye it, dizlerini büküp aşağı in ve kalk.',
     shortTip: 'Topuklarından güç al.',
@@ -340,8 +309,6 @@ class WorkoutRepository {
     restDurationInSeconds: 45,
     category: ExerciseCategory.legs,
     videoAsset: 'assets/videos/lunge.jpg',
-    startCommand:
-        'Sıradaki hareket: Lunge. Geniş bir adım at, ön diz dik açıya kadar in.',
     description:
         'Geniş bir adım at, ön dizini 90 dereceye kadar büküp kontrollü olarak kalk.',
     shortTip: 'Ön diz parmak ucunu geçmesin.',
@@ -355,8 +322,6 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 50,
     category: ExerciseCategory.legs,
-    startCommand:
-        'Sıradaki hareket: Bulgar Split Squat. Arka ayağını yüksek bir yere koy ve in çık.',
     description:
         'Arka ayağını yüksek bir yere koy, ön bacakla aşağı in ve patlayıcı şekilde kalk.',
     shortTip: 'Gövdeni dik tut.',
@@ -370,8 +335,6 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.legs,
-    startCommand:
-        'Sıradaki hareket: Leg Press. Sırtını desteğe yasla, dizlerini kilitlemeden it.',
     description:
         'Sırtını desteğe yasla, ayaklarını platforma sabitle ve dizleri kilitlemeden it.',
     shortTip: 'Topuklarını basılı tut.',
@@ -385,8 +348,6 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.legs,
-    startCommand:
-        'Sıradaki hareket: Calf Raise. Parmak ucunda yüksel ve yavaşça in.',
     description:
         'Parmak uçlarına yüksel, en tepede bir saniye sık ve yavaşça başlangıca dön.',
     shortTip: 'Tepe noktasında 1 saniye sık.',
@@ -400,8 +361,6 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.legs,
-    startCommand:
-        'Sıradaki hareket: Wall Sit. Sırtını duvara yasla, dizler 90 derecede sabit kal.',
     description:
         'Sırtını duvara yasla, dizlerini 90 dereceye getir ve sabit pozisyonda kal.',
     shortTip: 'Topuğunla bas, çakılı kal.',
@@ -420,8 +379,6 @@ class WorkoutRepository {
     restDurationInSeconds: 60,
     category: ExerciseCategory.back,
     videoAsset: 'assets/videos/pull_up.jpg',
-    startCommand:
-        'Sıradaki hareket: Pull-up. Bara avuçlar dışta tutun, çeneni bara çek.',
     description:
         'Bara avuçlar dışta tutun, kürek kemiklerini sıkarak çeneni bara çek.',
     shortTip: 'Önce kürekten çek.',
@@ -436,8 +393,6 @@ class WorkoutRepository {
     restDurationInSeconds: 60,
     category: ExerciseCategory.back,
     videoAsset: 'assets/videos/chin_up.jpg',
-    startCommand:
-        'Sıradaki hareket: Chin-up. Avuç içlerin sana dönük, kontrollü çek ve in.',
     description:
         'Avuç içlerin sana dönük, çeneni bara doğru kontrollü çek ve yavaşça in.',
     shortTip: 'Salınımdan kaçın.',
@@ -452,8 +407,6 @@ class WorkoutRepository {
     restDurationInSeconds: 50,
     category: ExerciseCategory.back,
     videoAsset: 'assets/videos/lat_pulldown.jpg',
-    startCommand:
-        'Sıradaki hareket: Lat Pulldown. Barı göğüs hizasına çek, kürek kemiklerini sık.',
     description:
         'Otur, barı göğüs hizasına çek ve kürek kemiklerini birbirine sıkıştır.',
     shortTip: 'Önce sırt, sonra dirsek.',
@@ -467,8 +420,6 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.back,
-    startCommand:
-        'Sıradaki hareket: Barbell Row. Sırtın düz, halteri göbek hizana çek.',
     description:
         'Sırtın nötr ve düz, halteri göbek hizana doğru kontrollü olarak çek.',
     shortTip: 'Sırtın yuvarlanmasın.',
@@ -482,8 +433,6 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.back,
-    startCommand:
-        'Sıradaki hareket: Superman. Yüz üstü uzan, kollar ve bacakları kaldır, sabit tut.',
     description:
         'Yüz üstü uzan, kollar ve bacaklarını aynı anda yukarı kaldır ve sabit kal.',
     shortTip: 'Boynunu nötr tut.',
@@ -502,8 +451,6 @@ class WorkoutRepository {
     restDurationInSeconds: 60,
     category: ExerciseCategory.shoulders,
     videoAsset: 'assets/videos/shoulder_press.jpg',
-    startCommand:
-        'Sıradaki hareket: Shoulder Press. Dambılları omuz hizasından tam yukarı it.',
     description:
         'Dambılları omuz hizasından kontrollü olarak tam yukarı it ve geri indir.',
     shortTip: 'Çekirdek sıkı, bilek nötr.',
@@ -518,8 +465,6 @@ class WorkoutRepository {
     restDurationInSeconds: 45,
     category: ExerciseCategory.shoulders,
     videoAsset: 'assets/videos/lateral_raise.jpg',
-    startCommand:
-        'Sıradaki hareket: Lateral Raise. Kolları yana doğru omuz seviyesine kadar kaldır.',
     description:
         'Kollarını yana doğru omuz seviyesine kadar düz hâlde kontrollü kaldır.',
     shortTip: 'Trapeze değil, omuza yükle.',
@@ -533,8 +478,6 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.shoulders,
-    startCommand:
-        'Sıradaki hareket: Front Raise. Kolları öne doğru omuz seviyesine kadar kaldır.',
     description:
         'Kollarını öne doğru omuz seviyesine kadar düz hâlde kontrollü kaldır.',
     shortTip: 'Bel yaylanmasın.',
@@ -548,8 +491,6 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.shoulders,
-    startCommand:
-        'Sıradaki hareket: Arnold Press. Avuçları çevirerek dambılı yukarı bas.',
     description:
         'Dambılları yukarı iterken avuç içlerini içeriden dışarıya doğru çevir.',
     shortTip: 'Dirseğini kilitleme.',
@@ -563,8 +504,6 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.shoulders,
-    startCommand:
-        'Sıradaki hareket: Pike Şınav. Kalçayı kaldır, başın iki elin arasında inip çıksın.',
     description:
         'Kalçanı yukarı kaldır, başını iki elin arasında inip çıkacak şekilde itele.',
     shortTip: 'Omuza odaklan, gövdeyi devirme.',
@@ -583,8 +522,6 @@ class WorkoutRepository {
     restDurationInSeconds: 45,
     category: ExerciseCategory.arms,
     videoAsset: 'assets/videos/biceps_curl.jpg',
-    startCommand:
-        'Sıradaki hareket: Biceps Curl. Dirseklerini sabit tut, dambılı omuza çek.',
     description:
         'Dirseklerini gövdene sabitle, dambılı omuzuna doğru kontrollü olarak çek.',
     shortTip: 'Salınma, biceps çalışsın.',
@@ -599,8 +536,6 @@ class WorkoutRepository {
     restDurationInSeconds: 45,
     category: ExerciseCategory.arms,
     videoAsset: 'assets/videos/hammer_curl.jpg',
-    startCommand:
-        'Sıradaki hareket: Hammer Curl. Avuç içleri içeride, dambılı kontrollü çek.',
     description:
         'Avuç içlerin içeriye dönük, dambılı omuza doğru kontrollü olarak çek.',
     shortTip: 'Bilek nötr kalsın.',
@@ -615,8 +550,6 @@ class WorkoutRepository {
     restDurationInSeconds: 60,
     category: ExerciseCategory.arms,
     videoAsset: 'assets/videos/triceps_dip.jpg',
-    startCommand:
-        'Sıradaki hareket: Triceps Dip. Sandalyenin kenarına dayan, dirseklerini bükerek in.',
     description:
         'Sandalye/bar kenarında ellerin destekli; dirseklerini bükerek aşağı in ve geri kalk.',
     shortTip: 'Dirsek geriye, dışarı değil.',
@@ -630,8 +563,6 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 50,
     category: ExerciseCategory.arms,
-    startCommand:
-        'Sıradaki hareket: Triceps Pushdown. Halatı aşağı it, kollarını tam aç.',
     description:
         'Dirseklerin gövdene sabit, halatı veya barı kontrollü olarak aşağı it.',
     shortTip: 'Sadece ön kol çalışsın.',
@@ -645,8 +576,6 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.arms,
-    startCommand:
-        'Sıradaki hareket: Yakın Tutuş Şınav. Elleri daralt, dirseklerini gövdeye yakın tut.',
     description:
         'Ellerini daralt, dirseklerini gövdene yakın tutarak şınav hareketini uygula.',
     shortTip: 'Dirsek dışa kaçmasın.',
@@ -664,8 +593,6 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 50,
     category: ExerciseCategory.fullBody,
-    startCommand:
-        'Sıradaki hareket: Burpee. Aşağı in, plank al, geri zıpla. Tempolu gidelim!',
     description:
         'Aşağı in, ellerin yere değdiğinde plank al, ayaklarını öne çekip patlayıcı zıpla.',
     shortTip: 'Sürekli ritim, mola yok.',
@@ -679,8 +606,6 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.fullBody,
-    startCommand:
-        'Sıradaki hareket: Jumping Jack. Aç ve kapat, ritmik bir tempoda.',
     description:
         'Aç-kapat hareketiyle aynı anda kollarını yukarı kaldırıp ritmik şekilde zıpla.',
     shortTip: 'Yumuşak ayak, sıkı çekirdek.',
@@ -695,8 +620,6 @@ class WorkoutRepository {
     restDurationInSeconds: 30,
     category: ExerciseCategory.fullBody,
     videoAsset: 'assets/videos/high_knees.jpg',
-    startCommand:
-        'Sıradaki hareket: High Knees. Dizleri kalçanı geçecek şekilde hızla yukarı çek.',
     description:
         'Olduğun yerde dizlerini sırayla kalçanı geçecek kadar hızla yukarı çekiştir.',
     shortTip: 'Kollarını da çalıştır.',
@@ -711,8 +634,6 @@ class WorkoutRepository {
     restDurationInSeconds: 45,
     category: ExerciseCategory.fullBody,
     videoAsset: 'assets/videos/jump_squat.jpg',
-    startCommand:
-        'Sıradaki hareket: Jump Squat. Squat\'a in, patlayıcı şekilde zıpla ve yumuşak in.',
     description:
         'Squat pozisyonuna in, patlayıcı biçimde havaya zıpla ve yumuşak iniş yap.',
     shortTip: 'Sessiz iniş, sıkı çekirdek.',
@@ -726,8 +647,6 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.fullBody,
-    startCommand:
-        'Sıradaki hareket: İp Atlama. Hafif tempoda zıpla, ritmi kaybetme.',
     description:
         'Bilek dönüşüyle ipi çevir, hafif tempoda ritmik olarak alçak zıplamalar yap.',
     shortTip: 'Diz hafif bükülü, ip kısa.',
@@ -768,8 +687,7 @@ class WorkoutRepository {
       _situp,
       _bicycleCrunch,
     ],
-    image:
-        'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80',
+    image: defaultMuscularPhotoUrl,
   );
 
   static const WorkoutPlan pushLimitsIronPack = WorkoutPlan(
@@ -800,8 +718,7 @@ class WorkoutRepository {
       _crunch,
       _flutterKick,
     ],
-    image:
-        'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=600&q=80',
+    image: defaultLeanPhotoUrl,
   );
 
   // ==========================================================================
