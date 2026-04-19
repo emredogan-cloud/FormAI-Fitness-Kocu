@@ -1,10 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
-/// Looping, muted, offline asset video preview for an exercise demo.
-/// Falls back to a neon placeholder tile when the asset is missing or the
-/// controller fails to initialize — safe to point at a path before the
-/// video file has been added to `assets/videos/`.
+/// Adaptive exercise guide preview.
+///
+///   • If [assetPath] ends in a video extension (`.mp4`/`.mov`/`.webm`)
+///     the widget spins up [VideoPlayerController.asset] and shows a
+///     looping muted demo, exactly like the original implementation.
+///   • If [assetPath] ends in an image extension (`.jpg`/`.jpeg`/`.png`/
+///     `.webp`/`.gif`) the widget skips the video pipeline entirely and
+///     renders a static [Image.asset] inside the same rounded container.
+///   • If [assetPath] is null/empty, or either renderer throws, the
+///     stylish neon "fallback tile" takes over so the surrounding PIP
+///     panel never goes blank.
+///
+/// Phase 27 baked .jpg stills into `assets/videos/` for ~26 exercises
+/// because the upstream RapidAPI tier no longer ships GIF URLs; this
+/// widget makes those land cleanly in the existing PIP slot.
 class ExerciseGuidePlayer extends StatefulWidget {
   const ExerciseGuidePlayer({
     super.key,
@@ -23,7 +34,21 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
   VideoPlayerController? _controller;
   bool _hasError = false;
   bool _ready = false;
+  bool _isImage = false;
   VoidCallback? _errorListener;
+
+  static const _imageExtensions = <String>{
+    '.jpg',
+    '.jpeg',
+    '.png',
+    '.webp',
+    '.gif',
+  };
+
+  static bool _isImagePath(String path) {
+    final lower = path.toLowerCase();
+    return _imageExtensions.any(lower.endsWith);
+  }
 
   @override
   void initState() {
@@ -44,32 +69,44 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
     if (!mounted) return;
 
     final path = widget.assetPath;
-    debugPrint('🎥 VIDEO DEBUG: Trying to load asset: $path');
+    debugPrint('🎥 GUIDE DEBUG: Trying to load asset: $path');
     if (path == null || path.isEmpty) {
       debugPrint(
-        '🎥 VIDEO ERROR: assetPath is null or empty for '
+        '🎥 GUIDE ERROR: assetPath is null/empty for '
         '"${widget.exerciseName}" — showing fallback tile.',
       );
       setState(() {
         _hasError = true;
         _ready = false;
+        _isImage = false;
       });
       return;
     }
 
+    final isImage = _isImagePath(path);
     setState(() {
       _hasError = false;
       _ready = false;
+      _isImage = isImage;
     });
+
+    if (isImage) {
+      // Image.asset is synchronous and pulls from the bundle on build.
+      // Mark ready immediately; if the file is missing, the build's
+      // errorBuilder swaps in the fallback tile without an extra round-trip.
+      debugPrint('🎥 GUIDE DEBUG: Image branch active for $path');
+      if (mounted) setState(() => _ready = true);
+      return;
+    }
 
     final controller = VideoPlayerController.asset(path);
     _controller = controller;
     try {
       await controller.initialize();
 
-      // Watch for runtime Exoplayer errors (e.g., decoder failures that
-      // surface AFTER initialize() completes). Without this, the native
-      // thread logs the error and the widget stays stuck on a broken frame.
+      // Catch decoder errors that surface AFTER initialize() returns,
+      // so the widget gracefully degrades to the fallback tile instead
+      // of freezing on a broken frame.
       _errorListener = () {
         if (!mounted) return;
         if (controller.value.hasError && !_hasError) {
@@ -117,8 +154,26 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
 
   @override
   Widget build(BuildContext context) {
+    if (_hasError || !_ready) {
+      return _FallbackTile(exerciseName: widget.exerciseName);
+    }
+
+    if (_isImage) {
+      // Same rounded container as the video branch so the PIP slot looks
+      // identical regardless of asset format.
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Image.asset(
+          widget.assetPath!,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) =>
+              _FallbackTile(exerciseName: widget.exerciseName),
+        ),
+      );
+    }
+
     final controller = _controller;
-    if (_hasError || controller == null || !_ready) {
+    if (controller == null) {
       return _FallbackTile(exerciseName: widget.exerciseName);
     }
     return ClipRRect(
@@ -159,7 +214,7 @@ class _FallbackTile extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            exerciseName ?? 'Video Yükleniyor...',
+            exerciseName ?? 'Yükleniyor...',
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,

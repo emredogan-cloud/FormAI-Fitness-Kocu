@@ -75,8 +75,8 @@ class WorkoutRepository {
     targetReps: 12,
     sets: 3,
     restDurationInSeconds: 30,
-    videoAsset: 'assets/videos/crunch_demo.mp4',
     category: ExerciseCategory.core,
+    videoAsset: 'assets/videos/crunch.jpg',
     startCommand:
         'Sıradaki hareket: Mekik. Yere uzan, ellerini başının arkasına koy ve başla.',
     description:
@@ -91,8 +91,8 @@ class WorkoutRepository {
     targetReps: 12,
     sets: 3,
     restDurationInSeconds: 35,
-    videoAsset: 'assets/videos/crunch_demo.mp4',
     category: ExerciseCategory.core,
+    videoAsset: 'assets/videos/situp.jpg',
     startCommand:
         'Sıradaki hareket: Sit-up. Tüm gövdeni yukarı kaldır, dizlerine kadar gel.',
     description:
@@ -107,8 +107,8 @@ class WorkoutRepository {
     targetDurationInSeconds: 40,
     sets: 3,
     restDurationInSeconds: 45,
-    videoAsset: 'assets/videos/plank_demo.mp4',
     category: ExerciseCategory.core,
+    videoAsset: 'assets/videos/plank.jpg',
     startCommand:
         'Sıradaki hareket: Plank. Dirseklerin üzerinde sabit kal, kalçanı düz tut.',
     description:
@@ -123,8 +123,8 @@ class WorkoutRepository {
     targetReps: 12,
     sets: 3,
     restDurationInSeconds: 30,
-    videoAsset: 'assets/videos/leg_raise_demo.mp4',
     category: ExerciseCategory.core,
+    videoAsset: 'assets/videos/leg_raise.jpg',
     startCommand:
         'Sıradaki hareket: Bacak Kaldırma. Bacaklarını 90 dereceye kaldır.',
     description:
@@ -140,6 +140,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.core,
+    videoAsset: 'assets/videos/hanging_leg_raise.jpg',
     startCommand:
         'Sıradaki hareket: Asılı Bacak Kaldırma. Bara tutun ve bacaklarını yukarı çek.',
     description:
@@ -155,6 +156,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.core,
+    videoAsset: 'assets/videos/russian_twist.jpg',
     startCommand:
         'Sıradaki hareket: Rus Dönüşü. Otur, hafif geri yaslan ve gövdeni sağa sola döndür.',
     description:
@@ -170,6 +172,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.core,
+    videoAsset: 'assets/videos/mountain_climber.jpg',
     startCommand:
         'Sıradaki hareket: Mountain Climber. Plank pozisyonunda dizlerini hızla göğsüne çek.',
     description:
@@ -185,6 +188,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.core,
+    videoAsset: 'assets/videos/bicycle_crunch.jpg',
     startCommand:
         'Sıradaki hareket: Bisiklet Mekiği. Karşıt dirsek ve dizini birleştir.',
     description:
@@ -200,6 +204,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.core,
+    videoAsset: 'assets/videos/flutter_kick.jpg',
     startCommand:
         'Sıradaki hareket: Flutter Kick. Sırt üstü uzan ve bacaklarını kısa, hızlı tempoda değiştir.',
     description:
@@ -219,6 +224,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.chest,
+    videoAsset: 'assets/videos/push_up.jpg',
     startCommand:
         'Sıradaki hareket: Şınav. Şınav pozisyonu al, eller omuz hizasında ve başla.',
     description:
@@ -234,6 +240,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.chest,
+    videoAsset: 'assets/videos/incline_push_up.jpg',
     startCommand:
         'Sıradaki hareket: Yokuş Yukarı Şınav. Ellerin yüksek bir yüzeye dayalı, şınava başla.',
     description:
@@ -264,6 +271,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.chest,
+    videoAsset: 'assets/videos/chest_dip.jpg',
     startCommand:
         'Sıradaki hareket: Göğüs Dip. Paralel barlarda göğsünü öne eğerek aşağı in.',
     description:
@@ -279,6 +287,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.chest,
+    videoAsset: 'assets/videos/bench_press.jpg',
     startCommand:
         'Sıradaki hareket: Dambıl Bench Press. Bench üzerinde uzan ve dambılları yukarı it.',
     description:
@@ -294,6 +303,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 50,
     category: ExerciseCategory.chest,
+    videoAsset: 'assets/videos/chest_fly.jpg',
     startCommand:
         'Sıradaki hareket: Chest Fly. Kollarını yana aç ve göğüs üstünde kontrollü kapat.',
     description:
@@ -313,6 +323,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.legs,
+    videoAsset: 'assets/videos/squat.jpg',
     startCommand:
         'Sıradaki hareket: Squat. Ayakların omuz hizasında, dizlerini bük ve kontrollü çık.',
     description:
@@ -328,6 +339,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.legs,
+    videoAsset: 'assets/videos/lunge.jpg',
     startCommand:
         'Sıradaki hareket: Lunge. Geniş bir adım at, ön diz dik açıya kadar in.',
     description:
@@ -407,6 +419,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.back,
+    videoAsset: 'assets/videos/pull_up.jpg',
     startCommand:
         'Sıradaki hareket: Pull-up. Bara avuçlar dışta tutun, çeneni bara çek.',
     description:
@@ -422,6 +435,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.back,
+    videoAsset: 'assets/videos/chin_up.jpg',
     startCommand:
         'Sıradaki hareket: Chin-up. Avuç içlerin sana dönük, kontrollü çek ve in.',
     description:
@@ -437,6 +451,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 50,
     category: ExerciseCategory.back,
+    videoAsset: 'assets/videos/lat_pulldown.jpg',
     startCommand:
         'Sıradaki hareket: Lat Pulldown. Barı göğüs hizasına çek, kürek kemiklerini sık.',
     description:
@@ -486,6 +501,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.shoulders,
+    videoAsset: 'assets/videos/shoulder_press.jpg',
     startCommand:
         'Sıradaki hareket: Shoulder Press. Dambılları omuz hizasından tam yukarı it.',
     description:
@@ -501,6 +517,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.shoulders,
+    videoAsset: 'assets/videos/lateral_raise.jpg',
     startCommand:
         'Sıradaki hareket: Lateral Raise. Kolları yana doğru omuz seviyesine kadar kaldır.',
     description:
@@ -565,6 +582,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.arms,
+    videoAsset: 'assets/videos/biceps_curl.jpg',
     startCommand:
         'Sıradaki hareket: Biceps Curl. Dirseklerini sabit tut, dambılı omuza çek.',
     description:
@@ -580,6 +598,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.arms,
+    videoAsset: 'assets/videos/hammer_curl.jpg',
     startCommand:
         'Sıradaki hareket: Hammer Curl. Avuç içleri içeride, dambılı kontrollü çek.',
     description:
@@ -595,6 +614,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.arms,
+    videoAsset: 'assets/videos/triceps_dip.jpg',
     startCommand:
         'Sıradaki hareket: Triceps Dip. Sandalyenin kenarına dayan, dirseklerini bükerek in.',
     description:
@@ -674,6 +694,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.fullBody,
+    videoAsset: 'assets/videos/high_knees.jpg',
     startCommand:
         'Sıradaki hareket: High Knees. Dizleri kalçanı geçecek şekilde hızla yukarı çek.',
     description:
@@ -689,6 +710,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.fullBody,
+    videoAsset: 'assets/videos/jump_squat.jpg',
     startCommand:
         'Sıradaki hareket: Jump Squat. Squat\'a in, patlayıcı şekilde zıpla ve yumuşak in.',
     description:
