@@ -18,6 +18,11 @@ import '../services/pose_analyzer.dart';
 import '../services/pose_detector_service.dart';
 import 'pose_painter.dart';
 import 'widgets/exercise_guide_player.dart';
+import 'widgets/preparation_overlay.dart';
+import 'widgets/rest_overlay.dart';
+import 'widgets/session_complete_overlay.dart';
+import 'widgets/workout_back_button.dart';
+import 'widgets/workout_control_panel.dart';
 
 class WorkoutCameraScreen extends ConsumerStatefulWidget {
   const WorkoutCameraScreen({super.key});
@@ -448,7 +453,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
   Widget _buildSession(
       CameraController controller, WorkoutSessionState session) {
     if (session.isResting) {
-      return _RestOverlay(
+      return RestOverlay(
         secondsRemaining: session.restSecondsRemaining,
         upcomingExercise: session.upcomingExercise,
         upcomingSet: session.currentSet,
@@ -459,7 +464,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     }
 
     if (session.isPreparing && session.activeExercise != null) {
-      return _PreparationOverlay(
+      return PreparationOverlay(
         exercise: session.activeExercise!,
         secondsRemaining: session.prepSecondsRemaining,
         onExit: () => _exit(context),
@@ -493,7 +498,16 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
             ),
           ],
         ),
-        if (session.isSessionComplete) _buildDayCompleteOverlay(session),
+        if (session.isSessionComplete)
+          SessionCompleteOverlay(
+            day: session.activeDay,
+            onAcknowledge: () {
+              ref
+                  .read(workoutSessionProvider.notifier)
+                  .acknowledgeSessionComplete();
+              _exit(context);
+            },
+          ),
       ],
     );
   }
@@ -538,7 +552,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
           Positioned(
             top: 18,
             left: 16,
-            child: _BackButton(onPressed: () => _exit(context)),
+            child: WorkoutBackButton(onPressed: () => _exit(context)),
           ),
           if (exercise != null)
             Positioned(
@@ -592,7 +606,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         ? _formatMmSs(_secondsRemaining)
         : (target == null ? 'x $reps' : 'x $reps / $target');
 
-    return _ControlPanel(
+    return WorkoutControlPanel(
       currentSet: session.currentSet,
       totalSets: exercise?.sets ?? 0,
       metric: metric,
@@ -639,262 +653,6 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     } else {
       context.go('/');
     }
-  }
-
-  Widget _buildDayCompleteOverlay(WorkoutSessionState session) {
-    final day = session.activeDay;
-    return Positioned.fill(
-      child: Container(
-        color: Colors.black.withValues(alpha: 0.75),
-        alignment: Alignment.center,
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.military_tech, size: 96, color: _neon),
-              const SizedBox(height: 16),
-              Text(
-                day == null ? 'Program Tamam!' : 'Gün ${day.dayNumber} Tamam!',
-                style: const TextStyle(
-                  color: _neon,
-                  fontSize: 32,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.5,
-                  shadows: [Shadow(blurRadius: 30, color: _neon)],
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Harika iş çıkardın, yarın görüşürüz.',
-                style: TextStyle(color: Colors.white70, fontSize: 16),
-              ),
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: () {
-                  ref
-                      .read(workoutSessionProvider.notifier)
-                      .acknowledgeSessionComplete();
-                  _exit(context);
-                },
-                style: FilledButton.styleFrom(
-                  backgroundColor: _neon,
-                  foregroundColor: Colors.black,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-                ),
-                child: const Text('Tamam',
-                    style: TextStyle(fontWeight: FontWeight.w900)),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _BackButton extends StatelessWidget {
-  const _BackButton({required this.onPressed});
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.black.withValues(alpha: 0.55),
-      shape: const CircleBorder(
-        side: BorderSide(color: Color(0xFF00F0FF), width: 1),
-      ),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onPressed,
-        child: const SizedBox(
-          width: 36,
-          height: 36,
-          child: Icon(
-            Icons.arrow_back_ios_new,
-            color: Color(0xFF00F0FF),
-            size: 16,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _RestOverlay extends StatelessWidget {
-  const _RestOverlay({
-    required this.secondsRemaining,
-    required this.upcomingExercise,
-    required this.upcomingSet,
-    required this.totalSets,
-    required this.onSkip,
-    required this.onExit,
-  });
-
-  static const Color _neon = Color(0xFF00F0FF);
-
-  final int secondsRemaining;
-  final Exercise? upcomingExercise;
-  final int upcomingSet;
-  final int totalSets;
-  final VoidCallback onSkip;
-  final VoidCallback onExit;
-
-  @override
-  Widget build(BuildContext context) {
-    final minutes = (secondsRemaining ~/ 60).toString().padLeft(2, '0');
-    final seconds = (secondsRemaining % 60).toString().padLeft(2, '0');
-    final exerciseName = upcomingExercise?.name ?? '—';
-
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: RadialGradient(
-          center: Alignment.center,
-          radius: 1.2,
-          colors: [Color(0xFF001823), Colors.black],
-        ),
-      ),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned(
-            top: 8,
-            left: 8,
-            child: _BackButton(onPressed: onExit),
-          ),
-          Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _neon.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: _neon.withValues(alpha: 0.6),
-                      width: 1,
-                    ),
-                  ),
-                  child: const Text(
-                    'DİNLENME ZAMANI',
-                    style: TextStyle(
-                      color: _neon,
-                      fontSize: 12,
-                      letterSpacing: 4,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 28),
-                Text(
-                  '$minutes:$seconds',
-                  style: const TextStyle(
-                    color: _neon,
-                    fontSize: 120,
-                    fontWeight: FontWeight.w900,
-                    height: 1,
-                    letterSpacing: 2,
-                    shadows: [
-                      Shadow(blurRadius: 32, color: _neon),
-                      Shadow(blurRadius: 64, color: _neon),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  'SIRADAKİ',
-                  style: TextStyle(
-                    color: Colors.white54,
-                    fontSize: 11,
-                    letterSpacing: 4,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  exerciseName,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 26,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  totalSets > 0 ? 'Set $upcomingSet / $totalSets' : '',
-                  style: const TextStyle(
-                    color: Colors.white60,
-                    fontSize: 14,
-                    letterSpacing: 1.5,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 40),
-                _SkipButton(onTap: onSkip),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SkipButton extends StatelessWidget {
-  const _SkipButton({required this.onTap});
-  final VoidCallback onTap;
-
-  static const Color _neon = Color(0xFF00F0FF);
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(40),
-        boxShadow: [
-          BoxShadow(
-            color: _neon.withValues(alpha: 0.65),
-            blurRadius: 28,
-            spreadRadius: 1,
-          ),
-        ],
-      ),
-      child: Material(
-        color: _neon,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(40),
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(40),
-          onTap: onTap,
-          child: const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 36, vertical: 14),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'GEÇ',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 4,
-                  ),
-                ),
-                SizedBox(width: 8),
-                Icon(Icons.skip_next_rounded, color: Colors.black, size: 22),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }
 
@@ -1110,128 +868,6 @@ class _FormWarning extends StatelessWidget {
   }
 }
 
-class _PreparationOverlay extends StatelessWidget {
-  const _PreparationOverlay({
-    required this.exercise,
-    required this.secondsRemaining,
-    required this.onExit,
-  });
-
-  static const Color _neon = Color(0xFF00F0FF);
-
-  final Exercise exercise;
-  final int secondsRemaining;
-  final VoidCallback onExit;
-
-  @override
-  Widget build(BuildContext context) {
-    final countdownText = secondsRemaining > 0 ? '$secondsRemaining' : 'BAŞLA';
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: RadialGradient(
-          center: Alignment.center,
-          radius: 1.2,
-          colors: [Color(0xFF00111A), Colors.black],
-        ),
-      ),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned(
-            top: 8,
-            left: 8,
-            child: _BackButton(onPressed: onExit),
-          ),
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 28),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _neon.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: _neon.withValues(alpha: 0.65),
-                        width: 1,
-                      ),
-                    ),
-                    child: const Text(
-                      'HAZIRLAN',
-                      style: TextStyle(
-                        color: _neon,
-                        fontSize: 12,
-                        letterSpacing: 4,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    exercise.name,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 30,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.4,
-                      shadows: [Shadow(blurRadius: 18, color: _neon)],
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    exercise.description.isNotEmpty
-                        ? exercise.description
-                        : 'Pozisyonunu al ve hazırlan.',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 15,
-                      height: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 36),
-                  Text(
-                    countdownText,
-                    style: TextStyle(
-                      color: secondsRemaining > 0
-                          ? _neon
-                          : const Color(0xFF39FF14),
-                      fontSize: secondsRemaining > 0 ? 140 : 80,
-                      fontWeight: FontWeight.w900,
-                      height: 1,
-                      letterSpacing: 2,
-                      shadows: [
-                        Shadow(
-                          blurRadius: 32,
-                          color: secondsRemaining > 0
-                              ? _neon
-                              : const Color(0xFF39FF14),
-                        ),
-                        Shadow(
-                          blurRadius: 64,
-                          color: secondsRemaining > 0
-                              ? _neon
-                              : const Color(0xFF39FF14),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _LiveTipPill extends StatelessWidget {
   const _LiveTipPill({required this.tip});
   static const Color _neon = Color(0xFF00F0FF);
@@ -1309,227 +945,6 @@ class _PausedBadge extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ControlPanel extends StatelessWidget {
-  const _ControlPanel({
-    required this.currentSet,
-    required this.totalSets,
-    required this.metric,
-    required this.exerciseName,
-    required this.detectorState,
-    required this.isPaused,
-    required this.onPrev,
-    required this.onTogglePlay,
-    required this.onNext,
-  });
-
-  static const Color _neon = Color(0xFF00F0FF);
-  static const Color _panel = Color(0xFF101010);
-
-  final int currentSet;
-  final int totalSets;
-  final String metric;
-  final String exerciseName;
-  final CrunchState detectorState;
-  final bool isPaused;
-  final VoidCallback onPrev;
-  final VoidCallback? onTogglePlay;
-  final VoidCallback? onNext;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: _panel,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(28),
-          topRight: Radius.circular(28),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black54,
-            blurRadius: 18,
-            offset: Offset(0, -4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.fromLTRB(18, 10, 18, 12),
-      child: Column(
-        children: [
-          _SetIndicator(
-            currentSet: currentSet,
-            totalSets: totalSets,
-            detectorLabel: detectorState.name.toUpperCase(),
-          ),
-          const Spacer(),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              metric,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 40,
-                fontWeight: FontWeight.w900,
-                height: 1,
-                letterSpacing: 1,
-                shadows: [Shadow(blurRadius: 14, color: _neon)],
-              ),
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            exerciseName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
-            ),
-          ),
-          const Spacer(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              _ControlIconButton(
-                icon: Icons.skip_previous_rounded,
-                onTap: onPrev,
-              ),
-              _CenterPlayButton(
-                isPaused: isPaused,
-                onTap: onTogglePlay,
-              ),
-              _ControlIconButton(
-                icon: Icons.skip_next_rounded,
-                onTap: onNext,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SetIndicator extends StatelessWidget {
-  const _SetIndicator({
-    required this.currentSet,
-    required this.totalSets,
-    required this.detectorLabel,
-  });
-
-  static const Color _neon = Color(0xFF00F0FF);
-
-  final int currentSet;
-  final int totalSets;
-  final String detectorLabel;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: _neon.withValues(alpha: 0.14),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: _neon.withValues(alpha: 0.5),
-              width: 0.8,
-            ),
-          ),
-          child: Text(
-            totalSets > 0 ? 'SET $currentSet / $totalSets' : 'SET —',
-            style: const TextStyle(
-              color: _neon,
-              fontSize: 11,
-              letterSpacing: 2.4,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ),
-        Text(
-          detectorLabel,
-          style: const TextStyle(
-            color: Colors.white38,
-            fontSize: 10,
-            letterSpacing: 2,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ControlIconButton extends StatelessWidget {
-  const _ControlIconButton({required this.icon, required this.onTap});
-  final IconData icon;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white.withValues(alpha: 0.05),
-      shape: const CircleBorder(
-        side: BorderSide(color: Colors.white24, width: 1),
-      ),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(9),
-          child: Icon(icon, color: Colors.white, size: 22),
-        ),
-      ),
-    );
-  }
-}
-
-class _CenterPlayButton extends StatelessWidget {
-  const _CenterPlayButton({required this.isPaused, required this.onTap});
-
-  static const Color _neon = Color(0xFF00F0FF);
-
-  final bool isPaused;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: _neon.withValues(alpha: 0.55),
-            blurRadius: 18,
-            spreadRadius: 1,
-          ),
-        ],
-      ),
-      child: Material(
-        color: _neon,
-        shape: const CircleBorder(),
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: onTap,
-          child: SizedBox(
-            width: 58,
-            height: 58,
-            child: Icon(
-              isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded,
-              color: Colors.black,
-              size: 30,
-            ),
-          ),
         ),
       ),
     );

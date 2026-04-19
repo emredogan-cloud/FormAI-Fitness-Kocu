@@ -1,0 +1,216 @@
+import 'package:flutter/material.dart';
+
+const Color _neon = Color(0xFF8E5BFF);
+const Color _neonAccent = Color(0xFF4DA6FF);
+const Color _surface = Color(0xFF111118);
+
+const List<String> _trDayLabels = [
+  'Pzt',
+  'Sal',
+  'Çar',
+  'Per',
+  'Cum',
+  'Cmt',
+  'Paz',
+];
+
+class WeeklyGoalCard extends StatelessWidget {
+  const WeeklyGoalCard({
+    super.key,
+    required this.weekDates,
+    required this.today,
+    required this.weeklyCompleted,
+    required this.weeklyTarget,
+  });
+
+  final List<DateTime> weekDates;
+  final DateTime today;
+  final int weeklyCompleted;
+  final int weeklyTarget;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Row(
+                  children: [
+                    Text(
+                      'Haftalık Hedef',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    SizedBox(width: 6),
+                    Icon(Icons.edit, color: Colors.white38, size: 14),
+                  ],
+                ),
+              ),
+              Text(
+                '$weeklyCompleted/$weeklyTarget egzersiz',
+                style: const TextStyle(
+                  color: _neonAccent,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              for (var i = 0; i < weekDates.length; i++)
+                _DateBubble(
+                  date: weekDates[i],
+                  label: _trDayLabels[i],
+                  isToday: _isSameDay(weekDates[i], today),
+                  isPast: weekDates[i]
+                      .isBefore(DateTime(today.year, today.month, today.day)),
+                ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          const _CoachSpeechBubble(
+            text: 'Haftayı tam gaz bitir! Bir antrenman daha yap, '
+                'harika başaracaksın!',
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool _isSameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+}
+
+class _DateBubble extends StatelessWidget {
+  const _DateBubble({
+    required this.date,
+    required this.label,
+    required this.isToday,
+    required this.isPast,
+  });
+
+  final DateTime date;
+  final String label;
+  final bool isToday;
+  final bool isPast;
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = isToday
+        ? _neon
+        : (isPast ? Colors.white.withValues(alpha: 0.04) : Colors.transparent);
+    final border = isToday ? _neon : Colors.white.withValues(alpha: 0.18);
+    final numberColor =
+        isToday ? Colors.white : (isPast ? Colors.white60 : Colors.white);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white38,
+            fontSize: 10,
+            letterSpacing: 1,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: bg,
+            border: Border.all(color: border, width: 1),
+            boxShadow: isToday
+                ? [
+                    BoxShadow(
+                      color: _neon.withValues(alpha: 0.55),
+                      blurRadius: 18,
+                      spreadRadius: 1,
+                    ),
+                  ]
+                : null,
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            '${date.day}',
+            style: TextStyle(
+              color: numberColor,
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CoachSpeechBubble extends StatelessWidget {
+  const _CoachSpeechBubble({required this.text});
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(10, 10, 14, 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                colors: [_neon, _neonAccent],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: _neon.withValues(alpha: 0.5),
+                  blurRadius: 12,
+                ),
+              ],
+            ),
+            child: const Icon(Icons.smart_toy, color: Colors.white, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 12.5,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
