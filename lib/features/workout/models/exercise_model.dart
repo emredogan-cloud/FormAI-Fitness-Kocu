@@ -14,6 +14,8 @@ class Exercise {
     this.restDurationInSeconds = 30,
     this.category = ExerciseCategory.core,
     this.startCommand,
+    this.description = '',
+    this.shortTip = '',
   });
 
   final String id;
@@ -31,6 +33,15 @@ class Exercise {
   /// "Sıradaki hareket: NAME. Başlayın!" pattern.
   final String? startCommand;
 
+  /// Long-form Turkish instructions shown on the "HAZIRLAN!" overlay and
+  /// spoken by the voice coach at exercise start. Empty by default so
+  /// pre-Phase-26 callers compile; populated for every shipped exercise.
+  final String description;
+
+  /// 4-6 word tactical reminder rendered as a translucent pill above the
+  /// camera control panel for the duration of the active set.
+  final String shortTip;
+
   bool get isRepBased => type == ExerciseType.repBased;
   bool get isTimeBased => type == ExerciseType.timeBased;
 
@@ -46,7 +57,9 @@ class Exercise {
       other.sets == sets &&
       other.restDurationInSeconds == restDurationInSeconds &&
       other.category == category &&
-      other.startCommand == startCommand;
+      other.startCommand == startCommand &&
+      other.description == description &&
+      other.shortTip == shortTip;
 
   @override
   int get hashCode => Object.hash(
@@ -60,5 +73,7 @@ class Exercise {
         restDurationInSeconds,
         category,
         startCommand,
+        description,
+        shortTip,
       );
 }

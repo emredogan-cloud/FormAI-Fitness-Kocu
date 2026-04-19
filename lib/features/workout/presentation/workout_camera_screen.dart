@@ -52,6 +52,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
   String? _activeExerciseId;
   int? _activeSet;
   bool _wasResting = false;
+  bool _wasPreparing = false;
   String? _formWarning;
   CrunchState _state = CrunchState.unknown;
 
@@ -115,10 +116,13 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
 
   void _onCameraImage(CameraImage image) {
     if (_isBusy || _isPaused) return;
-    // Skip pose work entirely while resting so we don't count phantom reps
-    // or trigger form-warning TTS while the user is recovering.
+    // Skip pose work entirely while resting OR during the HAZIRLAN! prep
+    // window so we don't count phantom reps before the user is ready and
+    // don't trigger form-warning TTS while recovering / setting up.
     final session = ref.read(workoutSessionProvider).value;
-    if (session?.isResting ?? false) return;
+    if ((session?.isResting ?? false) || (session?.isPreparing ?? false)) {
+      return;
+    }
     _isBusy = true;
     _processImage(image).whenComplete(() => _isBusy = false);
   }
@@ -339,8 +343,11 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       final id = exercise?.id;
       final set = session.currentSet;
       final resting = session.isResting;
+      final preparing = session.isPreparing;
       final justFinishedRest = _wasResting && !resting;
       final justStartedRest = !_wasResting && resting;
+      final justStartedPrep = !_wasPreparing && preparing;
+      final justFinishedPrep = _wasPreparing && !preparing;
       final exerciseChanged = id != _activeExerciseId;
       final setChanged = set != _activeSet;
       final sessionJustCompleted = (prevSession?.isSessionComplete == false) &&
@@ -349,44 +356,50 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       _activeExerciseId = id;
       _activeSet = set;
       _wasResting = resting;
+      _wasPreparing = preparing;
 
       // Voice coach lifecycle announcements. Priority:
-      //   session complete > rest entry > exercise start.
-      // Else-if prevents doubling up when multiple flags flip on the same
-      // state emission (e.g., rest start also changes `currentSet`).
+      //   session complete > rest entry > prep entry.
+      // The prep cue replaces the old "exercise start" cue because every
+      // exercise is now preceded by a HAZIRLAN! countdown.
       if (sessionJustCompleted) {
         _audio.speak('Antrenman tamamlandı! Harika bir iş çıkardın.');
       } else if (justStartedRest && exercise != null) {
         _audio.speak(
           'Harika! Şimdi ${exercise.restDurationInSeconds} saniye dinlenme.',
         );
-      } else if (!resting &&
-          exercise != null &&
-          (exerciseChanged || setChanged || justFinishedRest)) {
-        // Exercise-specific cue takes priority over the generic "Başlayın!"
-        // line so push-ups get push-up coaching, russian twists get twist
-        // coaching, etc. Falls back to the generic phrase when not set.
-        _audio.speak(
-          exercise.startCommand ??
-              'Sıradaki hareket: ${exercise.name}. Başlayın!',
-        );
+      } else if (justStartedPrep && exercise != null) {
+        // Prefer the rich `description` field (Phase 26); fall back to
+        // the legacy `startCommand`, then to a generic "Başlayın!".
+        final desc = exercise.description.isNotEmpty
+            ? exercise.description
+            : (exercise.startCommand ?? 'Başlayın!');
+        _audio.speak('Sıradaki hareket: ${exercise.name}. $desc');
       }
 
-      if (resting) {
+      // Always swap analyzer the moment the exercise id flips, even while
+      // resting/preparing — that way it's primed and ready when the user
+      // gets cleared to start.
+      if (exerciseChanged) {
+        _analyzer = exercise == null ? CrunchAnalyzer() : analyzerFor(exercise);
+      }
+
+      // Pause the per-exercise countdown during rest AND prep so the
+      // user doesn't burn into a time-based set before they're ready.
+      if (resting || preparing) {
         _workoutTimer?.cancel();
         _workoutTimer = null;
-        if (_secondsRemaining != 0) {
+        if (resting && _secondsRemaining != 0) {
           setState(() => _secondsRemaining = 0);
         }
         return;
       }
 
-      if (exerciseChanged) {
-        // Swap in the right analyzer for the new exercise. A fresh instance
-        // gives us clean state without having to call reset() explicitly.
-        _analyzer = exercise == null ? CrunchAnalyzer() : analyzerFor(exercise);
-        _syncExerciseTimer(exercise);
-      } else if (setChanged || justFinishedRest) {
+      // Active workout ground state.
+      if (exerciseChanged ||
+          justFinishedPrep ||
+          justFinishedRest ||
+          setChanged) {
         _analyzer.reset();
         _syncExerciseTimer(exercise);
       }
@@ -440,6 +453,14 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         upcomingSet: session.currentSet,
         totalSets: session.upcomingExercise?.sets ?? 0,
         onSkip: () => ref.read(workoutSessionProvider.notifier).skipRest(),
+        onExit: () => _exit(context),
+      );
+    }
+
+    if (session.isPreparing && session.activeExercise != null) {
+      return _PreparationOverlay(
+        exercise: session.activeExercise!,
+        secondsRemaining: session.prepSecondsRemaining,
         onExit: () => _exit(context),
       );
     }
@@ -524,13 +545,28 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
               right: 16,
               child: _PipPanel(exercise: exercise),
             ),
-          if (_formWarning != null)
-            Positioned(
-              left: 16,
-              right: 16,
-              bottom: 16,
-              child: _FormWarning(message: _formWarning!),
+          // Bottom-stack: form warning above the live tactical tip pill
+          // so they coexist without overlapping. Tip pill hides while the
+          // user has explicitly paused.
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 16,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                if (_formWarning != null) ...[
+                  _FormWarning(message: _formWarning!),
+                  const SizedBox(height: 8),
+                ],
+                if (!_isPaused &&
+                    exercise != null &&
+                    exercise.shortTip.isNotEmpty)
+                  _LiveTipPill(tip: exercise.shortTip),
+              ],
             ),
+          ),
           if (_isPaused)
             Positioned(
               left: 0,
@@ -1064,6 +1100,177 @@ class _FormWarning extends StatelessWidget {
                 color: Colors.white,
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PreparationOverlay extends StatelessWidget {
+  const _PreparationOverlay({
+    required this.exercise,
+    required this.secondsRemaining,
+    required this.onExit,
+  });
+
+  static const Color _neon = Color(0xFF00F0FF);
+
+  final Exercise exercise;
+  final int secondsRemaining;
+  final VoidCallback onExit;
+
+  @override
+  Widget build(BuildContext context) {
+    final countdownText = secondsRemaining > 0 ? '$secondsRemaining' : 'BAŞLA';
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: RadialGradient(
+          center: Alignment.center,
+          radius: 1.2,
+          colors: [Color(0xFF00111A), Colors.black],
+        ),
+      ),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Positioned(
+            top: 8,
+            left: 8,
+            child: _BackButton(onPressed: onExit),
+          ),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _neon.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: _neon.withValues(alpha: 0.65),
+                        width: 1,
+                      ),
+                    ),
+                    child: const Text(
+                      'HAZIRLAN',
+                      style: TextStyle(
+                        color: _neon,
+                        fontSize: 12,
+                        letterSpacing: 4,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    exercise.name,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 30,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.4,
+                      shadows: [Shadow(blurRadius: 18, color: _neon)],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    exercise.description.isNotEmpty
+                        ? exercise.description
+                        : 'Pozisyonunu al ve hazırlan.',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 15,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 36),
+                  Text(
+                    countdownText,
+                    style: TextStyle(
+                      color: secondsRemaining > 0
+                          ? _neon
+                          : const Color(0xFF39FF14),
+                      fontSize: secondsRemaining > 0 ? 140 : 80,
+                      fontWeight: FontWeight.w900,
+                      height: 1,
+                      letterSpacing: 2,
+                      shadows: [
+                        Shadow(
+                          blurRadius: 32,
+                          color: secondsRemaining > 0
+                              ? _neon
+                              : const Color(0xFF39FF14),
+                        ),
+                        Shadow(
+                          blurRadius: 64,
+                          color: secondsRemaining > 0
+                              ? _neon
+                              : const Color(0xFF39FF14),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LiveTipPill extends StatelessWidget {
+  const _LiveTipPill({required this.tip});
+  static const Color _neon = Color(0xFF00F0FF);
+
+  final String tip;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: _neon.withValues(alpha: 0.45),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: _neon.withValues(alpha: 0.25),
+            blurRadius: 12,
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.lightbulb_outline, color: _neon, size: 16),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              tip,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                height: 1.3,
               ),
             ),
           ),

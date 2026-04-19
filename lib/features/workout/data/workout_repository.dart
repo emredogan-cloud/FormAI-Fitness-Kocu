@@ -79,6 +79,9 @@ class WorkoutRepository {
     category: ExerciseCategory.core,
     startCommand:
         'Sıradaki hareket: Mekik. Yere uzan, ellerini başının arkasına koy ve başla.',
+    description:
+        'Sırt üstü uzan, dizlerini bük ve omuzlarını kontrollü olarak yukarı kaldır.',
+    shortTip: 'Boyuna asma, karnınla çek.',
   );
 
   static const Exercise _situp = Exercise(
@@ -92,6 +95,9 @@ class WorkoutRepository {
     category: ExerciseCategory.core,
     startCommand:
         'Sıradaki hareket: Sit-up. Tüm gövdeni yukarı kaldır, dizlerine kadar gel.',
+    description:
+        'Sırt üstü uzan, gövdeni dizlerine kadar tam olarak kaldır ve kontrollü in.',
+    shortTip: 'Karnını sık, hızı abartma.',
   );
 
   static const Exercise _plank = Exercise(
@@ -105,6 +111,9 @@ class WorkoutRepository {
     category: ExerciseCategory.core,
     startCommand:
         'Sıradaki hareket: Plank. Dirseklerin üzerinde sabit kal, kalçanı düz tut.',
+    description:
+        'Dirseklerin üstünde sabit dur, vücudunu omuzdan topuğa düz bir çizgi tut.',
+    shortTip: 'Kalçanı düşürme.',
   );
 
   static const Exercise _legRaise = Exercise(
@@ -118,6 +127,9 @@ class WorkoutRepository {
     category: ExerciseCategory.core,
     startCommand:
         'Sıradaki hareket: Bacak Kaldırma. Bacaklarını 90 dereceye kaldır.',
+    description:
+        'Sırt üstü uzan, bacaklarını düz tutarak yavaşça 90 dereceye kadar kaldır.',
+    shortTip: 'Belini yere bastır.',
   );
 
   static const Exercise _hangingLegRaise = Exercise(
@@ -130,6 +142,9 @@ class WorkoutRepository {
     category: ExerciseCategory.core,
     startCommand:
         'Sıradaki hareket: Asılı Bacak Kaldırma. Bara tutun ve bacaklarını yukarı çek.',
+    description:
+        'Bara tutun, bacaklarını birleştirip kontrollü olarak göğsüne doğru çek.',
+    shortTip: 'Salınımdan kaçın.',
   );
 
   static const Exercise _russianTwist = Exercise(
@@ -142,6 +157,9 @@ class WorkoutRepository {
     category: ExerciseCategory.core,
     startCommand:
         'Sıradaki hareket: Rus Dönüşü. Otur, hafif geri yaslan ve gövdeni sağa sola döndür.',
+    description:
+        'Otur, hafifçe geri yaslan ve gövdeni sağdan sola tempolu biçimde döndür.',
+    shortTip: 'Karnını sıkı tut.',
   );
 
   static const Exercise _mountainClimber = Exercise(
@@ -154,6 +172,9 @@ class WorkoutRepository {
     category: ExerciseCategory.core,
     startCommand:
         'Sıradaki hareket: Mountain Climber. Plank pozisyonunda dizlerini hızla göğsüne çek.',
+    description:
+        'Plank pozisyonunda kal, dizlerini sırayla göğsüne hızla çekiştir.',
+    shortTip: 'Kalçayı sabit tut.',
   );
 
   static const Exercise _bicycleCrunch = Exercise(
@@ -166,6 +187,9 @@ class WorkoutRepository {
     category: ExerciseCategory.core,
     startCommand:
         'Sıradaki hareket: Bisiklet Mekiği. Karşıt dirsek ve dizini birleştir.',
+    description:
+        'Sırt üstü uzan, karşıt dirsek ve dizini havada birleştir, taraf değiştir.',
+    shortTip: 'Tempolu ama kontrollü.',
   );
 
   static const Exercise _flutterKick = Exercise(
@@ -178,6 +202,9 @@ class WorkoutRepository {
     category: ExerciseCategory.core,
     startCommand:
         'Sıradaki hareket: Flutter Kick. Sırt üstü uzan ve bacaklarını kısa, hızlı tempoda değiştir.',
+    description:
+        'Sırt üstü uzan, bacaklarını kısa ve hızlı kanat çırpar gibi değiştir.',
+    shortTip: 'Karnını gevşetme.',
   );
 
   // ==========================================================================
@@ -194,6 +221,9 @@ class WorkoutRepository {
     category: ExerciseCategory.chest,
     startCommand:
         'Sıradaki hareket: Şınav. Şınav pozisyonu al, eller omuz hizasında ve başla.',
+    description:
+        'Eller omuz hizasında, gövdeni düz tutarak yere kadar in ve geri it.',
+    shortTip: 'Dirseğini gövdene yakın tut.',
   );
 
   static const Exercise _inclinePushUp = Exercise(
@@ -206,6 +236,9 @@ class WorkoutRepository {
     category: ExerciseCategory.chest,
     startCommand:
         'Sıradaki hareket: Yokuş Yukarı Şınav. Ellerin yüksek bir yüzeye dayalı, şınava başla.',
+    description:
+        'Ellerini yüksek bir yüzeye dayalı tutarak şınav hareketini uygula.',
+    shortTip: 'Sırtını düz tut.',
   );
 
   static const Exercise _declinePushUp = Exercise(
@@ -218,6 +251,9 @@ class WorkoutRepository {
     category: ExerciseCategory.chest,
     startCommand:
         'Sıradaki hareket: Yokuş Aşağı Şınav. Ayaklarını yüksek tut, kontrollü in ve çık.',
+    description:
+        'Ayaklarını yüksek bir yere koy, üst göğsünü hedefleyerek şınav yap.',
+    shortTip: 'Yavaş in, hızlı çık.',
   );
 
   static const Exercise _chestDip = Exercise(
@@ -230,6 +266,9 @@ class WorkoutRepository {
     category: ExerciseCategory.chest,
     startCommand:
         'Sıradaki hareket: Göğüs Dip. Paralel barlarda göğsünü öne eğerek aşağı in.',
+    description:
+        'Paralel barlarda göğsünü öne eğ, dirseklerini kontrollü olarak büküp aşağı in.',
+    shortTip: 'Omuzları çukurlaştırma.',
   );
 
   static const Exercise _benchPress = Exercise(
@@ -242,6 +281,9 @@ class WorkoutRepository {
     category: ExerciseCategory.chest,
     startCommand:
         'Sıradaki hareket: Dambıl Bench Press. Bench üzerinde uzan ve dambılları yukarı it.',
+    description:
+        'Sırtın bench üstünde, dambılları göğsünden başlayıp yukarı doğru kontrollü it.',
+    shortTip: 'Bilek düz, dirsek 45°.',
   );
 
   static const Exercise _chestFly = Exercise(
@@ -254,6 +296,9 @@ class WorkoutRepository {
     category: ExerciseCategory.chest,
     startCommand:
         'Sıradaki hareket: Chest Fly. Kollarını yana aç ve göğüs üstünde kontrollü kapat.',
+    description:
+        'Sırt üstü uzan, kollarını yana aç ve göğsünün üstünde kontrollü olarak kapat.',
+    shortTip: 'Dirseğin hafif bükülü kalsın.',
   );
 
   // ==========================================================================
@@ -270,6 +315,9 @@ class WorkoutRepository {
     category: ExerciseCategory.legs,
     startCommand:
         'Sıradaki hareket: Squat. Ayakların omuz hizasında, dizlerini bük ve kontrollü çık.',
+    description:
+        'Ayakların omuz hizasında; kalçanı geriye it, dizlerini büküp aşağı in ve kalk.',
+    shortTip: 'Topuklarından güç al.',
   );
 
   static const Exercise _lunge = Exercise(
@@ -282,6 +330,9 @@ class WorkoutRepository {
     category: ExerciseCategory.legs,
     startCommand:
         'Sıradaki hareket: Lunge. Geniş bir adım at, ön diz dik açıya kadar in.',
+    description:
+        'Geniş bir adım at, ön dizini 90 dereceye kadar büküp kontrollü olarak kalk.',
+    shortTip: 'Ön diz parmak ucunu geçmesin.',
   );
 
   static const Exercise _bulgarianSplitSquat = Exercise(
@@ -294,6 +345,9 @@ class WorkoutRepository {
     category: ExerciseCategory.legs,
     startCommand:
         'Sıradaki hareket: Bulgar Split Squat. Arka ayağını yüksek bir yere koy ve in çık.',
+    description:
+        'Arka ayağını yüksek bir yere koy, ön bacakla aşağı in ve patlayıcı şekilde kalk.',
+    shortTip: 'Gövdeni dik tut.',
   );
 
   static const Exercise _legPress = Exercise(
@@ -306,6 +360,9 @@ class WorkoutRepository {
     category: ExerciseCategory.legs,
     startCommand:
         'Sıradaki hareket: Leg Press. Sırtını desteğe yasla, dizlerini kilitlemeden it.',
+    description:
+        'Sırtını desteğe yasla, ayaklarını platforma sabitle ve dizleri kilitlemeden it.',
+    shortTip: 'Topuklarını basılı tut.',
   );
 
   static const Exercise _calfRaise = Exercise(
@@ -318,6 +375,9 @@ class WorkoutRepository {
     category: ExerciseCategory.legs,
     startCommand:
         'Sıradaki hareket: Calf Raise. Parmak ucunda yüksel ve yavaşça in.',
+    description:
+        'Parmak uçlarına yüksel, en tepede bir saniye sık ve yavaşça başlangıca dön.',
+    shortTip: 'Tepe noktasında 1 saniye sık.',
   );
 
   static const Exercise _wallSit = Exercise(
@@ -330,6 +390,9 @@ class WorkoutRepository {
     category: ExerciseCategory.legs,
     startCommand:
         'Sıradaki hareket: Wall Sit. Sırtını duvara yasla, dizler 90 derecede sabit kal.',
+    description:
+        'Sırtını duvara yasla, dizlerini 90 dereceye getir ve sabit pozisyonda kal.',
+    shortTip: 'Topuğunla bas, çakılı kal.',
   );
 
   // ==========================================================================
@@ -346,6 +409,9 @@ class WorkoutRepository {
     category: ExerciseCategory.back,
     startCommand:
         'Sıradaki hareket: Pull-up. Bara avuçlar dışta tutun, çeneni bara çek.',
+    description:
+        'Bara avuçlar dışta tutun, kürek kemiklerini sıkarak çeneni bara çek.',
+    shortTip: 'Önce kürekten çek.',
   );
 
   static const Exercise _chinUp = Exercise(
@@ -358,6 +424,9 @@ class WorkoutRepository {
     category: ExerciseCategory.back,
     startCommand:
         'Sıradaki hareket: Chin-up. Avuç içlerin sana dönük, kontrollü çek ve in.',
+    description:
+        'Avuç içlerin sana dönük, çeneni bara doğru kontrollü çek ve yavaşça in.',
+    shortTip: 'Salınımdan kaçın.',
   );
 
   static const Exercise _latPulldown = Exercise(
@@ -370,6 +439,9 @@ class WorkoutRepository {
     category: ExerciseCategory.back,
     startCommand:
         'Sıradaki hareket: Lat Pulldown. Barı göğüs hizasına çek, kürek kemiklerini sık.',
+    description:
+        'Otur, barı göğüs hizasına çek ve kürek kemiklerini birbirine sıkıştır.',
+    shortTip: 'Önce sırt, sonra dirsek.',
   );
 
   static const Exercise _barbellRow = Exercise(
@@ -382,6 +454,9 @@ class WorkoutRepository {
     category: ExerciseCategory.back,
     startCommand:
         'Sıradaki hareket: Barbell Row. Sırtın düz, halteri göbek hizana çek.',
+    description:
+        'Sırtın nötr ve düz, halteri göbek hizana doğru kontrollü olarak çek.',
+    shortTip: 'Sırtın yuvarlanmasın.',
   );
 
   static const Exercise _superman = Exercise(
@@ -394,6 +469,9 @@ class WorkoutRepository {
     category: ExerciseCategory.back,
     startCommand:
         'Sıradaki hareket: Superman. Yüz üstü uzan, kollar ve bacakları kaldır, sabit tut.',
+    description:
+        'Yüz üstü uzan, kollar ve bacaklarını aynı anda yukarı kaldır ve sabit kal.',
+    shortTip: 'Boynunu nötr tut.',
   );
 
   // ==========================================================================
@@ -410,6 +488,9 @@ class WorkoutRepository {
     category: ExerciseCategory.shoulders,
     startCommand:
         'Sıradaki hareket: Shoulder Press. Dambılları omuz hizasından tam yukarı it.',
+    description:
+        'Dambılları omuz hizasından kontrollü olarak tam yukarı it ve geri indir.',
+    shortTip: 'Çekirdek sıkı, bilek nötr.',
   );
 
   static const Exercise _lateralRaise = Exercise(
@@ -422,6 +503,9 @@ class WorkoutRepository {
     category: ExerciseCategory.shoulders,
     startCommand:
         'Sıradaki hareket: Lateral Raise. Kolları yana doğru omuz seviyesine kadar kaldır.',
+    description:
+        'Kollarını yana doğru omuz seviyesine kadar düz hâlde kontrollü kaldır.',
+    shortTip: 'Trapeze değil, omuza yükle.',
   );
 
   static const Exercise _frontRaise = Exercise(
@@ -434,6 +518,9 @@ class WorkoutRepository {
     category: ExerciseCategory.shoulders,
     startCommand:
         'Sıradaki hareket: Front Raise. Kolları öne doğru omuz seviyesine kadar kaldır.',
+    description:
+        'Kollarını öne doğru omuz seviyesine kadar düz hâlde kontrollü kaldır.',
+    shortTip: 'Bel yaylanmasın.',
   );
 
   static const Exercise _arnoldPress = Exercise(
@@ -446,6 +533,9 @@ class WorkoutRepository {
     category: ExerciseCategory.shoulders,
     startCommand:
         'Sıradaki hareket: Arnold Press. Avuçları çevirerek dambılı yukarı bas.',
+    description:
+        'Dambılları yukarı iterken avuç içlerini içeriden dışarıya doğru çevir.',
+    shortTip: 'Dirseğini kilitleme.',
   );
 
   static const Exercise _pikePushUp = Exercise(
@@ -458,6 +548,9 @@ class WorkoutRepository {
     category: ExerciseCategory.shoulders,
     startCommand:
         'Sıradaki hareket: Pike Şınav. Kalçayı kaldır, başın iki elin arasında inip çıksın.',
+    description:
+        'Kalçanı yukarı kaldır, başını iki elin arasında inip çıkacak şekilde itele.',
+    shortTip: 'Omuza odaklan, gövdeyi devirme.',
   );
 
   // ==========================================================================
@@ -474,6 +567,9 @@ class WorkoutRepository {
     category: ExerciseCategory.arms,
     startCommand:
         'Sıradaki hareket: Biceps Curl. Dirseklerini sabit tut, dambılı omuza çek.',
+    description:
+        'Dirseklerini gövdene sabitle, dambılı omuzuna doğru kontrollü olarak çek.',
+    shortTip: 'Salınma, biceps çalışsın.',
   );
 
   static const Exercise _hammerCurl = Exercise(
@@ -486,6 +582,9 @@ class WorkoutRepository {
     category: ExerciseCategory.arms,
     startCommand:
         'Sıradaki hareket: Hammer Curl. Avuç içleri içeride, dambılı kontrollü çek.',
+    description:
+        'Avuç içlerin içeriye dönük, dambılı omuza doğru kontrollü olarak çek.',
+    shortTip: 'Bilek nötr kalsın.',
   );
 
   static const Exercise _tricepsDip = Exercise(
@@ -498,6 +597,9 @@ class WorkoutRepository {
     category: ExerciseCategory.arms,
     startCommand:
         'Sıradaki hareket: Triceps Dip. Sandalyenin kenarına dayan, dirseklerini bükerek in.',
+    description:
+        'Sandalye/bar kenarında ellerin destekli; dirseklerini bükerek aşağı in ve geri kalk.',
+    shortTip: 'Dirsek geriye, dışarı değil.',
   );
 
   static const Exercise _tricepsPushdown = Exercise(
@@ -510,6 +612,9 @@ class WorkoutRepository {
     category: ExerciseCategory.arms,
     startCommand:
         'Sıradaki hareket: Triceps Pushdown. Halatı aşağı it, kollarını tam aç.',
+    description:
+        'Dirseklerin gövdene sabit, halatı veya barı kontrollü olarak aşağı it.',
+    shortTip: 'Sadece ön kol çalışsın.',
   );
 
   static const Exercise _closeGripPushUp = Exercise(
@@ -522,6 +627,9 @@ class WorkoutRepository {
     category: ExerciseCategory.arms,
     startCommand:
         'Sıradaki hareket: Yakın Tutuş Şınav. Elleri daralt, dirseklerini gövdeye yakın tut.',
+    description:
+        'Ellerini daralt, dirseklerini gövdene yakın tutarak şınav hareketini uygula.',
+    shortTip: 'Dirsek dışa kaçmasın.',
   );
 
   // ==========================================================================
@@ -538,6 +646,9 @@ class WorkoutRepository {
     category: ExerciseCategory.fullBody,
     startCommand:
         'Sıradaki hareket: Burpee. Aşağı in, plank al, geri zıpla. Tempolu gidelim!',
+    description:
+        'Aşağı in, ellerin yere değdiğinde plank al, ayaklarını öne çekip patlayıcı zıpla.',
+    shortTip: 'Sürekli ritim, mola yok.',
   );
 
   static const Exercise _jumpingJack = Exercise(
@@ -550,6 +661,9 @@ class WorkoutRepository {
     category: ExerciseCategory.fullBody,
     startCommand:
         'Sıradaki hareket: Jumping Jack. Aç ve kapat, ritmik bir tempoda.',
+    description:
+        'Aç-kapat hareketiyle aynı anda kollarını yukarı kaldırıp ritmik şekilde zıpla.',
+    shortTip: 'Yumuşak ayak, sıkı çekirdek.',
   );
 
   static const Exercise _highKnees = Exercise(
@@ -562,6 +676,9 @@ class WorkoutRepository {
     category: ExerciseCategory.fullBody,
     startCommand:
         'Sıradaki hareket: High Knees. Dizleri kalçanı geçecek şekilde hızla yukarı çek.',
+    description:
+        'Olduğun yerde dizlerini sırayla kalçanı geçecek kadar hızla yukarı çekiştir.',
+    shortTip: 'Kollarını da çalıştır.',
   );
 
   static const Exercise _jumpSquat = Exercise(
@@ -574,6 +691,9 @@ class WorkoutRepository {
     category: ExerciseCategory.fullBody,
     startCommand:
         'Sıradaki hareket: Jump Squat. Squat\'a in, patlayıcı şekilde zıpla ve yumuşak in.',
+    description:
+        'Squat pozisyonuna in, patlayıcı biçimde havaya zıpla ve yumuşak iniş yap.',
+    shortTip: 'Sessiz iniş, sıkı çekirdek.',
   );
 
   static const Exercise _skippingRope = Exercise(
@@ -586,6 +706,9 @@ class WorkoutRepository {
     category: ExerciseCategory.fullBody,
     startCommand:
         'Sıradaki hareket: İp Atlama. Hafif tempoda zıpla, ritmi kaybetme.',
+    description:
+        'Bilek dönüşüyle ipi çevir, hafif tempoda ritmik olarak alçak zıplamalar yap.',
+    shortTip: 'Diz hafif bükülü, ip kısa.',
   );
 
   // ==========================================================================

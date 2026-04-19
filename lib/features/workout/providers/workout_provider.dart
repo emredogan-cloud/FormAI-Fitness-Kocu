@@ -25,6 +25,8 @@ class WorkoutSessionState {
     this.isResting = false,
     this.restSecondsRemaining = 0,
     this.isSessionComplete = false,
+    this.isPreparing = false,
+    this.prepSecondsRemaining = 0,
   });
 
   final List<WorkoutDay> days;
@@ -35,6 +37,13 @@ class WorkoutSessionState {
   final bool isResting;
   final int restSecondsRemaining;
   final bool isSessionComplete;
+
+  /// True for the 3-second "HAZIRLAN!" countdown that precedes every
+  /// exercise (workout start + after every inter-exercise rest). The
+  /// camera screen swaps in a prep overlay and the analyzer skips frames
+  /// while this is true.
+  final bool isPreparing;
+  final int prepSecondsRemaining;
 
   Exercise? get activeExercise {
     final day = activeDay;
@@ -79,6 +88,8 @@ class WorkoutSessionState {
     bool? isResting,
     int? restSecondsRemaining,
     bool? isSessionComplete,
+    bool? isPreparing,
+    int? prepSecondsRemaining,
   }) {
     return WorkoutSessionState(
       days: days ?? this.days,
@@ -89,6 +100,8 @@ class WorkoutSessionState {
       isResting: isResting ?? this.isResting,
       restSecondsRemaining: restSecondsRemaining ?? this.restSecondsRemaining,
       isSessionComplete: isSessionComplete ?? this.isSessionComplete,
+      isPreparing: isPreparing ?? this.isPreparing,
+      prepSecondsRemaining: prepSecondsRemaining ?? this.prepSecondsRemaining,
     );
   }
 }
@@ -96,6 +109,14 @@ class WorkoutSessionState {
 class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
   late WorkoutRepository _repository;
   Timer? _restTimer;
+  Timer? _prepTimer;
+
+  /// Set when [_enterRest] is called for an inter-EXERCISE rest (vs an
+  /// inter-SET rest within the same exercise). Read by the rest timer
+  /// completion to decide whether to launch a HAZIRLAN! prep countdown.
+  bool _restPrecedesExerciseChange = false;
+
+  static const Duration _prepDuration = Duration(seconds: 3);
 
   @override
   Future<WorkoutSessionState> build() async {
@@ -104,6 +125,7 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
     final days = await _repository.loadProgram();
     final activeDay = _firstIncomplete(days);
     ref.onDispose(_cancelRestTimer);
+    ref.onDispose(_cancelPrepTimer);
     return WorkoutSessionState(days: days, activeDay: activeDay);
   }
 
@@ -123,6 +145,7 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
     final current = state.value;
     if (current == null) return;
     _cancelRestTimer();
+    _cancelPrepTimer();
     final day = current.days.firstWhere(
       (d) => d.dayNumber == dayNumber,
       orElse: () => current.days.first,
@@ -136,6 +159,7 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
       restSecondsRemaining: 0,
       isSessionComplete: false,
     ));
+    _startPrep();
   }
 
   /// Starts an ad-hoc session from a dashboard/plan-detail entry point.
@@ -146,6 +170,7 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
     final current = state.value;
     if (current == null || exercises.isEmpty) return;
     _cancelRestTimer();
+    _cancelPrepTimer();
     final adHocDay = WorkoutDay(dayNumber: 0, exercises: exercises);
     state = AsyncData(current.copyWith(
       activeDay: adHocDay,
@@ -156,6 +181,7 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
       restSecondsRemaining: 0,
       isSessionComplete: false,
     ));
+    _startPrep();
   }
 
   /// Called when a single set finishes (reps target hit OR time elapsed).
@@ -177,6 +203,7 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
           currentSet: current.currentSet + 1,
         ),
         exercise.restDurationInSeconds,
+        isExerciseChange: false,
       );
       return;
     }
@@ -191,6 +218,7 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
           currentSet: 1,
         ),
         nextExercise.restDurationInSeconds,
+        isExerciseChange: true,
       );
       return;
     }
@@ -230,6 +258,10 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
       isResting: false,
       restSecondsRemaining: 0,
     ));
+    if (_restPrecedesExerciseChange) {
+      _startPrep();
+    }
+    _restPrecedesExerciseChange = false;
   }
 
   Future<void> resetProgress() async {
@@ -242,14 +274,27 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
     ));
   }
 
-  void _enterRest(WorkoutSessionState base, int seconds) {
+  void _enterRest(
+    WorkoutSessionState base,
+    int seconds, {
+    required bool isExerciseChange,
+  }) {
     _cancelRestTimer();
+    _restPrecedesExerciseChange = isExerciseChange;
     final clamped = seconds <= 0 ? 0 : seconds;
     state = AsyncData(base.copyWith(
       isResting: clamped > 0,
       restSecondsRemaining: clamped,
     ));
-    if (clamped <= 0) return;
+    if (clamped <= 0) {
+      // Zero-second rest is effectively immediate transition — fire prep
+      // straight away so the user still gets the HAZIRLAN! countdown.
+      if (_restPrecedesExerciseChange) {
+        _startPrep();
+      }
+      _restPrecedesExerciseChange = false;
+      return;
+    }
 
     _restTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       final current = state.value;
@@ -265,8 +310,44 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
           isResting: false,
           restSecondsRemaining: 0,
         ));
+        if (_restPrecedesExerciseChange) {
+          _startPrep();
+        }
+        _restPrecedesExerciseChange = false;
       } else {
         state = AsyncData(current.copyWith(restSecondsRemaining: remaining));
+      }
+    });
+  }
+
+  /// Kicks off the 3-second HAZIRLAN! countdown. Each tick decrements
+  /// `prepSecondsRemaining`; the final tick flips `isPreparing` back to
+  /// false so the analyzer wakes up for the new exercise.
+  void _startPrep() {
+    _cancelPrepTimer();
+    final current = state.value;
+    if (current == null || current.activeExercise == null) return;
+    final initial = _prepDuration.inSeconds;
+    state = AsyncData(current.copyWith(
+      isPreparing: true,
+      prepSecondsRemaining: initial,
+    ));
+    _prepTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      final cur = state.value;
+      if (cur == null || !cur.isPreparing) {
+        timer.cancel();
+        return;
+      }
+      final remaining = cur.prepSecondsRemaining - 1;
+      if (remaining <= 0) {
+        timer.cancel();
+        _prepTimer = null;
+        state = AsyncData(cur.copyWith(
+          isPreparing: false,
+          prepSecondsRemaining: 0,
+        ));
+      } else {
+        state = AsyncData(cur.copyWith(prepSecondsRemaining: remaining));
       }
     });
   }
@@ -274,6 +355,11 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
   void _cancelRestTimer() {
     _restTimer?.cancel();
     _restTimer = null;
+  }
+
+  void _cancelPrepTimer() {
+    _prepTimer?.cancel();
+    _prepTimer = null;
   }
 
   WorkoutDay? _firstIncomplete(List<WorkoutDay> days) {
