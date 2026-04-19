@@ -45,14 +45,44 @@ Widget _resolveImage(String src) {
 ///                        opens this mode).
 /// The router decides which mode based on whether `state.extra` carries
 /// a [WorkoutPlan].
-class PlanDetailScreen extends ConsumerWidget {
+class PlanDetailScreen extends ConsumerStatefulWidget {
   const PlanDetailScreen({super.key, this.plan});
 
   final WorkoutPlan? plan;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final p = plan;
+  ConsumerState<PlanDetailScreen> createState() => _PlanDetailScreenState();
+}
+
+class _PlanDetailScreenState extends ConsumerState<PlanDetailScreen> {
+  bool _didPrecache = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_didPrecache) return;
+    _didPrecache = true;
+    // Warm the hero image for this screen BEFORE it appears so the
+    // SliverAppBar doesn't decode a ~200 KB webp during the push
+    // transition. Works for both faces: plan.image when present, or
+    // the default muscular URL when we fall back to the program view.
+    final heroSrc = widget.plan?.image ?? defaultMuscularPhotoUrl;
+    _precache(heroSrc);
+  }
+
+  void _precache(String src) {
+    final ImageProvider provider =
+        src.startsWith('http') ? NetworkImage(src) : AssetImage(src);
+    precacheImage(provider, context).catchError((_) {
+      // Best-effort: failures are fine — the widget's own errorBuilder
+      // will still swap in a fallback at render time.
+      return;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final p = widget.plan;
     if (p != null) {
       return _PlanView(plan: p);
     }

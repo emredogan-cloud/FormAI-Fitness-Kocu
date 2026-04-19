@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../core/services/app_preferences.dart';
 import '../../../core/utils/audio_feedback.dart';
+import '../../../core/utils/placeholder_images.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../workout/models/exercise_model.dart';
 import '../../workout/models/workout_day_model.dart';
@@ -171,7 +172,36 @@ class _AntrenmanTabState extends ConsumerState<_AntrenmanTab> {
     (label: 'Kardiyo', category: ExerciseCategory.fullBody),
   ];
 
+  // Heavy hero artwork rendered above the fold. Precached in
+  // `didChangeDependencies` so the first frame doesn't spend ~40 ms
+  // decoding a ~200 KB webp on mid-range phones.
+  static const List<String> _precacheAssets = [
+    'photos/günlükmeydanokumayenifoto.webp',
+    'photos/sınırlarınızorlabelirginkarınkarınkaslarıHIITnewfoto.webp',
+    'photos/sınırlarınızorlademiraltıpaketgücünewfoto.webp',
+  ];
+
   ExerciseCategory _selectedCategory = ExerciseCategory.core;
+  bool _didPrecache = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_didPrecache) return;
+    _didPrecache = true;
+    for (final asset in _precacheAssets) {
+      precacheImage(AssetImage(asset), context).catchError((_) {
+        // Best-effort — the widget's own errorBuilder covers missing assets.
+        return;
+      });
+    }
+    // Push-limits card 2 + 4 still use Unsplash URLs, so prefetch those too
+    // from the shared placeholder constants.
+    precacheImage(const NetworkImage(defaultMuscularPhotoUrl), context)
+        .catchError((_) => null);
+    precacheImage(const NetworkImage(defaultLeanPhotoUrl), context)
+        .catchError((_) => null);
+  }
 
   @override
   Widget build(BuildContext context) {

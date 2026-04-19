@@ -97,9 +97,28 @@ class PosePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant PosePainter oldDelegate) {
-    return oldDelegate.pose != pose ||
-        oldDelegate.imageSize != imageSize ||
+    // Fast paths first: image + camera config changes always need a repaint.
+    if (oldDelegate.imageSize != imageSize ||
         oldDelegate.rotation != rotation ||
-        oldDelegate.cameraLensDirection != cameraLensDirection;
+        oldDelegate.cameraLensDirection != cameraLensDirection) {
+      return true;
+    }
+    // ML Kit normally returns a fresh Pose instance per detection, so
+    // reference inequality is the cheapest correct signal.
+    if (!identical(oldDelegate.pose, pose)) return true;
+    // Defensive belt-and-suspenders: if ML Kit ever reuses the same Pose
+    // object and mutates landmarks in place (it doesn't today, but it's a
+    // free guard), fall back to sampling two critical landmark coordinates.
+    // Cheap enough to run on every shouldRepaint call.
+    const sampled = [
+      PoseLandmarkType.nose,
+      PoseLandmarkType.leftShoulder,
+    ];
+    for (final type in sampled) {
+      final a = oldDelegate.pose.landmarks[type];
+      final b = pose.landmarks[type];
+      if (a?.x != b?.x || a?.y != b?.y) return true;
+    }
+    return false;
   }
 }
