@@ -180,8 +180,9 @@ class _CoachSpeechBubble extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            width: 36,
-            height: 36,
+            width: 40,
+            height: 40,
+            padding: const EdgeInsets.all(2),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: const LinearGradient(
@@ -196,7 +197,21 @@ class _CoachSpeechBubble extends StatelessWidget {
                 ),
               ],
             ),
-            child: const Icon(Icons.smart_toy, color: Colors.white, size: 18),
+            child: ClipOval(
+              child: Image.asset(
+                'photos/kişiselyapayzekakoçfoto.webp',
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  color: Colors.black26,
+                  alignment: Alignment.center,
+                  child: const Icon(
+                    Icons.smart_toy,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                ),
+              ),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
