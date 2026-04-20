@@ -46,16 +46,19 @@ Widget _resolveImage(String image) {
 class PushLimitsStrip extends StatelessWidget {
   const PushLimitsStrip({super.key});
 
-  static const List<({WorkoutPlan plan, Color tint})> _items = [
+  // Can't be `const` any more — Phase 10 moved exercise video URLs to
+  // runtime (dotenv-backed), so the WorkoutPlan objects these tuples
+  // reference are `static final`, not `static const`.
+  static final List<({WorkoutPlan plan, Color tint})> _items = [
     (plan: WorkoutRepository.pushLimitsAbsHiit, tint: _neon),
     (
       plan: WorkoutRepository.pushLimitsStrongerCore,
-      tint: Color(0xFF1FBF8F),
+      tint: const Color(0xFF1FBF8F),
     ),
     (plan: WorkoutRepository.pushLimitsIronPack, tint: _neonAccent),
     (
       plan: WorkoutRepository.pushLimitsAthleticCore,
-      tint: Color(0xFFFF6FB5),
+      tint: const Color(0xFFFF6FB5),
     ),
   ];
 

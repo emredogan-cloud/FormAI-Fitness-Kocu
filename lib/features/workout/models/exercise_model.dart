@@ -9,7 +9,7 @@ class Exercise {
     required this.type,
     this.targetReps,
     this.targetDurationInSeconds,
-    this.videoAsset,
+    this.videoUrl,
     this.sets = 1,
     this.restDurationInSeconds = 30,
     this.category = ExerciseCategory.core,
@@ -22,7 +22,7 @@ class Exercise {
   final ExerciseType type;
   final int? targetReps;
   final int? targetDurationInSeconds;
-  final String? videoAsset;
+  final String? videoUrl;
   final int sets;
   final int restDurationInSeconds;
   final ExerciseCategory category;
@@ -47,7 +47,7 @@ class Exercise {
       other.type == type &&
       other.targetReps == targetReps &&
       other.targetDurationInSeconds == targetDurationInSeconds &&
-      other.videoAsset == videoAsset &&
+      other.videoUrl == videoUrl &&
       other.sets == sets &&
       other.restDurationInSeconds == restDurationInSeconds &&
       other.category == category &&
@@ -61,7 +61,7 @@ class Exercise {
         type,
         targetReps,
         targetDurationInSeconds,
-        videoAsset,
+        videoUrl,
         sets,
         restDurationInSeconds,
         category,

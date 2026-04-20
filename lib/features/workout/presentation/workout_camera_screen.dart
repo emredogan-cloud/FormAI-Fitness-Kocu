@@ -851,7 +851,7 @@ class _PipPanel extends StatelessWidget {
                 height: 200,
                 child: ExerciseGuidePlayer(
                   key: ValueKey('pip-${exercise.id}'),
-                  assetPath: exercise.videoAsset,
+                  assetPath: exercise.videoUrl,
                   exerciseName: exercise.name,
                 ),
               ),

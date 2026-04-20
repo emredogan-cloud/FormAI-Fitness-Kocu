@@ -1,3 +1,4 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -16,6 +17,16 @@ class WorkoutRepository {
   static const String _completedKey = 'sixpack.completed_days';
   static const String _pendingSyncKey = 'sixpack.pending_sync_days';
   static const String _progressTable = 'user_progress';
+
+  // Videos live in the public Supabase Storage bucket `exercises`. The URL
+  // is composed lazily because dotenv.env is empty until main.dart's
+  // _BootGate finishes; all static Exercise fields below use `static final`
+  // so they're only materialised after boot completes (and therefore after
+  // dotenv has loaded SUPABASE_URL).
+  static String _videoUrl(String filename) {
+    final base = dotenv.env['SUPABASE_URL'] ?? '';
+    return '$base/storage/v1/object/public/exercises/$filename';
+  }
 
   // ==========================================================================
   // ASSET PATH SHORTCUTS — keeps the plans list below readable. Each value
@@ -70,7 +81,7 @@ class WorkoutRepository {
   // CORE (Karın & Stabilite)
   // ==========================================================================
 
-  static const Exercise _crunch = Exercise(
+  static final Exercise _crunch = Exercise(
     id: 'crunch',
     name: 'Mekik',
     type: ExerciseType.repBased,
@@ -78,13 +89,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.core,
-    videoAsset: 'assets/videos/Crunch.mp4',
+    videoUrl: _videoUrl('Crunch.mp4'),
     description:
         'Sırt üstü uzan, dizlerini bük ve omuzlarını kontrollü olarak yukarı kaldır.',
     shortTip: 'Boyuna asma, karnınla çek.',
   );
 
-  static const Exercise _situp = Exercise(
+  static final Exercise _situp = Exercise(
     id: 'situp',
     name: 'Sit-up',
     type: ExerciseType.repBased,
@@ -92,13 +103,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 35,
     category: ExerciseCategory.core,
-    videoAsset: 'assets/videos/SitUp.mp4',
+    videoUrl: _videoUrl('SitUp.mp4'),
     description:
         'Sırt üstü uzan, gövdeni dizlerine kadar tam olarak kaldır ve kontrollü in.',
     shortTip: 'Karnını sık, hızı abartma.',
   );
 
-  static const Exercise _plank = Exercise(
+  static final Exercise _plank = Exercise(
     id: 'plank',
     name: 'Plank',
     type: ExerciseType.timeBased,
@@ -106,13 +117,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.core,
-    videoAsset: 'assets/videos/Plank.mp4',
+    videoUrl: _videoUrl('Plank.mp4'),
     description:
         'Dirseklerin üstünde sabit dur, vücudunu omuzdan topuğa düz bir çizgi tut.',
     shortTip: 'Kalçanı düşürme.',
   );
 
-  static const Exercise _legRaise = Exercise(
+  static final Exercise _legRaise = Exercise(
     id: 'leg_raise',
     name: 'Bacak Kaldırma',
     type: ExerciseType.repBased,
@@ -120,13 +131,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.core,
-    videoAsset: 'assets/videos/LegRaise_demo.mp4',
+    videoUrl: _videoUrl('LegRaise_demo.mp4'),
     description:
         'Sırt üstü uzan, bacaklarını düz tutarak yavaşça 90 dereceye kadar kaldır.',
     shortTip: 'Belini yere bastır.',
   );
 
-  static const Exercise _hangingLegRaise = Exercise(
+  static final Exercise _hangingLegRaise = Exercise(
     id: 'hanging_leg_raise',
     name: 'Asılı Bacak Kaldırma',
     type: ExerciseType.repBased,
@@ -134,13 +145,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.core,
-    videoAsset: 'assets/videos/HangingLegRaise.mp4',
+    videoUrl: _videoUrl('HangingLegRaise.mp4'),
     description:
         'Bara tutun, bacaklarını birleştirip kontrollü olarak göğsüne doğru çek.',
     shortTip: 'Salınımdan kaçın.',
   );
 
-  static const Exercise _russianTwist = Exercise(
+  static final Exercise _russianTwist = Exercise(
     id: 'russian_twist',
     name: 'Rus Dönüşü',
     type: ExerciseType.repBased,
@@ -148,13 +159,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.core,
-    videoAsset: 'assets/videos/RussianTwist.mp4',
+    videoUrl: _videoUrl('RussianTwist.mp4'),
     description:
         'Otur, hafifçe geri yaslan ve gövdeni sağdan sola tempolu biçimde döndür.',
     shortTip: 'Karnını sıkı tut.',
   );
 
-  static const Exercise _mountainClimber = Exercise(
+  static final Exercise _mountainClimber = Exercise(
     id: 'mountain_climber',
     name: 'Mountain Climber',
     type: ExerciseType.repBased,
@@ -162,13 +173,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.core,
-    videoAsset: 'assets/videos/MountainClimber.mp4',
+    videoUrl: _videoUrl('MountainClimber.mp4'),
     description:
         'Plank pozisyonunda kal, dizlerini sırayla göğsüne hızla çekiştir.',
     shortTip: 'Kalçayı sabit tut.',
   );
 
-  static const Exercise _bicycleCrunch = Exercise(
+  static final Exercise _bicycleCrunch = Exercise(
     id: 'bicycle_crunch',
     name: 'Bisiklet Mekiği',
     type: ExerciseType.repBased,
@@ -176,13 +187,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.core,
-    videoAsset: 'assets/videos/BicycleCrunch.mp4',
+    videoUrl: _videoUrl('BicycleCrunch.mp4'),
     description:
         'Sırt üstü uzan, karşıt dirsek ve dizini havada birleştir, taraf değiştir.',
     shortTip: 'Tempolu ama kontrollü.',
   );
 
-  static const Exercise _flutterKick = Exercise(
+  static final Exercise _flutterKick = Exercise(
     id: 'flutter_kick',
     name: 'Flutter Kick',
     type: ExerciseType.timeBased,
@@ -190,7 +201,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.core,
-    videoAsset: 'assets/videos/FlutterKick.mp4',
+    videoUrl: _videoUrl('FlutterKick.mp4'),
     description:
         'Sırt üstü uzan, bacaklarını kısa ve hızlı kanat çırpar gibi değiştir.',
     shortTip: 'Karnını gevşetme.',
@@ -200,7 +211,7 @@ class WorkoutRepository {
   // GÖĞÜS (Chest)
   // ==========================================================================
 
-  static const Exercise _pushUp = Exercise(
+  static final Exercise _pushUp = Exercise(
     id: 'push_up',
     name: 'Şınav',
     type: ExerciseType.repBased,
@@ -208,13 +219,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.chest,
-    videoAsset: 'assets/videos/PushUp.mp4',
+    videoUrl: _videoUrl('PushUp.mp4'),
     description:
         'Eller omuz hizasında, gövdeni düz tutarak yere kadar in ve geri it.',
     shortTip: 'Dirseğini gövdene yakın tut.',
   );
 
-  static const Exercise _inclinePushUp = Exercise(
+  static final Exercise _inclinePushUp = Exercise(
     id: 'incline_push_up',
     name: 'Yokuş Yukarı Şınav',
     type: ExerciseType.repBased,
@@ -222,13 +233,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.chest,
-    videoAsset: 'assets/videos/InclinePushUp.mp4',
+    videoUrl: _videoUrl('InclinePushUp.mp4'),
     description:
         'Ellerini yüksek bir yüzeye dayalı tutarak şınav hareketini uygula.',
     shortTip: 'Sırtını düz tut.',
   );
 
-  static const Exercise _declinePushUp = Exercise(
+  static final Exercise _declinePushUp = Exercise(
     id: 'decline_push_up',
     name: 'Yokuş Aşağı Şınav',
     type: ExerciseType.repBased,
@@ -236,13 +247,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 50,
     category: ExerciseCategory.chest,
-    videoAsset: 'assets/videos/DeclinePushUp.mp4',
+    videoUrl: _videoUrl('DeclinePushUp.mp4'),
     description:
         'Ayaklarını yüksek bir yere koy, üst göğsünü hedefleyerek şınav yap.',
     shortTip: 'Yavaş in, hızlı çık.',
   );
 
-  static const Exercise _chestDip = Exercise(
+  static final Exercise _chestDip = Exercise(
     id: 'chest_dip',
     name: 'Göğüs Dip',
     type: ExerciseType.repBased,
@@ -250,13 +261,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.chest,
-    videoAsset: 'assets/videos/ChestDip.mp4',
+    videoUrl: _videoUrl('ChestDip.mp4'),
     description:
         'Paralel barlarda göğsünü öne eğ, dirseklerini kontrollü olarak büküp aşağı in.',
     shortTip: 'Omuzları çukurlaştırma.',
   );
 
-  static const Exercise _benchPress = Exercise(
+  static final Exercise _benchPress = Exercise(
     id: 'bench_press',
     name: 'Dambıl Bench Press',
     type: ExerciseType.repBased,
@@ -264,13 +275,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.chest,
-    videoAsset: 'assets/videos/DumbellBenchPress.mp4',
+    videoUrl: _videoUrl('DumbellBenchPress.mp4'),
     description:
         'Sırtın bench üstünde, dambılları göğsünden başlayıp yukarı doğru kontrollü it.',
     shortTip: 'Bilek düz, dirsek 45°.',
   );
 
-  static const Exercise _chestFly = Exercise(
+  static final Exercise _chestFly = Exercise(
     id: 'chest_fly',
     name: 'Chest Fly',
     type: ExerciseType.repBased,
@@ -278,7 +289,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 50,
     category: ExerciseCategory.chest,
-    videoAsset: 'assets/videos/ChestFly.mp4',
+    videoUrl: _videoUrl('ChestFly.mp4'),
     description:
         'Sırt üstü uzan, kollarını yana aç ve göğsünün üstünde kontrollü olarak kapat.',
     shortTip: 'Dirseğin hafif bükülü kalsın.',
@@ -288,7 +299,7 @@ class WorkoutRepository {
   // BACAK (Legs)
   // ==========================================================================
 
-  static const Exercise _squat = Exercise(
+  static final Exercise _squat = Exercise(
     id: 'squat',
     name: 'Squat',
     type: ExerciseType.repBased,
@@ -296,13 +307,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.legs,
-    videoAsset: 'assets/videos/Squat.mp4',
+    videoUrl: _videoUrl('Squat.mp4'),
     description:
         'Ayakların omuz hizasında; kalçanı geriye it, dizlerini büküp aşağı in ve kalk.',
     shortTip: 'Topuklarından güç al.',
   );
 
-  static const Exercise _lunge = Exercise(
+  static final Exercise _lunge = Exercise(
     id: 'lunge',
     name: 'Lunge',
     type: ExerciseType.repBased,
@@ -310,13 +321,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.legs,
-    videoAsset: 'assets/videos/Lunge.mp4',
+    videoUrl: _videoUrl('Lunge.mp4'),
     description:
         'Geniş bir adım at, ön dizini 90 dereceye kadar büküp kontrollü olarak kalk.',
     shortTip: 'Ön diz parmak ucunu geçmesin.',
   );
 
-  static const Exercise _bulgarianSplitSquat = Exercise(
+  static final Exercise _bulgarianSplitSquat = Exercise(
     id: 'bulgarian_split_squat',
     name: 'Bulgar Split Squat',
     type: ExerciseType.repBased,
@@ -324,13 +335,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 50,
     category: ExerciseCategory.legs,
-    videoAsset: 'assets/videos/BulgarianSplitSquat.mp4',
+    videoUrl: _videoUrl('BulgarianSplitSquat.mp4'),
     description:
         'Arka ayağını yüksek bir yere koy, ön bacakla aşağı in ve patlayıcı şekilde kalk.',
     shortTip: 'Gövdeni dik tut.',
   );
 
-  static const Exercise _legPress = Exercise(
+  static final Exercise _legPress = Exercise(
     id: 'leg_press',
     name: 'Leg Press',
     type: ExerciseType.repBased,
@@ -338,13 +349,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.legs,
-    videoAsset: 'assets/videos/Legpress.mp4',
+    videoUrl: _videoUrl('Legpress.mp4'),
     description:
         'Sırtını desteğe yasla, ayaklarını platforma sabitle ve dizleri kilitlemeden it.',
     shortTip: 'Topuklarını basılı tut.',
   );
 
-  static const Exercise _calfRaise = Exercise(
+  static final Exercise _calfRaise = Exercise(
     id: 'calf_raise',
     name: 'Calf Raise',
     type: ExerciseType.timeBased,
@@ -352,13 +363,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.legs,
-    videoAsset: 'assets/videos/CalfRaise.mp4',
+    videoUrl: _videoUrl('CalfRaise.mp4'),
     description:
         'Parmak uçlarına yüksel, en tepede bir saniye sık ve yavaşça başlangıca dön.',
     shortTip: 'Tepe noktasında 1 saniye sık.',
   );
 
-  static const Exercise _wallSit = Exercise(
+  static final Exercise _wallSit = Exercise(
     id: 'wall_sit',
     name: 'Wall Sit',
     type: ExerciseType.timeBased,
@@ -366,7 +377,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.legs,
-    videoAsset: 'assets/videos/WallSit.mp4',
+    videoUrl: _videoUrl('WallSit.mp4'),
     description:
         'Sırtını duvara yasla, dizlerini 90 dereceye getir ve sabit pozisyonda kal.',
     shortTip: 'Topuğunla bas, çakılı kal.',
@@ -376,7 +387,7 @@ class WorkoutRepository {
   // SIRT (Back)
   // ==========================================================================
 
-  static const Exercise _pullUp = Exercise(
+  static final Exercise _pullUp = Exercise(
     id: 'pull_up',
     name: 'Pull-up',
     type: ExerciseType.repBased,
@@ -384,13 +395,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.back,
-    videoAsset: 'assets/videos/PullUp.mp4',
+    videoUrl: _videoUrl('PullUp.mp4'),
     description:
         'Bara avuçlar dışta tutun, kürek kemiklerini sıkarak çeneni bara çek.',
     shortTip: 'Önce kürekten çek.',
   );
 
-  static const Exercise _chinUp = Exercise(
+  static final Exercise _chinUp = Exercise(
     id: 'chin_up',
     name: 'Chin-up',
     type: ExerciseType.repBased,
@@ -398,13 +409,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.back,
-    videoAsset: 'assets/videos/ChinUp.mp4',
+    videoUrl: _videoUrl('ChinUp.mp4'),
     description:
         'Avuç içlerin sana dönük, çeneni bara doğru kontrollü çek ve yavaşça in.',
     shortTip: 'Salınımdan kaçın.',
   );
 
-  static const Exercise _latPulldown = Exercise(
+  static final Exercise _latPulldown = Exercise(
     id: 'lat_pulldown',
     name: 'Lat Pulldown',
     type: ExerciseType.repBased,
@@ -412,13 +423,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 50,
     category: ExerciseCategory.back,
-    videoAsset: 'assets/videos/LatPulldown.mp4',
+    videoUrl: _videoUrl('LatPulldown.mp4'),
     description:
         'Otur, barı göğüs hizasına çek ve kürek kemiklerini birbirine sıkıştır.',
     shortTip: 'Önce sırt, sonra dirsek.',
   );
 
-  static const Exercise _barbellRow = Exercise(
+  static final Exercise _barbellRow = Exercise(
     id: 'barbell_row',
     name: 'Barbell Row',
     type: ExerciseType.repBased,
@@ -426,13 +437,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.back,
-    videoAsset: 'assets/videos/BarbellRow.mp4',
+    videoUrl: _videoUrl('BarbellRow.mp4'),
     description:
         'Sırtın nötr ve düz, halteri göbek hizana doğru kontrollü olarak çek.',
     shortTip: 'Sırtın yuvarlanmasın.',
   );
 
-  static const Exercise _superman = Exercise(
+  static final Exercise _superman = Exercise(
     id: 'superman',
     name: 'Superman',
     type: ExerciseType.timeBased,
@@ -440,7 +451,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.back,
-    videoAsset: 'assets/videos/Superman.mp4',
+    videoUrl: _videoUrl('Superman.mp4'),
     description:
         'Yüz üstü uzan, kollar ve bacaklarını aynı anda yukarı kaldır ve sabit kal.',
     shortTip: 'Boynunu nötr tut.',
@@ -450,7 +461,7 @@ class WorkoutRepository {
   // OMUZ (Shoulders)
   // ==========================================================================
 
-  static const Exercise _shoulderPress = Exercise(
+  static final Exercise _shoulderPress = Exercise(
     id: 'shoulder_press',
     name: 'Shoulder Press',
     type: ExerciseType.repBased,
@@ -458,13 +469,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.shoulders,
-    videoAsset: 'assets/videos/ShoulderPress.mp4',
+    videoUrl: _videoUrl('ShoulderPress.mp4'),
     description:
         'Dambılları omuz hizasından kontrollü olarak tam yukarı it ve geri indir.',
     shortTip: 'Çekirdek sıkı, bilek nötr.',
   );
 
-  static const Exercise _lateralRaise = Exercise(
+  static final Exercise _lateralRaise = Exercise(
     id: 'lateral_raise',
     name: 'Lateral Raise',
     type: ExerciseType.repBased,
@@ -472,13 +483,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.shoulders,
-    videoAsset: 'assets/videos/LateralRaise.mp4',
+    videoUrl: _videoUrl('LateralRaise.mp4'),
     description:
         'Kollarını yana doğru omuz seviyesine kadar düz hâlde kontrollü kaldır.',
     shortTip: 'Trapeze değil, omuza yükle.',
   );
 
-  static const Exercise _frontRaise = Exercise(
+  static final Exercise _frontRaise = Exercise(
     id: 'front_raise',
     name: 'Front Raise',
     type: ExerciseType.repBased,
@@ -486,13 +497,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.shoulders,
-    videoAsset: 'assets/videos/FrontRaise.mp4',
+    videoUrl: _videoUrl('FrontRaise.mp4'),
     description:
         'Kollarını öne doğru omuz seviyesine kadar düz hâlde kontrollü kaldır.',
     shortTip: 'Bel yaylanmasın.',
   );
 
-  static const Exercise _arnoldPress = Exercise(
+  static final Exercise _arnoldPress = Exercise(
     id: 'arnold_press',
     name: 'Arnold Press',
     type: ExerciseType.repBased,
@@ -500,13 +511,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.shoulders,
-    videoAsset: 'assets/videos/ArnoldPress.mp4',
+    videoUrl: _videoUrl('ArnoldPress.mp4'),
     description:
         'Dambılları yukarı iterken avuç içlerini içeriden dışarıya doğru çevir.',
     shortTip: 'Dirseğini kilitleme.',
   );
 
-  static const Exercise _pikePushUp = Exercise(
+  static final Exercise _pikePushUp = Exercise(
     id: 'pike_push_up',
     name: 'Pike Şınav',
     type: ExerciseType.repBased,
@@ -514,7 +525,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.shoulders,
-    videoAsset: 'assets/videos/PikePushUp.mp4',
+    videoUrl: _videoUrl('PikePushUp.mp4'),
     description:
         'Kalçanı yukarı kaldır, başını iki elin arasında inip çıkacak şekilde itele.',
     shortTip: 'Omuza odaklan, gövdeyi devirme.',
@@ -524,7 +535,7 @@ class WorkoutRepository {
   // KOL (Arms)
   // ==========================================================================
 
-  static const Exercise _bicepsCurl = Exercise(
+  static final Exercise _bicepsCurl = Exercise(
     id: 'biceps_curl',
     name: 'Biceps Curl',
     type: ExerciseType.repBased,
@@ -532,13 +543,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.arms,
-    videoAsset: 'assets/videos/BicepsCurl.mp4',
+    videoUrl: _videoUrl('BicepsCurl.mp4'),
     description:
         'Dirseklerini gövdene sabitle, dambılı omuzuna doğru kontrollü olarak çek.',
     shortTip: 'Salınma, biceps çalışsın.',
   );
 
-  static const Exercise _hammerCurl = Exercise(
+  static final Exercise _hammerCurl = Exercise(
     id: 'hammer_curl',
     name: 'Hammer Curl',
     type: ExerciseType.repBased,
@@ -546,13 +557,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.arms,
-    videoAsset: 'assets/videos/HammerCurl.mp4',
+    videoUrl: _videoUrl('HammerCurl.mp4'),
     description:
         'Avuç içlerin içeriye dönük, dambılı omuza doğru kontrollü olarak çek.',
     shortTip: 'Bilek nötr kalsın.',
   );
 
-  static const Exercise _tricepsDip = Exercise(
+  static final Exercise _tricepsDip = Exercise(
     id: 'triceps_dip',
     name: 'Triceps Dip',
     type: ExerciseType.repBased,
@@ -560,13 +571,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.arms,
-    videoAsset: 'assets/videos/TricepsDip.mp4',
+    videoUrl: _videoUrl('TricepsDip.mp4'),
     description:
         'Sandalye/bar kenarında ellerin destekli; dirseklerini bükerek aşağı in ve geri kalk.',
     shortTip: 'Dirsek geriye, dışarı değil.',
   );
 
-  static const Exercise _tricepsPushdown = Exercise(
+  static final Exercise _tricepsPushdown = Exercise(
     id: 'triceps_pushdown',
     name: 'Triceps Pushdown',
     type: ExerciseType.repBased,
@@ -574,13 +585,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 50,
     category: ExerciseCategory.arms,
-    videoAsset: 'assets/videos/TricepsPushdown.mp4',
+    videoUrl: _videoUrl('TricepsPushdown.mp4'),
     description:
         'Dirseklerin gövdene sabit, halatı veya barı kontrollü olarak aşağı it.',
     shortTip: 'Sadece ön kol çalışsın.',
   );
 
-  static const Exercise _closeGripPushUp = Exercise(
+  static final Exercise _closeGripPushUp = Exercise(
     id: 'close_grip_push_up',
     name: 'Yakın Tutuş Şınav',
     type: ExerciseType.repBased,
@@ -588,7 +599,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.arms,
-    videoAsset: 'assets/videos/CloseGripPushUp.mp4',
+    videoUrl: _videoUrl('CloseGripPushUp.mp4'),
     description:
         'Ellerini daralt, dirseklerini gövdene yakın tutarak şınav hareketini uygula.',
     shortTip: 'Dirsek dışa kaçmasın.',
@@ -598,7 +609,7 @@ class WorkoutRepository {
   // KARDİYO & FULL BODY
   // ==========================================================================
 
-  static const Exercise _burpee = Exercise(
+  static final Exercise _burpee = Exercise(
     id: 'burpee',
     name: 'Burpee',
     type: ExerciseType.repBased,
@@ -606,13 +617,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 50,
     category: ExerciseCategory.fullBody,
-    videoAsset: 'assets/videos/Burpee.mp4',
+    videoUrl: _videoUrl('Burpee.mp4'),
     description:
         'Aşağı in, ellerin yere değdiğinde plank al, ayaklarını öne çekip patlayıcı zıpla.',
     shortTip: 'Sürekli ritim, mola yok.',
   );
 
-  static const Exercise _jumpingJack = Exercise(
+  static final Exercise _jumpingJack = Exercise(
     id: 'jumping_jack',
     name: 'Jumping Jack',
     type: ExerciseType.timeBased,
@@ -620,13 +631,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.fullBody,
-    videoAsset: 'assets/videos/JumpingJack.mp4',
+    videoUrl: _videoUrl('JumpingJack.mp4'),
     description:
         'Aç-kapat hareketiyle aynı anda kollarını yukarı kaldırıp ritmik şekilde zıpla.',
     shortTip: 'Yumuşak ayak, sıkı çekirdek.',
   );
 
-  static const Exercise _highKnees = Exercise(
+  static final Exercise _highKnees = Exercise(
     id: 'high_knees',
     name: 'High Knees',
     type: ExerciseType.timeBased,
@@ -634,13 +645,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.fullBody,
-    videoAsset: 'assets/videos/HighKness.mp4',
+    videoUrl: _videoUrl('HighKness.mp4'),
     description:
         'Olduğun yerde dizlerini sırayla kalçanı geçecek kadar hızla yukarı çekiştir.',
     shortTip: 'Kollarını da çalıştır.',
   );
 
-  static const Exercise _jumpSquat = Exercise(
+  static final Exercise _jumpSquat = Exercise(
     id: 'jump_squat',
     name: 'Jump Squat',
     type: ExerciseType.repBased,
@@ -648,13 +659,13 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.fullBody,
-    videoAsset: 'assets/videos/JumpSquat.mp4',
+    videoUrl: _videoUrl('JumpSquat.mp4'),
     description:
         'Squat pozisyonuna in, patlayıcı biçimde havaya zıpla ve yumuşak iniş yap.',
     shortTip: 'Sessiz iniş, sıkı çekirdek.',
   );
 
-  static const Exercise _skippingRope = Exercise(
+  static final Exercise _skippingRope = Exercise(
     id: 'skipping_rope',
     name: 'İp Atlama',
     type: ExerciseType.timeBased,
@@ -662,7 +673,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.fullBody,
-    videoAsset: 'assets/videos/SkippingRope.mp4',
+    videoUrl: _videoUrl('SkippingRope.mp4'),
     description:
         'Bilek dönüşüyle ipi çevir, hafif tempoda ritmik olarak alçak zıplamalar yap.',
     shortTip: 'Diz hafif bükülü, ip kısa.',
@@ -674,7 +685,7 @@ class WorkoutRepository {
   // them directly (and push them into /plan-detail via `extra:`).
   // ==========================================================================
 
-  static const WorkoutPlan pushLimitsAbsHiit = WorkoutPlan(
+  static final WorkoutPlan pushLimitsAbsHiit = WorkoutPlan(
     id: 'push_limits_abs_hiit',
     title: 'Belirgin Karın Kasları HIIT',
     category: ExerciseCategory.core,
@@ -690,7 +701,7 @@ class WorkoutRepository {
     image: 'photos/sınırlarınızorlabelirginkarınkarınkaslarıHIITnewfoto.webp',
   );
 
-  static const WorkoutPlan pushLimitsStrongerCore = WorkoutPlan(
+  static final WorkoutPlan pushLimitsStrongerCore = WorkoutPlan(
     id: 'push_limits_stronger_core',
     title: 'Daha Güçlü Şekil ve Çekirdek',
     category: ExerciseCategory.core,
@@ -706,7 +717,7 @@ class WorkoutRepository {
     image: defaultMuscularPhotoUrl,
   );
 
-  static const WorkoutPlan pushLimitsIronPack = WorkoutPlan(
+  static final WorkoutPlan pushLimitsIronPack = WorkoutPlan(
     id: 'push_limits_iron_pack',
     title: 'Demir Altı Paket Gücü',
     category: ExerciseCategory.core,
@@ -722,7 +733,7 @@ class WorkoutRepository {
     image: 'photos/sınırlarınızorlademiraltıpaketgücünewfoto.webp',
   );
 
-  static const WorkoutPlan pushLimitsAthleticCore = WorkoutPlan(
+  static final WorkoutPlan pushLimitsAthleticCore = WorkoutPlan(
     id: 'push_limits_athletic_core',
     title: 'Atletik Core Kontrolü',
     category: ExerciseCategory.core,
@@ -744,7 +755,7 @@ class WorkoutRepository {
   // populated even before bespoke routines exist for those regions.
   // ==========================================================================
 
-  static const List<WorkoutPlan> allPlans = [
+  static final List<WorkoutPlan> allPlans = [
     pushLimitsAbsHiit,
     pushLimitsStrongerCore,
     pushLimitsIronPack,
@@ -987,7 +998,7 @@ class WorkoutRepository {
   // PROGRAM
   // ==========================================================================
 
-  static const List<WorkoutDay> _staticProgram = [
+  static final List<WorkoutDay> _staticProgram = [
     WorkoutDay(
       dayNumber: 1,
       exercises: [_crunch, _plank, _legRaise],

@@ -3,19 +3,21 @@ import 'package:video_player/video_player.dart';
 
 /// Adaptive exercise guide preview.
 ///
-///   • If [assetPath] ends in a video extension (`.mp4`/`.mov`/`.webm`)
-///     the widget spins up [VideoPlayerController.asset] and shows a
-///     looping muted demo, exactly like the original implementation.
-///   • If [assetPath] ends in an image extension (`.jpg`/`.jpeg`/`.png`/
-///     `.webp`/`.gif`) the widget skips the video pipeline entirely and
-///     renders a static [Image.asset] inside the same rounded container.
-///   • If [assetPath] is null/empty, or either renderer throws, the
-///     stylish neon "fallback tile" takes over so the surrounding PIP
-///     panel never goes blank.
+///   • `http://` or `https://` paths stream via
+///     [VideoPlayerController.networkUrl] — the standard path now that
+///     Phase 10 moved the 41 demo clips out of the bundle and into a
+///     public Supabase Storage bucket.
+///   • Local `.mp4`/`.mov`/`.webm` asset paths still work via
+///     [VideoPlayerController.asset] so tests and any future offline
+///     packs keep rendering without code changes.
+///   • Image extensions (`.jpg`/`.jpeg`/`.png`/`.webp`/`.gif`) render as
+///     a static [Image.asset] inside the same rounded container.
+///   • Null/empty paths, or any renderer error, fall through to the neon
+///     `_FallbackTile` so the PIP panel never goes blank.
 ///
-/// Phase 27 baked .jpg stills into `assets/videos/` for ~26 exercises
-/// because the upstream RapidAPI tier no longer ships GIF URLs; this
-/// widget makes those land cleanly in the existing PIP slot.
+/// While the video is buffering (network branch, `!controller.value.isInitialized`)
+/// a small centered [CircularProgressIndicator] overlays the fallback so
+/// the PIP slot reads "loading" instead of "broken".
 class ExerciseGuidePlayer extends StatefulWidget {
   const ExerciseGuidePlayer({
     super.key,
@@ -99,7 +101,13 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
       return;
     }
 
-    final controller = VideoPlayerController.asset(path);
+    // Remote streaming branch (Phase 10 default) vs local asset branch.
+    // startsWith('http') covers both http and https so we don't special-case
+    // the scheme; Dart's Uri.parse will normalise either.
+    final isRemote = path.startsWith('http');
+    final controller = isRemote
+        ? VideoPlayerController.networkUrl(Uri.parse(path))
+        : VideoPlayerController.asset(path);
     _controller = controller;
     try {
       await controller.initialize();
@@ -154,8 +162,29 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
 
   @override
   Widget build(BuildContext context) {
-    if (_hasError || !_ready) {
+    if (_hasError) {
       return _FallbackTile(exerciseName: widget.exerciseName);
+    }
+    if (!_ready) {
+      // Show the fallback chrome + a centered spinner while the network
+      // video is still buffering. Keeps the PIP slot feeling "alive"
+      // instead of static placeholder text.
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          _FallbackTile(exerciseName: widget.exerciseName),
+          const Center(
+            child: SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Color(0xFF00F0FF),
+              ),
+            ),
+          ),
+        ],
+      );
     }
 
     if (_isImage) {
