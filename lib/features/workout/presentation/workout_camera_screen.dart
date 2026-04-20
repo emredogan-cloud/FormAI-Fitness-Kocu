@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../../core/utils/audio_feedback.dart';
 import '../models/exercise_model.dart';
@@ -53,6 +54,8 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
   Size? _imageSize;
   bool _isBusy = false;
   String? _error;
+  bool _permissionPermanentlyDenied = false;
+  bool _wakelockOn = false;
 
   String? _activeExerciseId;
   int? _activeSet;
@@ -70,15 +73,57 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _audio.init();
-    _bootstrap();
+    _enableWakelock();
+    // Defer bootstrap to the first frame so the ML Kit disclosure dialog has
+    // a valid Overlay to show into (dialogs from raw initState can race the
+    // first build on slower devices).
+    WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrap());
+  }
+
+  Future<void> _enableWakelock() async {
+    // Keeps the screen awake for the full workout so a 20-minute session
+    // doesn't get cut short by an OS-level auto-lock mid-rep. The disable
+    // in dispose() guarantees we don't drain battery after the user leaves.
+    try {
+      await WakelockPlus.enable();
+      _wakelockOn = true;
+    } catch (e, st) {
+      debugPrint('WakelockPlus.enable() failed: $e\n$st');
+    }
+  }
+
+  Future<void> _disableWakelock() async {
+    if (!_wakelockOn) return;
+    _wakelockOn = false;
+    try {
+      await WakelockPlus.disable();
+    } catch (e, st) {
+      debugPrint('WakelockPlus.disable() failed: $e\n$st');
+    }
   }
 
   Future<void> _bootstrap() async {
+    if (!mounted) return;
+    setState(() {
+      _error = null;
+      _permissionPermanentlyDenied = false;
+    });
+
+    // On-device ML disclosure is shown BEFORE the OS permission prompt so the
+    // user understands what the camera is used for (Apple/Google transparency
+    // requirement; see APP_STORE_AUDIT §1.4).
+    final accepted = await _showMlKitDisclosure();
+    if (!accepted || !mounted) return;
+
     final status = await Permission.camera.request();
+    if (!mounted) return;
+    if (status.isPermanentlyDenied) {
+      setState(() => _permissionPermanentlyDenied = true);
+      return;
+    }
     if (!status.isGranted) {
-      if (!mounted) return;
-      setState(
-          () => _error = 'Camera permission is required to analyze your form.');
+      setState(() =>
+          _error = 'Kamera izni gerekli. Antrenmanı başlatmak için izin ver.');
       return;
     }
 
@@ -86,7 +131,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       final cameras = await availableCameras();
       if (cameras.isEmpty) {
         if (!mounted) return;
-        setState(() => _error = 'No cameras available on this device.');
+        setState(() => _error = 'Bu cihazda kullanılabilir kamera bulunamadı.');
         return;
       }
       final front = cameras.firstWhere(
@@ -96,8 +141,58 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       await _startController(front);
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = 'Camera setup failed: $e');
+      setState(() => _error = 'Kamera başlatılamadı: $e');
     }
+  }
+
+  Future<bool> _showMlKitDisclosure() async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF111118),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: BorderSide(color: _neon.withValues(alpha: 0.5)),
+        ),
+        title: const Row(
+          children: [
+            Icon(Icons.shield_outlined, color: _neon),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Cihazında Analiz',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: const Text(
+          'FormAI, formunu cihazında Google ML Kit ile analiz eder. '
+          'Görüntüler kaydedilmez ve hiçbir sunucuya gönderilmez.',
+          style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.4),
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: _neon,
+              foregroundColor: Colors.black,
+              textStyle: const TextStyle(
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.5,
+              ),
+            ),
+            child: const Text('ANLADIM'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
   }
 
   Future<void> _startController(CameraDescription camera) async {
@@ -307,6 +402,10 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     _controller?.dispose();
     _poseService.dispose();
     _audio.dispose();
+    // Fire-and-forget — we don't want dispose() to await, and the plugin's
+    // native call is near-instant. Failing to disable here would leave the
+    // device screen permanently awake after the user exits.
+    unawaited(_disableWakelock());
     super.dispose();
   }
 
@@ -418,16 +517,30 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
   }
 
   Widget _buildBody() {
+    if (_permissionPermanentlyDenied) {
+      return _PermissionCard(
+        icon: Icons.lock_outline,
+        title: 'Kamera İzni Kapalı',
+        message: 'Formunu analiz edebilmek için kamera iznine ihtiyacımız var. '
+            'Ayarlara giderek FormAI için kamera iznini aç, ardından buraya '
+            'geri dön.',
+        primaryLabel: 'AYARLARA GİT',
+        onPrimary: () async {
+          await openAppSettings();
+        },
+        secondaryLabel: 'TEKRAR DENE',
+        onSecondary: _bootstrap,
+        onExit: () => _exit(context),
+      );
+    }
     if (_error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text(
-            _error!,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white, fontSize: 16),
-          ),
-        ),
+      return _PermissionCard(
+        icon: Icons.videocam_off_outlined,
+        title: 'Kamera Hazırlanamadı',
+        message: _error!,
+        primaryLabel: 'TEKRAR DENE',
+        onPrimary: _bootstrap,
+        onExit: () => _exit(context),
       );
     }
     final controller = _controller;
@@ -947,6 +1060,142 @@ class _PausedBadge extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _PermissionCard extends StatelessWidget {
+  const _PermissionCard({
+    required this.icon,
+    required this.title,
+    required this.message,
+    required this.primaryLabel,
+    required this.onPrimary,
+    required this.onExit,
+    this.secondaryLabel,
+    this.onSecondary,
+  });
+
+  static const Color _neon = Color(0xFF00F0FF);
+
+  final IconData icon;
+  final String title;
+  final String message;
+  final String primaryLabel;
+  final VoidCallback onPrimary;
+  final String? secondaryLabel;
+  final VoidCallback? onSecondary;
+  final VoidCallback onExit;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(22, 26, 22, 22),
+              decoration: BoxDecoration(
+                color: const Color(0xFF111118),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: _neon.withValues(alpha: 0.45)),
+                boxShadow: [
+                  BoxShadow(
+                    color: _neon.withValues(alpha: 0.2),
+                    blurRadius: 22,
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _neon.withValues(alpha: 0.15),
+                    ),
+                    child: Icon(icon, color: _neon, size: 28),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 13.5,
+                      height: 1.45,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: onPrimary,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: _neon,
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        textStyle: const TextStyle(
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.6,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(primaryLabel),
+                    ),
+                  ),
+                  if (secondaryLabel != null && onSecondary != null) ...[
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: onSecondary,
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                            color: _neon.withValues(alpha: 0.6),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          textStyle: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.5,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          secondaryLabel!,
+                          style: const TextStyle(color: _neon),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+        Positioned(
+          top: 18,
+          left: 16,
+          child: WorkoutBackButton(onPressed: onExit),
+        ),
+      ],
     );
   }
 }
