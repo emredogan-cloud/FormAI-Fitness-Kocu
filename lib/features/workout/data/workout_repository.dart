@@ -77,7 +77,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.core,
-    videoAsset: 'assets/videos/crunch.jpg',
+    videoAsset: 'assets/videos/Crunch.mp4',
     description:
         'Sırt üstü uzan, dizlerini bük ve omuzlarını kontrollü olarak yukarı kaldır.',
     shortTip: 'Boyuna asma, karnınla çek.',
@@ -91,7 +91,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 35,
     category: ExerciseCategory.core,
-    videoAsset: 'assets/videos/situp.jpg',
+    videoAsset: 'assets/videos/SitUp.mp4',
     description:
         'Sırt üstü uzan, gövdeni dizlerine kadar tam olarak kaldır ve kontrollü in.',
     shortTip: 'Karnını sık, hızı abartma.',
@@ -105,7 +105,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.core,
-    videoAsset: 'assets/videos/plank.jpg',
+    videoAsset: 'assets/videos/Plank.mp4',
     description:
         'Dirseklerin üstünde sabit dur, vücudunu omuzdan topuğa düz bir çizgi tut.',
     shortTip: 'Kalçanı düşürme.',
@@ -119,7 +119,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.core,
-    videoAsset: 'assets/videos/leg_raise.jpg',
+    videoAsset: 'assets/videos/LegRaise_demo.mp4',
     description:
         'Sırt üstü uzan, bacaklarını düz tutarak yavaşça 90 dereceye kadar kaldır.',
     shortTip: 'Belini yere bastır.',
@@ -133,7 +133,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.core,
-    videoAsset: 'assets/videos/hanging_leg_raise.jpg',
+    videoAsset: 'assets/videos/HangingLegRaise.mp4',
     description:
         'Bara tutun, bacaklarını birleştirip kontrollü olarak göğsüne doğru çek.',
     shortTip: 'Salınımdan kaçın.',
@@ -147,7 +147,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.core,
-    videoAsset: 'assets/videos/russian_twist.jpg',
+    videoAsset: 'assets/videos/RussianTwist.mp4',
     description:
         'Otur, hafifçe geri yaslan ve gövdeni sağdan sola tempolu biçimde döndür.',
     shortTip: 'Karnını sıkı tut.',
@@ -161,7 +161,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.core,
-    videoAsset: 'assets/videos/mountain_climber.jpg',
+    videoAsset: 'assets/videos/MountainClimber.mp4',
     description:
         'Plank pozisyonunda kal, dizlerini sırayla göğsüne hızla çekiştir.',
     shortTip: 'Kalçayı sabit tut.',
@@ -175,7 +175,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.core,
-    videoAsset: 'assets/videos/bicycle_crunch.jpg',
+    videoAsset: 'assets/videos/BicycleCrunch.mp4',
     description:
         'Sırt üstü uzan, karşıt dirsek ve dizini havada birleştir, taraf değiştir.',
     shortTip: 'Tempolu ama kontrollü.',
@@ -189,7 +189,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.core,
-    videoAsset: 'assets/videos/flutter_kick.jpg',
+    videoAsset: 'assets/videos/FlutterKick.mp4',
     description:
         'Sırt üstü uzan, bacaklarını kısa ve hızlı kanat çırpar gibi değiştir.',
     shortTip: 'Karnını gevşetme.',
@@ -207,7 +207,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.chest,
-    videoAsset: 'assets/videos/push_up.jpg',
+    videoAsset: 'assets/videos/PushUp.mp4',
     description:
         'Eller omuz hizasında, gövdeni düz tutarak yere kadar in ve geri it.',
     shortTip: 'Dirseğini gövdene yakın tut.',
@@ -221,7 +221,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.chest,
-    videoAsset: 'assets/videos/incline_push_up.jpg',
+    videoAsset: 'assets/videos/InclinePushUp.mp4',
     description:
         'Ellerini yüksek bir yüzeye dayalı tutarak şınav hareketini uygula.',
     shortTip: 'Sırtını düz tut.',
@@ -235,6 +235,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 50,
     category: ExerciseCategory.chest,
+    videoAsset: 'assets/videos/DeclinePushUp.mp4',
     description:
         'Ayaklarını yüksek bir yere koy, üst göğsünü hedefleyerek şınav yap.',
     shortTip: 'Yavaş in, hızlı çık.',
@@ -248,7 +249,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.chest,
-    videoAsset: 'assets/videos/chest_dip.jpg',
+    videoAsset: 'assets/videos/ChestDip.mp4',
     description:
         'Paralel barlarda göğsünü öne eğ, dirseklerini kontrollü olarak büküp aşağı in.',
     shortTip: 'Omuzları çukurlaştırma.',
@@ -262,7 +263,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.chest,
-    videoAsset: 'assets/videos/bench_press.jpg',
+    videoAsset: 'assets/videos/DumbellBenchPress.mp4',
     description:
         'Sırtın bench üstünde, dambılları göğsünden başlayıp yukarı doğru kontrollü it.',
     shortTip: 'Bilek düz, dirsek 45°.',
@@ -276,7 +277,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 50,
     category: ExerciseCategory.chest,
-    videoAsset: 'assets/videos/chest_fly.jpg',
+    videoAsset: 'assets/videos/ChestFly.mp4',
     description:
         'Sırt üstü uzan, kollarını yana aç ve göğsünün üstünde kontrollü olarak kapat.',
     shortTip: 'Dirseğin hafif bükülü kalsın.',
@@ -294,7 +295,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.legs,
-    videoAsset: 'assets/videos/squat.jpg',
+    videoAsset: 'assets/videos/Squat.mp4',
     description:
         'Ayakların omuz hizasında; kalçanı geriye it, dizlerini büküp aşağı in ve kalk.',
     shortTip: 'Topuklarından güç al.',
@@ -308,7 +309,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.legs,
-    videoAsset: 'assets/videos/lunge.jpg',
+    videoAsset: 'assets/videos/Lunge.mp4',
     description:
         'Geniş bir adım at, ön dizini 90 dereceye kadar büküp kontrollü olarak kalk.',
     shortTip: 'Ön diz parmak ucunu geçmesin.',
@@ -322,6 +323,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 50,
     category: ExerciseCategory.legs,
+    videoAsset: 'assets/videos/BulgarianSplitSquat.mp4',
     description:
         'Arka ayağını yüksek bir yere koy, ön bacakla aşağı in ve patlayıcı şekilde kalk.',
     shortTip: 'Gövdeni dik tut.',
@@ -335,6 +337,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.legs,
+    videoAsset: 'assets/videos/Legpress.mp4',
     description:
         'Sırtını desteğe yasla, ayaklarını platforma sabitle ve dizleri kilitlemeden it.',
     shortTip: 'Topuklarını basılı tut.',
@@ -348,6 +351,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.legs,
+    videoAsset: 'assets/videos/CalfRaise.mp4',
     description:
         'Parmak uçlarına yüksel, en tepede bir saniye sık ve yavaşça başlangıca dön.',
     shortTip: 'Tepe noktasında 1 saniye sık.',
@@ -361,6 +365,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.legs,
+    videoAsset: 'assets/videos/WallSit.mp4',
     description:
         'Sırtını duvara yasla, dizlerini 90 dereceye getir ve sabit pozisyonda kal.',
     shortTip: 'Topuğunla bas, çakılı kal.',
@@ -378,7 +383,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.back,
-    videoAsset: 'assets/videos/pull_up.jpg',
+    videoAsset: 'assets/videos/PullUp.mp4',
     description:
         'Bara avuçlar dışta tutun, kürek kemiklerini sıkarak çeneni bara çek.',
     shortTip: 'Önce kürekten çek.',
@@ -392,7 +397,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.back,
-    videoAsset: 'assets/videos/chin_up.jpg',
+    videoAsset: 'assets/videos/ChinUp.mp4',
     description:
         'Avuç içlerin sana dönük, çeneni bara doğru kontrollü çek ve yavaşça in.',
     shortTip: 'Salınımdan kaçın.',
@@ -406,7 +411,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 50,
     category: ExerciseCategory.back,
-    videoAsset: 'assets/videos/lat_pulldown.jpg',
+    videoAsset: 'assets/videos/LatPulldown.mp4',
     description:
         'Otur, barı göğüs hizasına çek ve kürek kemiklerini birbirine sıkıştır.',
     shortTip: 'Önce sırt, sonra dirsek.',
@@ -420,6 +425,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.back,
+    videoAsset: 'assets/videos/BarbellRow.mp4',
     description:
         'Sırtın nötr ve düz, halteri göbek hizana doğru kontrollü olarak çek.',
     shortTip: 'Sırtın yuvarlanmasın.',
@@ -433,6 +439,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.back,
+    videoAsset: 'assets/videos/Superman.mp4',
     description:
         'Yüz üstü uzan, kollar ve bacaklarını aynı anda yukarı kaldır ve sabit kal.',
     shortTip: 'Boynunu nötr tut.',
@@ -450,7 +457,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.shoulders,
-    videoAsset: 'assets/videos/shoulder_press.jpg',
+    videoAsset: 'assets/videos/ShoulderPress.mp4',
     description:
         'Dambılları omuz hizasından kontrollü olarak tam yukarı it ve geri indir.',
     shortTip: 'Çekirdek sıkı, bilek nötr.',
@@ -464,7 +471,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.shoulders,
-    videoAsset: 'assets/videos/lateral_raise.jpg',
+    videoAsset: 'assets/videos/LateralRaise.mp4',
     description:
         'Kollarını yana doğru omuz seviyesine kadar düz hâlde kontrollü kaldır.',
     shortTip: 'Trapeze değil, omuza yükle.',
@@ -478,6 +485,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.shoulders,
+    videoAsset: 'assets/videos/FrontRaise.mp4',
     description:
         'Kollarını öne doğru omuz seviyesine kadar düz hâlde kontrollü kaldır.',
     shortTip: 'Bel yaylanmasın.',
@@ -491,6 +499,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.shoulders,
+    videoAsset: 'assets/videos/ArnoldPress.mp4',
     description:
         'Dambılları yukarı iterken avuç içlerini içeriden dışarıya doğru çevir.',
     shortTip: 'Dirseğini kilitleme.',
@@ -504,6 +513,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.shoulders,
+    videoAsset: 'assets/videos/PikePushUp.mp4',
     description:
         'Kalçanı yukarı kaldır, başını iki elin arasında inip çıkacak şekilde itele.',
     shortTip: 'Omuza odaklan, gövdeyi devirme.',
@@ -521,7 +531,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.arms,
-    videoAsset: 'assets/videos/biceps_curl.jpg',
+    videoAsset: 'assets/videos/BicepsCurl.mp4',
     description:
         'Dirseklerini gövdene sabitle, dambılı omuzuna doğru kontrollü olarak çek.',
     shortTip: 'Salınma, biceps çalışsın.',
@@ -535,7 +545,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.arms,
-    videoAsset: 'assets/videos/hammer_curl.jpg',
+    videoAsset: 'assets/videos/HammerCurl.mp4',
     description:
         'Avuç içlerin içeriye dönük, dambılı omuza doğru kontrollü olarak çek.',
     shortTip: 'Bilek nötr kalsın.',
@@ -549,7 +559,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.arms,
-    videoAsset: 'assets/videos/triceps_dip.jpg',
+    videoAsset: 'assets/videos/TricepsDip.mp4',
     description:
         'Sandalye/bar kenarında ellerin destekli; dirseklerini bükerek aşağı in ve geri kalk.',
     shortTip: 'Dirsek geriye, dışarı değil.',
@@ -563,6 +573,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 50,
     category: ExerciseCategory.arms,
+    videoAsset: 'assets/videos/TricepsPushdown.mp4',
     description:
         'Dirseklerin gövdene sabit, halatı veya barı kontrollü olarak aşağı it.',
     shortTip: 'Sadece ön kol çalışsın.',
@@ -576,6 +587,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 60,
     category: ExerciseCategory.arms,
+    videoAsset: 'assets/videos/CloseGripPushUp.mp4',
     description:
         'Ellerini daralt, dirseklerini gövdene yakın tutarak şınav hareketini uygula.',
     shortTip: 'Dirsek dışa kaçmasın.',
@@ -593,6 +605,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 50,
     category: ExerciseCategory.fullBody,
+    videoAsset: 'assets/videos/Burpee.mp4',
     description:
         'Aşağı in, ellerin yere değdiğinde plank al, ayaklarını öne çekip patlayıcı zıpla.',
     shortTip: 'Sürekli ritim, mola yok.',
@@ -606,6 +619,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.fullBody,
+    videoAsset: 'assets/videos/JumpingJack.mp4',
     description:
         'Aç-kapat hareketiyle aynı anda kollarını yukarı kaldırıp ritmik şekilde zıpla.',
     shortTip: 'Yumuşak ayak, sıkı çekirdek.',
@@ -619,7 +633,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.fullBody,
-    videoAsset: 'assets/videos/high_knees.jpg',
+    videoAsset: 'assets/videos/HighKness.mp4',
     description:
         'Olduğun yerde dizlerini sırayla kalçanı geçecek kadar hızla yukarı çekiştir.',
     shortTip: 'Kollarını da çalıştır.',
@@ -633,7 +647,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 45,
     category: ExerciseCategory.fullBody,
-    videoAsset: 'assets/videos/jump_squat.jpg',
+    videoAsset: 'assets/videos/JumpSquat.mp4',
     description:
         'Squat pozisyonuna in, patlayıcı biçimde havaya zıpla ve yumuşak iniş yap.',
     shortTip: 'Sessiz iniş, sıkı çekirdek.',
@@ -647,6 +661,7 @@ class WorkoutRepository {
     sets: 3,
     restDurationInSeconds: 30,
     category: ExerciseCategory.fullBody,
+    videoAsset: 'assets/videos/SkippingRope.mp4',
     description:
         'Bilek dönüşüyle ipi çevir, hafif tempoda ritmik olarak alçak zıplamalar yap.',
     shortTip: 'Diz hafif bükülü, ip kısa.',
