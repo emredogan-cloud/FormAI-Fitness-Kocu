@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/routing/app_router.dart';
 import '../../../../core/services/app_preferences.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../../../core/utils/audio_feedback.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../workout/models/workout_day_model.dart';
@@ -158,14 +159,14 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
         _SettingsTile(
           icon: Icons.notifications_outlined,
           title: 'Bildirimler',
-          subtitle: 'Yakında',
-          onTap: () => _toast(context, 'Yakında'),
+          subtitle: 'Günlük hatırlatma saati belirle',
+          onTap: () => _pickReminderTime(context),
         ),
         _SettingsTile(
           icon: Icons.shield_outlined,
           title: 'Gizlilik',
           subtitle: 'Veri ve izinler',
-          onTap: () => _toast(context, 'Yakında'),
+          onTap: () => _openPrivacySheet(context),
         ),
         _SettingsTile(
           icon: Icons.logout,
@@ -207,6 +208,53 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     setState(
         () {}); // userMetrics reads fresh from SharedPreferences on next build
     _toast(context, 'Bilgiler güncellendi');
+  }
+
+  Future<void> _pickReminderTime(BuildContext context) async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: const TimeOfDay(hour: 19, minute: 0),
+      builder: (ctx, child) => Theme(
+        data: Theme.of(ctx).copyWith(
+          colorScheme: const ColorScheme.dark(
+            primary: _neon,
+            onPrimary: Colors.white,
+            surface: Color(0xFF1A1A22),
+            onSurface: Colors.white,
+          ),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked == null || !context.mounted) return;
+
+    final granted = await NotificationService.instance.requestPermissions();
+    if (!context.mounted) return;
+    if (!granted) {
+      _toast(context, 'Bildirim izni verilmedi');
+      return;
+    }
+    try {
+      await NotificationService.instance.scheduleDailyReminder(picked);
+    } catch (e) {
+      if (context.mounted) _toast(context, 'Bildirim ayarlanamadı: $e');
+      return;
+    }
+    if (!context.mounted) return;
+    final label = picked.format(context);
+    _toast(context, 'Bildirim saati $label olarak ayarlandı.');
+  }
+
+  Future<void> _openPrivacySheet(BuildContext context) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF111118),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => const _PrivacySheet(),
+    );
   }
 
   Future<void> _runTtsTest(BuildContext context) async {
@@ -648,6 +696,134 @@ class _SettingsTile extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _PrivacySheet extends StatelessWidget {
+  const _PrivacySheet();
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: _neon.withValues(alpha: 0.18),
+                  ),
+                  child: const Icon(
+                    Icons.shield_outlined,
+                    color: _neon,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'Gizlilik Politikası ve Veri Güvenliği',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w900,
+                      height: 1.3,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            const _PrivacySection(
+              title: '1. Kamera Verisi',
+              body:
+                  'FormAI, egzersiz formunuzu analiz etmek için Google ML Kit '
+                  'kullanır. Görüntüler cihazınızda (çevrimdışı) işlenir, '
+                  'kaydedilmez ve hiçbir sunucuya gönderilmez.',
+            ),
+            const SizedBox(height: 14),
+            const _PrivacySection(
+              title: '2. İlerleme Verisi',
+              body: 'Profil bilgileriniz ve tamamlanan antrenman günleriniz, '
+                  'deneyiminizi kişiselleştirmek için güvenli bir şekilde '
+                  'saklanır.',
+            ),
+            const SizedBox(height: 22),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () => Navigator.of(context).pop(),
+                style: FilledButton.styleFrom(
+                  backgroundColor: _neon,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  textStyle: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.5,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: const Text('KAPAT'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PrivacySection extends StatelessWidget {
+  const _PrivacySection({required this.title, required this.body});
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            color: _neon,
+            fontSize: 14,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0.3,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          body,
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 13,
+            height: 1.5,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -5,6 +5,12 @@
          remote asset/REST traffic in release builds. The debug manifest
          already declares this for the Flutter dev tools. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Android 13+ requires runtime POST_NOTIFICATIONS permission for
+         flutter_local_notifications to post the daily workout reminder;
+         RECEIVE_BOOT_COMPLETED lets the plugin re-register scheduled
+         reminders after a reboot so users don't silently lose them. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:label="FormAI"
