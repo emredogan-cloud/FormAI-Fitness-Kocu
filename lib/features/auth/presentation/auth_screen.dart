@@ -60,12 +60,34 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         await _persistWizardMetrics();
         _goToPaywall();
       } else {
-        final res = await _client.auth.signUp(email: email, password: password);
-        await _persistWizardMetrics();
-        if (res.session == null && mounted) {
-          _toast('E-posta adresine doğrulama bağlantısı gönderildi.');
-        } else {
+        // If the user came in as a guest (signInAnonymously from the
+        // onboarding flow), upgrade that same identity via updateUser
+        // instead of creating a new account. This preserves user_id, so
+        // any user_progress rows + queued offline syncs stay attributed
+        // to the same person after they register.
+        final currentUser = _client.auth.currentUser;
+        final isAnon = currentUser?.isAnonymous ?? false;
+        if (isAnon) {
+          await _client.auth.updateUser(
+            UserAttributes(email: email, password: password),
+          );
+          await _persistWizardMetrics();
+          if (mounted) {
+            _toast(
+              'E-posta adresine doğrulama bağlantısı gönderildi. '
+              'Hesabın yükseltildi, ilerlemen korundu.',
+            );
+          }
           _goToPaywall();
+        } else {
+          final res =
+              await _client.auth.signUp(email: email, password: password);
+          await _persistWizardMetrics();
+          if (res.session == null && mounted) {
+            _toast('E-posta adresine doğrulama bağlantısı gönderildi.');
+          } else {
+            _goToPaywall();
+          }
         }
       }
     } on AuthException catch (e) {

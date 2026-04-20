@@ -14,6 +14,7 @@ class WorkoutRepository {
   final SupabaseClient _client;
 
   static const String _completedKey = 'sixpack.completed_days';
+  static const String _pendingSyncKey = 'sixpack.pending_sync_days';
   static const String _progressTable = 'user_progress';
 
   // ==========================================================================
@@ -1035,27 +1036,29 @@ class WorkoutRepository {
     await _saveLocal(merged);
 
     final user = _client.auth.currentUser;
-    if (user == null) return;
-    try {
-      await _client.from(_progressTable).upsert(
-        {
-          'user_id': user.id,
-          'day_number': dayNumber,
-          'is_completed': true,
-          'completed_at': DateTime.now().toUtc().toIso8601String(),
-        },
-        onConflict: 'user_id,day_number',
-      );
-    } catch (_) {
-      // Offline or network error — local cache will re-sync on next load.
+    if (user == null) {
+      // Not yet signed in (first-run before auth completes, rare). Queue so
+      // we can replay as soon as a session exists.
+      await _queueSync(dayNumber);
+      return;
+    }
+    if (!await _upsertCompleted(user.id, dayNumber)) {
+      // Offline / network error — keep the local cache and remember to
+      // flush this to Supabase the next time _completedDays() runs.
+      await _queueSync(dayNumber);
     }
   }
 
   Future<void> resetProgress() async {
     await _prefs.remove(_completedKey);
+    await _prefs.remove(_pendingSyncKey);
   }
 
   Future<Set<int>> _completedDays() async {
+    // Every time the program loads is a chance to retry dropped syncs —
+    // cheap when the queue is empty, automatic recovery when it isn't.
+    await _flushPending();
+
     final local = _localCompleted();
     final user = _client.auth.currentUser;
     if (user == null) return local;
@@ -1077,6 +1080,68 @@ class WorkoutRepository {
       return merged;
     } catch (_) {
       return local;
+    }
+  }
+
+  /// Attempts a single upsert, returns true on success. Isolated so both the
+  /// live markDayCompleted path and the background flush can share exactly
+  /// the same write — no chance of drift between them.
+  Future<bool> _upsertCompleted(String userId, int dayNumber) async {
+    try {
+      await _client.from(_progressTable).upsert(
+        {
+          'user_id': userId,
+          'day_number': dayNumber,
+          'is_completed': true,
+          'completed_at': DateTime.now().toUtc().toIso8601String(),
+        },
+        onConflict: 'user_id,day_number',
+      );
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Set<int> _pendingSync() {
+    final raw = _prefs.getStringList(_pendingSyncKey) ?? const <String>[];
+    return raw.map(int.tryParse).whereType<int>().toSet();
+  }
+
+  Future<void> _savePending(Set<int> days) async {
+    if (days.isEmpty) {
+      await _prefs.remove(_pendingSyncKey);
+      return;
+    }
+    await _prefs.setStringList(
+      _pendingSyncKey,
+      days.map((e) => e.toString()).toList(),
+    );
+  }
+
+  Future<void> _queueSync(int dayNumber) async {
+    final pending = _pendingSync()..add(dayNumber);
+    await _savePending(pending);
+  }
+
+  /// Replays any completions that failed to reach Supabase. Anything that
+  /// succeeds is removed from the queue; anything that still fails stays
+  /// queued for the next flush. Anonymous→real upgrades keep the same
+  /// user_id (see auth_screen._submit), so queued rows sync cleanly once
+  /// the user signs up.
+  Future<void> _flushPending() async {
+    final pending = _pendingSync();
+    if (pending.isEmpty) return;
+    final user = _client.auth.currentUser;
+    if (user == null) return;
+
+    final remaining = <int>{};
+    for (final dayNumber in pending) {
+      final ok = await _upsertCompleted(user.id, dayNumber);
+      if (!ok) remaining.add(dayNumber);
+    }
+    if (remaining.length != pending.length) {
+      await _savePending(remaining);
     }
   }
 
