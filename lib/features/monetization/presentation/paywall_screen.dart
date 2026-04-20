@@ -1,8 +1,12 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 
+import '../../../core/utils/legal_urls.dart';
 import '../../onboarding/providers/wizard_provider.dart';
+import '../providers/monetization_provider.dart';
 
 class PaywallScreen extends ConsumerStatefulWidget {
   const PaywallScreen({super.key});
@@ -18,6 +22,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   static const Color _neonAccent = Color(0xFF4DA6FF);
 
   _Plan _selected = _Plan.yearly;
+  bool _busy = false;
+  bool _restoring = false;
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +53,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                     const _NoPaymentBadge(),
                     const SizedBox(height: 16),
                     _buildCta(),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 6),
+                    _buildRestoreButton(),
+                    const SizedBox(height: 6),
                     const _LegalFooter(),
                   ],
                 ),
@@ -121,28 +129,39 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
-          onTap: _simulatePurchase,
-          child: const Padding(
-            padding: EdgeInsets.symmetric(vertical: 20),
+          onTap: _busy ? null : _purchase,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  '₺0,00 karşılığında dene',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.4,
-                    fontSize: 16,
-                  ),
-                ),
-                SizedBox(width: 8),
-                Icon(
-                  Icons.arrow_forward_rounded,
-                  color: Colors.white,
-                  size: 22,
-                ),
-              ],
+              children: _busy
+                  ? const [
+                      SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.2,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ]
+                  : const [
+                      Text(
+                        '₺0,00 karşılığında dene',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.4,
+                          fontSize: 16,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Icon(
+                        Icons.arrow_forward_rounded,
+                        color: Colors.white,
+                        size: 22,
+                      ),
+                    ],
             ),
           ),
         ),
@@ -150,20 +169,114 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     );
   }
 
-  void _simulatePurchase() {
+  Widget _buildRestoreButton() {
+    return Center(
+      child: TextButton(
+        onPressed: _restoring || _busy ? null : _restore,
+        style: TextButton.styleFrom(
+          foregroundColor: Colors.white70,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          textStyle: const TextStyle(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.6,
+          ),
+        ),
+        child: _restoring
+            ? const SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white70,
+                ),
+              )
+            : const Text('Satın Alımları Geri Yükle'),
+      ),
+    );
+  }
+
+  Package? _packageForPlan(_Plan plan, Offerings? offerings) {
+    final current = offerings?.current;
+    if (current == null) return null;
+    return switch (plan) {
+      _Plan.monthly => current.monthly,
+      _Plan.yearly => current.annual,
+      _Plan.quarterly => current.threeMonth,
+    };
+  }
+
+  Future<void> _purchase() async {
+    if (_busy) return;
+    final offerings = ref.read(subscriptionProvider).value?.offerings;
+    final package = _packageForPlan(_selected, offerings);
+
+    if (package == null) {
+      // No RevenueCat offering available (dev builds / missing config).
+      // Surface a clear error instead of silently opening a broken purchase
+      // sheet — Apple reviewers hit this path when testing without sandbox.
+      _toast('Satın alma şu anda kullanılamıyor. Lütfen daha sonra dene.',
+          error: true);
+      return;
+    }
+
+    setState(() => _busy = true);
+    final outcome =
+        await ref.read(subscriptionProvider.notifier).purchase(package);
+    if (!mounted) return;
+    setState(() => _busy = false);
+
+    switch (outcome) {
+      case PurchaseOutcome.success:
+        _toast('Premium aktif edildi!');
+        await Future<void>.delayed(const Duration(milliseconds: 600));
+        if (!mounted) return;
+        _close(context);
+      case PurchaseOutcome.cancelled:
+        // User tapped cancel — stay on paywall, no noisy toast.
+        break;
+      case PurchaseOutcome.notEntitled:
+        _toast(
+          'Ödeme tamamlandı ama Premium henüz aktifleşmedi. '
+          'Satın alımları geri yüklemeyi dene.',
+          error: true,
+        );
+      case PurchaseOutcome.error:
+        _toast('Satın alma başarısız oldu. Lütfen tekrar dene.', error: true);
+    }
+  }
+
+  Future<void> _restore() async {
+    if (_restoring) return;
+    setState(() => _restoring = true);
+    final outcome = await ref.read(subscriptionProvider.notifier).restore();
+    if (!mounted) return;
+    setState(() => _restoring = false);
+
+    switch (outcome) {
+      case RestoreOutcome.restored:
+        _toast('Satın alımlar geri yüklendi');
+        await Future<void>.delayed(const Duration(milliseconds: 600));
+        if (!mounted) return;
+        _close(context);
+      case RestoreOutcome.nothingToRestore:
+        _toast('Geri yüklenecek bir abonelik bulunamadı');
+      case RestoreOutcome.error:
+        _toast('Geri yükleme başarısız oldu. Lütfen tekrar dene.', error: true);
+    }
+  }
+
+  void _toast(String message, {bool error = false}) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        const SnackBar(
-          content: Text('Deneme süresi başlatıldı'),
-          backgroundColor: Color(0xFF2A1B5C),
+        SnackBar(
+          content: Text(message),
+          backgroundColor:
+              error ? const Color(0xFF5A1B1B) : const Color(0xFF2A1B5C),
           behavior: SnackBarBehavior.floating,
         ),
       );
-    Future<void>.delayed(const Duration(milliseconds: 800), () {
-      if (!mounted) return;
-      _close(context);
-    });
   }
 
   void _close(BuildContext context) {
@@ -799,19 +912,74 @@ class _NoPaymentBadge extends StatelessWidget {
   }
 }
 
-class _LegalFooter extends StatelessWidget {
+class _LegalFooter extends StatefulWidget {
   const _LegalFooter();
 
   @override
+  State<_LegalFooter> createState() => _LegalFooterState();
+}
+
+class _LegalFooterState extends State<_LegalFooter> {
+  // TapGestureRecognizers must be disposed or they leak — owning them on
+  // the State lets us tear them down when the paywall closes.
+  late final TapGestureRecognizer _termsTap;
+  late final TapGestureRecognizer _privacyTap;
+
+  @override
+  void initState() {
+    super.initState();
+    _termsTap = TapGestureRecognizer()
+      ..onTap = () => openLegalUrl(LegalUrls.terms);
+    _privacyTap = TapGestureRecognizer()
+      ..onTap = () => openLegalUrl(LegalUrls.privacy);
+  }
+
+  @override
+  void dispose() {
+    _termsTap.dispose();
+    _privacyTap.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 8),
-      child: Text(
-        '7 günlük ücretsiz deneme süresinin sonunda seçtiğin abonelik '
-        'otomatik başlar. Deneme süresi içinde ayarlardan istediğin zaman '
-        'iptal edebilirsin.',
+    const baseStyle = TextStyle(
+      color: Colors.white38,
+      fontSize: 10.5,
+      height: 1.4,
+    );
+    final linkStyle = baseStyle.copyWith(
+      color: const Color(0xFF8E5BFF),
+      fontWeight: FontWeight.w700,
+      decoration: TextDecoration.underline,
+      decorationColor: const Color(0xFF8E5BFF).withValues(alpha: 0.8),
+    );
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Text.rich(
+        TextSpan(
+          style: baseStyle,
+          children: [
+            const TextSpan(
+              text: '7 günlük ücretsiz deneme süresinin sonunda seçtiğin '
+                  'abonelik otomatik başlar. Deneme süresi içinde ayarlardan '
+                  'istediğin zaman iptal edebilirsin. Devam ederek ',
+            ),
+            TextSpan(
+              text: 'Kullanım Şartları',
+              style: linkStyle,
+              recognizer: _termsTap,
+            ),
+            const TextSpan(text: ' ve '),
+            TextSpan(
+              text: 'Gizlilik Politikası',
+              style: linkStyle,
+              recognizer: _privacyTap,
+            ),
+            const TextSpan(text: '’nı kabul etmiş olursun.'),
+          ],
+        ),
         textAlign: TextAlign.center,
-        style: TextStyle(color: Colors.white38, fontSize: 10.5, height: 1.4),
       ),
     );
   }

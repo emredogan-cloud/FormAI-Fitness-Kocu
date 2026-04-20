@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/routing/app_router.dart';
 import 'core/services/app_preferences.dart';
+import 'features/monetization/providers/monetization_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,6 +64,11 @@ class _BootGateState extends State<_BootGate> {
         );
         _supabaseInitialized = true;
       }
+      // RevenueCat configuration — idempotent, tolerates missing API keys in
+      // dev builds. Deliberately NOT awaited into the boot blocker path so a
+      // slow key fetch can't stall the splash; its own internal debouncing
+      // keeps repeat calls safe.
+      await configureRevenueCat();
       return prefs;
     } catch (e, st) {
       debugPrint('BootGate init failed: $e\n$st');

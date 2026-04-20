@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/routing/app_router.dart';
 import '../../../core/services/app_preferences.dart';
+import '../../../core/utils/legal_urls.dart';
 import '../providers/wizard_provider.dart';
 import 'widgets/illusion_step.dart';
 import 'widgets/photo_option_card.dart';
@@ -221,21 +223,76 @@ class _WelcomeStep extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  'Devam ederek Kullanım Şartları ve Gizlilik Politikasını '
-                  'kabul edersin.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 11,
-                    shadows: [Shadow(blurRadius: 12, color: Colors.black)],
-                  ),
-                ),
+                const _WelcomeLegalLine(),
               ],
             ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _WelcomeLegalLine extends StatefulWidget {
+  const _WelcomeLegalLine();
+
+  @override
+  State<_WelcomeLegalLine> createState() => _WelcomeLegalLineState();
+}
+
+class _WelcomeLegalLineState extends State<_WelcomeLegalLine> {
+  late final TapGestureRecognizer _termsTap;
+  late final TapGestureRecognizer _privacyTap;
+
+  @override
+  void initState() {
+    super.initState();
+    _termsTap = TapGestureRecognizer()
+      ..onTap = () => openLegalUrl(LegalUrls.terms);
+    _privacyTap = TapGestureRecognizer()
+      ..onTap = () => openLegalUrl(LegalUrls.privacy);
+  }
+
+  @override
+  void dispose() {
+    _termsTap.dispose();
+    _privacyTap.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const baseStyle = TextStyle(
+      color: Colors.white70,
+      fontSize: 11,
+      shadows: [Shadow(blurRadius: 12, color: Colors.black)],
+    );
+    final linkStyle = baseStyle.copyWith(
+      color: const Color(0xFF00F0FF),
+      fontWeight: FontWeight.w700,
+      decoration: TextDecoration.underline,
+      decorationColor: const Color(0xFF00F0FF).withValues(alpha: 0.8),
+    );
+    return Text.rich(
+      TextSpan(
+        style: baseStyle,
+        children: [
+          const TextSpan(text: 'Devam ederek '),
+          TextSpan(
+            text: 'Kullanım Şartları',
+            style: linkStyle,
+            recognizer: _termsTap,
+          ),
+          const TextSpan(text: ' ve '),
+          TextSpan(
+            text: 'Gizlilik Politikası',
+            style: linkStyle,
+            recognizer: _privacyTap,
+          ),
+          const TextSpan(text: '’nı kabul edersin.'),
+        ],
+      ),
+      textAlign: TextAlign.center,
     );
   }
 }
