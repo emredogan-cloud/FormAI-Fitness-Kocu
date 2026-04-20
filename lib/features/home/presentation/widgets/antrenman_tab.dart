@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/routing/app_router.dart';
 import '../../../../core/utils/placeholder_images.dart';
+import '../../../../core/widgets/error_card.dart';
 import '../../../workout/models/exercise_model.dart';
 import '../../../workout/models/workout_day_model.dart';
 import '../../../workout/models/workout_plan_model.dart';
@@ -100,12 +101,13 @@ class _AntrenmanTabState extends ConsumerState<AntrenmanTab> {
     return sessionAsync.when(
       loading: () =>
           const Center(child: CircularProgressIndicator(color: _neon)),
-      error: (err, _) => Center(
-        child: Text(
-          'Program yüklenemedi: $err',
-          style: const TextStyle(color: Colors.white70),
-        ),
-      ),
+      error: (err, st) {
+        debugPrint('antrenman workoutSession error: $err\n$st');
+        return ErrorCard(
+          message: 'Programın yüklenirken bir sorun oluştu.',
+          onRetry: () => ref.invalidate(workoutSessionProvider),
+        );
+      },
       data: (session) => _buildContent(context, session),
     );
   }

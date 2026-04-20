@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/routing/app_router.dart';
 import '../../../core/utils/placeholder_images.dart';
+import '../../../core/widgets/error_card.dart';
 import '../models/exercise_model.dart';
 import '../models/workout_day_model.dart';
 import '../models/workout_plan_model.dart';
@@ -92,12 +93,13 @@ class _PlanDetailScreenState extends ConsumerState<PlanDetailScreen> {
       body: sessionAsync.when(
         loading: () =>
             const Center(child: CircularProgressIndicator(color: _neon)),
-        error: (err, _) => Center(
-          child: Text(
-            'Plan yüklenemedi: $err',
-            style: const TextStyle(color: Colors.white70),
-          ),
-        ),
+        error: (err, st) {
+          debugPrint('plan detail workoutSession error: $err\n$st');
+          return ErrorCard(
+            message: 'Plan yüklenirken bir sorun oluştu.',
+            onRetry: () => ref.invalidate(workoutSessionProvider),
+          );
+        },
         data: (session) => _buildContent(context, ref, session),
       ),
     );

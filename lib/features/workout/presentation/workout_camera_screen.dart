@@ -11,6 +11,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../../core/utils/audio_feedback.dart';
+import '../../../core/widgets/error_card.dart';
 import '../models/exercise_model.dart';
 import '../providers/workout_provider.dart';
 import '../services/analyzer_factory.dart';
@@ -56,6 +57,13 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
   String? _error;
   bool _permissionPermanentlyDenied = false;
   bool _wakelockOn = false;
+
+  // Throttles the pose detector to ~15 FPS. At 30 FPS (the camera's native
+  // rate) BlazePose inference thermally throttles mid-range devices within
+  // ~15 minutes; halving the rate roughly halves CPU/GPU load with no
+  // observable accuracy loss for rep-counting use cases.
+  static const int _minFrameIntervalMs = 66;
+  DateTime? _lastFrameProcessedAt;
 
   String? _activeExerciseId;
   int? _activeSet;
@@ -223,6 +231,19 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     if ((session?.isResting ?? false) || (session?.isPreparing ?? false)) {
       return;
     }
+
+    // FPS throttle gate: bail out of every other frame at 30 FPS so the
+    // BlazePose model runs at ~15 FPS. Timestamps are only advanced when
+    // we actually kick off processing, so a slow inference doesn't
+    // accidentally starve the next eligible frame.
+    final now = DateTime.now();
+    final last = _lastFrameProcessedAt;
+    if (last != null &&
+        now.difference(last).inMilliseconds < _minFrameIntervalMs) {
+      return;
+    }
+    _lastFrameProcessedAt = now;
+
     _isBusy = true;
     _processImage(image).whenComplete(() => _isBusy = false);
   }
@@ -284,6 +305,9 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         }
 
         if (result.repJustCompleted) {
+          // Light tap on every counted rep so the user feels the beat even
+          // with the phone on the floor and music in their ears.
+          unawaited(HapticFeedback.lightImpact());
           final notifier = ref.read(workoutSessionProvider.notifier);
           notifier.setCurrentReps(result.reps);
           final target = ref
@@ -307,6 +331,9 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
           }
 
           if (target != null && reps >= target) {
+            // Firmer thump when a set/exercise finishes, to distinguish
+            // "keep going" from "done".
+            unawaited(HapticFeedback.mediumImpact());
             await notifier.completeCurrentExercise();
             _analyzer.reset();
           }
@@ -429,6 +456,9 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
   }
 
   Future<void> _onTimerComplete() async {
+    // Time-based exercises don't go through the rep-counting path, so fire
+    // the "set done" medium thump here instead.
+    unawaited(HapticFeedback.mediumImpact());
     _audio.speak('Süre doldu, harika!');
     if (!mounted) return;
     await ref.read(workoutSessionProvider.notifier).completeCurrentExercise();
@@ -462,11 +492,22 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       _wasResting = resting;
       _wasPreparing = preparing;
 
+      // Prep-countdown tick haptic: fire a crisp selectionClick each time
+      // prepSecondsRemaining changes to a new non-zero value while we're in
+      // the HAZIRLAN! window. Matches the 3 → 2 → 1 visual countdown.
+      final prevPrep = prevSession?.prepSecondsRemaining ?? 0;
+      final prep = session.prepSecondsRemaining;
+      if (preparing && prep > 0 && prep != prevPrep) {
+        unawaited(HapticFeedback.selectionClick());
+      }
+
       // Voice coach lifecycle announcements. Priority:
       //   session complete > rest entry > prep entry.
       // The prep cue replaces the old "exercise start" cue because every
       // exercise is now preceded by a HAZIRLAN! countdown.
       if (sessionJustCompleted) {
+        // Celebratory thump to pair with the TTS finale.
+        unawaited(HapticFeedback.heavyImpact());
         _audio.speak('Antrenman tamamlandı! Harika bir iş çıkardın.');
       } else if (justStartedRest && exercise != null) {
         _audio.speak(
@@ -555,10 +596,13 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     return sessionAsync.when(
       loading: () =>
           const Center(child: CircularProgressIndicator(color: _neon)),
-      error: (err, _) => Center(
-        child: Text('Workout load failed: $err',
-            style: const TextStyle(color: Colors.white)),
-      ),
+      error: (err, st) {
+        debugPrint('workoutSessionProvider error: $err\n$st');
+        return ErrorCard(
+          message: 'Antrenman yüklenirken bir sorun oluştu.',
+          onRetry: () => ref.invalidate(workoutSessionProvider),
+        );
+      },
       data: (session) => _buildSession(controller, session),
     );
   }
