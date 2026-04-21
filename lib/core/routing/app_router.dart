@@ -37,13 +37,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return path == AppRoutes.auth ? null : AppRoutes.auth;
     }
     // First-time anon sign-in lands users at /onboarding momentarily before
-    // we punt them to the prediction hook. /auth (explicit sign-in fallback)
-    // still flows straight to the paywall as before.
+    // we punt them to the prediction hook. A *registered* user who hits
+    // /auth has nothing to do there and gets forwarded to the paywall;
+    // an *anonymous* user hitting /auth is explicitly trying to upgrade
+    // (e.g. via the profile tab's "Üye Ol / Giriş Yap" tile), so we must
+    // let them through.
     if (path == AppRoutes.onboarding) {
       return AppRoutes.prediction;
     }
     if (path == AppRoutes.auth) {
-      return AppRoutes.paywall;
+      return user.isAnonymous ? null : AppRoutes.paywall;
     }
     return null;
   }

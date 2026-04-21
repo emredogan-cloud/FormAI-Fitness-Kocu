@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -58,10 +57,12 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                     _buildRestoreButton(),
                     const SizedBox(height: 6),
                     const _LegalFooter(),
-                    if (kDebugMode) ...[
-                      const SizedBox(height: 12),
-                      _buildSandboxButton(),
-                    ],
+                    // TEMPORARILY visible in release builds (Phase 14) so the
+                    // operator can exercise premium paths while Google Play
+                    // Console verification is pending. Restore the
+                    // `if (kDebugMode)` guard once RC reports real offerings.
+                    const SizedBox(height: 12),
+                    _buildSandboxButton(),
                   ],
                 ),
               ),

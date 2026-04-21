@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../core/utils/placeholder_images.dart';
 import '../../../core/widgets/error_card.dart';
+import '../../monetization/providers/monetization_provider.dart';
 import '../models/exercise_model.dart';
 import '../models/workout_day_model.dart';
 import '../models/workout_plan_model.dart';
@@ -14,6 +15,12 @@ const Color _neon = Color(0xFF8E5BFF);
 const Color _success = Color(0xFF39FF14);
 
 const int _programLength = 30;
+
+/// Freemium split — the first three days of the 30-day program are free
+/// for everyone, so a non-paying user can experience the coaching loop end
+/// to end before hitting the paywall. Bumping this also updates the lock
+/// visuals and the paywall redirect in `_onDayTap`.
+const int _freeDayLimit = 3;
 
 /// Renders [src] as either a network image (when it starts with `http`) or
 /// a bundled asset. Local copy of the dashboard helper so plan-detail can
@@ -115,6 +122,7 @@ class _PlanDetailScreenState extends ConsumerState<PlanDetailScreen> {
         _firstIncomplete(realDays)?.dayNumber ?? realDays.length + 1;
     final completed = realDays.where((d) => d.isCompleted).length;
     final remaining = (_programLength - completed).clamp(0, _programLength);
+    final isPro = ref.watch(isProProvider);
 
     return CustomScrollView(
       slivers: [
@@ -141,6 +149,7 @@ class _PlanDetailScreenState extends ConsumerState<PlanDetailScreen> {
               final realDay = _findDay(realDays, dayNumber);
               final isActive = dayNumber == activeDayNumber;
               final isRest = _isRestDay(dayNumber);
+              final isLocked = !isPro && dayNumber > _freeDayLimit;
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: _DayTile(
@@ -148,7 +157,9 @@ class _PlanDetailScreenState extends ConsumerState<PlanDetailScreen> {
                   realDay: realDay,
                   isActive: isActive,
                   isRest: isRest,
-                  onTap: () => _onDayTap(context, ref, dayNumber, realDay),
+                  isLocked: isLocked,
+                  onTap: () =>
+                      _onDayTap(context, ref, dayNumber, realDay, isLocked),
                 ),
               );
             },
@@ -167,7 +178,16 @@ class _PlanDetailScreenState extends ConsumerState<PlanDetailScreen> {
     WidgetRef ref,
     int dayNumber,
     WorkoutDay? realDay,
+    bool isLocked,
   ) async {
+    // Premium gate short-circuits BEFORE we touch the session — don't want
+    // to "start" a day the user can't actually run, or the 30-day ledger
+    // would record a bogus in-progress day the next time they open the
+    // plan detail screen.
+    if (isLocked) {
+      context.push(AppRoutes.paywall);
+      return;
+    }
     if (realDay == null || realDay.exercises.isEmpty) return;
     await ref.read(workoutSessionProvider.notifier).startDay(dayNumber);
     if (!context.mounted) return;
@@ -375,6 +395,7 @@ class _DayTile extends StatelessWidget {
     required this.realDay,
     required this.isActive,
     required this.isRest,
+    required this.isLocked,
     required this.onTap,
   });
 
@@ -382,11 +403,14 @@ class _DayTile extends StatelessWidget {
   final WorkoutDay? realDay;
   final bool isActive;
   final bool isRest;
+  final bool isLocked;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    if (isActive) {
+    // Lock takes precedence over the active-day gradient: a locked day
+    // isn't actually runnable, so it shouldn't look like "continue here".
+    if (isActive && !isLocked) {
       return _ActiveDayCard(
         dayNumber: dayNumber,
         realDay: realDay,
@@ -397,6 +421,7 @@ class _DayTile extends StatelessWidget {
       dayNumber: dayNumber,
       realDay: realDay,
       isRest: isRest,
+      isLocked: isLocked,
       onTap: onTap,
     );
   }
@@ -506,23 +531,45 @@ class _StandardDayCard extends StatelessWidget {
     required this.dayNumber,
     required this.realDay,
     required this.isRest,
+    required this.isLocked,
     required this.onTap,
   });
 
   final int dayNumber;
   final WorkoutDay? realDay;
   final bool isRest;
+  final bool isLocked;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final completed = realDay?.isCompleted ?? false;
-    final tappable = !isRest && (realDay?.exercises.isNotEmpty ?? false);
     final exerciseCount = realDay?.exercises.length ?? 0;
 
-    final subtitle = isRest
-        ? 'İst.'
-        : (realDay == null ? 'Yakında' : '$exerciseCount Egzersiz');
+    // Rest days ignore the lock (they don't gate value behind payment),
+    // so locked-but-rest keeps the coffee styling. For workout days, the
+    // lock makes the tile tappable — tap routes to /paywall in the
+    // parent's _onDayTap handler.
+    final lockedWorkoutDay = isLocked && !isRest;
+    final tappable = !isRest &&
+        (lockedWorkoutDay || (realDay?.exercises.isNotEmpty ?? false));
+
+    final String subtitle;
+    if (isRest) {
+      subtitle = 'İst.';
+    } else if (lockedWorkoutDay) {
+      subtitle = 'Premium ile aç';
+    } else {
+      subtitle = realDay == null ? 'Yakında' : '$exerciseCount Egzersiz';
+    }
+
+    final dimmed = isRest || realDay == null || lockedWorkoutDay;
+    final borderColor = lockedWorkoutDay
+        ? _neon.withValues(alpha: 0.35)
+        : (completed ? _success.withValues(alpha: 0.45) : Colors.white12);
+    final fillColor = lockedWorkoutDay
+        ? _neon.withValues(alpha: 0.05)
+        : Colors.white.withValues(alpha: 0.04);
 
     return Material(
       color: Colors.transparent,
@@ -533,12 +580,8 @@ class _StandardDayCard extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            color: Colors.white.withValues(alpha: 0.04),
-            border: Border.all(
-              color:
-                  completed ? _success.withValues(alpha: 0.45) : Colors.white12,
-              width: 1,
-            ),
+            color: fillColor,
+            border: Border.all(color: borderColor, width: 1),
           ),
           child: Row(
             children: [
@@ -549,9 +592,7 @@ class _StandardDayCard extends StatelessWidget {
                     Text(
                       '$dayNumber. gün',
                       style: TextStyle(
-                        color: isRest || realDay == null
-                            ? Colors.white60
-                            : Colors.white,
+                        color: dimmed ? Colors.white60 : Colors.white,
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
                       ),
@@ -559,9 +600,14 @@ class _StandardDayCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
-                      style: const TextStyle(
-                        color: Colors.white54,
+                      style: TextStyle(
+                        color: lockedWorkoutDay
+                            ? _neon.withValues(alpha: 0.85)
+                            : Colors.white54,
                         fontSize: 13,
+                        fontWeight: lockedWorkoutDay
+                            ? FontWeight.w700
+                            : FontWeight.w400,
                       ),
                     ),
                   ],
@@ -569,6 +615,8 @@ class _StandardDayCard extends StatelessWidget {
               ),
               if (isRest)
                 const Icon(Icons.local_cafe, color: Colors.white54, size: 22)
+              else if (lockedWorkoutDay)
+                Icon(Icons.lock, color: _neon.withValues(alpha: 0.9), size: 22)
               else if (completed)
                 const Icon(Icons.check_circle, color: _success, size: 22)
               else if (tappable)

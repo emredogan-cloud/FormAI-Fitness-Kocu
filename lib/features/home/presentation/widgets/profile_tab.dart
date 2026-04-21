@@ -169,7 +169,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
           onTap: () => _openPrivacySheet(context),
         ),
         if (user?.isAnonymous ?? false)
-          _GuestLoginTile(onTap: () => context.go(AppRoutes.auth))
+          _GuestLoginTile(onTap: () => context.push(AppRoutes.auth))
         else ...[
           _SettingsTile(
             icon: Icons.logout,
