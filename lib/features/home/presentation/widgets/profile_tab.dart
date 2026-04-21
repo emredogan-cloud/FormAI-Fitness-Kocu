@@ -168,13 +168,40 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
           subtitle: 'Veri ve izinler',
           onTap: () => _openPrivacySheet(context),
         ),
-        _SettingsTile(
-          icon: Icons.logout,
-          title: 'Çıkış Yap',
-          onTap: () => _signOut(context),
-        ),
+        if (user?.isAnonymous ?? false)
+          _GuestLoginTile(onTap: () => context.go(AppRoutes.auth))
+        else ...[
+          _SettingsTile(
+            icon: Icons.logout,
+            title: 'Çıkış Yap',
+            onTap: () => _signOut(context),
+          ),
+          const SizedBox(height: 24),
+          _DeleteAccountTile(onTap: () => _openDeleteDialog(context)),
+        ],
       ],
     );
+  }
+
+  Future<void> _openDeleteDialog(BuildContext context) async {
+    final outcome = await showDialog<DeleteAccountOutcome>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => _DeleteAccountDialog(
+        onConfirm: () => ref.read(authControllerProvider).deleteAccount(),
+      ),
+    );
+    if (outcome == null || !context.mounted) return;
+    switch (outcome) {
+      case DeleteAccountOutcome.success:
+        _toast(context, 'Hesabın silindi.');
+        context.go(AppRoutes.auth);
+      case DeleteAccountOutcome.error:
+        _toast(
+          context,
+          'Hesap silinemedi. Lütfen tekrar dene veya destek ile iletişime geç.',
+        );
+    }
   }
 
   int _streakOf(List<WorkoutDay> days) {
@@ -696,6 +723,314 @@ class _SettingsTile extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// CTA shown in place of "Çıkış Yap" when the current user is anonymous.
+/// Bigger and louder than a regular settings tile so the conversion is
+/// obvious from a glance — this is the whole reason the tab exists for
+/// guest users.
+class _GuestLoginTile extends StatelessWidget {
+  const _GuestLoginTile({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: const LinearGradient(
+          colors: [_neon, _neonAccent],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: _neon.withValues(alpha: 0.45),
+            blurRadius: 22,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.white.withValues(alpha: 0.22),
+                  ),
+                  child: const Icon(
+                    Icons.person_add_alt_1,
+                    color: Colors.white,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Üye Ol / Giriş Yap',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.6,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'İlerlemeni bulutta güvene al, cihaz değiştirirken '
+                        'kaybetme.',
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.arrow_forward_rounded,
+                  color: Colors.white,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Destructive settings tile at the bottom of the profile list. Visually
+/// distinct from neutral tiles — red border + red icon — so the user can't
+/// confuse it with a benign action.
+class _DeleteAccountTile extends StatelessWidget {
+  const _DeleteAccountTile({required this.onTap});
+  final VoidCallback onTap;
+
+  static const Color _danger = Color(0xFFFF4D6D);
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            color: _danger.withValues(alpha: 0.06),
+            border: Border.all(
+              color: _danger.withValues(alpha: 0.45),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: _danger.withValues(alpha: 0.18),
+                ),
+                child: const Icon(
+                  Icons.delete_forever_outlined,
+                  color: _danger,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 14),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Hesabı Sil',
+                      style: TextStyle(
+                        color: _danger,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Tüm verileriniz kalıcı olarak silinir',
+                      style: TextStyle(color: Colors.white54, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded, color: _danger),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Typed-confirmation dialog for account deletion. The user must type
+/// "DELETE" exactly before the destructive button unlocks; once they tap
+/// it we pop with `true` and hand the network call back to the caller so
+/// the dialog can show a spinner without holding onto Riverpod state.
+class _DeleteAccountDialog extends StatefulWidget {
+  const _DeleteAccountDialog({required this.onConfirm});
+
+  /// The dialog awaits this callback internally so it can show a spinner
+  /// in the Sil button while the network round-trip is in flight, then
+  /// pops with the resulting outcome.
+  final Future<DeleteAccountOutcome> Function() onConfirm;
+
+  @override
+  State<_DeleteAccountDialog> createState() => _DeleteAccountDialogState();
+}
+
+class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
+  static const String _confirmPhrase = 'DELETE';
+  static const Color _danger = Color(0xFFFF4D6D);
+
+  final _ctl = TextEditingController();
+  bool _busy = false;
+  bool _matches = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctl.addListener(_onChanged);
+  }
+
+  void _onChanged() {
+    final next = _ctl.text == _confirmPhrase;
+    if (next != _matches) setState(() => _matches = next);
+  }
+
+  @override
+  void dispose() {
+    _ctl.removeListener(_onChanged);
+    _ctl.dispose();
+    super.dispose();
+  }
+
+  void _onCancel() {
+    if (_busy) return;
+    Navigator.of(context).pop();
+  }
+
+  Future<void> _onConfirm() async {
+    if (_busy || !_matches) return;
+    setState(() => _busy = true);
+    final outcome = await widget.onConfirm();
+    if (!mounted) return;
+    Navigator.of(context).pop(outcome);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: const Color(0xFF141420),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      title: const Text(
+        'Hesabınızı Silmek İstediğinize Emin Misiniz?',
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w900,
+          fontSize: 17,
+        ),
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            'Bu işlem geri alınamaz. Tüm antrenman geçmişiniz, serileriniz ve '
+            'profil bilgileriniz kalıcı olarak silinecektir. Onaylamak için '
+            'aşağıya \'DELETE\' yazın.',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 13,
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _ctl,
+            enabled: !_busy,
+            autofocus: true,
+            textCapitalization: TextCapitalization.characters,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 2,
+            ),
+            decoration: InputDecoration(
+              hintText: _confirmPhrase,
+              hintStyle:
+                  const TextStyle(color: Colors.white24, letterSpacing: 2),
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.04),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: _danger.withValues(alpha: 0.35),
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: _danger, width: 1.5),
+              ),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: _busy ? null : _onCancel,
+          style: TextButton.styleFrom(foregroundColor: Colors.white70),
+          child: const Text('Vazgeç'),
+        ),
+        FilledButton(
+          onPressed: (_matches && !_busy) ? _onConfirm : null,
+          style: FilledButton.styleFrom(
+            backgroundColor: _danger,
+            foregroundColor: Colors.white,
+            disabledBackgroundColor: Colors.white12,
+            disabledForegroundColor: Colors.white38,
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            textStyle: const TextStyle(
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          child: _busy
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Text('Sil'),
+        ),
+      ],
     );
   }
 }

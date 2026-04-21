@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -44,6 +45,10 @@ class _AuthRefreshListenable extends ChangeNotifier {
 /// whether to navigate forward on success, stay silent on cancellation, or
 /// surface an error toast.
 enum SocialAuthOutcome { success, cancelled, error }
+
+/// Outcome of a [AuthController.deleteAccount] attempt. The UI uses this
+/// to decide whether to show a success SnackBar or a retry toast.
+enum DeleteAccountOutcome { success, error }
 
 /// Wraps the native Google + Apple flows and hands the resulting id tokens
 /// to Supabase. Kept as a plain class (not a Notifier) because the global
@@ -139,6 +144,37 @@ class AuthController {
       debugPrint('signInWithApple failed: $e\n$st');
       return SocialAuthOutcome.error;
     }
+  }
+
+  /// Irreversible account deletion. Supabase's client SDK deliberately
+  /// can't delete users (it would need service-role keys we refuse to ship);
+  /// instead we call a `delete_user` Postgres RPC that runs under
+  /// `SECURITY DEFINER` on the server side. See the operator note in the
+  /// Phase 13 report for the SQL.
+  ///
+  /// The flow intentionally wipes local state even if the signOut call
+  /// throws — the row is already gone server-side, so the session token
+  /// is an invalid ghost anyway and we don't want stale metrics leaking
+  /// into the next account.
+  Future<DeleteAccountOutcome> deleteAccount() async {
+    try {
+      await Supabase.instance.client.rpc('delete_user');
+    } catch (e, st) {
+      debugPrint('deleteAccount RPC failed: $e\n$st');
+      return DeleteAccountOutcome.error;
+    }
+    try {
+      await Supabase.instance.client.auth.signOut();
+    } catch (e) {
+      debugPrint('deleteAccount signOut (non-fatal): $e');
+    }
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+    } catch (e) {
+      debugPrint('deleteAccount prefs.clear (non-fatal): $e');
+    }
+    return DeleteAccountOutcome.success;
   }
 
   String? _envOrNull(String key) {
