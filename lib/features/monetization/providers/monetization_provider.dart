@@ -5,10 +5,18 @@ import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Entitlement id configured on the RevenueCat dashboard. Products mapped
 /// to this id (monthly/quarterly/yearly) all unlock the same premium gate.
-const String kProEntitlementId = 'entitlement_pro';
+/// Case-sensitive — must match the RC dashboard exactly (space included).
+const String kProEntitlementId = 'FormAI Pro';
+
+/// Persisted flag used by the debug "Sandbox" button on the paywall to
+/// force-unlock Premium without a real RevenueCat purchase. Needed while
+/// Google Play Console verification is pending and native products aren't
+/// available; [isProProvider] OR-s this with the live entitlement.
+const String _kDevProOverrideKey = 'sixpack.monetization.dev_pro_override';
 
 /// Outcome of a `purchase()` attempt. UI consumers use this to decide
 /// whether to show a success SnackBar, silently return (user cancelled),
@@ -22,14 +30,30 @@ enum RestoreOutcome { restored, nothingToRestore, error }
 /// or when RevenueCat isn't configured (dev builds without API keys).
 @immutable
 class SubscriptionState {
-  const SubscriptionState({this.isPro = false, this.offerings});
+  const SubscriptionState({
+    this.isPro = false,
+    this.isDeveloperOverride = false,
+    this.offerings,
+  });
 
+  /// True iff RevenueCat reports an active `FormAI Pro` entitlement.
   final bool isPro;
+
+  /// Debug-only SharedPreferences flag flipped by the Sandbox button. Gates
+  /// the same premium features as [isPro]; consumers should prefer
+  /// [isProProvider], which OR-s the two.
+  final bool isDeveloperOverride;
+
   final Offerings? offerings;
 
-  SubscriptionState copyWith({bool? isPro, Offerings? offerings}) {
+  SubscriptionState copyWith({
+    bool? isPro,
+    bool? isDeveloperOverride,
+    Offerings? offerings,
+  }) {
     return SubscriptionState(
       isPro: isPro ?? this.isPro,
+      isDeveloperOverride: isDeveloperOverride ?? this.isDeveloperOverride,
       offerings: offerings ?? this.offerings,
     );
   }
@@ -43,11 +67,14 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
   Future<SubscriptionState> build() => _load();
 
   Future<SubscriptionState> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    final devOverride = prefs.getBool(_kDevProOverrideKey) ?? false;
     try {
       final customer = await Purchases.getCustomerInfo();
       final offerings = await Purchases.getOfferings();
       return SubscriptionState(
         isPro: customer.entitlements.active.containsKey(kProEntitlementId),
+        isDeveloperOverride: devOverride,
         offerings: offerings,
       );
     } catch (e, st) {
@@ -55,7 +82,7 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
       // Play Store / App Store session. Return a neutral state so the UI
       // can still render — the paywall will fall back to hardcoded prices.
       debugPrint('SubscriptionNotifier load failed: $e\n$st');
-      return const SubscriptionState();
+      return SubscriptionState(isDeveloperOverride: devOverride);
     }
   }
 
@@ -96,6 +123,16 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
       return RestoreOutcome.error;
     }
   }
+
+  /// Debug-only escape hatch wired to the paywall's Sandbox button. Persists
+  /// the override so a restart keeps Premium unlocked while the operator
+  /// waits on Play Console verification.
+  Future<void> unlockPremiumAsDeveloper() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kDevProOverrideKey, true);
+    final current = state.value ?? const SubscriptionState();
+    state = AsyncData(current.copyWith(isDeveloperOverride: true));
+  }
 }
 
 final subscriptionProvider =
@@ -103,10 +140,13 @@ final subscriptionProvider =
   SubscriptionNotifier.new,
 );
 
-/// Convenience boolean — paywall wrappers can watch this directly without
-/// unpacking the AsyncValue.
+/// Single source of truth for premium gating across the app. Resolves to
+/// `isProLocalOverride || isRevenueCatPro` so the debug Sandbox button can
+/// unlock features without a real purchase.
 final isProProvider = Provider<bool>((ref) {
-  return ref.watch(subscriptionProvider).value?.isPro ?? false;
+  final snapshot = ref.watch(subscriptionProvider).value;
+  if (snapshot == null) return false;
+  return snapshot.isDeveloperOverride || snapshot.isPro;
 });
 
 /// Reads the platform-appropriate RevenueCat API key from the .env file.

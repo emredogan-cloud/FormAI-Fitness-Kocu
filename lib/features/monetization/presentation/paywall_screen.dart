@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -57,6 +58,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                     _buildRestoreButton(),
                     const SizedBox(height: 6),
                     const _LegalFooter(),
+                    if (kDebugMode) ...[
+                      const SizedBox(height: 12),
+                      _buildSandboxButton(),
+                    ],
                   ],
                 ),
               ),
@@ -169,6 +174,24 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     );
   }
 
+  Widget _buildSandboxButton() {
+    return Center(
+      child: TextButton(
+        onPressed: _busy || _restoring ? null : _unlockAsDeveloper,
+        style: TextButton.styleFrom(
+          foregroundColor: Colors.white38,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          textStyle: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.4,
+          ),
+        ),
+        child: const Text("[DEV] Premium'u Aç (Sandbox)"),
+      ),
+    );
+  }
+
   Widget _buildRestoreButton() {
     return Center(
       child: TextButton(
@@ -264,6 +287,15 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       case RestoreOutcome.error:
         _toast('Geri yükleme başarısız oldu. Lütfen tekrar dene.', error: true);
     }
+  }
+
+  Future<void> _unlockAsDeveloper() async {
+    await ref.read(subscriptionProvider.notifier).unlockPremiumAsDeveloper();
+    if (!mounted) return;
+    _toast('Geliştirici modu: Premium aktif edildi!');
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+    if (!mounted) return;
+    _close(context);
   }
 
   void _toast(String message, {bool error = false}) {
