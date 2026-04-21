@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../core/services/app_preferences.dart';
 import '../../onboarding/providers/wizard_provider.dart';
+import '../providers/auth_provider.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
@@ -16,6 +17,8 @@ class AuthScreen extends ConsumerStatefulWidget {
 
 enum _Mode { signIn, signUp }
 
+enum _SocialProvider { google, apple }
+
 class _AuthScreenState extends ConsumerState<AuthScreen> {
   static const Color _neon = Color(0xFF00F0FF);
 
@@ -25,6 +28,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   _Mode _mode = _Mode.signIn;
   bool _busy = false;
+  // Tracks which OAuth flow (if any) is currently in flight so we can show a
+  // spinner on the right button and block re-entrancy on the other.
+  _SocialProvider? _social;
 
   @override
   void dispose() {
@@ -115,6 +121,43 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     }
   }
 
+  Future<void> _signInWithGoogle() => _runSocial(
+        _SocialProvider.google,
+        () => ref.read(authControllerProvider).signInWithGoogle(),
+        errorMessage: 'Google ile giriş başarısız oldu. Lütfen tekrar dene.',
+      );
+
+  Future<void> _signInWithApple() => _runSocial(
+        _SocialProvider.apple,
+        () => ref.read(authControllerProvider).signInWithApple(),
+        errorMessage: 'Apple ile giriş başarısız oldu. Lütfen tekrar dene.',
+      );
+
+  Future<void> _runSocial(
+    _SocialProvider provider,
+    Future<SocialAuthOutcome> Function() run, {
+    required String errorMessage,
+  }) async {
+    if (_busy || _social != null) return;
+    setState(() => _social = provider);
+    try {
+      final outcome = await run();
+      if (!mounted) return;
+      switch (outcome) {
+        case SocialAuthOutcome.success:
+          await _persistWizardMetrics();
+          _goToPaywall();
+        case SocialAuthOutcome.cancelled:
+          // Silent — user bailed out of the native sheet.
+          break;
+        case SocialAuthOutcome.error:
+          _toast(errorMessage);
+      }
+    } finally {
+      if (mounted) setState(() => _social = null);
+    }
+  }
+
   void _toast(String message) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -169,7 +212,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   _passwordField(),
                   const SizedBox(height: 20),
                   FilledButton(
-                    onPressed: _busy ? null : _submit,
+                    onPressed: (_busy || _social != null) ? null : _submit,
                     style: FilledButton.styleFrom(
                       backgroundColor: _neon,
                       foregroundColor: Colors.black,
@@ -210,7 +253,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   const _Divider(label: 'ya da'),
                   const SizedBox(height: 18),
                   OutlinedButton.icon(
-                    onPressed: _busy ? null : _continueAsGuest,
+                    onPressed:
+                        (_busy || _social != null) ? null : _continueAsGuest,
                     icon: const Icon(Icons.person_outline, color: _neon),
                     label: const Text(
                       'Misafir Olarak Devam Et',
@@ -224,6 +268,20 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         letterSpacing: 1.5,
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 24),
+                  const _Divider(label: 'Veya şununla giriş yap'),
+                  const SizedBox(height: 18),
+                  _GoogleButton(
+                    busy: _social == _SocialProvider.google,
+                    enabled: !_busy && _social == null,
+                    onPressed: _signInWithGoogle,
+                  ),
+                  const SizedBox(height: 12),
+                  _AppleButton(
+                    busy: _social == _SocialProvider.apple,
+                    enabled: !_busy && _social == null,
+                    onPressed: _signInWithApple,
                   ),
                 ],
               ),
@@ -350,6 +408,163 @@ class _Divider extends StatelessWidget {
         ),
         const Expanded(child: Divider(color: Colors.white12)),
       ],
+    );
+  }
+}
+
+class _GoogleButton extends StatelessWidget {
+  const _GoogleButton({
+    required this.busy,
+    required this.enabled,
+    required this.onPressed,
+  });
+
+  final bool busy;
+  final bool enabled;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton(
+      onPressed: enabled && !busy ? onPressed : null,
+      style: FilledButton.styleFrom(
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        disabledBackgroundColor: Colors.white24,
+        disabledForegroundColor: Colors.white54,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        textStyle: const TextStyle(
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.5,
+          fontSize: 14,
+        ),
+      ),
+      child: busy
+          ? const SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.black54,
+              ),
+            )
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                _GoogleLogo(size: 18),
+                SizedBox(width: 10),
+                Text('Google ile Devam Et'),
+              ],
+            ),
+    );
+  }
+}
+
+/// Official Google "G" rendered with the brand's four colours. Kept inline
+/// (no asset / SVG dep) so the button stays self-contained.
+class _GoogleLogo extends StatelessWidget {
+  const _GoogleLogo({required this.size});
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(painter: _GoogleLogoPainter()),
+    );
+  }
+}
+
+class _GoogleLogoPainter extends CustomPainter {
+  static const _blue = Color(0xFF4285F4);
+  static const _red = Color(0xFFEA4335);
+  static const _yellow = Color(0xFFFBBC05);
+  static const _green = Color(0xFF34A853);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
+    final stroke = size.width * 0.22;
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke
+      ..strokeCap = StrokeCap.butt;
+    // Four arcs, one per Google colour, in the conventional order.
+    canvas.drawArc(
+        rect.deflate(stroke / 2), -0.5, 1.8, false, paint..color = _blue);
+    canvas.drawArc(
+        rect.deflate(stroke / 2), 1.3, 1.4, false, paint..color = _green);
+    canvas.drawArc(
+        rect.deflate(stroke / 2), 2.7, 1.4, false, paint..color = _yellow);
+    canvas.drawArc(
+        rect.deflate(stroke / 2), 4.1, 1.7, false, paint..color = _red);
+    // Inner horizontal bar of the "G".
+    final barPaint = Paint()..color = _blue;
+    final barRect = Rect.fromLTWH(
+      size.width * 0.5,
+      size.height * 0.42,
+      size.width * 0.5 - stroke * 0.5,
+      size.height * 0.16,
+    );
+    canvas.drawRect(barRect, barPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _GoogleLogoPainter oldDelegate) => false;
+}
+
+class _AppleButton extends StatelessWidget {
+  const _AppleButton({
+    required this.busy,
+    required this.enabled,
+    required this.onPressed,
+  });
+
+  final bool busy;
+  final bool enabled;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton(
+      onPressed: enabled && !busy ? onPressed : null,
+      style: FilledButton.styleFrom(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        disabledBackgroundColor: Colors.white10,
+        disabledForegroundColor: Colors.white54,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        side: const BorderSide(color: Colors.white24, width: 1),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        textStyle: const TextStyle(
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.5,
+          fontSize: 14,
+        ),
+      ),
+      child: busy
+          ? const SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white70,
+              ),
+            )
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.apple, size: 22, color: Colors.white),
+                SizedBox(width: 8),
+                Text('Apple ile Devam Et'),
+              ],
+            ),
     );
   }
 }
