@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,8 +9,17 @@ import 'core/routing/app_router.dart';
 import 'core/services/app_preferences.dart';
 import 'features/monetization/providers/monetization_provider.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Portrait lock — Redmi Note 11R (and similar low-end Androids) started
+  // freezing on landscape rotation during workouts because the ML Kit pose
+  // detector re-allocates tensors on every resize and the camera preview
+  // briefly ran out of memory. Locking orientation sidesteps both that and
+  // the scattered layout overflows the landscape composition surfaced.
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
   runApp(const _BootGate());
 }
 
