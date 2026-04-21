@@ -3,6 +3,14 @@
 .env.*
 !.env.example
 
+# GCP / service-account credentials (NEVER commit). Scoped patterns instead
+# of a blanket *.json so legitimate files (web/manifest.json, iOS/macOS
+# Contents.json, future google-services.json, i18n files, etc.) stay tracked.
+formai-*.json
+*-service-account*.json
+service-account*.json
+*-credentials.json
+
 # Local-only API miner script — embeds a RapidAPI key, must NEVER ship.
 # Run `python3 exercise_miner.py` locally to refresh assets/videos/*.gif.
 exercise_miner.py
