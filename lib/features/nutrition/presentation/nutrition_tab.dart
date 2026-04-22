@@ -10,23 +10,46 @@ import '../domain/models/recipe.dart';
 import '../providers/nutrition_provider.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
-const Color _proteinColor = Color(0xFF4DA6FF);
-const Color _carbsColor = Color(0xFF39FF14);
-const Color _fatColor = Color(0xFFFFA726);
+const Color _proteinColor = Color(0xFF4DA6FF); // neon blue
+const Color _carbsColor = Color(0xFFFF4DDB); // neon pink
+const Color _fatColor = Color(0xFFEAFF00); // neon yellow
+
+// Traffic-light palette for the calorie ring's "on track / low / over"
+// readout — tuned warmer than pure red/green/yellow so the ring still
+// reads as neon instead of dashboard-warning-ugly.
+const Color _statusOnTrack = Color(0xFF39FF14); // neon green
+const Color _statusLow = Color(0xFFEAFF00); // neon yellow
+const Color _statusOver = Color(0xFFFF5577); // neon red
 
 /// Nutrition home surface. Reads the user's stored body metrics, computes
 /// the daily [MacroTarget] through [NutritionCalculatorService], and
-/// surfaces a visual macro summary + a meal plan drawn from the recipe
-/// catalogue. The tab is pure read — it writes nothing back to prefs or
-/// Supabase.
+/// surfaces a decision-first header (calorie ring + macro bars + AI
+/// coach banner) above the recipe-driven Günün Menüsü and Keşfet strips.
+///
+/// Consumed macros are a static zero placeholder until meal logging
+/// lands — the UI already handles any non-zero value gracefully, so
+/// wiring real intake later is a one-line swap of [_consumedToday].
 class NutritionTab extends ConsumerWidget {
   const NutritionTab({super.key});
+
+  /// Placeholder until meal logging exists. A future phase can replace
+  /// this with a `StateProvider<MacroTarget>` populated by the food
+  /// diary; the rest of the tab reads through this single seam so no
+  /// other callsite needs to change.
+  static const MacroTarget _consumedToday = MacroTarget(
+    calories: 0,
+    protein: 0,
+    carbs: 0,
+    fat: 0,
+  );
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final recipesAsync = ref.watch(recipesProvider);
     final target = _computeTarget(ref);
     final mealFrequency = _readMealFrequency(ref);
+    const consumed = _consumedToday;
+    final insight = _getDailyInsight(target, consumed);
 
     return recipesAsync.when(
       loading: () => const Center(
@@ -39,27 +62,26 @@ class NutritionTab extends ConsumerWidget {
           onRetry: () => ref.invalidate(recipesProvider),
         );
       },
-      data: (recipes) => ListView(
+      data: (recipes) => SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(0, 16, 0, 32),
-        children: [
-          const _SectionHeader(
-            title: 'Beslenme',
-            subtitle: 'Hedefin için günlük makro planı.',
-          ),
-          const SizedBox(height: 18),
-          _MacroRingsCard(target: target),
-          const SizedBox(height: 26),
-          const _SectionTitle(title: 'Günün Menüsü'),
-          const SizedBox(height: 12),
-          _DailyMenu(
-            recipes: recipes,
-            mealFrequency: mealFrequency,
-          ),
-          const SizedBox(height: 26),
-          const _SectionTitle(title: 'Keşfet'),
-          const SizedBox(height: 12),
-          _DiscoverStrip(recipes: recipes),
-        ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const _DailyDashboardHeader(),
+            const SizedBox(height: 18),
+            _MacroStatusCard(target: target, consumed: consumed),
+            const SizedBox(height: 16),
+            _AiInsightBanner(message: insight),
+            const SizedBox(height: 26),
+            const _SectionTitle(title: 'Günün Menüsü'),
+            const SizedBox(height: 12),
+            _DailyMenu(recipes: recipes, mealFrequency: mealFrequency),
+            const SizedBox(height: 26),
+            const _SectionTitle(title: 'Keşfet'),
+            const SizedBox(height: 12),
+            _DiscoverStrip(recipes: recipes),
+          ],
+        ),
       ),
     );
   }
@@ -89,13 +111,40 @@ class NutritionTab extends ConsumerWidget {
 }
 
 // ============================================================================
-// Header + section titles
+// AI insight — small rule-based helper lifted from the Phase 22.1 spec.
+// Exported via a top-level function so tests (future) can assert copy
+// without spinning up a widget tree.
 // ============================================================================
 
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title, required this.subtitle});
-  final String title;
-  final String subtitle;
+String _getDailyInsight(MacroTarget target, MacroTarget consumed) {
+  final calorieProgress = _safeProgress(consumed.calories, target.calories);
+  final proteinProgress = _safeProgress(consumed.protein, target.protein);
+
+  // Protein tailed off while calories are already >50% in — the user is
+  // filling up on non-protein and needs a steer.
+  if (proteinProgress < 0.5 && calorieProgress > 0.5) {
+    return 'Bugün proteinin düşük kalmış. Yüksek proteinli bir öğün ekle!';
+  }
+  // Over target — nudge towards a lighter evening to stay in the pocket.
+  if (calorieProgress > 1.0) {
+    return 'Günlük kalori hedefini aştın. Hafif bir akşam yemeği tercih et.';
+  }
+  // Everything else is a pat on the back. Better to default positive than
+  // to surface a wishy-washy "okay" state the user has to decode.
+  return 'Harika gidiyorsun! Hedeflerine sadık kal.';
+}
+
+double _safeProgress(int consumed, int target) {
+  if (target <= 0) return 0;
+  return consumed / target;
+}
+
+// ============================================================================
+// Dashboard header — title + formatted date
+// ============================================================================
+
+class _DailyDashboardHeader extends StatelessWidget {
+  const _DailyDashboardHeader();
 
   @override
   Widget build(BuildContext context) {
@@ -104,25 +153,355 @@ class _SectionHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
+          const Text(
+            'Bugün',
+            style: TextStyle(
               color: Colors.white,
-              fontSize: 24,
+              fontSize: 28,
               fontWeight: FontWeight.w900,
               letterSpacing: 0.4,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
-            subtitle,
+            _formatTurkishDate(DateTime.now()),
             style: const TextStyle(color: Colors.white54, fontSize: 13),
           ),
         ],
       ),
     );
   }
+
+  /// Formats as e.g. "Çarşamba, 22 Nisan 2026". Inlined rather than
+  /// adding `intl` as a dependency for one string — the day/month
+  /// tables below are small and change only when Turkish does.
+  static String _formatTurkishDate(DateTime d) {
+    const days = [
+      'Pazartesi',
+      'Salı',
+      'Çarşamba',
+      'Perşembe',
+      'Cuma',
+      'Cumartesi',
+      'Pazar',
+    ];
+    const months = [
+      'Ocak',
+      'Şubat',
+      'Mart',
+      'Nisan',
+      'Mayıs',
+      'Haziran',
+      'Temmuz',
+      'Ağustos',
+      'Eylül',
+      'Ekim',
+      'Kasım',
+      'Aralık',
+    ];
+    // DateTime.weekday is 1..7 with Monday=1, so a direct `-1` indexes
+    // straight into the days list.
+    final day = days[d.weekday - 1];
+    final month = months[d.month - 1];
+    return '$day, ${d.day} $month ${d.year}';
+  }
 }
+
+// ============================================================================
+// Macro status card — calorie ring + protein/carb/fat horizontal bars
+// ============================================================================
+
+class _MacroStatusCard extends StatelessWidget {
+  const _MacroStatusCard({required this.target, required this.consumed});
+  final MacroTarget target;
+  final MacroTarget consumed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(18, 22, 18, 20),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          color: Colors.white.withValues(alpha: 0.04),
+          border: Border.all(color: _neon.withValues(alpha: 0.35)),
+          boxShadow: [
+            BoxShadow(
+              color: _neon.withValues(alpha: 0.22),
+              blurRadius: 22,
+              spreadRadius: 0.5,
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            _CalorieRing(
+              consumed: consumed.calories,
+              target: target.calories,
+            ),
+            const SizedBox(height: 20),
+            _MacroBar(
+              label: 'Protein',
+              consumed: consumed.protein,
+              target: target.protein,
+              color: _proteinColor,
+            ),
+            const SizedBox(height: 12),
+            _MacroBar(
+              label: 'Karbonhidrat',
+              consumed: consumed.carbs,
+              target: target.carbs,
+              color: _carbsColor,
+            ),
+            const SizedBox(height: 12),
+            _MacroBar(
+              label: 'Yağ',
+              consumed: consumed.fat,
+              target: target.fat,
+              color: _fatColor,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CalorieRing extends StatelessWidget {
+  const _CalorieRing({required this.consumed, required this.target});
+  final int consumed;
+  final int target;
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = _safeProgress(consumed, target);
+    final color = _colorForProgress(progress);
+    // Over-target rings visually clamp at 100% — otherwise the stroke
+    // would wrap past 12 o'clock and look buggy. The numeric readout
+    // still reflects the real overage, and the red colour carries the
+    // "you're over" signal.
+    final clamped = progress.clamp(0.0, 1.0);
+    return SizedBox(
+      width: 170,
+      height: 170,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          SizedBox.expand(
+            child: CircularProgressIndicator(
+              value: clamped,
+              strokeWidth: 12,
+              strokeCap: StrokeCap.round,
+              backgroundColor: color.withValues(alpha: 0.14),
+              valueColor: AlwaysStoppedAnimation(color),
+            ),
+          ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '$consumed',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 34,
+                  fontWeight: FontWeight.w900,
+                  height: 1,
+                  shadows: [
+                    Shadow(color: color.withValues(alpha: 0.6), blurRadius: 14),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '/ $target kcal',
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                _statusLabel(progress),
+                style: TextStyle(
+                  color: color,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.8,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Color _colorForProgress(double progress) {
+    if (progress > 1.0) return _statusOver;
+    if (progress < 0.5) return _statusLow;
+    return _statusOnTrack;
+  }
+
+  static String _statusLabel(double progress) {
+    if (progress > 1.0) return 'HEDEFİ AŞTIN';
+    if (progress < 0.5) return 'DÜŞÜK ALIM';
+    return 'İYİ GİDİYORSUN';
+  }
+}
+
+class _MacroBar extends StatelessWidget {
+  const _MacroBar({
+    required this.label,
+    required this.consumed,
+    required this.target,
+    required this.color,
+  });
+
+  final String label;
+  final int consumed;
+  final int target;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = _safeProgress(consumed, target).clamp(0.0, 1.0);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            Text(
+              '$consumed g',
+              style: TextStyle(
+                color: color,
+                fontSize: 13,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              '/ $target g',
+              style: const TextStyle(
+                color: Colors.white54,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(6),
+          child: LinearProgressIndicator(
+            value: progress,
+            minHeight: 8,
+            backgroundColor: color.withValues(alpha: 0.14),
+            valueColor: AlwaysStoppedAnimation(color),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ============================================================================
+// AI insight banner
+// ============================================================================
+
+class _AiInsightBanner extends StatelessWidget {
+  const _AiInsightBanner({required this.message});
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            colors: [
+              _neon.withValues(alpha: 0.22),
+              _proteinColor.withValues(alpha: 0.12),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          border: Border.all(color: _neon.withValues(alpha: 0.55)),
+          boxShadow: [
+            BoxShadow(
+              color: _neon.withValues(alpha: 0.35),
+              blurRadius: 20,
+              spreadRadius: 0.5,
+            ),
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _neon.withValues(alpha: 0.28),
+              ),
+              child: const Icon(
+                Icons.auto_awesome,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'AI KOÇ',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    message,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// Section title (reused by both remaining sections)
+// ============================================================================
 
 class _SectionTitle extends StatelessWidget {
   const _SectionTitle({required this.title});
@@ -141,169 +520,6 @@ class _SectionTitle extends StatelessWidget {
           letterSpacing: 0.3,
         ),
       ),
-    );
-  }
-}
-
-// ============================================================================
-// Macro rings
-// ============================================================================
-
-class _MacroRingsCard extends StatelessWidget {
-  const _MacroRingsCard({required this.target});
-  final MacroTarget target;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(18, 20, 18, 18),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          color: Colors.white.withValues(alpha: 0.04),
-          border: Border.all(color: _neon.withValues(alpha: 0.35)),
-          boxShadow: [
-            BoxShadow(
-              color: _neon.withValues(alpha: 0.25),
-              blurRadius: 20,
-              spreadRadius: 0.5,
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            _MacroRing(
-              size: 140,
-              stroke: 10,
-              value: target.calories,
-              label: 'KALORİ',
-              unit: 'kcal',
-              color: _neon,
-            ),
-            const SizedBox(height: 18),
-            Row(
-              children: [
-                Expanded(
-                  child: _MacroRing(
-                    size: 88,
-                    stroke: 7,
-                    value: target.protein,
-                    label: 'PROTEİN',
-                    unit: 'g',
-                    color: _proteinColor,
-                  ),
-                ),
-                Expanded(
-                  child: _MacroRing(
-                    size: 88,
-                    stroke: 7,
-                    value: target.carbs,
-                    label: 'KARB',
-                    unit: 'g',
-                    color: _carbsColor,
-                  ),
-                ),
-                Expanded(
-                  child: _MacroRing(
-                    size: 88,
-                    stroke: 7,
-                    value: target.fat,
-                    label: 'YAĞ',
-                    unit: 'g',
-                    color: _fatColor,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _MacroRing extends StatelessWidget {
-  const _MacroRing({
-    required this.size,
-    required this.stroke,
-    required this.value,
-    required this.label,
-    required this.unit,
-    required this.color,
-  });
-
-  final double size;
-  final double stroke;
-  final int value;
-  final String label;
-  final String unit;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(
-          width: size,
-          height: size,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // Background ring — low-alpha of the accent colour so the
-              // "full target" ring has something to glow against.
-              SizedBox.expand(
-                child: CircularProgressIndicator(
-                  value: 1.0,
-                  strokeWidth: stroke,
-                  backgroundColor: color.withValues(alpha: 0.14),
-                  valueColor: AlwaysStoppedAnimation(color),
-                ),
-              ),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '$value',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: size * 0.24,
-                      fontWeight: FontWeight.w900,
-                      height: 1,
-                      shadows: [
-                        Shadow(
-                          color: color.withValues(alpha: 0.6),
-                          blurRadius: 14,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    unit,
-                    style: const TextStyle(
-                      color: Colors.white54,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: TextStyle(
-            color: color,
-            fontSize: 11,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.6,
-          ),
-        ),
-      ],
     );
   }
 }
@@ -503,7 +719,8 @@ class _DiscoverStrip extends StatelessWidget {
         .toList(growable: false);
     if (items.isEmpty) {
       return const _EmptyState(
-          message: 'Keşfedilecek yeni tarif yok — yakında.');
+        message: 'Keşfedilecek yeni tarif yok — yakında.',
+      );
     }
     return SizedBox(
       height: 200,
