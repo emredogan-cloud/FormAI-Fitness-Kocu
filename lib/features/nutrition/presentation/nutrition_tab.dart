@@ -76,9 +76,9 @@ class NutritionTab extends ConsumerWidget {
             const SizedBox(height: 12),
             const MealPlanTimeline(),
             const SizedBox(height: 26),
-            const _SectionTitle(title: 'Keşfet'),
+            const _SectionTitle(title: 'Tarif Keşfet'),
             const SizedBox(height: 12),
-            _DiscoverStrip(recipes: recipes),
+            _DiscoverySection(recipes: recipes),
           ],
         ),
       ),
@@ -518,55 +518,187 @@ class _SectionTitle extends StatelessWidget {
 }
 
 // ============================================================================
-// Discover (dessert + high-protein snacks)
+// Discovery gallery
+// ----------------------------------------------------------------------------
+// Filter chips + horizontal card list so a user can graze the recipe
+// catalogue when they want variety beyond the planned meals above.
+// Filters are lightweight predicates so users get an immediate effect;
+// "Vegan" is a best-effort keyword match since the Recipe model has no
+// dedicated dietary flag yet.
 // ============================================================================
 
-class _DiscoverStrip extends StatelessWidget {
-  const _DiscoverStrip({required this.recipes});
+class _DiscoverySection extends StatefulWidget {
+  const _DiscoverySection({required this.recipes});
   final List<Recipe> recipes;
 
   @override
-  Widget build(BuildContext context) {
-    final items = recipes
-        .where((r) =>
-            r.mealType.toLowerCase() == 'dessert' ||
-            (r.mealType.toLowerCase() == 'snack' && r.protein >= 15))
-        .toList(growable: false);
-    if (items.isEmpty) {
-      return const _EmptyState(
-        message: 'Keşfedilecek yeni tarif yok — yakında.',
-      );
+  State<_DiscoverySection> createState() => _DiscoverySectionState();
+}
+
+class _DiscoverySectionState extends State<_DiscoverySection> {
+  /// Null = no filter active (show all recipes). Tapping the active chip
+  /// again clears the filter.
+  String? _activeFilter;
+
+  static const List<String> _filters = [
+    'Yüksek Protein',
+    'Düşük Kalori',
+    'Hacim',
+    'Sıkılaşma',
+    'Vegan',
+  ];
+
+  List<Recipe> get _filtered {
+    final source = widget.recipes;
+    switch (_activeFilter) {
+      case 'Yüksek Protein':
+        return source.where((r) => r.protein >= 25).toList(growable: false);
+      case 'Düşük Kalori':
+        return source.where((r) => r.calories <= 400).toList(growable: false);
+      case 'Hacim':
+        return source.where((r) => r.calories >= 500).toList(growable: false);
+      case 'Sıkılaşma':
+        return source
+            .where((r) => r.calories <= 500 && r.protein >= 20)
+            .toList(growable: false);
+      case 'Vegan':
+        // No dedicated diet flag on Recipe yet — match on the title +
+        // instructions blob for the word "vegan" so the filter does
+        // something useful today and is trivial to retire once a real
+        // tag lands on the Supabase schema.
+        return source.where((r) {
+          final hay = '${r.title} ${r.instructions ?? ''}'.toLowerCase();
+          return hay.contains('vegan');
+        }).toList(growable: false);
+      default:
+        return source;
     }
-    return SizedBox(
-      height: 200,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: items.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
-        itemBuilder: (context, index) => _DiscoverCard(recipe: items[index]),
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final items = _filtered;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          height: 38,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: _filters.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            itemBuilder: (context, index) {
+              final filter = _filters[index];
+              final selected = filter == _activeFilter;
+              return _DiscoveryFilterChip(
+                label: filter,
+                selected: selected,
+                onTap: () => setState(
+                  () => _activeFilter = selected ? null : filter,
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 14),
+        if (items.isEmpty)
+          const _EmptyState(
+            message: 'Bu filtre için tarif bulunamadı.',
+          )
+        else
+          SizedBox(
+            height: 210,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: items.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemBuilder: (context, index) =>
+                  RecipeDiscoveryCard(recipe: items[index]),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _DiscoveryFilterChip extends StatelessWidget {
+  const _DiscoveryFilterChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(24),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            color: selected
+                ? _neon.withValues(alpha: 0.25)
+                : Colors.white.withValues(alpha: 0.04),
+            border: Border.all(
+              color: selected ? _neon : Colors.white24,
+              width: selected ? 1.5 : 1,
+            ),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: _neon.withValues(alpha: 0.35),
+                      blurRadius: 10,
+                    ),
+                  ]
+                : null,
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: selected ? Colors.white : Colors.white70,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ),
       ),
     );
   }
 }
 
-class _DiscoverCard extends StatelessWidget {
-  const _DiscoverCard({required this.recipe});
+class RecipeDiscoveryCard extends StatelessWidget {
+  const RecipeDiscoveryCard({super.key, required this.recipe});
   final Recipe recipe;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 200,
-      child: InkWell(
+      width: 220,
+      child: Material(
+        color: Colors.transparent,
+        clipBehavior: Clip.antiAlias,
         borderRadius: BorderRadius.circular(20),
-        onTap: () => context.push('/recipe/${recipe.id}'),
-        child: ClipRRect(
+        child: InkWell(
           borderRadius: BorderRadius.circular(20),
+          onTap: () => context.push('/recipe', extra: recipe),
           child: Stack(
             fit: StackFit.expand,
             children: [
               _RecipeThumb(recipe: recipe),
+              // Dark gradient keeps the title readable regardless of how
+              // bright the underlying photo is.
               DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -574,15 +706,15 @@ class _DiscoverCard extends StatelessWidget {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      Colors.black.withValues(alpha: 0.45),
-                      Colors.black.withValues(alpha: 0.88),
+                      Colors.black.withValues(alpha: 0.5),
+                      Colors.black.withValues(alpha: 0.92),
                     ],
                     stops: const [0.35, 0.65, 1.0],
                   ),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+                padding: const EdgeInsets.all(14),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -593,25 +725,51 @@ class _DiscoverCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 15,
+                        fontSize: 16,
                         fontWeight: FontWeight.w900,
                         height: 1.15,
                         shadows: [
-                          Shadow(blurRadius: 10, color: Colors.black87)
+                          Shadow(blurRadius: 10, color: Colors.black87),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
-                        _MetaChip(
-                          icon: Icons.local_fire_department,
-                          label: '${recipe.calories} kcal',
+                        const Icon(
+                          Icons.local_fire_department,
+                          color: _neon,
+                          size: 14,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${recipe.calories} kcal',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                         const SizedBox(width: 8),
-                        _MetaChip(
-                          icon: Icons.fitness_center,
-                          label: '${recipe.protein}g prot.',
+                        Container(
+                          width: 1,
+                          height: 12,
+                          color: Colors.white24,
+                        ),
+                        const SizedBox(width: 8),
+                        const Icon(
+                          Icons.fitness_center,
+                          color: Color(0xFF4DA6FF),
+                          size: 14,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${recipe.protein}g Protein',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                       ],
                     ),
@@ -649,39 +807,6 @@ class _RecipeThumb extends StatelessWidget {
       errorBuilder: (_, __, ___) => fallback,
       loadingBuilder: (_, child, progress) =>
           progress == null ? child : Container(color: Colors.white10),
-    );
-  }
-}
-
-class _MetaChip extends StatelessWidget {
-  const _MetaChip({required this.icon, required this.label});
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        color: Colors.white.withValues(alpha: 0.08),
-        border: Border.all(color: Colors.white12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: Colors.white70, size: 12),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

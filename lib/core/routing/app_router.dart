@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -7,6 +8,7 @@ import '../../features/auth/providers/auth_provider.dart';
 import '../../features/home/presentation/account_settings_screen.dart';
 import '../../features/home/presentation/dashboard_screen.dart';
 import '../../features/monetization/presentation/paywall_screen.dart';
+import '../../features/nutrition/domain/models/recipe.dart';
 import '../../features/nutrition/presentation/recipe_detail_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/onboarding/presentation/prediction_screen.dart';
@@ -26,8 +28,9 @@ class AppRoutes {
   static const String planDetail = '/plan-detail';
   static const String accountSettings = '/account-settings';
 
-  /// `/recipe/:id` — full recipe detail view. Pass the recipe's primary
-  /// key from Supabase as the `id` path param.
+  /// `/recipe` — full recipe detail view. Callers push with
+  /// `context.push('/recipe', extra: recipe)`; the route unpacks
+  /// `state.extra as Recipe`.
   static const String recipeDetail = '/recipe';
 }
 
@@ -113,13 +116,59 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const AccountSettingsScreen(),
       ),
       GoRoute(
-        path: '/recipe/:id',
+        path: AppRoutes.recipeDetail,
         name: 'recipeDetail',
         builder: (context, state) {
-          final id = state.pathParameters['id'] ?? '';
-          return RecipeDetailScreen(recipeId: id);
+          // Callers push the full Recipe object via `extra:` so the
+          // detail screen doesn't need a second round-trip to the
+          // catalogue to render. Unexpected `extra` types fall back to
+          // the dashboard rather than crashing.
+          final extra = state.extra;
+          if (extra is Recipe) {
+            return RecipeDetailScreen(recipe: extra);
+          }
+          return const _MissingRecipe();
         },
       ),
     ],
   );
 });
+
+/// Tiny fallback shown when someone navigates to `/recipe` without
+/// actually attaching a [Recipe] to `state.extra`. Keeps the app from
+/// crashing on a bad deep link without pulling in a whole error screen.
+class _MissingRecipe extends StatelessWidget {
+  const _MissingRecipe();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF0B0B12),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.restaurant, color: Colors.white38, size: 56),
+              const SizedBox(height: 12),
+              const Text(
+                'Tarif bulunamadı.',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 20),
+              FilledButton(
+                onPressed: () => context.go(AppRoutes.dashboard),
+                child: const Text('Ana ekrana dön'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

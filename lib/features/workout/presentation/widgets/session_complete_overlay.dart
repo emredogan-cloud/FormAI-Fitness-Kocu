@@ -210,7 +210,7 @@ class _RecoverySuggestionCard extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
-              onPressed: () => context.push('/recipe/${recipe.id}'),
+              onPressed: () => context.push('/recipe', extra: recipe),
               icon: const Icon(Icons.receipt_long, size: 18),
               label: const Text('Tarifi Gör'),
               style: FilledButton.styleFrom(

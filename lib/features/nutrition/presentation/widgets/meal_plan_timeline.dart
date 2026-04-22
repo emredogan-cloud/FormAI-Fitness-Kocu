@@ -217,7 +217,7 @@ class _MealCardState extends State<_MealCard> {
       duration: const Duration(milliseconds: 200),
       opacity: _eaten ? 0.55 : 1.0,
       child: _CardShell(
-        onTap: () => context.push('/recipe/${recipe.id}'),
+        onTap: () => context.push('/recipe', extra: recipe),
         borderColor: _eaten ? _neonGreen.withValues(alpha: 0.45) : null,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
