@@ -1,8 +1,13 @@
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/utils/placeholder_images.dart';
+import '../domain/services/workout_generator_service.dart';
 import '../models/exercise_model.dart';
 import '../models/workout_day_model.dart';
 import '../models/workout_plan_model.dart';
@@ -16,6 +21,7 @@ class WorkoutRepository {
 
   static const String _completedKey = 'sixpack.completed_days';
   static const String _pendingSyncKey = 'sixpack.pending_sync_days';
+  static const String _planKey = 'sixpack.user_custom_plan_v1';
   static const String _progressTable = 'user_progress';
 
   // Videos live in the public Supabase Storage bucket `exercises`. The URL
@@ -1177,50 +1183,73 @@ class WorkoutRepository {
 
   // ==========================================================================
   // PROGRAM
+  // Replaces the former `_staticProgram`: the 30-day schedule is now
+  // generated on first load by [WorkoutGeneratorService] from the user's
+  // stored goal + level, then cached as JSON in SharedPreferences under
+  // [_planKey]. Subsequent launches read the cache so the plan is stable
+  // across sessions until the user explicitly resets progress.
   // ==========================================================================
 
-  static final List<WorkoutDay> _staticProgram = [
-    WorkoutDay(
-      dayNumber: 1,
-      exercises: [_crunch, _plank, _legRaise],
-    ),
-    WorkoutDay(
-      dayNumber: 2,
-      exercises: [_situp, _bicycleCrunch, _plank],
-    ),
-    WorkoutDay(
-      dayNumber: 3,
-      exercises: [_crunch, _russianTwist, _legRaise],
-    ),
-    WorkoutDay(
-      dayNumber: 4,
-      exercises: [_pushUp, _inclinePushUp, _chestFly],
-    ),
-    WorkoutDay(
-      dayNumber: 5,
-      exercises: [_mountainClimber, _flutterKick, _plank],
-    ),
-    WorkoutDay(
-      dayNumber: 6,
-      exercises: [_benchPress, _chestDip, _declinePushUp],
-    ),
-    WorkoutDay(
-      dayNumber: 7,
-      exercises: [
-        _crunch,
-        _bicycleCrunch,
-        _hangingLegRaise,
-        _flutterKick,
-      ],
-    ),
-  ];
-
-  Future<List<WorkoutDay>> loadProgram() async {
+  /// Returns the user's 30-day plan with completion flags overlaid from
+  /// local + remote progress. On a cold cache (or when a previous cache
+  /// entry is unparseable), falls back to [generator] and persists the
+  /// result before returning.
+  Future<List<WorkoutDay>> loadOrGenerateProgram({
+    required WorkoutGeneratorService generator,
+    String? userGoal,
+    String? fitnessLevel,
+  }) async {
     final completed = await _completedDays();
-    return _staticProgram
+    final cached = _decodeCachedPlan();
+    final plan = cached ??
+        generator.generate30DayPlan(
+          userGoal: userGoal ?? 'sixpack',
+          fitnessLevel: fitnessLevel ?? 'beginner',
+        );
+    if (cached == null) {
+      // Fire-and-forget — cache is advisory; if the write fails we'll
+      // simply regenerate the same plan next launch (deterministic).
+      unawaited(_cachePlan(plan));
+    }
+    return plan
         .map((day) =>
             day.copyWith(isCompleted: completed.contains(day.dayNumber)))
         .toList(growable: false);
+  }
+
+  /// Reads + decodes the cached plan. Returns null for any failure mode:
+  /// missing key, malformed JSON, wrong root type, enum drift, or a
+  /// length mismatch — all of which mean "regenerate from scratch".
+  List<WorkoutDay>? _decodeCachedPlan() {
+    final raw = _prefs.getString(_planKey);
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return null;
+      final days = decoded
+          .map((e) => WorkoutDay.fromJson(e as Map<String, dynamic>))
+          .toList(growable: false);
+      // A partial write (power loss mid-save, say) would leave fewer
+      // than 30 entries — treat as corrupt rather than serving a short
+      // plan that silently fails the 30-day UI.
+      if (days.length != 30) return null;
+      return days;
+    } catch (e, st) {
+      debugPrint('WorkoutRepository: plan cache decode failed — '
+          'regenerating. $e\n$st');
+      return null;
+    }
+  }
+
+  Future<void> _cachePlan(List<WorkoutDay> plan) async {
+    try {
+      final encoded = jsonEncode(
+        plan.map((d) => d.toJson()).toList(growable: false),
+      );
+      await _prefs.setString(_planKey, encoded);
+    } catch (e, st) {
+      debugPrint('WorkoutRepository: plan cache encode failed: $e\n$st');
+    }
   }
 
   Future<void> markDayCompleted(int dayNumber) async {
@@ -1244,6 +1273,9 @@ class WorkoutRepository {
   Future<void> resetProgress() async {
     await _prefs.remove(_completedKey);
     await _prefs.remove(_pendingSyncKey);
+    // Drop the cached plan too — a full reset should yield a fresh
+    // regeneration against whatever the user's current goal/level is.
+    await _prefs.remove(_planKey);
   }
 
   Future<Set<int>> _completedDays() async {

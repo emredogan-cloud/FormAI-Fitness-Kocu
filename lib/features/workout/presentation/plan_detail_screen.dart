@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/routing/app_router.dart';
+import '../../../core/services/app_preferences.dart';
 import '../../../core/utils/placeholder_images.dart';
 import '../../../core/widgets/error_card.dart';
 import '../../monetization/providers/monetization_provider.dart';
@@ -15,6 +16,16 @@ const Color _neon = Color(0xFF8E5BFF);
 const Color _success = Color(0xFF39FF14);
 
 const int _programLength = 30;
+
+/// Display strings for the onboarding `GoalPhysique` enum values.
+/// Mirrors the map in `profile_tab.dart`; duplicated rather than shared
+/// because the profile-tab copy is private and this is the second UI
+/// surface that needs to render the same labels.
+const Map<String, String> _goalLabels = {
+  'tone': 'Sıkılaşmak',
+  'bulk': 'Hacim Kazanmak',
+  'sixpack': 'Sadece Six-Pack',
+};
 
 /// Freemium split — the first three days of the 30-day program are free
 /// for everyone, so a non-paying user can experience the coaching loop end
@@ -123,6 +134,10 @@ class _PlanDetailScreenState extends ConsumerState<PlanDetailScreen> {
     final completed = realDays.where((d) => d.isCompleted).length;
     final remaining = (_programLength - completed).clamp(0, _programLength);
     final isPro = ref.watch(isProProvider);
+    final goalKey = ref
+        .watch(appPreferencesProvider)
+        .userMetrics?['targetPhysique'] as String?;
+    final goalLabel = goalKey == null ? null : _goalLabels[goalKey];
 
     return CustomScrollView(
       slivers: [
@@ -140,6 +155,9 @@ class _PlanDetailScreenState extends ConsumerState<PlanDetailScreen> {
           pinned: true,
           delegate: _StickyRemainingHeader(remaining: remaining),
         ),
+        SliverToBoxAdapter(
+          child: _PersonalizedSubtitle(goalLabel: goalLabel),
+        ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
           sliver: SliverList.builder(
@@ -148,14 +166,18 @@ class _PlanDetailScreenState extends ConsumerState<PlanDetailScreen> {
               final dayNumber = index + 1;
               final realDay = _findDay(realDays, dayNumber);
               final isActive = dayNumber == activeDayNumber;
-              final isRest = _isRestDay(dayNumber);
+              // The generator is the source of truth for rest days; fall
+              // back to false for the defensive "no realDay" path — the
+              // UI would rather show a workout tile than a resting one
+              // we can't confirm.
+              final isRest = realDay?.isRestDay ?? false;
               final isLocked = !isPro && dayNumber > _freeDayLimit;
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: _DayTile(
                   dayNumber: dayNumber,
                   realDay: realDay,
-                  isActive: isActive,
+                  isActive: isActive && !isRest,
                   isRest: isRest,
                   isLocked: isLocked,
                   onTap: () =>
@@ -168,10 +190,6 @@ class _PlanDetailScreenState extends ConsumerState<PlanDetailScreen> {
       ],
     );
   }
-
-  /// Mark every 7th day as rest (4, 11, 18, 25). Visual-only heuristic until
-  /// the data model carries an explicit rest-day flag.
-  bool _isRestDay(int dayNumber) => dayNumber % 7 == 4;
 
   Future<void> _onDayTap(
     BuildContext context,
@@ -201,11 +219,57 @@ class _PlanDetailScreenState extends ConsumerState<PlanDetailScreen> {
     return null;
   }
 
+  /// Skips rest days on purpose: the completion flow never marks them
+  /// done, so without the filter the "active" highlight would stick on
+  /// day 4 (the first rest day) once days 1-3 are complete.
   WorkoutDay? _firstIncomplete(List<WorkoutDay> days) {
     for (final d in days) {
+      if (d.isRestDay) continue;
       if (!d.isCompleted) return d;
     }
     return null;
+  }
+}
+
+/// Personalized banner stating the plan is tailored to the user. Rendered
+/// directly under the sticky "N gün kaldı" header, so the affirmation is
+/// visible the first time the user lands on the program view without
+/// competing with the hero image.
+class _PersonalizedSubtitle extends StatelessWidget {
+  const _PersonalizedSubtitle({required this.goalLabel});
+  final String? goalLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = goalLabel ?? 'sana özel';
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: _neon.withValues(alpha: 0.08),
+          border: Border.all(color: _neon.withValues(alpha: 0.35)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.auto_awesome, color: _neon, size: 18),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Senin hedefine ($label) ve seviyene özel oluşturuldu.',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  height: 1.35,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

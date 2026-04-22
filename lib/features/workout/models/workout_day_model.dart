@@ -19,6 +19,31 @@ class WorkoutDay {
 
   bool get isRestDay => exercises.isEmpty;
 
+  Map<String, dynamic> toJson() => {
+        'dayNumber': dayNumber,
+        'exercises': exercises.map((e) => e.toJson()).toList(growable: false),
+        'isCompleted': isCompleted,
+        'title': title,
+      };
+
+  /// Throws [FormatException] if the `exercises` list is malformed or any
+  /// nested exercise fails to parse. The plan-cache loader catches these
+  /// throws and regenerates from the generator service.
+  factory WorkoutDay.fromJson(Map<String, dynamic> json) {
+    final rawExercises = json['exercises'];
+    if (rawExercises is! List) {
+      throw const FormatException('WorkoutDay.exercises was not a list');
+    }
+    return WorkoutDay(
+      dayNumber: json['dayNumber'] as int,
+      exercises: rawExercises
+          .map((e) => Exercise.fromJson(e as Map<String, dynamic>))
+          .toList(growable: false),
+      isCompleted: (json['isCompleted'] as bool?) ?? false,
+      title: (json['title'] as String?) ?? '',
+    );
+  }
+
   WorkoutDay copyWith({
     int? dayNumber,
     List<Exercise>? exercises,

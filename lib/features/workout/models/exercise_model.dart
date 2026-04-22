@@ -58,6 +58,53 @@ class Exercise {
   bool get isRepBased => type == ExerciseType.repBased;
   bool get isTimeBased => type == ExerciseType.timeBased;
 
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'type': type.name,
+        'targetReps': targetReps,
+        'targetDurationInSeconds': targetDurationInSeconds,
+        'videoUrl': videoUrl,
+        'sets': sets,
+        'restDurationInSeconds': restDurationInSeconds,
+        'category': category.name,
+        'description': description,
+        'shortTip': shortTip,
+        'difficulty': difficulty,
+        'targetMuscle': targetMuscle,
+        'isCardio': isCardio,
+      };
+
+  /// Throws [FormatException] if a required primitive is missing or the
+  /// enum name is unknown. Callers (the plan cache) catch the throw and
+  /// regenerate from scratch rather than surface a half-parsed plan.
+  factory Exercise.fromJson(Map<String, dynamic> json) {
+    final typeName = json['type'];
+    final categoryName = json['category'];
+    return Exercise(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      type: ExerciseType.values.firstWhere(
+        (v) => v.name == typeName,
+        orElse: () => throw FormatException('Unknown ExerciseType: $typeName'),
+      ),
+      targetReps: json['targetReps'] as int?,
+      targetDurationInSeconds: json['targetDurationInSeconds'] as int?,
+      videoUrl: json['videoUrl'] as String?,
+      sets: (json['sets'] as int?) ?? 1,
+      restDurationInSeconds: (json['restDurationInSeconds'] as int?) ?? 30,
+      category: ExerciseCategory.values.firstWhere(
+        (v) => v.name == categoryName,
+        orElse: () => ExerciseCategory.core,
+      ),
+      description: (json['description'] as String?) ?? '',
+      shortTip: (json['shortTip'] as String?) ?? '',
+      difficulty: json['difficulty'] as String,
+      targetMuscle: json['targetMuscle'] as String,
+      isCardio: json['isCardio'] as bool,
+    );
+  }
+
   Exercise copyWith({
     String? id,
     String? name,

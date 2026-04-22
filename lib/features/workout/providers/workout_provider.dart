@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/services/app_preferences.dart';
 import '../data/workout_repository.dart';
+import '../domain/services/workout_generator_service.dart';
 import '../models/exercise_model.dart';
 import '../models/workout_day_model.dart';
 import '../models/workout_plan_model.dart';
@@ -122,11 +124,28 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
   Future<WorkoutSessionState> build() async {
     final prefs = await SharedPreferences.getInstance();
     _repository = WorkoutRepository(prefs);
-    final days = await _repository.loadProgram();
+    final days = await _loadProgram();
     final activeDay = _firstIncomplete(days);
     ref.onDispose(_cancelRestTimer);
     ref.onDispose(_cancelPrepTimer);
     return WorkoutSessionState(days: days, activeDay: activeDay);
+  }
+
+  /// Resolves the user's stored goal + activity level (set during the
+  /// onboarding wizard) and hands them to the repository's cache-or-
+  /// generate pipeline. Guests or users who skipped onboarding fall back
+  /// to the generator's own defaults (sixpack + beginner), so there's
+  /// never a state where the 30-day list is empty.
+  Future<List<WorkoutDay>> _loadProgram() async {
+    final appPrefs = ref.read(appPreferencesProvider);
+    final metrics = appPrefs.userMetrics ?? const <String, dynamic>{};
+    final userGoal = metrics['targetPhysique'] as String?;
+    final fitnessLevel = metrics['activityLevel'] as String?;
+    return _repository.loadOrGenerateProgram(
+      generator: ref.read(workoutGeneratorProvider),
+      userGoal: userGoal,
+      fitnessLevel: fitnessLevel,
+    );
   }
 
   void setCurrentReps(int reps) {
@@ -230,7 +249,7 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
     if (!isAdHoc) {
       await _repository.markDayCompleted(day.dayNumber);
     }
-    final refreshed = isAdHoc ? current.days : await _repository.loadProgram();
+    final refreshed = isAdHoc ? current.days : await _loadProgram();
     final updatedDay = isAdHoc
         ? day.copyWith(isCompleted: true)
         : refreshed.firstWhere(
@@ -266,7 +285,7 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
 
   Future<void> resetProgress() async {
     await _repository.resetProgress();
-    final days = await _repository.loadProgram();
+    final days = await _loadProgram();
     _cancelRestTimer();
     state = AsyncData(WorkoutSessionState(
       days: days,
@@ -362,8 +381,12 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
     _prepTimer = null;
   }
 
+  /// Skips rest days: they never flow through `markDayCompleted`, so
+  /// including them would cause the session to "resume" on a day with
+  /// no exercises.
   WorkoutDay? _firstIncomplete(List<WorkoutDay> days) {
     for (final day in days) {
+      if (day.isRestDay) continue;
       if (!day.isCompleted) return day;
     }
     return null;
