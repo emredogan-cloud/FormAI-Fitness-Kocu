@@ -88,26 +88,8 @@ class RecipeDetailScreen extends StatelessWidget {
                   const SizedBox(height: 22),
                   _MacroTilesRow(recipe: recipe),
                   const SizedBox(height: 28),
-                  if ((recipe.instructions ?? '').trim().isNotEmpty) ...[
-                    const Text(
-                      'Hazırlanışı',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.3,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      recipe.instructions!,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                        height: 1.5,
-                      ),
-                    ),
-                  ],
+                  if ((recipe.instructions ?? '').trim().isNotEmpty)
+                    _InstructionsSection(text: recipe.instructions!),
                   // Leave headroom for the sticky CTA so long instruction
                   // blocks don't get visually eaten by the button.
                   const SizedBox(height: 96),
@@ -369,6 +351,120 @@ class _MacroTile extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Parses the seed recipes' "MALZEMELER: …\n\nHAZIRLANIŞI: …" shape
+/// into two visually distinct blocks. Legacy recipes (plain prose,
+/// no section headers) fall through to a single block with the
+/// original 14 px / 1.5 line height so they still read cleanly.
+class _InstructionsSection extends StatelessWidget {
+  const _InstructionsSection({required this.text});
+  final String text;
+
+  static const List<String> _sectionHeaders = ['MALZEMELER:', 'HAZIRLANIŞI:'];
+
+  @override
+  Widget build(BuildContext context) {
+    final sections = _split(text);
+    if (sections.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _SectionHeading(label: 'Hazırlanışı'),
+          const SizedBox(height: 10),
+          Text(
+            text,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 14,
+              height: 1.5,
+            ),
+          ),
+        ],
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var i = 0; i < sections.length; i++) ...[
+          _SectionHeading(label: sections[i].heading),
+          const SizedBox(height: 10),
+          Text(
+            sections[i].body,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 14,
+              height: 1.5,
+            ),
+          ),
+          if (i != sections.length - 1) const SizedBox(height: 20),
+        ],
+      ],
+    );
+  }
+
+  /// Splits the instruction blob on each recognised section header.
+  /// Header tokens ("MALZEMELER:", "HAZIRLANIŞI:") are stripped from
+  /// the body, and lowercase title-cased versions are used for the
+  /// rendered heading. Returns an empty list when no recognised header
+  /// is present — the caller then falls back to a plain single-block
+  /// render so unstructured legacy instructions still work.
+  List<_InstructionBlock> _split(String source) {
+    final matches = <({int index, String header})>[];
+    for (final header in _sectionHeaders) {
+      final idx = source.indexOf(header);
+      if (idx != -1) matches.add((index: idx, header: header));
+    }
+    if (matches.isEmpty) return const [];
+    matches.sort((a, b) => a.index.compareTo(b.index));
+
+    final blocks = <_InstructionBlock>[];
+    for (var i = 0; i < matches.length; i++) {
+      final start = matches[i].index + matches[i].header.length;
+      final end = i + 1 < matches.length ? matches[i + 1].index : source.length;
+      final body = source.substring(start, end).trim();
+      blocks.add(_InstructionBlock(
+        heading: _headingFor(matches[i].header),
+        body: body,
+      ));
+    }
+    return blocks;
+  }
+
+  String _headingFor(String raw) {
+    switch (raw) {
+      case 'MALZEMELER:':
+        return 'Malzemeler';
+      case 'HAZIRLANIŞI:':
+        return 'Hazırlanışı';
+      default:
+        return raw;
+    }
+  }
+}
+
+class _InstructionBlock {
+  const _InstructionBlock({required this.heading, required this.body});
+  final String heading;
+  final String body;
+}
+
+class _SectionHeading extends StatelessWidget {
+  const _SectionHeading({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label,
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 18,
+        fontWeight: FontWeight.w900,
+        letterSpacing: 0.3,
       ),
     );
   }

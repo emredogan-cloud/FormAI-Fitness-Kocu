@@ -13,6 +13,7 @@ class Recipe {
     required this.prepTimeMinutes,
     this.imageUrl,
     this.instructions,
+    this.tags = const [],
   });
 
   /// Primary key. Stored as [String] regardless of whether the column is
@@ -44,10 +45,20 @@ class Recipe {
   /// newlines for paragraph breaks.
   final String? instructions;
 
+  /// Dietitian-curated category labels (e.g. "Yüksek Protein", "Vegan").
+  /// Populated from the Postgres `text[]` column of the same name. The
+  /// list is immutable; callers should treat missing/empty as "no tag
+  /// overrides, fall back to macro-based heuristics".
+  final List<String> tags;
+
   /// Tolerant parser: coerces numeric fields from either `int` or `num`
   /// (Supabase sometimes returns `double` for integer columns depending
   /// on the driver path), and falls back to 0 for any missing numeric
   /// so a malformed row never crashes the recipe list.
+  ///
+  /// `tags` handles both a Postgres text[] (decoded as `List<dynamic>`
+  /// of strings) and a JSON array, coercing each entry through
+  /// `toString()` so a stray non-string element doesn't throw.
   factory Recipe.fromJson(Map<String, dynamic> json) {
     return Recipe(
       id: json['id']?.toString() ?? '',
@@ -60,6 +71,7 @@ class Recipe {
       prepTimeMinutes: _asInt(json['prep_time_minutes']),
       imageUrl: json['image_url'] as String?,
       instructions: json['instructions'] as String?,
+      tags: _asStringList(json['tags']),
     );
   }
 
@@ -68,5 +80,12 @@ class Recipe {
     if (value is num) return value.round();
     if (value is String) return int.tryParse(value) ?? 0;
     return 0;
+  }
+
+  static List<String> _asStringList(dynamic value) {
+    if (value is List) {
+      return value.map((e) => e.toString()).toList(growable: false);
+    }
+    return const [];
   }
 }

@@ -59,9 +59,9 @@ class RecipeTagBadge extends StatelessWidget {
 
 /// Compact `Wrap` of the recipe's applicable tags. Limits to [maxTags]
 /// badges so the strip doesn't blow out the card footer when a recipe
-/// qualifies for several categories. The selection respects tier
-/// ordering from [recipeTags] (high-protein → low-calorie → bulk →
-/// fast), so the most informative tag wins.
+/// qualifies for several categories. Selection is delegated to
+/// [recipeTags], which prefers dietitian-curated `recipe.tags` and
+/// falls back to macro-based heuristics.
 class RecipeTagsStrip extends StatelessWidget {
   const RecipeTagsStrip({
     super.key,
@@ -94,17 +94,33 @@ class RecipeTagsStrip extends StatelessWidget {
   }
 }
 
-/// Category tags a recipe qualifies for, in priority order:
+/// Returns the tags a recipe should surface in the UI, in priority
+/// order. Two paths:
 ///
-///   1. 🔥 Yüksek Protein — ≥25 g protein.
-///   2. 🥗 Düşük Kalori — ≤400 kcal.
-///   3. 💪 Hacim — ≥500 kcal (the bulk-friendly tier).
-///   4. ⚡ Hızlı — ≤15 min prep time.
+///   1. **Dietitian-curated**: if `recipe.tags` is populated (Phase 24
+///      seed), map each known label onto a styled badge. Unknown labels
+///      still render but with a neutral tint so ad-hoc tags don't crash
+///      the layout.
+///   2. **Macro-heuristic fallback**: when `recipe.tags` is empty (legacy
+///      rows, or user-generated recipes without explicit tagging), fall
+///      back to the macro thresholds introduced in phase 23.2:
+///         • 🔥 Yüksek Protein — ≥25 g protein
+///         • 🥗 Düşük Kalori — ≤400 kcal
+///         • 💪 Hacim — ≥500 kcal
+///         • ⚡ Hızlı — ≤15 min prep time
 ///
-/// A recipe can match several simultaneously (e.g. a high-protein
-/// 10-minute recipe gets both tags). Callers typically [take] the first
-/// one or two so the card stays readable.
+/// The five canonical phase-24 tags each have a dedicated icon/tint:
+///   • 🔥 Yüksek Protein (protein-blue)
+///   • 🥗 Düşük Kalori (neon-green)
+///   • 💪 Hacim (neon-pink)
+///   • ✨ Sıkılaşma (neon-yellow)
+///   • 🌱 Vegan (deep-green)
 List<({String icon, String label, Color tint})> recipeTags(Recipe recipe) {
+  if (recipe.tags.isNotEmpty) {
+    return recipe.tags.map(_badgeForCuratedTag).toList(growable: false);
+  }
+
+  // Macro-heuristic fallback for legacy rows with no `tags` value.
   const highProtein = (
     icon: '🔥',
     label: 'Yüksek Protein',
@@ -132,4 +148,27 @@ List<({String icon, String label, Color tint})> recipeTags(Recipe recipe) {
   if (recipe.calories >= 500) tags.add(bulk);
   if (recipe.prepTimeMinutes <= 15) tags.add(fast);
   return tags;
+}
+
+({String icon, String label, Color tint}) _badgeForCuratedTag(String tag) {
+  switch (tag) {
+    case 'Yüksek Protein':
+      return (
+        icon: '🔥',
+        label: 'Yüksek Protein',
+        tint: const Color(0xFF4DA6FF)
+      );
+    case 'Düşük Kalori':
+      return (icon: '🥗', label: 'Düşük Kalori', tint: const Color(0xFF39FF14));
+    case 'Hacim':
+      return (icon: '💪', label: 'Hacim', tint: const Color(0xFFFF4DDB));
+    case 'Sıkılaşma':
+      return (icon: '✨', label: 'Sıkılaşma', tint: const Color(0xFFEAFF00));
+    case 'Vegan':
+      return (icon: '🌱', label: 'Vegan', tint: const Color(0xFF39C46B));
+    default:
+      // Neutral neon-purple for any server-side tag we don't yet know
+      // about; keeps the UI stable while new categories roll out.
+      return (icon: '•', label: tag, tint: const Color(0xFF8E5BFF));
+  }
 }
