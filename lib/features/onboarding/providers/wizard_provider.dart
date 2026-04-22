@@ -8,6 +8,14 @@ enum GoalPhysique { tone, bulk, sixpack }
 
 enum ActivityLevel { sedentary, light, active }
 
+/// Nutrition preference defaults. Kept as module-level constants so the
+/// onboarding UI, the serialiser, and the macro engine can all reference
+/// the same token if they need to treat the default specially.
+const String kDefaultDietPreference = 'standart';
+const String kDefaultAllergies = 'yok';
+const String kDefaultMealFrequency = '3_ogun';
+const String kDefaultPrepTime = 'hizli';
+
 class WizardState {
   const WizardState({
     this.gender,
@@ -17,6 +25,10 @@ class WizardState {
     this.currentPhysique,
     this.targetPhysique,
     this.activityLevel,
+    this.dietPreference = kDefaultDietPreference,
+    this.allergies = kDefaultAllergies,
+    this.mealFrequency = kDefaultMealFrequency,
+    this.prepTime = kDefaultPrepTime,
   });
 
   final Gender? gender;
@@ -27,6 +39,21 @@ class WizardState {
   final GoalPhysique? targetPhysique;
   final ActivityLevel? activityLevel;
 
+  /// One of: `standart`, `vejetaryen`, `vegan`, `ketojenik`. Keyed in
+  /// Turkish ASCII to match the rest of the wizard's persisted tokens.
+  final String dietPreference;
+
+  /// One of: `yok`, `kuruyemis`, `sut_urunleri`, `gluten`. Intentionally
+  /// a single-select string for now — the recipe filter currently only
+  /// needs one hot exclusion; multi-select can graduate to a list later.
+  final String allergies;
+
+  /// One of: `2_ogun`, `3_ogun`, `4_ogun`.
+  final String mealFrequency;
+
+  /// One of: `hizli` (10-15 min), `yavas` (30+ min).
+  final String prepTime;
+
   WizardState copyWith({
     Gender? gender,
     int? age,
@@ -35,6 +62,10 @@ class WizardState {
     Physique? currentPhysique,
     GoalPhysique? targetPhysique,
     ActivityLevel? activityLevel,
+    String? dietPreference,
+    String? allergies,
+    String? mealFrequency,
+    String? prepTime,
   }) {
     return WizardState(
       gender: gender ?? this.gender,
@@ -44,6 +75,10 @@ class WizardState {
       currentPhysique: currentPhysique ?? this.currentPhysique,
       targetPhysique: targetPhysique ?? this.targetPhysique,
       activityLevel: activityLevel ?? this.activityLevel,
+      dietPreference: dietPreference ?? this.dietPreference,
+      allergies: allergies ?? this.allergies,
+      mealFrequency: mealFrequency ?? this.mealFrequency,
+      prepTime: prepTime ?? this.prepTime,
     );
   }
 
@@ -55,6 +90,10 @@ class WizardState {
         'currentPhysique': currentPhysique?.name,
         'targetPhysique': targetPhysique?.name,
         'activityLevel': activityLevel?.name,
+        'dietPreference': dietPreference,
+        'allergies': allergies,
+        'mealFrequency': mealFrequency,
+        'prepTime': prepTime,
       };
 }
 
@@ -72,6 +111,10 @@ class WizardController extends Notifier<WizardState> {
       state = state.copyWith(targetPhysique: v);
   void setActivityLevel(ActivityLevel v) =>
       state = state.copyWith(activityLevel: v);
+  void setDietPreference(String v) => state = state.copyWith(dietPreference: v);
+  void setAllergies(String v) => state = state.copyWith(allergies: v);
+  void setMealFrequency(String v) => state = state.copyWith(mealFrequency: v);
+  void setPrepTime(String v) => state = state.copyWith(prepTime: v);
 }
 
 final wizardProvider =

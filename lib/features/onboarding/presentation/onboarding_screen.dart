@@ -16,7 +16,9 @@ import 'widgets/wheel_column.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonAccent = Color(0xFF4DA6FF);
-const int _totalSteps = 9;
+// 13 pages total: 2 hook screens + 7 body/fitness questions + 4 nutrition
+// questions (phase 21) + 1 illusion/finish screen.
+const int _totalSteps = 13;
 const int _hookSteps = 2;
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -109,6 +111,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   _CurrentPhysiqueStep(onSelected: _next),
                   _TargetPhysiqueStep(onSelected: _next),
                   _ActivityStep(onSelected: _next),
+                  _DietPreferenceStep(onSelected: _next),
+                  _AllergiesStep(onSelected: _next),
+                  _MealFrequencyStep(onSelected: _next),
+                  _PrepTimeStep(onSelected: _next),
                   IllusionStep(onComplete: _finish),
                 ],
               ),
@@ -1082,6 +1088,277 @@ class _ActivityStep extends ConsumerWidget {
                     subtitle: 'Düzenli antrenman, yüksek tempo.',
                     selected: selected == ActivityLevel.active,
                     onTap: () => pick(ActivityLevel.active),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ============================================================================
+// Nutrition wizard steps (phase 21)
+// ----------------------------------------------------------------------------
+// Four single-select questions that feed the macro engine + recipe filter.
+// All four use [PhotoOptionCard] with `image: null` so each option renders
+// as an icon panel — no photography required, keeps the visual language
+// of the earlier fitness steps while saving asset weight.
+// ============================================================================
+
+class _DietPreferenceStep extends ConsumerWidget {
+  const _DietPreferenceStep({required this.onSelected});
+  final VoidCallback onSelected;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selected = ref.watch(wizardProvider).dietPreference;
+
+    void pick(String value) {
+      ref.read(wizardProvider.notifier).setDietPreference(value);
+      Future<void>.delayed(const Duration(milliseconds: 220), onSelected);
+    }
+
+    return Column(
+      children: [
+        const _StepTitle(
+          title: 'Diyet Tercihin Nedir?',
+          subtitle: 'Tarifleri bu tercihine göre filtreleyeceğiz.',
+        ),
+        const SizedBox(height: 16),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: Column(
+              children: [
+                Expanded(
+                  child: PhotoOptionCard(
+                    fallbackIcon: Icons.restaurant,
+                    title: 'Standart',
+                    subtitle: 'Her şeyi yiyebilirim.',
+                    selected: selected == 'standart',
+                    onTap: () => pick('standart'),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Expanded(
+                  child: PhotoOptionCard(
+                    fallbackIcon: Icons.eco,
+                    title: 'Vejetaryen',
+                    subtitle: 'Et yemem, yumurta/süt olabilir.',
+                    selected: selected == 'vejetaryen',
+                    onTap: () => pick('vejetaryen'),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Expanded(
+                  child: PhotoOptionCard(
+                    fallbackIcon: Icons.spa,
+                    title: 'Vegan',
+                    subtitle: 'Hiçbir hayvansal ürün tüketmem.',
+                    selected: selected == 'vegan',
+                    onTap: () => pick('vegan'),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Expanded(
+                  child: PhotoOptionCard(
+                    fallbackIcon: Icons.local_fire_department,
+                    title: 'Ketojenik',
+                    subtitle: 'Düşük karbonhidrat, yüksek yağ.',
+                    selected: selected == 'ketojenik',
+                    onTap: () => pick('ketojenik'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AllergiesStep extends ConsumerWidget {
+  const _AllergiesStep({required this.onSelected});
+  final VoidCallback onSelected;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selected = ref.watch(wizardProvider).allergies;
+
+    void pick(String value) {
+      ref.read(wizardProvider.notifier).setAllergies(value);
+      Future<void>.delayed(const Duration(milliseconds: 220), onSelected);
+    }
+
+    return Column(
+      children: [
+        const _StepTitle(
+          title: 'Herhangi bir gıda alerjin var mı?',
+          subtitle: 'Tariflerden bu içeriği çıkaracağız.',
+        ),
+        const SizedBox(height: 16),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: Column(
+              children: [
+                Expanded(
+                  child: PhotoOptionCard(
+                    fallbackIcon: Icons.check_circle_outline,
+                    title: 'Yok',
+                    subtitle: 'Bilinen bir alerjim yok.',
+                    selected: selected == 'yok',
+                    onTap: () => pick('yok'),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Expanded(
+                  child: PhotoOptionCard(
+                    fallbackIcon: Icons.scatter_plot,
+                    title: 'Kuruyemiş',
+                    subtitle: 'Badem, fıstık, ceviz vb.',
+                    selected: selected == 'kuruyemis',
+                    onTap: () => pick('kuruyemis'),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Expanded(
+                  child: PhotoOptionCard(
+                    fallbackIcon: Icons.local_drink,
+                    title: 'Süt Ürünleri',
+                    subtitle: 'Süt, peynir, yoğurt vb.',
+                    selected: selected == 'sut_urunleri',
+                    onTap: () => pick('sut_urunleri'),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Expanded(
+                  child: PhotoOptionCard(
+                    fallbackIcon: Icons.bakery_dining,
+                    title: 'Glüten',
+                    subtitle: 'Buğday, arpa, çavdar vb.',
+                    selected: selected == 'gluten',
+                    onTap: () => pick('gluten'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MealFrequencyStep extends ConsumerWidget {
+  const _MealFrequencyStep({required this.onSelected});
+  final VoidCallback onSelected;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selected = ref.watch(wizardProvider).mealFrequency;
+
+    void pick(String value) {
+      ref.read(wizardProvider.notifier).setMealFrequency(value);
+      Future<void>.delayed(const Duration(milliseconds: 220), onSelected);
+    }
+
+    return Column(
+      children: [
+        const _StepTitle(
+          title: 'Günde kaç öğün yersin?',
+          subtitle: 'Kalori dağılımını öğün sayına göre planlayacağız.',
+        ),
+        const SizedBox(height: 16),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: Column(
+              children: [
+                Expanded(
+                  child: PhotoOptionCard(
+                    fallbackIcon: Icons.timer_outlined,
+                    title: '2 Öğün',
+                    subtitle: 'Aralıklı oruç (16:8) tarzı beslenirim.',
+                    selected: selected == '2_ogun',
+                    onTap: () => pick('2_ogun'),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: PhotoOptionCard(
+                    fallbackIcon: Icons.restaurant,
+                    title: '3 Öğün',
+                    subtitle: 'Standart — kahvaltı, öğle, akşam.',
+                    selected: selected == '3_ogun',
+                    onTap: () => pick('3_ogun'),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: PhotoOptionCard(
+                    fallbackIcon: Icons.set_meal,
+                    title: '4+ Öğün',
+                    subtitle: 'Atıştırmalık severim.',
+                    selected: selected == '4_ogun',
+                    onTap: () => pick('4_ogun'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PrepTimeStep extends ConsumerWidget {
+  const _PrepTimeStep({required this.onSelected});
+  final VoidCallback onSelected;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selected = ref.watch(wizardProvider).prepTime;
+
+    void pick(String value) {
+      ref.read(wizardProvider.notifier).setPrepTime(value);
+      Future<void>.delayed(const Duration(milliseconds: 220), onSelected);
+    }
+
+    return Column(
+      children: [
+        const _StepTitle(
+          title: 'Yemek hazırlamak için ne kadar vaktin var?',
+          subtitle: 'Tarifleri süresine göre dengeleyeceğiz.',
+        ),
+        const SizedBox(height: 16),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: Column(
+              children: [
+                Expanded(
+                  child: PhotoOptionCard(
+                    fallbackIcon: Icons.flash_on,
+                    title: 'Hızlı & Pratik',
+                    subtitle: '10-15 dakika içinde hazırlanan tarifler.',
+                    selected: selected == 'hizli',
+                    onTap: () => pick('hizli'),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: PhotoOptionCard(
+                    fallbackIcon: Icons.outdoor_grill,
+                    title: 'Mutfakta Vakit',
+                    subtitle: '30+ dakika. Pişirmekten keyif alırım.',
+                    selected: selected == 'yavas',
+                    onTap: () => pick('yavas'),
                   ),
                 ),
               ],
