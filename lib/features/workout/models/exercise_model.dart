@@ -58,6 +58,42 @@ class Exercise {
   bool get isRepBased => type == ExerciseType.repBased;
   bool get isTimeBased => type == ExerciseType.timeBased;
 
+  Exercise copyWith({
+    String? id,
+    String? name,
+    ExerciseType? type,
+    int? targetReps,
+    int? targetDurationInSeconds,
+    String? videoUrl,
+    int? sets,
+    int? restDurationInSeconds,
+    ExerciseCategory? category,
+    String? description,
+    String? shortTip,
+    String? difficulty,
+    String? targetMuscle,
+    bool? isCardio,
+  }) {
+    return Exercise(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      type: type ?? this.type,
+      targetReps: targetReps ?? this.targetReps,
+      targetDurationInSeconds:
+          targetDurationInSeconds ?? this.targetDurationInSeconds,
+      videoUrl: videoUrl ?? this.videoUrl,
+      sets: sets ?? this.sets,
+      restDurationInSeconds:
+          restDurationInSeconds ?? this.restDurationInSeconds,
+      category: category ?? this.category,
+      description: description ?? this.description,
+      shortTip: shortTip ?? this.shortTip,
+      difficulty: difficulty ?? this.difficulty,
+      targetMuscle: targetMuscle ?? this.targetMuscle,
+      isCardio: isCardio ?? this.isCardio,
+    );
+  }
+
   @override
   bool operator ==(Object other) =>
       other is Exercise &&

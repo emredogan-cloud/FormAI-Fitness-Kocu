@@ -803,6 +803,64 @@ class WorkoutRepository {
   );
 
   // ==========================================================================
+  // EXERCISE POOL — flat list of every movement the generator service can
+  // draw from. Kept in insertion order (core → chest → legs → back →
+  // shoulders → arms → cardio/full-body) so rotation through the list
+  // gives a balanced default sequence before any goal-specific filtering.
+  // ==========================================================================
+
+  static final List<Exercise> allExercises = [
+    // Core
+    _crunch,
+    _situp,
+    _plank,
+    _legRaise,
+    _hangingLegRaise,
+    _russianTwist,
+    _mountainClimber,
+    _bicycleCrunch,
+    _flutterKick,
+    // Chest
+    _pushUp,
+    _inclinePushUp,
+    _declinePushUp,
+    _chestDip,
+    _benchPress,
+    _chestFly,
+    // Legs
+    _squat,
+    _lunge,
+    _bulgarianSplitSquat,
+    _legPress,
+    _calfRaise,
+    _wallSit,
+    // Back
+    _pullUp,
+    _chinUp,
+    _latPulldown,
+    _barbellRow,
+    _superman,
+    // Shoulders
+    _shoulderPress,
+    _lateralRaise,
+    _frontRaise,
+    _arnoldPress,
+    _pikePushUp,
+    // Arms
+    _bicepsCurl,
+    _hammerCurl,
+    _tricepsDip,
+    _tricepsPushdown,
+    _closeGripPushUp,
+    // Cardio & Full Body
+    _burpee,
+    _jumpingJack,
+    _highKnees,
+    _jumpSquat,
+    _skippingRope,
+  ];
+
+  // ==========================================================================
   // "SINIRLARINI ZORLA" DASHBOARD CARDS
   // Exposed as top-level static const so the dashboard strip can reference
   // them directly (and push them into /plan-detail via `extra:`).
