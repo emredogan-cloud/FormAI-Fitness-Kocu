@@ -427,8 +427,7 @@ class WorkoutRepository {
     restDurationInSeconds: 30,
     category: ExerciseCategory.legs,
     videoUrl: _videoUrl('CalfRaise.mp4'),
-    description:
-        'Parmak uçlarına yüksel, en tepede bir saniye sık ve yavaşça başlangıca dön.',
+    description: 'Kalf kaldırma. Parmak uçlarında yüksel ve baldırlarını sık.',
     shortTip: 'Tepe noktasında 1 saniye sık.',
     difficulty: 'beginner',
     targetMuscle: 'lower_body',
@@ -445,7 +444,7 @@ class WorkoutRepository {
     category: ExerciseCategory.legs,
     videoUrl: _videoUrl('WallSit.mp4'),
     description:
-        'Sırtını duvara yasla, dizlerini 90 dereceye getir ve sabit pozisyonda kal.',
+        'Duvara oturuş. Sırtını duvara daya ve dizlerini doksan derece bükerek bekle.',
     shortTip: 'Topuğunla bas, çakılı kal.',
     difficulty: 'beginner',
     targetMuscle: 'lower_body',
@@ -534,7 +533,7 @@ class WorkoutRepository {
     category: ExerciseCategory.back,
     videoUrl: _videoUrl('Superman.mp4'),
     description:
-        'Yüz üstü uzan, kollar ve bacaklarını aynı anda yukarı kaldır ve sabit kal.',
+        'Superman. Karın üstü yat, kollarını ve bacaklarını aynı anda havaya kaldır.',
     shortTip: 'Boynunu nötr tut.',
     difficulty: 'beginner',
     targetMuscle: 'upper_body',
@@ -767,7 +766,7 @@ class WorkoutRepository {
     category: ExerciseCategory.fullBody,
     videoUrl: _videoUrl('HighKness.mp4'),
     description:
-        'Olduğun yerde dizlerini sırayla kalçanı geçecek kadar hızla yukarı çekiştir.',
+        'Diz çekme. Olduğun yerde dizlerini göğsüne doğru olabildiğince yüksek çek.',
     shortTip: 'Kollarını da çalıştır.',
     difficulty: 'beginner',
     targetMuscle: 'cardio',
@@ -800,8 +799,7 @@ class WorkoutRepository {
     restDurationInSeconds: 30,
     category: ExerciseCategory.fullBody,
     videoUrl: _videoUrl('SkippingRope.mp4'),
-    description:
-        'Bilek dönüşüyle ipi çevir, hafif tempoda ritmik olarak alçak zıplamalar yap.',
+    description: 'İp atlama. Temponu koru ve ayak uçlarında zıpla.',
     shortTip: 'Diz hafif bükülü, ip kısa.',
     difficulty: 'beginner',
     targetMuscle: 'cardio',

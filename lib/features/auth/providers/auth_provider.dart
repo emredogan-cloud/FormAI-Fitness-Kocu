@@ -11,6 +11,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/services/app_preferences.dart';
+import '../../monetization/providers/monetization_provider.dart';
+import '../../onboarding/providers/wizard_provider.dart';
+import '../../workout/providers/workout_provider.dart';
+
 /// Streams Supabase auth state changes (login, logout, refresh).
 final authStateProvider = StreamProvider<AuthState>((ref) {
   return Supabase.instance.client.auth.onAuthStateChange;
@@ -54,8 +59,15 @@ enum DeleteAccountOutcome { success, error }
 /// to Supabase. Kept as a plain class (not a Notifier) because the global
 /// auth state is already watched via [authStateProvider]; the screen just
 /// needs a one-shot `Future` it can await.
+///
+/// Holds a [Ref] so sign-out / delete-account can invalidate the
+/// user-scoped providers whose caches would otherwise survive an identity
+/// change — see [_invalidateUserScopedProviders] for the list and the
+/// ghost-data incident that motivated it.
 class AuthController {
-  const AuthController();
+  AuthController(this._ref);
+
+  final Ref _ref;
 
   Future<SocialAuthOutcome> signInWithGoogle() async {
     try {
@@ -174,7 +186,34 @@ class AuthController {
     } catch (e) {
       debugPrint('deleteAccount prefs.clear (non-fatal): $e');
     }
+    _invalidateUserScopedProviders();
     return DeleteAccountOutcome.success;
+  }
+
+  /// Signs the current user out of Supabase and clears the user-scoped
+  /// provider caches so the next login sees a fresh slate. Callers can
+  /// treat the returned future as "done when the UI is safe to
+  /// redirect" — the router's authRefreshListenable will then route
+  /// them to /auth automatically.
+  Future<void> signOut() async {
+    try {
+      await Supabase.instance.client.auth.signOut();
+    } catch (e, st) {
+      debugPrint('signOut failed: $e\n$st');
+    }
+    _invalidateUserScopedProviders();
+  }
+
+  /// Invalidates every provider whose cached value belongs to the
+  /// signed-in user. Riverpod rebuilds them lazily on next read, so the
+  /// next login / guest session lands on a clean state instead of
+  /// inheriting the previous account's 30-day plan, pro entitlement,
+  /// preference wrapper, or onboarding wizard state.
+  void _invalidateUserScopedProviders() {
+    _ref.invalidate(workoutSessionProvider);
+    _ref.invalidate(subscriptionProvider);
+    _ref.invalidate(appPreferencesProvider);
+    _ref.invalidate(wizardProvider);
   }
 
   String? _envOrNull(String key) {
@@ -199,5 +238,5 @@ class AuthController {
 }
 
 final authControllerProvider = Provider<AuthController>((ref) {
-  return const AuthController();
+  return AuthController(ref);
 });

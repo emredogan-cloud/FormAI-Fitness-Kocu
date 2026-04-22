@@ -143,13 +143,14 @@ class _AntrenmanTabState extends ConsumerState<AntrenmanTab> {
         ),
         const SizedBox(height: 26),
         const _SectionTitle(
-          title: 'Günlük Meydan Okuma',
+          title: 'Kişisel Antrenman Programın',
           trailingIcon: Icons.tune,
         ),
         const SizedBox(height: 12),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: ChallengeHeroCard(
+            title: _challengeTitleFor(nextDay),
             dayNumber: nextDay?.dayNumber ?? 1,
             completed: completed,
             total: 30,
@@ -194,6 +195,38 @@ class _AntrenmanTabState extends ConsumerState<AntrenmanTab> {
       if (!day.isCompleted) return day;
     }
     return null;
+  }
+
+  /// Builds a human title for the next-up day on the dashboard card.
+  /// Rest days short-circuit to "Dinlenme Günü"; active days pick a
+  /// title from the dominant `targetMuscle` of that day's exercises so
+  /// a core-heavy day and a cardio-heavy day don't both read as
+  /// "Karın Kasları".
+  String _challengeTitleFor(WorkoutDay? day) {
+    if (day == null) return 'Kişisel Antrenman';
+    if (day.isRestDay) return 'Dinlenme Günü';
+
+    final counts = <String, int>{};
+    for (final exercise in day.exercises) {
+      counts[exercise.targetMuscle] = (counts[exercise.targetMuscle] ?? 0) + 1;
+    }
+    if (counts.isEmpty) return 'Kişisel Antrenman';
+
+    final dominant =
+        counts.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
+    switch (dominant) {
+      case 'core':
+        return 'Sert Karın Kasları';
+      case 'upper_body':
+        return 'Üst Vücut Gücü';
+      case 'lower_body':
+        return 'Bacak ve Kalça Ateşi';
+      case 'cardio':
+      case 'full_body':
+        return 'Tüm Vücut Kondisyon';
+      default:
+        return 'Kişisel Antrenman';
+    }
   }
 }
 

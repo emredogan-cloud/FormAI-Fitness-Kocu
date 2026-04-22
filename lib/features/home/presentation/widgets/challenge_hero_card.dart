@@ -5,11 +5,18 @@ const Color _neon = Color(0xFF8E5BFF);
 class ChallengeHeroCard extends StatelessWidget {
   const ChallengeHeroCard({
     super.key,
+    required this.title,
     required this.dayNumber,
     required this.completed,
     required this.total,
     required this.onTap,
   });
+
+  /// Headline shown at the top of the card. Derived from the current
+  /// day's content upstream in `antrenman_tab.dart` — rest days get
+  /// "Dinlenme Günü"; active days get a title inferred from the day's
+  /// dominant `targetMuscle`.
+  final String title;
 
   final int dayNumber;
   final int completed;
@@ -67,9 +74,9 @@ class ChallengeHeroCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Taş Gibi Sert\nKarın Kasları',
-                    style: TextStyle(
+                  Text(
+                    title,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 20,
                       fontWeight: FontWeight.w900,

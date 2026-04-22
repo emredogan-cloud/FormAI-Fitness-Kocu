@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/routing/app_router.dart';
 import '../../../../core/services/app_preferences.dart';
@@ -276,8 +275,11 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
   }
 
   Future<void> _signOut(BuildContext context) async {
+    // Route through AuthController so the user-scoped providers get
+    // invalidated — otherwise the next login inherits this user's cached
+    // 30-day plan, pro entitlement, and wizard state.
     try {
-      await Supabase.instance.client.auth.signOut();
+      await ref.read(authControllerProvider).signOut();
     } catch (_) {
       if (context.mounted) _toast(context, 'Çıkış başarısız');
     }
