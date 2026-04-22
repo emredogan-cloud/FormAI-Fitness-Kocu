@@ -18,20 +18,22 @@ const Color _proteinColor = Color(0xFF4DA6FF);
 const Color _carbsColor = Color(0xFFFF4DDB);
 const Color _fatColor = Color(0xFFEAFF00);
 
-/// Vertical meal-plan timeline rendered directly under the AI insight
-/// banner. Reads [dailyMenuProvider] and paints one [_MealCard] per
-/// planned meal, stitched together by a continuous neon gutter on the
-/// left so the day reads as a chronological arc.
+/// Accordion meal-plan timeline rendered as a direct sliver inside the
+/// nutrition tab's [CustomScrollView].
 ///
-/// Adds in phase 25.1:
-///   • Time-based "Şu an" highlight on the meal matching the current
-///     hour-of-day block when its status is still `planned`.
+/// Phase 26 behaviour:
+///   • "Current" = first meal with `status == planned` (not time-based
+///     any more). Current meal is **expanded**, has a neon glow, and
+///     shows the "⏳ Şu an" badge.
+///   • All other meals (future-planned, completed, skipped) default to
+///     **collapsed** — a single line showing slot label + status icon
+///     + recipe title at reduced weight. Tapping expands the full card.
 ///   • Over-calorie switch: when consumed ≥ target, the planned meal
 ///     cards swap their primary CTA from "Yedim" to the warning
 ///     "❌ Daha Hafif Alternatif Gör" which routes to the next-best
 ///     (light) suggestion.
-class MealPlanTimeline extends ConsumerWidget {
-  const MealPlanTimeline({super.key});
+class MealPlanSliver extends ConsumerWidget {
+  const MealPlanSliver({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -40,65 +42,65 @@ class MealPlanTimeline extends ConsumerWidget {
     final consumed = ref.watch(consumedMacrosProvider);
     final overCalories =
         target.calories > 0 && consumed.calories >= target.calories;
-    // Phase 25.2 returns a NextMealRecommendation; only the recipe is
-    // needed here for the over-calorie warning CTA.
     final lighterSuggestion = ref.watch(nextBestMealProvider)?.recipe;
-    final currentSlot = _currentSlotForHour(DateTime.now().hour);
 
     return menuAsync.when(
-      loading: () => const Padding(
-        padding: EdgeInsets.symmetric(vertical: 32),
-        child: Center(child: CircularProgressIndicator(color: _neon)),
+      loading: () => const SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 32),
+          child: Center(child: CircularProgressIndicator(color: _neon)),
+        ),
       ),
       error: (err, st) {
-        debugPrint('MealPlanTimeline menu error: $err\n$st');
-        return ErrorCard(
-          message: 'Günün menüsü yüklenemedi.',
-          onRetry: () => ref.invalidate(dailyMenuProvider),
+        debugPrint('MealPlanSliver menu error: $err\n$st');
+        return SliverToBoxAdapter(
+          child: ErrorCard(
+            message: 'Günün menüsü yüklenemedi.',
+            onRetry: () => ref.invalidate(dailyMenuProvider),
+          ),
         );
       },
       data: (meals) {
         if (meals.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20),
-            child: _EmptyPlaceholder(
-              message: 'Günün menüsü için tercih bulunamadı.',
+          return const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: _EmptyPlaceholder(
+                message: 'Günün menüsü için tercih bulunamadı.',
+              ),
             ),
           );
         }
-        return Padding(
+        final currentMealId = _firstPlannedId(meals);
+        return SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            children: [
-              for (var i = 0; i < meals.length; i++)
-                _TimelineRow(
-                  meal: meals[i],
-                  isFirst: i == 0,
-                  isLast: i == meals.length - 1,
-                  isCurrent: _isCurrent(meals[i], currentSlot),
-                  overCalories: overCalories,
-                  lighterSuggestion: lighterSuggestion,
-                ),
-            ],
+          sliver: SliverList.builder(
+            itemCount: meals.length,
+            itemBuilder: (context, i) {
+              final meal = meals[i];
+              return _TimelineRow(
+                meal: meal,
+                isFirst: i == 0,
+                isLast: i == meals.length - 1,
+                isCurrent: meal.id == currentMealId,
+                overCalories: overCalories,
+                lighterSuggestion: lighterSuggestion,
+              );
+            },
           ),
         );
       },
     );
   }
 
-  /// Maps the hour-of-day to the slot the timeline should highlight.
-  /// Night hours (23:00-05:59) return `null` so the timeline rests
-  /// without a fake target while the user is presumably asleep.
-  static DailyMealSlot? _currentSlotForHour(int hour) {
-    if (hour >= 6 && hour < 12) return DailyMealSlot.breakfast;
-    if (hour >= 12 && hour < 17) return DailyMealSlot.lunch;
-    if (hour >= 17 && hour < 23) return DailyMealSlot.dinner;
+  /// Returns the id of the first meal still marked `planned`. When the
+  /// whole day is complete (all meals logged or skipped) this returns
+  /// null and no card gets the "current" highlight.
+  static String? _firstPlannedId(List<PlannedMeal> meals) {
+    for (final meal in meals) {
+      if (meal.status == MealStatus.planned) return meal.id;
+    }
     return null;
-  }
-
-  static bool _isCurrent(PlannedMeal meal, DailyMealSlot? slot) {
-    if (slot == null) return false;
-    return meal.slot == slot && meal.status == MealStatus.planned;
   }
 }
 
@@ -130,6 +132,7 @@ class _TimelineRow extends StatelessWidget {
             child: CustomPaint(
               painter: _TimelineGutterPainter(
                 status: meal.status,
+                isCurrent: isCurrent,
                 isFirst: isFirst,
                 isLast: isLast,
               ),
@@ -152,18 +155,19 @@ class _TimelineRow extends StatelessWidget {
   }
 }
 
-/// Paints the vertical connecting line plus a status-coloured dot at
-/// the top of each row. First row has no line above, last row has no
-/// line below, so the connective tissue flows continuously through the
-/// list.
+/// Paints the vertical connecting line + status-coloured dot at the
+/// top of each row. The current meal's dot gets an extra glow so the
+/// "you are here" marker is obvious even on a crowded list.
 class _TimelineGutterPainter extends CustomPainter {
   const _TimelineGutterPainter({
     required this.status,
+    required this.isCurrent,
     required this.isFirst,
     required this.isLast,
   });
 
   final MealStatus status;
+  final bool isCurrent;
   final bool isFirst;
   final bool isLast;
 
@@ -205,31 +209,34 @@ class _TimelineGutterPainter extends CustomPainter {
     }
     final color = _dotColor;
     final glow = Paint()
-      ..color = color.withValues(alpha: 0.55)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
-    canvas.drawCircle(Offset(centerX, _dotY), _dotRadius, glow);
+      ..color = color.withValues(alpha: isCurrent ? 0.9 : 0.55)
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, isCurrent ? 10 : 6);
+    canvas.drawCircle(
+      Offset(centerX, _dotY),
+      isCurrent ? _dotRadius + 1 : _dotRadius,
+      glow,
+    );
     final dot = Paint()..color = color;
-    canvas.drawCircle(Offset(centerX, _dotY), _dotRadius, dot);
+    canvas.drawCircle(
+      Offset(centerX, _dotY),
+      isCurrent ? _dotRadius + 0.5 : _dotRadius,
+      dot,
+    );
   }
 
   @override
   bool shouldRepaint(covariant _TimelineGutterPainter old) =>
-      old.status != status || old.isFirst != isFirst || old.isLast != isLast;
+      old.status != status ||
+      old.isCurrent != isCurrent ||
+      old.isFirst != isFirst ||
+      old.isLast != isLast;
 }
 
-/// One meal entry. Stateful purely for the expansion toggle on
-/// completed meals — everything else is driven by [PlannedMeal.status].
+/// Accordion meal entry. Stateful purely for the expansion toggle —
+/// everything else is driven by [PlannedMeal.status] + [isCurrent].
 ///
-/// Behaviour matrix:
-///   • `planned` → full card with secondary Değiştir + primary Yedim
-///     (swaps to a warning "Daha Hafif Alternatif Gör" when the user
-///     is already over today's calorie target), plus a tertiary
-///     "Detay" link. A `⏳ Şu an` pill + glowing border + Transform.scale
-///     highlight the meal matching the current hour block.
-///   • `completed` → collapses to a single "✔ Title (Tamamlandı)" row
-///     by default. Tapping expands back to the full card with a
-///     "Geri Al" action.
-///   • `skipped` → full card with a "Geri Al" action.
+/// Default-expanded rule: `_expanded = isCurrent`. Every non-current
+/// card starts collapsed (saves vertical space per phase 26 spec).
 class _MealCard extends ConsumerStatefulWidget {
   const _MealCard({
     required this.meal,
@@ -253,15 +260,21 @@ class _MealCardState extends ConsumerState<_MealCard> {
   @override
   void initState() {
     super.initState();
-    _expanded = widget.meal.status != MealStatus.completed;
+    // Phase 26: all non-current meals collapse by default, regardless
+    // of whether they are future-planned, completed, or skipped.
+    _expanded = widget.isCurrent;
   }
 
   @override
   void didUpdateWidget(covariant _MealCard old) {
     super.didUpdateWidget(old);
-    // Only auto-collapse on the planned → completed transition. If the
-    // user manually expands a completed card, that expanded state
-    // persists until they explicitly collapse or the meal is reset.
+    // When this card becomes the current meal (user skipped the
+    // previous one, say), auto-expand so they see the action row.
+    if (!old.isCurrent && widget.isCurrent) {
+      _expanded = true;
+    }
+    // When a meal transitions into a completed state, auto-collapse —
+    // the user just acted on it, reduce visual weight.
     if (old.meal.status != MealStatus.completed &&
         widget.meal.status == MealStatus.completed) {
       _expanded = false;
@@ -270,8 +283,8 @@ class _MealCardState extends ConsumerState<_MealCard> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.meal.status == MealStatus.completed && !_expanded) {
-      return _CollapsedCompletedCard(
+    if (!_expanded) {
+      return _CollapsedCard(
         meal: widget.meal,
         onTap: () => setState(() => _expanded = true),
       );
@@ -281,19 +294,28 @@ class _MealCardState extends ConsumerState<_MealCard> {
       isCurrent: widget.isCurrent,
       overCalories: widget.overCalories,
       lighterSuggestion: widget.lighterSuggestion,
+      onCollapse: () => setState(() => _expanded = false),
     );
   }
 }
 
-class _CollapsedCompletedCard extends StatelessWidget {
-  const _CollapsedCompletedCard({required this.meal, required this.onTap});
+/// Minimal single-line row used for every non-current meal.
+///   • completed → "✔ KAHVALTI · {title} (Tamamlandı)" strikethrough
+///   • skipped   → "✖ KAHVALTI · {title} (Atlandı)" strikethrough
+///   • planned   → "KAHVALTI · {title}" subtle
+class _CollapsedCard extends StatelessWidget {
+  const _CollapsedCard({required this.meal, required this.onTap});
   final PlannedMeal meal;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final status = meal.status;
+    final (icon, iconColor, borderColor, suffix, opacity, strike) =
+        _visualsFor(status);
+
     return Opacity(
-      opacity: 0.6,
+      opacity: opacity,
       child: Material(
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(14),
@@ -305,22 +327,34 @@ class _CollapsedCompletedCard extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
               color: Colors.white.withValues(alpha: 0.03),
-              border: Border.all(color: _neonGreen.withValues(alpha: 0.35)),
+              border: Border.all(color: borderColor),
             ),
             child: Row(
               children: [
-                const Icon(Icons.check_circle, color: _neonGreen, size: 18),
+                if (icon != null) ...[
+                  Icon(icon, color: iconColor, size: 18),
+                  const SizedBox(width: 10),
+                ],
+                Text(
+                  _slotLabel(meal.slot),
+                  style: const TextStyle(
+                    color: _neon,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.6,
+                  ),
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    '${meal.recipe.title} (Tamamlandı)',
+                    '${meal.recipe.title}$suffix',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white70,
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      decoration: TextDecoration.lineThrough,
+                      decoration: strike ? TextDecoration.lineThrough : null,
                       decorationColor: Colors.white38,
                     ),
                   ),
@@ -337,6 +371,40 @@ class _CollapsedCompletedCard extends StatelessWidget {
       ),
     );
   }
+
+  (IconData?, Color?, Color, String, double, bool) _visualsFor(
+    MealStatus status,
+  ) {
+    switch (status) {
+      case MealStatus.completed:
+        return (
+          Icons.check_circle,
+          _neonGreen,
+          _neonGreen.withValues(alpha: 0.35),
+          ' (Tamamlandı)',
+          0.6,
+          true,
+        );
+      case MealStatus.skipped:
+        return (
+          Icons.cancel_outlined,
+          _skippedColor,
+          _skippedColor.withValues(alpha: 0.35),
+          ' (Atlandı)',
+          0.55,
+          true,
+        );
+      case MealStatus.planned:
+        return (
+          null,
+          null,
+          Colors.white12,
+          '',
+          1.0,
+          false,
+        );
+    }
+  }
 }
 
 class _ExpandedCard extends ConsumerWidget {
@@ -345,97 +413,96 @@ class _ExpandedCard extends ConsumerWidget {
     required this.isCurrent,
     required this.overCalories,
     required this.lighterSuggestion,
+    required this.onCollapse,
   });
 
   final PlannedMeal meal;
   final bool isCurrent;
   final bool overCalories;
   final Recipe? lighterSuggestion;
+  final VoidCallback onCollapse;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifier = ref.read(dailyMenuProvider.notifier);
     final recipe = meal.recipe;
-    final dimmed = meal.status != MealStatus.planned;
 
-    final card = AnimatedOpacity(
-      duration: const Duration(milliseconds: 200),
-      opacity: dimmed ? 0.7 : 1.0,
-      child: _CardShell(
-        onTap: () => context.push('/recipe', extra: recipe),
-        borderColor: _borderColorFor(
-          status: meal.status,
-          isCurrent: isCurrent,
-        ),
-        glow: isCurrent,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: SizedBox(
-                      width: 68,
-                      height: 68,
-                      child: _RecipeThumb(imageUrl: recipe.imageUrl),
-                    ),
+    final card = _CardShell(
+      onTap: () => context.push('/recipe', extra: recipe),
+      borderColor: _borderColorFor(
+        status: meal.status,
+        isCurrent: isCurrent,
+      ),
+      glow: isCurrent,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: SizedBox(
+                    width: 68,
+                    height: 68,
+                    child: _RecipeThumb(imageUrl: recipe.imageUrl),
                   ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _HeaderRow(
-                          slot: meal.slot,
-                          status: meal.status,
-                          isCurrent: isCurrent,
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _HeaderRow(
+                        slot: meal.slot,
+                        status: meal.status,
+                        isCurrent: isCurrent,
+                        onCollapse: onCollapse,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        recipe.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          height: 1.2,
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          recipe.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                            height: 1.2,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        _MacroStrip(recipe: recipe),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 8),
+                      _MacroStrip(recipe: recipe),
+                    ],
                   ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              _PrimaryActionRow(
-                meal: meal,
-                notifier: notifier,
-                overCalories: overCalories,
-                lighterSuggestion: lighterSuggestion,
-              ),
-              const SizedBox(height: 6),
-              _TertiaryRow(recipe: recipe),
-            ],
-          ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _PrimaryActionRow(
+              meal: meal,
+              notifier: notifier,
+              overCalories: overCalories,
+              lighterSuggestion: lighterSuggestion,
+            ),
+            const SizedBox(height: 6),
+            _TertiaryRow(recipe: recipe),
+          ],
         ),
       ),
     );
-
-    // Scale 1.02 amplifies the "current meal" affordance without pushing
-    // the row's layout footprint enough to shove neighbours.
     if (!isCurrent) return card;
+    // Slight scale-up on the current meal amplifies its presence
+    // without disturbing layout neighbours.
     return Transform.scale(scale: 1.02, child: card);
   }
 
-  Color? _borderColorFor(
-      {required MealStatus status, required bool isCurrent}) {
+  Color? _borderColorFor({
+    required MealStatus status,
+    required bool isCurrent,
+  }) {
     if (isCurrent) return _neon;
     switch (status) {
       case MealStatus.completed:
@@ -453,11 +520,13 @@ class _HeaderRow extends StatelessWidget {
     required this.slot,
     required this.status,
     required this.isCurrent,
+    required this.onCollapse,
   });
 
   final DailyMealSlot slot;
   final MealStatus status;
   final bool isCurrent;
+  final VoidCallback onCollapse;
 
   @override
   Widget build(BuildContext context) {
@@ -479,12 +548,27 @@ class _HeaderRow extends StatelessWidget {
           const SizedBox(width: 8),
           _StatusPill(status: status),
         ],
+        const Spacer(),
+        // Collapse affordance on non-current cards (a user might re-fold
+        // the card after peeking). Current meal stays pinned open.
+        if (!isCurrent)
+          InkWell(
+            customBorder: const CircleBorder(),
+            onTap: onCollapse,
+            child: const Padding(
+              padding: EdgeInsets.all(4),
+              child: Icon(
+                Icons.expand_less_rounded,
+                color: Colors.white38,
+                size: 18,
+              ),
+            ),
+          ),
       ],
     );
   }
 }
 
-/// "Şu an" pill that marks the meal matching the current hour block.
 class _CurrentNowPill extends StatelessWidget {
   const _CurrentNowPill();
 
@@ -629,13 +713,9 @@ class _YedimButton extends StatelessWidget {
   }
 }
 
-/// Over-calorie warning CTA. Replaces "Yedim" / "Hemen Ekle" when the
-/// user has already met or exceeded their daily calorie target.
-///
-/// Tapping routes to the next-best-meal recipe detail (Priority 2 of
-/// [NextBestMealService] fires when remaining calories are low, so the
-/// suggestion skews light). If no suggestion is available the button
-/// is disabled — we don't want to shove the user onto an empty view.
+/// Outlined warning CTA per the phase 26 over-calorie switch spec. The
+/// button is outlined (not filled) so the visual weight is lower than
+/// a green Yedim — matching "no new calories, go reconsider".
 class _LighterAlternativeButton extends StatelessWidget {
   const _LighterAlternativeButton({required this.suggestion});
   final Recipe? suggestion;
@@ -643,7 +723,7 @@ class _LighterAlternativeButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final enabled = suggestion != null;
-    return FilledButton.icon(
+    return OutlinedButton.icon(
       onPressed: enabled
           ? () {
               HapticFeedback.lightImpact();
@@ -652,13 +732,16 @@ class _LighterAlternativeButton extends StatelessWidget {
           : null,
       icon: const Icon(Icons.cancel_outlined, size: 16),
       label: const Text(
-        'Daha Hafif Alternatif Gör',
+        'Daha Hafif Alternatif',
         overflow: TextOverflow.ellipsis,
       ),
-      style: FilledButton.styleFrom(
-        backgroundColor: _warningColor,
-        foregroundColor: Colors.white,
-        disabledBackgroundColor: _warningColor.withValues(alpha: 0.35),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: _warningColor,
+        side: BorderSide(
+          color: _warningColor.withValues(alpha: enabled ? 1.0 : 0.35),
+          width: 1.2,
+        ),
+        disabledForegroundColor: _warningColor.withValues(alpha: 0.35),
         padding: const EdgeInsets.symmetric(vertical: 10),
         textStyle: const TextStyle(
           fontWeight: FontWeight.w900,
@@ -673,10 +756,6 @@ class _LighterAlternativeButton extends StatelessWidget {
   }
 }
 
-/// Tertiary action — opens the recipe detail explicitly. The card
-/// body tap already does this, but having a labelled affordance makes
-/// the hierarchy obvious and is easier for accessibility tools to
-/// announce.
 class _TertiaryRow extends StatelessWidget {
   const _TertiaryRow({required this.recipe});
   final Recipe recipe;

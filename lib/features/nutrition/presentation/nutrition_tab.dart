@@ -1,332 +1,310 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/widgets/error_card.dart';
 import '../domain/models/macro_target.dart';
 import '../domain/models/recipe.dart';
+import '../domain/services/next_best_meal_service.dart';
+import '../providers/daily_menu_provider.dart';
 import '../providers/nutrition_provider.dart';
-import 'widgets/ai_insight_banner.dart';
 import 'widgets/meal_plan_timeline.dart';
-import 'widgets/next_best_meal_card.dart';
 import 'widgets/recipe_tags.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
-const Color _proteinColor = Color(0xFF4DA6FF); // neon blue
-const Color _carbsColor = Color(0xFFFF4DDB); // neon pink
-const Color _fatColor = Color(0xFFEAFF00); // neon yellow
+const Color _neonGreen = Color(0xFF39FF14);
+const Color _warningColor = Color(0xFFFF5577);
+const Color _proteinColor = Color(0xFF4DA6FF);
 
-// Traffic-light palette for the calorie ring's "on track / low / over"
-// readout — tuned warmer than pure red/green/yellow so the ring still
-// reads as neon instead of dashboard-warning-ugly.
-const Color _statusOnTrack = Color(0xFF39FF14); // neon green
-const Color _statusLow = Color(0xFFEAFF00); // neon yellow
-const Color _statusOver = Color(0xFFFF5577); // neon red
+// Traffic-light palette for the calorie ring.
+const Color _statusOnTrack = Color(0xFF39FF14);
+const Color _statusLow = Color(0xFFEAFF00);
+const Color _statusOver = Color(0xFFFF5577);
 
-/// Nutrition home surface. Reads the user's stored body metrics via
-/// [macroTargetProvider], their consumed macros via
-/// [consumedMacrosProvider], and renders a decision-first stack:
-/// dashboard header → macro status card → AI coach banner →
-/// next-best-meal card → meal plan timeline → recipe discovery.
+/// Phase 26 decision-first dashboard. Everything the user needs to act
+/// on their day (calorie ring + AI prescription + next best meal with
+/// a single green CTA) is packed into a `SliverAppBar` hero that
+/// collapses to a persistent "1200 kcal kaldı | P %70" toolbar as the
+/// user scrolls. Below the hero: the accordion meal timeline, then a
+/// compact discovery strip.
 ///
-/// Stateful because the AI coach banner's "Öneriyi Gör" CTA scrolls
-/// the tab down to the next-best-meal section; that needs a
-/// [GlobalKey] held across rebuilds.
-class NutritionTab extends ConsumerStatefulWidget {
+/// Structural deltas from the pre-26 layout:
+///   • No more `SingleChildScrollView` + `Column`. The tab is a
+///     `CustomScrollView` with slivers so we can pin the hero.
+///   • `_DailyDashboardHeader` / `_DailyScoreCard` / `_MacroStatusCard`
+///     / the standalone `AiInsightBanner` / `NextBestMealCard` are all
+///     gone — their content is absorbed into the one hero panel so
+///     the user doesn't have to scroll past five separate cards to
+///     make one decision.
+class NutritionTab extends ConsumerWidget {
   const NutritionTab({super.key});
 
+  /// Total expanded height of the hero sliver. Tuned to fit calorie
+  /// ring + AI insight + next-best preview + CTA on a 6.1" phone
+  /// without clipping.
+  static const double _expandedHeight = 420;
+
   @override
-  ConsumerState<NutritionTab> createState() => _NutritionTabState();
-}
-
-class _NutritionTabState extends ConsumerState<NutritionTab> {
-  /// Attached to the next-best-meal section so the coach banner can
-  /// scroll to it with [Scrollable.ensureVisible].
-  final GlobalKey _suggestionKey = GlobalKey();
-
-  Future<void> _scrollToSuggestion() async {
-    final target = _suggestionKey.currentContext;
-    if (target == null) return;
-    await Scrollable.ensureVisible(
-      target,
-      duration: const Duration(milliseconds: 450),
-      curve: Curves.easeInOutCubic,
-      alignment: 0.1,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final recipesAsync = ref.watch(recipesProvider);
+    return CustomScrollView(
+      slivers: [
+        _DecisionPanelSliver(expandedHeight: _expandedHeight),
+        const SliverPadding(
+          padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
+          sliver: SliverToBoxAdapter(
+            child: _SectionTitle(title: 'Günün Menüsü'),
+          ),
+        ),
+        const MealPlanSliver(),
+        SliverToBoxAdapter(
+          child: _DiscoverySectionHeader(
+            onSeeAll: () => _showComingSoon(context),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: recipesAsync.when(
+            loading: () => const SizedBox(
+              height: 180,
+              child: Center(
+                child: CircularProgressIndicator(color: _neon),
+              ),
+            ),
+            error: (_, __) => const SizedBox.shrink(),
+            data: (recipes) => _DiscoveryStrip(recipes: recipes),
+          ),
+        ),
+        const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
+      ],
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final recipesAsync = ref.watch(recipesProvider);
-    final target = ref.watch(macroTargetProvider);
-    final consumed = ref.watch(consumedMacrosProvider);
-    final suggestion = ref.watch(nextBestMealProvider);
+  static void _showComingSoon(BuildContext context) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text('Tüm tarif keşfi yakında!'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+  }
+}
 
-    return recipesAsync.when(
-      loading: () => const Center(
-        child: CircularProgressIndicator(color: _neon),
-      ),
-      error: (err, st) {
-        debugPrint('NutritionTab recipes error: $err\n$st');
-        return ErrorCard(
-          message: 'Tarifler yüklenirken bir sorun oluştu.',
-          onRetry: () => ref.invalidate(recipesProvider),
-        );
-      },
-      data: (recipes) => SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(0, 16, 0, 32),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const _DailyDashboardHeader(),
-            const SizedBox(height: 14),
-            const _DailyScoreCard(),
-            const SizedBox(height: 18),
-            _MacroStatusCard(target: target, consumed: consumed),
-            const SizedBox(height: 16),
-            AiInsightBanner(onShowSuggestion: _scrollToSuggestion),
-            const SizedBox(height: 26),
-            if (suggestion != null) ...[
-              KeyedSubtree(
-                key: _suggestionKey,
-                child: const _SectionTitle(
-                  title: '🎯 Sana En Uygun Sonraki Öğün',
+// ============================================================================
+// Decision Panel Sliver — the hero. LayoutBuilder fades between the full
+// expanded panel (calorie ring + AI insight + next-best preview + single
+// green CTA) and the compact collapsed header ("1200 kcal kaldı | P %70")
+// as the user scrolls.
+// ============================================================================
+
+class _DecisionPanelSliver extends ConsumerWidget {
+  const _DecisionPanelSliver({required this.expandedHeight});
+  final double expandedHeight;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return SliverAppBar(
+      expandedHeight: expandedHeight,
+      pinned: true,
+      backgroundColor: const Color(0xFF0B0B12),
+      elevation: 0,
+      automaticallyImplyLeading: false,
+      toolbarHeight: kToolbarHeight,
+      flexibleSpace: LayoutBuilder(
+        builder: (context, constraints) {
+          final topPadding = MediaQuery.paddingOf(context).top;
+          final minH = topPadding + kToolbarHeight;
+          final range = expandedHeight - minH;
+          final t = range <= 0
+              ? 1.0
+              : ((constraints.maxHeight - minH) / range).clamp(0.0, 1.0);
+          return Stack(
+            children: [
+              // Always-present dark panel background so the status bar
+              // stays dark through the collapse transition.
+              const Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF14061F), Color(0xFF0B0B12)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(height: 12),
-              const NextBestMealCard(),
-              const SizedBox(height: 26),
+              // Expanded panel fades out as the sliver collapses.
+              Positioned(
+                top: topPadding,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: IgnorePointer(
+                  ignoring: t < 0.3,
+                  child: Opacity(
+                    opacity: t,
+                    child: const _ExpandedDecisionPanel(),
+                  ),
+                ),
+              ),
+              // Compact header fades in as the sliver collapses.
+              Positioned(
+                top: topPadding,
+                left: 0,
+                right: 0,
+                height: kToolbarHeight,
+                child: IgnorePointer(
+                  ignoring: t > 0.7,
+                  child: Opacity(
+                    opacity: 1.0 - t,
+                    child: const _CompactDecisionHeader(),
+                  ),
+                ),
+              ),
             ],
-            const _SectionTitle(title: 'Günün Menüsü'),
-            const SizedBox(height: 12),
-            const MealPlanTimeline(),
-            const SizedBox(height: 26),
-            const _SectionTitle(title: 'Tarif Keşfet'),
-            const SizedBox(height: 12),
-            _DiscoverySection(recipes: recipes),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 }
 
-double _safeProgress(int consumed, int target) {
-  if (target <= 0) return 0;
-  return consumed / target;
-}
-
 // ============================================================================
-// Dashboard header — title + formatted date
+// Expanded panel content.
 // ============================================================================
 
-class _DailyDashboardHeader extends StatelessWidget {
-  const _DailyDashboardHeader();
+class _ExpandedDecisionPanel extends ConsumerWidget {
+  const _ExpandedDecisionPanel();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final target = ref.watch(macroTargetProvider);
+    final consumed = ref.watch(consumedMacrosProvider);
+    final score = ref.watch(dailyScoreProvider);
+    final streak = ref.watch(nutritionStreakProvider);
+    final recommendation = ref.watch(nextBestMealProvider);
+    final overCalories =
+        target.calories > 0 && consumed.calories >= target.calories;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            'Bugün',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 0.4,
+          _DecisionHeaderRow(score: score, streak: streak),
+          const SizedBox(height: 8),
+          _CalorieRing(target: target, consumed: consumed),
+          const SizedBox(height: 10),
+          _AiInsightRow(
+            target: target,
+            consumed: consumed,
+            suggestion: recommendation,
+          ),
+          const Spacer(),
+          if (recommendation != null)
+            _NextMealPreview(
+              recommendation: recommendation,
+              overCalories: overCalories,
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            _formatTurkishDate(DateTime.now()),
-            style: const TextStyle(color: Colors.white54, fontSize: 13),
-          ),
         ],
       ),
     );
   }
-
-  /// Formats as e.g. "Çarşamba, 22 Nisan 2026". Inlined rather than
-  /// adding `intl` as a dependency for one string — the day/month
-  /// tables below are small and change only when Turkish does.
-  static String _formatTurkishDate(DateTime d) {
-    const days = [
-      'Pazartesi',
-      'Salı',
-      'Çarşamba',
-      'Perşembe',
-      'Cuma',
-      'Cumartesi',
-      'Pazar',
-    ];
-    const months = [
-      'Ocak',
-      'Şubat',
-      'Mart',
-      'Nisan',
-      'Mayıs',
-      'Haziran',
-      'Temmuz',
-      'Ağustos',
-      'Eylül',
-      'Ekim',
-      'Kasım',
-      'Aralık',
-    ];
-    // DateTime.weekday is 1..7 with Monday=1, so a direct `-1` indexes
-    // straight into the days list.
-    final day = days[d.weekday - 1];
-    final month = months[d.month - 1];
-    return '$day, ${d.day} $month ${d.year}';
-  }
 }
 
-// ============================================================================
-// Daily score + streak pill — phase 25.2 gamification.
-// ============================================================================
-
-/// Prominent card at the very top of the nutrition dashboard. Shows
-/// today's score out of 100 with a tier-coloured border + progress
-/// bar (red <50, yellow <80, green ≥80) alongside the streak flame.
-class _DailyScoreCard extends ConsumerWidget {
-  const _DailyScoreCard();
+class _DecisionHeaderRow extends StatelessWidget {
+  const _DecisionHeaderRow({required this.score, required this.streak});
+  final int score;
+  final int streak;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final score = ref.watch(dailyScoreProvider);
-    final streak = ref.watch(nutritionStreakProvider);
-    final tierColor = _tierColor(score);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: Colors.white.withValues(alpha: 0.04),
-          border: Border.all(color: tierColor.withValues(alpha: 0.55)),
-          boxShadow: [
-            BoxShadow(
-              color: tierColor.withValues(alpha: 0.25),
-              blurRadius: 18,
-              spreadRadius: 0.5,
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'GÜNLÜK SKOR',
-                        style: TextStyle(
-                          color: Colors.white54,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 2,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      RichText(
-                        text: TextSpan(
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w900,
-                            height: 1,
-                          ),
-                          children: [
-                            TextSpan(
-                              text: '$score',
-                              style: TextStyle(
-                                color: tierColor,
-                                fontSize: 32,
-                                shadows: [
-                                  Shadow(
-                                    color: tierColor.withValues(alpha: 0.6),
-                                    blurRadius: 14,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const TextSpan(
-                              text: ' / 100',
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                _StreakPill(streak: streak),
-              ],
-            ),
-            const SizedBox(height: 12),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0, end: score / 100),
-                duration: const Duration(milliseconds: 500),
-                curve: Curves.easeOutCubic,
-                builder: (context, value, _) => LinearProgressIndicator(
-                  value: value,
-                  minHeight: 6,
-                  backgroundColor: tierColor.withValues(alpha: 0.14),
-                  valueColor: AlwaysStoppedAnimation(tierColor),
+  Widget build(BuildContext context) {
+    final tint = _scoreTint(score);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Bugün',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.3,
+                  height: 1.1,
                 ),
               ),
-            ),
-          ],
+              Text(
+                _formatTurkishDate(DateTime.now()),
+                style: const TextStyle(color: Colors.white54, fontSize: 12),
+              ),
+            ],
+          ),
         ),
-      ),
+        _InlinePill(
+          label: '$score / 100',
+          icon: Icons.emoji_events,
+          tint: tint,
+        ),
+        const SizedBox(width: 6),
+        _InlinePill(
+          label: '$streak Gün',
+          leadingEmoji: '🔥',
+          tint: const Color(0xFFFF8A00),
+        ),
+      ],
     );
   }
 
-  /// Traffic-light tiering per the phase 25.2 spec. Colours match the
-  /// macro status ring so both surfaces tell the same story at a glance.
-  static Color _tierColor(int score) {
-    if (score >= 80) return const Color(0xFF39FF14); // neon green
-    if (score >= 50) return const Color(0xFFEAFF00); // neon yellow
-    return const Color(0xFFFF5577); // neon red
+  static Color _scoreTint(int score) {
+    if (score >= 80) return _statusOnTrack;
+    if (score >= 50) return _statusLow;
+    return _statusOver;
   }
 }
 
-class _StreakPill extends StatelessWidget {
-  const _StreakPill({required this.streak});
-  final int streak;
+class _InlinePill extends StatelessWidget {
+  const _InlinePill({
+    required this.label,
+    required this.tint,
+    this.icon,
+    this.leadingEmoji,
+  });
 
-  static const Color _flame = Color(0xFFFF8A00);
+  final String label;
+  final Color tint;
+  final IconData? icon;
+  final String? leadingEmoji;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(999),
-        color: _flame.withValues(alpha: 0.18),
-        border: Border.all(color: _flame.withValues(alpha: 0.55)),
+        color: tint.withValues(alpha: 0.18),
+        border: Border.all(color: tint.withValues(alpha: 0.55)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('🔥', style: TextStyle(fontSize: 12)),
-          const SizedBox(width: 4),
+          if (leadingEmoji != null) ...[
+            Text(leadingEmoji!, style: const TextStyle(fontSize: 11)),
+            const SizedBox(width: 4),
+          ] else if (icon != null) ...[
+            Icon(icon, color: tint, size: 12),
+            const SizedBox(width: 4),
+          ],
           Text(
-            'Seri: $streak Gün',
+            label,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: FontWeight.w800,
               letterSpacing: 0.2,
             ),
@@ -337,92 +315,24 @@ class _StreakPill extends StatelessWidget {
   }
 }
 
-// ============================================================================
-// Macro status card — calorie ring + protein/carb/fat horizontal bars
-// ============================================================================
-
-class _MacroStatusCard extends StatelessWidget {
-  const _MacroStatusCard({required this.target, required this.consumed});
+class _CalorieRing extends StatelessWidget {
+  const _CalorieRing({required this.target, required this.consumed});
   final MacroTarget target;
   final MacroTarget consumed;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(18, 22, 18, 20),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          color: Colors.white.withValues(alpha: 0.04),
-          border: Border.all(color: _neon.withValues(alpha: 0.35)),
-          boxShadow: [
-            BoxShadow(
-              color: _neon.withValues(alpha: 0.22),
-              blurRadius: 22,
-              spreadRadius: 0.5,
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            _CalorieRing(
-              consumed: consumed.calories,
-              target: target.calories,
-            ),
-            const SizedBox(height: 20),
-            _MacroBar(
-              label: 'Protein',
-              consumed: consumed.protein,
-              target: target.protein,
-              color: _proteinColor,
-            ),
-            const SizedBox(height: 12),
-            _MacroBar(
-              label: 'Karbonhidrat',
-              consumed: consumed.carbs,
-              target: target.carbs,
-              color: _carbsColor,
-            ),
-            const SizedBox(height: 12),
-            _MacroBar(
-              label: 'Yağ',
-              consumed: consumed.fat,
-              target: target.fat,
-              color: _fatColor,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CalorieRing extends StatelessWidget {
-  const _CalorieRing({required this.consumed, required this.target});
-  final int consumed;
-  final int target;
-
-  @override
-  Widget build(BuildContext context) {
-    final progress = _safeProgress(consumed, target);
+    final progress =
+        target.calories <= 0 ? 0.0 : consumed.calories / target.calories;
     final color = _colorForProgress(progress);
-    // Over-target rings visually clamp at 100% — otherwise the stroke
-    // would wrap past 12 o'clock and look buggy. The numeric readout
-    // still reflects the real overage, and the red colour carries the
-    // "you're over" signal.
     final clamped = progress.clamp(0.0, 1.0);
+    final remaining = target.calories - consumed.calories;
     return SizedBox(
-      width: 170,
-      height: 170,
+      width: 138,
+      height: 138,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Phase 25.1 dopamine loop: tween the stroke fill to its new
-          // value instead of snapping. TweenAnimationBuilder detects
-          // the new `end` on each rebuild and animates from the
-          // currently-displayed value, so completing a meal visibly
-          // nudges the ring forward instead of teleporting.
           SizedBox.expand(
             child: TweenAnimationBuilder<double>(
               tween: Tween(begin: 0, end: clamped),
@@ -430,7 +340,7 @@ class _CalorieRing extends StatelessWidget {
               curve: Curves.easeOutCubic,
               builder: (context, value, _) => CircularProgressIndicator(
                 value: value,
-                strokeWidth: 12,
+                strokeWidth: 10,
                 strokeCap: StrokeCap.round,
                 backgroundColor: color.withValues(alpha: 0.14),
                 valueColor: AlwaysStoppedAnimation(color),
@@ -441,10 +351,10 @@ class _CalorieRing extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                '$consumed',
+                '${consumed.calories}',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 34,
+                  fontSize: 28,
                   fontWeight: FontWeight.w900,
                   height: 1,
                   shadows: [
@@ -452,23 +362,23 @@ class _CalorieRing extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 2),
               Text(
-                '/ $target kcal',
+                '/ ${target.calories} kcal',
                 style: const TextStyle(
                   color: Colors.white70,
-                  fontSize: 13,
+                  fontSize: 11,
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               Text(
-                _remainingLabel(consumed: consumed, target: target),
+                _remainingLabel(remaining),
                 style: TextStyle(
                   color: color,
-                  fontSize: 11,
+                  fontSize: 10,
                   fontWeight: FontWeight.w900,
-                  letterSpacing: 0.6,
+                  letterSpacing: 0.4,
                 ),
               ),
             ],
@@ -484,90 +394,382 @@ class _CalorieRing extends StatelessWidget {
     return _statusOnTrack;
   }
 
-  /// Renders the live delta against the target:
-  ///   • under target → "N kcal kaldı" (positive remaining)
-  ///   • over target  → "N kcal aşıldı" (absolute overage)
-  ///   • exactly hit  → "hedef tam"
-  static String _remainingLabel({required int consumed, required int target}) {
-    final remaining = target - consumed;
+  static String _remainingLabel(int remaining) {
     if (remaining > 0) return '$remaining kcal kaldı';
     if (remaining < 0) return '${-remaining} kcal aşıldı';
     return 'hedef tam';
   }
 }
 
-class _MacroBar extends StatelessWidget {
-  const _MacroBar({
-    required this.label,
-    required this.consumed,
+class _AiInsightRow extends StatelessWidget {
+  const _AiInsightRow({
     required this.target,
-    required this.color,
+    required this.consumed,
+    required this.suggestion,
   });
 
-  final String label;
-  final int consumed;
-  final int target;
-  final Color color;
+  final MacroTarget target;
+  final MacroTarget consumed;
+  final NextMealRecommendation? suggestion;
 
   @override
   Widget build(BuildContext context) {
-    final progress = _safeProgress(consumed, target).clamp(0.0, 1.0);
-    return Column(
+    final copy = _buildCopy(target, consumed, suggestion);
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                label,
+        const Icon(Icons.auto_awesome, color: _neon, size: 16),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                copy.message,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 13,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w900,
+                  height: 1.25,
                 ),
               ),
-            ),
-            Text(
-              '$consumed g',
-              style: TextStyle(
-                color: color,
-                fontSize: 13,
-                fontWeight: FontWeight.w900,
+              const SizedBox(height: 2),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '→ ',
+                    style: TextStyle(
+                      color: _neon,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      copy.fix,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        height: 1.3,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(width: 4),
-            Text(
-              '/ $target g',
-              style: const TextStyle(
-                color: Colors.white54,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(6),
-          child: TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0, end: progress),
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeOutCubic,
-            builder: (context, value, _) => LinearProgressIndicator(
-              value: value,
-              minHeight: 8,
-              backgroundColor: color.withValues(alpha: 0.14),
-              valueColor: AlwaysStoppedAnimation(color),
-            ),
+            ],
           ),
         ),
       ],
     );
   }
+
+  /// Mirror of `buildCoachCopy` from the old standalone banner, kept
+  /// local to the hero so the panel stays self-contained. Rules match
+  /// the phase 25.2 spec verbatim.
+  static ({String message, String fix}) _buildCopy(
+    MacroTarget target,
+    MacroTarget consumed,
+    NextMealRecommendation? suggestion,
+  ) {
+    final overage = consumed.calories - target.calories;
+    if (target.calories > 0 && overage > 0) {
+      return (
+        message: '$overage kcal fazla aldın.',
+        fix: 'Akşam karbonhidratı azalt veya 20 dk yürüyüş yap.',
+      );
+    }
+    if (target.protein > 0 && consumed.protein < target.protein * 0.6) {
+      return (
+        message: 'Protein hedefini kaçırıyorsun.',
+        fix: 'Tavuk/Balık bazlı bir ana öğün ekle.',
+      );
+    }
+    final remainingCalories = target.calories - consumed.calories;
+    if (remainingCalories > 0 && remainingCalories < 400) {
+      return (
+        message: 'Az kalorin kaldı, ölçülü devam.',
+        fix: suggestion != null
+            ? '${suggestion.recipe.title} senin için uygun.'
+            : 'Hafif bir ara öğün seç.',
+      );
+    }
+    if (suggestion != null) {
+      return (
+        message: 'Dengeyi koru.',
+        fix: 'Sonraki adım: ${suggestion.recipe.title}.',
+      );
+    }
+    return const (
+      message: 'Harika gidiyorsun!',
+      fix: 'Hedeflerine sadık kal.',
+    );
+  }
+}
+
+/// Next-best-meal preview strip inside the hero. One neon-bordered
+/// row with thumb + title + impact string + the single primary CTA
+/// (swapped for a warning outline when the user is already over
+/// their daily calorie target).
+class _NextMealPreview extends ConsumerWidget {
+  const _NextMealPreview({
+    required this.recommendation,
+    required this.overCalories,
+  });
+
+  final NextMealRecommendation recommendation;
+  final bool overCalories;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final recipe = recommendation.recipe;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        color: Colors.white.withValues(alpha: 0.05),
+        border: Border.all(color: _neonGreen.withValues(alpha: 0.55)),
+        boxShadow: [
+          BoxShadow(
+            color: _neonGreen.withValues(alpha: 0.22),
+            blurRadius: 18,
+            spreadRadius: 0.5,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: SizedBox(
+              width: 48,
+              height: 48,
+              child: _Thumb(imageUrl: recipe.imageUrl),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  recipe.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    height: 1.15,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  recommendation.impactString,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          overCalories
+              ? _WarningCta(recipe: recipe)
+              : _PrimaryHemenEkleButton(
+                  onPressed: () => _addToPlan(context, ref, recipe),
+                ),
+        ],
+      ),
+    );
+  }
+
+  void _addToPlan(BuildContext context, WidgetRef ref, Recipe recipe) {
+    HapticFeedback.mediumImpact();
+    ref
+        .read(dailyMenuProvider.notifier)
+        .addRecipeToPlan(recipe, recipe.mealType);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text('${recipe.title} plana eklendi!'),
+          backgroundColor: _neonGreen.withValues(alpha: 0.9),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+  }
+}
+
+class _PrimaryHemenEkleButton extends StatelessWidget {
+  const _PrimaryHemenEkleButton({required this.onPressed});
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton.icon(
+      onPressed: onPressed,
+      icon: const Icon(Icons.add, size: 14),
+      label: const Text('Hemen Ekle'),
+      style: FilledButton.styleFrom(
+        backgroundColor: _neonGreen,
+        foregroundColor: Colors.black,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        minimumSize: const Size(0, 36),
+        textStyle: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.6,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+    );
+  }
+}
+
+class _WarningCta extends StatelessWidget {
+  const _WarningCta({required this.recipe});
+  final Recipe recipe;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      onPressed: () {
+        HapticFeedback.lightImpact();
+        context.push('/recipe', extra: recipe);
+      },
+      icon: const Icon(Icons.cancel_outlined, size: 14),
+      label: const Text('Hafif Alternatif'),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: _warningColor,
+        side: const BorderSide(color: _warningColor, width: 1.2),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        minimumSize: const Size(0, 36),
+        textStyle: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.3,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+    );
+  }
+}
+
+class _Thumb extends StatelessWidget {
+  const _Thumb({required this.imageUrl});
+  final String? imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final fallback = Container(
+      color: Colors.white10,
+      alignment: Alignment.center,
+      child: const Icon(Icons.restaurant, color: Colors.white54, size: 22),
+    );
+    final src = imageUrl;
+    if (src == null || src.isEmpty) return fallback;
+    return Image.network(
+      src,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => fallback,
+      loadingBuilder: (_, child, progress) =>
+          progress == null ? child : Container(color: Colors.white10),
+    );
+  }
 }
 
 // ============================================================================
-// Section title (reused by both remaining sections)
+// Collapsed compact header
+// ============================================================================
+
+class _CompactDecisionHeader extends ConsumerWidget {
+  const _CompactDecisionHeader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final target = ref.watch(macroTargetProvider);
+    final consumed = ref.watch(consumedMacrosProvider);
+    final remaining = target.calories - consumed.calories;
+    final remainingLabel =
+        remaining >= 0 ? '$remaining kcal kaldı' : '${-remaining} kcal aşıldı';
+    final proteinRatio = target.protein > 0
+        ? (consumed.protein / target.protein).clamp(0.0, 1.0)
+        : 0.0;
+    final proteinPct = (proteinRatio * 100).round();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.local_fire_department,
+            color: _statusOnTrack,
+            size: 16,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            remainingLabel,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.2,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Container(width: 1, height: 14, color: Colors.white24),
+          const SizedBox(width: 12),
+          Text(
+            'P %$proteinPct',
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.2,
+            ),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 52,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: proteinRatio),
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, _) => LinearProgressIndicator(
+                  value: value,
+                  minHeight: 4,
+                  backgroundColor: _proteinColor.withValues(alpha: 0.18),
+                  valueColor: const AlwaysStoppedAnimation(_proteinColor),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// Section title reused by both timeline + discovery headings.
 // ============================================================================
 
 class _SectionTitle extends StatelessWidget {
@@ -576,203 +778,108 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Text(
-        title,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 18,
-          fontWeight: FontWeight.w900,
-          letterSpacing: 0.3,
-        ),
+    return Text(
+      title,
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 18,
+        fontWeight: FontWeight.w900,
+        letterSpacing: 0.3,
       ),
     );
   }
 }
 
 // ============================================================================
-// Discovery gallery
-// ----------------------------------------------------------------------------
-// Filter chips + horizontal card list so a user can graze the recipe
-// catalogue when they want variety beyond the planned meals above.
-// Filters are lightweight predicates so users get an immediate effect;
-// "Vegan" is a best-effort keyword match since the Recipe model has no
-// dedicated dietary flag yet.
+// Compact recipe discovery section. Title row shows "Tarif Keşfet" +
+// "Tümünü Gör" (phase 26 spec), followed by a short horizontal list.
+// Filter chips dropped in phase 26 — full filtering lives on the future
+// "Tümünü Gör" screen.
 // ============================================================================
 
-class _DiscoverySection extends StatefulWidget {
-  const _DiscoverySection({required this.recipes});
+class _DiscoverySectionHeader extends StatelessWidget {
+  const _DiscoverySectionHeader({required this.onSeeAll});
+  final VoidCallback onSeeAll;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 22, 12, 8),
+      child: Row(
+        children: [
+          const _SectionTitle(title: 'Tarif Keşfet'),
+          const Spacer(),
+          TextButton.icon(
+            onPressed: onSeeAll,
+            icon: const Icon(Icons.arrow_forward_rounded, size: 14),
+            label: const Text('Tümünü Gör'),
+            style: TextButton.styleFrom(
+              foregroundColor: _neon,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              minimumSize: const Size(0, 32),
+              textStyle: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.4,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DiscoveryStrip extends StatelessWidget {
+  const _DiscoveryStrip({required this.recipes});
   final List<Recipe> recipes;
 
   @override
-  State<_DiscoverySection> createState() => _DiscoverySectionState();
-}
-
-class _DiscoverySectionState extends State<_DiscoverySection> {
-  /// Null = no filter active (show all recipes). Tapping the active chip
-  /// again clears the filter.
-  String? _activeFilter;
-
-  static const List<String> _filters = [
-    'Yüksek Protein',
-    'Düşük Kalori',
-    'Hacim',
-    'Sıkılaşma',
-    'Vegan',
-  ];
-
-  List<Recipe> get _filtered {
-    final source = widget.recipes;
-    switch (_activeFilter) {
-      case 'Yüksek Protein':
-        return source.where((r) => r.protein >= 25).toList(growable: false);
-      case 'Düşük Kalori':
-        return source.where((r) => r.calories <= 400).toList(growable: false);
-      case 'Hacim':
-        return source.where((r) => r.calories >= 500).toList(growable: false);
-      case 'Sıkılaşma':
-        return source
-            .where((r) => r.calories <= 500 && r.protein >= 20)
-            .toList(growable: false);
-      case 'Vegan':
-        // No dedicated diet flag on Recipe yet — match on the title +
-        // instructions blob for the word "vegan" so the filter does
-        // something useful today and is trivial to retire once a real
-        // tag lands on the Supabase schema.
-        return source.where((r) {
-          final hay = '${r.title} ${r.instructions ?? ''}'.toLowerCase();
-          return hay.contains('vegan');
-        }).toList(growable: false);
-      default:
-        return source;
+  Widget build(BuildContext context) {
+    // Prioritise recipes with explicit curated tags first; fall back to
+    // any recipe so the strip is never empty once the catalogue loads.
+    final items = recipes.toList()
+      ..sort((a, b) => b.tags.length.compareTo(a.tags.length));
+    if (items.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20),
+        child: _EmptyState(message: 'Keşfedilecek tarif yok — yakında.'),
+      );
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final items = _filtered;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          height: 38,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            itemCount: _filters.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
-            itemBuilder: (context, index) {
-              final filter = _filters[index];
-              final selected = filter == _activeFilter;
-              return _DiscoveryFilterChip(
-                label: filter,
-                selected: selected,
-                onTap: () => setState(
-                  () => _activeFilter = selected ? null : filter,
-                ),
-              );
-            },
-          ),
-        ),
-        const SizedBox(height: 14),
-        if (items.isEmpty)
-          const _EmptyState(
-            message: 'Bu filtre için tarif bulunamadı.',
-          )
-        else
-          SizedBox(
-            height: 210,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              itemCount: items.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
-              itemBuilder: (context, index) =>
-                  RecipeDiscoveryCard(recipe: items[index]),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _DiscoveryFilterChip extends StatelessWidget {
-  const _DiscoveryFilterChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(24),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(24),
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            color: selected
-                ? _neon.withValues(alpha: 0.25)
-                : Colors.white.withValues(alpha: 0.04),
-            border: Border.all(
-              color: selected ? _neon : Colors.white24,
-              width: selected ? 1.5 : 1,
-            ),
-            boxShadow: selected
-                ? [
-                    BoxShadow(
-                      color: _neon.withValues(alpha: 0.35),
-                      blurRadius: 10,
-                    ),
-                  ]
-                : null,
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: selected ? Colors.white : Colors.white70,
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.3,
-            ),
-          ),
+    return SizedBox(
+      height: 180,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: items.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        itemBuilder: (context, index) => _CompactDiscoveryCard(
+          recipe: items[index],
         ),
       ),
     );
   }
 }
 
-class RecipeDiscoveryCard extends StatelessWidget {
-  const RecipeDiscoveryCard({super.key, required this.recipe});
+class _CompactDiscoveryCard extends StatelessWidget {
+  const _CompactDiscoveryCard({required this.recipe});
   final Recipe recipe;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 220,
+      width: 190,
       child: Material(
         color: Colors.transparent,
         clipBehavior: Clip.antiAlias,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         child: InkWell(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(18),
           onTap: () => context.push('/recipe', extra: recipe),
           child: Stack(
             fit: StackFit.expand,
             children: [
-              _RecipeThumb(recipe: recipe),
-              // Dark gradient keeps the title readable regardless of how
-              // bright the underlying photo is.
+              _Thumb(imageUrl: recipe.imageUrl),
               DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -787,20 +894,18 @@ class RecipeDiscoveryCard extends StatelessWidget {
                   ),
                 ),
               ),
-              // Category tags anchored top-left so they read above the
-              // photography without blocking the title below.
               Positioned(
                 top: 10,
                 left: 10,
                 right: 10,
                 child: RecipeTagsStrip(
                   recipe: recipe,
-                  maxTags: 2,
+                  maxTags: 1,
                   compact: true,
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -811,7 +916,7 @@ class RecipeDiscoveryCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: FontWeight.w900,
                         height: 1.15,
                         shadows: [
@@ -819,45 +924,14 @@ class RecipeDiscoveryCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.local_fire_department,
-                          color: _neon,
-                          size: 14,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${recipe.calories} kcal',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          width: 1,
-                          height: 12,
-                          color: Colors.white24,
-                        ),
-                        const SizedBox(width: 8),
-                        const Icon(
-                          Icons.fitness_center,
-                          color: Color(0xFF4DA6FF),
-                          size: 14,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${recipe.protein}g Protein',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ],
+                    const SizedBox(height: 6),
+                    Text(
+                      '${recipe.calories} kcal · ${recipe.protein}g P',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ],
                 ),
@@ -870,53 +944,49 @@ class RecipeDiscoveryCard extends StatelessWidget {
   }
 }
 
-// ============================================================================
-// Shared bits
-// ============================================================================
-
-class _RecipeThumb extends StatelessWidget {
-  const _RecipeThumb({required this.recipe});
-  final Recipe recipe;
-
-  @override
-  Widget build(BuildContext context) {
-    final fallback = Container(
-      color: Colors.white10,
-      alignment: Alignment.center,
-      child: const Icon(Icons.restaurant, color: Colors.white54, size: 28),
-    );
-    final url = recipe.imageUrl;
-    if (url == null || url.isEmpty) return fallback;
-    return Image.network(
-      url,
-      fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => fallback,
-      loadingBuilder: (_, child, progress) =>
-          progress == null ? child : Container(color: Colors.white10),
-    );
-  }
-}
-
 class _EmptyState extends StatelessWidget {
   const _EmptyState({required this.message});
   final String message;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          color: Colors.white.withValues(alpha: 0.03),
-          border: Border.all(color: Colors.white12),
-        ),
-        child: Text(
-          message,
-          style: const TextStyle(color: Colors.white54, fontSize: 13),
-        ),
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        color: Colors.white.withValues(alpha: 0.03),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: Text(
+        message,
+        style: const TextStyle(color: Colors.white54, fontSize: 13),
       ),
     );
   }
+}
+
+// ============================================================================
+// Helpers
+// ============================================================================
+
+/// Formats as e.g. "Çar 22 Nisan" — short form to fit in the hero header row.
+String _formatTurkishDate(DateTime d) {
+  const days = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+  const months = [
+    'Ocak',
+    'Şubat',
+    'Mart',
+    'Nisan',
+    'Mayıs',
+    'Haziran',
+    'Temmuz',
+    'Ağustos',
+    'Eylül',
+    'Ekim',
+    'Kasım',
+    'Aralık',
+  ];
+  final day = days[d.weekday - 1];
+  final month = months[d.month - 1];
+  return '$day ${d.day} $month';
 }
