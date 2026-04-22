@@ -79,6 +79,8 @@ class _NutritionTabState extends ConsumerState<NutritionTab> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const _DailyDashboardHeader(),
+            const SizedBox(height: 14),
+            const _DailyScoreCard(),
             const SizedBox(height: 18),
             _MacroStatusCard(target: target, consumed: consumed),
             const SizedBox(height: 16),
@@ -179,6 +181,159 @@ class _DailyDashboardHeader extends StatelessWidget {
     final day = days[d.weekday - 1];
     final month = months[d.month - 1];
     return '$day, ${d.day} $month ${d.year}';
+  }
+}
+
+// ============================================================================
+// Daily score + streak pill — phase 25.2 gamification.
+// ============================================================================
+
+/// Prominent card at the very top of the nutrition dashboard. Shows
+/// today's score out of 100 with a tier-coloured border + progress
+/// bar (red <50, yellow <80, green ≥80) alongside the streak flame.
+class _DailyScoreCard extends ConsumerWidget {
+  const _DailyScoreCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final score = ref.watch(dailyScoreProvider);
+    final streak = ref.watch(nutritionStreakProvider);
+    final tierColor = _tierColor(score);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          color: Colors.white.withValues(alpha: 0.04),
+          border: Border.all(color: tierColor.withValues(alpha: 0.55)),
+          boxShadow: [
+            BoxShadow(
+              color: tierColor.withValues(alpha: 0.25),
+              blurRadius: 18,
+              spreadRadius: 0.5,
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'GÜNLÜK SKOR',
+                        style: TextStyle(
+                          color: Colors.white54,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 2,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      RichText(
+                        text: TextSpan(
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w900,
+                            height: 1,
+                          ),
+                          children: [
+                            TextSpan(
+                              text: '$score',
+                              style: TextStyle(
+                                color: tierColor,
+                                fontSize: 32,
+                                shadows: [
+                                  Shadow(
+                                    color: tierColor.withValues(alpha: 0.6),
+                                    blurRadius: 14,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const TextSpan(
+                              text: ' / 100',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                _StreakPill(streak: streak),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: score / 100),
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, _) => LinearProgressIndicator(
+                  value: value,
+                  minHeight: 6,
+                  backgroundColor: tierColor.withValues(alpha: 0.14),
+                  valueColor: AlwaysStoppedAnimation(tierColor),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Traffic-light tiering per the phase 25.2 spec. Colours match the
+  /// macro status ring so both surfaces tell the same story at a glance.
+  static Color _tierColor(int score) {
+    if (score >= 80) return const Color(0xFF39FF14); // neon green
+    if (score >= 50) return const Color(0xFFEAFF00); // neon yellow
+    return const Color(0xFFFF5577); // neon red
+  }
+}
+
+class _StreakPill extends StatelessWidget {
+  const _StreakPill({required this.streak});
+  final int streak;
+
+  static const Color _flame = Color(0xFFFF8A00);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        color: _flame.withValues(alpha: 0.18),
+        border: Border.all(color: _flame.withValues(alpha: 0.55)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('🔥', style: TextStyle(fontSize: 12)),
+          const SizedBox(width: 4),
+          Text(
+            'Seri: $streak Gün',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

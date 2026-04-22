@@ -109,11 +109,57 @@ final nextBestMealServiceProvider = Provider<NextBestMealService>(
 /// treat `null` as "hide the suggestion surface" rather than "no good
 /// option", because a null reflects "we don't know yet" more often
 /// than "there's nothing to suggest".
-final nextBestMealProvider = Provider<Recipe?>((ref) {
+///
+/// Phase 25.2 upgraded this from `Recipe?` to [NextMealRecommendation?]
+/// so the UI can show why a meal was picked and what impact adding it
+/// will have on the day's macros.
+final nextBestMealProvider = Provider<NextMealRecommendation?>((ref) {
   final recipes = ref.watch(recipesProvider).value ?? const <Recipe>[];
   if (recipes.isEmpty) return null;
   final remaining = ref.watch(remainingMacrosProvider);
   return ref
       .watch(nextBestMealServiceProvider)
       .suggestNextMeal(recipes: recipes, remaining: remaining);
+});
+
+/// Daily gamification score from 0 to 100. Reads [macroTargetProvider]
+/// and [consumedMacrosProvider] and awards points for each macro that
+/// lands close to target:
+///   • Calories within ±10% of target → +40
+///   • Protein ≥ 90% of target        → +30
+///   • Carbs within ±15%              → +15
+///   • Fat within ±15%                → +15
+///
+/// Scores are read-only — future phases may persist a rolling weekly
+/// average to SharedPreferences, but today the value is derived from
+/// live consumed macros and updates every time a meal is logged.
+final dailyScoreProvider = Provider<int>((ref) {
+  final target = ref.watch(macroTargetProvider);
+  final consumed = ref.watch(consumedMacrosProvider);
+  var score = 0;
+  if (_within(consumed.calories, target.calories, 0.10)) score += 40;
+  if (target.protein > 0 && consumed.protein >= target.protein * 0.9) {
+    score += 30;
+  }
+  if (_within(consumed.carbs, target.carbs, 0.15)) score += 15;
+  if (_within(consumed.fat, target.fat, 0.15)) score += 15;
+  return score;
+});
+
+/// Helper for the score arithmetic. Returns true when `consumed` sits
+/// within `tolerance` (expressed as a fraction of `target`) of
+/// `target`. `target <= 0` short-circuits to false so an unset target
+/// never awards points accidentally.
+bool _within(int consumed, int target, double tolerance) {
+  if (target <= 0) return false;
+  final delta = (consumed - target).abs();
+  return delta <= (target * tolerance).round();
+}
+
+/// Current nutrition streak in whole days. Phase 25.2 ships the UI
+/// only; a future cron job will increment this at midnight based on
+/// the previous day's score. Today the value comes straight from
+/// [AppPreferences.nutritionStreak] (default 0).
+final nutritionStreakProvider = Provider<int>((ref) {
+  return ref.watch(appPreferencesProvider).nutritionStreak;
 });

@@ -1,6 +1,27 @@
 import '../models/macro_target.dart';
 import '../models/recipe.dart';
 
+/// Dietitian-grade recommendation wrapper. Phase 25.2 introduces this
+/// so the UI can explain *why* a recipe was picked and *what* it will
+/// do to the user's day, not just present a card in silence.
+///
+///   • [recipe] — the picked recipe.
+///   • [reason] — short Turkish sentence explaining the priority tier
+///     that fired (protein gap / light finish / balance).
+///   • [impactString] — one-line macro impact preview, e.g.
+///     "+25g Protein | +520 kcal".
+class NextMealRecommendation {
+  const NextMealRecommendation({
+    required this.recipe,
+    required this.reason,
+    required this.impactString,
+  });
+
+  final Recipe recipe;
+  final String reason;
+  final String impactString;
+}
+
 /// Rule-based next-meal recommender. Consumes the user's **remaining**
 /// macro budget (target − consumed) and returns the single best
 /// candidate from the recipe catalogue, or `null` when the catalogue
@@ -32,7 +53,15 @@ class NextBestMealService {
   static const int lowCalorieGapThreshold = 400;
   static const int lowCalorieRecipeThreshold = 300;
 
-  Recipe? suggestNextMeal({
+  /// Priority-tier identifier returned alongside the pick so callers
+  /// can branch on the reason without parsing the copy string.
+  /// Internal because the UI only needs the human sentence today, but
+  /// future telemetry / A-B tests can re-use it cheaply.
+  static const String _protein = 'protein';
+  static const String _lowCalorie = 'lowCalorie';
+  static const String _balance = 'balance';
+
+  NextMealRecommendation? suggestNextMeal({
     required List<Recipe> recipes,
     required MacroTarget remaining,
   }) {
@@ -47,7 +76,7 @@ class NextBestMealService {
           .toList();
       if (picks.isNotEmpty) {
         picks.sort((a, b) => b.protein.compareTo(a.protein));
-        return picks.first;
+        return _buildRecommendation(picks.first, _protein);
       }
     }
 
@@ -57,7 +86,7 @@ class NextBestMealService {
           recipes.where((r) => r.calories < lowCalorieRecipeThreshold).toList();
       if (picks.isNotEmpty) {
         picks.sort((a, b) => a.calories.compareTo(b.calories));
-        return picks.first;
+        return _buildRecommendation(picks.first, _lowCalorie);
       }
     }
 
@@ -76,6 +105,27 @@ class NextBestMealService {
         best = recipe;
       }
     }
-    return best;
+    if (best == null) return null;
+    return _buildRecommendation(best, _balance);
+  }
+
+  NextMealRecommendation _buildRecommendation(Recipe recipe, String tier) {
+    return NextMealRecommendation(
+      recipe: recipe,
+      reason: _reasonFor(tier),
+      impactString: '+${recipe.protein}g Protein | +${recipe.calories} kcal',
+    );
+  }
+
+  String _reasonFor(String tier) {
+    switch (tier) {
+      case _protein:
+        return 'Protein açığını kapatmak için önerildi.';
+      case _lowCalorie:
+        return 'Kalan kalorine uygun hafif bir seçenek.';
+      case _balance:
+      default:
+        return 'Kalan makrolarına en iyi eşleşme.';
+    }
   }
 }

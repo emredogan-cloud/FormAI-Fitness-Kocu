@@ -2,22 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/models/macro_target.dart';
-import '../../domain/models/recipe.dart';
+import '../../domain/services/next_best_meal_service.dart';
 import '../../providers/nutrition_provider.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _proteinColor = Color(0xFF4DA6FF);
 
 /// AI coach banner shown below the macro status card on the nutrition
-/// tab. Reads [remainingMacrosProvider] + [nextBestMealProvider] and
-/// produces a two-line message (problem + prescription) plus an
-/// optional "Öneriyi Gör" CTA that scrolls the tab to the next-best-
-/// meal section.
+/// tab. Reads [consumedMacrosProvider] + [macroTargetProvider] +
+/// [nextBestMealProvider] and produces a two-line Message + Fix copy
+/// via [buildCoachCopy], rendered as **message** (bold) with `→ fix`
+/// underneath.
 ///
-/// Extracted out of `nutrition_tab.dart` in phase 23.2 because the
-/// banner graduated from a static pep-talk line into a decision
-/// surface; keeping its copy-generation rules in the tab file was
-/// going to hide them under hundreds of lines of layout code.
+/// Phase 25.2 upgraded the copy rules from soft encouragement to
+/// data-specific prescriptions:
+///   • Over-target → "{X} kcal fazla aldın." + carb/walk fix.
+///   • Protein <60% of target → "Protein hedefini kaçırıyorsun." +
+///     chicken/fish fix.
+///   • Else → existing light-finish / balance fallbacks.
 class AiInsightBanner extends ConsumerWidget {
   const AiInsightBanner({super.key, required this.onShowSuggestion});
 
@@ -28,9 +30,14 @@ class AiInsightBanner extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final remaining = ref.watch(remainingMacrosProvider);
+    final target = ref.watch(macroTargetProvider);
+    final consumed = ref.watch(consumedMacrosProvider);
     final suggestion = ref.watch(nextBestMealProvider);
-    final copy = buildCoachCopy(remaining: remaining, suggestion: suggestion);
+    final copy = buildCoachCopy(
+      target: target,
+      consumed: consumed,
+      suggestion: suggestion,
+    );
     final hasSuggestion = suggestion != null;
 
     return Padding(
@@ -60,7 +67,7 @@ class AiInsightBanner extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
                   width: 40,
@@ -94,20 +101,36 @@ class AiInsightBanner extends ConsumerWidget {
                         copy.message,
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          height: 1.3,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w900,
+                          height: 1.25,
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        copy.action,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          height: 1.35,
-                        ),
+                      const SizedBox(height: 6),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            '→ ',
+                            style: TextStyle(
+                              color: _neon,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w900,
+                              height: 1.35,
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              copy.fix,
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                height: 1.35,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -146,57 +169,70 @@ class AiInsightBanner extends ConsumerWidget {
   }
 }
 
-/// Shape of a coach message: the short problem statement + the actionable
-/// prescription. Exported as a record so tests can assert copy without
-/// rendering the widget tree.
-typedef CoachCopy = ({String message, String action});
+/// Shape of a coach message: the short problem statement + the
+/// actionable fix. Exported as a record so tests can assert copy
+/// without rendering the widget tree.
+typedef CoachCopy = ({String message, String fix});
 
-/// Maps `(remaining, suggestion)` to the copy the banner should render.
-/// Mirrors the priority tiers in [NextBestMealService] so the banner
-/// explains *why* the suggestion is what it is:
+/// Maps `(target, consumed, suggestion)` to the copy the banner should
+/// render. Rules evaluated top-to-bottom — first match wins:
 ///
-///   • Protein gap (>30 g) → "Protein hedefini kaçırıyorsun."
-///   • Calorie overshoot (remaining < 0) → "Günlük kalori hedefini aştın."
-///   • Light finish needed (remaining < 400 kcal) → "Az kalorin kaldı."
-///   • Otherwise → a balance-tier line.
+///   1. `consumed.calories > target.calories` — over target. Shows the
+///      exact overage and recommends carb cuts / a walk.
+///   2. `consumed.protein < target.protein * 0.6` — meaningful protein
+///      gap. Suggests a chicken/fish main.
+///   3. `remaining.calories < 400` — light finish territory. Points at
+///      the current suggestion if any, else generic nudge.
+///   4. Otherwise → balance / positive copy.
 ///
-/// When `suggestion` is null (catalogue empty / still loading) the copy
-/// falls back to an encouraging default without an actionable line.
+/// `suggestion` may be null (catalogue still loading); the rules
+/// degrade gracefully when it is.
 CoachCopy buildCoachCopy({
-  required MacroTarget remaining,
-  required Recipe? suggestion,
+  required MacroTarget target,
+  required MacroTarget consumed,
+  required NextMealRecommendation? suggestion,
 }) {
-  if (suggestion == null) {
-    return const (
-      message: 'Harika gidiyorsun!',
-      action: 'Hedeflerine sadık kal.',
+  final overage = consumed.calories - target.calories;
+
+  // Rule 1 — calorie overshoot.
+  if (target.calories > 0 && overage > 0) {
+    return (
+      message: '$overage kcal fazla aldın.',
+      fix: 'Akşam karbonhidratı azalt veya 20 dk yürüyüş yap.',
     );
   }
 
-  if (remaining.protein > 30) {
+  // Rule 2 — protein gap (<60% of target). target.protein == 0
+  // short-circuits to false so an unset target doesn't fire a false
+  // alarm.
+  if (target.protein > 0 && consumed.protein < target.protein * 0.6) {
     return (
       message: 'Protein hedefini kaçırıyorsun.',
-      action:
-          '${suggestion.title} tarzı yüksek proteinli bir öğün eklemeni öneririm.',
+      fix: 'Tavuk/Balık bazlı bir ana öğün ekle.',
     );
   }
 
-  if (remaining.calories < 0) {
-    return (
-      message: 'Günlük kalori hedefini aştın.',
-      action: 'Hafif bir seçenek: ${suggestion.title}.',
-    );
-  }
+  final remainingCalories = target.calories - consumed.calories;
 
-  if (remaining.calories < 400) {
+  // Rule 3 — light-finish territory.
+  if (remainingCalories > 0 && remainingCalories < 400) {
     return (
       message: 'Az kalorin kaldı, ölçülü devam.',
-      action: '${suggestion.title} senin için uygun görünüyor.',
+      fix: suggestion != null
+          ? '${suggestion.recipe.title} senin için uygun görünüyor.'
+          : 'Hafif bir ara öğün seç.',
     );
   }
 
-  return (
-    message: 'Dengeyi koru.',
-    action: 'Sonraki adım: ${suggestion.title}.',
+  // Rule 4 — balance / positive default.
+  if (suggestion != null) {
+    return (
+      message: 'Dengeyi koru.',
+      fix: 'Sonraki adım: ${suggestion.recipe.title}.',
+    );
+  }
+  return const (
+    message: 'Harika gidiyorsun!',
+    fix: 'Hedeflerine sadık kal.',
   );
 }

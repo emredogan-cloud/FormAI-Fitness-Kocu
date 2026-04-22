@@ -40,7 +40,9 @@ class MealPlanTimeline extends ConsumerWidget {
     final consumed = ref.watch(consumedMacrosProvider);
     final overCalories =
         target.calories > 0 && consumed.calories >= target.calories;
-    final lighterSuggestion = ref.watch(nextBestMealProvider);
+    // Phase 25.2 returns a NextMealRecommendation; only the recipe is
+    // needed here for the over-calorie warning CTA.
+    final lighterSuggestion = ref.watch(nextBestMealProvider)?.recipe;
     final currentSlot = _currentSlotForHour(DateTime.now().hour);
 
     return menuAsync.when(

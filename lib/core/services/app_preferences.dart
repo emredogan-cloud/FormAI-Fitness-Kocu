@@ -28,6 +28,7 @@ class AppPreferences {
   // changes, and a cross-import would create an awkward core → feature
   // dependency just for one string constant.
   static const String _planCacheKey = 'sixpack.user_custom_plan_v2';
+  static const String _nutritionStreakKey = 'sixpack.nutrition_streak';
 
   bool get isFirstTime => _prefs.getBool(_firstTimeKey) ?? true;
 
@@ -61,5 +62,15 @@ class AppPreferences {
     await _prefs.remove(_firstTimeKey);
     await _prefs.remove(_goalKey);
     await _prefs.remove(_userMetricsKey);
+  }
+
+  /// Current nutrition streak in whole days. Zero-default so a fresh
+  /// install just shows "0 Gün" until the cron job backfills real
+  /// values. Phase 25.2 ships the UI only — see
+  /// [nutritionStreakProvider] for the read-side.
+  int get nutritionStreak => _prefs.getInt(_nutritionStreakKey) ?? 0;
+
+  Future<void> setNutritionStreak(int value) async {
+    await _prefs.setInt(_nutritionStreakKey, value);
   }
 }
