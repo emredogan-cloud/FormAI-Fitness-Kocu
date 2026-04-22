@@ -4,10 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/services/app_preferences.dart';
 import '../../../core/widgets/error_card.dart';
-import '../../onboarding/providers/wizard_provider.dart';
 import '../domain/models/macro_target.dart';
 import '../domain/models/recipe.dart';
 import '../providers/nutrition_provider.dart';
+import 'widgets/meal_plan_timeline.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _proteinColor = Color(0xFF4DA6FF); // neon blue
@@ -47,7 +47,6 @@ class NutritionTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final recipesAsync = ref.watch(recipesProvider);
     final target = _computeTarget(ref);
-    final mealFrequency = _readMealFrequency(ref);
     const consumed = _consumedToday;
     final insight = _getDailyInsight(target, consumed);
 
@@ -75,7 +74,7 @@ class NutritionTab extends ConsumerWidget {
             const SizedBox(height: 26),
             const _SectionTitle(title: 'Günün Menüsü'),
             const SizedBox(height: 12),
-            _DailyMenu(recipes: recipes, mealFrequency: mealFrequency),
+            const MealPlanTimeline(),
             const SizedBox(height: 26),
             const _SectionTitle(title: 'Keşfet'),
             const SizedBox(height: 12),
@@ -101,12 +100,6 @@ class NutritionTab extends ConsumerWidget {
       activityLevel: (metrics['activityLevel'] as String?) ?? 'sedentary',
       goal: (metrics['targetPhysique'] as String?) ?? 'sixpack',
     );
-  }
-
-  String _readMealFrequency(WidgetRef ref) {
-    final metrics = ref.watch(appPreferencesProvider).userMetrics ??
-        const <String, dynamic>{};
-    return (metrics['mealFrequency'] as String?) ?? kDefaultMealFrequency;
   }
 }
 
@@ -521,184 +514,6 @@ class _SectionTitle extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-// ============================================================================
-// Daily menu
-// ============================================================================
-
-class _DailyMenu extends StatelessWidget {
-  const _DailyMenu({required this.recipes, required this.mealFrequency});
-  final List<Recipe> recipes;
-  final String mealFrequency;
-
-  @override
-  Widget build(BuildContext context) {
-    if (recipes.isEmpty) {
-      return const _EmptyState(message: 'Henüz tarif eklenmemiş.');
-    }
-    final slots = _slotsFor(mealFrequency);
-    // Rotate selection by day-of-year so the menu feels fresh each day
-    // without being random (two users on the same day see the same plan —
-    // easier to reason about in QA).
-    final seed = DateTime.now().difference(DateTime(2024)).inDays;
-
-    final picks = <_DailyMenuPick>[];
-    for (var i = 0; i < slots.length; i++) {
-      final slot = slots[i];
-      final candidates = recipes.where((r) => _matchesSlot(r, slot)).toList();
-      if (candidates.isEmpty) continue;
-      final recipe = candidates[(seed + i) % candidates.length];
-      picks.add(_DailyMenuPick(slot: slot, recipe: recipe));
-    }
-    if (picks.isEmpty) {
-      return const _EmptyState(
-        message: 'Bu tercih için uygun tarif bulunamadı.',
-      );
-    }
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        children: [
-          for (final pick in picks) ...[
-            _MenuTile(slot: pick.slot, recipe: pick.recipe),
-            if (pick != picks.last) const SizedBox(height: 12),
-          ],
-        ],
-      ),
-    );
-  }
-
-  /// Maps the onboarding's `mealFrequency` token to an ordered list of
-  /// meal-type slots. The order matters — it's the order the tiles
-  /// render, so `breakfast → main → snack` reads top-to-bottom like a day.
-  List<String> _slotsFor(String freq) {
-    switch (freq) {
-      case '2_ogun':
-        return const ['main', 'main'];
-      case '4_ogun':
-        return const ['breakfast', 'main', 'snack', 'main'];
-      case '3_ogun':
-      default:
-        return const ['breakfast', 'main', 'snack'];
-    }
-  }
-
-  /// Lenient match — Supabase vocab might use `lunch`/`dinner` instead
-  /// of a single `main`, and we don't want the filter to collapse an
-  /// otherwise healthy catalogue to empty.
-  bool _matchesSlot(Recipe recipe, String slot) {
-    final type = recipe.mealType.toLowerCase();
-    switch (slot) {
-      case 'main':
-        return type == 'main' || type == 'lunch' || type == 'dinner';
-      case 'breakfast':
-        return type == 'breakfast' || type == 'kahvalti' || type == 'kahvaltı';
-      case 'snack':
-        return type == 'snack' || type == 'atistirmalik';
-      default:
-        return type == slot;
-    }
-  }
-}
-
-class _DailyMenuPick {
-  const _DailyMenuPick({required this.slot, required this.recipe});
-  final String slot;
-  final Recipe recipe;
-}
-
-class _MenuTile extends StatelessWidget {
-  const _MenuTile({required this.slot, required this.recipe});
-  final String slot;
-  final Recipe recipe;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: () => context.push('/recipe/${recipe.id}'),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: Colors.white.withValues(alpha: 0.04),
-          border: Border.all(color: Colors.white12),
-        ),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: SizedBox(
-                width: 68,
-                height: 68,
-                child: _RecipeThumb(recipe: recipe),
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _slotLabel(slot),
-                    style: const TextStyle(
-                      color: _neon,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    recipe.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      height: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      _MetaChip(
-                        icon: Icons.local_fire_department,
-                        label: '${recipe.calories} kcal',
-                      ),
-                      const SizedBox(width: 8),
-                      _MetaChip(
-                        icon: Icons.schedule,
-                        label: '${recipe.prepTimeMinutes} dk',
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right_rounded, color: Colors.white38),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _slotLabel(String slot) {
-    switch (slot) {
-      case 'breakfast':
-        return 'KAHVALTI';
-      case 'main':
-        return 'ANA ÖĞÜN';
-      case 'snack':
-        return 'ATIŞTIRMALIK';
-      case 'dessert':
-        return 'TATLI';
-      default:
-        return slot.toUpperCase();
-    }
   }
 }
 
