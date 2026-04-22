@@ -641,13 +641,19 @@ class _StandardDayCard extends StatelessWidget {
 // summary + list shape so the two share the same scroll feel.
 // ============================================================================
 
-class _PlanView extends StatelessWidget {
+class _PlanView extends ConsumerWidget {
   const _PlanView({required this.plan});
   final WorkoutPlan plan;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final exercises = plan.exercises;
+    // Regional / ad-hoc plans are a premium feature — non-PRO users see
+    // the card header + exercise list but every meaningful interaction
+    // routes to /paywall. The list below the CTA is dimmed so the lock
+    // framing carries visually even when a user scrolls past the button.
+    final isPro = ref.watch(isProProvider);
+    final locked = !isPro;
     return Scaffold(
       backgroundColor: Colors.black,
       body: CustomScrollView(
@@ -679,16 +685,19 @@ class _PlanView extends StatelessWidget {
           else ...[
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-              sliver: SliverToBoxAdapter(child: _PlanStartCta(plan: plan)),
+              sliver: SliverToBoxAdapter(
+                child: _PlanStartCta(plan: plan, locked: locked),
+              ),
             ),
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
               sliver: SliverList.builder(
                 itemCount: exercises.length,
                 itemBuilder: (context, index) {
+                  final tile = _ExerciseTile(exercise: exercises[index]);
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: _ExerciseTile(exercise: exercises[index]),
+                    child: locked ? Opacity(opacity: 0.35, child: tile) : tile,
                   );
                 },
               ),
@@ -834,8 +843,9 @@ class _StickyTextHeader extends SliverPersistentHeaderDelegate {
 }
 
 class _PlanStartCta extends ConsumerWidget {
-  const _PlanStartCta({required this.plan});
+  const _PlanStartCta({required this.plan, required this.locked});
   final WorkoutPlan plan;
+  final bool locked;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -863,6 +873,10 @@ class _PlanStartCta extends ConsumerWidget {
           child: InkWell(
             borderRadius: BorderRadius.circular(20),
             onTap: () {
+              if (locked) {
+                context.push(AppRoutes.paywall);
+                return;
+              }
               // Seed the session with this plan's exercises (ad-hoc
               // day, won't persist to the 30-day ledger) then hand off to
               // the camera screen so the user drops straight into the
@@ -872,18 +886,25 @@ class _PlanStartCta extends ConsumerWidget {
                   .initializeWorkout(plan.exercises);
               context.push(AppRoutes.workout);
             },
-            child: const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              child: Center(
-                child: Text(
-                  'PLANI BAŞLAT',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 2,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (locked) ...[
+                    const Icon(Icons.lock, color: Colors.white, size: 18),
+                    const SizedBox(width: 10),
+                  ],
+                  Text(
+                    locked ? 'PRO İLE KİLİDİ AÇ' : 'PLANI BAŞLAT',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 2,
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ),
