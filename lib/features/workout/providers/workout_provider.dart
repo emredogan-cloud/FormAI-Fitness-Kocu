@@ -133,13 +133,24 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
 
   /// Resolves the user's stored goal + activity level (set during the
   /// onboarding wizard) and hands them to the repository's cache-or-
-  /// generate pipeline. Guests or users who skipped onboarding fall back
-  /// to the generator's own defaults (sixpack + beginner), so there's
-  /// never a state where the 30-day list is empty.
+  /// generate pipeline.
+  ///
+  /// Two sources are tried for the goal before giving up:
+  ///
+  ///   1. `userMetrics['targetPhysique']` — the full wizard payload
+  ///      saved by onboarding / profile-edit.
+  ///   2. `prefs.goal` — the flat `sixpack.goal` string written by
+  ///      `completeOnboarding`. This is the fallback for legacy installs
+  ///      that onboarded before the metrics-save was wired in (otherwise
+  ///      those users would be stuck on the sixpack default forever even
+  ///      though they picked bulk or tone).
+  ///
+  /// If both are absent, the repository/generator's own defaults
+  /// (sixpack + beginner) kick in — never an empty 30-day list.
   Future<List<WorkoutDay>> _loadProgram() async {
     final appPrefs = ref.read(appPreferencesProvider);
     final metrics = appPrefs.userMetrics ?? const <String, dynamic>{};
-    final userGoal = metrics['targetPhysique'] as String?;
+    final userGoal = (metrics['targetPhysique'] as String?) ?? appPrefs.goal;
     final fitnessLevel = metrics['activityLevel'] as String?;
     return _repository.loadOrGenerateProgram(
       generator: ref.read(workoutGeneratorProvider),

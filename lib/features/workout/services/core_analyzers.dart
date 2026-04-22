@@ -501,6 +501,60 @@ class PlankAnalyzer implements PoseAnalyzer {
   }
 }
 
+/// Neutral analyzer for time-based holds and rhythmic movements that
+/// have no meaningful pose check (calf raise, wall sit, superman, high
+/// knees, skipping rope). Returns empty results every frame — no form
+/// warnings, no reps — and emits an occasional generic encouragement
+/// line via `contextualCue`.
+///
+/// Exists to stop the previous behaviour where these exercises were
+/// misrouted to [PlankAnalyzer], which would yell "Kalçanı düz tut,
+/// plank pozisyonunu koru" every 8 s because the shoulder-hip-ankle
+/// line check is nonsense for a person who is face-down (superman),
+/// seated (wall sit), or standing upright (calf raise / skipping rope).
+class SilentHoldAnalyzer implements PoseAnalyzer {
+  SilentHoldAnalyzer({
+    this.encouragementCooldown = const Duration(seconds: 18),
+  });
+
+  final Duration encouragementCooldown;
+
+  static const List<String> _encouragements = [
+    'Harika gidiyorsun!',
+    'Dayan, bırakma!',
+    'Güzel ritim, aynen böyle!',
+  ];
+
+  int _index = 0;
+  DateTime _lastCue = DateTime.now();
+
+  @override
+  void reset() {
+    _index = 0;
+    _lastCue = DateTime.now();
+  }
+
+  @override
+  CrunchResult analyze(Pose pose) {
+    final now = DateTime.now();
+    String? cue;
+    if (now.difference(_lastCue) >= encouragementCooldown) {
+      cue = _encouragements[_index % _encouragements.length];
+      _index++;
+      _lastCue = now;
+    }
+    return CrunchResult(
+      reps: 0,
+      state: CrunchState.up,
+      torsoAngle: null,
+      neckAngle: null,
+      formWarning: null,
+      repJustCompleted: false,
+      contextualCue: cue,
+    );
+  }
+}
+
 // ----------------------------------------------------------------------------
 // Internal helpers shared across the analyzers above.
 // ----------------------------------------------------------------------------

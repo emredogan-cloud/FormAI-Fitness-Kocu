@@ -8,10 +8,17 @@ import 'shoulders_arms_cardio_analyzers.dart';
 
 /// Returns a fresh [PoseAnalyzer] tuned for [exercise]. Always returns a
 /// new instance so set transitions don't carry rep state across boundaries.
-/// Unknown ids fall back to [CrunchAnalyzer] so legacy data still ticks.
-/// Time-based holds without a meaningful pose check (calf raises, wall
-/// sits, supermans) route to [PlankAnalyzer] so the screen still surfaces
-/// posture warnings while the timer counts down.
+///
+/// Unknown ids fall back to [SilentHoldAnalyzer] rather than [CrunchAnalyzer]
+/// — a neutral "no-op" is safer than a counter that might tick on unrelated
+/// movements.
+///
+/// Time-based holds / rhythmic cardio with no meaningful pose check
+/// (`wall_sit`, `calf_raise`, `superman`, `high_knees`, `skipping_rope`)
+/// route to [SilentHoldAnalyzer]. Previously they were misrouted to
+/// [PlankAnalyzer], which would yell "Kalçanı düz tut, plank pozisyonunu
+/// koru" every 8 s because its shoulder-hip-ankle check is meaningless
+/// for a seated/standing/prone user.
 PoseAnalyzer analyzerFor(Exercise exercise) {
   switch (exercise.id) {
     // ---- Core ----
@@ -49,7 +56,7 @@ PoseAnalyzer analyzerFor(Exercise exercise) {
       return SquatAnalyzer();
     case 'wall_sit':
     case 'calf_raise':
-      return PlankAnalyzer();
+      return SilentHoldAnalyzer();
     // ---- Back ----
     case 'pull_up':
     case 'chin_up':
@@ -57,7 +64,7 @@ PoseAnalyzer analyzerFor(Exercise exercise) {
     case 'barbell_row':
       return PullUpAnalyzer();
     case 'superman':
-      return PlankAnalyzer();
+      return SilentHoldAnalyzer();
     // ---- Shoulders ----
     case 'shoulder_press':
     case 'arnold_press':
@@ -84,8 +91,8 @@ PoseAnalyzer analyzerFor(Exercise exercise) {
       return SquatAnalyzer();
     case 'high_knees':
     case 'skipping_rope':
-      return PlankAnalyzer();
+      return SilentHoldAnalyzer();
     default:
-      return CrunchAnalyzer();
+      return SilentHoldAnalyzer();
   }
 }

@@ -53,8 +53,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Future<void> _finish() async {
-    await ref.read(appPreferencesProvider).completeOnboarding(
-        goal: ref.read(wizardProvider).targetPhysique?.name);
+    final wizard = ref.read(wizardProvider);
+    final prefs = ref.read(appPreferencesProvider);
+    // Persist the full wizard payload BEFORE flipping the firstTime flag
+    // so the workout generator (which reads `userMetrics['targetPhysique']`
+    // and `userMetrics['activityLevel']`) has everything it needs on the
+    // very first /prediction render — without this save, guests complete
+    // onboarding with an empty `user_metrics` and the generator silently
+    // falls back to sixpack + beginner.
+    await prefs.saveUserMetrics(wizard.toJson());
+    await prefs.completeOnboarding(goal: wizard.targetPhysique?.name);
     if (!mounted) return;
 
     // Frictionless auth: silently create an anonymous Supabase session so

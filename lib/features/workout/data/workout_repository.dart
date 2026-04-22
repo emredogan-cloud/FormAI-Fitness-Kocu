@@ -21,7 +21,12 @@ class WorkoutRepository {
 
   static const String _completedKey = 'sixpack.completed_days';
   static const String _pendingSyncKey = 'sixpack.pending_sync_days';
-  static const String _planKey = 'sixpack.user_custom_plan_v1';
+  // Bumped from v1 → v2 in phase 19.5: pre-fix installs cached an
+  // all-core plan against an empty goal (the onboarding flow was not
+  // saving userMetrics, so the generator fell back to sixpack). A key
+  // bump forces every existing install to regenerate on next launch
+  // once the goal is actually available.
+  static const String _planKey = 'sixpack.user_custom_plan_v2';
   static const String _progressTable = 'user_progress';
 
   // Videos live in the public Supabase Storage bucket `exercises`. The URL
