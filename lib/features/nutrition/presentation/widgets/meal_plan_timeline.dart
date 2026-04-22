@@ -3,19 +3,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/widgets/error_card.dart';
+import '../../domain/models/daily_meal_slot.dart';
+import '../../domain/models/planned_meal.dart';
 import '../../domain/models/recipe.dart';
 import '../../providers/daily_menu_provider.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonGreen = Color(0xFF39FF14);
+const Color _skippedColor = Color(0xFFFF5577);
 const Color _proteinColor = Color(0xFF4DA6FF);
 const Color _carbsColor = Color(0xFFFF4DDB);
 const Color _fatColor = Color(0xFFEAFF00);
 
 /// Vertical meal-plan timeline rendered directly under the AI insight
-/// banner in the nutrition tab. Reads [dailyMenuProvider] and paints one
-/// [_MealCard] per slot, stitched together by a continuous neon gutter
-/// on the left (dot + line) so the day reads as a chronological arc.
+/// banner in the nutrition tab. Reads [dailyMenuProvider] (now an
+/// `AsyncNotifier<List<PlannedMeal>>`) and paints one [_MealCard] per
+/// planned meal, stitched together by a continuous neon gutter on the
+/// left so the day reads as a chronological arc.
 ///
 /// Uses a plain [Column] instead of [ListView.builder] because the tab
 /// already scrolls via [SingleChildScrollView]; a nested scroll view
@@ -40,8 +44,8 @@ class MealPlanTimeline extends ConsumerWidget {
           onRetry: () => ref.invalidate(dailyMenuProvider),
         );
       },
-      data: (slots) {
-        if (slots.isEmpty) {
+      data: (meals) {
+        if (meals.isEmpty) {
           return const Padding(
             padding: EdgeInsets.symmetric(horizontal: 20),
             child: _EmptyPlaceholder(
@@ -51,17 +55,15 @@ class MealPlanTimeline extends ConsumerWidget {
         }
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: IntrinsicHeight(
-            child: Column(
-              children: [
-                for (var i = 0; i < slots.length; i++)
-                  _TimelineRow(
-                    slot: slots[i],
-                    isFirst: i == 0,
-                    isLast: i == slots.length - 1,
-                  ),
-              ],
-            ),
+          child: Column(
+            children: [
+              for (var i = 0; i < meals.length; i++)
+                _TimelineRow(
+                  meal: meals[i],
+                  isFirst: i == 0,
+                  isLast: i == meals.length - 1,
+                ),
+            ],
           ),
         );
       },
@@ -71,12 +73,12 @@ class MealPlanTimeline extends ConsumerWidget {
 
 class _TimelineRow extends StatelessWidget {
   const _TimelineRow({
-    required this.slot,
+    required this.meal,
     required this.isFirst,
     required this.isLast,
   });
 
-  final DailyMenuSlot slot;
+  final PlannedMeal meal;
   final bool isFirst;
   final bool isLast;
 
@@ -90,6 +92,7 @@ class _TimelineRow extends StatelessWidget {
             width: 40,
             child: CustomPaint(
               painter: _TimelineGutterPainter(
+                status: meal.status,
                 isFirst: isFirst,
                 isLast: isLast,
               ),
@@ -98,7 +101,7 @@ class _TimelineRow extends StatelessWidget {
           Expanded(
             child: Padding(
               padding: EdgeInsets.only(bottom: isLast ? 0 : 14),
-              child: _MealCard(slot: slot),
+              child: _MealCard(meal: meal),
             ),
           ),
         ],
@@ -107,17 +110,34 @@ class _TimelineRow extends StatelessWidget {
   }
 }
 
-/// Paints the vertical connecting line plus a neon dot at the top of
-/// each row. First row has no line above, last row has no line below,
-/// so the connective tissue flows continuously through the list.
+/// Paints the vertical connecting line plus a status-coloured dot at
+/// the top of each row. First row has no line above, last row has no
+/// line below, so the connective tissue flows continuously through the
+/// list.
 class _TimelineGutterPainter extends CustomPainter {
-  const _TimelineGutterPainter({required this.isFirst, required this.isLast});
+  const _TimelineGutterPainter({
+    required this.status,
+    required this.isFirst,
+    required this.isLast,
+  });
 
+  final MealStatus status;
   final bool isFirst;
   final bool isLast;
 
   static const double _dotY = 24;
   static const double _dotRadius = 7;
+
+  Color get _dotColor {
+    switch (status) {
+      case MealStatus.completed:
+        return _neonGreen;
+      case MealStatus.skipped:
+        return _skippedColor;
+      case MealStatus.planned:
+        return _neon;
+    }
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -127,8 +147,6 @@ class _TimelineGutterPainter extends CustomPainter {
       ..strokeWidth = 2
       ..strokeCap = StrokeCap.round;
 
-    // Line running above the dot — suppressed on the first row so the
-    // timeline visually "starts" at the first dot.
     if (!isFirst) {
       canvas.drawLine(
         Offset(centerX, 0),
@@ -136,8 +154,6 @@ class _TimelineGutterPainter extends CustomPainter {
         linePaint,
       );
     }
-    // Line running below the dot — suppressed on the last row so it
-    // doesn't dangle into the next section.
     if (!isLast) {
       canvas.drawLine(
         Offset(centerX, _dotY + _dotRadius + 1),
@@ -145,80 +161,42 @@ class _TimelineGutterPainter extends CustomPainter {
         linePaint,
       );
     }
-    // Glow behind the dot.
+    final color = _dotColor;
     final glow = Paint()
-      ..color = _neon.withValues(alpha: 0.55)
+      ..color = color.withValues(alpha: 0.55)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
     canvas.drawCircle(Offset(centerX, _dotY), _dotRadius, glow);
-    // Solid dot.
-    final dot = Paint()..color = _neon;
+    final dot = Paint()..color = color;
     canvas.drawCircle(Offset(centerX, _dotY), _dotRadius, dot);
   }
 
   @override
   bool shouldRepaint(covariant _TimelineGutterPainter old) =>
-      old.isFirst != isFirst || old.isLast != isLast;
+      old.status != status || old.isFirst != isFirst || old.isLast != isLast;
 }
 
-/// One meal entry. Holds local state for:
-///   • [_index] — the currently shown recipe inside `slot.candidates`.
-///     "Değiştir" advances this by one, wrapping around.
-///   • [_eaten] — toggled by "Yedim". Dims the card and swaps the log
-///     button to "Geri Al" so the action is reversible.
+/// One meal entry. Fully driven by [PlannedMeal.status]; no local state.
+/// Actions dispatch to the [dailyMenuProvider] notifier so the change
+/// is visible everywhere (timeline, calorie ring, macro bars).
 ///
-/// The card tap also routes into `/recipe/:id` so users can drill down.
-class _MealCard extends StatefulWidget {
-  const _MealCard({required this.slot});
-  final DailyMenuSlot slot;
+///   • `planned` → "Atla" outlined + "Yedim" filled.
+///   • `completed` / `skipped` → full-width "Geri Al" that returns the
+///     meal to `planned`.
+class _MealCard extends ConsumerWidget {
+  const _MealCard({required this.meal});
+  final PlannedMeal meal;
 
   @override
-  State<_MealCard> createState() => _MealCardState();
-}
-
-class _MealCardState extends State<_MealCard> {
-  late int _index;
-  bool _eaten = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _index = widget.slot.candidates.isEmpty
-        ? 0
-        : widget.slot.initialIndex.clamp(0, widget.slot.candidates.length - 1);
-  }
-
-  Recipe? get _recipe {
-    if (widget.slot.candidates.isEmpty) return null;
-    return widget.slot.candidates[_index];
-  }
-
-  bool get _canSwap => widget.slot.candidates.length > 1;
-
-  void _swap() {
-    if (!_canSwap) return;
-    setState(() {
-      _index = (_index + 1) % widget.slot.candidates.length;
-      // Swapping the recipe resets the "eaten" flag — the user is now
-      // looking at a different dish, so the old confirmation shouldn't
-      // stick.
-      _eaten = false;
-    });
-  }
-
-  void _toggleEaten() => setState(() => _eaten = !_eaten);
-
-  @override
-  Widget build(BuildContext context) {
-    final recipe = _recipe;
-    if (recipe == null) {
-      return _EmptySlotCard(slot: widget.slot.slot);
-    }
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notifier = ref.read(dailyMenuProvider.notifier);
+    final recipe = meal.recipe;
+    final dimmed = meal.status != MealStatus.planned;
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 200),
-      opacity: _eaten ? 0.55 : 1.0,
+      opacity: dimmed ? 0.55 : 1.0,
       child: _CardShell(
         onTap: () => context.push('/recipe', extra: recipe),
-        borderColor: _eaten ? _neonGreen.withValues(alpha: 0.45) : null,
+        borderColor: _borderColorFor(meal.status),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
           child: Column(
@@ -232,7 +210,7 @@ class _MealCardState extends State<_MealCard> {
                     child: SizedBox(
                       width: 68,
                       height: 68,
-                      child: _RecipeThumb(url: recipe.imageUrl),
+                      child: _RecipeThumb(imageUrl: recipe.imageUrl),
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -240,14 +218,22 @@ class _MealCardState extends State<_MealCard> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          _slotLabel(widget.slot.slot),
-                          style: const TextStyle(
-                            color: _neon,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.6,
-                          ),
+                        Row(
+                          children: [
+                            Text(
+                              _slotLabel(meal.slot),
+                              style: const TextStyle(
+                                color: _neon,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1.6,
+                              ),
+                            ),
+                            if (meal.status != MealStatus.planned) ...[
+                              const SizedBox(width: 8),
+                              _StatusPill(status: meal.status),
+                            ],
+                          ],
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -269,98 +255,132 @@ class _MealCardState extends State<_MealCard> {
                 ],
               ),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _canSwap ? _swap : null,
-                      icon: const Icon(Icons.sync, size: 16),
-                      label: const Text('Değiştir'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        side: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.25),
-                        ),
-                        disabledForegroundColor: Colors.white38,
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        textStyle: const TextStyle(
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.5,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: _toggleEaten,
-                      icon: Icon(_eaten ? Icons.undo : Icons.check, size: 16),
-                      label: Text(_eaten ? 'Geri Al' : 'Yedim'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: _eaten
-                            ? Colors.white.withValues(alpha: 0.12)
-                            : _neonGreen,
-                        foregroundColor: _eaten ? Colors.white : Colors.black,
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        textStyle: const TextStyle(
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.5,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              _ActionRow(meal: meal, notifier: notifier),
             ],
           ),
         ),
       ),
     );
   }
+
+  Color? _borderColorFor(MealStatus status) {
+    switch (status) {
+      case MealStatus.completed:
+        return _neonGreen.withValues(alpha: 0.45);
+      case MealStatus.skipped:
+        return _skippedColor.withValues(alpha: 0.45);
+      case MealStatus.planned:
+        return null;
+    }
+  }
 }
 
-class _EmptySlotCard extends StatelessWidget {
-  const _EmptySlotCard({required this.slot});
-  final DailyMealSlot slot;
+class _ActionRow extends StatelessWidget {
+  const _ActionRow({required this.meal, required this.notifier});
+  final PlannedMeal meal;
+  final DailyMenuNotifier notifier;
 
   @override
   Widget build(BuildContext context) {
-    return _CardShell(
-      onTap: null,
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Row(
+    switch (meal.status) {
+      case MealStatus.planned:
+        return Row(
           children: [
-            const Icon(Icons.hourglass_empty, color: Colors.white38, size: 22),
-            const SizedBox(width: 12),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _slotLabel(slot),
-                    style: const TextStyle(
-                      color: _neon,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.6,
-                    ),
+              child: OutlinedButton.icon(
+                onPressed: () => notifier.markAsSkipped(meal.id),
+                icon: const Icon(Icons.close, size: 16),
+                label: const Text('Atla'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  side: BorderSide(
+                    color: Colors.white.withValues(alpha: 0.25),
                   ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Bu öğün için uygun tarif bulunamadı.',
-                    style: TextStyle(color: Colors.white60, fontSize: 13),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  textStyle: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
                   ),
-                ],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: FilledButton.icon(
+                onPressed: () => notifier.markAsCompleted(meal.id),
+                icon: const Icon(Icons.check, size: 16),
+                label: const Text('Yedim'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: _neonGreen,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  textStyle: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.5,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
               ),
             ),
           ],
+        );
+      case MealStatus.completed:
+      case MealStatus.skipped:
+        return SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: () => notifier.resetMeal(meal.id),
+            icon: const Icon(Icons.undo, size: 16),
+            label: const Text('Geri Al'),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.white.withValues(alpha: 0.12),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              textStyle: const TextStyle(
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.5,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+        );
+    }
+  }
+}
+
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.status});
+  final MealStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final (label, color) = switch (status) {
+      MealStatus.completed => ('YENDİ', _neonGreen),
+      MealStatus.skipped => ('ATLANDI', _skippedColor),
+      MealStatus.planned => ('', Colors.transparent),
+    };
+    if (label.isEmpty) return const SizedBox.shrink();
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(6),
+        color: color.withValues(alpha: 0.18),
+        border: Border.all(color: color.withValues(alpha: 0.55)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 9,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 1.4,
         ),
       ),
     );
@@ -474,15 +494,9 @@ class _Chip extends StatelessWidget {
   }
 }
 
-/// Uses [Image.network] with fallback + loading builders instead of
-/// `CachedNetworkImage`. The phase 22.2 spec named the latter, but the
-/// project's pubspec doesn't include that package, so we reuse the same
-/// cache-miss-friendly pattern already used by the Keşfet strip and
-/// recipe detail screen — a Supabase image URL is the same cost to
-/// re-fetch as most cached miss paths and this keeps deps minimal.
 class _RecipeThumb extends StatelessWidget {
-  const _RecipeThumb({required this.url});
-  final String? url;
+  const _RecipeThumb({required this.imageUrl});
+  final String? imageUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -491,7 +505,7 @@ class _RecipeThumb extends StatelessWidget {
       alignment: Alignment.center,
       child: const Icon(Icons.restaurant, color: Colors.white54, size: 28),
     );
-    final src = url;
+    final src = imageUrl;
     if (src == null || src.isEmpty) return fallback;
     return Image.network(
       src,

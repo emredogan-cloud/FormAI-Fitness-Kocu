@@ -26,28 +26,18 @@ const Color _statusOver = Color(0xFFFF5577); // neon red
 /// surfaces a decision-first header (calorie ring + macro bars + AI
 /// coach banner) above the recipe-driven Günün Menüsü and Keşfet strips.
 ///
-/// Consumed macros are a static zero placeholder until meal logging
-/// lands — the UI already handles any non-zero value gracefully, so
-/// wiring real intake later is a one-line swap of [_consumedToday].
+/// Consumed macros come from [consumedMacrosProvider], which derives
+/// its value from meals the user has marked as `completed` in
+/// [dailyMenuProvider] — so every "Yedim" / "Geri Al" tap in the
+/// timeline re-renders this surface in real time.
 class NutritionTab extends ConsumerWidget {
   const NutritionTab({super.key});
-
-  /// Placeholder until meal logging exists. A future phase can replace
-  /// this with a `StateProvider<MacroTarget>` populated by the food
-  /// diary; the rest of the tab reads through this single seam so no
-  /// other callsite needs to change.
-  static const MacroTarget _consumedToday = MacroTarget(
-    calories: 0,
-    protein: 0,
-    carbs: 0,
-    fat: 0,
-  );
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final recipesAsync = ref.watch(recipesProvider);
     final target = _computeTarget(ref);
-    const consumed = _consumedToday;
+    final consumed = ref.watch(consumedMacrosProvider);
     final insight = _getDailyInsight(target, consumed);
 
     return recipesAsync.when(
@@ -316,12 +306,12 @@ class _CalorieRing extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                _statusLabel(progress),
+                _remainingLabel(consumed: consumed, target: target),
                 style: TextStyle(
                   color: color,
-                  fontSize: 10,
+                  fontSize: 11,
                   fontWeight: FontWeight.w900,
-                  letterSpacing: 1.8,
+                  letterSpacing: 0.6,
                 ),
               ),
             ],
@@ -337,10 +327,15 @@ class _CalorieRing extends StatelessWidget {
     return _statusOnTrack;
   }
 
-  static String _statusLabel(double progress) {
-    if (progress > 1.0) return 'HEDEFİ AŞTIN';
-    if (progress < 0.5) return 'DÜŞÜK ALIM';
-    return 'İYİ GİDİYORSUN';
+  /// Renders the live delta against the target:
+  ///   • under target → "N kcal kaldı" (positive remaining)
+  ///   • over target  → "N kcal aşıldı" (absolute overage)
+  ///   • exactly hit  → "hedef tam"
+  static String _remainingLabel({required int consumed, required int target}) {
+    final remaining = target - consumed;
+    if (remaining > 0) return '$remaining kcal kaldı';
+    if (remaining < 0) return '${-remaining} kcal aşıldı';
+    return 'hedef tam';
   }
 }
 

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../domain/models/recipe.dart';
+import '../providers/daily_menu_provider.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonGreen = Color(0xFF39FF14);
@@ -365,15 +367,16 @@ class _MacroTile extends StatelessWidget {
   }
 }
 
-/// Sticky bottom CTA. For MVP it toasts + pops — swapping for a real
-/// "add to plan" persistence call is a single onPressed change once the
-/// food diary lands.
-class _AddToPlanButton extends StatelessWidget {
+/// Sticky bottom CTA. Wired in phase 23.1 to actually append the recipe
+/// to the daily plan via [DailyMenuNotifier.addRecipeToPlan]; the slot
+/// is inferred from `recipe.mealType` so a breakfast recipe lands in
+/// the breakfast row, a main lands in dinner, etc.
+class _AddToPlanButton extends ConsumerWidget {
   const _AddToPlanButton({required this.recipe});
   final Recipe recipe;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return SafeArea(
       top: false,
       child: Container(
@@ -388,6 +391,9 @@ class _AddToPlanButton extends StatelessWidget {
           width: double.infinity,
           child: FilledButton.icon(
             onPressed: () {
+              ref
+                  .read(dailyMenuProvider.notifier)
+                  .addRecipeToPlan(recipe, recipe.mealType);
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
                 ..showSnackBar(
