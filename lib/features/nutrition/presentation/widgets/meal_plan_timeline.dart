@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -7,31 +8,41 @@ import '../../domain/models/daily_meal_slot.dart';
 import '../../domain/models/planned_meal.dart';
 import '../../domain/models/recipe.dart';
 import '../../providers/daily_menu_provider.dart';
+import '../../providers/nutrition_provider.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonGreen = Color(0xFF39FF14);
 const Color _skippedColor = Color(0xFFFF5577);
+const Color _warningColor = Color(0xFFFF5577);
 const Color _proteinColor = Color(0xFF4DA6FF);
 const Color _carbsColor = Color(0xFFFF4DDB);
 const Color _fatColor = Color(0xFFEAFF00);
 
 /// Vertical meal-plan timeline rendered directly under the AI insight
-/// banner in the nutrition tab. Reads [dailyMenuProvider] (now an
-/// `AsyncNotifier<List<PlannedMeal>>`) and paints one [_MealCard] per
+/// banner. Reads [dailyMenuProvider] and paints one [_MealCard] per
 /// planned meal, stitched together by a continuous neon gutter on the
 /// left so the day reads as a chronological arc.
 ///
-/// Uses a plain [Column] instead of [ListView.builder] because the tab
-/// already scrolls via [SingleChildScrollView]; a nested scroll view
-/// would either fight the outer scroll or require shrinkWrap which
-/// defeats the laziness ListView.builder gives you. With 2–4 cards per
-/// day the cost of building them all eagerly is negligible.
+/// Adds in phase 25.1:
+///   • Time-based "Şu an" highlight on the meal matching the current
+///     hour-of-day block when its status is still `planned`.
+///   • Over-calorie switch: when consumed ≥ target, the planned meal
+///     cards swap their primary CTA from "Yedim" to the warning
+///     "❌ Daha Hafif Alternatif Gör" which routes to the next-best
+///     (light) suggestion.
 class MealPlanTimeline extends ConsumerWidget {
   const MealPlanTimeline({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final menuAsync = ref.watch(dailyMenuProvider);
+    final target = ref.watch(macroTargetProvider);
+    final consumed = ref.watch(consumedMacrosProvider);
+    final overCalories =
+        target.calories > 0 && consumed.calories >= target.calories;
+    final lighterSuggestion = ref.watch(nextBestMealProvider);
+    final currentSlot = _currentSlotForHour(DateTime.now().hour);
+
     return menuAsync.when(
       loading: () => const Padding(
         padding: EdgeInsets.symmetric(vertical: 32),
@@ -62,12 +73,30 @@ class MealPlanTimeline extends ConsumerWidget {
                   meal: meals[i],
                   isFirst: i == 0,
                   isLast: i == meals.length - 1,
+                  isCurrent: _isCurrent(meals[i], currentSlot),
+                  overCalories: overCalories,
+                  lighterSuggestion: lighterSuggestion,
                 ),
             ],
           ),
         );
       },
     );
+  }
+
+  /// Maps the hour-of-day to the slot the timeline should highlight.
+  /// Night hours (23:00-05:59) return `null` so the timeline rests
+  /// without a fake target while the user is presumably asleep.
+  static DailyMealSlot? _currentSlotForHour(int hour) {
+    if (hour >= 6 && hour < 12) return DailyMealSlot.breakfast;
+    if (hour >= 12 && hour < 17) return DailyMealSlot.lunch;
+    if (hour >= 17 && hour < 23) return DailyMealSlot.dinner;
+    return null;
+  }
+
+  static bool _isCurrent(PlannedMeal meal, DailyMealSlot? slot) {
+    if (slot == null) return false;
+    return meal.slot == slot && meal.status == MealStatus.planned;
   }
 }
 
@@ -76,11 +105,17 @@ class _TimelineRow extends StatelessWidget {
     required this.meal,
     required this.isFirst,
     required this.isLast,
+    required this.isCurrent,
+    required this.overCalories,
+    required this.lighterSuggestion,
   });
 
   final PlannedMeal meal;
   final bool isFirst;
   final bool isLast;
+  final bool isCurrent;
+  final bool overCalories;
+  final Recipe? lighterSuggestion;
 
   @override
   Widget build(BuildContext context) {
@@ -101,7 +136,12 @@ class _TimelineRow extends StatelessWidget {
           Expanded(
             child: Padding(
               padding: EdgeInsets.only(bottom: isLast ? 0 : 14),
-              child: _MealCard(meal: meal),
+              child: _MealCard(
+                meal: meal,
+                isCurrent: isCurrent,
+                overCalories: overCalories,
+                lighterSuggestion: lighterSuggestion,
+              ),
             ),
           ),
         ],
@@ -175,28 +215,157 @@ class _TimelineGutterPainter extends CustomPainter {
       old.status != status || old.isFirst != isFirst || old.isLast != isLast;
 }
 
-/// One meal entry. Fully driven by [PlannedMeal.status]; no local state.
-/// Actions dispatch to the [dailyMenuProvider] notifier so the change
-/// is visible everywhere (timeline, calorie ring, macro bars).
+/// One meal entry. Stateful purely for the expansion toggle on
+/// completed meals — everything else is driven by [PlannedMeal.status].
 ///
-///   • `planned` → "Atla" outlined + "Yedim" filled.
-///   • `completed` / `skipped` → full-width "Geri Al" that returns the
-///     meal to `planned`.
-class _MealCard extends ConsumerWidget {
-  const _MealCard({required this.meal});
+/// Behaviour matrix:
+///   • `planned` → full card with secondary Değiştir + primary Yedim
+///     (swaps to a warning "Daha Hafif Alternatif Gör" when the user
+///     is already over today's calorie target), plus a tertiary
+///     "Detay" link. A `⏳ Şu an` pill + glowing border + Transform.scale
+///     highlight the meal matching the current hour block.
+///   • `completed` → collapses to a single "✔ Title (Tamamlandı)" row
+///     by default. Tapping expands back to the full card with a
+///     "Geri Al" action.
+///   • `skipped` → full card with a "Geri Al" action.
+class _MealCard extends ConsumerStatefulWidget {
+  const _MealCard({
+    required this.meal,
+    required this.isCurrent,
+    required this.overCalories,
+    required this.lighterSuggestion,
+  });
+
   final PlannedMeal meal;
+  final bool isCurrent;
+  final bool overCalories;
+  final Recipe? lighterSuggestion;
+
+  @override
+  ConsumerState<_MealCard> createState() => _MealCardState();
+}
+
+class _MealCardState extends ConsumerState<_MealCard> {
+  late bool _expanded;
+
+  @override
+  void initState() {
+    super.initState();
+    _expanded = widget.meal.status != MealStatus.completed;
+  }
+
+  @override
+  void didUpdateWidget(covariant _MealCard old) {
+    super.didUpdateWidget(old);
+    // Only auto-collapse on the planned → completed transition. If the
+    // user manually expands a completed card, that expanded state
+    // persists until they explicitly collapse or the meal is reset.
+    if (old.meal.status != MealStatus.completed &&
+        widget.meal.status == MealStatus.completed) {
+      _expanded = false;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.meal.status == MealStatus.completed && !_expanded) {
+      return _CollapsedCompletedCard(
+        meal: widget.meal,
+        onTap: () => setState(() => _expanded = true),
+      );
+    }
+    return _ExpandedCard(
+      meal: widget.meal,
+      isCurrent: widget.isCurrent,
+      overCalories: widget.overCalories,
+      lighterSuggestion: widget.lighterSuggestion,
+    );
+  }
+}
+
+class _CollapsedCompletedCard extends StatelessWidget {
+  const _CollapsedCompletedCard({required this.meal, required this.onTap});
+  final PlannedMeal meal;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Opacity(
+      opacity: 0.6,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              color: Colors.white.withValues(alpha: 0.03),
+              border: Border.all(color: _neonGreen.withValues(alpha: 0.35)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.check_circle, color: _neonGreen, size: 18),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    '${meal.recipe.title} (Tamamlandı)',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      decoration: TextDecoration.lineThrough,
+                      decorationColor: Colors.white38,
+                    ),
+                  ),
+                ),
+                const Icon(
+                  Icons.expand_more_rounded,
+                  color: Colors.white38,
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ExpandedCard extends ConsumerWidget {
+  const _ExpandedCard({
+    required this.meal,
+    required this.isCurrent,
+    required this.overCalories,
+    required this.lighterSuggestion,
+  });
+
+  final PlannedMeal meal;
+  final bool isCurrent;
+  final bool overCalories;
+  final Recipe? lighterSuggestion;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifier = ref.read(dailyMenuProvider.notifier);
     final recipe = meal.recipe;
     final dimmed = meal.status != MealStatus.planned;
-    return AnimatedOpacity(
+
+    final card = AnimatedOpacity(
       duration: const Duration(milliseconds: 200),
-      opacity: dimmed ? 0.55 : 1.0,
+      opacity: dimmed ? 0.7 : 1.0,
       child: _CardShell(
         onTap: () => context.push('/recipe', extra: recipe),
-        borderColor: _borderColorFor(meal.status),
+        borderColor: _borderColorFor(
+          status: meal.status,
+          isCurrent: isCurrent,
+        ),
+        glow: isCurrent,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
           child: Column(
@@ -218,22 +387,10 @@ class _MealCard extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Text(
-                              _slotLabel(meal.slot),
-                              style: const TextStyle(
-                                color: _neon,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.6,
-                              ),
-                            ),
-                            if (meal.status != MealStatus.planned) ...[
-                              const SizedBox(width: 8),
-                              _StatusPill(status: meal.status),
-                            ],
-                          ],
+                        _HeaderRow(
+                          slot: meal.slot,
+                          status: meal.status,
+                          isCurrent: isCurrent,
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -255,15 +412,29 @@ class _MealCard extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 12),
-              _ActionRow(meal: meal, notifier: notifier),
+              _PrimaryActionRow(
+                meal: meal,
+                notifier: notifier,
+                overCalories: overCalories,
+                lighterSuggestion: lighterSuggestion,
+              ),
+              const SizedBox(height: 6),
+              _TertiaryRow(recipe: recipe),
             ],
           ),
         ),
       ),
     );
+
+    // Scale 1.02 amplifies the "current meal" affordance without pushing
+    // the row's layout footprint enough to shove neighbours.
+    if (!isCurrent) return card;
+    return Transform.scale(scale: 1.02, child: card);
   }
 
-  Color? _borderColorFor(MealStatus status) {
+  Color? _borderColorFor(
+      {required MealStatus status, required bool isCurrent}) {
+    if (isCurrent) return _neon;
     switch (status) {
       case MealStatus.completed:
         return _neonGreen.withValues(alpha: 0.45);
@@ -275,10 +446,86 @@ class _MealCard extends ConsumerWidget {
   }
 }
 
-class _ActionRow extends StatelessWidget {
-  const _ActionRow({required this.meal, required this.notifier});
+class _HeaderRow extends StatelessWidget {
+  const _HeaderRow({
+    required this.slot,
+    required this.status,
+    required this.isCurrent,
+  });
+
+  final DailyMealSlot slot;
+  final MealStatus status;
+  final bool isCurrent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text(
+          _slotLabel(slot),
+          style: const TextStyle(
+            color: _neon,
+            fontSize: 10,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.6,
+          ),
+        ),
+        if (isCurrent) ...[
+          const SizedBox(width: 8),
+          const _CurrentNowPill(),
+        ] else if (status != MealStatus.planned) ...[
+          const SizedBox(width: 8),
+          _StatusPill(status: status),
+        ],
+      ],
+    );
+  }
+}
+
+/// "Şu an" pill that marks the meal matching the current hour block.
+class _CurrentNowPill extends StatelessWidget {
+  const _CurrentNowPill();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(6),
+        color: _neon.withValues(alpha: 0.28),
+        border: Border.all(color: _neon),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('⏳ ', style: TextStyle(fontSize: 9)),
+          Text(
+            'ŞU AN',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 9,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PrimaryActionRow extends StatelessWidget {
+  const _PrimaryActionRow({
+    required this.meal,
+    required this.notifier,
+    required this.overCalories,
+    required this.lighterSuggestion,
+  });
+
   final PlannedMeal meal;
   final DailyMenuNotifier notifier;
+  final bool overCalories;
+  final Recipe? lighterSuggestion;
 
   @override
   Widget build(BuildContext context) {
@@ -288,9 +535,12 @@ class _ActionRow extends StatelessWidget {
           children: [
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: () => notifier.markAsSkipped(meal.id),
-                icon: const Icon(Icons.close, size: 16),
-                label: const Text('Atla'),
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  notifier.markAsSkipped(meal.id);
+                },
+                icon: const Icon(Icons.sync, size: 16),
+                label: const Text('Değiştir'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
                   side: BorderSide(
@@ -309,23 +559,16 @@ class _ActionRow extends StatelessWidget {
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: FilledButton.icon(
-                onPressed: () => notifier.markAsCompleted(meal.id),
-                icon: const Icon(Icons.check, size: 16),
-                label: const Text('Yedim'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: _neonGreen,
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  textStyle: const TextStyle(
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.5,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
+              child: overCalories
+                  ? _LighterAlternativeButton(
+                      suggestion: lighterSuggestion,
+                    )
+                  : _YedimButton(
+                      onPressed: () {
+                        HapticFeedback.mediumImpact();
+                        notifier.markAsCompleted(meal.id);
+                      },
+                    ),
             ),
           ],
         );
@@ -334,7 +577,10 @@ class _ActionRow extends StatelessWidget {
         return SizedBox(
           width: double.infinity,
           child: FilledButton.icon(
-            onPressed: () => notifier.resetMeal(meal.id),
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              notifier.resetMeal(meal.id);
+            },
             icon: const Icon(Icons.undo, size: 16),
             label: const Text('Geri Al'),
             style: FilledButton.styleFrom(
@@ -352,6 +598,107 @@ class _ActionRow extends StatelessWidget {
           ),
         );
     }
+  }
+}
+
+class _YedimButton extends StatelessWidget {
+  const _YedimButton({required this.onPressed});
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton.icon(
+      onPressed: onPressed,
+      icon: const Icon(Icons.check, size: 16),
+      label: const Text('Yedim'),
+      style: FilledButton.styleFrom(
+        backgroundColor: _neonGreen,
+        foregroundColor: Colors.black,
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        textStyle: const TextStyle(
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.5,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+    );
+  }
+}
+
+/// Over-calorie warning CTA. Replaces "Yedim" / "Hemen Ekle" when the
+/// user has already met or exceeded their daily calorie target.
+///
+/// Tapping routes to the next-best-meal recipe detail (Priority 2 of
+/// [NextBestMealService] fires when remaining calories are low, so the
+/// suggestion skews light). If no suggestion is available the button
+/// is disabled — we don't want to shove the user onto an empty view.
+class _LighterAlternativeButton extends StatelessWidget {
+  const _LighterAlternativeButton({required this.suggestion});
+  final Recipe? suggestion;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = suggestion != null;
+    return FilledButton.icon(
+      onPressed: enabled
+          ? () {
+              HapticFeedback.lightImpact();
+              context.push('/recipe', extra: suggestion);
+            }
+          : null,
+      icon: const Icon(Icons.cancel_outlined, size: 16),
+      label: const Text(
+        'Daha Hafif Alternatif Gör',
+        overflow: TextOverflow.ellipsis,
+      ),
+      style: FilledButton.styleFrom(
+        backgroundColor: _warningColor,
+        foregroundColor: Colors.white,
+        disabledBackgroundColor: _warningColor.withValues(alpha: 0.35),
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        textStyle: const TextStyle(
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.3,
+          fontSize: 12,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+    );
+  }
+}
+
+/// Tertiary action — opens the recipe detail explicitly. The card
+/// body tap already does this, but having a labelled affordance makes
+/// the hierarchy obvious and is easier for accessibility tools to
+/// announce.
+class _TertiaryRow extends StatelessWidget {
+  const _TertiaryRow({required this.recipe});
+  final Recipe recipe;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: TextButton.icon(
+        onPressed: () => context.push('/recipe', extra: recipe),
+        icon: const Icon(Icons.open_in_new, size: 14),
+        label: const Text('Detay'),
+        style: TextButton.styleFrom(
+          foregroundColor: Colors.white60,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          minimumSize: const Size(0, 32),
+          textStyle: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.3,
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -392,11 +739,13 @@ class _CardShell extends StatelessWidget {
     required this.child,
     required this.onTap,
     this.borderColor,
+    this.glow = false,
   });
 
   final Widget child;
   final VoidCallback? onTap;
   final Color? borderColor;
+  final bool glow;
 
   @override
   Widget build(BuildContext context) {
@@ -410,7 +759,19 @@ class _CardShell extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             color: Colors.white.withValues(alpha: 0.04),
-            border: Border.all(color: borderColor ?? Colors.white12),
+            border: Border.all(
+              color: borderColor ?? Colors.white12,
+              width: glow ? 1.5 : 1,
+            ),
+            boxShadow: glow
+                ? [
+                    BoxShadow(
+                      color: _neon.withValues(alpha: 0.35),
+                      blurRadius: 22,
+                      spreadRadius: 0.5,
+                    ),
+                  ]
+                : null,
           ),
           child: child,
         ),

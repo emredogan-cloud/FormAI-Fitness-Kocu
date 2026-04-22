@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -9,6 +10,7 @@ import 'recipe_tags.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonGreen = Color(0xFF39FF14);
+const Color _warningColor = Color(0xFFFF5577);
 const Color _proteinColor = Color(0xFF4DA6FF);
 const Color _carbsColor = Color(0xFFFF4DDB);
 const Color _fatColor = Color(0xFFEAFF00);
@@ -27,6 +29,13 @@ class NextBestMealCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final recipe = ref.watch(nextBestMealProvider);
     if (recipe == null) return const SizedBox.shrink();
+    final target = ref.watch(macroTargetProvider);
+    final consumed = ref.watch(consumedMacrosProvider);
+    // Over-calorie switch: when consumed >= target, swap the primary
+    // "Hemen Ekle" CTA for the warning "Daha Hafif Alternatif Gör" that
+    // reroutes the user to a lighter option instead of piling on.
+    final overCalories =
+        target.calories > 0 && consumed.calories >= target.calories;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -86,21 +95,31 @@ class NextBestMealCard extends ConsumerWidget {
                       const SizedBox(height: 14),
                       SizedBox(
                         width: double.infinity,
-                        child: FilledButton.icon(
-                          onPressed: () => _addToPlan(context, ref, recipe),
-                          icon: const Icon(Icons.add_circle_outline, size: 18),
-                          label: const Text('Hemen Ekle'),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: _neonGreen,
-                            foregroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            textStyle: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.2,
+                        child: overCalories
+                            ? _WarningCta(recipe: recipe)
+                            : _HemenEkleButton(
+                                onPressed: () =>
+                                    _addToPlan(context, ref, recipe),
+                              ),
+                      ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          onPressed: () =>
+                              context.push('/recipe', extra: recipe),
+                          icon: const Icon(Icons.open_in_new, size: 14),
+                          label: const Text('Detay'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.white60,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
                             ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                            minimumSize: const Size(0, 32),
+                            textStyle: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.3,
                             ),
                           ),
                         ),
@@ -122,6 +141,7 @@ class NextBestMealCard extends ConsumerWidget {
     // slot picker here: the "Hemen Ekle" button is meant to be one-tap,
     // and the recipe detail screen's CTA is the right place when the
     // user wants explicit control over the slot.
+    HapticFeedback.mediumImpact();
     ref
         .read(dailyMenuProvider.notifier)
         .addRecipeToPlan(recipe, recipe.mealType);
@@ -134,6 +154,71 @@ class NextBestMealCard extends ConsumerWidget {
           behavior: SnackBarBehavior.floating,
         ),
       );
+  }
+}
+
+class _HemenEkleButton extends StatelessWidget {
+  const _HemenEkleButton({required this.onPressed});
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton.icon(
+      onPressed: onPressed,
+      icon: const Icon(Icons.add_circle_outline, size: 18),
+      label: const Text('Hemen Ekle'),
+      style: FilledButton.styleFrom(
+        backgroundColor: _neonGreen,
+        foregroundColor: Colors.black,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        textStyle: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 1.2,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+  }
+}
+
+/// Phase 25.1 over-calorie guardrail. When consumed >= target, the
+/// "Hemen Ekle" CTA is replaced with this warning that pushes the user
+/// into the recipe detail (so they see what they'd be committing to)
+/// rather than silently piling on. Same recipe — the suggestion engine
+/// already prioritises light options once remaining calories drop low.
+class _WarningCta extends StatelessWidget {
+  const _WarningCta({required this.recipe});
+  final Recipe recipe;
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton.icon(
+      onPressed: () {
+        HapticFeedback.lightImpact();
+        context.push('/recipe', extra: recipe);
+      },
+      icon: const Icon(Icons.cancel_outlined, size: 16),
+      label: const Text(
+        'Daha Hafif Alternatif Gör',
+        overflow: TextOverflow.ellipsis,
+      ),
+      style: FilledButton.styleFrom(
+        backgroundColor: _warningColor,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        textStyle: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.6,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
   }
 }
 

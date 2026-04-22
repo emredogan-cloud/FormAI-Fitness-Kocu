@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -526,6 +527,7 @@ Future<void> _handleAddToPlan(
 ) async {
   final slot = await _showSlotPicker(context);
   if (slot == null) return;
+  HapticFeedback.mediumImpact();
   ref.read(dailyMenuProvider.notifier).addRecipeToPlan(recipe, slot.name);
   if (!context.mounted) return;
   ScaffoldMessenger.of(context)

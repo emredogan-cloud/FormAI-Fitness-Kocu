@@ -263,13 +263,23 @@ class _CalorieRing extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
+          // Phase 25.1 dopamine loop: tween the stroke fill to its new
+          // value instead of snapping. TweenAnimationBuilder detects
+          // the new `end` on each rebuild and animates from the
+          // currently-displayed value, so completing a meal visibly
+          // nudges the ring forward instead of teleporting.
           SizedBox.expand(
-            child: CircularProgressIndicator(
-              value: clamped,
-              strokeWidth: 12,
-              strokeCap: StrokeCap.round,
-              backgroundColor: color.withValues(alpha: 0.14),
-              valueColor: AlwaysStoppedAnimation(color),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: clamped),
+              duration: const Duration(milliseconds: 600),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, _) => CircularProgressIndicator(
+                value: value,
+                strokeWidth: 12,
+                strokeCap: StrokeCap.round,
+                backgroundColor: color.withValues(alpha: 0.14),
+                valueColor: AlwaysStoppedAnimation(color),
+              ),
             ),
           ),
           Column(
@@ -384,11 +394,16 @@ class _MacroBar extends StatelessWidget {
         const SizedBox(height: 6),
         ClipRRect(
           borderRadius: BorderRadius.circular(6),
-          child: LinearProgressIndicator(
-            value: progress,
-            minHeight: 8,
-            backgroundColor: color.withValues(alpha: 0.14),
-            valueColor: AlwaysStoppedAnimation(color),
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: progress),
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeOutCubic,
+            builder: (context, value, _) => LinearProgressIndicator(
+              value: value,
+              minHeight: 8,
+              backgroundColor: color.withValues(alpha: 0.14),
+              valueColor: AlwaysStoppedAnimation(color),
+            ),
           ),
         ),
       ],
