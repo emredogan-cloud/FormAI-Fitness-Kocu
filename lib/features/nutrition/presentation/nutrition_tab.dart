@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/services/app_preferences.dart';
 import '../../../core/widgets/error_card.dart';
 import '../domain/models/macro_target.dart';
 import '../domain/models/recipe.dart';
 import '../providers/nutrition_provider.dart';
+import 'widgets/ai_insight_banner.dart';
 import 'widgets/meal_plan_timeline.dart';
+import 'widgets/next_best_meal_card.dart';
+import 'widgets/recipe_tags.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _proteinColor = Color(0xFF4DA6FF); // neon blue
@@ -21,24 +23,44 @@ const Color _statusOnTrack = Color(0xFF39FF14); // neon green
 const Color _statusLow = Color(0xFFEAFF00); // neon yellow
 const Color _statusOver = Color(0xFFFF5577); // neon red
 
-/// Nutrition home surface. Reads the user's stored body metrics, computes
-/// the daily [MacroTarget] through [NutritionCalculatorService], and
-/// surfaces a decision-first header (calorie ring + macro bars + AI
-/// coach banner) above the recipe-driven Günün Menüsü and Keşfet strips.
+/// Nutrition home surface. Reads the user's stored body metrics via
+/// [macroTargetProvider], their consumed macros via
+/// [consumedMacrosProvider], and renders a decision-first stack:
+/// dashboard header → macro status card → AI coach banner →
+/// next-best-meal card → meal plan timeline → recipe discovery.
 ///
-/// Consumed macros come from [consumedMacrosProvider], which derives
-/// its value from meals the user has marked as `completed` in
-/// [dailyMenuProvider] — so every "Yedim" / "Geri Al" tap in the
-/// timeline re-renders this surface in real time.
-class NutritionTab extends ConsumerWidget {
+/// Stateful because the AI coach banner's "Öneriyi Gör" CTA scrolls
+/// the tab down to the next-best-meal section; that needs a
+/// [GlobalKey] held across rebuilds.
+class NutritionTab extends ConsumerStatefulWidget {
   const NutritionTab({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NutritionTab> createState() => _NutritionTabState();
+}
+
+class _NutritionTabState extends ConsumerState<NutritionTab> {
+  /// Attached to the next-best-meal section so the coach banner can
+  /// scroll to it with [Scrollable.ensureVisible].
+  final GlobalKey _suggestionKey = GlobalKey();
+
+  Future<void> _scrollToSuggestion() async {
+    final target = _suggestionKey.currentContext;
+    if (target == null) return;
+    await Scrollable.ensureVisible(
+      target,
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.easeInOutCubic,
+      alignment: 0.1,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final recipesAsync = ref.watch(recipesProvider);
-    final target = _computeTarget(ref);
+    final target = ref.watch(macroTargetProvider);
     final consumed = ref.watch(consumedMacrosProvider);
-    final insight = _getDailyInsight(target, consumed);
+    final suggestion = ref.watch(nextBestMealProvider);
 
     return recipesAsync.when(
       loading: () => const Center(
@@ -60,8 +82,19 @@ class NutritionTab extends ConsumerWidget {
             const SizedBox(height: 18),
             _MacroStatusCard(target: target, consumed: consumed),
             const SizedBox(height: 16),
-            _AiInsightBanner(message: insight),
+            AiInsightBanner(onShowSuggestion: _scrollToSuggestion),
             const SizedBox(height: 26),
+            if (suggestion != null) ...[
+              KeyedSubtree(
+                key: _suggestionKey,
+                child: const _SectionTitle(
+                  title: '🎯 Sana En Uygun Sonraki Öğün',
+                ),
+              ),
+              const SizedBox(height: 12),
+              const NextBestMealCard(),
+              const SizedBox(height: 26),
+            ],
             const _SectionTitle(title: 'Günün Menüsü'),
             const SizedBox(height: 12),
             const MealPlanTimeline(),
@@ -74,47 +107,6 @@ class NutritionTab extends ConsumerWidget {
       ),
     );
   }
-
-  /// Pulls body metrics from the onboarding payload and hands them to the
-  /// calculator. Anything missing falls back to a reasonable default so a
-  /// guest who skipped onboarding still sees a sensible plan.
-  MacroTarget _computeTarget(WidgetRef ref) {
-    final calc = ref.watch(nutritionCalculatorProvider);
-    final metrics = ref.watch(appPreferencesProvider).userMetrics ??
-        const <String, dynamic>{};
-    return calc.calculateDailyMacros(
-      weight: (metrics['weightKg'] as int?) ?? 70,
-      height: (metrics['heightCm'] as int?) ?? 175,
-      age: (metrics['age'] as int?) ?? 28,
-      gender: (metrics['gender'] as String?) ?? 'male',
-      activityLevel: (metrics['activityLevel'] as String?) ?? 'sedentary',
-      goal: (metrics['targetPhysique'] as String?) ?? 'sixpack',
-    );
-  }
-}
-
-// ============================================================================
-// AI insight — small rule-based helper lifted from the Phase 22.1 spec.
-// Exported via a top-level function so tests (future) can assert copy
-// without spinning up a widget tree.
-// ============================================================================
-
-String _getDailyInsight(MacroTarget target, MacroTarget consumed) {
-  final calorieProgress = _safeProgress(consumed.calories, target.calories);
-  final proteinProgress = _safeProgress(consumed.protein, target.protein);
-
-  // Protein tailed off while calories are already >50% in — the user is
-  // filling up on non-protein and needs a steer.
-  if (proteinProgress < 0.5 && calorieProgress > 0.5) {
-    return 'Bugün proteinin düşük kalmış. Yüksek proteinli bir öğün ekle!';
-  }
-  // Over target — nudge towards a lighter evening to stay in the pocket.
-  if (calorieProgress > 1.0) {
-    return 'Günlük kalori hedefini aştın. Hafif bir akşam yemeği tercih et.';
-  }
-  // Everything else is a pat on the back. Better to default positive than
-  // to surface a wishy-washy "okay" state the user has to decode.
-  return 'Harika gidiyorsun! Hedeflerine sadık kal.';
 }
 
 double _safeProgress(int consumed, int target) {
@@ -405,89 +397,6 @@ class _MacroBar extends StatelessWidget {
 }
 
 // ============================================================================
-// AI insight banner
-// ============================================================================
-
-class _AiInsightBanner extends StatelessWidget {
-  const _AiInsightBanner({required this.message});
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            colors: [
-              _neon.withValues(alpha: 0.22),
-              _proteinColor.withValues(alpha: 0.12),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          border: Border.all(color: _neon.withValues(alpha: 0.55)),
-          boxShadow: [
-            BoxShadow(
-              color: _neon.withValues(alpha: 0.35),
-              blurRadius: 20,
-              spreadRadius: 0.5,
-            ),
-          ],
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: _neon.withValues(alpha: 0.28),
-              ),
-              child: const Icon(
-                Icons.auto_awesome,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'AI KOÇ',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 2,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    message,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      height: 1.35,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ============================================================================
 // Section title (reused by both remaining sections)
 // ============================================================================
 
@@ -706,6 +615,18 @@ class RecipeDiscoveryCard extends StatelessWidget {
                     ],
                     stops: const [0.35, 0.65, 1.0],
                   ),
+                ),
+              ),
+              // Category tags anchored top-left so they read above the
+              // photography without blocking the title below.
+              Positioned(
+                top: 10,
+                left: 10,
+                right: 10,
+                child: RecipeTagsStrip(
+                  recipe: recipe,
+                  maxTags: 2,
+                  compact: true,
                 ),
               ),
               Padding(

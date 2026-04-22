@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../domain/models/daily_meal_slot.dart';
 import '../domain/models/recipe.dart';
 import '../providers/daily_menu_provider.dart';
+import 'widgets/recipe_tags.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonGreen = Color(0xFF39FF14);
@@ -59,6 +61,11 @@ class RecipeDetailScreen extends StatelessWidget {
                       height: 1.1,
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  // Category badges (🔥 Yüksek Protein, 🥗 Düşük Kalori,
+                  // 💪 Hacim, ⚡ Hızlı) — up to three at full size so the
+                  // user can scan the recipe's macro profile at a glance.
+                  RecipeTagsStrip(recipe: recipe, maxTags: 3),
                   const SizedBox(height: 12),
                   Row(
                     children: [
@@ -390,21 +397,7 @@ class _AddToPlanButton extends ConsumerWidget {
         child: SizedBox(
           width: double.infinity,
           child: FilledButton.icon(
-            onPressed: () {
-              ref
-                  .read(dailyMenuProvider.notifier)
-                  .addRecipeToPlan(recipe, recipe.mealType);
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  SnackBar(
-                    content: const Text('Tarif plana eklendi!'),
-                    backgroundColor: _neonGreen.withValues(alpha: 0.9),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              if (context.canPop()) context.pop();
-            },
+            onPressed: () => _handleAddToPlan(context, ref, recipe),
             icon: const Icon(Icons.add_circle_outline, size: 20),
             label: const Text('Plana Ekle'),
             style: FilledButton.styleFrom(
@@ -424,5 +417,176 @@ class _AddToPlanButton extends ConsumerWidget {
         ),
       ),
     );
+  }
+}
+
+/// Opens the slot picker, waits for a selection, then dispatches the
+/// add-to-plan and toasts + pops on success. Separated out so the
+/// button's `onPressed` stays readable.
+Future<void> _handleAddToPlan(
+  BuildContext context,
+  WidgetRef ref,
+  Recipe recipe,
+) async {
+  final slot = await _showSlotPicker(context);
+  if (slot == null) return;
+  ref.read(dailyMenuProvider.notifier).addRecipeToPlan(recipe, slot.name);
+  if (!context.mounted) return;
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        content: Text('${recipe.title} "${_slotLabel(slot)}" öğününe eklendi.'),
+        backgroundColor: _neonGreen.withValues(alpha: 0.9),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  if (context.canPop()) context.pop();
+}
+
+Future<DailyMealSlot?> _showSlotPicker(BuildContext context) {
+  return showModalBottomSheet<DailyMealSlot>(
+    context: context,
+    backgroundColor: const Color(0xFF111119),
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (ctx) => const _SlotPickerSheet(),
+  );
+}
+
+class _SlotPickerSheet extends StatelessWidget {
+  const _SlotPickerSheet();
+
+  static const List<DailyMealSlot> _slots = [
+    DailyMealSlot.breakfast,
+    DailyMealSlot.lunch,
+    DailyMealSlot.dinner,
+    DailyMealSlot.snack,
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            const Text(
+              'Hangi öğüne eklemek istersin?',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 17,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.3,
+              ),
+            ),
+            const SizedBox(height: 14),
+            for (final slot in _slots) ...[
+              _SlotOption(
+                slot: slot,
+                onTap: () => Navigator.of(context).pop(slot),
+              ),
+              const SizedBox(height: 10),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SlotOption extends StatelessWidget {
+  const _SlotOption({required this.slot, required this.onTap});
+  final DailyMealSlot slot;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final (icon, color) = _iconFor(slot);
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            color: Colors.white.withValues(alpha: 0.05),
+            border: Border.all(color: color.withValues(alpha: 0.45)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: color.withValues(alpha: 0.22),
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  _slotLabel(slot),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: Colors.white38,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  (IconData, Color) _iconFor(DailyMealSlot slot) {
+    switch (slot) {
+      case DailyMealSlot.breakfast:
+        return (Icons.free_breakfast, _neon);
+      case DailyMealSlot.lunch:
+        return (Icons.lunch_dining, _proteinColor);
+      case DailyMealSlot.dinner:
+        return (Icons.dinner_dining, _carbsColor);
+      case DailyMealSlot.snack:
+        return (Icons.cookie, _fatColor);
+    }
+  }
+}
+
+String _slotLabel(DailyMealSlot slot) {
+  switch (slot) {
+    case DailyMealSlot.breakfast:
+      return 'Kahvaltı';
+    case DailyMealSlot.lunch:
+      return 'Öğle Yemeği';
+    case DailyMealSlot.dinner:
+      return 'Akşam Yemeği';
+    case DailyMealSlot.snack:
+      return 'Atıştırmalık';
   }
 }
