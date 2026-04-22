@@ -7,6 +7,9 @@ class Exercise {
     required this.id,
     required this.name,
     required this.type,
+    required this.difficulty,
+    required this.targetMuscle,
+    required this.isCardio,
     this.targetReps,
     this.targetDurationInSeconds,
     this.videoUrl,
@@ -36,6 +39,22 @@ class Exercise {
   /// camera control panel for the duration of the active set.
   final String shortTip;
 
+  /// Coarse difficulty bucket used by the personalised-plan generator.
+  /// Expected values: `beginner`, `intermediate`, `advanced`. Kept as a
+  /// plain string (not an enum) so new tiers can be added without forcing
+  /// a schema migration on every serialised exercise.
+  final String difficulty;
+
+  /// Which body region the movement primarily loads — consumed by the
+  /// plan generator to balance a routine. Expected values: `core`,
+  /// `upper_body`, `lower_body`, `full_body`, `cardio`.
+  final String targetMuscle;
+
+  /// True when the movement is primarily a conditioning / elevated-HR
+  /// exercise rather than a strength movement. The generator uses this to
+  /// seed HIIT blocks and to cap cardio density inside strength plans.
+  final bool isCardio;
+
   bool get isRepBased => type == ExerciseType.repBased;
   bool get isTimeBased => type == ExerciseType.timeBased;
 
@@ -52,7 +71,10 @@ class Exercise {
       other.restDurationInSeconds == restDurationInSeconds &&
       other.category == category &&
       other.description == description &&
-      other.shortTip == shortTip;
+      other.shortTip == shortTip &&
+      other.difficulty == difficulty &&
+      other.targetMuscle == targetMuscle &&
+      other.isCardio == isCardio;
 
   @override
   int get hashCode => Object.hash(
@@ -67,5 +89,8 @@ class Exercise {
         category,
         description,
         shortTip,
+        difficulty,
+        targetMuscle,
+        isCardio,
       );
 }

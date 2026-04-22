@@ -93,6 +93,9 @@ class WorkoutRepository {
     description:
         'Sırt üstü uzan, dizlerini bük ve omuzlarını kontrollü olarak yukarı kaldır.',
     shortTip: 'Boyuna asma, karnınla çek.',
+    difficulty: 'beginner',
+    targetMuscle: 'core',
+    isCardio: false,
   );
 
   static final Exercise _situp = Exercise(
@@ -107,6 +110,9 @@ class WorkoutRepository {
     description:
         'Sırt üstü uzan, gövdeni dizlerine kadar tam olarak kaldır ve kontrollü in.',
     shortTip: 'Karnını sık, hızı abartma.',
+    difficulty: 'beginner',
+    targetMuscle: 'core',
+    isCardio: false,
   );
 
   static final Exercise _plank = Exercise(
@@ -121,6 +127,9 @@ class WorkoutRepository {
     description:
         'Dirseklerin üstünde sabit dur, vücudunu omuzdan topuğa düz bir çizgi tut.',
     shortTip: 'Kalçanı düşürme.',
+    difficulty: 'beginner',
+    targetMuscle: 'core',
+    isCardio: false,
   );
 
   static final Exercise _legRaise = Exercise(
@@ -135,6 +144,9 @@ class WorkoutRepository {
     description:
         'Sırt üstü uzan, bacaklarını düz tutarak yavaşça 90 dereceye kadar kaldır.',
     shortTip: 'Belini yere bastır.',
+    difficulty: 'beginner',
+    targetMuscle: 'core',
+    isCardio: false,
   );
 
   static final Exercise _hangingLegRaise = Exercise(
@@ -149,6 +161,9 @@ class WorkoutRepository {
     description:
         'Bara tutun, bacaklarını birleştirip kontrollü olarak göğsüne doğru çek.',
     shortTip: 'Salınımdan kaçın.',
+    difficulty: 'advanced',
+    targetMuscle: 'core',
+    isCardio: false,
   );
 
   static final Exercise _russianTwist = Exercise(
@@ -163,6 +178,9 @@ class WorkoutRepository {
     description:
         'Otur, hafifçe geri yaslan ve gövdeni sağdan sola tempolu biçimde döndür.',
     shortTip: 'Karnını sıkı tut.',
+    difficulty: 'beginner',
+    targetMuscle: 'core',
+    isCardio: false,
   );
 
   static final Exercise _mountainClimber = Exercise(
@@ -177,6 +195,9 @@ class WorkoutRepository {
     description:
         'Plank pozisyonunda kal, dizlerini sırayla göğsüne hızla çekiştir.',
     shortTip: 'Kalçayı sabit tut.',
+    difficulty: 'intermediate',
+    targetMuscle: 'core',
+    isCardio: true,
   );
 
   static final Exercise _bicycleCrunch = Exercise(
@@ -191,6 +212,9 @@ class WorkoutRepository {
     description:
         'Sırt üstü uzan, karşıt dirsek ve dizini havada birleştir, taraf değiştir.',
     shortTip: 'Tempolu ama kontrollü.',
+    difficulty: 'beginner',
+    targetMuscle: 'core',
+    isCardio: false,
   );
 
   static final Exercise _flutterKick = Exercise(
@@ -205,6 +229,9 @@ class WorkoutRepository {
     description:
         'Sırt üstü uzan, bacaklarını kısa ve hızlı kanat çırpar gibi değiştir.',
     shortTip: 'Karnını gevşetme.',
+    difficulty: 'intermediate',
+    targetMuscle: 'core',
+    isCardio: false,
   );
 
   // ==========================================================================
@@ -223,6 +250,9 @@ class WorkoutRepository {
     description:
         'Eller omuz hizasında, gövdeni düz tutarak yere kadar in ve geri it.',
     shortTip: 'Dirseğini gövdene yakın tut.',
+    difficulty: 'intermediate',
+    targetMuscle: 'upper_body',
+    isCardio: false,
   );
 
   static final Exercise _inclinePushUp = Exercise(
@@ -237,6 +267,9 @@ class WorkoutRepository {
     description:
         'Ellerini yüksek bir yüzeye dayalı tutarak şınav hareketini uygula.',
     shortTip: 'Sırtını düz tut.',
+    difficulty: 'beginner',
+    targetMuscle: 'upper_body',
+    isCardio: false,
   );
 
   static final Exercise _declinePushUp = Exercise(
@@ -251,6 +284,9 @@ class WorkoutRepository {
     description:
         'Ayaklarını yüksek bir yere koy, üst göğsünü hedefleyerek şınav yap.',
     shortTip: 'Yavaş in, hızlı çık.',
+    difficulty: 'advanced',
+    targetMuscle: 'upper_body',
+    isCardio: false,
   );
 
   static final Exercise _chestDip = Exercise(
@@ -265,6 +301,9 @@ class WorkoutRepository {
     description:
         'Paralel barlarda göğsünü öne eğ, dirseklerini kontrollü olarak büküp aşağı in.',
     shortTip: 'Omuzları çukurlaştırma.',
+    difficulty: 'advanced',
+    targetMuscle: 'upper_body',
+    isCardio: false,
   );
 
   static final Exercise _benchPress = Exercise(
@@ -279,6 +318,9 @@ class WorkoutRepository {
     description:
         'Sırtın bench üstünde, dambılları göğsünden başlayıp yukarı doğru kontrollü it.',
     shortTip: 'Bilek düz, dirsek 45°.',
+    difficulty: 'intermediate',
+    targetMuscle: 'upper_body',
+    isCardio: false,
   );
 
   static final Exercise _chestFly = Exercise(
@@ -293,6 +335,9 @@ class WorkoutRepository {
     description:
         'Sırt üstü uzan, kollarını yana aç ve göğsünün üstünde kontrollü olarak kapat.',
     shortTip: 'Dirseğin hafif bükülü kalsın.',
+    difficulty: 'intermediate',
+    targetMuscle: 'upper_body',
+    isCardio: false,
   );
 
   // ==========================================================================
@@ -311,6 +356,9 @@ class WorkoutRepository {
     description:
         'Ayakların omuz hizasında; kalçanı geriye it, dizlerini büküp aşağı in ve kalk.',
     shortTip: 'Topuklarından güç al.',
+    difficulty: 'beginner',
+    targetMuscle: 'lower_body',
+    isCardio: false,
   );
 
   static final Exercise _lunge = Exercise(
@@ -325,6 +373,9 @@ class WorkoutRepository {
     description:
         'Geniş bir adım at, ön dizini 90 dereceye kadar büküp kontrollü olarak kalk.',
     shortTip: 'Ön diz parmak ucunu geçmesin.',
+    difficulty: 'beginner',
+    targetMuscle: 'lower_body',
+    isCardio: false,
   );
 
   static final Exercise _bulgarianSplitSquat = Exercise(
@@ -339,6 +390,9 @@ class WorkoutRepository {
     description:
         'Arka ayağını yüksek bir yere koy, ön bacakla aşağı in ve patlayıcı şekilde kalk.',
     shortTip: 'Gövdeni dik tut.',
+    difficulty: 'advanced',
+    targetMuscle: 'lower_body',
+    isCardio: false,
   );
 
   static final Exercise _legPress = Exercise(
@@ -353,6 +407,9 @@ class WorkoutRepository {
     description:
         'Sırtını desteğe yasla, ayaklarını platforma sabitle ve dizleri kilitlemeden it.',
     shortTip: 'Topuklarını basılı tut.',
+    difficulty: 'intermediate',
+    targetMuscle: 'lower_body',
+    isCardio: false,
   );
 
   static final Exercise _calfRaise = Exercise(
@@ -367,6 +424,9 @@ class WorkoutRepository {
     description:
         'Parmak uçlarına yüksel, en tepede bir saniye sık ve yavaşça başlangıca dön.',
     shortTip: 'Tepe noktasında 1 saniye sık.',
+    difficulty: 'beginner',
+    targetMuscle: 'lower_body',
+    isCardio: false,
   );
 
   static final Exercise _wallSit = Exercise(
@@ -381,6 +441,9 @@ class WorkoutRepository {
     description:
         'Sırtını duvara yasla, dizlerini 90 dereceye getir ve sabit pozisyonda kal.',
     shortTip: 'Topuğunla bas, çakılı kal.',
+    difficulty: 'beginner',
+    targetMuscle: 'lower_body',
+    isCardio: false,
   );
 
   // ==========================================================================
@@ -399,6 +462,9 @@ class WorkoutRepository {
     description:
         'Bara avuçlar dışta tutun, kürek kemiklerini sıkarak çeneni bara çek.',
     shortTip: 'Önce kürekten çek.',
+    difficulty: 'advanced',
+    targetMuscle: 'upper_body',
+    isCardio: false,
   );
 
   static final Exercise _chinUp = Exercise(
@@ -413,6 +479,9 @@ class WorkoutRepository {
     description:
         'Avuç içlerin sana dönük, çeneni bara doğru kontrollü çek ve yavaşça in.',
     shortTip: 'Salınımdan kaçın.',
+    difficulty: 'advanced',
+    targetMuscle: 'upper_body',
+    isCardio: false,
   );
 
   static final Exercise _latPulldown = Exercise(
@@ -427,6 +496,9 @@ class WorkoutRepository {
     description:
         'Otur, barı göğüs hizasına çek ve kürek kemiklerini birbirine sıkıştır.',
     shortTip: 'Önce sırt, sonra dirsek.',
+    difficulty: 'intermediate',
+    targetMuscle: 'upper_body',
+    isCardio: false,
   );
 
   static final Exercise _barbellRow = Exercise(
@@ -441,6 +513,9 @@ class WorkoutRepository {
     description:
         'Sırtın nötr ve düz, halteri göbek hizana doğru kontrollü olarak çek.',
     shortTip: 'Sırtın yuvarlanmasın.',
+    difficulty: 'intermediate',
+    targetMuscle: 'upper_body',
+    isCardio: false,
   );
 
   static final Exercise _superman = Exercise(
@@ -455,6 +530,9 @@ class WorkoutRepository {
     description:
         'Yüz üstü uzan, kollar ve bacaklarını aynı anda yukarı kaldır ve sabit kal.',
     shortTip: 'Boynunu nötr tut.',
+    difficulty: 'beginner',
+    targetMuscle: 'upper_body',
+    isCardio: false,
   );
 
   // ==========================================================================
@@ -473,6 +551,9 @@ class WorkoutRepository {
     description:
         'Dambılları omuz hizasından kontrollü olarak tam yukarı it ve geri indir.',
     shortTip: 'Çekirdek sıkı, bilek nötr.',
+    difficulty: 'intermediate',
+    targetMuscle: 'upper_body',
+    isCardio: false,
   );
 
   static final Exercise _lateralRaise = Exercise(
@@ -487,6 +568,9 @@ class WorkoutRepository {
     description:
         'Kollarını yana doğru omuz seviyesine kadar düz hâlde kontrollü kaldır.',
     shortTip: 'Trapeze değil, omuza yükle.',
+    difficulty: 'beginner',
+    targetMuscle: 'upper_body',
+    isCardio: false,
   );
 
   static final Exercise _frontRaise = Exercise(
@@ -501,6 +585,9 @@ class WorkoutRepository {
     description:
         'Kollarını öne doğru omuz seviyesine kadar düz hâlde kontrollü kaldır.',
     shortTip: 'Bel yaylanmasın.',
+    difficulty: 'beginner',
+    targetMuscle: 'upper_body',
+    isCardio: false,
   );
 
   static final Exercise _arnoldPress = Exercise(
@@ -515,6 +602,9 @@ class WorkoutRepository {
     description:
         'Dambılları yukarı iterken avuç içlerini içeriden dışarıya doğru çevir.',
     shortTip: 'Dirseğini kilitleme.',
+    difficulty: 'intermediate',
+    targetMuscle: 'upper_body',
+    isCardio: false,
   );
 
   static final Exercise _pikePushUp = Exercise(
@@ -529,6 +619,9 @@ class WorkoutRepository {
     description:
         'Kalçanı yukarı kaldır, başını iki elin arasında inip çıkacak şekilde itele.',
     shortTip: 'Omuza odaklan, gövdeyi devirme.',
+    difficulty: 'advanced',
+    targetMuscle: 'upper_body',
+    isCardio: false,
   );
 
   // ==========================================================================
@@ -547,6 +640,9 @@ class WorkoutRepository {
     description:
         'Dirseklerini gövdene sabitle, dambılı omuzuna doğru kontrollü olarak çek.',
     shortTip: 'Salınma, biceps çalışsın.',
+    difficulty: 'beginner',
+    targetMuscle: 'upper_body',
+    isCardio: false,
   );
 
   static final Exercise _hammerCurl = Exercise(
@@ -561,6 +657,9 @@ class WorkoutRepository {
     description:
         'Avuç içlerin içeriye dönük, dambılı omuza doğru kontrollü olarak çek.',
     shortTip: 'Bilek nötr kalsın.',
+    difficulty: 'beginner',
+    targetMuscle: 'upper_body',
+    isCardio: false,
   );
 
   static final Exercise _tricepsDip = Exercise(
@@ -575,6 +674,9 @@ class WorkoutRepository {
     description:
         'Sandalye/bar kenarında ellerin destekli; dirseklerini bükerek aşağı in ve geri kalk.',
     shortTip: 'Dirsek geriye, dışarı değil.',
+    difficulty: 'intermediate',
+    targetMuscle: 'upper_body',
+    isCardio: false,
   );
 
   static final Exercise _tricepsPushdown = Exercise(
@@ -589,6 +691,9 @@ class WorkoutRepository {
     description:
         'Dirseklerin gövdene sabit, halatı veya barı kontrollü olarak aşağı it.',
     shortTip: 'Sadece ön kol çalışsın.',
+    difficulty: 'beginner',
+    targetMuscle: 'upper_body',
+    isCardio: false,
   );
 
   static final Exercise _closeGripPushUp = Exercise(
@@ -603,6 +708,9 @@ class WorkoutRepository {
     description:
         'Ellerini daralt, dirseklerini gövdene yakın tutarak şınav hareketini uygula.',
     shortTip: 'Dirsek dışa kaçmasın.',
+    difficulty: 'intermediate',
+    targetMuscle: 'upper_body',
+    isCardio: false,
   );
 
   // ==========================================================================
@@ -621,6 +729,9 @@ class WorkoutRepository {
     description:
         'Aşağı in, ellerin yere değdiğinde plank al, ayaklarını öne çekip patlayıcı zıpla.',
     shortTip: 'Sürekli ritim, mola yok.',
+    difficulty: 'advanced',
+    targetMuscle: 'full_body',
+    isCardio: true,
   );
 
   static final Exercise _jumpingJack = Exercise(
@@ -635,6 +746,9 @@ class WorkoutRepository {
     description:
         'Aç-kapat hareketiyle aynı anda kollarını yukarı kaldırıp ritmik şekilde zıpla.',
     shortTip: 'Yumuşak ayak, sıkı çekirdek.',
+    difficulty: 'beginner',
+    targetMuscle: 'cardio',
+    isCardio: true,
   );
 
   static final Exercise _highKnees = Exercise(
@@ -649,6 +763,9 @@ class WorkoutRepository {
     description:
         'Olduğun yerde dizlerini sırayla kalçanı geçecek kadar hızla yukarı çekiştir.',
     shortTip: 'Kollarını da çalıştır.',
+    difficulty: 'beginner',
+    targetMuscle: 'cardio',
+    isCardio: true,
   );
 
   static final Exercise _jumpSquat = Exercise(
@@ -663,6 +780,9 @@ class WorkoutRepository {
     description:
         'Squat pozisyonuna in, patlayıcı biçimde havaya zıpla ve yumuşak iniş yap.',
     shortTip: 'Sessiz iniş, sıkı çekirdek.',
+    difficulty: 'intermediate',
+    targetMuscle: 'full_body',
+    isCardio: true,
   );
 
   static final Exercise _skippingRope = Exercise(
@@ -677,6 +797,9 @@ class WorkoutRepository {
     description:
         'Bilek dönüşüyle ipi çevir, hafif tempoda ritmik olarak alçak zıplamalar yap.',
     shortTip: 'Diz hafif bükülü, ip kısa.',
+    difficulty: 'beginner',
+    targetMuscle: 'cardio',
+    isCardio: true,
   );
 
   // ==========================================================================
