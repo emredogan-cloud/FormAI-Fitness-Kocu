@@ -1,10 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/services/app_preferences.dart';
+import '../../../nutrition/domain/models/recipe.dart';
+import '../../../nutrition/providers/nutrition_provider.dart';
 import '../../models/workout_day_model.dart';
 
 const Color _neon = Color(0xFF00F0FF);
+const Color _neonPurple = Color(0xFF8E5BFF);
 
-class SessionCompleteOverlay extends StatelessWidget {
+/// Post-workout celebration overlay. Renders the "Gün N Tamam!" trophy
+/// block and — when the recipe catalogue is loaded — a "Toparlanma
+/// Önerisi" card with a high-protein recipe the user can tap to open.
+///
+/// Converted to a `ConsumerWidget` in phase 22 so it can read both the
+/// recipe catalogue and the user's nutrition preferences (to honour a
+/// `hizli` prep choice with a fast-to-make suggestion).
+class SessionCompleteOverlay extends ConsumerWidget {
   const SessionCompleteOverlay({
     super.key,
     required this.day,
@@ -15,53 +28,230 @@ class SessionCompleteOverlay extends StatelessWidget {
   final VoidCallback onAcknowledge;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final recipesAsync = ref.watch(recipesProvider);
+    final prefs = ref.watch(appPreferencesProvider).userMetrics ??
+        const <String, dynamic>{};
+    final prepPref = (prefs['prepTime'] as String?) ?? 'hizli';
+
+    final suggestion = recipesAsync.maybeWhen(
+      data: (recipes) => _pickRecoveryRecipe(recipes, prepPref),
+      orElse: () => null,
+    );
+
     return Positioned.fill(
       child: Container(
-        color: Colors.black.withValues(alpha: 0.75),
-        alignment: Alignment.center,
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.military_tech, size: 96, color: _neon),
-              const SizedBox(height: 16),
-              Text(
-                day == null ? 'Program Tamam!' : 'Gün ${day!.dayNumber} Tamam!',
-                style: const TextStyle(
-                  color: _neon,
-                  fontSize: 32,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.5,
-                  shadows: [Shadow(blurRadius: 30, color: _neon)],
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Harika iş çıkardın, yarın görüşürüz.',
-                style: TextStyle(color: Colors.white70, fontSize: 16),
-              ),
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: onAcknowledge,
-                style: FilledButton.styleFrom(
-                  backgroundColor: _neon,
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 28,
-                    vertical: 14,
+        color: Colors.black.withValues(alpha: 0.80),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            child: Column(
+              children: [
+                const SizedBox(height: 12),
+                const Icon(Icons.military_tech, size: 96, color: _neon),
+                const SizedBox(height: 16),
+                Text(
+                  day == null
+                      ? 'Program Tamam!'
+                      : 'Gün ${day!.dayNumber} Tamam!',
+                  style: const TextStyle(
+                    color: _neon,
+                    fontSize: 32,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.5,
+                    shadows: [Shadow(blurRadius: 30, color: _neon)],
                   ),
                 ),
-                child: const Text(
-                  'Tamam',
-                  style: TextStyle(fontWeight: FontWeight.w900),
+                const SizedBox(height: 8),
+                const Text(
+                  'Harika iş çıkardın, yarın görüşürüz.',
+                  style: TextStyle(color: Colors.white70, fontSize: 16),
+                  textAlign: TextAlign.center,
+                ),
+                if (suggestion != null) ...[
+                  const SizedBox(height: 24),
+                  _RecoverySuggestionCard(recipe: suggestion),
+                ],
+                const SizedBox(height: 24),
+                FilledButton(
+                  onPressed: onAcknowledge,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: _neon,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 28,
+                      vertical: 14,
+                    ),
+                  ),
+                  child: const Text(
+                    'Tamam',
+                    style: TextStyle(fontWeight: FontWeight.w900),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Picks a recovery recipe prioritised by:
+  ///   1. mealType in {`snack`, `main`, `lunch`, `dinner`} — these make
+  ///      sense immediately after a workout;
+  ///   2. if the user prefers `hizli` prep, prepTime ≤ 15 min;
+  ///   3. highest protein in grams.
+  ///
+  /// Returns null if no recipe survives the filter — the overlay then
+  /// simply omits the card.
+  Recipe? _pickRecoveryRecipe(List<Recipe> recipes, String prepPref) {
+    if (recipes.isEmpty) return null;
+
+    Iterable<Recipe> pool = recipes.where((r) {
+      final t = r.mealType.toLowerCase();
+      return t == 'snack' || t == 'main' || t == 'lunch' || t == 'dinner';
+    });
+    if (pool.isEmpty) pool = recipes;
+
+    if (prepPref == 'hizli') {
+      final fast = pool.where((r) => r.prepTimeMinutes <= 15);
+      if (fast.isNotEmpty) pool = fast;
+    }
+
+    final sorted = pool.toList()
+      ..sort((a, b) => b.protein.compareTo(a.protein));
+    return sorted.isEmpty ? null : sorted.first;
+  }
+}
+
+class _RecoverySuggestionCard extends StatelessWidget {
+  const _RecoverySuggestionCard({required this.recipe});
+  final Recipe recipe;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        color: Colors.white.withValues(alpha: 0.06),
+        border: Border.all(color: _neonPurple.withValues(alpha: 0.55)),
+        boxShadow: [
+          BoxShadow(
+            color: _neonPurple.withValues(alpha: 0.35),
+            blurRadius: 22,
+            spreadRadius: 0.5,
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.restaurant, color: _neonPurple, size: 16),
+              SizedBox(width: 6),
+              Text(
+                'TOPARLANMA ÖNERİSİ',
+                style: TextStyle(
+                  color: _neonPurple,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 2,
                 ),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 10),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: SizedBox(
+                  width: 60,
+                  height: 60,
+                  child: _Thumbnail(imageUrl: recipe.imageUrl),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      recipe.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        height: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${recipe.protein}g protein · '
+                      '${recipe.calories} kcal · '
+                      '${recipe.prepTimeMinutes} dk',
+                      style: const TextStyle(
+                        color: Colors.white60,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () => context.push('/recipe/${recipe.id}'),
+              icon: const Icon(Icons.receipt_long, size: 18),
+              label: const Text('Tarifi Gör'),
+              style: FilledButton.styleFrom(
+                backgroundColor: _neonPurple,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.2,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
+    );
+  }
+}
+
+class _Thumbnail extends StatelessWidget {
+  const _Thumbnail({required this.imageUrl});
+  final String? imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final fallback = Container(
+      color: Colors.white10,
+      alignment: Alignment.center,
+      child: const Icon(Icons.restaurant, color: Colors.white54, size: 22),
+    );
+    final url = imageUrl;
+    if (url == null || url.isEmpty) return fallback;
+    return Image.network(
+      url,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => fallback,
+      loadingBuilder: (_, child, progress) =>
+          progress == null ? child : Container(color: Colors.white10),
     );
   }
 }

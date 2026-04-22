@@ -7,6 +7,7 @@ import '../../features/auth/providers/auth_provider.dart';
 import '../../features/home/presentation/account_settings_screen.dart';
 import '../../features/home/presentation/dashboard_screen.dart';
 import '../../features/monetization/presentation/paywall_screen.dart';
+import '../../features/nutrition/presentation/recipe_detail_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/onboarding/presentation/prediction_screen.dart';
 import '../../features/workout/models/workout_plan_model.dart';
@@ -24,6 +25,10 @@ class AppRoutes {
   static const String prediction = '/prediction';
   static const String planDetail = '/plan-detail';
   static const String accountSettings = '/account-settings';
+
+  /// `/recipe/:id` — full recipe detail view. Pass the recipe's primary
+  /// key from Supabase as the `id` path param.
+  static const String recipeDetail = '/recipe';
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -106,6 +111,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.accountSettings,
         name: 'accountSettings',
         builder: (context, state) => const AccountSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/recipe/:id',
+        name: 'recipeDetail',
+        builder: (context, state) {
+          final id = state.pathParameters['id'] ?? '';
+          return RecipeDetailScreen(recipeId: id);
+        },
       ),
     ],
   );

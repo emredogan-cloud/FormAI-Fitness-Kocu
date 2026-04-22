@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../nutrition/presentation/nutrition_tab.dart';
 import 'widgets/antrenman_tab.dart';
 import 'widgets/gelisim_tab.dart';
 import 'widgets/profile_tab.dart';
@@ -27,6 +28,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           index: _index,
           children: const [
             AntrenmanTab(),
+            NutritionTab(),
             GelisimTab(),
             ProfileTab(),
           ],
@@ -70,6 +72,11 @@ class _BottomNav extends StatelessWidget {
             icon: Icon(Icons.fitness_center_outlined),
             activeIcon: Icon(Icons.fitness_center),
             label: 'Antrenman',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.restaurant_outlined),
+            activeIcon: Icon(Icons.restaurant),
+            label: 'Beslenme',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.insights_outlined),
