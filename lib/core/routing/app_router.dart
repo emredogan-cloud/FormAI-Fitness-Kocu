@@ -9,6 +9,7 @@ import '../../features/home/presentation/account_settings_screen.dart';
 import '../../features/home/presentation/dashboard_screen.dart';
 import '../../features/monetization/presentation/paywall_screen.dart';
 import '../../features/nutrition/domain/models/recipe.dart';
+import '../../features/nutrition/presentation/category_recipes_screen.dart';
 import '../../features/nutrition/presentation/recipe_detail_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/onboarding/presentation/prediction_screen.dart';
@@ -128,6 +129,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             return RecipeDetailScreen(recipe: extra);
           }
           return const _MissingRecipe();
+        },
+      ),
+      GoRoute(
+        path: '/nutrition/category/:type',
+        name: 'nutritionCategory',
+        builder: (context, state) {
+          // `type` is the English meal-type token (breakfast / lunch /
+          // dinner / snack / dessert). The screen itself is tolerant of
+          // unknown values and shows an empty state rather than crashing.
+          final type = state.pathParameters['type'] ?? 'breakfast';
+          return CategoryRecipesScreen(categoryType: type);
         },
       ),
     ],

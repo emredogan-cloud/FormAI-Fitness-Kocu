@@ -15,6 +15,8 @@ const Color _neon = Color(0xFF8E5BFF);
 const Color _neonGreen = Color(0xFF39FF14);
 const Color _warningColor = Color(0xFFFF5577);
 const Color _proteinColor = Color(0xFF4DA6FF);
+const Color _carbsColor = Color(0xFFFF4DDB);
+const Color _fatColor = Color(0xFFEAFF00);
 
 // Traffic-light palette for the calorie ring.
 const Color _statusOnTrack = Color(0xFF39FF14);
@@ -39,10 +41,10 @@ const Color _statusOver = Color(0xFFFF5577);
 class NutritionTab extends ConsumerWidget {
   const NutritionTab({super.key});
 
-  /// Total expanded height of the hero sliver. Tuned to fit calorie
-  /// ring + AI insight + next-best preview + CTA on a 6.1" phone
-  /// without clipping.
-  static const double _expandedHeight = 420;
+  /// Total expanded height of the hero sliver. Bumped in phase 27 to
+  /// accommodate the restored Protein/Carbs/Fat macro bars between the
+  /// calorie ring and the AI insight block.
+  static const double _expandedHeight = 450;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -57,6 +59,13 @@ class NutritionTab extends ConsumerWidget {
           ),
         ),
         const MealPlanSliver(),
+        const SliverPadding(
+          padding: EdgeInsets.fromLTRB(20, 22, 20, 8),
+          sliver: SliverToBoxAdapter(
+            child: _SectionTitle(title: 'Öğün Kategorileri'),
+          ),
+        ),
+        const SliverToBoxAdapter(child: _MealCategoriesSection()),
         SliverToBoxAdapter(
           child: _DiscoverySectionHeader(
             onSeeAll: () => _showComingSoon(context),
@@ -71,7 +80,7 @@ class NutritionTab extends ConsumerWidget {
               ),
             ),
             error: (_, __) => const SizedBox.shrink(),
-            data: (recipes) => _DiscoveryStrip(recipes: recipes),
+            data: (recipes) => _DiscoverySection(recipes: recipes),
           ),
         ),
         const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
@@ -187,28 +196,152 @@ class _ExpandedDecisionPanel extends ConsumerWidget {
     final overCalories =
         target.calories > 0 && consumed.calories >= target.calories;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _DecisionHeaderRow(score: score, streak: streak),
-          const SizedBox(height: 8),
-          _CalorieRing(target: target, consumed: consumed),
-          const SizedBox(height: 10),
-          _AiInsightRow(
-            target: target,
-            consumed: consumed,
-            suggestion: recommendation,
-          ),
-          const Spacer(),
-          if (recommendation != null)
-            _NextMealPreview(
-              recommendation: recommendation,
-              overCalories: overCalories,
+    // ClipRect + NeverScrollableScrollPhysics keeps the panel from
+    // throwing a RenderFlex overflow when the SliverAppBar shrinks
+    // toward its toolbar height during collapse — the scroll view
+    // absorbs the squeeze, the clip rect hides the lower content
+    // instead of painting it into the toolbar area.
+    return ClipRect(
+      child: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _DecisionHeaderRow(score: score, streak: streak),
+            const SizedBox(height: 8),
+            Center(
+              child: _CalorieRing(target: target, consumed: consumed),
             ),
-        ],
+            const SizedBox(height: 10),
+            _MacroBarsRow(target: target, consumed: consumed),
+            const SizedBox(height: 10),
+            _AiInsightRow(
+              target: target,
+              consumed: consumed,
+              suggestion: recommendation,
+            ),
+            const SizedBox(height: 10),
+            if (recommendation != null)
+              _NextMealPreview(
+                recommendation: recommendation,
+                overCalories: overCalories,
+              ),
+          ],
+        ),
       ),
+    );
+  }
+}
+
+/// Phase 27 restoration of the Protein/Carbs/Fat progress bars that
+/// Phase 26 accidentally dropped. Three thin `LinearProgressIndicator`s
+/// stacked tightly — each with its label + "{consumed}g / {target}g"
+/// readout on the right side.
+class _MacroBarsRow extends StatelessWidget {
+  const _MacroBarsRow({required this.target, required this.consumed});
+  final MacroTarget target;
+  final MacroTarget consumed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _MacroBar(
+          label: 'Protein',
+          consumed: consumed.protein,
+          target: target.protein,
+          color: _proteinColor,
+        ),
+        const SizedBox(height: 6),
+        _MacroBar(
+          label: 'Karb',
+          consumed: consumed.carbs,
+          target: target.carbs,
+          color: _carbsColor,
+        ),
+        const SizedBox(height: 6),
+        _MacroBar(
+          label: 'Yağ',
+          consumed: consumed.fat,
+          target: target.fat,
+          color: _fatColor,
+        ),
+      ],
+    );
+  }
+}
+
+class _MacroBar extends StatelessWidget {
+  const _MacroBar({
+    required this.label,
+    required this.consumed,
+    required this.target,
+    required this.color,
+  });
+
+  final String label;
+  final int consumed;
+  final int target;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = target <= 0 ? 0.0 : (consumed / target).clamp(0.0, 1.0);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              '${consumed}g',
+              style: TextStyle(
+                color: color,
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(width: 2),
+            Text(
+              '/ ${target}g',
+              style: const TextStyle(
+                color: Colors.white54,
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 3),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: progress),
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeOutCubic,
+            builder: (context, value, _) => LinearProgressIndicator(
+              value: value,
+              minHeight: 5,
+              backgroundColor: color.withValues(alpha: 0.14),
+              valueColor: AlwaysStoppedAnimation(color),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -830,31 +963,297 @@ class _DiscoverySectionHeader extends StatelessWidget {
   }
 }
 
-class _DiscoveryStrip extends StatelessWidget {
-  const _DiscoveryStrip({required this.recipes});
+/// Phase 27 restoration of the filter chip row + compact recipe strip.
+/// Stateful holder: chip selection lives here so the list re-filters
+/// without a provider round-trip.
+class _DiscoverySection extends StatefulWidget {
+  const _DiscoverySection({required this.recipes});
   final List<Recipe> recipes;
 
   @override
-  Widget build(BuildContext context) {
-    // Prioritise recipes with explicit curated tags first; fall back to
-    // any recipe so the strip is never empty once the catalogue loads.
-    final items = recipes.toList()
-      ..sort((a, b) => b.tags.length.compareTo(a.tags.length));
-    if (items.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20),
-        child: _EmptyState(message: 'Keşfedilecek tarif yok — yakında.'),
-      );
+  State<_DiscoverySection> createState() => _DiscoverySectionState();
+}
+
+class _DiscoverySectionState extends State<_DiscoverySection> {
+  /// Null = no filter active. Tapping the currently-selected chip
+  /// clears the filter.
+  String? _active;
+
+  static const List<String> _filters = [
+    'Yüksek Protein',
+    'Düşük Kalori',
+    'Hacim',
+    'Sıkılaşma',
+    'Vegan',
+  ];
+
+  List<Recipe> _apply(List<Recipe> source) {
+    switch (_active) {
+      case 'Yüksek Protein':
+        return source
+            .where((r) => r.tags.contains('Yüksek Protein') || r.protein >= 25)
+            .toList();
+      case 'Düşük Kalori':
+        return source
+            .where((r) => r.tags.contains('Düşük Kalori') || r.calories <= 400)
+            .toList();
+      case 'Hacim':
+        return source
+            .where((r) => r.tags.contains('Hacim') || r.calories >= 500)
+            .toList();
+      case 'Sıkılaşma':
+        return source
+            .where((r) =>
+                r.tags.contains('Sıkılaşma') ||
+                (r.calories <= 500 && r.protein >= 20))
+            .toList();
+      case 'Vegan':
+        return source.where((r) {
+          if (r.tags.contains('Vegan')) return true;
+          final hay = '${r.title} ${r.instructions ?? ''}'.toLowerCase();
+          return hay.contains('vegan');
+        }).toList();
+      default:
+        return source;
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Prioritise tagged recipes first so curated content floats to the
+    // start of the strip.
+    final items = _apply(widget.recipes)
+      ..sort((a, b) => b.tags.length.compareTo(a.tags.length));
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          height: 38,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: _filters.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            itemBuilder: (context, index) {
+              final label = _filters[index];
+              final selected = label == _active;
+              return _DiscoveryFilterChip(
+                label: label,
+                selected: selected,
+                onTap: () => setState(
+                  () => _active = selected ? null : label,
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (items.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: _EmptyState(
+              message: 'Bu filtreye uygun tarif bulunamadı.',
+            ),
+          )
+        else
+          SizedBox(
+            height: 180,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: items.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemBuilder: (context, index) =>
+                  _CompactDiscoveryCard(recipe: items[index]),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _DiscoveryFilterChip extends StatelessWidget {
+  const _DiscoveryFilterChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(24),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            color: selected
+                ? _neon.withValues(alpha: 0.25)
+                : Colors.white.withValues(alpha: 0.04),
+            border: Border.all(
+              color: selected ? _neon : Colors.white24,
+              width: selected ? 1.5 : 1,
+            ),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: _neon.withValues(alpha: 0.35),
+                      blurRadius: 10,
+                    ),
+                  ]
+                : null,
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: selected ? Colors.white : Colors.white70,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Phase 27 — horizontal row of tappable category cards. Each card
+/// routes to `/nutrition/category/{type}` where the screen lists all
+/// recipes matching that meal-type bucket.
+///
+/// Rendered as a StatelessWidget because the cards have no local
+/// state; each tap goes straight through `context.push`.
+class _MealCategoriesSection extends StatelessWidget {
+  const _MealCategoriesSection();
+
+  static const List<_CategoryEntry> _categories = [
+    _CategoryEntry(
+      label: 'Kahvaltı',
+      emoji: '🌅',
+      type: 'breakfast',
+      tint: Color(0xFFFFB84D),
+    ),
+    _CategoryEntry(
+      label: 'Öğle Yemeği',
+      emoji: '🥗',
+      type: 'lunch',
+      tint: Color(0xFF4DA6FF),
+    ),
+    _CategoryEntry(
+      label: 'Akşam Yemeği',
+      emoji: '🍽️',
+      type: 'dinner',
+      tint: Color(0xFF8E5BFF),
+    ),
+    _CategoryEntry(
+      label: 'Ara Öğün',
+      emoji: '🍎',
+      type: 'snack',
+      tint: Color(0xFF39FF14),
+    ),
+    _CategoryEntry(
+      label: 'Sporcu Tatlısı',
+      emoji: '💪',
+      type: 'dessert',
+      tint: Color(0xFFFF4DDB),
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
     return SizedBox(
-      height: 180,
+      height: 116,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: items.length,
+        itemCount: _categories.length,
         separatorBuilder: (_, __) => const SizedBox(width: 12),
-        itemBuilder: (context, index) => _CompactDiscoveryCard(
-          recipe: items[index],
+        itemBuilder: (context, index) => _MealCategoryCard(
+          entry: _categories[index],
+        ),
+      ),
+    );
+  }
+}
+
+class _CategoryEntry {
+  const _CategoryEntry({
+    required this.label,
+    required this.emoji,
+    required this.type,
+    required this.tint,
+  });
+  final String label;
+  final String emoji;
+  final String type;
+  final Color tint;
+}
+
+class _MealCategoryCard extends StatelessWidget {
+  const _MealCategoryCard({required this.entry});
+  final _CategoryEntry entry;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 120,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => context.push('/nutrition/category/${entry.type}'),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: LinearGradient(
+                colors: [
+                  entry.tint.withValues(alpha: 0.3),
+                  entry.tint.withValues(alpha: 0.08),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              border: Border.all(color: entry.tint.withValues(alpha: 0.55)),
+              boxShadow: [
+                BoxShadow(
+                  color: entry.tint.withValues(alpha: 0.2),
+                  blurRadius: 14,
+                  spreadRadius: 0.5,
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(entry.emoji, style: const TextStyle(fontSize: 32)),
+                const Spacer(),
+                Text(
+                  entry.label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    height: 1.2,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
