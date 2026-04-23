@@ -987,17 +987,19 @@ class _DiscoverySectionState extends State<_DiscoverySection> {
     'Vegan',
   ];
 
-  /// Exact tag match (phase 30). Previous phases used
-  /// `toLowerCase` + trim defensively, but Dart's case folding on
-  /// Turkish dotted/dotless İ is locale-dependent and was eating
-  /// legitimate matches on certain devices. The chip labels here and
-  /// the Phase 24 + 28 seed arrays both use identical Title Case
-  /// strings ("Yüksek Protein", "Düşük Kalori", "Hacim", "Sıkılaşma",
-  /// "Vegan"), so a direct `contains` compare is the safest path.
+  /// Exact tag match with whitespace-safe trim on both sides
+  /// (phase 31). Postgres `text[]` sometimes preserves a stray
+  /// trailing space on array literals that came through a copy-paste
+  /// path, and the chip labels are compile-time constants — trimming
+  /// both sides is a cheap safety net that can't cause false
+  /// positives. Kept case-exact (no `toLowerCase`) because Dart's
+  /// Turkish İ/I folding is locale-dependent; the UI and DB both use
+  /// identical Title Case.
   List<Recipe> _apply(List<Recipe> source) {
     final selectedTag = _active;
     if (selectedTag == null) return source;
-    return source.where((r) => r.tags.contains(selectedTag)).toList();
+    final target = selectedTag.trim();
+    return source.where((r) => r.tags.any((t) => t.trim() == target)).toList();
   }
 
   @override
@@ -1128,8 +1130,10 @@ class _MealCategoriesSection extends StatelessWidget {
       label: 'Kahvaltı',
       type: 'breakfast',
       tint: Color(0xFFFFB84D),
+      // Phase 31 reverted to the Phase 29 breakfast URL (the one on the
+      // spec in Phase 30 was 404-ing on test devices).
       imageUrl:
-          'https://images.unsplash.com/photo-1517093602195-b40af9688b92?w=600&q=80',
+          'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?auto=format&fit=crop&w=600&q=80',
     ),
     _CategoryEntry(
       label: 'Öğle Yemeği',

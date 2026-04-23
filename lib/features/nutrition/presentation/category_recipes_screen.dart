@@ -120,75 +120,84 @@ class _CategoryRecipeCard extends StatelessWidget {
             color: Colors.white.withValues(alpha: 0.04),
             border: Border.all(color: Colors.white12),
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SizedBox(
-                width: 110,
-                child: _Thumb(imageUrl: recipe.imageUrl),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        recipe.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w900,
-                          height: 1.2,
+          // IntrinsicHeight is the cheapest way to give the Row a
+          // bounded cross-axis extent inside a vertical ListView. Without
+          // it, `CrossAxisAlignment.stretch` flows `h=Infinity` down to
+          // the thumbnail SizedBox and the image crashes with
+          // "BoxConstraints forces an infinite height". With it, the Row
+          // sizes to the tallest child (the text column) and the
+          // thumbnail stretches to match.
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  width: 110,
+                  child: _Thumb(imageUrl: recipe.imageUrl),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          recipe.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w900,
+                            height: 1.2,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      RecipeTagsStrip(
-                        recipe: recipe,
-                        maxTags: 2,
-                        compact: true,
-                      ),
-                      const Spacer(),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.local_fire_department,
-                            color: _neon,
-                            size: 14,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${recipe.calories} kcal',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
+                        const SizedBox(height: 8),
+                        RecipeTagsStrip(
+                          recipe: recipe,
+                          maxTags: 2,
+                          compact: true,
+                        ),
+                        const Spacer(),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.local_fire_department,
+                              color: _neon,
+                              size: 14,
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          const Icon(
-                            Icons.fitness_center,
-                            color: _proteinColor,
-                            size: 14,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${recipe.protein}g Protein',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
+                            const SizedBox(width: 4),
+                            Text(
+                              '${recipe.calories} kcal',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                            const SizedBox(width: 12),
+                            const Icon(
+                              Icons.fitness_center,
+                              color: _proteinColor,
+                              size: 14,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${recipe.protein}g Protein',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
