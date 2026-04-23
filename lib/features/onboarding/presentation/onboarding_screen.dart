@@ -1120,6 +1120,17 @@ const String _dietVeganImg =
 const String _dietKetoImg =
     'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=800&q=80';
 
+// Meal frequency visuals — same verified-URL rule (all three are already
+// on live recipe rows). 2 öğün = single minimalist bowl, 3 öğün = a
+// balanced composed plate, 4+ öğün = a high-variety fresh-ingredient
+// spread so each option telegraphs its energy at a glance.
+const String _mealFreq2Img =
+    'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=800&q=80';
+const String _mealFreq3Img =
+    'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80';
+const String _mealFreq4Img =
+    'https://images.unsplash.com/photo-1525351484163-7529414344d8?w=800&q=80';
+
 class _DietPreferenceStep extends ConsumerWidget {
   const _DietPreferenceStep({required this.onSelected});
   final VoidCallback onSelected;
@@ -1297,6 +1308,7 @@ class _MealFrequencyStep extends ConsumerWidget {
               children: [
                 Expanded(
                   child: PhotoOptionCard(
+                    image: _mealFreq2Img,
                     fallbackIcon: Icons.hourglass_top,
                     title: '2 Öğün',
                     subtitle: 'Aralıklı oruç (16:8) tarzı beslenirim.',
@@ -1307,6 +1319,7 @@ class _MealFrequencyStep extends ConsumerWidget {
                 const SizedBox(height: 12),
                 Expanded(
                   child: PhotoOptionCard(
+                    image: _mealFreq3Img,
                     fallbackIcon: Icons.restaurant,
                     title: '3 Öğün',
                     subtitle: 'Standart — kahvaltı, öğle, akşam.',
@@ -1317,6 +1330,7 @@ class _MealFrequencyStep extends ConsumerWidget {
                 const SizedBox(height: 12),
                 Expanded(
                   child: PhotoOptionCard(
+                    image: _mealFreq4Img,
                     fallbackIcon: Icons.lunch_dining,
                     title: '4+ Öğün',
                     subtitle: 'Atıştırmalık severim.',

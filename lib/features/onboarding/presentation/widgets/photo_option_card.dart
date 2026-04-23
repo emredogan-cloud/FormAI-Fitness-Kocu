@@ -53,50 +53,54 @@ class PhotoOptionCard extends StatelessWidget {
               Expanded(
                 flex: 5,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 18, 12, 18),
+                  padding: const EdgeInsets.fromLTRB(18, 14, 10, 14),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Top group (icon + title + subtitle) lives inside
-                      // an Expanded + NeverScrollable SingleChildScrollView
-                      // so the ~4-5 px over-extension that was firing on
-                      // short devices gets silently absorbed instead of
-                      // throwing a RenderFlex overflow. The chevron/check
-                      // below still pins to the bottom of the card.
-                      Expanded(
-                        child: SingleChildScrollView(
-                          physics: const NeverScrollableScrollPhysics(),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Icon(
-                                fallbackIcon,
-                                color: selected ? _neon : Colors.white70,
-                                size: 26,
+                      // Icon + title + subtitle stack. `Flexible` +
+                      // `MainAxisSize.min` let it compress when the parent
+                      // row gets short; `maxLines: 2` on the subtitle keeps
+                      // "Süt, peynir, yoğurt vb." from spilling off the
+                      // bottom of the card instead of silently clipping
+                      // (the old `NeverScrollable SingleChildScrollView`
+                      // trick was absorbing overflow by cutting glyphs in
+                      // half).
+                      Flexible(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              fallbackIcon,
+                              color: selected ? _neon : Colors.white70,
+                              size: 24,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w900,
                               ),
-                              const SizedBox(height: 10),
+                            ),
+                            if (subtitle.isNotEmpty) ...[
+                              const SizedBox(height: 4),
                               Text(
-                                title,
+                                subtitle,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white54,
+                                  fontSize: 12.5,
+                                  height: 1.3,
                                 ),
                               ),
-                              if (subtitle.isNotEmpty) ...[
-                                const SizedBox(height: 4),
-                                Text(
-                                  subtitle,
-                                  style: const TextStyle(
-                                    color: Colors.white54,
-                                    fontSize: 13,
-                                    height: 1.3,
-                                  ),
-                                ),
-                              ],
                             ],
-                          ),
+                          ],
                         ),
                       ),
                       Icon(
