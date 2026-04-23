@@ -987,35 +987,16 @@ class _DiscoverySectionState extends State<_DiscoverySection> {
     'Vegan',
   ];
 
+  /// Strict tag filter per phase 28: only recipes whose `tags` array
+  /// contains the active filter label pass through. No more macro
+  /// heuristics as a fallback — the Phase 24 seed populates real
+  /// `tags`, and falling back on inferences made the chips read as
+  /// visual-only (everything matched by heuristic, so tapping didn't
+  /// change the list).
   List<Recipe> _apply(List<Recipe> source) {
-    switch (_active) {
-      case 'Yüksek Protein':
-        return source
-            .where((r) => r.tags.contains('Yüksek Protein') || r.protein >= 25)
-            .toList();
-      case 'Düşük Kalori':
-        return source
-            .where((r) => r.tags.contains('Düşük Kalori') || r.calories <= 400)
-            .toList();
-      case 'Hacim':
-        return source
-            .where((r) => r.tags.contains('Hacim') || r.calories >= 500)
-            .toList();
-      case 'Sıkılaşma':
-        return source
-            .where((r) =>
-                r.tags.contains('Sıkılaşma') ||
-                (r.calories <= 500 && r.protein >= 20))
-            .toList();
-      case 'Vegan':
-        return source.where((r) {
-          if (r.tags.contains('Vegan')) return true;
-          final hay = '${r.title} ${r.instructions ?? ''}'.toLowerCase();
-          return hay.contains('vegan');
-        }).toList();
-      default:
-        return source;
-    }
+    final tag = _active;
+    if (tag == null) return source;
+    return source.where((r) => r.tags.contains(tag)).toList();
   }
 
   @override
@@ -1138,33 +1119,38 @@ class _MealCategoriesSection extends StatelessWidget {
   static const List<_CategoryEntry> _categories = [
     _CategoryEntry(
       label: 'Kahvaltı',
-      emoji: '🌅',
       type: 'breakfast',
       tint: Color(0xFFFFB84D),
+      imageUrl:
+          'https://images.unsplash.com/photo-1517093602195-b40af9688b92?w=600&q=80',
     ),
     _CategoryEntry(
       label: 'Öğle Yemeği',
-      emoji: '🥗',
       type: 'lunch',
       tint: Color(0xFF4DA6FF),
+      imageUrl:
+          'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80',
     ),
     _CategoryEntry(
       label: 'Akşam Yemeği',
-      emoji: '🍽️',
       type: 'dinner',
       tint: Color(0xFF8E5BFF),
+      imageUrl:
+          'https://images.unsplash.com/photo-1544025162-d76694265947?w=600&q=80',
     ),
     _CategoryEntry(
       label: 'Ara Öğün',
-      emoji: '🍎',
       type: 'snack',
       tint: Color(0xFF39FF14),
+      imageUrl:
+          'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=600&q=80',
     ),
     _CategoryEntry(
       label: 'Sporcu Tatlısı',
-      emoji: '💪',
       type: 'dessert',
       tint: Color(0xFFFF4DDB),
+      imageUrl:
+          'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=600&q=80',
     ),
   ];
 
@@ -1188,14 +1174,14 @@ class _MealCategoriesSection extends StatelessWidget {
 class _CategoryEntry {
   const _CategoryEntry({
     required this.label,
-    required this.emoji,
     required this.type,
     required this.tint,
+    required this.imageUrl,
   });
   final String label;
-  final String emoji;
   final String type;
   final Color tint;
+  final String imageUrl;
 }
 
 class _MealCategoryCard extends StatelessWidget {
@@ -1205,54 +1191,91 @@ class _MealCategoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 120,
+      width: 140,
       child: Material(
         color: Colors.transparent,
+        clipBehavior: Clip.antiAlias,
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
           onTap: () => context.push('/nutrition/category/${entry.type}'),
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              gradient: LinearGradient(
-                colors: [
-                  entry.tint.withValues(alpha: 0.3),
-                  entry.tint.withValues(alpha: 0.08),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              border: Border.all(color: entry.tint.withValues(alpha: 0.55)),
-              boxShadow: [
-                BoxShadow(
-                  color: entry.tint.withValues(alpha: 0.2),
-                  blurRadius: 14,
-                  spreadRadius: 0.5,
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(entry.emoji, style: const TextStyle(fontSize: 32)),
-                const Spacer(),
-                Text(
-                  entry.label,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
-                    height: 1.2,
-                    letterSpacing: 0.2,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Layer 1 — background image. Network fetch with a
+              // neutral fallback gradient so an offline user still
+              // sees a tappable tinted tile instead of a broken icon.
+              Image.network(
+                entry.imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        entry.tint.withValues(alpha: 0.55),
+                        entry.tint.withValues(alpha: 0.18),
+                      ],
+                    ),
                   ),
                 ),
-              ],
-            ),
+                loadingBuilder: (_, child, progress) =>
+                    progress == null ? child : Container(color: Colors.white10),
+              ),
+              // Layer 2 — dark gradient overlay for text legibility.
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color(0x33000000),
+                      Color(0xCC000000),
+                    ],
+                    stops: [0.2, 1.0],
+                  ),
+                ),
+              ),
+              // Layer 3 — subtle tinted border that picks up the
+              // category's brand colour without fighting the photo.
+              IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: entry.tint.withValues(alpha: 0.55),
+                    ),
+                  ),
+                ),
+              ),
+              // Layer 4 — label pinned to the bottom with a shadow so
+              // it holds its own against bright photography.
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      entry.label,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                        height: 1.15,
+                        letterSpacing: 0.2,
+                        shadows: [
+                          Shadow(blurRadius: 8, color: Colors.black87),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),

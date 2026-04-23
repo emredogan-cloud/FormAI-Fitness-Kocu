@@ -244,11 +244,23 @@ class _EmptyCategoryState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.restaurant_outlined,
-              color: Colors.white38, size: 56),
-          const SizedBox(height: 12),
+          Container(
+            width: 96,
+            height: 96,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: _neon.withValues(alpha: 0.12),
+              border: Border.all(color: _neon.withValues(alpha: 0.4)),
+            ),
+            child: const Icon(
+              Icons.restaurant_menu,
+              color: _neon,
+              size: 44,
+            ),
+          ),
+          const SizedBox(height: 18),
           const Text(
-            'Bu kategoriye henüz tarif eklenmedi.',
+            'Bu kategoride henüz tarif yok.',
             style: TextStyle(
               color: Colors.white,
               fontSize: 16,
@@ -258,7 +270,7 @@ class _EmptyCategoryState extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Yeni tarifler yakında. ($category)',
+            'Yeni tarifler yakında ($category).',
             style: const TextStyle(color: Colors.white54, fontSize: 13),
             textAlign: TextAlign.center,
           ),
