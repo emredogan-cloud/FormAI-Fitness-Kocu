@@ -987,19 +987,29 @@ class _DiscoverySectionState extends State<_DiscoverySection> {
     'Vegan',
   ];
 
-  /// Exact tag match with whitespace-safe trim on both sides
-  /// (phase 31). Postgres `text[]` sometimes preserves a stray
-  /// trailing space on array literals that came through a copy-paste
-  /// path, and the chip labels are compile-time constants — trimming
-  /// both sides is a cheap safety net that can't cause false
-  /// positives. Kept case-exact (no `toLowerCase`) because Dart's
-  /// Turkish İ/I folding is locale-dependent; the UI and DB both use
-  /// identical Title Case.
+  /// Phase 33 detective instrumentation: the filter has been silently
+  /// returning empty lists across multiple phases despite the parser
+  /// and seed data both looking correct. Before the filter decides
+  /// anything, log the chip label and every candidate recipe's tags
+  /// so the mismatch (Unicode NFC vs NFD? hidden whitespace? wrong
+  /// string literal?) shows up directly in the debug console.
+  ///
+  /// The match itself is strict `==` against the raw selected tag —
+  /// no `trim`, no `toLowerCase`. Trim already happens inside
+  /// [Recipe._parseTags], so both sides of the compare are already
+  /// clean; adding it here would only hide a real bug. Dart's Turkish
+  /// İ/I case folding is locale-dependent so `toLowerCase` is
+  /// deliberately avoided; UI and DB both use identical Title Case.
   List<Recipe> _apply(List<Recipe> source) {
     final selectedTag = _active;
     if (selectedTag == null) return source;
-    final target = selectedTag.trim();
-    return source.where((r) => r.tags.any((t) => t.trim() == target)).toList();
+    debugPrint('[Filter] Selected Tag: "$selectedTag"');
+    return source.where((r) {
+      debugPrint(
+        '[Filter]   Recipe "${r.title}" tags=${r.tags}',
+      );
+      return r.tags.any((t) => t == selectedTag);
+    }).toList();
   }
 
   @override

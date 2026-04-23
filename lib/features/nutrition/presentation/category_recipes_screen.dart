@@ -105,12 +105,15 @@ class _CategoryRecipeCard extends StatelessWidget {
   const _CategoryRecipeCard({required this.recipe});
   final Recipe recipe;
 
-  /// Strict card height enforced in phase 32 so the category list reads
-  /// as a clean uniform grid. Every card is 120 px tall, every thumb
-  /// is 100×100 with `BoxFit.cover` — regardless of the recipe title
-  /// length or the source image's native aspect ratio.
-  static const double _cardHeight = 120;
-  static const double _thumbSize = 100;
+  /// Phase 33 bump: cards are now 140 px tall with a 120×120 thumb.
+  /// Phase 32's 120/100 pairing overflowed by ~17 px on rows with two
+  /// tag chips because the title (maxLines: 2) + tag Wrap + macro row
+  /// together exceed 100 px of inner height on compact devices. The
+  /// extra 20 px absorbs that while keeping the layout tight; the
+  /// title+tags block now lives in an `Expanded` so any residual slack
+  /// is distributed gracefully instead of overflowing.
+  static const double _cardHeight = 140;
+  static const double _thumbSize = 120;
 
   @override
   Widget build(BuildContext context) {
@@ -149,25 +152,37 @@ class _CategoryRecipeCard extends StatelessWidget {
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        recipe.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w900,
-                          height: 1.2,
+                      // Title + tags share the flexible top region.
+                      // Wrapping them in `Expanded` lets the tag Wrap
+                      // grow to two rows (which was the phase 32
+                      // overflow trigger) without blowing past the
+                      // fixed card height; the macro row below stays
+                      // pinned as the fixed bottom anchor.
+                      Expanded(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              recipe.title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w900,
+                                height: 1.2,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            RecipeTagsStrip(
+                              recipe: recipe,
+                              maxTags: 2,
+                              compact: true,
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 6),
-                      RecipeTagsStrip(
-                        recipe: recipe,
-                        maxTags: 2,
-                        compact: true,
                       ),
                       const SizedBox(height: 6),
                       Row(

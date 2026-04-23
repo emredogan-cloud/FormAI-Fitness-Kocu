@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// Row from the Supabase `recipes` table. Columns are snake_case on the
 /// server; [Recipe.fromJson] maps them to camelCase fields so the rest
 /// of the app doesn't have to think about SQL naming conventions.
@@ -56,10 +58,22 @@ class Recipe {
   /// on the driver path), and falls back to 0 for any missing numeric
   /// so a malformed row never crashes the recipe list.
   ///
-  /// `tags` handles both a Postgres text[] (decoded as `List<dynamic>`
-  /// of strings) and a JSON array, coercing each entry through
-  /// `toString()` so a stray non-string element doesn't throw.
+  /// `tags` is delegated to [_parseTags] which handles both a Postgres
+  /// text[] (decoded as `List<dynamic>`) and the raw Postgres array
+  /// literal String form that certain driver paths return.
   factory Recipe.fromJson(Map<String, dynamic> json) {
+    final rawTags = json['tags'];
+    // Phase 33 detective work: the filter chips have been silently
+    // returning empty lists for multiple phases. Before parsing, dump
+    // the raw payload so we can see EXACTLY what the backend delivers
+    // — List, String literal, null, something else? — without having
+    // to guess. Only logs in debug builds; release is silent.
+    if (kDebugMode) {
+      debugPrint(
+        '[Recipe.fromJson] title="${json['title']}" '
+        'raw tags type=${rawTags?.runtimeType} value=$rawTags',
+      );
+    }
     return Recipe(
       id: json['id']?.toString() ?? '',
       title: (json['title'] as String?) ?? '',
@@ -71,7 +85,7 @@ class Recipe {
       prepTimeMinutes: _asInt(json['prep_time_minutes']),
       imageUrl: json['image_url'] as String?,
       instructions: json['instructions'] as String?,
-      tags: _asStringList(json['tags']),
+      tags: _parseTags(rawTags),
     );
   }
 
@@ -87,7 +101,7 @@ class Recipe {
   ///
   ///   • **List path** — the canonical PostgREST response; arrays
   ///     decode to `List<dynamic>` and each element is already a
-  ///     `String`. Straight map + toString.
+  ///     `String`. Straight map + toString + trim.
   ///   • **String path** — hit when the column comes through an RPC,
   ///     a view with a cast, or certain edge cases in the supabase-
   ///     flutter client. The row arrives as the raw Postgres array
@@ -100,14 +114,18 @@ class Recipe {
   /// "Sıkılaşma"]`. Null / anything unexpected falls through to an
   /// empty list so the UI doesn't crash on a malformed row.
   ///
-  /// This was the silent-filter culprit in phase 31: the List path
-  /// worked locally, but whatever the user's device was hitting came
-  /// back as a String and [Recipe.tags] was always empty — which is
-  /// why `r.tags.contains('Vegan')` matched zero rows.
-  static List<String> _asStringList(dynamic value) {
+  /// Phase 33 rename: was `_asStringList`. The name masked what the
+  /// function was actually for — parsing the Postgres-shaped tags
+  /// payload. Every call site was `tags`-specific anyway.
+  ///
+  /// **Every element goes through `.trim()`** so an incidental leading
+  /// or trailing space from either path (e.g. `"{Vegan, Sıkılaşma}"`
+  /// has a space after the comma) can never cause `==` comparisons
+  /// with the chip labels to silently fail.
+  static List<String> _parseTags(dynamic value) {
     if (value is List) {
       return value
-          .map((e) => e.toString())
+          .map((e) => e.toString().trim())
           .where((e) => e.isNotEmpty)
           .toList(growable: false);
     }
@@ -125,7 +143,7 @@ class Recipe {
             if (element.length >= 2 &&
                 element.startsWith('"') &&
                 element.endsWith('"')) {
-              element = element.substring(1, element.length - 1);
+              element = element.substring(1, element.length - 1).trim();
             }
             return element;
           })
