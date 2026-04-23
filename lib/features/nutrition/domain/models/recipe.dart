@@ -82,9 +82,55 @@ class Recipe {
     return 0;
   }
 
+  /// Tolerant parser for the `tags` column. Supabase returns Postgres
+  /// arrays in two different shapes depending on the driver path:
+  ///
+  ///   • **List path** — the canonical PostgREST response; arrays
+  ///     decode to `List<dynamic>` and each element is already a
+  ///     `String`. Straight map + toString.
+  ///   • **String path** — hit when the column comes through an RPC,
+  ///     a view with a cast, or certain edge cases in the supabase-
+  ///     flutter client. The row arrives as the raw Postgres array
+  ///     literal: `"{Vegan, Sıkılaşma}"` or with quoted elements
+  ///     `'{"Yüksek Protein","Hacim"}'`. We strip the curly braces
+  ///     and split on comma, trimming whitespace + stripping any
+  ///     surrounding double-quotes from each element.
+  ///
+  /// Both paths return a clean `List<String>` like `["Vegan",
+  /// "Sıkılaşma"]`. Null / anything unexpected falls through to an
+  /// empty list so the UI doesn't crash on a malformed row.
+  ///
+  /// This was the silent-filter culprit in phase 31: the List path
+  /// worked locally, but whatever the user's device was hitting came
+  /// back as a String and [Recipe.tags] was always empty — which is
+  /// why `r.tags.contains('Vegan')` matched zero rows.
   static List<String> _asStringList(dynamic value) {
     if (value is List) {
-      return value.map((e) => e.toString()).toList(growable: false);
+      return value
+          .map((e) => e.toString())
+          .where((e) => e.isNotEmpty)
+          .toList(growable: false);
+    }
+    if (value is String) {
+      var s = value.trim();
+      if (s.isEmpty) return const [];
+      if (s.startsWith('{') && s.endsWith('}')) {
+        s = s.substring(1, s.length - 1);
+      }
+      if (s.isEmpty) return const [];
+      return s
+          .split(',')
+          .map((raw) {
+            var element = raw.trim();
+            if (element.length >= 2 &&
+                element.startsWith('"') &&
+                element.endsWith('"')) {
+              element = element.substring(1, element.length - 1);
+            }
+            return element;
+          })
+          .where((element) => element.isNotEmpty)
+          .toList(growable: false);
     }
     return const [];
   }

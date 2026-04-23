@@ -105,95 +105,105 @@ class _CategoryRecipeCard extends StatelessWidget {
   const _CategoryRecipeCard({required this.recipe});
   final Recipe recipe;
 
+  /// Strict card height enforced in phase 32 so the category list reads
+  /// as a clean uniform grid. Every card is 120 px tall, every thumb
+  /// is 100×100 with `BoxFit.cover` — regardless of the recipe title
+  /// length or the source image's native aspect ratio.
+  static const double _cardHeight = 120;
+  static const double _thumbSize = 100;
+
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      clipBehavior: Clip.antiAlias,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
+    return SizedBox(
+      height: _cardHeight,
+      child: Material(
+        color: Colors.transparent,
+        clipBehavior: Clip.antiAlias,
         borderRadius: BorderRadius.circular(16),
-        onTap: () => context.push('/recipe', extra: recipe),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            color: Colors.white.withValues(alpha: 0.04),
-            border: Border.all(color: Colors.white12),
-          ),
-          // IntrinsicHeight is the cheapest way to give the Row a
-          // bounded cross-axis extent inside a vertical ListView. Without
-          // it, `CrossAxisAlignment.stretch` flows `h=Infinity` down to
-          // the thumbnail SizedBox and the image crashes with
-          // "BoxConstraints forces an infinite height". With it, the Row
-          // sizes to the tallest child (the text column) and the
-          // thumbnail stretches to match.
-          child: IntrinsicHeight(
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => context.push('/recipe', extra: recipe),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              color: Colors.white.withValues(alpha: 0.04),
+              border: Border.all(color: Colors.white12),
+            ),
+            padding: const EdgeInsets.all(10),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                SizedBox(
-                  width: 110,
-                  child: _Thumb(imageUrl: recipe.imageUrl),
+                // Fixed 100×100 thumbnail. `BoxFit.cover` + a strict box
+                // guarantees no stretching regardless of the source
+                // aspect ratio, and ClipRRect rounds the corners
+                // independently of the card's own rounded border.
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: SizedBox(
+                    width: _thumbSize,
+                    height: _thumbSize,
+                    child: _Thumb(imageUrl: recipe.imageUrl),
+                  ),
                 ),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          recipe.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w900,
-                            height: 1.2,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        recipe.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w900,
+                          height: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      RecipeTagsStrip(
+                        recipe: recipe,
+                        maxTags: 2,
+                        compact: true,
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.local_fire_department,
+                            color: _neon,
+                            size: 14,
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        RecipeTagsStrip(
-                          recipe: recipe,
-                          maxTags: 2,
-                          compact: true,
-                        ),
-                        const Spacer(),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.local_fire_department,
-                              color: _neon,
-                              size: 14,
+                          const SizedBox(width: 4),
+                          Text(
+                            '${recipe.calories} kcal',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
                             ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${recipe.calories} kcal',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
-                              ),
+                          ),
+                          const SizedBox(width: 12),
+                          const Icon(
+                            Icons.fitness_center,
+                            color: _proteinColor,
+                            size: 14,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${recipe.protein}g P',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
                             ),
-                            const SizedBox(width: 12),
-                            const Icon(
-                              Icons.fitness_center,
-                              color: _proteinColor,
-                              size: 14,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${recipe.protein}g Protein',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ],
