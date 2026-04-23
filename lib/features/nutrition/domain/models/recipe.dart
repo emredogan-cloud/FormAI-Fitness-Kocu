@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 /// Row from the Supabase `recipes` table. Columns are snake_case on the
 /// server; [Recipe.fromJson] maps them to camelCase fields so the rest
 /// of the app doesn't have to think about SQL naming conventions.
@@ -62,18 +60,6 @@ class Recipe {
   /// text[] (decoded as `List<dynamic>`) and the raw Postgres array
   /// literal String form that certain driver paths return.
   factory Recipe.fromJson(Map<String, dynamic> json) {
-    final rawTags = json['tags'];
-    // Phase 33 detective work: the filter chips have been silently
-    // returning empty lists for multiple phases. Before parsing, dump
-    // the raw payload so we can see EXACTLY what the backend delivers
-    // — List, String literal, null, something else? — without having
-    // to guess. Only logs in debug builds; release is silent.
-    if (kDebugMode) {
-      debugPrint(
-        '[Recipe.fromJson] title="${json['title']}" '
-        'raw tags type=${rawTags?.runtimeType} value=$rawTags',
-      );
-    }
     return Recipe(
       id: json['id']?.toString() ?? '',
       title: (json['title'] as String?) ?? '',
@@ -85,7 +71,7 @@ class Recipe {
       prepTimeMinutes: _asInt(json['prep_time_minutes']),
       imageUrl: json['image_url'] as String?,
       instructions: json['instructions'] as String?,
-      tags: _parseTags(rawTags),
+      tags: _parseTags(json['tags']),
     );
   }
 

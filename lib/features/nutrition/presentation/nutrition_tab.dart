@@ -987,36 +987,25 @@ class _DiscoverySectionState extends State<_DiscoverySection> {
     'Vegan',
   ];
 
-  /// Phase 33 detective instrumentation: the filter has been silently
-  /// returning empty lists across multiple phases despite the parser
-  /// and seed data both looking correct. Before the filter decides
-  /// anything, log the chip label and every candidate recipe's tags
-  /// so the mismatch (Unicode NFC vs NFD? hidden whitespace? wrong
-  /// string literal?) shows up directly in the debug console.
-  ///
-  /// The match itself is strict `==` against the raw selected tag —
-  /// no `trim`, no `toLowerCase`. Trim already happens inside
-  /// [Recipe._parseTags], so both sides of the compare are already
-  /// clean; adding it here would only hide a real bug. Dart's Turkish
-  /// İ/I case folding is locale-dependent so `toLowerCase` is
-  /// deliberately avoided; UI and DB both use identical Title Case.
+  /// Strict `==` against the raw selected tag — no `trim`, no
+  /// `toLowerCase`. Trim already happens inside [Recipe._parseTags],
+  /// so both sides of the compare are already clean; adding it here
+  /// would only hide a real bug. Dart's Turkish İ/I case folding is
+  /// locale-dependent so `toLowerCase` is deliberately avoided; UI
+  /// and DB both use identical Title Case.
   List<Recipe> _apply(List<Recipe> source) {
     final selectedTag = _active;
     if (selectedTag == null) return source;
-    debugPrint('[Filter] Selected Tag: "$selectedTag"');
-    return source.where((r) {
-      debugPrint(
-        '[Filter]   Recipe "${r.title}" tags=${r.tags}',
-      );
-      return r.tags.any((t) => t == selectedTag);
-    }).toList();
+    return source.where((r) => r.tags.any((t) => t == selectedTag)).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     // Prioritise tagged recipes first so curated content floats to the
-    // start of the strip.
-    final items = _apply(widget.recipes)
+    // start of the strip. `filteredRecipes` is what the horizontal
+    // strip iterates over — bound explicitly so tapping a chip and
+    // re-running [_apply] flows straight through to the ListView.
+    final filteredRecipes = _apply(widget.recipes)
       ..sort((a, b) => b.tags.length.compareTo(a.tags.length));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1042,7 +1031,7 @@ class _DiscoverySectionState extends State<_DiscoverySection> {
           ),
         ),
         const SizedBox(height: 12),
-        if (items.isEmpty)
+        if (filteredRecipes.isEmpty)
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 20),
             child: _EmptyState(
@@ -1055,10 +1044,10 @@ class _DiscoverySectionState extends State<_DiscoverySection> {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              itemCount: items.length,
+              itemCount: filteredRecipes.length,
               separatorBuilder: (_, __) => const SizedBox(width: 12),
               itemBuilder: (context, index) =>
-                  _CompactDiscoveryCard(recipe: items[index]),
+                  _CompactDiscoveryCard(recipe: filteredRecipes[index]),
             ),
           ),
       ],
