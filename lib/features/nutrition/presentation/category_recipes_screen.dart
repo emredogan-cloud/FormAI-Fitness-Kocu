@@ -90,28 +90,18 @@ class CategoryRecipesScreen extends ConsumerWidget {
     }
   }
 
-  /// Lenient filter — the seed mixes `main` / `lunch` / `dinner` for
-  /// main meals, so lunch shows both and dinner shows both. Snack and
-  /// breakfast also accept Turkish aliases.
+  /// Strict equality filter per phase 29. Phase 27 had leniency
+  /// (accepting `main` as both lunch and dinner), but when the Phase
+  /// 28 seed landed with exact `lunch` / `dinner` strings, the lenient
+  /// matcher started over-matching because no row ever had to equal
+  /// the canonical token. Simplifying to a direct case-insensitive
+  /// equality makes the filter predictable — every row now belongs
+  /// to exactly one bucket, determined by its stored `meal_type`.
   static List<Recipe> _filter(List<Recipe> recipes, String type) {
-    final normalized = type.toLowerCase();
-    return recipes.where((r) {
-      final t = r.mealType.toLowerCase();
-      switch (normalized) {
-        case 'breakfast':
-          return t == 'breakfast' || t == 'kahvalti' || t == 'kahvaltı';
-        case 'lunch':
-          return t == 'lunch' || t == 'main';
-        case 'dinner':
-          return t == 'dinner' || t == 'main';
-        case 'snack':
-          return t == 'snack' || t == 'atistirmalik' || t == 'atıştırmalık';
-        case 'dessert':
-          return t == 'dessert' || t == 'tatli' || t == 'tatlı';
-        default:
-          return false;
-      }
-    }).toList();
+    final normalized = type.trim().toLowerCase();
+    return recipes
+        .where((r) => r.mealType.trim().toLowerCase() == normalized)
+        .toList();
   }
 }
 
