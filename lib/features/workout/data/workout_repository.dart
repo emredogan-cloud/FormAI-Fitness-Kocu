@@ -40,53 +40,48 @@ class WorkoutRepository {
   }
 
   // ==========================================================================
-  // ASSET PATH SHORTCUTS — keeps the plans list below readable. Each value
-  // resolves to a file inside one of the docs/<region>/ folders declared
-  // under flutter.assets in pubspec.yaml; the long base64-ish basenames
-  // come straight from the cloud-storage exports the user dropped in.
+  // HERO IMAGE URLS — phase 35 swap. The docs/<region>/ jpegs they used to
+  // point at were generic stock, so the Bölgeler strip now pulls cinematic
+  // neon-lit Unsplash shots instead. Two IDs (`defaultMuscularPhotoUrl`,
+  // `defaultLeanPhotoUrl`) are already validated; the two new literals
+  // (`_gymDarkImg`, `_pushUpImg`) are widely-cited fitness stock photos
+  // and have a graceful `Image.network` fallback behind them if either
+  // ever 404s.
   // ==========================================================================
 
-  static const String _coreImg1 = 'docs/Core (Karın & Stabilite)/1.jpeg';
-  static const String _coreImg2 =
-      'docs/Core (Karın & Stabilite)/4h-GfJgN9a4wzOi5dyPr4KKzTpZDl4vlTe5qrgdfbu-YomsCs9IxRfwX4C59yrMzFmdH7q33bMBU1PJYM5epPdc577HOU-8pc5rS85ayDzJXt4fVp-wlwgBGgugxDyqag-U0zX4sqMe7Y9QendQX0aT-fDYsYfdHW73PvxmVmUQ.jpeg';
-  static const String _chestImg1 =
-      'docs/Göğüs (Chest)/E9CjEna37nJKbG4xizXoq8r0-UFei_q8TvZdsf28rQ2PdTO6IBfn3JcyHsTjZ0ajMUdYONm0IeJQWI9pooHrWaGFoom5UFezanHoyFq6HfhXF9ogvwCKCavQTTFbWRmW4I4VNSHWuUtdTSnr2EOND47p9xBtkeBs-gckcnCkkL4.jpeg';
-  static const String _chestImg2 =
-      'docs/Göğüs (Chest)/JpJrp6V8ApIDIbjyWcwl8EJd2H7nBHQIFvkwuTE19rWpeyzFxljASLhwIZdMn13phGSSHZ0pZDF7h-y4fNyuxtQs5OW9jOZvbRZbhmvfukC8TsmQU2iU39rgs_HHtlWvfOY5VNWriZxRvjHn5TRdDT_MmlFpFWkfNHlfABZm4oY.jpeg';
-  static const String _chestImg3 =
-      'docs/Göğüs (Chest)/QrerRX4gKZal4Q9UdGhjHMhe2DzMZRnPy_xPSArSoSdTnlDM-vQVcrCRsVxrtc_Hw71PYdlclsmuFmQH7len4atYL2PGluwc_MziOps4Cotfrh7tLxpFCm1IEzFlvEOYwJnYjRs4PRGXc2gxWZvN-gbX6pwV7M2_ato-6QG2Axv90-TUqpnr2eYw_X5FYcWe.jpeg';
-  static const String _chestImg4 =
-      'docs/Göğüs (Chest)/uigcgXRDQbphmZcD8AMJWlg-3h0BYRX1MI9oVj3WH8PNKgTSg_XzebzZ-avafXT8SoNbqw5bOcmvK6XyGoTakHAVzAfzA1GfjXwaHWffCwD9gXxuIRTdXNKYP3krRR-8Mkx0BqD9iErK7digcfORT0WYCFD4pVs9QFPIyrew20SvvD_DIke6uGROLFxxIqmJ.jpeg';
-  static const String _backImg1 =
-      'docs/Sırt (Back)/DkFE86-g1pS0UaNntjAY3IhaCb3hfF5FekQ0gN893pveagV3LGBjzihc_ld5V0aCEK8OPrrfoJu16CKXdUTFUWo4dpHCXJ3ZbBGTNNExEW9bJIEGUpbK6WNuvWq2487WAcT6dLkmSGml6s_ePD-eKi_ZzGQYL-mRcXkXcFWm8LRmdJAgxrurFP1xzG4Hgu8C.jpeg';
-  static const String _backImg2 =
-      'docs/Sırt (Back)/w4hPxE1QE3qK9OO5j67xk8JC_oRqz7zsfq187sTHrrlyCKAgSJsU7rTCzQvXjRtdXc7FCw6o04lEq039fzeemachfR6vbCyoNctqNRMNDDGkj0Sl7-D81DyG3sd167H2HQ6xLZu3AokrngJnwk2udZO-Q_JesVDmdmcUhb393YKUjfSL7ikBOXM1RKuG9DX2.jpeg';
-  static const String _legsImg1 =
-      'docs/Bacak (Legs)/eWCp_hOV3FeP_erhHbLTS0w6Pakbs-zsH-UnvBu9gg8vuU1jbNU6zD9Qp5SP3ZrBefkEJCbSRjSTp-LxUOKxu8DXVk_48yoAKE3ZpO9eauuKRQCmKyxaEwdcbk6oLUOtQev6uEPhWf7VbcUdBvcCyhjOom6sAfz-WvDrV2qqCqhS0U925QACge33ReoCk7M9.jpeg';
-  static const String _legsImg2 =
-      'docs/Bacak (Legs)/FZyPUHF5w9TgElI1Kw16ybexSiSrCRiB7df4hpPOidOpdT6Cx5u0x7fLVgDrm9uc1sP08OCBFzwt8Son5ltNtOlVnfO6tJqm7Dv37y0x_58Xq44pOfSqWYDBnVpYZy9nWy1oMNLyGBBtQ5YymatFD5sXltkC-ZMrMJlVtmFAUc_kAoN7LON64py17VwT2Yhv.jpeg';
-  static const String _legsImg3 =
-      'docs/Bacak (Legs)/KaA4Q9qGOCwN0JArCU6QJyZ6_q8cLE90vhWZuR_HjqCF6EEziCkyKM1F2KbuahMkyQLC9su_lOdog-2IBklawVhoR3vvlm72kTzKzfAD43cs6c8Le-xGiV0Ypzhv5wwTGU4ng9CnWkleAU5XSD7wGDGvBUAYYsNUdeQxgwiZhGRZOnQ7aTS5MhmOI9gf71vU.jpeg';
-  static const String _legsImg4 =
-      'docs/Bacak (Legs)/sjz2Ldz3yNj2c7FGkLTGjcPWnchkO_6VAYmu1Z6spiiFrM-LmwREsOseQ7lWCcMfESKItiRHZp6oa1HxyZxFfj4KCyo3PQN3-2p6hwSFlHNRfcHeyrVcJNWi0fVClqm1d9-r8_Tqz011bzj0qSfUnxynWxHfRXOXhn0c6mF7kxr2BlLamVxyVMD9-428zHl_.jpeg';
-  static const String _shouldersImg1 =
-      'docs/Omuz (Shoulders)/OIxKG1D5mR7xAsyUT_Dn-bZVmWjgZdrAjyw0dS8qzZQ_05dDiOslH-dk6kujsNr7pKfDmjMtyjQcuwZDmQGX9iAoDUEZpbVuaTFIcI8--oeXX0oG5Hcv22YY9LULxcAEAX8g-WKat6Ml48MdY4Sik_Zjur5ym8c7xPbF6sFjxBwjO48FyW-Lz9bhp8prsNaB.jpeg';
-  static const String _shouldersImg2 =
-      'docs/Omuz (Shoulders)/bR94XbUWi4IyC-1NM4S3IBBCLtrqpjmQ-3HSgCzuzisth-sZSQJTYIHbfJQYrloDtp_3EqZ9tcq440lUPETrjAQow8yVIBmpwej6PkfRRbGpML_JgYQItiBpdYqEbdX1Vbn1UW_z_7JNBVzEOQkKAQmfRFwg2G-Y--17SmvfpgiCEPEEeUwMaLwfv4JurFXf.jpeg';
-  static const String _shouldersImg3 =
-      'docs/Omuz (Shoulders)/shtCkPS2UX6ieJfejUFF4q9HSgv566ndemhoU6q0IXgKiANuQZ4dxeazZiMnNPk4S-L52kxNNfXHngl2NLsYOtHW4Hivs_FzSq-1WgB39lJhdjRYAEsd4PzoA-qLcg5LephEKe-Hhw_ag7Nt7VWmSEdCuPVGH8hLLe4ZWSLJ-_ygAocCBUojxEepLccJm1Me.jpeg';
-  static const String _armsImg1 =
-      'docs/Kol (Arms)/bSLUGrV7-P_4L6oIyHstsUMJkYGDxDxsQXJ_JGTR7cTF8xmadysiHCF8k5rfBQLq2X1UuHpCKc-J6SL0wB41a9BCLWc5s_-jFSXp8Mf1B0WqsrB-nFrgl6cHO18e03gAyuhRA8ssqpqXh34-1v8aFvEXIc6nG0ZEyOeRLjkPXyCY6InQ2hBwtLtrQ2LuQsW5.jpeg';
-  static const String _armsImg2 =
-      'docs/Kol (Arms)/nYGKt7WaHa0zaslGOH2qfSTGHTb4dOHCsBIlQ-IZhG9A6hb_fSOyHH9mUZiu1bXxtUXIIKp-QXA1g7QKhJHGH7SImV0CoP00_IJmynl_wF_ypR1ELZfnnjOBox3MZDY4V8y4-VcGg7PsU3BvXwPwR0rvZru8NrSBS-68El53f35dXMzdsf7tZRsDg1ykGSNP.jpeg';
-  static const String _armsImg3 =
-      'docs/Kol (Arms)/r1xK7LMYZuJ_eYSsWsLeBWjf9ydstrCx6UEH49bE3NaJ1PdAkQvR1YIPHzgtrS7LZgSSSkewrKhI9wAJQRfKtXGJ4QSO9wylZ8EH9oMHpsChhYayme_JYqQYQdqrXU5qOF22brbZtAWrGkPQUyRgsVA0NUAsi5HSDfIKqfBu0xCZRhQEyL4lBgyQB1niOjX0.jpeg';
-  static const String _cardioImg1 =
-      'docs/Kardiyo & Full Body/9HOfBbb87p7h6T5pJE0EL8cPdPegtFKeMIf2E6kcLIwKxci8E5vhrqTHpM_wU_L_-3MOZ726uxkSAlgoWckfpLVfm03A1RoQSfHaWwwG2WXiyddOCPjwK6cUUGLe9B3EwJZxWaKApR0jCAzlNzdIhsSSjMKlniBvTv-B0IIfFPo8gNJ7ZtLMyyq5pBXgl4le.jpeg';
-  static const String _cardioImg2 =
-      'docs/Kardiyo & Full Body/GMo8yQ1NhdkXbArhN0A68-4Q-aLOk28_JXM_bN676Gk4tmI7UZkLeANINxoiIcYpX6s-AZW6aZiKYW_4Qu0p7IHX_jAWbwc2gCRHbJTJxLTGLNPJUUGHkxQfG2ByFNpMX2WSNfjGHyEewqzNl5-GBXxnegwcsSMr92lhPIC0d31cgDYqVX3H6mAtT4qhC5yR.jpeg';
-  static const String _cardioImg3 =
-      'docs/Kardiyo & Full Body/GW932TbHYkRV0PBVAZO6THafyZIWeJrAkeb3NwyM3kn7YglCp111ovv3zSeAaIj3wRR9pmaUAn-ccuSKFB-jQFHlFfnCeJduslMeqrUE3HMkurOpPc3NndI1CqIFyMTIr0RqxjM_1fpyCoZYohcSmz3XDsv0CxJQ0xjFlQRvMK8tAupxbkAMx1ZMfrrGAS23.jpeg';
+  /// Moody low-key gym shot with iron-grey tones. Used as the visual
+  /// anchor for back / legs / cardio plans — the dark palette lets the
+  /// neon-violet card borders pop.
+  static const String _gymDarkImg =
+      'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=800&q=80';
+
+  /// Dynamic push-up action shot. Paired with chest / arm / explosive
+  /// routines because the body-weight pose reads instantly as an active
+  /// workout even at thumbnail size.
+  static const String _pushUpImg =
+      'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=800&q=80';
+
+  static const String _coreImg1 = defaultLeanPhotoUrl;
+  static const String _coreImg2 = _gymDarkImg;
+  static const String _chestImg1 = defaultMuscularPhotoUrl;
+  static const String _chestImg2 = _pushUpImg;
+  static const String _chestImg3 = _gymDarkImg;
+  static const String _chestImg4 = defaultMuscularPhotoUrl;
+  static const String _backImg1 = _gymDarkImg;
+  static const String _backImg2 = defaultMuscularPhotoUrl;
+  static const String _legsImg1 = _gymDarkImg;
+  static const String _legsImg2 = defaultLeanPhotoUrl;
+  static const String _legsImg3 = _gymDarkImg;
+  static const String _legsImg4 = _pushUpImg;
+  static const String _shouldersImg1 = defaultMuscularPhotoUrl;
+  static const String _shouldersImg2 = _gymDarkImg;
+  static const String _shouldersImg3 = _pushUpImg;
+  static const String _armsImg1 = defaultMuscularPhotoUrl;
+  static const String _armsImg2 = _pushUpImg;
+  static const String _armsImg3 = _gymDarkImg;
+  static const String _cardioImg1 = _pushUpImg;
+  static const String _cardioImg2 = _gymDarkImg;
+  static const String _cardioImg3 = _pushUpImg;
 
   // ==========================================================================
   // CORE (Karın & Stabilite)

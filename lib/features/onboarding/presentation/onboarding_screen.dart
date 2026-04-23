@@ -1100,13 +1100,25 @@ class _ActivityStep extends ConsumerWidget {
 }
 
 // ============================================================================
-// Nutrition wizard steps (phase 21)
+// Nutrition wizard steps (phase 21, visuals upgraded in phase 35)
 // ----------------------------------------------------------------------------
 // Four single-select questions that feed the macro engine + recipe filter.
-// All four use [PhotoOptionCard] with `image: null` so each option renders
-// as an icon panel — no photography required, keeps the visual language
-// of the earlier fitness steps while saving asset weight.
+// `_DietPreferenceStep` carries Unsplash food photos (URLs shared with the
+// `supabase_seed_recipes` dataset so we know they resolve); the remaining
+// three stay icon-only because an allergy / meal-count / prep-time question
+// reads more clearly with an abstract glyph than a stock photo.
 // ============================================================================
+
+// Food photos — lifted verbatim from supabase_seed_recipes.sql so each
+// URL is already exercised in production and guaranteed to resolve.
+const String _dietStandardImg =
+    'https://images.unsplash.com/photo-1544025162-d76694265947?w=800&q=80';
+const String _dietVegetarianImg =
+    'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80';
+const String _dietVeganImg =
+    'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&q=80';
+const String _dietKetoImg =
+    'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=800&q=80';
 
 class _DietPreferenceStep extends ConsumerWidget {
   const _DietPreferenceStep({required this.onSelected});
@@ -1135,7 +1147,8 @@ class _DietPreferenceStep extends ConsumerWidget {
               children: [
                 Expanded(
                   child: PhotoOptionCard(
-                    fallbackIcon: Icons.restaurant,
+                    image: _dietStandardImg,
+                    fallbackIcon: Icons.restaurant_menu,
                     title: 'Standart',
                     subtitle: 'Her şeyi yiyebilirim.',
                     selected: selected == 'standart',
@@ -1145,7 +1158,8 @@ class _DietPreferenceStep extends ConsumerWidget {
                 const SizedBox(height: 10),
                 Expanded(
                   child: PhotoOptionCard(
-                    fallbackIcon: Icons.eco,
+                    image: _dietVegetarianImg,
+                    fallbackIcon: Icons.grass,
                     title: 'Vejetaryen',
                     subtitle: 'Et yemem, yumurta/süt olabilir.',
                     selected: selected == 'vejetaryen',
@@ -1155,7 +1169,8 @@ class _DietPreferenceStep extends ConsumerWidget {
                 const SizedBox(height: 10),
                 Expanded(
                   child: PhotoOptionCard(
-                    fallbackIcon: Icons.spa,
+                    image: _dietVeganImg,
+                    fallbackIcon: Icons.eco,
                     title: 'Vegan',
                     subtitle: 'Hiçbir hayvansal ürün tüketmem.',
                     selected: selected == 'vegan',
@@ -1165,6 +1180,7 @@ class _DietPreferenceStep extends ConsumerWidget {
                 const SizedBox(height: 10),
                 Expanded(
                   child: PhotoOptionCard(
+                    image: _dietKetoImg,
                     fallbackIcon: Icons.local_fire_department,
                     title: 'Ketojenik',
                     subtitle: 'Düşük karbonhidrat, yüksek yağ.',
@@ -1208,7 +1224,7 @@ class _AllergiesStep extends ConsumerWidget {
               children: [
                 Expanded(
                   child: PhotoOptionCard(
-                    fallbackIcon: Icons.check_circle_outline,
+                    fallbackIcon: Icons.verified_user,
                     title: 'Yok',
                     subtitle: 'Bilinen bir alerjim yok.',
                     selected: selected == 'yok',
@@ -1218,7 +1234,7 @@ class _AllergiesStep extends ConsumerWidget {
                 const SizedBox(height: 10),
                 Expanded(
                   child: PhotoOptionCard(
-                    fallbackIcon: Icons.scatter_plot,
+                    fallbackIcon: Icons.emoji_nature,
                     title: 'Kuruyemiş',
                     subtitle: 'Badem, fıstık, ceviz vb.',
                     selected: selected == 'kuruyemis',
@@ -1228,7 +1244,7 @@ class _AllergiesStep extends ConsumerWidget {
                 const SizedBox(height: 10),
                 Expanded(
                   child: PhotoOptionCard(
-                    fallbackIcon: Icons.local_drink,
+                    fallbackIcon: Icons.icecream,
                     title: 'Süt Ürünleri',
                     subtitle: 'Süt, peynir, yoğurt vb.',
                     selected: selected == 'sut_urunleri',
@@ -1281,7 +1297,7 @@ class _MealFrequencyStep extends ConsumerWidget {
               children: [
                 Expanded(
                   child: PhotoOptionCard(
-                    fallbackIcon: Icons.timer_outlined,
+                    fallbackIcon: Icons.hourglass_top,
                     title: '2 Öğün',
                     subtitle: 'Aralıklı oruç (16:8) tarzı beslenirim.',
                     selected: selected == '2_ogun',
@@ -1301,7 +1317,7 @@ class _MealFrequencyStep extends ConsumerWidget {
                 const SizedBox(height: 12),
                 Expanded(
                   child: PhotoOptionCard(
-                    fallbackIcon: Icons.set_meal,
+                    fallbackIcon: Icons.lunch_dining,
                     title: '4+ Öğün',
                     subtitle: 'Atıştırmalık severim.',
                     selected: selected == '4_ogun',
@@ -1344,7 +1360,7 @@ class _PrepTimeStep extends ConsumerWidget {
               children: [
                 Expanded(
                   child: PhotoOptionCard(
-                    fallbackIcon: Icons.flash_on,
+                    fallbackIcon: Icons.timer,
                     title: 'Hızlı & Pratik',
                     subtitle: '10-15 dakika içinde hazırlanan tarifler.',
                     selected: selected == 'hizli',
@@ -1354,7 +1370,7 @@ class _PrepTimeStep extends ConsumerWidget {
                 const SizedBox(height: 12),
                 Expanded(
                   child: PhotoOptionCard(
-                    fallbackIcon: Icons.outdoor_grill,
+                    fallbackIcon: Icons.soup_kitchen,
                     title: 'Mutfakta Vakit',
                     subtitle: '30+ dakika. Pişirmekten keyif alırım.',
                     selected: selected == 'yavas',

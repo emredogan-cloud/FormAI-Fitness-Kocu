@@ -17,6 +17,72 @@ const Color _success = Color(0xFF39FF14);
 
 const int _programLength = 30;
 
+/// Phase 35: the hero at the top of the program view now reflects the
+/// muscle focus of the next incomplete day — title + image both. The
+/// photo URLs mirror the neon-lit Unsplash shots used by the Bölgeler
+/// strip so the two surfaces feel like the same product.
+class _HeroCopy {
+  const _HeroCopy({required this.title, required this.imageUrl});
+  final String title;
+  final String imageUrl;
+}
+
+const _HeroCopy _heroCopyDefault = _HeroCopy(
+  title: 'Taş Gibi Sert\nKarın Kasları',
+  imageUrl: defaultMuscularPhotoUrl,
+);
+
+const _HeroCopy _heroCopyRest = _HeroCopy(
+  title: 'Dinlenme Günü',
+  imageUrl: defaultLeanPhotoUrl,
+);
+
+/// Picks the hero strings for the active day by tallying its exercises'
+/// `targetMuscle` and handing back the dominant region's copy. Mirrors
+/// `_challengeTitleFor` on the antrenman tab so both surfaces stay in
+/// lockstep; diverging would mean a user's dashboard says "Üst Vücut
+/// Gücü" while the program detail still reads "Karın Kasları".
+_HeroCopy _heroCopyFor(WorkoutDay? day) {
+  if (day == null) return _heroCopyDefault;
+  if (day.isRestDay) return _heroCopyRest;
+
+  final counts = <String, int>{};
+  for (final exercise in day.exercises) {
+    counts[exercise.targetMuscle] = (counts[exercise.targetMuscle] ?? 0) + 1;
+  }
+  if (counts.isEmpty) return _heroCopyDefault;
+
+  final dominant =
+      counts.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
+  switch (dominant) {
+    case 'core':
+      return const _HeroCopy(
+        title: 'Sert Karın\nKasları',
+        imageUrl: defaultLeanPhotoUrl,
+      );
+    case 'upper_body':
+      return const _HeroCopy(
+        title: 'Üst Vücut\nGücü',
+        imageUrl: defaultMuscularPhotoUrl,
+      );
+    case 'lower_body':
+      return const _HeroCopy(
+        title: 'Bacak ve\nKalça Ateşi',
+        imageUrl:
+            'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=800&q=80',
+      );
+    case 'cardio':
+    case 'full_body':
+      return const _HeroCopy(
+        title: 'Tüm Vücut\nKondisyonu',
+        imageUrl:
+            'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=800&q=80',
+      );
+    default:
+      return _heroCopyDefault;
+  }
+}
+
 /// Display strings for the onboarding `GoalPhysique` enum values.
 /// Mirrors the map in `profile_tab.dart`; duplicated rather than shared
 /// because the profile-tab copy is private and this is the second UI
@@ -82,9 +148,10 @@ class _PlanDetailScreenState extends ConsumerState<PlanDetailScreen> {
     if (_didPrecache) return;
     _didPrecache = true;
     // Warm the hero image for this screen BEFORE it appears so the
-    // SliverAppBar doesn't decode a ~200 KB webp during the push
-    // transition. Works for both faces: plan.image when present, or
-    // the default muscular URL when we fall back to the program view.
+    // SliverAppBar doesn't decode a ~200 KB asset during the push
+    // transition. Plan view warms plan.image; program view best-effort
+    // warms the default — the active-day-specific URL isn't known
+    // until `workoutSessionProvider` resolves inside `build`.
     final heroSrc = widget.plan?.image ?? defaultMuscularPhotoUrl;
     _precache(heroSrc);
   }
@@ -129,8 +196,8 @@ class _PlanDetailScreenState extends ConsumerState<PlanDetailScreen> {
     WorkoutSessionState session,
   ) {
     final realDays = session.days;
-    final activeDayNumber =
-        _firstIncomplete(realDays)?.dayNumber ?? realDays.length + 1;
+    final activeDay = _firstIncomplete(realDays);
+    final activeDayNumber = activeDay?.dayNumber ?? realDays.length + 1;
     final completed = realDays.where((d) => d.isCompleted).length;
     final remaining = (_programLength - completed).clamp(0, _programLength);
     final isPro = ref.watch(isProProvider);
@@ -138,6 +205,7 @@ class _PlanDetailScreenState extends ConsumerState<PlanDetailScreen> {
         .watch(appPreferencesProvider)
         .userMetrics?['targetPhysique'] as String?;
     final goalLabel = goalKey == null ? null : _goalLabels[goalKey];
+    final heroCopy = _heroCopyFor(activeDay);
 
     return CustomScrollView(
       slivers: [
@@ -147,8 +215,8 @@ class _PlanDetailScreenState extends ConsumerState<PlanDetailScreen> {
           backgroundColor: const Color(0xFF1A0B3D),
           elevation: 0,
           leading: const _BackButton(),
-          flexibleSpace: const FlexibleSpaceBar(
-            background: _HeroHeader(),
+          flexibleSpace: FlexibleSpaceBar(
+            background: _HeroHeader(copy: heroCopy),
           ),
         ),
         SliverPersistentHeader(
@@ -303,7 +371,8 @@ class _BackButton extends StatelessWidget {
 }
 
 class _HeroHeader extends StatelessWidget {
-  const _HeroHeader();
+  const _HeroHeader({required this.copy});
+  final _HeroCopy copy;
 
   @override
   Widget build(BuildContext context) {
@@ -328,12 +397,7 @@ class _HeroHeader extends StatelessWidget {
                 _neon.withValues(alpha: 0.55),
                 BlendMode.softLight,
               ),
-              child: Image.network(
-                defaultMuscularPhotoUrl,
-                fit: BoxFit.cover,
-                alignment: Alignment.centerRight,
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-              ),
+              child: _resolveImage(copy.imageUrl),
             ),
           ),
           // Soft vignette so the bottom of the hero blends into the dark list.
@@ -374,9 +438,9 @@ class _HeroHeader extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 10),
-                const Text(
-                  'Taş Gibi Sert\nKarın Kasları',
-                  style: TextStyle(
+                Text(
+                  copy.title,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 30,
                     fontWeight: FontWeight.w900,
