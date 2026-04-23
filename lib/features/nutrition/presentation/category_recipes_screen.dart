@@ -90,18 +90,14 @@ class CategoryRecipesScreen extends ConsumerWidget {
     }
   }
 
-  /// Strict equality filter per phase 29. Phase 27 had leniency
-  /// (accepting `main` as both lunch and dinner), but when the Phase
-  /// 28 seed landed with exact `lunch` / `dinner` strings, the lenient
-  /// matcher started over-matching because no row ever had to equal
-  /// the canonical token. Simplifying to a direct case-insensitive
-  /// equality makes the filter predictable — every row now belongs
-  /// to exactly one bucket, determined by its stored `meal_type`.
+  /// Exact-match filter (phase 30). No more trim/`toLowerCase` —
+  /// Dart's case folding on Turkish characters isn't guaranteed to
+  /// round-trip (İ / i / I / ı), and the seed + route both use
+  /// identical lowercase English tokens (`breakfast`, `lunch`,
+  /// `dinner`, `snack`, `dessert`), so a direct `==` compare is
+  /// cleaner and can never silently fail on Unicode edge cases.
   static List<Recipe> _filter(List<Recipe> recipes, String type) {
-    final normalized = type.trim().toLowerCase();
-    return recipes
-        .where((r) => r.mealType.trim().toLowerCase() == normalized)
-        .toList();
+    return recipes.where((r) => r.mealType == type).toList();
   }
 }
 

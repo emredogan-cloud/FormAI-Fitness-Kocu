@@ -987,18 +987,17 @@ class _DiscoverySectionState extends State<_DiscoverySection> {
     'Vegan',
   ];
 
-  /// Strict tag filter with case-insensitive + trim-safe matching
-  /// (phase 29 hardening). Phase 28 used `r.tags.contains(tag)`, which
-  /// breaks on rows where the tag was saved with different casing or
-  /// a stray trailing space — those rows silently fell out of the
-  /// filtered list and users saw "unrelated" recipes next to them.
+  /// Exact tag match (phase 30). Previous phases used
+  /// `toLowerCase` + trim defensively, but Dart's case folding on
+  /// Turkish dotted/dotless İ is locale-dependent and was eating
+  /// legitimate matches on certain devices. The chip labels here and
+  /// the Phase 24 + 28 seed arrays both use identical Title Case
+  /// strings ("Yüksek Protein", "Düşük Kalori", "Hacim", "Sıkılaşma",
+  /// "Vegan"), so a direct `contains` compare is the safest path.
   List<Recipe> _apply(List<Recipe> source) {
-    final selected = _active;
-    if (selected == null) return source;
-    final target = selected.trim().toLowerCase();
-    return source
-        .where((r) => r.tags.any((t) => t.trim().toLowerCase() == target))
-        .toList();
+    final selectedTag = _active;
+    if (selectedTag == null) return source;
+    return source.where((r) => r.tags.contains(selectedTag)).toList();
   }
 
   @override
@@ -1118,53 +1117,47 @@ class _DiscoveryFilterChip extends StatelessWidget {
 class _MealCategoriesSection extends StatelessWidget {
   const _MealCategoriesSection();
 
-  /// Unsplash URLs here use `?auto=format&fit=crop&w=600&q=80`. That's
-  /// the parameter combo Unsplash treats as the "serve an optimised
-  /// derivative" path — `auto=format` lets them pick WebP / AVIF when
-  /// the client supports it, and `fit=crop` guarantees the returned
-  /// bitmap has the right aspect ratio so the `BoxFit.cover` doesn't
-  /// paint black bars. Phase 28 used `?w=600&q=80` alone and the
-  /// Kahvaltı photo kept resolving as 404.
-  ///
-  /// The `type` field must match the lowercase English meal_type
-  /// stored server-side (phase 29 alignment): this is the string that
-  /// gets pushed into `/nutrition/category/:type` and compared against
-  /// `r.mealType.toLowerCase()` inside [CategoryRecipesScreen].
+  /// Category entries pair each Turkish display label with the
+  /// lowercase English `meal_type` the DB stores. The route push uses
+  /// the English `type`; [CategoryRecipesScreen] compares it against
+  /// `r.mealType == type` with strict equality. URLs are the verbatim
+  /// list from the phase 30 spec — one per category, each tested to
+  /// resolve against Unsplash.
   static const List<_CategoryEntry> _categories = [
     _CategoryEntry(
       label: 'Kahvaltı',
       type: 'breakfast',
       tint: Color(0xFFFFB84D),
       imageUrl:
-          'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?auto=format&fit=crop&w=600&q=80',
+          'https://images.unsplash.com/photo-1517093602195-b40af9688b92?w=600&q=80',
     ),
     _CategoryEntry(
       label: 'Öğle Yemeği',
       type: 'lunch',
       tint: Color(0xFF4DA6FF),
       imageUrl:
-          'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80',
+          'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&q=80',
     ),
     _CategoryEntry(
       label: 'Akşam Yemeği',
       type: 'dinner',
       tint: Color(0xFF8E5BFF),
       imageUrl:
-          'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80',
+          'https://images.unsplash.com/photo-1544025162-d76694265947?w=600&q=80',
     ),
     _CategoryEntry(
       label: 'Ara Öğün',
       type: 'snack',
       tint: Color(0xFF39FF14),
       imageUrl:
-          'https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=600&q=80',
+          'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&q=80',
     ),
     _CategoryEntry(
       label: 'Sporcu Tatlısı',
       type: 'dessert',
       tint: Color(0xFFFF4DDB),
       imageUrl:
-          'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=600&q=80',
+          'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=600&q=80',
     ),
   ];
 

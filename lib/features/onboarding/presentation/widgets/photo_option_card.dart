@@ -56,34 +56,49 @@ class PhotoOptionCard extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(20, 18, 12, 18),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        fallbackIcon,
-                        color: selected ? _neon : Colors.white70,
-                        size: 26,
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      if (subtitle.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          subtitle,
-                          style: const TextStyle(
-                            color: Colors.white54,
-                            fontSize: 13,
-                            height: 1.3,
+                      // Top group (icon + title + subtitle) lives inside
+                      // an Expanded + NeverScrollable SingleChildScrollView
+                      // so the ~4-5 px over-extension that was firing on
+                      // short devices gets silently absorbed instead of
+                      // throwing a RenderFlex overflow. The chevron/check
+                      // below still pins to the bottom of the card.
+                      Expanded(
+                        child: SingleChildScrollView(
+                          physics: const NeverScrollableScrollPhysics(),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                fallbackIcon,
+                                color: selected ? _neon : Colors.white70,
+                                size: 26,
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                title,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                              if (subtitle.isNotEmpty) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  subtitle,
+                                  style: const TextStyle(
+                                    color: Colors.white54,
+                                    fontSize: 13,
+                                    height: 1.3,
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
-                      ],
-                      const Spacer(),
+                      ),
                       Icon(
                         selected ? Icons.check_circle : Icons.chevron_right,
                         color: selected ? _neon : Colors.white24,
