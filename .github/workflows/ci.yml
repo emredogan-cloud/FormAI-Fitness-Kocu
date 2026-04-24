@@ -1,0 +1,48 @@
+name: CI
+
+# Phase 44 · Continuous integration gate.
+#
+# Runs on every push to main and on every pull request targeting main.
+# Keep this in sync with `flutter_ci.yml` — the older workflow kept the
+# Android APK build; this one handles the cheap format / analyze / unit-
+# test loop that should gate every merge.
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Format, analyze, and test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # `.env` is expected at runtime by `flutter_dotenv`. CI has no
+      # secrets available so a blank file keeps the analyzer happy
+      # without shipping real values.
+      - name: Create empty .env for analyzer / test startup
+        run: touch .env
+
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Analyze source
+        run: flutter analyze
+
+      - name: Run unit and widget tests
+        run: flutter test

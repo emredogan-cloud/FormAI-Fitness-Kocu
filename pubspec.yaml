@@ -61,6 +61,11 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  # Phase 44 QA · end-to-end UI testing harness. Runs on-device tests
+  # from integration_test/ under `flutter test integration_test/` or
+  # `flutter drive`, sharing the same assertions API as flutter_test.
+  integration_test:
+    sdk: flutter
   flutter_lints: ^6.0.0
   # Native app-icon generator. Pinned to ^0.14.x so the config block
   # below (flutter_launcher_icons:) keeps parsing on future upgrades.

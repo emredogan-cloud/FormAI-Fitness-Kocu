@@ -3,12 +3,10 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../../core/routing/app_router.dart';
-import '../../../monetization/providers/monetization_provider.dart';
 import '../../../workout/models/workout_day_model.dart';
 import '../../../workout/providers/workout_provider.dart';
+import 'today_task_card.dart';
 
 const Color _neon = Color(0xFF8B5CF6);
 const Color _neonDeep = Color(0xFF6A3DFF);
@@ -20,7 +18,6 @@ const Color _surfaceBorder = Color(0xFF1E1E26);
 const Color _inactive = Color(0xFF1C1C24);
 
 const int _programLength = 30;
-const int _freeDayLimit = 3;
 const int _kcalPerDay = 250;
 
 /// Phase 36b: the Gelişim tab now mirrors the "gelişim_sekmesi_referans"
@@ -94,9 +91,9 @@ class GelisimTab extends ConsumerWidget {
           ),
           const SizedBox(height: 14),
           if (isProgramComplete)
-            const _ProgramCompleteCard()
+            const ProgramCompleteCard()
           else if (activeDay != null)
-            _TodayTaskCard(activeDay: activeDay),
+            TodayTaskCard(activeDay: activeDay),
           const SizedBox(height: 24),
           _DayGridSection(days: days, activeDayNumber: activeDayNumber),
           const SizedBox(height: 24),
@@ -489,276 +486,9 @@ class _StreakCard extends StatelessWidget {
 }
 
 // =============================================================================
-// Today task — dumbbell tile on the left, day label + duration/level in the
-// middle, purple-gradient CTA on the right.
+// Today task and program-complete cards now live in
+// `today_task_card.dart` so they can be widget-tested in isolation.
 // =============================================================================
-
-class _TodayTaskCard extends ConsumerWidget {
-  const _TodayTaskCard({required this.activeDay});
-  final WorkoutDay activeDay;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final focus = _focusLabel(activeDay);
-    final minutes = _estimateMinutes(activeDay);
-    final level = _levelLabel(activeDay);
-    // Primary-action card: icon + title/sub on top, full-width gradient
-    // CTA below. Promoting the button to its own row (vs an inline pill
-    // on the right) makes this the clear hierarchy peak of the screen
-    // and lets the title wrap to 2 lines without competing for the
-    // CTA's horizontal space.
-    return _SoftCard(
-      accent: _neon,
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const _CardLabel(text: 'BUGÜNKÜ GÖREV'),
-          const SizedBox(height: 12),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  color: _neon.withValues(alpha: 0.18),
-                  border: Border.all(color: _neon.withValues(alpha: 0.45)),
-                ),
-                child: const Icon(
-                  Icons.fitness_center,
-                  color: _neon,
-                  size: 26,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Gün ${activeDay.dayNumber} – $focus',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w900,
-                        height: 1.2,
-                        letterSpacing: 0.2,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '$minutes dk · $level',
-                      style: const TextStyle(
-                        color: Colors.white54,
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          _PrimaryCta(onTap: () => _launch(context, ref)),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _launch(BuildContext context, WidgetRef ref) async {
-    if (activeDay.exercises.isEmpty) return;
-    final isPro = ref.read(isProProvider);
-    if (!isPro && activeDay.dayNumber > _freeDayLimit) {
-      HapticFeedback.lightImpact();
-      context.push(AppRoutes.paywall);
-      return;
-    }
-    // Phase 38: route to the 30-day plan detail screen (the "Antrenman"
-    // tab's workout detail) where the active day is highlighted and
-    // the user taps DEVAM ET to actually start. No direct camera push.
-    HapticFeedback.mediumImpact();
-    context.push(AppRoutes.planDetail);
-  }
-
-  String _focusLabel(WorkoutDay day) {
-    if (day.isRestDay) return 'Aktif Dinlenme';
-    final counts = <String, int>{};
-    for (final exercise in day.exercises) {
-      counts[exercise.targetMuscle] = (counts[exercise.targetMuscle] ?? 0) + 1;
-    }
-    if (counts.isEmpty) return 'Antrenman';
-    final dominant =
-        counts.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
-    switch (dominant) {
-      case 'core':
-        return 'Göğüs & Core';
-      case 'upper_body':
-        return 'Göğüs & Kol';
-      case 'lower_body':
-        return 'Bacak Gücü';
-      case 'cardio':
-        return 'Yağ Yakıcı Kardiyo';
-      case 'full_body':
-        return 'Tüm Vücut HIIT';
-      default:
-        return 'Antrenman';
-    }
-  }
-
-  /// Rough work+rest estimate, rounded to the nearest 5-minute bucket so
-  /// the label reads as "45 dk" rather than "47 dk".
-  int _estimateMinutes(WorkoutDay day) {
-    var seconds = 0;
-    for (final ex in day.exercises) {
-      final work = ex.isTimeBased
-          ? (ex.targetDurationInSeconds ?? 30) * ex.sets
-          : (ex.targetReps ?? 10) * 3 * ex.sets;
-      final rest = ex.restDurationInSeconds * ex.sets;
-      seconds += work + rest;
-    }
-    final minutes = (seconds / 60).round();
-    final bucketed = ((minutes / 5).round() * 5).clamp(10, 120);
-    return bucketed;
-  }
-
-  String _levelLabel(WorkoutDay day) {
-    final counts = <String, int>{};
-    for (final ex in day.exercises) {
-      counts[ex.difficulty] = (counts[ex.difficulty] ?? 0) + 1;
-    }
-    if (counts.isEmpty) return 'Başlangıç';
-    final dominant =
-        counts.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
-    switch (dominant) {
-      case 'advanced':
-        return 'İleri';
-      case 'intermediate':
-        return 'Orta Seviye';
-      default:
-        return 'Başlangıç';
-    }
-  }
-}
-
-/// Full-width primary CTA — strong `_neonDeep → _neon` gradient + a
-/// subtle glow halo. `borderRadius: 16` is applied on every layer
-/// (shadow, Material, Ink, InkWell) so the ripple, gradient, and
-/// shadow all clip to the same silhouette.
-class _PrimaryCta extends StatelessWidget {
-  const _PrimaryCta({required this.onTap});
-  final VoidCallback onTap;
-
-  static final BorderRadius _radius = BorderRadius.circular(16);
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: _radius,
-          boxShadow: [
-            BoxShadow(
-              color: _neon.withValues(alpha: 0.50),
-              blurRadius: 22,
-              spreadRadius: 0.4,
-            ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: _radius,
-          child: Ink(
-            decoration: BoxDecoration(
-              borderRadius: _radius,
-              gradient: const LinearGradient(
-                colors: [_neonDeep, _neon],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: InkWell(
-              borderRadius: _radius,
-              onTap: onTap,
-              child: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 14),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'ANTRENMANA BAŞLA',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.4,
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      color: Colors.white,
-                      size: 12,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ProgramCompleteCard extends StatelessWidget {
-  const _ProgramCompleteCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return _SoftCard(
-      accent: _success,
-      child: Row(
-        children: [
-          const Text('🏆', style: TextStyle(fontSize: 30)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Tebrikler!',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '30 günlük programı tamamladın.',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.8),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 // =============================================================================
 // 30-day grid section — header with a "Takvimi Gör" pill link, then the
