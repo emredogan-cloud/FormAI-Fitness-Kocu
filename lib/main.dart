@@ -1,12 +1,16 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/routing/app_router.dart';
+import 'core/services/analytics_service.dart';
 import 'core/services/app_preferences.dart';
+import 'core/utils/app_logger.dart';
 import 'features/monetization/providers/monetization_provider.dart';
 
 Future<void> main() async {
@@ -20,7 +24,41 @@ Future<void> main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  runApp(const _BootGate());
+
+  // Phase 42: dotenv must load BEFORE SentryFlutter.init so the DSN is
+  // available. Fails silently if `.env` is missing (dev builds without
+  // keys) — Sentry will init with an empty DSN and no-op, which is the
+  // desired behaviour in that case.
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (_) {
+    // Swallow; _BootGate re-checks and surfaces the retry screen for
+    // cases that actually break initialisation (Supabase URL missing).
+  }
+
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = dotenv.env['SENTRY_DSN'] ?? '';
+      options.tracesSampleRate = 0.2;
+      options.environment = kReleaseMode ? 'prod' : 'dev';
+      // PII scrubber — Sentry attaches the device IP and a User slot by
+      // default; we clear the email / ipAddress / data fields before
+      // the event leaves the device. Supabase user_id stays on `id` so
+      // funnels can still group events per user; nothing sensitive
+      // (weight, height, goals) ever reaches the User slot in the
+      // first place because `AppLogger.error` never sets it.
+      options.beforeSend = (event, hint) {
+        final user = event.user;
+        if (user != null) {
+          user.ipAddress = null;
+          user.email = null;
+          user.data = null;
+        }
+        return event;
+      };
+    },
+    appRunner: () => runApp(const _BootGate()),
+  );
 }
 
 const Color _kNeon = Color(0xFF00F0FF);
@@ -59,13 +97,9 @@ class _BootGateState extends State<_BootGate> {
 
   Future<SharedPreferences> _init() async {
     try {
-      // dotenv reads an asset bundle; SharedPreferences crosses a platform
-      // channel. They don't depend on each other, so awaiting them in parallel
-      // pays the max latency instead of the sum.
-      final envFuture = dotenv.load(fileName: '.env');
-      final prefsFuture = SharedPreferences.getInstance();
-      await envFuture;
-      final prefs = await prefsFuture;
+      // dotenv already loaded in `main()` before Sentry.init, so we only
+      // cross the SharedPreferences platform channel here.
+      final prefs = await SharedPreferences.getInstance();
 
       if (!_supabaseInitialized) {
         await Supabase.initialize(
@@ -74,6 +108,16 @@ class _BootGateState extends State<_BootGate> {
         );
         _supabaseInitialized = true;
       }
+
+      // Phase 42: PostHog analytics. Await it so the first analytics
+      // event (typically `paywall_viewed` on auto-prompt, or
+      // `onboarding_step_completed` on welcome) actually lands — the
+      // setup() call in posthog_flutter buffers until done.
+      await AnalyticsService.instance.init(
+        apiKey: dotenv.env['POSTHOG_API_KEY'] ?? '',
+        host: dotenv.env['POSTHOG_HOST'] ?? 'https://app.posthog.com',
+      );
+
       // RevenueCat configuration — idempotent, tolerates missing API keys in
       // dev builds. Deliberately NOT awaited into the boot blocker path so a
       // slow key fetch can't stall the splash; its own internal debouncing
@@ -81,7 +125,12 @@ class _BootGateState extends State<_BootGate> {
       await configureRevenueCat();
       return prefs;
     } catch (e, st) {
-      debugPrint('BootGate init failed: $e\n$st');
+      AppLogger.error(
+        'BootGate init failed',
+        e,
+        stackTrace: st,
+        category: 'boot',
+      );
       rethrow;
     }
   }

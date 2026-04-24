@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
+import '../../../../core/utils/app_logger.dart';
+
 /// Adaptive exercise guide preview.
 ///
 ///   • `http://` or `https://` paths stream via
@@ -71,11 +73,16 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
     if (!mounted) return;
 
     final path = widget.assetPath;
-    debugPrint('🎥 GUIDE DEBUG: Trying to load asset: $path');
+    AppLogger.info(
+      'ExerciseGuide: loading asset',
+      category: 'workout',
+      data: {'path': path ?? '', 'exercise': widget.exerciseName},
+    );
     if (path == null || path.isEmpty) {
-      debugPrint(
-        '🎥 GUIDE ERROR: assetPath is null/empty for '
-        '"${widget.exerciseName}" — showing fallback tile.',
+      AppLogger.warning(
+        'ExerciseGuide: assetPath is null/empty — fallback tile',
+        category: 'workout',
+        data: {'exercise': widget.exerciseName},
       );
       setState(() {
         _hasError = true;
@@ -96,7 +103,11 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
       // Image.asset is synchronous and pulls from the bundle on build.
       // Mark ready immediately; if the file is missing, the build's
       // errorBuilder swaps in the fallback tile without an extra round-trip.
-      debugPrint('🎥 GUIDE DEBUG: Image branch active for $path');
+      AppLogger.info(
+        'ExerciseGuide: image branch active',
+        category: 'workout',
+        data: {'path': path},
+      );
       if (mounted) setState(() => _ready = true);
       return;
     }
@@ -118,9 +129,13 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
       _errorListener = () {
         if (!mounted) return;
         if (controller.value.hasError && !_hasError) {
-          debugPrint(
-            '🎥 VIDEO ERROR: runtime failure on $path — '
-            '${controller.value.errorDescription}',
+          AppLogger.warning(
+            'ExerciseGuide: video runtime failure',
+            category: 'workout',
+            data: {
+              'path': path,
+              'error': controller.value.errorDescription ?? 'unknown',
+            },
           );
           setState(() => _hasError = true);
         }
@@ -134,10 +149,20 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
         await controller.dispose();
         return;
       }
-      debugPrint('🎥 VIDEO DEBUG: Successfully loaded $path');
+      AppLogger.info(
+        'ExerciseGuide: video loaded',
+        category: 'workout',
+        data: {'path': path},
+      );
       setState(() => _ready = true);
     } catch (e, st) {
-      debugPrint('🎥 VIDEO ERROR: Failed to load $path. Error: $e\n$st');
+      AppLogger.error(
+        'ExerciseGuide: video load failed',
+        e,
+        stackTrace: st,
+        category: 'workout',
+        data: {'path': path},
+      );
       if (!mounted) return;
       setState(() => _hasError = true);
     }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/utils/app_logger.dart';
 import '../../../core/widgets/cached_image.dart';
 import '../../../core/widgets/error_card.dart';
 import '../domain/models/recipe.dart';
@@ -47,7 +48,12 @@ class CategoryRecipesScreen extends ConsumerWidget {
           child: CircularProgressIndicator(color: _neon),
         ),
         error: (err, st) {
-          debugPrint('CategoryRecipesScreen error: $err\n$st');
+          AppLogger.error(
+            'CategoryRecipesScreen error',
+            err,
+            stackTrace: st,
+            category: 'nutrition',
+          );
           return ErrorCard(
             message: 'Tarifler yüklenirken bir sorun oluştu.',
             onRetry: () => ref.invalidate(recipesProvider),

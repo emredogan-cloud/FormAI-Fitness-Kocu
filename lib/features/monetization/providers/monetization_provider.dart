@@ -7,6 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/services/analytics_service.dart';
+import '../../../core/utils/app_logger.dart';
+
 /// Entitlement id configured on the RevenueCat dashboard. Products mapped
 /// to this id (monthly/quarterly/yearly) all unlock the same premium gate.
 /// Case-sensitive — must match the RC dashboard exactly (space included).
@@ -81,7 +84,11 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
       // Happens in dev builds without API keys or when the device has no
       // Play Store / App Store session. Return a neutral state so the UI
       // can still render — the paywall will fall back to hardcoded prices.
-      debugPrint('SubscriptionNotifier load failed: $e\n$st');
+      AppLogger.warning(
+        'SubscriptionNotifier load failed — paywall falls back',
+        category: 'monetization',
+        data: {'error': e.toString(), 'stack': st.toString()},
+      );
       return SubscriptionState(isDeveloperOverride: devOverride);
     }
   }
@@ -97,16 +104,31 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
       final isPro = info.entitlements.active.containsKey(kProEntitlementId);
       final current = state.value ?? const SubscriptionState();
       state = AsyncData(current.copyWith(isPro: isPro));
+      if (isPro) {
+        AnalyticsService.instance.purchaseSucceeded(
+          productId: package.storeProduct.identifier,
+        );
+      }
       return isPro ? PurchaseOutcome.success : PurchaseOutcome.notEntitled;
-    } on PlatformException catch (e) {
+    } on PlatformException catch (e, st) {
       final code = PurchasesErrorHelper.getErrorCode(e);
       if (code == PurchasesErrorCode.purchaseCancelledError) {
         return PurchaseOutcome.cancelled;
       }
-      debugPrint('purchasePackage PlatformException: $code $e');
+      AppLogger.error(
+        'purchasePackage PlatformException: $code',
+        e,
+        stackTrace: st,
+        category: 'monetization',
+      );
       return PurchaseOutcome.error;
     } catch (e, st) {
-      debugPrint('purchasePackage failed: $e\n$st');
+      AppLogger.error(
+        'purchasePackage failed',
+        e,
+        stackTrace: st,
+        category: 'monetization',
+      );
       return PurchaseOutcome.error;
     }
   }
@@ -119,7 +141,12 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
       state = AsyncData(current.copyWith(isPro: isPro));
       return isPro ? RestoreOutcome.restored : RestoreOutcome.nothingToRestore;
     } catch (e, st) {
-      debugPrint('restorePurchases failed: $e\n$st');
+      AppLogger.error(
+        'restorePurchases failed',
+        e,
+        stackTrace: st,
+        category: 'monetization',
+      );
       return RestoreOutcome.error;
     }
   }
@@ -169,9 +196,10 @@ String? revenueCatApiKey() {
 Future<void> configureRevenueCat() async {
   final key = revenueCatApiKey();
   if (key == null) {
-    debugPrint(
+    AppLogger.info(
       'RevenueCat: no API key in .env for this platform — '
       'paywall will run in fallback mode (offerings will be empty).',
+      category: 'monetization',
     );
     return;
   }
@@ -181,6 +209,11 @@ Future<void> configureRevenueCat() async {
     );
     await Purchases.configure(PurchasesConfiguration(key));
   } catch (e, st) {
-    debugPrint('Purchases.configure failed: $e\n$st');
+    AppLogger.error(
+      'Purchases.configure failed',
+      e,
+      stackTrace: st,
+      category: 'monetization',
+    );
   }
 }

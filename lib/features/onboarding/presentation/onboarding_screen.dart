@@ -7,7 +7,9 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/routing/app_router.dart';
+import '../../../core/services/analytics_service.dart';
 import '../../../core/services/app_preferences.dart';
+import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/legal_urls.dart';
 import '../providers/wizard_provider.dart';
 import 'widgets/illusion_step.dart';
@@ -20,6 +22,25 @@ const Color _neonAccent = Color(0xFF4DA6FF);
 // questions (phase 21) + 1 illusion/finish screen.
 const int _totalSteps = 13;
 const int _hookSteps = 2;
+
+/// Phase 42 · analytics labels per onboarding page. Index-aligned with
+/// the `PageView.children` list below so the funnel reads the same
+/// names the code uses.
+const List<String> _stepNames = [
+  'welcome',
+  'coach_intro',
+  'gender',
+  'age',
+  'body_metrics',
+  'current_physique',
+  'target_physique',
+  'activity',
+  'diet_preference',
+  'allergies',
+  'meal_frequency',
+  'prep_time',
+  'illusion',
+];
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -74,11 +95,20 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     try {
       await Supabase.instance.client.auth.signInAnonymously();
     } catch (e, st) {
-      debugPrint('Anonymous sign-in failed, falling back to /auth: $e\n$st');
+      AppLogger.error(
+        'Anonymous sign-in failed, falling back to /auth',
+        e,
+        stackTrace: st,
+        category: 'onboarding',
+      );
       if (!mounted) return;
       context.go(AppRoutes.auth);
       return;
     }
+    // Phase 42: now that the user has a session, raise the iOS ATT
+    // prompt BEFORE navigating. The ~400 ms internal debounce keeps
+    // the prompt from getting eaten by the prediction route's push.
+    await AnalyticsService.instance.requestAttIfNeeded();
     if (!mounted) return;
     context.go(AppRoutes.prediction);
   }
@@ -101,7 +131,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               child: PageView(
                 controller: _controller,
                 physics: const NeverScrollableScrollPhysics(),
-                onPageChanged: (i) => setState(() => _index = i),
+                onPageChanged: (i) {
+                  setState(() => _index = i);
+                  // Funnel event — drop-off per step is the most actionable
+                  // metric for onboarding optimisation (Phase 46 plans an
+                  // A/B on the 13→9 step squeeze).
+                  AnalyticsService.instance.onboardingStepCompleted(
+                    stepIndex: i,
+                    stepName:
+                        i < _stepNames.length ? _stepNames[i] : 'unknown_$i',
+                  );
+                },
                 children: [
                   _WelcomeStep(onStart: _next),
                   _CoachIntroStep(onContinue: _next),

@@ -10,6 +10,7 @@ import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
+import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/audio_feedback.dart';
 import '../../../core/widgets/error_card.dart';
 import '../models/exercise_model.dart';
@@ -96,7 +97,11 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       await WakelockPlus.enable();
       _wakelockOn = true;
     } catch (e, st) {
-      debugPrint('WakelockPlus.enable() failed: $e\n$st');
+      AppLogger.warning(
+        'WakelockPlus.enable() failed',
+        category: 'workout',
+        data: {'error': e.toString(), 'stack': st.toString()},
+      );
     }
   }
 
@@ -106,7 +111,11 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     try {
       await WakelockPlus.disable();
     } catch (e, st) {
-      debugPrint('WakelockPlus.disable() failed: $e\n$st');
+      AppLogger.warning(
+        'WakelockPlus.disable() failed',
+        category: 'workout',
+        data: {'error': e.toString(), 'stack': st.toString()},
+      );
     }
   }
 
@@ -597,7 +606,12 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       loading: () =>
           const Center(child: CircularProgressIndicator(color: _neon)),
       error: (err, st) {
-        debugPrint('workoutSessionProvider error: $err\n$st');
+        AppLogger.error(
+          'workoutSessionProvider error',
+          err,
+          stackTrace: st,
+          category: 'workout',
+        );
         return ErrorCard(
           message: 'Antrenman yüklenirken bir sorun oluştu.',
           onRetry: () => ref.invalidate(workoutSessionProvider),

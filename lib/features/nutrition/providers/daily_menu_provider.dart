@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/services/analytics_service.dart';
 import '../../../core/services/app_preferences.dart';
 import '../../onboarding/providers/wizard_provider.dart';
 import '../domain/models/daily_meal_slot.dart';
@@ -95,6 +96,12 @@ class DailyMenuNotifier extends AsyncNotifier<List<PlannedMeal>> {
       ),
     ];
     state = AsyncData(next);
+    // Phase 42 analytics — captures the "Plana Ekle" intent so the
+    // funnel can correlate recipe discovery → adoption → completion.
+    AnalyticsService.instance.recipeAddedToPlan(
+      recipeId: recipe.id,
+      mealType: slot,
+    );
   }
 
   // ==========================================================================

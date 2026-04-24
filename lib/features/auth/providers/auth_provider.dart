@@ -3,7 +3,7 @@ import 'dart:io' show Platform;
 import 'dart:math';
 
 import 'package:crypto/crypto.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' show ChangeNotifier, Listenable;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -12,6 +12,7 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/services/app_preferences.dart';
+import '../../../core/utils/app_logger.dart';
 import '../../monetization/providers/monetization_provider.dart';
 import '../../onboarding/providers/wizard_provider.dart';
 import '../../workout/providers/workout_provider.dart';
@@ -89,7 +90,10 @@ class AuthController {
       );
       final idToken = account.authentication.idToken;
       if (idToken == null) {
-        debugPrint('signInWithGoogle: idToken was null');
+        AppLogger.warning(
+          'signInWithGoogle: idToken was null',
+          category: 'auth',
+        );
         return SocialAuthOutcome.error;
       }
       // Access token is best-effort — Supabase only strictly requires the
@@ -100,8 +104,12 @@ class AuthController {
         final authz = await account.authorizationClient
             .authorizationForScopes(const ['email', 'profile']);
         accessToken = authz?.accessToken;
-      } catch (e) {
-        debugPrint('signInWithGoogle: authorizationForScopes failed: $e');
+      } catch (e, st) {
+        AppLogger.warning(
+          'signInWithGoogle: authorizationForScopes failed',
+          category: 'auth',
+          data: {'error': e.toString(), 'stack': st.toString()},
+        );
       }
       await Supabase.instance.client.auth.signInWithIdToken(
         provider: OAuthProvider.google,
@@ -109,14 +117,24 @@ class AuthController {
         accessToken: accessToken,
       );
       return SocialAuthOutcome.success;
-    } on GoogleSignInException catch (e) {
+    } on GoogleSignInException catch (e, st) {
       if (e.code == GoogleSignInExceptionCode.canceled) {
         return SocialAuthOutcome.cancelled;
       }
-      debugPrint('signInWithGoogle GoogleSignInException: ${e.code} $e');
+      AppLogger.error(
+        'signInWithGoogle GoogleSignInException: ${e.code}',
+        e,
+        stackTrace: st,
+        category: 'auth',
+      );
       return SocialAuthOutcome.error;
     } catch (e, st) {
-      debugPrint('signInWithGoogle failed: $e\n$st');
+      AppLogger.error(
+        'signInWithGoogle failed',
+        e,
+        stackTrace: st,
+        category: 'auth',
+      );
       return SocialAuthOutcome.error;
     }
   }
@@ -137,7 +155,10 @@ class AuthController {
       );
       final idToken = credential.identityToken;
       if (idToken == null) {
-        debugPrint('signInWithApple: identityToken was null');
+        AppLogger.warning(
+          'signInWithApple: identityToken was null',
+          category: 'auth',
+        );
         return SocialAuthOutcome.error;
       }
       await Supabase.instance.client.auth.signInWithIdToken(
@@ -146,14 +167,24 @@ class AuthController {
         nonce: rawNonce,
       );
       return SocialAuthOutcome.success;
-    } on SignInWithAppleAuthorizationException catch (e) {
+    } on SignInWithAppleAuthorizationException catch (e, st) {
       if (e.code == AuthorizationErrorCode.canceled) {
         return SocialAuthOutcome.cancelled;
       }
-      debugPrint('signInWithApple AuthorizationException: ${e.code} $e');
+      AppLogger.error(
+        'signInWithApple AuthorizationException: ${e.code}',
+        e,
+        stackTrace: st,
+        category: 'auth',
+      );
       return SocialAuthOutcome.error;
     } catch (e, st) {
-      debugPrint('signInWithApple failed: $e\n$st');
+      AppLogger.error(
+        'signInWithApple failed',
+        e,
+        stackTrace: st,
+        category: 'auth',
+      );
       return SocialAuthOutcome.error;
     }
   }
@@ -172,19 +203,32 @@ class AuthController {
     try {
       await Supabase.instance.client.rpc('delete_user');
     } catch (e, st) {
-      debugPrint('deleteAccount RPC failed: $e\n$st');
+      AppLogger.error(
+        'deleteAccount RPC failed',
+        e,
+        stackTrace: st,
+        category: 'auth',
+      );
       return DeleteAccountOutcome.error;
     }
     try {
       await Supabase.instance.client.auth.signOut();
     } catch (e) {
-      debugPrint('deleteAccount signOut (non-fatal): $e');
+      AppLogger.warning(
+        'deleteAccount signOut (non-fatal)',
+        category: 'auth',
+        data: {'error': e.toString()},
+      );
     }
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
     } catch (e) {
-      debugPrint('deleteAccount prefs.clear (non-fatal): $e');
+      AppLogger.warning(
+        'deleteAccount prefs.clear (non-fatal)',
+        category: 'auth',
+        data: {'error': e.toString()},
+      );
     }
     _invalidateUserScopedProviders();
     return DeleteAccountOutcome.success;
@@ -199,7 +243,12 @@ class AuthController {
     try {
       await Supabase.instance.client.auth.signOut();
     } catch (e, st) {
-      debugPrint('signOut failed: $e\n$st');
+      AppLogger.error(
+        'signOut failed',
+        e,
+        stackTrace: st,
+        category: 'auth',
+      );
     }
     _invalidateUserScopedProviders();
   }

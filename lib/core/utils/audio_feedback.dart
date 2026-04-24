@@ -1,7 +1,8 @@
 import 'dart:io' show Platform;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+
+import 'app_logger.dart';
 
 class AudioFeedback {
   AudioFeedback({
@@ -40,7 +41,12 @@ class AudioFeedback {
           IosTextToSpeechAudioMode.voicePrompt,
         );
       } catch (e, st) {
-        debugPrint('AudioFeedback: iOS audio category failed: $e\n$st');
+        AppLogger.error(
+          'AudioFeedback: iOS audio category failed',
+          e,
+          stackTrace: st,
+          category: 'tts',
+        );
       }
     }
 
@@ -53,33 +59,47 @@ class AudioFeedback {
       final available = (raw is List)
           ? raw.map((e) => e.toString().toLowerCase()).toList()
           : const <String>[];
-      debugPrint('AudioFeedback: ${available.length} TTS languages available');
+      AppLogger.info(
+        'AudioFeedback: ${available.length} TTS languages available',
+        category: 'tts',
+      );
       if (!available.contains(language.toLowerCase())) {
-        debugPrint(
-          '⚠️ AudioFeedback: "$language" is NOT installed on this device. '
-          'Falling back to "$fallbackLanguage". '
-          'Install Turkish TTS via Settings → Language & input → '
-          'Text-to-speech output for native playback.',
+        AppLogger.warning(
+          'AudioFeedback: "$language" is NOT installed on this device. '
+          'Falling back to "$fallbackLanguage".',
+          category: 'tts',
         );
         chosen = fallbackLanguage;
       }
     } catch (e, st) {
-      debugPrint('AudioFeedback: getLanguages failed: $e\n$st');
+      AppLogger.error(
+        'AudioFeedback: getLanguages failed',
+        e,
+        stackTrace: st,
+        category: 'tts',
+      );
     }
 
     try {
       await _tts.setLanguage(chosen);
       _activeLanguage = chosen;
     } catch (e, st) {
-      debugPrint('AudioFeedback: setLanguage("$chosen") failed: $e\n$st');
+      AppLogger.error(
+        'AudioFeedback: setLanguage("$chosen") failed',
+        e,
+        stackTrace: st,
+        category: 'tts',
+      );
       if (chosen != fallbackLanguage) {
         try {
           await _tts.setLanguage(fallbackLanguage);
           _activeLanguage = fallbackLanguage;
         } catch (e2, st2) {
-          debugPrint(
-            'AudioFeedback: fallback setLanguage("$fallbackLanguage") '
-            'failed: $e2\n$st2',
+          AppLogger.error(
+            'AudioFeedback: fallback setLanguage("$fallbackLanguage") failed',
+            e2,
+            stackTrace: st2,
+            category: 'tts',
           );
         }
       }
@@ -91,7 +111,12 @@ class AudioFeedback {
       await _tts.setVolume(1.0);
       await _tts.awaitSpeakCompletion(true);
     } catch (e, st) {
-      debugPrint('AudioFeedback: init tuning failed: $e\n$st');
+      AppLogger.error(
+        'AudioFeedback: init tuning failed',
+        e,
+        stackTrace: st,
+        category: 'tts',
+      );
     }
 
     _ready = true;
@@ -117,9 +142,12 @@ class AudioFeedback {
       await _tts.setVolume(1.0);
       await _tts.speak(phrase);
     } catch (e, st) {
-      debugPrint(
-        'AudioFeedback: speak("$phrase", lang=$_activeLanguage) '
-        'failed: $e\n$st',
+      AppLogger.error(
+        'AudioFeedback: speak failed (lang=$_activeLanguage)',
+        e,
+        stackTrace: st,
+        category: 'tts',
+        data: {'phrase': phrase},
       );
     }
   }
@@ -127,19 +155,33 @@ class AudioFeedback {
   /// Manual smoke test for the TTS pipeline — tap-to-invoke from dev UI.
   /// Forces the engine open, re-applies volume, and speaks a fixed phrase.
   Future<void> testAudio() async {
-    debugPrint('🔊 TTS DEBUG: Starting audio test...');
+    AppLogger.info('TTS smoke test: start', category: 'tts');
     try {
       if (!_ready) {
-        debugPrint('🔊 TTS DEBUG: engine not ready, running init() first.');
+        AppLogger.info(
+          'TTS smoke test: engine not ready, running init()',
+          category: 'tts',
+        );
         await init();
       }
-      debugPrint('🔊 TTS DEBUG: active language = $_activeLanguage');
+      AppLogger.info(
+        'TTS smoke test: active language = $_activeLanguage',
+        category: 'tts',
+      );
       await _tts.stop();
       await _tts.setVolume(1.0);
       final result = await _tts.speak('Ses testi başarılı, sistem çalışıyor.');
-      debugPrint('🔊 TTS DEBUG: speak() returned $result');
+      AppLogger.info(
+        'TTS smoke test: speak() returned $result',
+        category: 'tts',
+      );
     } catch (e, st) {
-      debugPrint('🔊 TTS ERROR: testAudio failed: $e\n$st');
+      AppLogger.error(
+        'TTS smoke test failed',
+        e,
+        stackTrace: st,
+        category: 'tts',
+      );
     }
   }
 
@@ -147,7 +189,11 @@ class AudioFeedback {
     try {
       await _tts.stop();
     } catch (e, st) {
-      debugPrint('AudioFeedback: stop on dispose failed: $e\n$st');
+      AppLogger.warning(
+        'AudioFeedback: stop on dispose failed',
+        category: 'tts',
+        data: {'error': e.toString(), 'stack': st.toString()},
+      );
     }
   }
 }

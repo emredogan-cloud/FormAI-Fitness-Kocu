@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/utils/app_logger.dart';
 import '../../../../core/widgets/cached_image.dart';
 import '../../../../core/widgets/error_card.dart';
 import '../../domain/models/daily_meal_slot.dart';
@@ -53,7 +54,12 @@ class MealPlanSliver extends ConsumerWidget {
         ),
       ),
       error: (err, st) {
-        debugPrint('MealPlanSliver menu error: $err\n$st');
+        AppLogger.error(
+          'MealPlanSliver menu error',
+          err,
+          stackTrace: st,
+          category: 'nutrition',
+        );
         return SliverToBoxAdapter(
           child: ErrorCard(
             message: 'Günün menüsü yüklenemedi.',

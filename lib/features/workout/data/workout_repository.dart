@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/placeholder_images.dart';
 import '../domain/services/workout_generator_service.dart';
 import '../models/exercise_model.dart';
@@ -1233,8 +1233,11 @@ class WorkoutRepository {
       if (days.length != 30) return null;
       return days;
     } catch (e, st) {
-      debugPrint('WorkoutRepository: plan cache decode failed — '
-          'regenerating. $e\n$st');
+      AppLogger.warning(
+        'WorkoutRepository: plan cache decode failed — regenerating',
+        category: 'workout',
+        data: {'error': e.toString(), 'stack': st.toString()},
+      );
       return null;
     }
   }
@@ -1246,7 +1249,12 @@ class WorkoutRepository {
       );
       await _prefs.setString(_planKey, encoded);
     } catch (e, st) {
-      debugPrint('WorkoutRepository: plan cache encode failed: $e\n$st');
+      AppLogger.error(
+        'WorkoutRepository: plan cache encode failed',
+        e,
+        stackTrace: st,
+        category: 'workout',
+      );
     }
   }
 

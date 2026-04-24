@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
+import '../../../core/services/analytics_service.dart';
 import '../../../core/utils/legal_urls.dart';
 import '../../onboarding/providers/wizard_provider.dart';
 import '../providers/monetization_provider.dart';
@@ -25,6 +26,16 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   _Plan _selected = _Plan.yearly;
   bool _busy = false;
   bool _restoring = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Phase 42 analytics — fire once per mount so the
+    // viewed-→-purchased conversion rate is derivable. If the paywall
+    // is reached from multiple surfaces we'll wire a `source` param
+    // later via a constructor arg.
+    AnalyticsService.instance.paywallViewed();
+  }
 
   @override
   Widget build(BuildContext context) {

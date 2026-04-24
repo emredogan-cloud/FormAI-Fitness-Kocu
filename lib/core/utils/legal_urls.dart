@@ -1,5 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import 'app_logger.dart';
 
 /// Production URLs for the Kullanım Şartları (Terms of Use) and Gizlilik
 /// Politikası (Privacy Policy) pages. Surfaced from the paywall footer,
@@ -24,7 +25,13 @@ Future<bool> openLegalUrl(String url) async {
   try {
     return await launchUrl(uri, mode: LaunchMode.externalApplication);
   } catch (e, st) {
-    debugPrint('openLegalUrl failed for $url: $e\n$st');
+    AppLogger.error(
+      'openLegalUrl failed',
+      e,
+      stackTrace: st,
+      category: 'legal',
+      data: {'url': url},
+    );
     return false;
   }
 }

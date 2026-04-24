@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/routing/app_router.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/placeholder_images.dart';
 import '../../../../core/widgets/cached_image.dart';
 import '../../../../core/widgets/error_card.dart';
@@ -89,7 +90,12 @@ class _AntrenmanTabState extends ConsumerState<AntrenmanTab> {
       loading: () =>
           const Center(child: CircularProgressIndicator(color: _neon)),
       error: (err, st) {
-        debugPrint('antrenman workoutSession error: $err\n$st');
+        AppLogger.error(
+          'antrenman workoutSession error',
+          err,
+          stackTrace: st,
+          category: 'workout',
+        );
         return ErrorCard(
           message: 'Programın yüklenirken bir sorun oluştu.',
           onRetry: () => ref.invalidate(workoutSessionProvider),

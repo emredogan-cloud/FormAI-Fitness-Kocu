@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/services/analytics_service.dart';
 import '../../../core/services/app_preferences.dart';
 import '../data/workout_repository.dart';
 import '../domain/services/workout_generator_service.dart';
@@ -189,6 +190,9 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
       restSecondsRemaining: 0,
       isSessionComplete: false,
     ));
+    // Phase 42 analytics — fire after state transition so the funnel
+    // lines up with the actual user-visible "workout started" moment.
+    AnalyticsService.instance.workoutStarted(dayNumber: dayNumber);
     _startPrep();
   }
 
@@ -211,6 +215,12 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
       restSecondsRemaining: 0,
       isSessionComplete: false,
     ));
+    // Ad-hoc run — dayNumber 0 so the funnel can segment program days
+    // from Sınırlarını Zorla / regional launches.
+    AnalyticsService.instance.workoutStarted(
+      dayNumber: 0,
+      exerciseName: exercises.first.name,
+    );
     _startPrep();
   }
 
@@ -278,6 +288,10 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
       restSecondsRemaining: 0,
       isSessionComplete: true,
     ));
+    // Phase 42 analytics — end-of-session marker. dayNumber 0 for ad-hoc
+    // runs so the funnel can count "completed a workout" without mixing
+    // 30-day progress into the same event.
+    AnalyticsService.instance.workoutCompleted(dayNumber: day.dayNumber);
   }
 
   void skipRest() {
