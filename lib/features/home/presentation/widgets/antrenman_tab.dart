@@ -312,21 +312,52 @@ class _RegionalPlansList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (plans.isEmpty) {
-      // Phase 40: "yakında eklenecek" metni mağaza için Incomplete
-      // App riski oluşturuyordu; tarafsız bir durum metniyle
-      // değiştirildi. Gerçek plan eklendiğinde bu dal hiç girilmez.
+      // Phase 47B · polished empty state. Icon + two-line copy nudges
+      // the user toward other regional categories instead of leaving
+      // them on a dead-end neutral note. No CTA here on purpose —
+      // the user already sees the category filter strip above; the
+      // message is the nudge.
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Container(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            color: Colors.white.withValues(alpha: 0.03),
+            borderRadius: BorderRadius.circular(16),
+            color: Colors.white.withValues(alpha: 0.04),
             border: Border.all(color: Colors.white12),
           ),
-          child: const Text(
-            'Bu bölge için plan bulunmuyor — diğer kategorileri keşfedebilirsin.',
-            style: TextStyle(color: Colors.white54, fontSize: 13),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  color: _neonAccent.withValues(alpha: 0.15),
+                  border: Border.all(
+                    color: _neonAccent.withValues(alpha: 0.45),
+                  ),
+                ),
+                child: const Icon(
+                  Icons.explore,
+                  color: _neonAccent,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 14),
+              const Expanded(
+                child: Text(
+                  'Bu bölge için plan bulunmuyor — diğer kategorileri '
+                  'keşfedebilirsin.',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 13,
+                    height: 1.45,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       );

@@ -7,6 +7,7 @@ import '../../../../core/routing/app_router.dart';
 import '../../../../core/services/app_preferences.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/utils/audio_feedback.dart';
+import '../../../../core/utils/legal_urls.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../workout/models/workout_day_model.dart';
 import '../../../workout/providers/workout_provider.dart';
@@ -167,6 +168,17 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
           subtitle: 'Veri ve izinler',
           onTap: () => _openPrivacySheet(context),
         ),
+        // Phase 47B · Destek satırı. Launches the device mail app
+        // with a pre-filled "SixPack AI Destek" subject line. If the
+        // device can't open a mail client (rare — simulator, no mail
+        // app), we surface a toast with the raw email address so the
+        // user can copy it manually.
+        _SettingsTile(
+          icon: Icons.headset_mic_outlined,
+          title: 'Destek',
+          subtitle: 'Bize ulaş: ${LegalUrls.supportEmail}',
+          onTap: () => _openSupport(context),
+        ),
         if (user?.isAnonymous ?? false)
           _GuestLoginTile(onTap: () => context.push(AppRoutes.auth))
         else ...[
@@ -264,6 +276,18 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
       ),
       builder: (ctx) => const _PrivacySheet(),
     );
+  }
+
+  Future<void> _openSupport(BuildContext context) async {
+    final ok = await openSupportMail();
+    if (!context.mounted) return;
+    if (!ok) {
+      _toast(
+        context,
+        'Mail uygulaması açılamadı — ${LegalUrls.supportEmail} adresine '
+        'manuel olarak yazabilirsin.',
+      );
+    }
   }
 
   Future<void> _runTtsTest(BuildContext context) async {

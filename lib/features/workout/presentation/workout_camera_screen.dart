@@ -777,10 +777,11 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         ? _formatMmSs(_secondsRemaining)
         : (target == null ? 'x $reps' : 'x $reps / $target');
 
-    // Phase 40: onPrev stays null until backwards navigation lands in
-    // the session notifier. The control panel renders an invisible
-    // placeholder of the same dimension so the play button stays
-    // centered in the bottom bar.
+    // Phase 47B: onPrev wired to the notifier's previousExercise().
+    // We still pass `null` when the pointer is already at index 0 so
+    // the control-panel row swaps in an invisible puck of matching
+    // width and the play control stays centered.
+    final canGoBack = exercise != null && session.activeExerciseIndex > 0;
     return WorkoutControlPanel(
       currentSet: session.currentSet,
       totalSets: exercise?.sets ?? 0,
@@ -789,6 +790,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       detectorState: _state,
       isPaused: _isPaused,
       onTogglePlay: exercise == null ? null : _togglePause,
+      onPrev: canGoBack ? _onPrev : null,
       onNext: exercise == null ? null : _onNext,
     );
   }
@@ -804,6 +806,23 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       setState(() => _isPaused = false);
     }
     await ref.read(workoutSessionProvider.notifier).completeCurrentExercise();
+  }
+
+  /// Phase 47B · handles the "Önceki egzersize geçiş" tap. Cancels any
+  /// local countdown timer (the time-based workout timer re-seeds
+  /// from the rewound exercise via the session listener), resumes
+  /// analysis if paused, and asks the notifier to rewind the
+  /// session pointer. Haptic tap so the user feels the action landed
+  /// even before the HAZIRLAN! prep overlay surfaces.
+  void _onPrev() {
+    _workoutTimer?.cancel();
+    _workoutTimer = null;
+    _secondsRemaining = 0;
+    if (_isPaused) {
+      setState(() => _isPaused = false);
+    }
+    unawaited(HapticFeedback.lightImpact());
+    ref.read(workoutSessionProvider.notifier).previousExercise();
   }
 
   void _exit(BuildContext context) {

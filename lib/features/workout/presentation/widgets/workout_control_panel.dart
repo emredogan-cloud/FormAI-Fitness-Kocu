@@ -25,9 +25,10 @@ class WorkoutControlPanel extends StatelessWidget {
   final String exerciseName;
   final CrunchState detectorState;
   final bool isPaused;
-  // Phase 40: now nullable — backwards-nav isn't implemented so the
-  // parent passes `null` and the prev button is replaced by an equal-
-  // width `SizedBox` to preserve the Row's symmetric layout.
+  // Phase 47B: onPrev is passed in when the session has at least one
+  // exercise behind the active index; the parent still passes `null`
+  // on the first exercise so the Row renders an equal-width invisible
+  // puck in place of the button and keeps the play control centered.
   final VoidCallback? onPrev;
   final VoidCallback? onTogglePlay;
   final VoidCallback? onNext;

@@ -308,6 +308,40 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
     _restPrecedesExerciseChange = false;
   }
 
+  /// Phase 47B · user tapped the "Önceki egzersize geçiş" control.
+  ///
+  /// Rewinds [activeExerciseIndex] by one position and resets
+  /// [currentReps] / [currentSet] so the previous movement starts
+  /// clean. Any in-flight rest or prep countdown is cancelled — if
+  /// the user is backing up, they are choosing to skip the recovery
+  /// window. A 3-second HAZIRLAN! prep fires for the rewound exercise
+  /// so the camera/analyzer rebinds against it before the first rep
+  /// is counted.
+  ///
+  /// No-ops when the pointer is already at index 0 (nothing to go
+  /// back to) or when the session has no active day.
+  void previousExercise() {
+    final current = state.value;
+    final day = current?.activeDay;
+    if (current == null || day == null) return;
+    if (current.activeExerciseIndex <= 0) return;
+
+    _cancelRestTimer();
+    _cancelPrepTimer();
+    _restPrecedesExerciseChange = false;
+
+    final nextIndex = current.activeExerciseIndex - 1;
+    state = AsyncData(current.copyWith(
+      activeExerciseIndex: nextIndex,
+      currentReps: 0,
+      currentSet: 1,
+      isResting: false,
+      restSecondsRemaining: 0,
+      isSessionComplete: false,
+    ));
+    _startPrep();
+  }
+
   Future<void> resetProgress() async {
     await _repository.resetProgress();
     final days = await _loadProgram();

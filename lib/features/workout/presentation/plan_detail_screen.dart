@@ -1119,6 +1119,13 @@ class _ExerciseTile extends StatelessWidget {
   }
 }
 
+/// Phase 47B · empty-plan upsell.
+///
+/// Rendered in place of the exercise list when a regional/ad-hoc plan
+/// ships with zero exercises. Instead of the Phase 40 "bu plan şu an
+/// boş" neutral note, this card turns the dead-end into a Premium
+/// funnel with a neon paywall CTA. Copy is identical to the Phase
+/// 47B spec.
 class _ComingSoonNote extends StatelessWidget {
   const _ComingSoonNote({required this.plan});
   final WorkoutPlan plan;
@@ -1128,27 +1135,131 @@ class _ComingSoonNote extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: Colors.white.withValues(alpha: 0.04),
-        border: Border.all(color: Colors.white12),
+        borderRadius: BorderRadius.circular(18),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            _neon.withValues(alpha: 0.18),
+            _neon.withValues(alpha: 0.04),
+          ],
+        ),
+        border: Border.all(color: _neon.withValues(alpha: 0.55)),
+        boxShadow: [
+          BoxShadow(
+            color: _neon.withValues(alpha: 0.28),
+            blurRadius: 22,
+            spreadRadius: 0.4,
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.fitness_center, color: _neon, size: 28),
-          const SizedBox(height: 10),
-          Text(
-            plan.title,
-            style: const TextStyle(
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF6A3DFF), Color(0xFF4DA6FF)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _neon.withValues(alpha: 0.6),
+                      blurRadius: 12,
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.workspace_premium_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  plan.title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            'Bu bölge için antrenmanlar hazırlanıyor. Abonelik alarak '
+            'diğer Premium planlara erişebilirsin.',
+            style: TextStyle(
               color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w900,
+              fontSize: 14,
+              height: 1.5,
+              fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(height: 6),
-          const Text(
-            'Bu plan şu an boş — diğer bölge planlarını deneyebilirsin.',
-            style: TextStyle(color: Colors.white60, fontSize: 13, height: 1.4),
+          const SizedBox(height: 18),
+          SizedBox(
+            width: double.infinity,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: _neon.withValues(alpha: 0.55),
+                    blurRadius: 18,
+                    spreadRadius: 0.5,
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(14),
+                child: Ink(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF6A3DFF), Color(0xFF4DA6FF)],
+                    ),
+                  ),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(14),
+                    onTap: () => context.push(AppRoutes.paywall),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 14),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.workspace_premium,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            'PRO İLE KİLİDİ AÇ',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.6,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
