@@ -42,7 +42,9 @@ dependencies:
   purchases_flutter: ^8.1.1
   flutter_local_notifications: ^21.0.0
   timezone: ^0.11.0
-  fl_chart: ^1.2.0
+  # Network image + disk/memory cache. Phase 40: replaces `Image.network`
+  # everywhere so tarif/hero/thumbnail images don't re-download per scroll.
+  cached_network_image: ^3.4.1
   wakelock_plus: ^1.6.0
   url_launcher: ^6.3.2
   google_sign_in: ^7.2.0
@@ -61,18 +63,11 @@ flutter:
   uses-material-design: true
   assets:
     - .env
-    # Reference photography for per-category cards. Folder names contain
-    # spaces and Turkish characters so the paths MUST stay quoted below
-    # for the YAML parser to round-trip them as-is to the asset manifest.
-    - "docs/Core (Karın & Stabilite)/"
-    - "docs/Göğüs (Chest)/"
-    - "docs/Sırt (Back)/"
-    - "docs/Bacak (Legs)/"
-    - "docs/Kol (Arms)/"
-    - "docs/Omuz (Shoulders)/"
-    - "docs/Kardiyo & Full Body/"
     # Bespoke onboarding + prediction artwork (all Turkish-named PNG/JPEG/
     # WEBP files live at the photos/ root). Folder is quoted for safety.
+    # Phase 40 removed the `docs/<region>/` jpegs that the Bölgeler strip
+    # used pre-Phase-35; the strip now points at Unsplash URLs and the
+    # binary weight (~2 MB across 7 folders) was dead bundle space.
     - "photos/"
 
 # Launcher icon source. Uses a square PNG (derived from the onboarding

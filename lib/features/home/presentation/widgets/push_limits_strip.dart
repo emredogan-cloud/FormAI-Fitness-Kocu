@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/routing/app_router.dart';
+import '../../../../core/widgets/cached_image.dart';
 import '../../../workout/data/workout_repository.dart';
 import '../../../workout/models/workout_plan_model.dart';
 
@@ -15,24 +16,10 @@ Widget _resolveImage(String image) {
     child: const Icon(Icons.fitness_center, color: Colors.white54),
   );
   if (image.startsWith('http')) {
-    return Image.network(
-      image,
+    return CachedImage(
+      url: image,
       fit: BoxFit.cover,
-      loadingBuilder: (_, child, progress) {
-        if (progress == null) return child;
-        return Container(
-          color: Colors.white10,
-          alignment: Alignment.center,
-          child: const SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: Colors.white54,
-            ),
-          ),
-        );
-      },
+      memCacheHeight: 500,
       errorBuilder: (_, __, ___) => fallback,
     );
   }

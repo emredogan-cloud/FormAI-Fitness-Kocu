@@ -777,35 +777,13 @@ class _DayGridSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 40: "Takvimi Gör →" linki kaldırıldı. Arkaplanındaki takvim
+    // ekranı henüz hazırlanmadı; placeholder SnackBar mağaza için
+    // "Incomplete App" riski yaratıyor. Başlık ve grid kalıyor.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            const Expanded(child: _SectionLabel(title: '30 GÜNLÜK PROGRAM')),
-            TextButton(
-              onPressed: () => ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  const SnackBar(
-                    content: Text('Takvim görünümü yakında.'),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                ),
-              style: TextButton.styleFrom(
-                foregroundColor: _neon,
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                minimumSize: const Size(0, 28),
-                textStyle: const TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.3,
-                ),
-              ),
-              child: const Text('Takvimi Gör →'),
-            ),
-          ],
-        ),
+        const _SectionLabel(title: '30 GÜNLÜK PROGRAM'),
         const SizedBox(height: 10),
         _DayGrid(days: days, activeDayNumber: activeDayNumber),
       ],
@@ -1459,42 +1437,10 @@ class _AiCoachCard extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 14),
-          // Phase 37: sleek transparent TextButton (no outlined chrome),
-          // neon-tint text + small `arrow_forward_ios` icon. Matches
-          // the reference's "link" treatment rather than a second CTA.
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton(
-              onPressed: () => ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  const SnackBar(
-                    content: Text('Koç önerileri yakında.'),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                ),
-              style: TextButton.styleFrom(
-                foregroundColor: _neon,
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                minimumSize: const Size(0, 28),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                textStyle: const TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.3,
-                ),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('Önerilere Git'),
-                  SizedBox(width: 6),
-                  Icon(Icons.arrow_forward_ios_rounded, size: 11),
-                ],
-              ),
-            ),
-          ),
+          // Phase 40: "Önerilere Git →" linki kaldırıldı. AI öneri
+          // ekranı henüz hazır değil; placeholder navigation mağaza
+          // için red riski. Tavsiye metni AI Koç kartının içinde
+          // kalıyor — tek başına yeterli bir sinyal.
         ],
       ),
     );
@@ -1626,35 +1572,13 @@ class _BadgesSection extends StatelessWidget {
         progress: 0,
       ),
     ];
+    // Phase 40: rozet galerisi ekranı henüz hazır değil — "Tümünü Gör"
+    // linki kaldırıldı. Görünür rozet listesi zaten kullanıcıya tüm
+    // kilitli + aktif rozetleri bir arada gösteriyor.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            const Expanded(child: _SectionLabel(title: 'ROZETLERİN')),
-            TextButton(
-              onPressed: () => ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  const SnackBar(
-                    content: Text('Rozet galerisi yakında.'),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                ),
-              style: TextButton.styleFrom(
-                foregroundColor: _neon,
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                minimumSize: const Size(0, 28),
-                textStyle: const TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.3,
-                ),
-              ),
-              child: const Text('Tümünü Gör →'),
-            ),
-          ],
-        ),
+        const _SectionLabel(title: 'ROZETLERİN'),
         const SizedBox(height: 10),
         SizedBox(
           // Bumped from 112 → 128 to absorb the 3-px bottom overflow

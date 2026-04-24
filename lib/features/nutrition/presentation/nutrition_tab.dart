@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/widgets/cached_image.dart';
 import '../domain/models/macro_target.dart';
 import '../domain/models/recipe.dart';
 import '../domain/services/next_best_meal_service.dart';
@@ -66,11 +67,7 @@ class NutritionTab extends ConsumerWidget {
           ),
         ),
         const SliverToBoxAdapter(child: _MealCategoriesSection()),
-        SliverToBoxAdapter(
-          child: _DiscoverySectionHeader(
-            onSeeAll: () => _showComingSoon(context),
-          ),
-        ),
+        const SliverToBoxAdapter(child: _DiscoverySectionHeader()),
         SliverToBoxAdapter(
           child: recipesAsync.when(
             loading: () => const SizedBox(
@@ -86,17 +83,6 @@ class NutritionTab extends ConsumerWidget {
         const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
       ],
     );
-  }
-
-  static void _showComingSoon(BuildContext context) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        const SnackBar(
-          content: Text('Tüm tarif keşfi yakında!'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
   }
 }
 
@@ -817,12 +803,11 @@ class _Thumb extends StatelessWidget {
     );
     final src = imageUrl;
     if (src == null || src.isEmpty) return fallback;
-    return Image.network(
-      src,
+    return CachedImage(
+      url: src,
       fit: BoxFit.cover,
+      memCacheHeight: 200,
       errorBuilder: (_, __, ___) => fallback,
-      loadingBuilder: (_, child, progress) =>
-          progress == null ? child : Container(color: Colors.white10),
     );
   }
 }
@@ -931,34 +916,17 @@ class _SectionTitle extends StatelessWidget {
 // ============================================================================
 
 class _DiscoverySectionHeader extends StatelessWidget {
-  const _DiscoverySectionHeader({required this.onSeeAll});
-  final VoidCallback onSeeAll;
+  const _DiscoverySectionHeader();
 
+  // Phase 40: "Tümünü Gör" button removed — the full discovery screen
+  // it pointed at isn't shipped yet, and a "yakında" SnackBar is an
+  // Incomplete App red flag for store review. The title stays; the
+  // horizontal filter strip below the header still lets users explore.
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 22, 12, 8),
-      child: Row(
-        children: [
-          const _SectionTitle(title: 'Tarif Keşfet'),
-          const Spacer(),
-          TextButton.icon(
-            onPressed: onSeeAll,
-            icon: const Icon(Icons.arrow_forward_rounded, size: 14),
-            label: const Text('Tümünü Gör'),
-            style: TextButton.styleFrom(
-              foregroundColor: _neon,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              minimumSize: const Size(0, 32),
-              textStyle: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.4,
-              ),
-            ),
-          ),
-        ],
-      ),
+    return const Padding(
+      padding: EdgeInsets.fromLTRB(20, 22, 20, 8),
+      child: _SectionTitle(title: 'Tarif Keşfet'),
     );
   }
 }
@@ -1215,9 +1183,10 @@ class _MealCategoryCard extends StatelessWidget {
               // Layer 1 — background image. Network fetch with a
               // neutral fallback gradient so an offline user still
               // sees a tappable tinted tile instead of a broken icon.
-              Image.network(
-                entry.imageUrl,
+              CachedImage(
+                url: entry.imageUrl,
                 fit: BoxFit.cover,
+                memCacheHeight: 400,
                 errorBuilder: (_, __, ___) => DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -1230,8 +1199,6 @@ class _MealCategoryCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                loadingBuilder: (_, child, progress) =>
-                    progress == null ? child : Container(color: Colors.white10),
               ),
               // Layer 2 — dark gradient overlay for text legibility.
               const DecoratedBox(

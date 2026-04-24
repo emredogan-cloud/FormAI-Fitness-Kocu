@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/routing/app_router.dart';
 import '../../../../core/utils/placeholder_images.dart';
+import '../../../../core/widgets/cached_image.dart';
 import '../../../../core/widgets/error_card.dart';
 import '../../../workout/models/exercise_model.dart';
 import '../../../workout/models/workout_day_model.dart';
@@ -23,24 +24,10 @@ Widget _resolveImage(String image) {
     child: const Icon(Icons.fitness_center, color: Colors.white54),
   );
   if (image.startsWith('http')) {
-    return Image.network(
-      image,
+    return CachedImage(
+      url: image,
       fit: BoxFit.cover,
-      loadingBuilder: (_, child, progress) {
-        if (progress == null) return child;
-        return Container(
-          color: Colors.white10,
-          alignment: Alignment.center,
-          child: const SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: Colors.white54,
-            ),
-          ),
-        );
-      },
+      memCacheHeight: 500,
       errorBuilder: (_, __, ___) => fallback,
     );
   }
@@ -319,6 +306,9 @@ class _RegionalPlansList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (plans.isEmpty) {
+      // Phase 40: "yakında eklenecek" metni mağaza için Incomplete
+      // App riski oluşturuyordu; tarafsız bir durum metniyle
+      // değiştirildi. Gerçek plan eklendiğinde bu dal hiç girilmez.
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Container(
@@ -329,7 +319,7 @@ class _RegionalPlansList extends StatelessWidget {
             border: Border.all(color: Colors.white12),
           ),
           child: const Text(
-            'Bu bölge için plan yakında eklenecek.',
+            'Bu bölge için plan bulunmuyor — diğer kategorileri keşfedebilirsin.',
             style: TextStyle(color: Colors.white54, fontSize: 13),
           ),
         ),

@@ -14,9 +14,9 @@ class WorkoutControlPanel extends StatelessWidget {
     required this.exerciseName,
     required this.detectorState,
     required this.isPaused,
-    required this.onPrev,
     required this.onTogglePlay,
     required this.onNext,
+    this.onPrev,
   });
 
   final int currentSet;
@@ -25,7 +25,10 @@ class WorkoutControlPanel extends StatelessWidget {
   final String exerciseName;
   final CrunchState detectorState;
   final bool isPaused;
-  final VoidCallback onPrev;
+  // Phase 40: now nullable — backwards-nav isn't implemented so the
+  // parent passes `null` and the prev button is replaced by an equal-
+  // width `SizedBox` to preserve the Row's symmetric layout.
+  final VoidCallback? onPrev;
   final VoidCallback? onTogglePlay;
   final VoidCallback? onNext;
 
@@ -86,10 +89,16 @@ class WorkoutControlPanel extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              _ControlIconButton(
-                icon: Icons.skip_previous_rounded,
-                onTap: onPrev,
-              ),
+              // When `onPrev` is null we render an invisible puck of
+              // matching diameter so the center play button stays
+              // horizontally centered inside the panel.
+              if (onPrev != null)
+                _ControlIconButton(
+                  icon: Icons.skip_previous_rounded,
+                  onTap: onPrev,
+                )
+              else
+                const SizedBox(width: 40, height: 40),
               _CenterPlayButton(
                 isPaused: isPaused,
                 onTap: onTogglePlay,

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../core/services/app_preferences.dart';
 import '../../../core/utils/placeholder_images.dart';
+import '../../../core/widgets/cached_image.dart';
 import '../../../core/widgets/error_card.dart';
 import '../../monetization/providers/monetization_provider.dart';
 import '../models/exercise_model.dart';
@@ -110,9 +111,10 @@ Widget _resolveImage(String src) {
     child: const Icon(Icons.fitness_center, color: Colors.white54),
   );
   if (src.startsWith('http')) {
-    return Image.network(
-      src,
+    return CachedImage(
+      url: src,
       fit: BoxFit.cover,
+      memCacheHeight: 600,
       errorBuilder: (_, __, ___) => fallback,
     );
   }
@@ -1127,10 +1129,10 @@ class _ComingSoonNote extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.hourglass_top, color: _neon, size: 28),
+          const Icon(Icons.fitness_center, color: _neon, size: 28),
           const SizedBox(height: 10),
           Text(
-            '${plan.title} — yakında',
+            plan.title,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 16,
@@ -1139,8 +1141,7 @@ class _ComingSoonNote extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           const Text(
-            'Bu bölge için bespoke egzersiz seti yolda. Şimdilik diğer '
-            'planları deneyebilirsin.',
+            'Bu plan şu an boş — diğer bölge planlarını deneyebilirsin.',
             style: TextStyle(color: Colors.white60, fontSize: 13, height: 1.4),
           ),
         ],

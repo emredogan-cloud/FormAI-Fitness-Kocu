@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/services/app_preferences.dart';
+import '../../../../core/widgets/cached_image.dart';
 import '../../../nutrition/domain/models/recipe.dart';
 import '../../../nutrition/providers/nutrition_provider.dart';
 import '../../models/workout_day_model.dart';
@@ -246,12 +247,11 @@ class _Thumbnail extends StatelessWidget {
     );
     final url = imageUrl;
     if (url == null || url.isEmpty) return fallback;
-    return Image.network(
-      url,
+    return CachedImage(
+      url: url,
       fit: BoxFit.cover,
+      memCacheHeight: 300,
       errorBuilder: (_, __, ___) => fallback,
-      loadingBuilder: (_, child, progress) =>
-          progress == null ? child : Container(color: Colors.white10),
     );
   }
 }

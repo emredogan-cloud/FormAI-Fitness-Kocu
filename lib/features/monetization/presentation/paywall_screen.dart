@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -57,12 +58,16 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                     _buildRestoreButton(),
                     const SizedBox(height: 6),
                     const _LegalFooter(),
-                    // TEMPORARILY visible in release builds (Phase 14) so the
-                    // operator can exercise premium paths while Google Play
-                    // Console verification is pending. Restore the
-                    // `if (kDebugMode)` guard once RC reports real offerings.
-                    const SizedBox(height: 12),
-                    _buildSandboxButton(),
+                    // Phase 40: Sandbox override button is strictly a
+                    // debug-only affordance now. The `_kDevProOverrideKey`
+                    // logic in `monetization_provider` still reads from
+                    // SharedPreferences regardless so local devs can keep
+                    // the flag set, but the UI tile only renders in
+                    // debug builds — App Store reviewers never see it.
+                    if (kDebugMode) ...[
+                      const SizedBox(height: 12),
+                      _buildSandboxButton(),
+                    ],
                   ],
                 ),
               ),

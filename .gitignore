@@ -73,3 +73,8 @@ coverage/
 
 # Logs
 *.log
+
+# Phase 40: untracked personal nutrition reference photography. Kept
+# off-repo because the folder is ~MB of user-owned shots with no
+# production asset binding in pubspec.yaml.
+Beslenme-Photos/

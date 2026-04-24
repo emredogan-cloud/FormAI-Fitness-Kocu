@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/widgets/cached_image.dart';
 import '../../domain/models/recipe.dart';
 import '../../providers/daily_menu_provider.dart';
 import '../../providers/nutrition_provider.dart';
@@ -320,12 +321,11 @@ class _HeroThumb extends StatelessWidget {
     );
     final image = (url == null || url.isEmpty)
         ? fallback
-        : Image.network(
-            url,
+        : CachedImage(
+            url: url,
             fit: BoxFit.cover,
+            memCacheHeight: 400,
             errorBuilder: (_, __, ___) => fallback,
-            loadingBuilder: (_, child, progress) =>
-                progress == null ? child : Container(color: Colors.white10),
           );
     return Stack(
       fit: StackFit.expand,

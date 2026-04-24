@@ -763,6 +763,10 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         ? _formatMmSs(_secondsRemaining)
         : (target == null ? 'x $reps' : 'x $reps / $target');
 
+    // Phase 40: onPrev stays null until backwards navigation lands in
+    // the session notifier. The control panel renders an invisible
+    // placeholder of the same dimension so the play button stays
+    // centered in the bottom bar.
     return WorkoutControlPanel(
       currentSet: session.currentSet,
       totalSets: exercise?.sets ?? 0,
@@ -770,7 +774,6 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       exerciseName: exercise?.name ?? '—',
       detectorState: _state,
       isPaused: _isPaused,
-      onPrev: _onPrev,
       onTogglePlay: exercise == null ? null : _togglePause,
       onNext: exercise == null ? null : _onNext,
     );
@@ -780,21 +783,6 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     final mm = (seconds ~/ 60).toString().padLeft(2, '0');
     final ss = (seconds % 60).toString().padLeft(2, '0');
     return '$mm:$ss';
-  }
-
-  void _onPrev() {
-    // Provider doesn't expose backwards navigation yet — surface intent via
-    // a transient snackbar so the control feels responsive.
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        const SnackBar(
-          content: Text('Önceki egzersize geçiş yakında'),
-          backgroundColor: Color(0xFF0A3A50),
-          behavior: SnackBarBehavior.floating,
-          duration: Duration(milliseconds: 1400),
-        ),
-      );
   }
 
   Future<void> _onNext() async {

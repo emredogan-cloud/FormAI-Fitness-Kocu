@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/cached_image.dart';
+
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonAccent = Color(0xFF4DA6FF);
 
@@ -171,11 +173,10 @@ class PhotoOptionCard extends StatelessWidget {
       child: Icon(fallbackIcon, color: Colors.white54, size: 36),
     );
     if (src.startsWith('http')) {
-      return Image.network(
-        src,
+      return CachedImage(
+        url: src,
         fit: BoxFit.cover,
-        loadingBuilder: (_, child, progress) =>
-            progress == null ? child : Container(color: Colors.white10),
+        memCacheHeight: 400,
         errorBuilder: (_, __, ___) => fb,
       );
     }

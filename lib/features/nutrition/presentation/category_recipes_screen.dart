@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/widgets/cached_image.dart';
 import '../../../core/widgets/error_card.dart';
 import '../domain/models/recipe.dart';
 import '../providers/nutrition_provider.dart';
@@ -243,12 +244,11 @@ class _Thumb extends StatelessWidget {
     );
     final src = imageUrl;
     if (src == null || src.isEmpty) return fallback;
-    return Image.network(
-      src,
+    return CachedImage(
+      url: src,
       fit: BoxFit.cover,
+      memCacheHeight: 300,
       errorBuilder: (_, __, ___) => fallback,
-      loadingBuilder: (_, child, progress) =>
-          progress == null ? child : Container(color: Colors.white10),
     );
   }
 }
@@ -290,7 +290,7 @@ class _EmptyCategoryState extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Yeni tarifler yakında ($category).',
+            'Bu kategoriye uygun tarif bulunamadı ($category).',
             style: const TextStyle(color: Colors.white54, fontSize: 13),
             textAlign: TextAlign.center,
           ),

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/widgets/cached_image.dart';
 import '../domain/models/daily_meal_slot.dart';
 import '../domain/models/recipe.dart';
 import '../providers/daily_menu_provider.dart';
@@ -113,12 +114,11 @@ class _HeroImage extends StatelessWidget {
   Widget build(BuildContext context) {
     final url = imageUrl;
     final image = (url != null && url.isNotEmpty)
-        ? Image.network(
-            url,
+        ? CachedImage(
+            url: url,
             fit: BoxFit.cover,
+            memCacheHeight: 800,
             errorBuilder: (_, __, ___) => _fallback(),
-            loadingBuilder: (_, child, progress) =>
-                progress == null ? child : Container(color: Colors.white10),
           )
         : _fallback();
     return Stack(
