@@ -10,9 +10,13 @@ import '../../features/home/presentation/dashboard_screen.dart';
 import '../../features/monetization/presentation/paywall_screen.dart';
 import '../../features/nutrition/domain/models/recipe.dart';
 import '../../features/nutrition/presentation/category_recipes_screen.dart';
+import '../../features/nutrition/presentation/discover_recipes_screen.dart';
 import '../../features/nutrition/presentation/recipe_detail_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/onboarding/presentation/prediction_screen.dart';
+import '../../features/progress/presentation/badges_screen.dart';
+import '../../features/progress/presentation/calendar_screen.dart';
+import '../../features/progress/presentation/suggestions_screen.dart';
 import '../../features/workout/models/workout_plan_model.dart';
 import '../../features/workout/presentation/plan_detail_screen.dart';
 import '../../features/workout/presentation/workout_camera_screen.dart';
@@ -33,6 +37,13 @@ class AppRoutes {
   /// `context.push('/recipe', extra: recipe)`; the route unpacks
   /// `state.extra as Recipe`.
   static const String recipeDetail = '/recipe';
+
+  // Phase 47A · dedicated screens that Phase 40 temporarily hid
+  // because their destination didn't yet exist.
+  static const String progressCalendar = '/progress/calendar';
+  static const String progressSuggestions = '/progress/suggestions';
+  static const String progressBadges = '/progress/badges';
+  static const String nutritionDiscover = '/nutrition/discover';
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -141,6 +152,27 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final type = state.pathParameters['type'] ?? 'breakfast';
           return CategoryRecipesScreen(categoryType: type);
         },
+      ),
+      // Phase 47A · progress + discovery surfaces.
+      GoRoute(
+        path: AppRoutes.progressCalendar,
+        name: 'progressCalendar',
+        builder: (context, state) => const CalendarScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.progressSuggestions,
+        name: 'progressSuggestions',
+        builder: (context, state) => const SuggestionsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.progressBadges,
+        name: 'progressBadges',
+        builder: (context, state) => const BadgesScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.nutritionDiscover,
+        name: 'nutritionDiscover',
+        builder: (context, state) => const DiscoverRecipesScreen(),
       ),
     ],
   );

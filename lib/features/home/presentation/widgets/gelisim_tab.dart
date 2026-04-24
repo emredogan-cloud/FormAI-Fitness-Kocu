@@ -3,7 +3,9 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/routing/app_router.dart';
 import '../../../workout/models/workout_day_model.dart';
 import '../../../workout/providers/workout_provider.dart';
 import 'today_task_card.dart';
@@ -507,16 +509,77 @@ class _DayGridSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Phase 40: "Takvimi Gör →" linki kaldırıldı. Arkaplanındaki takvim
-    // ekranı henüz hazırlanmadı; placeholder SnackBar mağaza için
-    // "Incomplete App" riski yaratıyor. Başlık ve grid kalıyor.
+    // Phase 47A · "Takvimi Gör →" restored. The Phase 40 concern was
+    // a placeholder SnackBar; the real `/progress/calendar` screen
+    // ships in Phase 47A and maps program days onto calendar dates
+    // relative to today, so the pill can finally route somewhere real.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionLabel(title: '30 GÜNLÜK PROGRAM'),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const _SectionLabel(title: '30 GÜNLÜK PROGRAM'),
+            _SectionLinkPill(
+              label: 'Takvimi Gör',
+              onTap: () => context.push(AppRoutes.progressCalendar),
+            ),
+          ],
+        ),
         const SizedBox(height: 10),
         _DayGrid(days: days, activeDayNumber: activeDayNumber),
       ],
+    );
+  }
+}
+
+/// Phase 47A · reusable "section link" pill rendered flush-right of
+/// a section header. Low-contrast chrome so it sits alongside the
+/// bolder `_SectionLabel` without stealing attention.
+class _SectionLinkPill extends StatelessWidget {
+  const _SectionLinkPill({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(999),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(999),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            color: _neon.withValues(alpha: 0.10),
+            border: Border.all(color: _neon.withValues(alpha: 0.5)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.8,
+                ),
+              ),
+              const SizedBox(width: 4),
+              const Icon(
+                Icons.arrow_forward_rounded,
+                color: _neon,
+                size: 14,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -1167,10 +1230,17 @@ class _AiCoachCard extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          // Phase 40: "Önerilere Git →" linki kaldırıldı. AI öneri
-          // ekranı henüz hazır değil; placeholder navigation mağaza
-          // için red riski. Tavsiye metni AI Koç kartının içinde
-          // kalıyor — tek başına yeterli bir sinyal.
+          const SizedBox(height: 14),
+          // Phase 47A · "Önerilere Git →" restored. Routes to the new
+          // /progress/suggestions screen which surfaces three tailored
+          // mikro-aksiyonlar based on the user's current state.
+          Align(
+            alignment: Alignment.centerLeft,
+            child: _SectionLinkPill(
+              label: 'Önerilere Git',
+              onTap: () => context.push(AppRoutes.progressSuggestions),
+            ),
+          ),
         ],
       ),
     );
@@ -1302,13 +1372,25 @@ class _BadgesSection extends StatelessWidget {
         progress: 0,
       ),
     ];
-    // Phase 40: rozet galerisi ekranı henüz hazır değil — "Tümünü Gör"
-    // linki kaldırıldı. Görünür rozet listesi zaten kullanıcıya tüm
-    // kilitli + aktif rozetleri bir arada gösteriyor.
+    // Phase 47A · "Tümünü Gör →" restored. The full gallery now lives
+    // at /progress/badges; the strip here stays as a quick preview of
+    // the five most-relevant badges for the current progress state.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionLabel(title: 'ROZETLERİN'),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const _SectionLabel(title: 'ROZETLERİN'),
+            Builder(
+              builder: (context) => _SectionLinkPill(
+                label: 'Tümünü Gör',
+                onTap: () => context.push(AppRoutes.progressBadges),
+              ),
+            ),
+          ],
+        ),
         const SizedBox(height: 10),
         SizedBox(
           // Bumped from 112 → 128 to absorb the 3-px bottom overflow

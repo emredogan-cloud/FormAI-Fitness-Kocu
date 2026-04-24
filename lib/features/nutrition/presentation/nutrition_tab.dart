@@ -918,15 +918,69 @@ class _SectionTitle extends StatelessWidget {
 class _DiscoverySectionHeader extends StatelessWidget {
   const _DiscoverySectionHeader();
 
-  // Phase 40: "Tümünü Gör" button removed — the full discovery screen
-  // it pointed at isn't shipped yet, and a "yakında" SnackBar is an
-  // Incomplete App red flag for store review. The title stays; the
-  // horizontal filter strip below the header still lets users explore.
+  // Phase 47A · "Tümünü Gör" restored. Routes to
+  // /nutrition/discover, a dedicated grid that carries over the same
+  // tag-filter chips used by the compact strip below, and renders
+  // every thumbnail through `CachedImage` so repeat visits don't
+  // re-download.
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.fromLTRB(20, 22, 20, 8),
-      child: _SectionTitle(title: 'Tarif Keşfet'),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 22, 20, 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const _SectionTitle(title: 'Tarif Keşfet'),
+          _DiscoverAllPill(
+            onTap: () => context.push('/nutrition/discover'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DiscoverAllPill extends StatelessWidget {
+  const _DiscoverAllPill({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(999),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(999),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            color: _neon.withValues(alpha: 0.10),
+            border: Border.all(color: _neon.withValues(alpha: 0.55)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Tümünü Gör',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.6,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                Icons.arrow_forward_rounded,
+                color: _neon.withValues(alpha: 0.9),
+                size: 14,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
