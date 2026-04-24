@@ -15,10 +15,31 @@
 -- block in Turkish, and a tag array that the Discovery filter chips on the
 -- nutrition tab will match against.
 --
--- Re-running this file will create duplicates (no unique constraint on
--- `title`). To reset: `DELETE FROM public.recipes;` first, or target by
--- title range if you only want to scrub this seed.
+-- Phase 43: the file is now idempotent — re-running is safe. The
+-- preamble dedupes any existing duplicate titles (keeping the earliest
+-- ctid), installs a UNIQUE constraint on `title` if one isn't there
+-- yet, and the INSERT at the bottom uses `ON CONFLICT (title) DO
+-- NOTHING` so a second run becomes a no-op on seeded rows. If the
+-- Phase 24 seed already ran, its copy of the preamble is a no-op here.
 -- =============================================================================
+
+-- Idempotency primer — dedupe existing duplicates, then add the UNIQUE
+-- constraint the `ON CONFLICT` clause below relies on.
+DELETE FROM public.recipes r1
+USING public.recipes r2
+WHERE r1.ctid < r2.ctid
+  AND r1.title = r2.title;
+
+DO $guard$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'recipes_title_unique'
+  ) THEN
+    ALTER TABLE public.recipes
+      ADD CONSTRAINT recipes_title_unique UNIQUE (title);
+  END IF;
+END
+$guard$;
 
 INSERT INTO public.recipes (
   title, meal_type, calories, protein, carbs, fat,
@@ -561,7 +582,8 @@ HAZIRLANIŞI:
 4. Buzdolabında 30 dakika dinlendirin.
 5. Her ısırığın üzerine bir çilek dilimi koyarak servis edin.$$,
   ARRAY['Yüksek Protein']
-);
+)
+ON CONFLICT (title) DO NOTHING;
 
 -- =============================================================================
 -- Sanity check — should add 25 new rows.

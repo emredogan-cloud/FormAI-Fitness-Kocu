@@ -9,21 +9,40 @@
 --   • Vegan           — plant-only, no animal products
 --
 -- Copy this entire file into Supabase's SQL Editor and run it once.
--- Re-running will create duplicates — there is no unique constraint
--- on `title`. To reset before re-seeding:
---
---     TRUNCATE public.recipes;
+-- Phase 43: the file is now idempotent — re-running is safe. The
+-- preamble dedupes any existing duplicate titles (keeping the earliest
+-- ctid), installs a UNIQUE constraint on `title`, and the INSERT at
+-- the bottom uses `ON CONFLICT (title) DO NOTHING` so a second run
+-- becomes a no-op on seeded rows.
 --
 -- Image URLs point to Unsplash photos that match the meal type. If any
--- URL 404s, the Flutter client's `Image.network` fallback renders a
--- neon-gradient placeholder, so broken images never crash the UI.
+-- URL 404s, the Flutter client's cached-network-image fallback renders
+-- a neon-gradient placeholder, so broken images never crash the UI.
 -- =============================================================================
 
 -- 1. Schema: add the `tags` column if it isn't already there.
 ALTER TABLE public.recipes
   ADD COLUMN IF NOT EXISTS tags text[] DEFAULT '{}';
 
--- 2. Bulk insert of the 25 recipes. Dollar-quoted strings ($$...$$) let
+-- 2. Idempotency primer — dedupe existing duplicates, then add the
+--    UNIQUE constraint the `ON CONFLICT` clause below relies on.
+DELETE FROM public.recipes r1
+USING public.recipes r2
+WHERE r1.ctid < r2.ctid
+  AND r1.title = r2.title;
+
+DO $guard$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'recipes_title_unique'
+  ) THEN
+    ALTER TABLE public.recipes
+      ADD CONSTRAINT recipes_title_unique UNIQUE (title);
+  END IF;
+END
+$guard$;
+
+-- 3. Bulk insert of the 25 recipes. Dollar-quoted strings ($$...$$) let
 --    the instructions hold literal newlines and Turkish apostrophes
 --    without escaping.
 INSERT INTO public.recipes (
@@ -594,7 +613,8 @@ HAZIRLANIŞI:
 3. Uzun bir bardağa aktarın.
 4. Üzerine dilerseniz biraz kakao tozu serpip hemen için.$$,
   ARRAY['Vegan']
-);
+)
+ON CONFLICT (title) DO NOTHING;
 
 -- =============================================================================
 -- Sanity check — should return 25 rows after a fresh run.
