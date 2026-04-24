@@ -60,11 +60,14 @@ class GelisimTab extends ConsumerWidget {
         weeklyDays.where((d) => d?.isCompleted ?? false).length;
     final weeklyKcal = weeklyCompleted * _kcalPerDay;
 
+    // Section spacing normalized to the 20–24 px system. 14 stays on
+    // the top-row → today-task seam because those two blocks are a
+    // single logical "status + next action" unit.
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 40),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
       children: [
         _TopHeader(streak: streak),
-        const SizedBox(height: 18),
+        const SizedBox(height: 22),
         _ProgramStatsRow(
           percent: percent,
           completedCount: completedCount,
@@ -75,17 +78,17 @@ class GelisimTab extends ConsumerWidget {
           const _ProgramCompleteCard()
         else if (activeDay != null)
           _TodayTaskCard(activeDay: activeDay),
-        const SizedBox(height: 22),
+        const SizedBox(height: 24),
         _DayGridSection(days: days, activeDayNumber: activeDayNumber),
-        const SizedBox(height: 22),
+        const SizedBox(height: 24),
         _StatsCardsRow(
           weeklyDays: weeklyDays,
           weeklyCompleted: weeklyCompleted,
           weeklyKcal: weeklyKcal,
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 22),
         _AiCoachCard(streak: streak, percent: percent),
-        const SizedBox(height: 18),
+        const SizedBox(height: 22),
         _BadgesSection(
           completedCount: completedCount,
           streak: streak,
@@ -464,48 +467,50 @@ class _TodayTaskCard extends ConsumerWidget {
     final focus = _focusLabel(activeDay);
     final minutes = _estimateMinutes(activeDay);
     final level = _levelLabel(activeDay);
+    // Primary-action card: icon + title/sub on top, full-width gradient
+    // CTA below. Promoting the button to its own row (vs an inline pill
+    // on the right) makes this the clear hierarchy peak of the screen
+    // and lets the title wrap to 2 lines without competing for the
+    // CTA's horizontal space.
     return _SoftCard(
       accent: _neon,
-      padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           const _CardLabel(text: 'BUGÜNKÜ GÖREV'),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: 52,
+                height: 52,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(14),
                   color: _neon.withValues(alpha: 0.18),
-                  border: Border.all(color: _neon.withValues(alpha: 0.4)),
+                  border: Border.all(color: _neon.withValues(alpha: 0.45)),
                 ),
                 child: const Icon(
                   Icons.fitness_center,
                   color: _neon,
-                  size: 22,
+                  size: 26,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // maxLines: 2 so long focus labels ("Kardiyo & Tüm
-                    // Vücut HIIT") wrap instead of truncating to
-                    // "Gün 2 - ...". Line height tightened so 2 lines
-                    // still fit alongside the sub + CTA pill.
                     Text(
                       'Gün ${activeDay.dayNumber} – $focus',
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 15,
+                        fontSize: 17,
                         fontWeight: FontWeight.w900,
                         height: 1.2,
                         letterSpacing: 0.2,
@@ -516,17 +521,17 @@ class _TodayTaskCard extends ConsumerWidget {
                       '$minutes dk · $level',
                       style: const TextStyle(
                         color: Colors.white54,
-                        fontSize: 12,
+                        fontSize: 12.5,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 10),
-              _PrimaryCta(onTap: () => _launch(context, ref)),
             ],
           ),
+          const SizedBox(height: 14),
+          _PrimaryCta(onTap: () => _launch(context, ref)),
         ],
       ),
     );
@@ -608,65 +613,68 @@ class _TodayTaskCard extends ConsumerWidget {
   }
 }
 
-/// Pill-shaped primary CTA. `StadiumBorder`-equivalent via
-/// `borderRadius: 999` (applied consistently on every layer —
-/// `DecoratedBox`, `Material`, `Ink`, `InkWell` — so the ripple, shadow,
-/// and gradient all clip to the same capsule silhouette).
+/// Full-width primary CTA — strong `_neonDeep → _neon` gradient + a
+/// subtle glow halo. `borderRadius: 16` is applied on every layer
+/// (shadow, Material, Ink, InkWell) so the ripple, gradient, and
+/// shadow all clip to the same silhouette.
 class _PrimaryCta extends StatelessWidget {
   const _PrimaryCta({required this.onTap});
   final VoidCallback onTap;
 
-  static final BorderRadius _pill = BorderRadius.circular(999);
+  static final BorderRadius _radius = BorderRadius.circular(16);
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: _pill,
-        boxShadow: [
-          BoxShadow(
-            color: _neon.withValues(alpha: 0.55),
-            blurRadius: 16,
-            spreadRadius: 0.2,
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: _pill,
-        child: Ink(
-          decoration: BoxDecoration(
-            borderRadius: _pill,
-            gradient: const LinearGradient(
-              colors: [_neonDeep, _neon],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+    return SizedBox(
+      width: double.infinity,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: _radius,
+          boxShadow: [
+            BoxShadow(
+              color: _neon.withValues(alpha: 0.50),
+              blurRadius: 22,
+              spreadRadius: 0.4,
             ),
-          ),
-          child: InkWell(
-            borderRadius: _pill,
-            onTap: onTap,
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Antrenmana Başla',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.2,
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: _radius,
+          child: Ink(
+            decoration: BoxDecoration(
+              borderRadius: _radius,
+              gradient: const LinearGradient(
+                colors: [_neonDeep, _neon],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: InkWell(
+              borderRadius: _radius,
+              onTap: onTap,
+              child: const Padding(
+                padding: EdgeInsets.symmetric(vertical: 14),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'ANTRENMANA BAŞLA',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.4,
+                      ),
                     ),
-                  ),
-                  SizedBox(width: 6),
-                  Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    color: Colors.white,
-                    size: 11,
-                  ),
-                ],
+                    SizedBox(width: 8),
+                    Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      color: Colors.white,
+                      size: 12,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1072,7 +1080,12 @@ class _StatsCardsRow extends StatelessWidget {
     // natural height. A concrete height + stretch + `Expanded`-flex chart
     // removes the circular constraint.
     return SizedBox(
-      height: 132,
+      // 132 → 140: gives the chart column a few extra pixels so a
+      // larger `unit` label or a locale that measures taller metrics
+      // can't push the card past its bounds. The `_MiniBars` math is
+      // now deterministic (explicit label-strip + gap), but keeping
+      // slack here is cheap insurance.
+      height: 140,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -1151,12 +1164,12 @@ class _StatChartCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _SoftCard(
       accent: accent,
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _CardLabel(text: label, color: accent),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -1217,11 +1230,21 @@ class _MiniBars extends StatelessWidget {
   final List<Color> gradientColors;
   final bool rounded;
 
+  // Explicit label strip height + gap so the column math is exact and
+  // the chart can't over-subscribe the parent. The prior `maxHeight - 14`
+  // formula under-reserved the label row (fontSize 8.5 × default
+  // line-height lands at ~11-12 px, plus ascender/descender), which
+  // was the deterministic source of the 2-px bottom overflow.
+  static const double _labelStripHeight = 14;
+  static const double _chartLabelGap = 4;
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final chartHeight = (constraints.maxHeight - 14).clamp(10.0, 80.0);
+        final reserved = _labelStripHeight + _chartLabelGap;
+        final chartHeight =
+            (constraints.maxHeight - reserved).clamp(10.0, 80.0);
         return Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
@@ -1257,25 +1280,29 @@ class _MiniBars extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                for (var i = 0; i < labels.length; i++) ...[
-                  Expanded(
-                    child: Center(
-                      child: Text(
-                        labels[i].substring(0, 1),
-                        style: const TextStyle(
-                          color: Colors.white38,
-                          fontSize: 8.5,
-                          fontWeight: FontWeight.w700,
+            const SizedBox(height: _chartLabelGap),
+            SizedBox(
+              height: _labelStripHeight,
+              child: Row(
+                children: [
+                  for (var i = 0; i < labels.length; i++) ...[
+                    Expanded(
+                      child: Center(
+                        child: Text(
+                          labels[i].substring(0, 1),
+                          style: const TextStyle(
+                            color: Colors.white38,
+                            fontSize: 8.5,
+                            fontWeight: FontWeight.w700,
+                            height: 1.1,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  if (i < labels.length - 1) const SizedBox(width: 3),
+                    if (i < labels.length - 1) const SizedBox(width: 3),
+                  ],
                 ],
-              ],
+              ),
             ),
           ],
         );
@@ -1390,17 +1417,17 @@ class _AiCoachCard extends StatelessWidget {
               const _CardLabel(text: 'AI KOÇ'),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Text(
             copy,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 13,
-              height: 1.4,
+              height: 1.55,
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           // Phase 37: sleek transparent TextButton (no outlined chrome),
           // neon-tint text + small `arrow_forward_ios` icon. Matches
           // the reference's "link" treatment rather than a second CTA.
@@ -1581,7 +1608,7 @@ class _BadgesSection extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
             itemCount: badges.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            separatorBuilder: (_, __) => const SizedBox(width: 14),
             itemBuilder: (context, index) => _HexBadge(data: badges[index]),
           ),
         ),
@@ -1752,7 +1779,7 @@ class _SoftCard extends StatelessWidget {
   const _SoftCard({
     required this.child,
     required this.accent,
-    this.padding = const EdgeInsets.fromLTRB(14, 14, 14, 12),
+    this.padding = const EdgeInsets.all(16),
   });
 
   final Widget child;
