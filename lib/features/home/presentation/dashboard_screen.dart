@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/services/app_preferences.dart';
 import '../../nutrition/presentation/nutrition_tab.dart';
 import '../../nutrition/presentation/widgets/nutrition_onboarding_sheet.dart';
+import '../../progress/presentation/widgets/badge_unlock_dialog.dart';
+import '../../progress/providers/badge_unlocks_provider.dart';
 import 'widgets/antrenman_tab.dart';
 import 'widgets/gelisim_tab.dart';
 import 'widgets/profile_tab.dart';
@@ -18,11 +20,80 @@ class DashboardScreen extends ConsumerStatefulWidget {
   ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+class _DashboardScreenState extends ConsumerState<DashboardScreen>
+    with RouteAware {
   int _index = 0;
+  // Phase 48.1 · whether the dashboard's PageRoute is currently the
+  // topmost route in the navigator. Toggled from `didPush` /
+  // `didPushNext` / `didPopNext`. We only fire badge celebrations when
+  // this is true, so an unlock that resolves while the user is still
+  // looking at the workout summary overlay (a route pushed on top)
+  // gets queued and surfaced after they pop back.
+  bool _routeIsCurrent = true;
+  RouteObserver<PageRoute<dynamic>>? _routeObserver;
+  // Tracks whether a celebration dialog is in flight so we don't stack
+  // two on top of each other if the unlock set churns mid-celebration.
+  bool _celebrating = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute<dynamic>) {
+      _routeObserver?.unsubscribe(this);
+      _routeObserver = ref.read(routeObserverProvider);
+      _routeObserver!.subscribe(this, route);
+    }
+  }
+
+  @override
+  void dispose() {
+    _routeObserver?.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPush() {
+    _routeIsCurrent = true;
+    // Right after first push, seed the celebration history with whatever
+    // is already unlocked so we don't replay yesterday's wins on cold
+    // start. The seed is null-checked inside `_maybeCelebrate`.
+    _maybeCelebrate();
+  }
+
+  @override
+  void didPopNext() {
+    // Returned to the dashboard from a pushed route (e.g. /workout).
+    // Now is the moment any badges that unlocked while we were
+    // off-screen become safe to celebrate.
+    _routeIsCurrent = true;
+    _maybeCelebrate();
+  }
+
+  @override
+  void didPushNext() {
+    // Another route was pushed on top of the dashboard. Suppress
+    // celebrations until we get a `didPopNext`.
+    _routeIsCurrent = false;
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Phase 48.1 · listen for unlock-set transitions. The dialog
+    // itself is shown only when `_routeIsCurrent` is true; otherwise
+    // the unlocked id is held in the celebrated provider's diff and
+    // surfaced on the next `didPopNext`.
+    ref.listen<Set<String>>(unlockedBadgesProvider, (previous, next) {
+      // First emission seeds `celebratedBadgesProvider` so existing
+      // unlocks don't trigger a celebration storm on cold start.
+      final celebrated = ref.read(celebratedBadgesProvider);
+      if (celebrated == null) {
+        ref.read(celebratedBadgesProvider.notifier).setAll(next);
+        return;
+      }
+      _maybeCelebrate();
+    });
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
@@ -42,6 +113,37 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         onChanged: _onTabChanged,
       ),
     );
+  }
+
+  Future<void> _maybeCelebrate() async {
+    if (!mounted || !_routeIsCurrent || _celebrating) return;
+    final unlocked = ref.read(unlockedBadgesProvider);
+    final celebrated = ref.read(celebratedBadgesProvider) ?? unlocked;
+    final pending = unlocked.difference(celebrated).toList();
+    if (pending.isEmpty) {
+      // Initialise celebrated set if it was null but no unlocks pending.
+      if (ref.read(celebratedBadgesProvider) == null) {
+        ref.read(celebratedBadgesProvider.notifier).setAll(unlocked);
+      }
+      return;
+    }
+    _celebrating = true;
+    try {
+      for (final id in pending) {
+        if (!mounted || !_routeIsCurrent) break;
+        final badge = badgeById(id);
+        if (badge == null) {
+          // Mark anyway so an unknown id doesn't loop forever.
+          ref.read(celebratedBadgesProvider.notifier).add(id);
+          continue;
+        }
+        await showBadgeUnlockedDialog(context, badge);
+        if (!mounted) break;
+        ref.read(celebratedBadgesProvider.notifier).add(id);
+      }
+    } finally {
+      _celebrating = false;
+    }
   }
 
   void _onTabChanged(int newIndex) {

@@ -17,6 +17,7 @@ import '../../features/onboarding/presentation/prediction_screen.dart';
 import '../../features/progress/presentation/badges_screen.dart';
 import '../../features/progress/presentation/calendar_screen.dart';
 import '../../features/progress/presentation/suggestions_screen.dart';
+import '../../features/progress/providers/badge_unlocks_provider.dart';
 import '../../features/workout/models/workout_plan_model.dart';
 import '../../features/workout/presentation/plan_detail_screen.dart';
 import '../../features/workout/presentation/workout_camera_screen.dart';
@@ -49,6 +50,11 @@ class AppRoutes {
 final appRouterProvider = Provider<GoRouter>((ref) {
   final prefs = ref.watch(appPreferencesProvider);
   final refreshListenable = ref.watch(authRefreshListenableProvider);
+  // Phase 48.1 · register the global RouteObserver so DashboardScreen
+  // can become RouteAware and learn when a pushed route (e.g. the
+  // workout camera) pops back. The observer is owned by Riverpod so a
+  // single instance is shared across the app's lifetime.
+  final routeObserver = ref.watch(routeObserverProvider);
 
   String? redirect(path) {
     if (prefs.isFirstTime) {
@@ -76,6 +82,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: redirect(AppRoutes.dashboard) ?? AppRoutes.dashboard,
     refreshListenable: refreshListenable,
+    observers: [routeObserver],
     redirect: (context, state) => redirect(state.matchedLocation),
     routes: [
       GoRoute(

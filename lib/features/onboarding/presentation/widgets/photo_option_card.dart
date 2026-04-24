@@ -56,59 +56,66 @@ class PhotoOptionCard extends StatelessWidget {
                 flex: 5,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(18, 14, 10, 14),
+                  // Phase 48.1 · the previous `Flexible` + inner Column
+                  // with `MainAxisSize.min` reported its intrinsic height
+                  // (icon 24 + 8 + title ~22 + 4 + subtitle 2 lines × ~17
+                  // ≈ 92 px) and refused to compress further, blowing a
+                  // 22 px overflow on the 110 px nutrition card slot.
+                  // The new layout `Expanded`s the text block and wraps
+                  // it in a `NeverScrollableScrollPhysics` SingleChildScroll
+                  // view so any overflow is absorbed by clipping rather
+                  // than thrown as an error. The chevron stays pinned to
+                  // the bottom via Column's MainAxisAlignment.end.
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Icon + title + subtitle stack. `Flexible` +
-                      // `MainAxisSize.min` let it compress when the parent
-                      // row gets short; `maxLines: 2` on the subtitle keeps
-                      // "Süt, peynir, yoğurt vb." from spilling off the
-                      // bottom of the card instead of silently clipping
-                      // (the old `NeverScrollable SingleChildScrollView`
-                      // trick was absorbing overflow by cutting glyphs in
-                      // half).
-                      Flexible(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(
-                              fallbackIcon,
-                              color: selected ? _neon : Colors.white70,
-                              size: 24,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w900,
+                      Expanded(
+                        child: SingleChildScrollView(
+                          physics: const NeverScrollableScrollPhysics(),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                fallbackIcon,
+                                color: selected ? _neon : Colors.white70,
+                                size: 24,
                               ),
-                            ),
-                            if (subtitle.isNotEmpty) ...[
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 8),
                               Text(
-                                subtitle,
-                                maxLines: 2,
+                                title,
+                                maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
-                                  color: Colors.white54,
-                                  fontSize: 12.5,
-                                  height: 1.3,
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w900,
                                 ),
                               ),
+                              if (subtitle.isNotEmpty) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  subtitle,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: Colors.white54,
+                                    fontSize: 12.5,
+                                    height: 1.3,
+                                  ),
+                                ),
+                              ],
                             ],
-                          ],
+                          ),
                         ),
                       ),
-                      Icon(
-                        selected ? Icons.check_circle : Icons.chevron_right,
-                        color: selected ? _neon : Colors.white24,
-                        size: 22,
+                      Align(
+                        alignment: Alignment.bottomLeft,
+                        child: Icon(
+                          selected ? Icons.check_circle : Icons.chevron_right,
+                          color: selected ? _neon : Colors.white24,
+                          size: 22,
+                        ),
                       ),
                     ],
                   ),

@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/routing/app_router.dart';
 import '../../../../core/services/app_preferences.dart';
 import '../../../../core/services/notification_service.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/audio_feedback.dart';
 import '../../../../core/utils/legal_urls.dart';
 import '../../../auth/providers/auth_provider.dart';
@@ -15,6 +17,7 @@ import 'stat_tile.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonAccent = Color(0xFF4DA6FF);
+const Color _danger = Color(0xFFFF4D6D);
 
 // Target physique enum names live in SharedPreferences as raw strings; these
 // are the same values used by the onboarding wizard. Keeping the map local so
@@ -142,6 +145,46 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
           ],
         ),
         const SizedBox(height: 28),
+        // Phase 48.1 · `HESAP AYARLARI` block surfaces the four
+        // mandated account actions (Profili Düzenle, Şifreyi Değiştir,
+        // Bildirimler, Hesabı Sil) as discrete, always-visible tiles
+        // rather than burying them behind a single "Hesap Ayarları"
+        // shortcut. The PM specifically flagged this section as
+        // missing in the Phase 48 review; rebuilding it here keeps the
+        // discovery cost to a single tap from the Profile tab.
+        const _SettingsHeader(title: 'HESAP AYARLARI'),
+        const SizedBox(height: 10),
+        _SettingsTile(
+          icon: Icons.person_outline,
+          title: 'Profili Düzenle',
+          subtitle: 'Yaş, boy, kilo ve hedefini güncelle.',
+          onTap: () => _openEditSheet(metrics),
+        ),
+        _SettingsTile(
+          icon: Icons.lock_outline,
+          title: 'Şifreyi Değiştir',
+          subtitle: user?.isAnonymous ?? true
+              ? 'Önce bir hesap oluşturman gerekiyor.'
+              : 'Yeni bir Supabase şifresi belirle.',
+          onTap: user?.isAnonymous ?? true
+              ? null
+              : () => _openChangePasswordSheet(context),
+        ),
+        _SettingsTile(
+          icon: Icons.notifications_outlined,
+          title: 'Bildirimler',
+          subtitle: 'Günlük hatırlatma saati belirle.',
+          onTap: () => _pickReminderTime(context),
+        ),
+        if (!(user?.isAnonymous ?? true))
+          _DangerSettingsTile(
+            icon: Icons.delete_forever_outlined,
+            title: 'Hesabı Sil',
+            subtitle:
+                'Tüm antrenman ve beslenme verilerini kalıcı olarak siler.',
+            onTap: () => context.push(AppRoutes.accountSettings),
+          ),
+        const SizedBox(height: 28),
         const _SettingsHeader(title: 'AYARLAR'),
         const SizedBox(height: 10),
         _SettingsTile(
@@ -155,12 +198,6 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
           title: 'Sesli Koç Testi',
           subtitle: 'TTS motorunu hızlıca dene',
           onTap: () => _runTtsTest(context),
-        ),
-        _SettingsTile(
-          icon: Icons.notifications_outlined,
-          title: 'Bildirimler',
-          subtitle: 'Günlük hatırlatma saati belirle',
-          onTap: () => _pickReminderTime(context),
         ),
         _SettingsTile(
           icon: Icons.shield_outlined,
@@ -181,19 +218,12 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
         ),
         if (user?.isAnonymous ?? false)
           _GuestLoginTile(onTap: () => context.push(AppRoutes.auth))
-        else ...[
-          _SettingsTile(
-            icon: Icons.manage_accounts_outlined,
-            title: 'Hesap Ayarları',
-            subtitle: 'Hesabını yönet ve kaldır',
-            onTap: () => context.push(AppRoutes.accountSettings),
-          ),
+        else
           _SettingsTile(
             icon: Icons.logout,
             title: 'Çıkış Yap',
             onTap: () => _signOut(context),
           ),
-        ],
       ],
     );
   }
@@ -229,6 +259,43 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     setState(
         () {}); // userMetrics reads fresh from SharedPreferences on next build
     _toast(context, 'Bilgiler güncellendi');
+  }
+
+  Future<void> _openChangePasswordSheet(BuildContext context) async {
+    final password = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF111118),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => const _ChangePasswordSheet(),
+    );
+    if (password == null || password.isEmpty || !context.mounted) return;
+    try {
+      await Supabase.instance.client.auth.updateUser(
+        UserAttributes(password: password),
+      );
+      if (!context.mounted) return;
+      _toast(context, 'Şifre güncellendi');
+    } on AuthException catch (e, st) {
+      AppLogger.warning(
+        'updatePassword AuthException',
+        category: 'auth',
+        data: {'error': e.message, 'stack': st.toString()},
+      );
+      if (!context.mounted) return;
+      _toast(context, 'Şifre güncellenemedi: ${e.message}');
+    } catch (e, st) {
+      AppLogger.error(
+        'updatePassword failed',
+        e,
+        stackTrace: st,
+        category: 'auth',
+      );
+      if (!context.mounted) return;
+      _toast(context, 'Şifre güncellenemedi. Lütfen tekrar dene.');
+    }
   }
 
   Future<void> _pickReminderTime(BuildContext context) async {
@@ -670,10 +737,14 @@ class _SettingsTile extends StatelessWidget {
   final IconData icon;
   final String title;
   final String? subtitle;
-  final VoidCallback onTap;
+  // Nullable so a "disabled" state (e.g. Şifreyi Değiştir for anonymous
+  // users) can render a greyed-out tile that still tells the user *why*
+  // it's not actionable instead of disappearing entirely.
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
+    final disabled = onTap == null;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -694,9 +765,13 @@ class _SettingsTile extends StatelessWidget {
                 height: 40,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
-                  color: _neon.withValues(alpha: 0.18),
+                  color: _neon.withValues(alpha: disabled ? 0.06 : 0.18),
                 ),
-                child: Icon(icon, color: _neon, size: 20),
+                child: Icon(
+                  icon,
+                  color: disabled ? Colors.white38 : _neon,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -705,8 +780,8 @@ class _SettingsTile extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: disabled ? Colors.white54 : Colors.white,
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                       ),
@@ -724,13 +799,252 @@ class _SettingsTile extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
-                color: Colors.white38,
+                color: disabled ? Colors.white24 : Colors.white38,
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Phase 48.1 · destructive variant of `_SettingsTile`. Same chrome,
+/// red accent. Used for the "Hesabı Sil" entry inside the HESAP
+/// AYARLARI block so the user instantly recognises it as a permanent
+/// action without having to navigate into the dedicated screen first.
+class _DangerSettingsTile extends StatelessWidget {
+  const _DangerSettingsTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.only(top: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            color: _danger.withValues(alpha: 0.06),
+            border: Border.all(color: _danger.withValues(alpha: 0.45)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: _danger.withValues(alpha: 0.18),
+                ),
+                child: Icon(icon, color: _danger, size: 20),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: _danger,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        color: Colors.white54,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: _danger,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Phase 48.1 · inline change-password sheet surfaced from the Profile
+/// tab's HESAP AYARLARI block. Identical contract to the sheet inside
+/// `account_settings_screen.dart`: returns the new password as a String
+/// (or null on cancel) so the caller can issue the Supabase
+/// `updateUser(password:)` RPC.
+class _ChangePasswordSheet extends StatefulWidget {
+  const _ChangePasswordSheet();
+
+  @override
+  State<_ChangePasswordSheet> createState() => _ChangePasswordSheetState();
+}
+
+class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
+  final _formKey = GlobalKey<FormState>();
+  final _passwordCtl = TextEditingController();
+  final _confirmCtl = TextEditingController();
+  bool _obscure = true;
+
+  @override
+  void dispose() {
+    _passwordCtl.dispose();
+    _confirmCtl.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+    Navigator.of(context).pop(_passwordCtl.text);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final insets = MediaQuery.of(context).viewInsets.bottom;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20, 18, 20, 20 + insets),
+      child: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Şifreyi Değiştir',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Yeni şifren en az 8 karakter olmalı.',
+                style: TextStyle(color: Colors.white54, fontSize: 12),
+              ),
+              const SizedBox(height: 18),
+              TextFormField(
+                controller: _passwordCtl,
+                obscureText: _obscure,
+                style: const TextStyle(color: Colors.white),
+                decoration: _decoration(
+                  label: 'Yeni şifre',
+                  icon: Icons.lock_outline,
+                  suffix: IconButton(
+                    onPressed: () => setState(() => _obscure = !_obscure),
+                    icon: Icon(
+                      _obscure ? Icons.visibility : Icons.visibility_off,
+                      color: Colors.white54,
+                    ),
+                  ),
+                ),
+                validator: (value) {
+                  final v = value ?? '';
+                  if (v.length < 8) return 'En az 8 karakter';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _confirmCtl,
+                obscureText: _obscure,
+                style: const TextStyle(color: Colors.white),
+                decoration: _decoration(
+                  label: 'Şifreyi tekrar gir',
+                  icon: Icons.lock_outline,
+                ),
+                validator: (value) {
+                  if ((value ?? '') != _passwordCtl.text) {
+                    return 'Şifreler eşleşmiyor';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 22),
+              FilledButton(
+                onPressed: _submit,
+                style: FilledButton.styleFrom(
+                  backgroundColor: _neon,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  textStyle: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.5,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: const Text('ŞİFREYİ GÜNCELLE'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  InputDecoration _decoration({
+    required String label,
+    required IconData icon,
+    Widget? suffix,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(color: Colors.white54),
+      prefixIcon: Icon(icon, color: _neon),
+      suffixIcon: suffix,
+      filled: true,
+      fillColor: Colors.white.withValues(alpha: 0.04),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Colors.white24),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: _neon, width: 1.5),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Colors.redAccent),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
       ),
     );
   }

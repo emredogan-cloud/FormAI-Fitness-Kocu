@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -7,6 +9,7 @@ import '../../../onboarding/presentation/widgets/photo_option_card.dart';
 import '../../../onboarding/providers/wizard_provider.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
+const Color _success = Color(0xFF22C55E);
 
 // Food + meal-frequency photos — duplicated from `onboarding_screen.dart`
 // (where the nutrition steps used to live) so the deferred flow keeps
@@ -99,12 +102,22 @@ class NutritionOnboardingSheet extends ConsumerStatefulWidget {
       _NutritionOnboardingSheetState();
 }
 
+/// Phase 48.1 · the sheet's overall lifecycle. The user moves linearly:
+///   `questions` → `calculating` (2.5 s "labor illusion") → `ready`.
+/// Closing only happens when the user taps the explicit "Menüye Git"
+/// CTA on the `ready` panel — closing on the timer would feel abrupt
+/// and short-circuit the feeling of value the labor illusion creates.
+enum _OnboardingPhase { questions, calculating, ready }
+
 class _NutritionOnboardingSheetState
     extends ConsumerState<NutritionOnboardingSheet> {
   static const int _total = 4;
+  static const Duration _laborIllusionDuration = Duration(milliseconds: 2500);
   final PageController _controller = PageController();
   int _index = 0;
   bool _busy = false;
+  _OnboardingPhase _phase = _OnboardingPhase.questions;
+  Timer? _laborTimer;
 
   @override
   void initState() {
@@ -120,13 +133,14 @@ class _NutritionOnboardingSheetState
 
   @override
   void dispose() {
+    _laborTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
 
   void _next() {
     if (_index >= _total - 1) {
-      _finish();
+      _enterCalculating();
       return;
     }
     _controller.nextPage(
@@ -143,9 +157,30 @@ class _NutritionOnboardingSheetState
     );
   }
 
-  Future<void> _finish() async {
+  /// Phase 48.1 · "labor illusion".
+  ///
+  /// The user has answered all four nutrition questions; we now show a
+  /// calculating panel for ~2.5 seconds before flipping to the ready
+  /// state. Persistence (saveUserMetrics + completeNutritionOnboarding
+  /// + analytics) runs concurrently with the visible delay so the
+  /// transition feels like real work, not artificial latency. The
+  /// sheet does NOT close yet — only the explicit "Menüye Git" tap on
+  /// the ready panel triggers `_dismiss`.
+  void _enterCalculating() {
     if (_busy) return;
-    setState(() => _busy = true);
+    setState(() {
+      _busy = true;
+      _phase = _OnboardingPhase.calculating;
+    });
+    unawaited(_persistPreferences());
+    _laborTimer?.cancel();
+    _laborTimer = Timer(_laborIllusionDuration, () {
+      if (!mounted) return;
+      setState(() => _phase = _OnboardingPhase.ready);
+    });
+  }
+
+  Future<void> _persistPreferences() async {
     final wizard = ref.read(wizardProvider);
     final prefs = ref.read(appPreferencesProvider);
     // Merge the four nutrition fields into whatever `user_metrics`
@@ -159,12 +194,26 @@ class _NutritionOnboardingSheetState
     await prefs.saveUserMetrics(existing);
     await prefs.completeNutritionOnboarding();
     AnalyticsService.instance.nutritionOnboardingCompleted();
+  }
+
+  void _dismiss() {
     if (!mounted) return;
     Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
+    switch (_phase) {
+      case _OnboardingPhase.questions:
+        return _buildQuestions();
+      case _OnboardingPhase.calculating:
+        return const _CalculatingPanel();
+      case _OnboardingPhase.ready:
+        return _ReadyPanel(onContinue: _dismiss);
+    }
+  }
+
+  Widget _buildQuestions() {
     return Column(
       children: [
         _SheetHeader(
@@ -192,6 +241,239 @@ class _NutritionOnboardingSheetState
           ),
         ),
       ],
+    );
+  }
+}
+
+// ============================================================================
+// Phase 48.1 · Labor Illusion + Ready panels.
+//
+// `_CalculatingPanel` runs for `_laborIllusionDuration` (~2.5 s) and
+// rotates two reassuring status lines so the user feels work happening
+// instead of an instantaneous-but-jarring sheet close. The animation
+// is a pulsing neon halo around the FormAI logo + a CircularProgress
+// indicator at the top — kept self-contained so a future redesign can
+// swap the visual without touching the lifecycle code.
+//
+// `_ReadyPanel` lands the moment after with a green checkmark, the
+// "Planınız Hazır!" headline, and a single "Menüye Git" CTA. The
+// sheet does not auto-dismiss; the CTA is the only exit so the user
+// always feels they completed the flow themselves.
+// ============================================================================
+
+class _CalculatingPanel extends StatefulWidget {
+  const _CalculatingPanel();
+
+  @override
+  State<_CalculatingPanel> createState() => _CalculatingPanelState();
+}
+
+class _CalculatingPanelState extends State<_CalculatingPanel>
+    with SingleTickerProviderStateMixin {
+  static const List<String> _statusLines = [
+    'Makrolarınız hesaplanıyor...',
+    'Size özel tarifler seçiliyor...',
+    'Beslenme planınız hazırlanıyor...',
+  ];
+
+  late final AnimationController _ctrl = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1400),
+  )..repeat(reverse: true);
+
+  Timer? _statusTimer;
+  int _statusIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Cycle through the status lines so the panel reads as "multiple
+    // things happening" instead of a single static spinner.
+    _statusTimer = Timer.periodic(const Duration(milliseconds: 800), (_) {
+      if (!mounted) return;
+      setState(() => _statusIndex = (_statusIndex + 1) % _statusLines.length);
+    });
+  }
+
+  @override
+  void dispose() {
+    _statusTimer?.cancel();
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          AnimatedBuilder(
+            animation: _ctrl,
+            builder: (context, _) {
+              final glow = 0.35 + _ctrl.value * 0.45;
+              return Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    colors: [_neon, Color(0xFF4DA6FF)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _neon.withValues(alpha: glow),
+                      blurRadius: 32,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: const SizedBox(
+                  width: 56,
+                  height: 56,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    color: Colors.white,
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 28),
+          const Text(
+            'Planın Hazırlanıyor',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.4,
+            ),
+          ),
+          const SizedBox(height: 12),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 280),
+            child: Text(
+              _statusLines[_statusIndex],
+              key: ValueKey<int>(_statusIndex),
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(999),
+              color: _neon.withValues(alpha: 0.12),
+              border: Border.all(color: _neon.withValues(alpha: 0.45)),
+            ),
+            child: const Text(
+              'Lütfen bekle',
+              style: TextStyle(
+                color: _neon,
+                fontSize: 11,
+                letterSpacing: 2,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReadyPanel extends StatelessWidget {
+  const _ReadyPanel({required this.onContinue});
+  final VoidCallback onContinue;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [
+                  _success.withValues(alpha: 0.85),
+                  _success.withValues(alpha: 0.45),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: _success.withValues(alpha: 0.55),
+                  blurRadius: 28,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            alignment: Alignment.center,
+            child: const Icon(
+              Icons.check_rounded,
+              color: Colors.white,
+              size: 64,
+            ),
+          ),
+          const SizedBox(height: 28),
+          const Text(
+            'Planınız Hazır!',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.4,
+            ),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'Tercihlerine göre tarifler ve makrolar seçildi. '
+            'Beslenme menünü hemen incelemeye başlayabilirsin.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 14,
+              height: 1.55,
+            ),
+          ),
+          const SizedBox(height: 28),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: onContinue,
+              icon: const Icon(Icons.restaurant_rounded, size: 18),
+              label: const Text('Menüye Git'),
+              style: FilledButton.styleFrom(
+                backgroundColor: _success,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.6,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

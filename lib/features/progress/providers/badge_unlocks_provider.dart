@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/services/app_preferences.dart';
@@ -118,6 +119,43 @@ BadgeDefinition? badgeById(String id) {
     if (b.id == id) return b;
   }
   return null;
+}
+
+/// Phase 48.1 · global `RouteObserver` shared between the GoRouter
+/// navigator (registered as an `observer` on the GoRouter instance)
+/// and `DashboardScreen` (subscribed via `RouteAware` to receive
+/// `didPopNext` when the user returns from a pushed route like the
+/// workout camera). Held as a `Provider` so tests can override it
+/// with a no-op. Generic argument is `PageRoute` because GoRoute's
+/// MaterialPageRoute is a PageRoute, and only PageRoutes participate
+/// in this observer.
+final routeObserverProvider = Provider<RouteObserver<PageRoute<dynamic>>>(
+  (ref) => RouteObserver<PageRoute<dynamic>>(),
+);
+
+/// Phase 48.1 · the set of badge IDs we have already shown a
+/// celebration dialog for. Initialised to `null`; the dashboard seeds
+/// it with the *current* unlocked set on first build so the app
+/// doesn't replay yesterday's celebrations on every cold start.
+/// Persisted in-memory only — a full app restart re-seeds, which is
+/// acceptable since the user already saw the dialog the first time.
+final celebratedBadgesProvider =
+    NotifierProvider<CelebratedBadgesNotifier, Set<String>?>(
+  CelebratedBadgesNotifier.new,
+);
+
+class CelebratedBadgesNotifier extends Notifier<Set<String>?> {
+  @override
+  Set<String>? build() => null;
+
+  void setAll(Set<String> ids) {
+    state = Set<String>.from(ids);
+  }
+
+  void add(String id) {
+    final current = state ?? const <String>{};
+    state = {...current, id};
+  }
 }
 
 /// Resolves the user's current unlock set from the live workout session
