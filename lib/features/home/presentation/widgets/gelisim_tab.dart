@@ -63,38 +63,58 @@ class GelisimTab extends ConsumerWidget {
     // Section spacing normalized to the 20–24 px system. 14 stays on
     // the top-row → today-task seam because those two blocks are a
     // single logical "status + next action" unit.
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
-      children: [
-        _TopHeader(streak: streak),
-        const SizedBox(height: 22),
-        _ProgramStatsRow(
-          percent: percent,
-          completedCount: completedCount,
-          streak: streak,
+    //
+    // Phase 38: a radial neon glow wraps the whole tab — dark purple
+    // halo at the top fading to pure black at the edges/bottom, so the
+    // surface feels branded instead of flat-black. The gradient lives
+    // on the outer `Container` (not per-card) to keep the effect cheap
+    // and consistent while cards scroll past.
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: RadialGradient(
+          center: Alignment(0, -0.85),
+          radius: 1.1,
+          colors: [
+            Color(0xFF1E0A40),
+            Color(0xFF0A0612),
+            Colors.black,
+          ],
+          stops: [0.0, 0.55, 1.0],
         ),
-        const SizedBox(height: 14),
-        if (isProgramComplete)
-          const _ProgramCompleteCard()
-        else if (activeDay != null)
-          _TodayTaskCard(activeDay: activeDay),
-        const SizedBox(height: 24),
-        _DayGridSection(days: days, activeDayNumber: activeDayNumber),
-        const SizedBox(height: 24),
-        _StatsCardsRow(
-          weeklyDays: weeklyDays,
-          weeklyCompleted: weeklyCompleted,
-          weeklyKcal: weeklyKcal,
-        ),
-        const SizedBox(height: 22),
-        _AiCoachCard(streak: streak, percent: percent),
-        const SizedBox(height: 22),
-        _BadgesSection(
-          completedCount: completedCount,
-          streak: streak,
-          weeklyKcal: weeklyKcal,
-        ),
-      ],
+      ),
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
+        children: [
+          _TopHeader(streak: streak),
+          const SizedBox(height: 22),
+          _ProgramStatsColumn(
+            percent: percent,
+            completedCount: completedCount,
+            streak: streak,
+          ),
+          const SizedBox(height: 14),
+          if (isProgramComplete)
+            const _ProgramCompleteCard()
+          else if (activeDay != null)
+            _TodayTaskCard(activeDay: activeDay),
+          const SizedBox(height: 24),
+          _DayGridSection(days: days, activeDayNumber: activeDayNumber),
+          const SizedBox(height: 24),
+          _StatsCardsColumn(
+            weeklyDays: weeklyDays,
+            weeklyCompleted: weeklyCompleted,
+            weeklyKcal: weeklyKcal,
+          ),
+          const SizedBox(height: 22),
+          _AiCoachCard(streak: streak, percent: percent),
+          const SizedBox(height: 22),
+          _BadgesSection(
+            completedCount: completedCount,
+            streak: streak,
+            weeklyKcal: weeklyKcal,
+          ),
+        ],
+      ),
     );
   }
 
@@ -186,8 +206,11 @@ class _TopHeader extends StatelessWidget {
 // Program-progress card (left) + streak card (right).
 // =============================================================================
 
-class _ProgramStatsRow extends StatelessWidget {
-  const _ProgramStatsRow({
+/// Phase 38: was `_ProgramStatsRow` — the two square half-width tiles
+/// split into full-width horizontal stacks (text on the left, visual on
+/// the right) so each card can breathe instead of cramping the type.
+class _ProgramStatsColumn extends StatelessWidget {
+  const _ProgramStatsColumn({
     required this.percent,
     required this.completedCount,
     required this.streak,
@@ -198,20 +221,15 @@ class _ProgramStatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: _ProgramProgressCard(
-              percent: percent,
-              completedCount: completedCount,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(child: _StreakCard(streak: streak)),
-        ],
-      ),
+    return Column(
+      children: [
+        _ProgramProgressCard(
+          percent: percent,
+          completedCount: completedCount,
+        ),
+        const SizedBox(height: 12),
+        _StreakCard(streak: streak),
+      ],
     );
   }
 }
@@ -227,80 +245,80 @@ class _ProgramProgressCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pctInt = (percent * 100).round();
+    // Horizontal stack: all the text (label/value/bar/motivation) sits
+    // on the left flex side, the trophy ring pins to the right. Keeps
+    // the card slim and full-width friendly.
     return _SoftCard(
       accent: _neon,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const _CardLabel(text: 'PROGRAM TAMAMLAMA'),
-          const SizedBox(height: 10),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '%$pctInt',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 32,
-                        fontWeight: FontWeight.w900,
-                        height: 1.0,
-                        letterSpacing: 0.3,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '$completedCount / $_programLength gün tamamlandı',
-                      style: const TextStyle(
-                        color: Colors.white54,
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const _CardLabel(text: 'PROGRAM TAMAMLAMA'),
+                const SizedBox(height: 8),
+                Text(
+                  '%$pctInt',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 34,
+                    fontWeight: FontWeight.w900,
+                    height: 1.0,
+                    letterSpacing: 0.3,
+                  ),
                 ),
-              ),
-              _TrophyRing(percent: percent),
-            ],
-          ),
-          const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0, end: percent),
-              duration: const Duration(milliseconds: 700),
-              curve: Curves.easeOutCubic,
-              builder: (context, value, _) => Stack(
-                children: [
-                  Container(height: 7, color: Colors.white10),
-                  FractionallySizedBox(
-                    widthFactor: value,
-                    child: Container(
-                      height: 7,
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [_neonDeep, _neon],
+                const SizedBox(height: 4),
+                Text(
+                  '$completedCount / $_programLength gün tamamlandı',
+                  style: const TextStyle(
+                    color: Colors.white54,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: percent),
+                    duration: const Duration(milliseconds: 700),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, value, _) => Stack(
+                      children: [
+                        Container(height: 7, color: Colors.white10),
+                        FractionallySizedBox(
+                          widthFactor: value,
+                          child: Container(
+                            height: 7,
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [_neonDeep, _neon],
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Harika gidiyorsun, devam et! 💪',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    height: 1.3,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 10),
-          const Text(
-            'Harika gidiyorsun, devam et! 💪',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 11.5,
-              fontWeight: FontWeight.w600,
-              height: 1.3,
-            ),
-          ),
+          const SizedBox(width: 16),
+          _TrophyRing(percent: percent),
         ],
       ),
     );
@@ -362,90 +380,107 @@ class _StreakCard extends StatelessWidget {
     final filled = streak.clamp(0, 5);
     return _SoftCard(
       accent: _orange,
-      child: Stack(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Subtle flame in the corner — matches the "flame icon
-          // background" note on the reference mock.
-          Positioned(
-            right: -8,
-            top: -6,
-            child: Icon(
-              Icons.local_fire_department,
-              size: 54,
-              color: _orange.withValues(alpha: 0.08),
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const _CardLabel(text: 'SERİ'),
-              const SizedBox(height: 10),
-              Text(
-                '$streak gün',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 32,
-                  fontWeight: FontWeight.w900,
-                  height: 1.0,
-                  letterSpacing: 0.3,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const _CardLabel(text: 'SERİ'),
+                const SizedBox(height: 8),
+                Text(
+                  '$streak gün',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 34,
+                    fontWeight: FontWeight.w900,
+                    height: 1.0,
+                    letterSpacing: 0.3,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                'Serini bozma!',
-                style: TextStyle(
-                  color: Colors.white54,
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w600,
+                const SizedBox(height: 4),
+                const Text(
+                  'Serini bozma!',
+                  style: TextStyle(
+                    color: Colors.white54,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-              const Spacer(),
-              // Phase 37: tiny dot → 22-px check pucks. Completed days
-              // get a green-filled circle with a crisp `Icons.check`;
-              // upcoming days keep a transparent fill + white24 outline
-              // so the row reads as a 5-day checklist, not a stats chip.
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: List.generate(5, (i) {
-                  final isOn = i < filled;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: Container(
-                      width: 22,
-                      height: 22,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isOn
-                            ? _success.withValues(alpha: 0.20)
-                            : Colors.transparent,
-                        border: Border.all(
+                const SizedBox(height: 12),
+                // Phase 37: tiny dot → 22-px check pucks. Completed days
+                // get a green-filled circle with a crisp `Icons.check`;
+                // upcoming days keep a transparent fill + white24 outline
+                // so the row reads as a 5-day checklist, not a stats chip.
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: List.generate(5, (i) {
+                    final isOn = i < filled;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: Container(
+                        width: 22,
+                        height: 22,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
                           color: isOn
-                              ? _success
-                              : Colors.white.withValues(alpha: 0.22),
-                          width: isOn ? 1.4 : 1,
+                              ? _success.withValues(alpha: 0.20)
+                              : Colors.transparent,
+                          border: Border.all(
+                            color: isOn
+                                ? _success
+                                : Colors.white.withValues(alpha: 0.22),
+                            width: isOn ? 1.4 : 1,
+                          ),
+                          boxShadow: isOn
+                              ? [
+                                  BoxShadow(
+                                    color: _success.withValues(alpha: 0.45),
+                                    blurRadius: 8,
+                                  ),
+                                ]
+                              : null,
                         ),
-                        boxShadow: isOn
-                            ? [
-                                BoxShadow(
-                                  color: _success.withValues(alpha: 0.45),
-                                  blurRadius: 8,
-                                ),
-                              ]
+                        alignment: Alignment.center,
+                        child: isOn
+                            ? const Icon(
+                                Icons.check,
+                                color: _success,
+                                size: 13,
+                              )
                             : null,
                       ),
-                      alignment: Alignment.center,
-                      child: isOn
-                          ? const Icon(
-                              Icons.check,
-                              color: _success,
-                              size: 13,
-                            )
-                          : null,
-                    ),
-                  );
-                }),
-              ),
-            ],
+                    );
+                  }),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          // Right-side flame puck — the focal "streak" visual that
+          // mirrors the trophy ring on the Program card above.
+          Container(
+            width: 62,
+            height: 62,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: _orange.withValues(alpha: 0.18),
+              border: Border.all(color: _orange.withValues(alpha: 0.55)),
+              boxShadow: [
+                BoxShadow(
+                  color: _orange.withValues(alpha: 0.35),
+                  blurRadius: 16,
+                  spreadRadius: 0.5,
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.local_fire_department,
+              color: _orange,
+              size: 34,
+            ),
           ),
         ],
       ),
@@ -545,12 +580,11 @@ class _TodayTaskCard extends ConsumerWidget {
       context.push(AppRoutes.paywall);
       return;
     }
+    // Phase 38: route to the 30-day plan detail screen (the "Antrenman"
+    // tab's workout detail) where the active day is highlighted and
+    // the user taps DEVAM ET to actually start. No direct camera push.
     HapticFeedback.mediumImpact();
-    await ref
-        .read(workoutSessionProvider.notifier)
-        .startDay(activeDay.dayNumber);
-    if (!context.mounted) return;
-    context.push(AppRoutes.workout);
+    context.push(AppRoutes.planDetail);
   }
 
   String _focusLabel(WorkoutDay day) {
@@ -1040,8 +1074,12 @@ class _LockedCell extends StatelessWidget {
 // workouts (green waveform). All three draw from the same 7-day bucket.
 // =============================================================================
 
-class _StatsCardsRow extends StatelessWidget {
-  const _StatsCardsRow({
+/// Phase 38: was `_StatsCardsRow`. The three tight squares that lived
+/// side-by-side are now full-width horizontal cards stacked vertically,
+/// so the charts on the right side have room to elongate instead of
+/// getting crushed into a 110-px column.
+class _StatsCardsColumn extends StatelessWidget {
+  const _StatsCardsColumn({
     required this.weeklyDays,
     required this.weeklyCompleted,
     required this.weeklyKcal,
@@ -1066,77 +1104,53 @@ class _StatsCardsRow extends StatelessWidget {
         weeklyDays.map((d) => (d?.isCompleted ?? false) ? 1.0 : 0.25).toList();
     final kcalValues =
         weeklyDays.map((d) => (d?.isCompleted ?? false) ? 1.0 : 0.2).toList();
-    // Waveform: alternate heights to read as a bar waveform. Completed
-    // days bump up, gaps stay short.
     final waveformBars = List<double>.generate(weeklyDays.length, (i) {
       final completed = weeklyDays[i]?.isCompleted ?? false;
       final baseline = i.isEven ? 0.55 : 0.35;
       return completed ? 1.0 : baseline;
     });
 
-    // Fixed-height row (vs prior `IntrinsicHeight`): the 2 px bottom
-    // overflow came from `IntrinsicHeight + stretch` locking children to
-    // a sub-pixel rounded height that didn't match the inner Column's
-    // natural height. A concrete height + stretch + `Expanded`-flex chart
-    // removes the circular constraint.
-    return SizedBox(
-      // 132 → 140: gives the chart column a few extra pixels so a
-      // larger `unit` label or a locale that measures taller metrics
-      // can't push the card past its bounds. The `_MiniBars` math is
-      // now deterministic (explicit label-strip + gap), but keeping
-      // slack here is cheap insurance.
-      height: 140,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: _StatChartCard(
-              label: 'BU HAFTA',
-              value: '$weeklyCompleted / 7',
-              accent: _neon,
-              chart: _MiniBars(
-                values: completionBars,
-                labels: _dayLabels,
-                gradientColors: const [_neonDeep, _neon],
-              ),
-            ),
+    return Column(
+      children: [
+        _StatChartCard(
+          label: 'BU HAFTA',
+          value: '$weeklyCompleted / 7',
+          accent: _neon,
+          chart: _MiniBars(
+            values: completionBars,
+            labels: _dayLabels,
+            gradientColors: const [_neonDeep, _neon],
           ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: _StatChartCard(
-              label: 'YAKILAN KALORİ',
-              value: _formatKcal(weeklyKcal),
-              unit: 'kcal',
-              accent: _orange,
-              chart: _MiniAreaLine(values: kcalValues, color: _orange),
-            ),
+        ),
+        const SizedBox(height: 12),
+        _StatChartCard(
+          label: 'YAKILAN KALORİ',
+          value: _formatKcal(weeklyKcal),
+          unit: 'kcal',
+          accent: _orange,
+          chart: _MiniAreaLine(values: kcalValues, color: _orange),
+        ),
+        const SizedBox(height: 12),
+        _StatChartCard(
+          label: 'ANTRENMAN',
+          value: '$weeklyCompleted',
+          unit: 'tamamlandı',
+          accent: _success,
+          chart: _MiniBars(
+            values: waveformBars,
+            labels: _dayLabels,
+            gradientColors: [
+              _success.withValues(alpha: 0.9),
+              _success.withValues(alpha: 0.35),
+            ],
+            rounded: true,
           ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: _StatChartCard(
-              label: 'ANTRENMAN',
-              value: '$weeklyCompleted',
-              unit: 'tamamlandı',
-              accent: _success,
-              chart: _MiniBars(
-                values: waveformBars,
-                labels: _dayLabels,
-                gradientColors: [
-                  _success.withValues(alpha: 0.9),
-                  _success.withValues(alpha: 0.35),
-                ],
-                rounded: true,
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   String _formatKcal(int kcal) {
-    // "3.250" with dot thousands separator — Turkish convention, matches
-    // the reference mock's value.
     if (kcal < 1000) return '$kcal';
     final s = kcal.toString();
     final head = s.substring(0, s.length - 3);
@@ -1145,6 +1159,9 @@ class _StatsCardsRow extends StatelessWidget {
   }
 }
 
+/// Full-width horizontal stat card: fixed-width left column with the
+/// label and big value, then an `Expanded` chart block on the right
+/// that stretches edge-to-edge so the mini chart can actually read.
 class _StatChartCard extends StatelessWidget {
   const _StatChartCard({
     required this.label,
@@ -1164,50 +1181,65 @@ class _StatChartCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _SoftCard(
       accent: accent,
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          _CardLabel(text: label, color: accent),
-          const SizedBox(height: 8),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Flexible(
-                child: Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                    height: 1.0,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-              ),
-              if (unit != null) ...[
-                const SizedBox(width: 4),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 2),
-                  child: Text(
-                    unit!,
-                    style: const TextStyle(
-                      color: Colors.white54,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
+          SizedBox(
+            width: 118,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _CardLabel(text: label, color: accent),
+                const SizedBox(height: 6),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        value,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                          height: 1.0,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
                     ),
-                  ),
+                    if (unit != null) ...[
+                      const SizedBox(width: 4),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 3),
+                        child: Text(
+                          unit!,
+                          style: const TextStyle(
+                            color: Colors.white54,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ],
-            ],
+            ),
           ),
-          const SizedBox(height: 8),
-          // Chart flexes to fill whatever's left in the 132-px parent —
-          // no fixed height, so sub-pixel rendering variance on the
-          // label/value row can't push the card past its box.
-          Expanded(child: chart),
+          const SizedBox(width: 14),
+          Expanded(
+            child: SizedBox(
+              // 60 px lets the elongated bars / area curve breathe while
+              // keeping the card slim (~92 px total). `_MiniBars` still
+              // does its own deterministic split between chart + label
+              // strip inside this box.
+              height: 60,
+              child: chart,
+            ),
+          ),
         ],
       ),
     );
@@ -1410,11 +1442,11 @@ class _AiCoachCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
               _CoachAvatar(),
-              const SizedBox(width: 10),
-              const _CardLabel(text: 'AI KOÇ'),
+              SizedBox(width: 12),
+              _CardLabel(text: 'AI KOÇ'),
             ],
           ),
           const SizedBox(height: 12),
@@ -1486,12 +1518,22 @@ class _AiCoachCard extends StatelessWidget {
   }
 }
 
+/// Phase 38: the generic robot icon is replaced by the custom coach
+/// photograph (`photos/kişiselyapayzekakoçfoto.webp`, already declared
+/// under the `photos/` asset root in pubspec.yaml). The image is
+/// clipped to a 45-px circle, surrounded by a 2-px neon-gradient ring
+/// + glow so the avatar reads as "your coach" and not a stock icon.
+/// An `errorBuilder` falls back to the old robot glyph if the asset
+/// ever fails to decode.
 class _CoachAvatar extends StatelessWidget {
+  const _CoachAvatar();
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 32,
-      height: 32,
+      width: 45,
+      height: 45,
+      padding: const EdgeInsets.all(2),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: const LinearGradient(
@@ -1502,12 +1544,28 @@ class _CoachAvatar extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: _neon.withValues(alpha: 0.55),
-            blurRadius: 12,
+            blurRadius: 14,
             spreadRadius: 0.5,
           ),
         ],
       ),
-      child: const Icon(Icons.smart_toy, color: Colors.white, size: 18),
+      child: ClipOval(
+        child: Image.asset(
+          'photos/kişiselyapayzekakoçfoto.webp',
+          width: 41,
+          height: 41,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => Container(
+            color: _neonDeep,
+            alignment: Alignment.center,
+            child: const Icon(
+              Icons.smart_toy,
+              color: Colors.white,
+              size: 22,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
