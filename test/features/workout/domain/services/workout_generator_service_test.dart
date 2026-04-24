@@ -83,7 +83,13 @@ void main() {
   });
 
   group('goal-aware daily composition', () {
-    test('sixpack plan day 1 leans on core exercises', () {
+    test('sixpack plan day 1 leads with a core movement and stays core-heavy',
+        () {
+      // Phase 48 · the generator now round-robin-interleaves the goal
+      // buckets ([core, cardio, full_body] for sixpack) so day 1 reads
+      // as a balanced ab-finisher rather than nine consecutive crunches.
+      // The invariants we still want: the first exercise is core (the
+      // bucket head), and a clear majority of the day stays core.
       final plan = service.generate30DayPlan(
         userGoal: 'sixpack',
         fitnessLevel: 'beginner',
@@ -94,13 +100,25 @@ void main() {
           dayOne.exercises.where((e) => e.targetMuscle == 'core').length;
 
       expect(
-        coreCount,
-        dayOne.exercises.length,
-        reason: 'sixpack goal starts rotation at the core-first filtered pool',
+        dayOne.exercises.first.targetMuscle,
+        'core',
+        reason: 'sixpack rotation must lead with the core bucket head',
+      );
+      expect(
+        coreCount * 2,
+        greaterThanOrEqualTo(dayOne.exercises.length),
+        reason: 'sixpack day 1 must remain at least 50% core after Phase 48 '
+            'interleave introduces cardio + full_body variety',
       );
     });
 
-    test('bulk plan day 1 uses strength (upper/lower body) exercises', () {
+    test(
+        'bulk plan day 1 leads with strength and surfaces multiple muscle '
+        'groups', () {
+      // Phase 48 · bulk now interleaves [upper_body, lower_body, full_body],
+      // so a single day touches multiple compound zones in sequence
+      // instead of front-loading nine upper-body movements before
+      // touching legs. The day still leads on strength (upper/lower).
       final plan = service.generate30DayPlan(
         userGoal: 'bulk',
         fitnessLevel: 'intermediate',
@@ -111,12 +129,24 @@ void main() {
           .where((e) =>
               e.targetMuscle == 'upper_body' || e.targetMuscle == 'lower_body')
           .length;
+      final muscleGroups = dayOne.exercises.map((e) => e.targetMuscle).toSet();
 
       expect(
-        strengthCount,
-        dayOne.exercises.length,
-        reason: 'bulk goal foregrounds compound strength movements, '
-            'deprioritising cardio until later in the rotation',
+        dayOne.exercises.first.targetMuscle,
+        'upper_body',
+        reason: 'bulk rotation must lead with the upper-body bucket head',
+      );
+      expect(
+        strengthCount * 2,
+        greaterThanOrEqualTo(dayOne.exercises.length),
+        reason: 'bulk day must stay majority compound strength even after '
+            'the interleave brings full_body in for variety',
+      );
+      expect(
+        muscleGroups.length,
+        greaterThan(1),
+        reason: 'bulk interleave must surface more than one muscle group '
+            'per day so users do not see a pure upper-body wall on day 1',
       );
     });
 

@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/routing/app_router.dart';
+import '../../../progress/presentation/widgets/badge_unlock_dialog.dart';
+import '../../../progress/providers/badge_unlocks_provider.dart';
 import '../../../workout/models/workout_day_model.dart';
 import '../../../workout/providers/workout_provider.dart';
 import 'today_task_card.dart';
@@ -33,6 +35,24 @@ class GelisimTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Phase 48 · celebrate brand-new badge unlocks. The Gelisim tab is
+    // the canonical home of badge progress, so this is where we observe
+    // the unlock set. The `previous == null` guard skips the very first
+    // build (a fresh app open shouldn't celebrate yesterday's wins);
+    // subsequent transitions diff and chain a dialog per newly-unlocked
+    // badge so a multi-unlock day doesn't drop celebrations on the floor.
+    ref.listen<Set<String>>(unlockedBadgesProvider, (previous, next) async {
+      if (previous == null) return;
+      final newOnes = next.difference(previous).toList();
+      if (newOnes.isEmpty) return;
+      for (final id in newOnes) {
+        final badge = badgeById(id);
+        if (badge == null) continue;
+        if (!context.mounted) return;
+        await showBadgeUnlockedDialog(context, badge);
+      }
+    });
+
     final session = ref.watch(workoutSessionProvider).value;
     final days = session?.days ?? const <WorkoutDay>[];
     final completedCount = days.where((d) => d.isCompleted).length;

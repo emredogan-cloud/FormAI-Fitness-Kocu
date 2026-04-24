@@ -322,6 +322,12 @@ class _PageTitle extends StatelessWidget {
 // `_MealFrequencyStep` and `_PrepTimeStep` widgets in onboarding_screen.dart.
 // ============================================================================
 
+/// Phase 48 · fixed minimum card height for the four nutrition steps so
+/// short Android screens (e.g. 5"-class devices, ~640 px logical height
+/// after status / nav bars) can scroll instead of throwing a 17 px
+/// `RenderFlex` overflow when four cards + the page title don't fit.
+const double _kNutritionCardMinHeight = 110;
+
 class _DietPreferencePage extends ConsumerWidget {
   const _DietPreferencePage({required this.onSelected});
   final VoidCallback onSelected;
@@ -343,11 +349,11 @@ class _DietPreferencePage extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         Expanded(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
             child: Column(
               children: [
-                Expanded(
+                _NutritionCardSlot(
                   child: PhotoOptionCard(
                     image: _dietStandardImg,
                     fallbackIcon: Icons.restaurant_menu,
@@ -358,7 +364,7 @@ class _DietPreferencePage extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                Expanded(
+                _NutritionCardSlot(
                   child: PhotoOptionCard(
                     image: _dietVegetarianImg,
                     fallbackIcon: Icons.grass,
@@ -369,7 +375,7 @@ class _DietPreferencePage extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                Expanded(
+                _NutritionCardSlot(
                   child: PhotoOptionCard(
                     image: _dietVeganImg,
                     fallbackIcon: Icons.eco,
@@ -380,7 +386,7 @@ class _DietPreferencePage extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                Expanded(
+                _NutritionCardSlot(
                   child: PhotoOptionCard(
                     image: _dietKetoImg,
                     fallbackIcon: Icons.local_fire_department,
@@ -396,6 +402,20 @@ class _DietPreferencePage extends ConsumerWidget {
         ),
       ],
     );
+  }
+}
+
+/// Wrapper that stamps a deterministic minimum height on every option
+/// card inside the four nutrition wizard pages. Without it the cards
+/// shrink to fit and lose their photographic anchoring; with it the
+/// page either fits exactly or scrolls — never overflows.
+class _NutritionCardSlot extends StatelessWidget {
+  const _NutritionCardSlot({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(height: _kNutritionCardMinHeight, child: child);
   }
 }
 
@@ -420,11 +440,11 @@ class _AllergiesPage extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         Expanded(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
             child: Column(
               children: [
-                Expanded(
+                _NutritionCardSlot(
                   child: PhotoOptionCard(
                     fallbackIcon: Icons.verified_user,
                     title: 'Yok',
@@ -434,7 +454,7 @@ class _AllergiesPage extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                Expanded(
+                _NutritionCardSlot(
                   child: PhotoOptionCard(
                     fallbackIcon: Icons.emoji_nature,
                     title: 'Kuruyemiş',
@@ -444,7 +464,7 @@ class _AllergiesPage extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                Expanded(
+                _NutritionCardSlot(
                   child: PhotoOptionCard(
                     fallbackIcon: Icons.icecream,
                     title: 'Süt Ürünleri',
@@ -454,7 +474,7 @@ class _AllergiesPage extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                Expanded(
+                _NutritionCardSlot(
                   child: PhotoOptionCard(
                     fallbackIcon: Icons.bakery_dining,
                     title: 'Glüten',
@@ -493,11 +513,11 @@ class _MealFrequencyPage extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         Expanded(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
             child: Column(
               children: [
-                Expanded(
+                _NutritionCardSlot(
                   child: PhotoOptionCard(
                     image: _mealFreq2Img,
                     fallbackIcon: Icons.hourglass_top,
@@ -508,7 +528,7 @@ class _MealFrequencyPage extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                Expanded(
+                _NutritionCardSlot(
                   child: PhotoOptionCard(
                     image: _mealFreq3Img,
                     fallbackIcon: Icons.restaurant,
@@ -519,7 +539,7 @@ class _MealFrequencyPage extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                Expanded(
+                _NutritionCardSlot(
                   child: PhotoOptionCard(
                     image: _mealFreq4Img,
                     fallbackIcon: Icons.lunch_dining,
@@ -560,11 +580,11 @@ class _PrepTimePage extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         Expanded(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
             child: Column(
               children: [
-                Expanded(
+                _NutritionCardSlot(
                   child: PhotoOptionCard(
                     fallbackIcon: Icons.timer,
                     title: 'Hızlı & Pratik',
@@ -574,7 +594,7 @@ class _PrepTimePage extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                Expanded(
+                _NutritionCardSlot(
                   child: PhotoOptionCard(
                     fallbackIcon: Icons.soup_kitchen,
                     title: 'Mutfakta Vakit',

@@ -27,7 +27,7 @@ class AppPreferences {
   // saveUserMetrics needs to drop the cached 30-day plan when the goal
   // changes, and a cross-import would create an awkward core → feature
   // dependency just for one string constant.
-  static const String _planCacheKey = 'sixpack.user_custom_plan_v2';
+  static const String _planCacheKey = 'sixpack.user_custom_plan_v3';
   static const String _nutritionStreakKey = 'sixpack.nutrition_streak';
   // Phase 46 · progressive disclosure. The four nutrition wizard
   // questions (diet / allergies / meal-frequency / prep-time) were
@@ -37,6 +37,13 @@ class AppPreferences {
   // that deferred flow completes so the sheet never re-prompts.
   static const String _nutritionPrefsCompletedKey =
       'sixpack.nutrition_prefs_completed';
+  // Phase 48 · daily-reminder toggle persisted so the account-settings
+  // switch can render its "on" / "off" position across app restarts.
+  // The real scheduling still lives in NotificationService; this flag
+  // is just the source of truth for the switch and gates whether we
+  // actually ask the OS to schedule.
+  static const String _dailyReminderEnabledKey =
+      'sixpack.daily_reminder_enabled';
 
   bool get isFirstTime => _prefs.getBool(_firstTimeKey) ?? true;
 
@@ -90,5 +97,15 @@ class AppPreferences {
 
   Future<void> completeNutritionOnboarding() async {
     await _prefs.setBool(_nutritionPrefsCompletedKey, true);
+  }
+
+  /// Whether the user has the daily training-reminder push enabled.
+  /// Defaults to `false` so a fresh install never schedules a notification
+  /// without an explicit opt-in (Apple/Google policy).
+  bool get dailyReminderEnabled =>
+      _prefs.getBool(_dailyReminderEnabledKey) ?? false;
+
+  Future<void> setDailyReminderEnabled(bool value) async {
+    await _prefs.setBool(_dailyReminderEnabledKey, value);
   }
 }

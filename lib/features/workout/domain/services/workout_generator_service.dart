@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/app_logger.dart';
 import '../../data/workout_repository.dart';
 import '../../models/exercise_model.dart';
 import '../../models/workout_day_model.dart';
@@ -50,6 +51,24 @@ class WorkoutGeneratorService {
     final level = _normaliseLevel(fitnessLevel);
     final pool = WorkoutRepository.allExercises;
     final goalFiltered = _filterByGoal(pool, goal);
+
+    // Phase 48 · structured generator log so the dashboard's "all-Core
+    // workouts" report is debuggable without a debugger attached. Tags
+    // the inputs so we can verify whether the wizard payload reached the
+    // generator (the prior bug was an empty `userGoal` collapsing the
+    // sixpack default into a pure-core feed). PII-safe: no user metrics.
+    AppLogger.info(
+      'WorkoutGenerator · resolved inputs',
+      category: 'workout',
+      data: {
+        'userGoal_raw': userGoal,
+        'fitnessLevel_raw': fitnessLevel,
+        'goal_normalised': goal.name,
+        'level_normalised': level.name,
+        'pool_size': pool.length,
+        'goal_filtered_size': goalFiltered.length,
+      },
+    );
 
     final days = <WorkoutDay>[];
     var cursor = 0;
@@ -143,41 +162,64 @@ class WorkoutGeneratorService {
   }
 
   List<Exercise> _filterByGoal(List<Exercise> pool, _Goal goal) {
+    // Phase 48 · round-robin interleave. The previous concatenation
+    // strategy meant the first ~9 exercises pulled by the day-cursor
+    // were all the same muscle group (e.g. for `sixpack`, days 1-2 came
+    // out as pure-core "fallback Abs" feeds). Interleaving across the
+    // goal's bucket list guarantees every day sees variety from the
+    // first cursor position.
     switch (goal) {
       case _Goal.sixpack:
-        // Primary core emphasis. Core-tagged movements come first; if the
-        // user has lots of active days we also let cardio + full_body in
-        // at the end of the sequence to keep heart rate variety.
+        // Primary emphasis on core, but cardio + full_body sprinkled in
+        // every day so even Day 1 reads as a balanced ab-finisher rather
+        // than nine consecutive crunches.
         final core = pool.where((e) => e.targetMuscle == 'core').toList();
-        final support = pool
-            .where((e) =>
-                e.targetMuscle == 'cardio' || e.targetMuscle == 'full_body')
-            .toList();
-        return [...core, ...support];
-      case _Goal.bulk:
-        // Hypertrophy focus → upper-body and lower-body compound work.
-        // Cardio is deprioritised but still present for conditioning.
-        final strength = pool
-            .where((e) =>
-                e.targetMuscle == 'upper_body' ||
-                e.targetMuscle == 'lower_body')
-            .toList();
-        final support =
+        final cardio = pool.where((e) => e.targetMuscle == 'cardio').toList();
+        final fullBody =
             pool.where((e) => e.targetMuscle == 'full_body').toList();
-        return [...strength, ...support];
+        return _roundRobinMerge([core, cardio, fullBody]);
+      case _Goal.bulk:
+        // Hypertrophy focus → upper-body and lower-body compound work,
+        // alternating muscles each pick so a single day naturally rotates
+        // upper / lower / full-body without manual splits.
+        final upper =
+            pool.where((e) => e.targetMuscle == 'upper_body').toList();
+        final lower =
+            pool.where((e) => e.targetMuscle == 'lower_body').toList();
+        final fullBody =
+            pool.where((e) => e.targetMuscle == 'full_body').toList();
+        return _roundRobinMerge([upper, lower, fullBody]);
       case _Goal.tone:
-        // Fat-burn / toning → cardio + full_body first, core + lower_body
-        // to round out the session.
-        final cardio = pool
-            .where((e) =>
-                e.targetMuscle == 'cardio' || e.targetMuscle == 'full_body')
-            .toList();
-        final support = pool
-            .where((e) =>
-                e.targetMuscle == 'core' || e.targetMuscle == 'lower_body')
-            .toList();
-        return [...cardio, ...support];
+        // Fat-burn / toning → cardio-led but with core + lower-body
+        // intermixed so each day moves the heart rate up while still
+        // hitting the target zones.
+        final cardio = pool.where((e) => e.targetMuscle == 'cardio').toList();
+        final fullBody =
+            pool.where((e) => e.targetMuscle == 'full_body').toList();
+        final core = pool.where((e) => e.targetMuscle == 'core').toList();
+        final lower =
+            pool.where((e) => e.targetMuscle == 'lower_body').toList();
+        return _roundRobinMerge([cardio, fullBody, core, lower]);
     }
+  }
+
+  /// Deterministic round-robin merge: takes the first item of each list,
+  /// then the second of each, and so on, until every list is drained.
+  /// Empty buckets are skipped silently. Order within a bucket is
+  /// preserved (catalogue order — beginner movements first), so the
+  /// output is reproducible across runs.
+  List<Exercise> _roundRobinMerge(List<List<Exercise>> buckets) {
+    final out = <Exercise>[];
+    final maxLen = buckets.fold<int>(
+      0,
+      (acc, b) => b.length > acc ? b.length : acc,
+    );
+    for (var i = 0; i < maxLen; i++) {
+      for (final bucket in buckets) {
+        if (i < bucket.length) out.add(bucket[i]);
+      }
+    }
+    return out;
   }
 
   List<Exercise> _filterByLevel(

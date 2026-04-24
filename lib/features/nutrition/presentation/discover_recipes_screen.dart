@@ -115,12 +115,21 @@ class _DiscoverRecipesScreenState extends ConsumerState<DiscoverRecipesScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
                   sliver: SliverGrid.builder(
                     itemCount: filtered.length,
+                    // Phase 48 · `mainAxisExtent` instead of `childAspectRatio`.
+                    // The aspect-ratio formulation made each card's height a
+                    // function of the (text-scaled) device width, so on a
+                    // 360-px screen the body section (title + tags + macros)
+                    // got ~105 px and threw a 6-12 px vertical overflow.
+                    // Pinning the height to 252 px gives the body 130 px
+                    // regardless of width, which fits 2-line title +
+                    // single-line tag strip + macro row at all OS-level
+                    // text scales up to ~1.2.
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       mainAxisSpacing: 12,
                       crossAxisSpacing: 12,
-                      childAspectRatio: 0.7,
+                      mainAxisExtent: 252,
                     ),
                     itemBuilder: (context, index) =>
                         _DiscoverRecipeCard(recipe: filtered[index]),
@@ -265,71 +274,81 @@ class _DiscoverRecipeCard extends StatelessWidget {
             color: Colors.white.withValues(alpha: 0.04),
             border: Border.all(color: Colors.white12),
           ),
+          // Phase 48 · `Expanded` flex split instead of `AspectRatio` so
+          // the image's height is driven by the cell height (mainAxisExtent
+          // 252) rather than the cell width. The previous AspectRatio(1.3)
+          // grew the image to ~290 px on wide-tablet test viewports and
+          // overflowed the body section by ~40 px. With a 3:2 flex the
+          // image always gets ~60% of the cell and the body the remaining
+          // ~40%, regardless of how wide each column is.
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AspectRatio(
-                aspectRatio: 1.3,
+              Expanded(
+                flex: 3,
                 child: _Thumb(imageUrl: recipe.imageUrl),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      recipe.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w900,
-                        height: 1.2,
+              Expanded(
+                flex: 2,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          recipe.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w900,
+                            height: 1.2,
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    RecipeTagsStrip(
-                      recipe: recipe,
-                      maxTags: 2,
-                      compact: true,
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.local_fire_department,
-                          color: _neon,
-                          size: 12,
-                        ),
-                        const SizedBox(width: 3),
-                        Text(
-                          '${recipe.calories}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
+                      RecipeTagsStrip(
+                        recipe: recipe,
+                        maxTags: 2,
+                        compact: true,
+                      ),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.local_fire_department,
+                            color: _neon,
+                            size: 12,
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        const Icon(
-                          Icons.fitness_center,
-                          color: _proteinColor,
-                          size: 12,
-                        ),
-                        const SizedBox(width: 3),
-                        Text(
-                          '${recipe.protein}g',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
+                          const SizedBox(width: 3),
+                          Text(
+                            '${recipe.calories}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                          const SizedBox(width: 10),
+                          const Icon(
+                            Icons.fitness_center,
+                            color: _proteinColor,
+                            size: 12,
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            '${recipe.protein}g',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],

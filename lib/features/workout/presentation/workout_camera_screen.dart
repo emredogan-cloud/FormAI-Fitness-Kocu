@@ -54,7 +54,13 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
   CameraDescription? _camera;
   List<Pose> _poses = const [];
   Size? _imageSize;
-  bool _isBusy = false;
+  // Phase 48 · single-flight gate. Prevents the camera's image stream
+  // (running at 30 FPS) from queuing up multiple BlazePose inferences
+  // simultaneously — when the previous frame is still being processed
+  // we drop new frames on the floor. Combined with `_minFrameIntervalMs`
+  // below, this keeps the pose detector below 15 FPS on mid-range
+  // devices and stops the OOM/ANR storms reported in Phase 47B.
+  bool _isProcessingFrame = false;
   String? _error;
   bool _permissionPermanentlyDenied = false;
   bool _wakelockOn = false;
@@ -232,7 +238,15 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
   }
 
   void _onCameraImage(CameraImage image) {
-    if (_isBusy || _isPaused) return;
+    // Phase 48 · hard guard against unmounted-ref crashes. The camera
+    // image stream keeps firing for one or two frames after the widget
+    // tree starts tearing down (dispose hasn't reached `_controller`
+    // yet); reading `ref` from there throws "Bad state: Using ref when
+    // a widget is unmounted". Bailing out before any `ref.read` keeps
+    // us safe.
+    if (!mounted) return;
+    if (_isProcessingFrame || _isPaused) return;
+
     // Skip pose work entirely while resting OR during the HAZIRLAN! prep
     // window so we don't count phantom reps before the user is ready and
     // don't trigger form-warning TTS while recovering / setting up.
@@ -253,8 +267,13 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     }
     _lastFrameProcessedAt = now;
 
-    _isBusy = true;
-    _processImage(image).whenComplete(() => _isBusy = false);
+    _isProcessingFrame = true;
+    // try/finally via whenComplete so a thrown inference still releases
+    // the gate — otherwise the stream wedges permanently after the
+    // first failure.
+    _processImage(image).whenComplete(() {
+      _isProcessingFrame = false;
+    });
   }
 
   void _togglePause() {
@@ -293,6 +312,9 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     if (input == null) return;
     try {
       final poses = await _poseService.detectPose(input);
+      // Re-check mounted *every time* we cross an `await` boundary or
+      // hop into a notifier; the user can pop the camera screen during
+      // any of those gaps and `ref.read` would throw.
       if (!mounted) return;
 
       CrunchResult? result;
@@ -317,6 +339,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
           // Light tap on every counted rep so the user feels the beat even
           // with the phone on the floor and music in their ears.
           unawaited(HapticFeedback.lightImpact());
+          if (!mounted) return;
           final notifier = ref.read(workoutSessionProvider.notifier);
           notifier.setCurrentReps(result.reps);
           final target = ref
@@ -344,11 +367,13 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
             // "keep going" from "done".
             unawaited(HapticFeedback.mediumImpact());
             await notifier.completeCurrentExercise();
+            if (!mounted) return;
             _analyzer.reset();
           }
         }
       }
 
+      if (!mounted) return;
       setState(() {
         _poses = poses;
         _imageSize = Size(image.width.toDouble(), image.height.toDouble());
@@ -435,7 +460,17 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _workoutTimer?.cancel();
-    _controller?.dispose();
+    // Phase 48 · stop the image stream BEFORE disposing the controller.
+    // `controller.dispose()` will tear down the underlying texture, but
+    // any frame already buffered inside the camera plugin still races
+    // through `_onCameraImage` for ~1-2 frames after dispose. Stopping
+    // the stream first means those buffered frames are dropped at the
+    // platform layer and never enter our Dart callback.
+    final controller = _controller;
+    if (controller != null && controller.value.isStreamingImages) {
+      unawaited(controller.stopImageStream().catchError((_) {}));
+    }
+    controller?.dispose();
     _poseService.dispose();
     _audio.dispose();
     // Fire-and-forget — we don't want dispose() to await, and the plugin's
