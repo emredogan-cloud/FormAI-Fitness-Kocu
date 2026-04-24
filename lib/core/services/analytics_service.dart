@@ -83,6 +83,29 @@ class AnalyticsService {
     });
   }
 
+  /// Phase 46 — fires on every page flip inside the deferred nutrition
+  /// sheet (the four diet / allergies / meal-frequency / prep-time
+  /// questions that were split out of the main 13-step wizard). Uses
+  /// a distinct event name so funnel dashboards can measure drop-off
+  /// on the deferred flow separately from primary onboarding.
+  Future<void> nutritionOnboardingStepCompleted({
+    required int stepIndex,
+    required String stepName,
+  }) {
+    return _capture('nutrition_onboarding_step_completed', {
+      'step_index': stepIndex,
+      'step_name': stepName,
+    });
+  }
+
+  /// Phase 46 — fires once when the user finishes the deferred
+  /// nutrition sheet. Pairs with [nutritionOnboardingStepCompleted]
+  /// to give a conversion rate from "sheet opened" to "sheet
+  /// completed".
+  Future<void> nutritionOnboardingCompleted() {
+    return _capture('nutrition_onboarding_completed');
+  }
+
   /// Fires when `WorkoutSessionNotifier.startDay` successfully enters a
   /// new day. `planId` is set when the session comes from an ad-hoc
   /// plan (push-limits strip / regional plan); `dayNumber` is the

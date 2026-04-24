@@ -18,14 +18,20 @@ import 'widgets/wheel_column.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonAccent = Color(0xFF4DA6FF);
-// 13 pages total: 2 hook screens + 7 body/fitness questions + 4 nutrition
-// questions (phase 21) + 1 illusion/finish screen.
-const int _totalSteps = 13;
+// Phase 46 · shortened wizard.
+//
+// 9 pages total: 2 hook screens + 6 body/fitness questions + 1
+// illusion/finish screen. The four nutrition questions
+// (`_DietPreferenceStep`, `_AllergiesStep`, `_MealFrequencyStep`,
+// `_PrepTimeStep`) were lifted into `NutritionOnboardingSheet` so
+// the critical path to the /prediction payoff is 4 taps shorter.
+const int _totalSteps = 9;
 const int _hookSteps = 2;
 
 /// Phase 42 · analytics labels per onboarding page. Index-aligned with
 /// the `PageView.children` list below so the funnel reads the same
-/// names the code uses.
+/// names the code uses. Phase 46 drops the four `nutrition_*` entries
+/// — they live in `nutrition_onboarding_step_completed` now.
 const List<String> _stepNames = [
   'welcome',
   'coach_intro',
@@ -35,10 +41,6 @@ const List<String> _stepNames = [
   'current_physique',
   'target_physique',
   'activity',
-  'diet_preference',
-  'allergies',
-  'meal_frequency',
-  'prep_time',
   'illusion',
 ];
 
@@ -52,6 +54,19 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final PageController _controller = PageController();
   int _index = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Phase 46 · capture step_index=0 so the funnel has an "entered
+    // onboarding" event. `PageView.onPageChanged` never emits for the
+    // initial page, so without this the welcome impression is
+    // invisible to the drop-off dashboard.
+    AnalyticsService.instance.onboardingStepCompleted(
+      stepIndex: 0,
+      stepName: _stepNames.first,
+    );
+  }
 
   @override
   void dispose() {
@@ -151,10 +166,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   _CurrentPhysiqueStep(onSelected: _next),
                   _TargetPhysiqueStep(onSelected: _next),
                   _ActivityStep(onSelected: _next),
-                  _DietPreferenceStep(onSelected: _next),
-                  _AllergiesStep(onSelected: _next),
-                  _MealFrequencyStep(onSelected: _next),
-                  _PrepTimeStep(onSelected: _next),
                   IllusionStep(onComplete: _finish),
                 ],
               ),
@@ -543,6 +554,21 @@ class _WizardHeader extends StatelessWidget {
   final int total;
   final VoidCallback? onBack;
 
+  /// Phase 46 · psychological motivator on the progress rail.
+  ///
+  /// Replaces the bare "4/7" counter with commitment-style copy:
+  ///   • steps 1..total-2 → "N soru kaldı" (N questions left)
+  ///   • steps total-1, total → "Neredeyse bitti!" (Almost done!)
+  ///
+  /// The two-step tail is deliberate — the user on the very last
+  /// body-metric question should feel the finish line, not another
+  /// abstract countdown.
+  String _progressCopy() {
+    final remaining = total - step;
+    if (remaining <= 1) return 'Neredeyse bitti!';
+    return '$remaining soru kaldı';
+  }
+
   @override
   Widget build(BuildContext context) {
     final progress = step / total;
@@ -595,7 +621,7 @@ class _WizardHeader extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
@@ -605,6 +631,17 @@ class _WizardHeader extends StatelessWidget {
               valueColor: const AlwaysStoppedAnimation(_neon),
             ),
           ),
+          const SizedBox(height: 6),
+          Text(
+            _progressCopy(),
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.4,
+            ),
+          ),
         ],
       ),
     );
@@ -612,25 +649,54 @@ class _WizardHeader extends StatelessWidget {
 }
 
 class _StepTitle extends StatelessWidget {
-  const _StepTitle({required this.title, this.subtitle});
+  const _StepTitle({
+    required this.title,
+    this.subtitle,
+    this.whyAskTitle,
+    this.whyAskExplanation,
+  });
   final String title;
   final String? subtitle;
 
+  /// Phase 46 · optional "Neden soruyoruz?" tooltip. When
+  /// [whyAskExplanation] is non-null, a subtle `Icons.info_outline`
+  /// button renders flush-right of the title; tapping it surfaces
+  /// [_showWhyAskSheet]. Left null on non-sensitive questions
+  /// (gender, activity, current physique) so the chrome stays quiet
+  /// everywhere it doesn't need to reassure the user.
+  final String? whyAskTitle;
+  final String? whyAskExplanation;
+
   @override
   Widget build(BuildContext context) {
+    final showInfoButton = whyAskExplanation != null;
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.w900,
-              height: 1.1,
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    height: 1.1,
+                  ),
+                ),
+              ),
+              if (showInfoButton) ...[
+                const SizedBox(width: 8),
+                _WhyAskButton(
+                  title: whyAskTitle ?? 'Neden soruyoruz?',
+                  explanation: whyAskExplanation!,
+                ),
+              ],
+            ],
           ),
           if (subtitle != null) ...[
             const SizedBox(height: 8),
@@ -643,6 +709,144 @@ class _StepTitle extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Subtle info button that sits flush-right of a step title and opens
+/// a `_showWhyAskSheet` on tap. Surface rendering is deliberately
+/// low-contrast so it doesn't compete with the primary answer options
+/// — users who don't need reassurance never see it.
+class _WhyAskButton extends StatelessWidget {
+  const _WhyAskButton({required this.title, required this.explanation});
+  final String title;
+  final String explanation;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: () => _showWhyAskSheet(
+          context,
+          title: title,
+          explanation: explanation,
+        ),
+        child: Container(
+          width: 36,
+          height: 36,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white.withValues(alpha: 0.06),
+            border: Border.all(
+              color: _neon.withValues(alpha: 0.35),
+              width: 1,
+            ),
+          ),
+          child: const Icon(
+            Icons.info_outline,
+            color: _neon,
+            size: 18,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Phase 46 · "Neden soruyoruz?" reassurance sheet.
+///
+/// Called from the info buttons on sensitive wizard steps (Age,
+/// Body Metrics, Target Physique). Keeps the explanation contained
+/// in a modal so the user can dismiss it without losing their
+/// place in the wizard. Background matches the onboarding purple
+/// gradient so it reads as part of the same flow.
+Future<void> _showWhyAskSheet(
+  BuildContext context, {
+  required String title,
+  required String explanation,
+}) {
+  return showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    builder: (sheetContext) => SafeArea(
+      top: false,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(22),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF221145), Color(0xFF0D0622)],
+          ),
+          border: Border.all(
+            color: _neon.withValues(alpha: 0.35),
+            width: 1,
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.info_outline, color: _neonAccent, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.of(sheetContext).pop(),
+                  icon: const Icon(Icons.close, color: Colors.white54),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              explanation,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Align(
+              alignment: Alignment.centerRight,
+              child: FilledButton(
+                onPressed: () => Navigator.of(sheetContext).pop(),
+                style: FilledButton.styleFrom(
+                  backgroundColor: _neon,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 22,
+                    vertical: 12,
+                  ),
+                  textStyle: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.6,
+                  ),
+                ),
+                child: const Text('ANLADIM'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 class _PrimaryButton extends StatelessWidget {
@@ -781,6 +985,11 @@ class _AgeStepState extends ConsumerState<_AgeStep> {
         const _StepTitle(
           title: 'Yaşın kaç?',
           subtitle: 'Metabolizmana göre yoğunluğu ayarlayalım.',
+          whyAskTitle: 'Yaşı neden soruyoruz?',
+          whyAskExplanation: 'Bazal metabolizma hızı yaşla birlikte değişir. '
+              'Günlük kalori ihtiyacını ve antrenman yoğunluğunu doğru '
+              'hesaplamak için yaşına ihtiyacımız var. Veriler sadece '
+              'senin hesabında tutulur, üçüncü taraflarla paylaşılmaz.',
         ),
         const SizedBox(height: 8),
         Expanded(
@@ -901,6 +1110,13 @@ class _BodyMetricsStepState extends ConsumerState<_BodyMetricsStep> {
         const _StepTitle(
           title: 'Boy & Kilo',
           subtitle: 'Kalori ve set hesaplarını buna göre yapacağız.',
+          whyAskTitle: 'Boy ve kiloyu neden soruyoruz?',
+          whyAskExplanation:
+              'Kalori ihtiyacını ve günlük makro dağılımını (protein, '
+              'karbonhidrat, yağ) doğru hesaplamak için fiziksel '
+              'metriklerine ihtiyacımız var. Ayrıca antrenman şiddetini '
+              've set sayısını sana göre ayarlayabilmemiz için önemli. '
+              'Tüm bilgiler güvenli bir şekilde saklanır.',
         ),
         const SizedBox(height: 12),
         Expanded(
@@ -1025,6 +1241,14 @@ class _TargetPhysiqueStep extends ConsumerWidget {
         const _StepTitle(
           title: 'Hedefin ne?',
           subtitle: '30 gün sonra nereye varmak istersin?',
+          whyAskTitle: 'Hedefini neden soruyoruz?',
+          whyAskExplanation:
+              '30 günlük programının tamamı hedefine göre kalibre '
+              'edilir. Sıkılaşmak için kardiyo + full-body ağırlıklı '
+              'bir plan, hacim kazanmak için güç antrenmanları, '
+              'six-pack için ise core + stabilite çalışmaları '
+              'öne çıkar. Bu tercih programının ilk günden doğru '
+              'yönde ilerlemesini sağlar.',
         ),
         const SizedBox(height: 16),
         Expanded(
@@ -1139,303 +1363,7 @@ class _ActivityStep extends ConsumerWidget {
   }
 }
 
-// ============================================================================
-// Nutrition wizard steps (phase 21, visuals upgraded in phase 35)
-// ----------------------------------------------------------------------------
-// Four single-select questions that feed the macro engine + recipe filter.
-// `_DietPreferenceStep` carries Unsplash food photos (URLs shared with the
-// `supabase_seed_recipes` dataset so we know they resolve); the remaining
-// three stay icon-only because an allergy / meal-count / prep-time question
-// reads more clearly with an abstract glyph than a stock photo.
-// ============================================================================
-
-// Food photos — lifted verbatim from supabase_seed_recipes.sql so each
-// URL is already exercised in production and guaranteed to resolve.
-const String _dietStandardImg =
-    'https://images.unsplash.com/photo-1544025162-d76694265947?w=800&q=80';
-const String _dietVegetarianImg =
-    'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80';
-const String _dietVeganImg =
-    'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&q=80';
-const String _dietKetoImg =
-    'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=800&q=80';
-
-// Meal frequency visuals — same verified-URL rule (all three are already
-// on live recipe rows). 2 öğün = single minimalist bowl, 3 öğün = a
-// balanced composed plate, 4+ öğün = a high-variety fresh-ingredient
-// spread so each option telegraphs its energy at a glance.
-const String _mealFreq2Img =
-    'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=800&q=80';
-const String _mealFreq3Img =
-    'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80';
-const String _mealFreq4Img =
-    'https://images.unsplash.com/photo-1525351484163-7529414344d8?w=800&q=80';
-
-class _DietPreferenceStep extends ConsumerWidget {
-  const _DietPreferenceStep({required this.onSelected});
-  final VoidCallback onSelected;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final selected = ref.watch(wizardProvider).dietPreference;
-
-    void pick(String value) {
-      ref.read(wizardProvider.notifier).setDietPreference(value);
-      Future<void>.delayed(const Duration(milliseconds: 220), onSelected);
-    }
-
-    return Column(
-      children: [
-        const _StepTitle(
-          title: 'Diyet Tercihin Nedir?',
-          subtitle: 'Tarifleri bu tercihine göre filtreleyeceğiz.',
-        ),
-        const SizedBox(height: 16),
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-            child: Column(
-              children: [
-                Expanded(
-                  child: PhotoOptionCard(
-                    image: _dietStandardImg,
-                    fallbackIcon: Icons.restaurant_menu,
-                    title: 'Standart',
-                    subtitle: 'Her şeyi yiyebilirim.',
-                    selected: selected == 'standart',
-                    onTap: () => pick('standart'),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Expanded(
-                  child: PhotoOptionCard(
-                    image: _dietVegetarianImg,
-                    fallbackIcon: Icons.grass,
-                    title: 'Vejetaryen',
-                    subtitle: 'Et yemem, yumurta/süt olabilir.',
-                    selected: selected == 'vejetaryen',
-                    onTap: () => pick('vejetaryen'),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Expanded(
-                  child: PhotoOptionCard(
-                    image: _dietVeganImg,
-                    fallbackIcon: Icons.eco,
-                    title: 'Vegan',
-                    subtitle: 'Hiçbir hayvansal ürün tüketmem.',
-                    selected: selected == 'vegan',
-                    onTap: () => pick('vegan'),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Expanded(
-                  child: PhotoOptionCard(
-                    image: _dietKetoImg,
-                    fallbackIcon: Icons.local_fire_department,
-                    title: 'Ketojenik',
-                    subtitle: 'Düşük karbonhidrat, yüksek yağ.',
-                    selected: selected == 'ketojenik',
-                    onTap: () => pick('ketojenik'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _AllergiesStep extends ConsumerWidget {
-  const _AllergiesStep({required this.onSelected});
-  final VoidCallback onSelected;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final selected = ref.watch(wizardProvider).allergies;
-
-    void pick(String value) {
-      ref.read(wizardProvider.notifier).setAllergies(value);
-      Future<void>.delayed(const Duration(milliseconds: 220), onSelected);
-    }
-
-    return Column(
-      children: [
-        const _StepTitle(
-          title: 'Herhangi bir gıda alerjin var mı?',
-          subtitle: 'Tariflerden bu içeriği çıkaracağız.',
-        ),
-        const SizedBox(height: 16),
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-            child: Column(
-              children: [
-                Expanded(
-                  child: PhotoOptionCard(
-                    fallbackIcon: Icons.verified_user,
-                    title: 'Yok',
-                    subtitle: 'Bilinen bir alerjim yok.',
-                    selected: selected == 'yok',
-                    onTap: () => pick('yok'),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Expanded(
-                  child: PhotoOptionCard(
-                    fallbackIcon: Icons.emoji_nature,
-                    title: 'Kuruyemiş',
-                    subtitle: 'Badem, fıstık, ceviz vb.',
-                    selected: selected == 'kuruyemis',
-                    onTap: () => pick('kuruyemis'),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Expanded(
-                  child: PhotoOptionCard(
-                    fallbackIcon: Icons.icecream,
-                    title: 'Süt Ürünleri',
-                    subtitle: 'Süt, peynir, yoğurt vb.',
-                    selected: selected == 'sut_urunleri',
-                    onTap: () => pick('sut_urunleri'),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Expanded(
-                  child: PhotoOptionCard(
-                    fallbackIcon: Icons.bakery_dining,
-                    title: 'Glüten',
-                    subtitle: 'Buğday, arpa, çavdar vb.',
-                    selected: selected == 'gluten',
-                    onTap: () => pick('gluten'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _MealFrequencyStep extends ConsumerWidget {
-  const _MealFrequencyStep({required this.onSelected});
-  final VoidCallback onSelected;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final selected = ref.watch(wizardProvider).mealFrequency;
-
-    void pick(String value) {
-      ref.read(wizardProvider.notifier).setMealFrequency(value);
-      Future<void>.delayed(const Duration(milliseconds: 220), onSelected);
-    }
-
-    return Column(
-      children: [
-        const _StepTitle(
-          title: 'Günde kaç öğün yersin?',
-          subtitle: 'Kalori dağılımını öğün sayına göre planlayacağız.',
-        ),
-        const SizedBox(height: 16),
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-            child: Column(
-              children: [
-                Expanded(
-                  child: PhotoOptionCard(
-                    image: _mealFreq2Img,
-                    fallbackIcon: Icons.hourglass_top,
-                    title: '2 Öğün',
-                    subtitle: 'Aralıklı oruç (16:8) tarzı beslenirim.',
-                    selected: selected == '2_ogun',
-                    onTap: () => pick('2_ogun'),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: PhotoOptionCard(
-                    image: _mealFreq3Img,
-                    fallbackIcon: Icons.restaurant,
-                    title: '3 Öğün',
-                    subtitle: 'Standart — kahvaltı, öğle, akşam.',
-                    selected: selected == '3_ogun',
-                    onTap: () => pick('3_ogun'),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: PhotoOptionCard(
-                    image: _mealFreq4Img,
-                    fallbackIcon: Icons.lunch_dining,
-                    title: '4+ Öğün',
-                    subtitle: 'Atıştırmalık severim.',
-                    selected: selected == '4_ogun',
-                    onTap: () => pick('4_ogun'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _PrepTimeStep extends ConsumerWidget {
-  const _PrepTimeStep({required this.onSelected});
-  final VoidCallback onSelected;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final selected = ref.watch(wizardProvider).prepTime;
-
-    void pick(String value) {
-      ref.read(wizardProvider.notifier).setPrepTime(value);
-      Future<void>.delayed(const Duration(milliseconds: 220), onSelected);
-    }
-
-    return Column(
-      children: [
-        const _StepTitle(
-          title: 'Yemek hazırlamak için ne kadar vaktin var?',
-          subtitle: 'Tarifleri süresine göre dengeleyeceğiz.',
-        ),
-        const SizedBox(height: 16),
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-            child: Column(
-              children: [
-                Expanded(
-                  child: PhotoOptionCard(
-                    fallbackIcon: Icons.timer,
-                    title: 'Hızlı & Pratik',
-                    subtitle: '10-15 dakika içinde hazırlanan tarifler.',
-                    selected: selected == 'hizli',
-                    onTap: () => pick('hizli'),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: PhotoOptionCard(
-                    fallbackIcon: Icons.soup_kitchen,
-                    title: 'Mutfakta Vakit',
-                    subtitle: '30+ dakika. Pişirmekten keyif alırım.',
-                    selected: selected == 'yavas',
-                    onTap: () => pick('yavas'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
+// Nutrition wizard steps moved to
+// `lib/features/nutrition/presentation/widgets/nutrition_onboarding_sheet.dart`
+// in Phase 46. Surfaced on first Beslenme-tab view instead of inside
+// primary onboarding so the path to /prediction stays short.

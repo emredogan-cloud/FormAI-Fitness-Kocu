@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/services/app_preferences.dart';
 import '../../nutrition/presentation/nutrition_tab.dart';
+import '../../nutrition/presentation/widgets/nutrition_onboarding_sheet.dart';
 import 'widgets/antrenman_tab.dart';
 import 'widgets/gelisim_tab.dart';
 import 'widgets/profile_tab.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
+const int _nutritionTabIndex = 1;
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -36,9 +39,31 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ),
       bottomNavigationBar: _BottomNav(
         index: _index,
-        onChanged: (i) => setState(() => _index = i),
+        onChanged: _onTabChanged,
       ),
     );
+  }
+
+  void _onTabChanged(int newIndex) {
+    final previous = _index;
+    setState(() => _index = newIndex);
+    // Phase 46 · deferred nutrition onboarding. First time the user
+    // lands on the Beslenme tab, present the four nutrition
+    // questions that used to live at the tail of primary
+    // onboarding. `hasCompletedNutritionPrefs` gates the prompt so
+    // it fires exactly once per install.
+    if (newIndex == _nutritionTabIndex && previous != _nutritionTabIndex) {
+      _maybePromptNutritionSheet();
+    }
+  }
+
+  void _maybePromptNutritionSheet() {
+    final prefs = ref.read(appPreferencesProvider);
+    if (prefs.hasCompletedNutritionPrefs) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      showNutritionOnboardingSheet(context);
+    });
   }
 }
 

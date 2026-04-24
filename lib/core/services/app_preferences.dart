@@ -29,6 +29,14 @@ class AppPreferences {
   // dependency just for one string constant.
   static const String _planCacheKey = 'sixpack.user_custom_plan_v2';
   static const String _nutritionStreakKey = 'sixpack.nutrition_streak';
+  // Phase 46 · progressive disclosure. The four nutrition wizard
+  // questions (diet / allergies / meal-frequency / prep-time) were
+  // lifted out of the main onboarding flow so the initial 13-step
+  // wizard could shrink to 9. They are asked the first time the user
+  // opens the Beslenme tab instead; this flag is set to `true` once
+  // that deferred flow completes so the sheet never re-prompts.
+  static const String _nutritionPrefsCompletedKey =
+      'sixpack.nutrition_prefs_completed';
 
   bool get isFirstTime => _prefs.getBool(_firstTimeKey) ?? true;
 
@@ -72,5 +80,15 @@ class AppPreferences {
 
   Future<void> setNutritionStreak(int value) async {
     await _prefs.setInt(_nutritionStreakKey, value);
+  }
+
+  /// True once the user has answered the four deferred nutrition
+  /// questions surfaced on first Beslenme-tab view. False-by-default
+  /// so fresh installs trigger the sheet exactly once.
+  bool get hasCompletedNutritionPrefs =>
+      _prefs.getBool(_nutritionPrefsCompletedKey) ?? false;
+
+  Future<void> completeNutritionOnboarding() async {
+    await _prefs.setBool(_nutritionPrefsCompletedKey, true);
   }
 }
