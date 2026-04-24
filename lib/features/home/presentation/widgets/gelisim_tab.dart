@@ -310,9 +310,12 @@ class _TrophyRing extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Scaled up from 54 → 72 px with a proportionally thicker stroke so
+    // the ring reads as a focal element next to the big `%N` number,
+    // not a decoration.
     return SizedBox(
-      width: 54,
-      height: 54,
+      width: 72,
+      height: 72,
       child: Stack(
         alignment: Alignment.center,
         children: [
@@ -323,14 +326,23 @@ class _TrophyRing extends StatelessWidget {
               curve: Curves.easeOutCubic,
               builder: (context, value, _) => CircularProgressIndicator(
                 value: value,
-                strokeWidth: 4,
+                strokeWidth: 5.5,
                 strokeCap: StrokeCap.round,
                 backgroundColor: _neon.withValues(alpha: 0.15),
                 valueColor: const AlwaysStoppedAnimation(_neon),
               ),
             ),
           ),
-          const Icon(Icons.emoji_events, color: _neon, size: 22),
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: _neon.withValues(alpha: 0.12),
+            ),
+            alignment: Alignment.center,
+            child: const Icon(Icons.emoji_events, color: _neon, size: 28),
+          ),
         ],
       ),
     );
@@ -385,6 +397,10 @@ class _StreakCard extends StatelessWidget {
                 ),
               ),
               const Spacer(),
+              // Phase 37: tiny dot → 22-px check pucks. Completed days
+              // get a green-filled circle with a crisp `Icons.check`;
+              // upcoming days keep a transparent fill + white24 outline
+              // so the row reads as a 5-day checklist, not a stats chip.
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: List.generate(5, (i) {
@@ -392,28 +408,36 @@ class _StreakCard extends StatelessWidget {
                   return Padding(
                     padding: const EdgeInsets.only(right: 6),
                     child: Container(
-                      width: 10,
-                      height: 10,
+                      width: 22,
+                      height: 22,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: isOn
-                            ? _success
-                            : Colors.white.withValues(alpha: 0.08),
+                            ? _success.withValues(alpha: 0.20)
+                            : Colors.transparent,
                         border: Border.all(
                           color: isOn
                               ? _success
-                              : Colors.white.withValues(alpha: 0.18),
-                          width: 1,
+                              : Colors.white.withValues(alpha: 0.22),
+                          width: isOn ? 1.4 : 1,
                         ),
                         boxShadow: isOn
                             ? [
                                 BoxShadow(
-                                  color: _success.withValues(alpha: 0.5),
-                                  blurRadius: 6,
+                                  color: _success.withValues(alpha: 0.45),
+                                  blurRadius: 8,
                                 ),
                               ]
                             : null,
                       ),
+                      alignment: Alignment.center,
+                      child: isOn
+                          ? const Icon(
+                              Icons.check,
+                              color: _success,
+                              size: 13,
+                            )
+                          : null,
                     ),
                   );
                 }),
@@ -471,18 +495,23 @@ class _TodayTaskCard extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // maxLines: 2 so long focus labels ("Kardiyo & Tüm
+                    // Vücut HIIT") wrap instead of truncating to
+                    // "Gün 2 - ...". Line height tightened so 2 lines
+                    // still fit alongside the sub + CTA pill.
                     Text(
                       'Gün ${activeDay.dayNumber} – $focus',
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 16,
+                        fontSize: 15,
                         fontWeight: FontWeight.w900,
+                        height: 1.2,
                         letterSpacing: 0.2,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Text(
                       '$minutes dk · $level',
                       style: const TextStyle(
@@ -494,7 +523,7 @@ class _TodayTaskCard extends ConsumerWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
               _PrimaryCta(onTap: () => _launch(context, ref)),
             ],
           ),
@@ -579,29 +608,35 @@ class _TodayTaskCard extends ConsumerWidget {
   }
 }
 
+/// Pill-shaped primary CTA. `StadiumBorder`-equivalent via
+/// `borderRadius: 999` (applied consistently on every layer —
+/// `DecoratedBox`, `Material`, `Ink`, `InkWell` — so the ripple, shadow,
+/// and gradient all clip to the same capsule silhouette).
 class _PrimaryCta extends StatelessWidget {
   const _PrimaryCta({required this.onTap});
   final VoidCallback onTap;
+
+  static final BorderRadius _pill = BorderRadius.circular(999);
 
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: _pill,
         boxShadow: [
           BoxShadow(
             color: _neon.withValues(alpha: 0.55),
-            blurRadius: 18,
-            spreadRadius: 0.5,
+            blurRadius: 16,
+            spreadRadius: 0.2,
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: _pill,
         child: Ink(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: _pill,
             gradient: const LinearGradient(
               colors: [_neonDeep, _neon],
               begin: Alignment.topLeft,
@@ -609,10 +644,10 @@ class _PrimaryCta extends StatelessWidget {
             ),
           ),
           child: InkWell(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: _pill,
             onTap: onTap,
             child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -620,16 +655,16 @@ class _PrimaryCta extends StatelessWidget {
                     'Antrenmana Başla',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 12.5,
+                      fontSize: 12,
                       fontWeight: FontWeight.w900,
-                      letterSpacing: 0.3,
+                      letterSpacing: 0.2,
                     ),
                   ),
                   SizedBox(width: 6),
                   Icon(
-                    Icons.arrow_forward_rounded,
+                    Icons.arrow_forward_ios_rounded,
                     color: Colors.white,
-                    size: 16,
+                    size: 11,
                   ),
                 ],
               ),
@@ -826,25 +861,22 @@ class _PulsingCurrentCellState extends State<_PulsingCurrentCell>
       animation: _ctrl,
       builder: (context, _) {
         final t = _ctrl.value;
-        final glowBlur = 14.0 + t * 14;
-        final glowAlpha = 0.55 + t * 0.30;
+        final glowBlur = 12.0 + t * 12;
+        final glowAlpha = 0.45 + t * 0.30;
+        // Phase 37: match the reference's "neon purple outline" treatment
+        // for the current day — 2-px neon border + a low-alpha purple
+        // wash inside, instead of the full gradient fill the prior
+        // version shipped. Pulse stays so it still catches the eye.
         return Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            gradient: LinearGradient(
-              colors: [_neonDeep, _neon],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.75),
-              width: 1.6,
-            ),
+            color: _neon.withValues(alpha: 0.18),
+            border: Border.all(color: _neon, width: 2),
             boxShadow: [
               BoxShadow(
                 color: _neon.withValues(alpha: glowAlpha),
                 blurRadius: glowBlur,
-                spreadRadius: 1.4,
+                spreadRadius: 1.0,
               ),
             ],
           ),
@@ -853,10 +885,9 @@ class _PulsingCurrentCellState extends State<_PulsingCurrentCell>
             '${widget.dayNumber}',
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 18,
+              fontSize: 17,
               fontWeight: FontWeight.w900,
               letterSpacing: 0.4,
-              shadows: [Shadow(blurRadius: 8, color: Colors.black38)],
             ),
           ),
         );
@@ -1035,7 +1066,13 @@ class _StatsCardsRow extends StatelessWidget {
       return completed ? 1.0 : baseline;
     });
 
-    return IntrinsicHeight(
+    // Fixed-height row (vs prior `IntrinsicHeight`): the 2 px bottom
+    // overflow came from `IntrinsicHeight + stretch` locking children to
+    // a sub-pixel rounded height that didn't match the inner Column's
+    // natural height. A concrete height + stretch + `Expanded`-flex chart
+    // removes the circular constraint.
+    return SizedBox(
+      height: 132,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -1117,7 +1154,6 @@ class _StatChartCard extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
         children: [
           _CardLabel(text: label, color: accent),
           const SizedBox(height: 6),
@@ -1154,8 +1190,11 @@ class _StatChartCard extends StatelessWidget {
               ],
             ],
           ),
-          const SizedBox(height: 10),
-          SizedBox(height: 50, child: chart),
+          const SizedBox(height: 8),
+          // Chart flexes to fill whatever's left in the 132-px parent —
+          // no fixed height, so sub-pixel rendering variance on the
+          // label/value row can't push the card past its box.
+          Expanded(child: chart),
         ],
       ),
     );
@@ -1362,9 +1401,12 @@ class _AiCoachCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
+          // Phase 37: sleek transparent TextButton (no outlined chrome),
+          // neon-tint text + small `arrow_forward_ios` icon. Matches
+          // the reference's "link" treatment rather than a second CTA.
           Align(
             alignment: Alignment.centerLeft,
-            child: OutlinedButton(
+            child: TextButton(
               onPressed: () => ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
                 ..showSnackBar(
@@ -1373,22 +1415,25 @@ class _AiCoachCard extends StatelessWidget {
                     behavior: SnackBarBehavior.floating,
                   ),
                 ),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.white,
-                side: BorderSide(color: _neon.withValues(alpha: 0.55)),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                minimumSize: const Size(0, 32),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
+              style: TextButton.styleFrom(
+                foregroundColor: _neon,
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                minimumSize: const Size(0, 28),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 textStyle: const TextStyle(
-                  fontSize: 12,
+                  fontSize: 12.5,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 0.3,
                 ),
               ),
-              child: const Text('Önerilere Git →'),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Önerilere Git'),
+                  SizedBox(width: 6),
+                  Icon(Icons.arrow_forward_ios_rounded, size: 11),
+                ],
+              ),
             ),
           ),
         ],
@@ -1527,7 +1572,11 @@ class _BadgesSection extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         SizedBox(
-          height: 112,
+          // Bumped from 112 → 128 to absorb the 3-px bottom overflow
+          // when a locked badge renders its progress (`%67`) line below
+          // the label. Individual text spans are also `FittedBox`-wrapped
+          // so a long localization can't reintroduce the issue.
+          height: 128,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
@@ -1588,26 +1637,31 @@ class _HexBadge extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          Text(
-            data.label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: data.unlocked ? Colors.white : Colors.white38,
-              fontSize: 10.5,
-              fontWeight: FontWeight.w800,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              data.label,
+              maxLines: 1,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: data.unlocked ? Colors.white : Colors.white38,
+                fontSize: 10.5,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
           if (!data.unlocked && data.progress > 0)
             Padding(
               padding: const EdgeInsets.only(top: 2),
-              child: Text(
-                '%${(data.progress * 100).round()}',
-                style: TextStyle(
-                  color: data.accent.withValues(alpha: 0.85),
-                  fontSize: 9.5,
-                  fontWeight: FontWeight.w800,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  '%${(data.progress * 100).round()}',
+                  style: TextStyle(
+                    color: data.accent.withValues(alpha: 0.85),
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ),
