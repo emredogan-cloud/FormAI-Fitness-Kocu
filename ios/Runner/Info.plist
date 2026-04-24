@@ -46,8 +46,8 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>FormAI needs camera access to analyze your workout form in real-time using on-device ML.</string>
+	<string>Antrenman sırasında formunu analiz etmek için kamerana ihtiyacımız var.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Microphone access is used when recording workout sessions.</string>
+	<string>Antrenman seanslarını kaydederken mikrofon erişimi kullanılabilir.</string>
 </dict>
 </plist>

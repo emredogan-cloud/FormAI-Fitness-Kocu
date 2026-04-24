@@ -48,13 +48,23 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
 
   Future<void> _onDeletePressed() async {
     if (_busy || !_matches) return;
+    // Phase 41: even after the user typed DELETE in the inline gate,
+    // raise an AlertDialog as a final, modal "are you sure?" — a
+    // GDPR/KVKK destructive operation must be impossible to trigger
+    // by accident. The dialog explicitly enumerates what gets wiped
+    // (antrenman + beslenme verileri).
+    final confirmed = await _showFinalConfirmDialog();
+    if (!mounted || !confirmed) return;
+
     setState(() => _busy = true);
     final outcome = await ref.read(authControllerProvider).deleteAccount();
     if (!mounted) return;
-    // On success we do NOT navigate here — Supabase emits a signed-out
-    // auth state, which refreshes the router and redirects to /auth. On
-    // failure we release the spinner and surface a toast so the user can
-    // retry without losing their typed confirmation.
+    // On success we do NOT navigate here — `AuthController.deleteAccount`
+    // already calls Supabase signOut + `prefs.clear()` + invalidates
+    // user-scoped providers, and Supabase emits a signed-out auth state
+    // which refreshes `authRefreshListenable` in the router, landing the
+    // user back on `/auth`. On failure we release the spinner and
+    // surface a toast so the user can retry without losing input.
     if (outcome == DeleteAccountOutcome.error) {
       setState(() => _busy = false);
       ScaffoldMessenger.of(context)
@@ -69,6 +79,72 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
           ),
         );
     }
+  }
+
+  Future<bool> _showFinalConfirmDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: const Color(0xFF14141B),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+        ),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: _danger, size: 24),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Emin misin?',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: const Text(
+          'Bu işlem geri alınamaz. Tüm antrenman ve beslenme '
+          'verileriniz silinecektir.',
+          style: TextStyle(
+            color: Colors.white70,
+            fontSize: 13.5,
+            height: 1.45,
+          ),
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            style: TextButton.styleFrom(foregroundColor: Colors.white70),
+            child: const Text('Vazgeç'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: _danger,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 10,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              textStyle: const TextStyle(
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.6,
+              ),
+            ),
+            child: const Text('KALICI OLARAK SİL'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
   }
 
   @override
@@ -176,7 +252,7 @@ class _DangerCard extends StatelessWidget {
               const SizedBox(width: 12),
               const Expanded(
                 child: Text(
-                  'Hesabı Sil',
+                  'Hesabımı Sil',
                   style: TextStyle(
                     color: _danger,
                     fontSize: 17,

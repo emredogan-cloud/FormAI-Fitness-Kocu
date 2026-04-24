@@ -1,10 +1,16 @@
 import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// Placeholder URLs for the Kullanım Şartları and Gizlilik Politikası pages.
-/// These get surfaced from both the paywall footer and onboarding disclaimer
-/// (App Store guideline 3.1.2 + Play Store developer policy). Swap to real
-/// URLs once legal approves the hosted copy.
+/// Production URLs for the Kullanım Şartları (Terms of Use) and Gizlilik
+/// Politikası (Privacy Policy) pages. Surfaced from the paywall footer,
+/// the onboarding welcome disclaimer, and the in-app Gizlilik sheet —
+/// satisfies App Store guideline 3.1.2 + 5.1.1(i), and Play Store Data
+/// Safety link-out.
+///
+/// Phase 41: promoted from placeholder to canonical. Hosting lives on
+/// `formai.app` (marketing static site); any URL change here must be
+/// accompanied by a matching update in App Store Connect and Play
+/// Console listing metadata.
 class LegalUrls {
   const LegalUrls._();
   static const String terms = 'https://formai.app/terms';
