@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/theme_extension.dart';
+
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonAccent = Color(0xFF4DA6FF);
-const Color _surface = Color(0xFF111118);
+const Color _surfaceDark = Color(0xFF111118);
 
 const List<String> _trDayLabels = [
   'Pzt',
@@ -30,31 +32,46 @@ class WeeklyGoalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53F · the entire card was painted from a hardcoded
+    // `_surface = #111118` plus white text/borders. Both flip via the
+    // active ColorScheme: light mode uses `surface` for the card and
+    // `outlineVariant` for the hairline; dark mode preserves the
+    // existing chrome.
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
       decoration: BoxDecoration(
-        color: _surface,
+        color: isDark ? _surfaceDark : scheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.06)
+              : scheme.outlineVariant,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Row(
                   children: [
                     Text(
                       'Haftalık Hedef',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: scheme.onSurface,
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    SizedBox(width: 6),
-                    Icon(Icons.edit, color: Colors.white38, size: 14),
+                    const SizedBox(width: 6),
+                    Icon(
+                      Icons.edit,
+                      color: scheme.onSurface.withValues(alpha: 0.38),
+                      size: 14,
+                    ),
                   ],
                 ),
               ),
@@ -111,20 +128,30 @@ class _DateBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53F · weekday labels + date bubbles were all hardcoded
+    // white tones. Pull the neutral surfaces + text via onSurface so
+    // the bubble row reads on light. Today's neon-filled bubble keeps
+    // its purple emphasis (it's brand identity).
+    final scheme = context.colors;
     final bg = isToday
         ? _neon
-        : (isPast ? Colors.white.withValues(alpha: 0.04) : Colors.transparent);
-    final border = isToday ? _neon : Colors.white.withValues(alpha: 0.18);
-    final numberColor =
-        isToday ? Colors.white : (isPast ? Colors.white60 : Colors.white);
+        : (isPast
+            ? scheme.onSurface.withValues(alpha: 0.05)
+            : Colors.transparent);
+    final border = isToday ? _neon : scheme.onSurface.withValues(alpha: 0.20);
+    final numberColor = isToday
+        ? Colors.white
+        : (isPast
+            ? scheme.onSurface.withValues(alpha: 0.55)
+            : scheme.onSurface);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           label,
-          style: const TextStyle(
-            color: Colors.white38,
+          style: TextStyle(
+            color: scheme.onSurface.withValues(alpha: 0.45),
             fontSize: 10,
             letterSpacing: 1,
             fontWeight: FontWeight.w600,
@@ -169,12 +196,23 @@ class _CoachSpeechBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53F · the speech bubble was an opaque-white-on-translucent
+    // tile in dark mode. Light mode reuses surfaceContainer and pulls
+    // the body text from onSurface so the AI Coach copy is legible.
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
     return Container(
       padding: const EdgeInsets.fromLTRB(10, 10, 14, 10),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.05)
+            : scheme.surfaceContainer,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.07)
+              : scheme.outlineVariant,
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -217,8 +255,8 @@ class _CoachSpeechBubble extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
-                color: Colors.white70,
+              style: TextStyle(
+                color: scheme.onSurface.withValues(alpha: 0.75),
                 fontSize: 12.5,
                 height: 1.4,
               ),

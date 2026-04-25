@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
 import '../../../core/services/analytics_service.dart';
+import '../../../core/theme/theme_extension.dart';
 import '../../../core/utils/legal_urls.dart';
 import '../../onboarding/providers/wizard_provider.dart';
 import '../providers/monetization_provider.dart';
@@ -39,17 +40,28 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53F · drop the Scaffold's hardcoded `Colors.black` so the
+    // active theme's `scaffoldBackgroundColor` flows through (lightBg
+    // in light mode, darkBg in dark). The brand purple gradient stays
+    // because it's the paywall's hero treatment — but in light mode it
+    // fades onto white instead of black so the cards below don't sit
+    // on a half-black, half-white backdrop.
+    final isDark = context.isDarkMode;
     return Scaffold(
-      backgroundColor: Colors.black,
       body: Stack(
         children: [
           DecoratedBox(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Color(0xFF1A0B3D), Colors.black],
-                stops: [0.0, 0.55],
+                colors: isDark
+                    ? const [Color(0xFF1A0B3D), Colors.black]
+                    : [
+                        _neon.withValues(alpha: 0.18),
+                        context.colors.surface,
+                      ],
+                stops: const [0.0, 0.55],
               ),
             ),
             child: SafeArea(
@@ -773,10 +785,18 @@ class _PlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53F · plan-card chrome was hardcoded for dark; surface,
+    // border, title, price, /per, decoy strikethrough, and the
+    // selection radio all flip via the active ColorScheme. The selected
+    // state's neon tint stays because it's the brand emphasis.
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
     final cardHeight = _isHighlighted ? 220.0 : 180.0;
     final borderColor = isSelected
         ? _PaywallScreenState._neon
-        : (_isHighlighted ? _PaywallScreenState._neon : Colors.white24);
+        : (_isHighlighted
+            ? _PaywallScreenState._neon
+            : (isDark ? Colors.white24 : scheme.outlineVariant));
 
     return GestureDetector(
       onTap: onTap,
@@ -794,7 +814,9 @@ class _PlanCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isSelected
                     ? _PaywallScreenState._neon.withValues(alpha: 0.14)
-                    : Colors.white.withValues(alpha: 0.04),
+                    : (isDark
+                        ? Colors.white.withValues(alpha: 0.04)
+                        : scheme.surface),
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(
                   color: borderColor,
@@ -820,7 +842,7 @@ class _PlanCard extends StatelessWidget {
                     style: TextStyle(
                       color: isSelected
                           ? _PaywallScreenState._neon
-                          : Colors.white70,
+                          : scheme.onSurface.withValues(alpha: 0.70),
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1.2,
@@ -834,7 +856,7 @@ class _PlanCard extends StatelessWidget {
                         child: Text(
                           _price,
                           style: TextStyle(
-                            color: Colors.white,
+                            color: scheme.onSurface,
                             fontSize: _isHighlighted ? 22 : 18,
                             fontWeight: FontWeight.w900,
                             height: 1,
@@ -844,8 +866,8 @@ class _PlanCard extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         _per,
-                        style: const TextStyle(
-                          color: Colors.white54,
+                        style: TextStyle(
+                          color: scheme.onSurface.withValues(alpha: 0.55),
                           fontSize: 11,
                           letterSpacing: 1,
                         ),
@@ -854,11 +876,12 @@ class _PlanCard extends StatelessWidget {
                         const SizedBox(height: 6),
                         Text(
                           _decoy!,
-                          style: const TextStyle(
-                            color: Colors.white54,
+                          style: TextStyle(
+                            color: scheme.onSurface.withValues(alpha: 0.55),
                             fontSize: 11,
                             decoration: TextDecoration.lineThrough,
-                            decorationColor: Colors.white60,
+                            decorationColor:
+                                scheme.onSurface.withValues(alpha: 0.60),
                             decorationThickness: 2,
                           ),
                         ),
@@ -876,7 +899,7 @@ class _PlanCard extends StatelessWidget {
                       border: Border.all(
                         color: isSelected
                             ? _PaywallScreenState._neon
-                            : Colors.white38,
+                            : scheme.onSurface.withValues(alpha: 0.40),
                         width: 1.5,
                       ),
                     ),

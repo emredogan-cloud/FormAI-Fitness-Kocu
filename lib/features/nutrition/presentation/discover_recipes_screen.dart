@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/theme/theme_extension.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../core/widgets/cached_image.dart';
@@ -90,16 +91,17 @@ class _DiscoverRecipesScreenState extends ConsumerState<DiscoverRecipesScreen> {
   Widget build(BuildContext context) {
     final recipesAsync = ref.watch(recipesProvider);
     final activeFilter = ref.watch(filterChipsProvider);
+    // Phase 53F · drop the hardcoded `0xFF0B0B12` Scaffold + AppBar.
+    final scheme = context.colors;
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0B12),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0B0B12),
+        backgroundColor: scheme.surface,
         elevation: 0,
-        foregroundColor: Colors.white,
-        title: const Text(
+        foregroundColor: scheme.onSurface,
+        title: Text(
           'Tüm Tarifler',
           style: TextStyle(
-            color: Colors.white,
+            color: scheme.onSurface,
             fontWeight: FontWeight.w900,
             letterSpacing: 0.4,
           ),
@@ -246,6 +248,10 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53F · filter chip surface + border + label all flip with
+    // the active theme. Selected chip stays neon-tinted (brand).
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(24),
@@ -259,9 +265,13 @@ class _FilterChip extends StatelessWidget {
             borderRadius: BorderRadius.circular(24),
             color: selected
                 ? _neon.withValues(alpha: 0.25)
-                : Colors.white.withValues(alpha: 0.04),
+                : (isDark
+                    ? Colors.white.withValues(alpha: 0.04)
+                    : scheme.surface),
             border: Border.all(
-              color: selected ? _neon : Colors.white24,
+              color: selected
+                  ? _neon
+                  : (isDark ? Colors.white24 : scheme.outlineVariant),
               width: selected ? 1.5 : 1,
             ),
             boxShadow: selected
@@ -276,7 +286,9 @@ class _FilterChip extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-              color: selected ? Colors.white : Colors.white70,
+              color: selected
+                  ? scheme.onSurface
+                  : scheme.onSurface.withValues(alpha: 0.70),
               fontSize: 12,
               fontWeight: FontWeight.w800,
               letterSpacing: 0.3,
@@ -300,8 +312,8 @@ class _ResultCount extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(18, 14, 18, 4),
       child: Text(
         '$count tarif bulundu$suffix',
-        style: const TextStyle(
-          color: Colors.white60,
+        style: TextStyle(
+          color: context.colors.onSurface.withValues(alpha: 0.60),
           fontSize: 12,
           fontWeight: FontWeight.w700,
           letterSpacing: 0.4,
@@ -317,6 +329,11 @@ class _DiscoverRecipeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53F · grid card surface + border + title + macros all
+    // route through onSurface so the discover gallery reads in light
+    // mode. Brand-coloured kcal flame + protein dumbbell stay.
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
     return Material(
       color: Colors.transparent,
       clipBehavior: Clip.antiAlias,
@@ -327,8 +344,11 @@ class _DiscoverRecipeCard extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            color: Colors.white.withValues(alpha: 0.04),
-            border: Border.all(color: Colors.white12),
+            color:
+                isDark ? Colors.white.withValues(alpha: 0.04) : scheme.surface,
+            border: Border.all(
+              color: isDark ? Colors.white12 : scheme.outlineVariant,
+            ),
           ),
           // Phase 48 · `Expanded` flex split instead of `AspectRatio` so
           // the image's height is driven by the cell height (mainAxisExtent
@@ -357,8 +377,8 @@ class _DiscoverRecipeCard extends StatelessWidget {
                           recipe.title,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: scheme.onSurface,
                             fontSize: 13,
                             fontWeight: FontWeight.w900,
                             height: 1.2,
@@ -380,8 +400,8 @@ class _DiscoverRecipeCard extends StatelessWidget {
                           const SizedBox(width: 3),
                           Text(
                             '${recipe.calories}',
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: scheme.onSurface,
                               fontSize: 11,
                               fontWeight: FontWeight.w800,
                             ),
@@ -395,8 +415,8 @@ class _DiscoverRecipeCard extends StatelessWidget {
                           const SizedBox(width: 3),
                           Text(
                             '${recipe.protein}g',
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: scheme.onSurface,
                               fontSize: 11,
                               fontWeight: FontWeight.w800,
                             ),
@@ -421,10 +441,16 @@ class _Thumb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53F · thumb fallback flips with the active theme.
+    final scheme = context.colors;
     final fallback = Container(
-      color: Colors.white10,
+      color: scheme.surfaceContainerHighest,
       alignment: Alignment.center,
-      child: const Icon(Icons.restaurant, color: Colors.white38, size: 28),
+      child: Icon(
+        Icons.restaurant,
+        color: scheme.onSurface.withValues(alpha: 0.40),
+        size: 28,
+      ),
     );
     final src = imageUrl;
     if (src == null || src.isEmpty) return fallback;
@@ -462,20 +488,23 @@ class _EmptyState extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 18),
-          const Text(
+          Text(
             'Bu filtreye uygun tarif bulunamadı.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.white,
+              color: context.colors.onSurface,
               fontSize: 15,
               fontWeight: FontWeight.w900,
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             'Farklı bir etiket deneyebilir veya filtreyi kaldırabilirsin.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white54, fontSize: 13),
+            style: TextStyle(
+              color: context.colors.onSurface.withValues(alpha: 0.55),
+              fontSize: 13,
+            ),
           ),
         ],
       ),

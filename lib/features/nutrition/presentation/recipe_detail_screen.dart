@@ -582,6 +582,12 @@ class _SlotPickerSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53F · the meal-swap bottom sheet (the "Hangi öğüne
+    // eklemek istersin?" picker triggered by the recipe-detail "Plana
+    // Ekle" button) was painting Kahvaltı / Öğle / Akşam labels in
+    // hardcoded white. Pull every text + chrome through onSurface so
+    // the sheet reads correctly on both palettes.
+    final scheme = context.colors;
     return SafeArea(
       top: false,
       child: Padding(
@@ -595,16 +601,16 @@ class _SlotPickerSheet extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white24,
+                  color: scheme.onSurface.withValues(alpha: 0.24),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
             const SizedBox(height: 18),
-            const Text(
+            Text(
               'Hangi öğüne eklemek istersin?',
               style: TextStyle(
-                color: Colors.white,
+                color: scheme.onSurface,
                 fontSize: 17,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 0.3,
@@ -632,6 +638,8 @@ class _SlotOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
     final (icon, color) = _iconFor(slot);
     return Material(
       color: Colors.transparent,
@@ -643,7 +651,9 @@ class _SlotOption extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            color: Colors.white.withValues(alpha: 0.05),
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : scheme.surfaceContainer,
             border: Border.all(color: color.withValues(alpha: 0.45)),
           ),
           child: Row(
@@ -661,16 +671,16 @@ class _SlotOption extends StatelessWidget {
               Expanded(
                 child: Text(
                   _slotLabel(slot),
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: scheme.onSurface,
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
-                color: Colors.white38,
+                color: scheme.onSurface.withValues(alpha: 0.38),
               ),
             ],
           ),
