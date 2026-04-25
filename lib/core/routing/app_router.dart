@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../features/admin/presentation/admin_dashboard_screen.dart';
 import '../../features/auth/presentation/auth_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/home/presentation/account_settings_screen.dart';
@@ -45,6 +46,11 @@ class AppRoutes {
   static const String progressSuggestions = '/progress/suggestions';
   static const String progressBadges = '/progress/badges';
   static const String nutritionDiscover = '/nutrition/discover';
+
+  /// Phase 50B · internal admin panel. Gated by [isAdminProvider]; the
+  /// router redirects non-admins to [dashboard] before the screen is
+  /// ever instantiated, so this path is invisible to regular users.
+  static const String admin = '/admin';
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -75,6 +81,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     }
     if (path == AppRoutes.auth) {
       return user.isAnonymous ? null : AppRoutes.paywall;
+    }
+    // Phase 50B · admin panel. Reads `app_metadata.role` directly off the
+    // current Supabase user (not via Riverpod) because this redirect runs
+    // before the widget tree is even mounted. Any non-admin (anonymous,
+    // regular signed-in user, missing claim) is silently bounced to the
+    // dashboard — the path stays invisible to the rest of the app.
+    if (path == AppRoutes.admin) {
+      final role = user.appMetadata['role'];
+      final isAdmin = role is String && role == 'admin';
+      return isAdmin ? null : AppRoutes.dashboard;
     }
     return null;
   }
@@ -180,6 +196,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.nutritionDiscover,
         name: 'nutritionDiscover',
         builder: (context, state) => const DiscoverRecipesScreen(),
+      ),
+      // Phase 50B · admin panel. The redirect above already forces
+      // non-admins to /, so the builder can render unconditionally.
+      GoRoute(
+        path: AppRoutes.admin,
+        name: 'admin',
+        builder: (context, state) => const AdminDashboardScreen(),
       ),
     ],
   );

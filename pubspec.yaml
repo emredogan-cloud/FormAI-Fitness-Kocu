@@ -63,6 +63,13 @@ dependencies:
   # in the recipe grid, the 30-day grid, and the plan-detail exercise
   # list while data is in flight.
   shimmer: ^3.0.0
+  # Phase 50B · image picker for the internal admin panel. Chosen
+  # over `file_picker` because the alternative had a transitive
+  # `win32` version conflict with our `wakelock_plus` pin, and
+  # because the admin panel only ever picks images. On web,
+  # `XFile.readAsBytes()` returns the raw bytes for the Supabase
+  # Storage upload pipeline.
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:

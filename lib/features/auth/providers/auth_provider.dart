@@ -33,6 +33,24 @@ final currentUserProvider = Provider<User?>((ref) {
   return Supabase.instance.client.auth.currentUser;
 });
 
+/// Phase 50B · `true` when the current user carries the
+/// `app_metadata.role = 'admin'` claim minted from Supabase Studio.
+/// Routes / widgets behind the admin tools watch this provider so a
+/// regular user navigating to `/admin` is bounced back to the dashboard
+/// instead of seeing a half-rendered shell.
+///
+/// `app_metadata` (not `user_metadata`) is intentional: the former can
+/// only be edited from a trusted server context, so a malicious client
+/// cannot self-promote by writing into the JWT — it would just fail the
+/// RLS policy anyway, but failing the route guard early avoids a
+/// confusing "you have access here but every write 401s" experience.
+final isAdminProvider = Provider<bool>((ref) {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) return false;
+  final role = user.appMetadata['role'];
+  return role is String && role == 'admin';
+});
+
 /// `Listenable` that notifies on every auth state change. Wired into
 /// `GoRouter.refreshListenable` so navigation re-evaluates on login/logout
 /// without tearing down the router.
