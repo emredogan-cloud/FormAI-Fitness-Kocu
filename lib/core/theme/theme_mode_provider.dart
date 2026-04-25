@@ -41,6 +41,14 @@ class _ThemeModeNotifier extends Notifier<ThemeMode> {
   }
 
   Future<void> set(ThemeMode mode) async {
+    // Phase 53 hotfix · idempotent guard. Without it, any caller that
+    // re-selects the already-active mode (for example, the
+    // SegmentedButton firing onSelectionChanged on a programmatic
+    // `selected:` update during the rebuild storm Light mode triggered)
+    // would reassign `state` and propagate a fresh notification down
+    // the tree — fuel for an infinite rebuild loop. Comparing first
+    // makes the loop self-terminating.
+    if (state == mode) return;
     state = mode;
     final prefs = ref.read(sharedPreferencesProvider);
     await prefs.setString(_storageKey, _encode(mode));

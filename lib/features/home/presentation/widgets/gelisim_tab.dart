@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/routing/app_router.dart';
 import '../../../../core/services/app_preferences.dart';
+import '../../../../core/theme/theme_extension.dart';
 import '../../../../core/utils/app_haptics.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/audio_feedback.dart';
@@ -102,18 +103,27 @@ class GelisimTab extends ConsumerWidget {
       await ref.read(workoutSessionProvider.future);
     }
 
+    // Phase 53 hotfix · the dark-purple radial halo is signature dark-
+    // mode chrome. In light mode it would clash with white content
+    // beneath, so swap to a transparent fill so the Scaffold's
+    // ColorScheme.surface shows through. The dark-mode gradient
+    // returns unchanged.
+    final isDark = context.isDarkMode;
     return Container(
-      decoration: const BoxDecoration(
-        gradient: RadialGradient(
-          center: Alignment(0, -0.85),
-          radius: 1.1,
-          colors: [
-            Color(0xFF1E0A40),
-            Color(0xFF0A0612),
-            Colors.black,
-          ],
-          stops: [0.0, 0.55, 1.0],
-        ),
+      decoration: BoxDecoration(
+        gradient: isDark
+            ? const RadialGradient(
+                center: Alignment(0, -0.85),
+                radius: 1.1,
+                colors: [
+                  Color(0xFF1E0A40),
+                  Color(0xFF0A0612),
+                  Colors.black,
+                ],
+                stops: [0.0, 0.55, 1.0],
+              )
+            : null,
+        color: isDark ? null : context.colors.surface,
       ),
       child: RefreshIndicator(
         onRefresh: handleRefresh,
@@ -1873,15 +1883,23 @@ class _SoftCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53 hotfix · static `_surface` / `_surfaceBorder` constants
+    // pinned every card on this tab to the dark palette regardless of
+    // the active theme. Pull from the live ColorScheme so the cards
+    // flip cleanly when the user toggles to Açık.
+    final isDark = context.isDarkMode;
+    final cardColor =
+        isDark ? _surface : context.colors.surfaceContainerHighest;
+    final cardBorder = isDark ? _surfaceBorder : context.colors.outlineVariant;
     return Container(
       padding: padding,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        color: _surface,
-        border: Border.all(color: _surfaceBorder),
+        color: cardColor,
+        border: Border.all(color: cardBorder),
         boxShadow: [
           BoxShadow(
-            color: accent.withValues(alpha: 0.10),
+            color: accent.withValues(alpha: isDark ? 0.10 : 0.06),
             blurRadius: 18,
             spreadRadius: 0.5,
           ),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/routing/app_router.dart';
+import '../../../core/theme/theme_extension.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/cached_image.dart';
 import '../domain/models/macro_target.dart';
@@ -65,7 +66,8 @@ class NutritionTab extends ConsumerWidget {
     return RefreshIndicator(
       onRefresh: handleRefresh,
       color: _neon,
-      backgroundColor: const Color(0xFF14141B),
+      // Phase 53 hotfix · refresh chrome flips with the active theme.
+      backgroundColor: context.colors.surface,
       child: CustomScrollView(
         slivers: [
           _DecisionPanelSliver(expandedHeight: _expandedHeight),
@@ -119,7 +121,10 @@ class _DecisionPanelSliver extends ConsumerWidget {
     return SliverAppBar(
       expandedHeight: expandedHeight,
       pinned: true,
-      backgroundColor: const Color(0xFF0B0B12),
+      // Phase 53 hotfix · was hardcoded `0xFF0B0B12`, leaving the
+      // collapsed app-bar pinned to dark even after the theme flipped.
+      // ColorScheme.surface is the right anchor for both modes.
+      backgroundColor: context.colors.surface,
       elevation: 0,
       automaticallyImplyLeading: false,
       toolbarHeight: kToolbarHeight,

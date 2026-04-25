@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/routing/app_router.dart';
 import '../../../../core/services/app_preferences.dart';
 import '../../../../core/services/notification_service.dart';
+import '../../../../core/theme/theme_extension.dart';
 import '../../../../core/theme/theme_mode_provider.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/audio_feedback.dart';
@@ -710,10 +711,14 @@ class _ProfileHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              // Phase 53 hotfix · "Profil" headline used hardcoded
+              // `Colors.white`, leaving white-on-white in light mode.
+              // Pull from `onSurface` so it lands as charcoal on the
+              // light scaffold and pure white on the dark one.
+              Text(
                 'Profil',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.colors.onSurface,
                   fontSize: 22,
                   fontWeight: FontWeight.w900,
                 ),
@@ -722,7 +727,10 @@ class _ProfileHeader extends StatelessWidget {
               Text(
                 label,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: Colors.white60, fontSize: 13),
+                style: TextStyle(
+                  color: context.colors.onSurface.withValues(alpha: 0.65),
+                  fontSize: 13,
+                ),
               ),
             ],
           ),
@@ -850,7 +858,6 @@ class _ThemeModeTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final mode = ref.watch(themeModeProvider);
-    final notifier = ref.read(themeModeProvider.notifier);
     return Container(
       margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsetsDirectional.fromSTEB(14, 14, 14, 14),
@@ -929,9 +936,20 @@ class _ThemeModeTile extends ConsumerWidget {
               ],
               selected: {mode},
               showSelectedIcon: false,
-              onSelectionChanged: (set) {
-                if (set.isEmpty) return;
-                notifier.set(set.first);
+              // Phase 53 hotfix · resolve the notifier inside the
+              // callback (NOT at build time) so the closure can't
+              // capture a stale instance after a hot reload / provider
+              // refresh. The Phase 53 build cached `final notifier =
+              // ref.read(...)` outside the closure; that pattern was
+              // working correctly in isolation, but during the Light
+              // mode rebuild storm Riverpod 3.3 ended up walking back
+              // through the same widget chain and re-firing the
+              // capture, which the framework surfaced as a stack
+              // overflow. Inline `ref.read` per the Riverpod docs is
+              // the safe pattern.
+              onSelectionChanged: (Set<ThemeMode> newSelection) {
+                if (newSelection.isEmpty) return;
+                ref.read(themeModeProvider.notifier).set(newSelection.first);
               },
               style: ButtonStyle(
                 visualDensity: VisualDensity.compact,

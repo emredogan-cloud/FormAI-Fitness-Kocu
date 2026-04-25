@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/services/app_preferences.dart';
+import '../../../core/theme/theme_extension.dart';
 import '../../nutrition/presentation/nutrition_tab.dart';
 import '../../nutrition/presentation/widgets/nutrition_onboarding_sheet.dart';
 import '../../progress/presentation/widgets/badge_unlock_dialog.dart';
@@ -95,7 +96,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     });
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      // Phase 53 hotfix · pull from the active ColorScheme so the
+      // Scaffold paints near-white in light mode and the existing
+      // `lightBg` token in our `AppTheme.light()` builder. Pre-hotfix
+      // hardcoded `Colors.black` made the whole shell pin to dark
+      // regardless of `themeMode`.
+      backgroundColor: context.colors.surface,
       body: SafeArea(
         bottom: false,
         child: IndexedStack(
@@ -177,20 +183,27 @@ class _BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53 hotfix · the bottom nav is the dashboard's most
+    // visible chrome strip; if it stayed black after a Light mode
+    // switch the user would see a black bar fighting white content
+    // above it. Pull from `surface` so it matches whichever mode
+    // is active, plus a hairline border tinted with the current
+    // theme's outline.
+    final scheme = context.colors;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.black,
+        color: scheme.surface,
         border: Border(
-          top: BorderSide(color: Colors.white.withValues(alpha: 0.06)),
+          top: BorderSide(color: scheme.outlineVariant),
         ),
       ),
       child: BottomNavigationBar(
         currentIndex: index,
         onTap: onChanged,
         type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.black,
+        backgroundColor: scheme.surface,
         selectedItemColor: _neon,
-        unselectedItemColor: Colors.white54,
+        unselectedItemColor: scheme.onSurface.withValues(alpha: 0.55),
         selectedFontSize: 12,
         unselectedFontSize: 12,
         showUnselectedLabels: true,
