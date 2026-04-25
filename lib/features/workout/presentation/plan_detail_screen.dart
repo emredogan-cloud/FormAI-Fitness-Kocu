@@ -9,6 +9,7 @@ import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/placeholder_images.dart';
 import '../../../core/widgets/cached_image.dart';
 import '../../../core/widgets/error_card.dart';
+import '../../../core/widgets/skeleton_loader.dart';
 import '../../monetization/providers/monetization_provider.dart';
 import '../models/exercise_model.dart';
 import '../models/workout_day_model.dart';
@@ -182,8 +183,10 @@ class _PlanDetailScreenState extends ConsumerState<PlanDetailScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: sessionAsync.when(
-        loading: () =>
-            const Center(child: CircularProgressIndicator(color: _neon)),
+        // Phase 49 · skeleton list mirrors the eventual exercise list
+        // shape so the user sees a coherent layout instead of a spinner
+        // floating on a black canvas.
+        loading: () => const ExerciseListSkeleton(),
         error: (err, st) {
           AppLogger.error(
             'plan detail workoutSession error',

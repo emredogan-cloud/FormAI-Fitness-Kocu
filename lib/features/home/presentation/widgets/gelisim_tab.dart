@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/routing/app_router.dart';
+import '../../../../core/widgets/skeleton_loader.dart';
 import '../../../workout/models/workout_day_model.dart';
 import '../../../workout/providers/workout_provider.dart';
 import 'today_task_card.dart';
@@ -41,7 +42,13 @@ class GelisimTab extends ConsumerWidget {
     // it can gate dialogs on the dashboard route being current. Showing
     // celebrations from inside this tab fired them on top of the
     // workout summary overlay, which the PM flagged as a clash.
-    final session = ref.watch(workoutSessionProvider).value;
+    final sessionAsync = ref.watch(workoutSessionProvider);
+    final session = sessionAsync.value;
+    // Phase 49 · treat the first frame after cold-start as "loading"
+    // when the session hasn't materialised yet. The day-grid section
+    // swaps in a shimmer placeholder instead of rendering 30 locked
+    // cells, which was the pre-Phase-49 look and read as "empty".
+    final isSessionLoading = sessionAsync.isLoading && session == null;
     final days = session?.days ?? const <WorkoutDay>[];
     final completedCount = days.where((d) => d.isCompleted).length;
     final streak = _streakOf(days);
@@ -76,6 +83,16 @@ class GelisimTab extends ConsumerWidget {
     // surface feels branded instead of flat-black. The gradient lives
     // on the outer `Container` (not per-card) to keep the effect cheap
     // and consistent while cards scroll past.
+    // Phase 49 · pull-to-refresh on the Gelişim tab. Invalidates the
+    // workout-session notifier so a swipe-down re-runs `_loadProgram`
+    // (which re-pulls completion rows from Supabase + replays any
+    // queued offline syncs). Awaiting the future on the next read
+    // keeps the spinner visible until the new data lands.
+    Future<void> handleRefresh() async {
+      ref.invalidate(workoutSessionProvider);
+      await ref.read(workoutSessionProvider.future);
+    }
+
     return Container(
       decoration: const BoxDecoration(
         gradient: RadialGradient(
@@ -89,38 +106,47 @@ class GelisimTab extends ConsumerWidget {
           stops: [0.0, 0.55, 1.0],
         ),
       ),
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
-        children: [
-          _TopHeader(streak: streak),
-          const SizedBox(height: 22),
-          _ProgramStatsColumn(
-            percent: percent,
-            completedCount: completedCount,
-            streak: streak,
-          ),
-          const SizedBox(height: 14),
-          if (isProgramComplete)
-            const ProgramCompleteCard()
-          else if (activeDay != null)
-            TodayTaskCard(activeDay: activeDay),
-          const SizedBox(height: 24),
-          _DayGridSection(days: days, activeDayNumber: activeDayNumber),
-          const SizedBox(height: 24),
-          _StatsCardsColumn(
-            weeklyDays: weeklyDays,
-            weeklyCompleted: weeklyCompleted,
-            weeklyKcal: weeklyKcal,
-          ),
-          const SizedBox(height: 22),
-          _AiCoachCard(streak: streak, percent: percent),
-          const SizedBox(height: 22),
-          _BadgesSection(
-            completedCount: completedCount,
-            streak: streak,
-            weeklyKcal: weeklyKcal,
-          ),
-        ],
+      child: RefreshIndicator(
+        onRefresh: handleRefresh,
+        color: _neon,
+        backgroundColor: const Color(0xFF14141B),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
+          children: [
+            _TopHeader(streak: streak),
+            const SizedBox(height: 22),
+            _ProgramStatsColumn(
+              percent: percent,
+              completedCount: completedCount,
+              streak: streak,
+            ),
+            const SizedBox(height: 14),
+            if (isProgramComplete)
+              const ProgramCompleteCard()
+            else if (activeDay != null)
+              TodayTaskCard(activeDay: activeDay),
+            const SizedBox(height: 24),
+            _DayGridSection(
+              days: days,
+              activeDayNumber: activeDayNumber,
+              isLoading: isSessionLoading,
+            ),
+            const SizedBox(height: 24),
+            _StatsCardsColumn(
+              weeklyDays: weeklyDays,
+              weeklyCompleted: weeklyCompleted,
+              weeklyKcal: weeklyKcal,
+            ),
+            const SizedBox(height: 22),
+            _AiCoachCard(streak: streak, percent: percent),
+            const SizedBox(height: 22),
+            _BadgesSection(
+              completedCount: completedCount,
+              streak: streak,
+              weeklyKcal: weeklyKcal,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -511,9 +537,11 @@ class _DayGridSection extends StatelessWidget {
   const _DayGridSection({
     required this.days,
     required this.activeDayNumber,
+    this.isLoading = false,
   });
   final List<WorkoutDay> days;
   final int activeDayNumber;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -521,6 +549,11 @@ class _DayGridSection extends StatelessWidget {
     // a placeholder SnackBar; the real `/progress/calendar` screen
     // ships in Phase 47A and maps program days onto calendar dates
     // relative to today, so the pill can finally route somewhere real.
+    //
+    // Phase 49 · while the session is loading we render a 5×6 shimmer
+    // grid in the same slot so the page reserves its real height
+    // (no jump when data lands) and the user sees motion instead of
+    // 30 locked-state cells.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -536,7 +569,10 @@ class _DayGridSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 10),
-        _DayGrid(days: days, activeDayNumber: activeDayNumber),
+        if (isLoading)
+          const DayGridSkeleton()
+        else
+          _DayGrid(days: days, activeDayNumber: activeDayNumber),
       ],
     );
   }
@@ -1279,43 +1315,73 @@ class _AiCoachCard extends StatelessWidget {
 /// + glow so the avatar reads as "your coach" and not a stock icon.
 /// An `errorBuilder` falls back to the old robot glyph if the asset
 /// ever fails to decode.
-class _CoachAvatar extends StatelessWidget {
+///
+/// Phase 49 · slow breathing scale (0.95 → 1.05) so the avatar reads
+/// as "alive" / "thinking" instead of a static stamp. 2.4 s per
+/// half-cycle keeps it subtle — fast enough to register motion, slow
+/// enough not to fight the rest of the page's content.
+class _CoachAvatar extends StatefulWidget {
   const _CoachAvatar();
 
   @override
+  State<_CoachAvatar> createState() => _CoachAvatarState();
+}
+
+class _CoachAvatarState extends State<_CoachAvatar>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 2400),
+  )..repeat(reverse: true);
+
+  late final Animation<double> _scale = Tween<double>(
+    begin: 0.95,
+    end: 1.05,
+  ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 45,
-      height: 45,
-      padding: const EdgeInsets.all(2),
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: const LinearGradient(
-          colors: [_neonDeep, _neon],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: _neon.withValues(alpha: 0.55),
-            blurRadius: 14,
-            spreadRadius: 0.5,
+    return ScaleTransition(
+      scale: _scale,
+      child: Container(
+        width: 45,
+        height: 45,
+        padding: const EdgeInsets.all(2),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: const LinearGradient(
+            colors: [_neonDeep, _neon],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-        ],
-      ),
-      child: ClipOval(
-        child: Image.asset(
-          'photos/kişiselyapayzekakoçfoto.webp',
-          width: 41,
-          height: 41,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Container(
-            color: _neonDeep,
-            alignment: Alignment.center,
-            child: const Icon(
-              Icons.smart_toy,
-              color: Colors.white,
-              size: 22,
+          boxShadow: [
+            BoxShadow(
+              color: _neon.withValues(alpha: 0.55),
+              blurRadius: 14,
+              spreadRadius: 0.5,
+            ),
+          ],
+        ),
+        child: ClipOval(
+          child: Image.asset(
+            'photos/kişiselyapayzekakoçfoto.webp',
+            width: 41,
+            height: 41,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => Container(
+              color: _neonDeep,
+              alignment: Alignment.center,
+              child: const Icon(
+                Icons.smart_toy,
+                color: Colors.white,
+                size: 22,
+              ),
             ),
           ),
         ),

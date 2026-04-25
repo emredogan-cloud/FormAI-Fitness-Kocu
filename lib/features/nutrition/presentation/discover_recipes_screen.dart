@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/utils/app_haptics.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../core/widgets/cached_image.dart';
 import '../../../core/widgets/error_card.dart';
+import '../../../core/widgets/skeleton_loader.dart';
 import '../domain/models/recipe.dart';
 import '../providers/nutrition_provider.dart';
 import 'widgets/recipe_tags.dart';
@@ -104,9 +106,9 @@ class _DiscoverRecipesScreenState extends ConsumerState<DiscoverRecipesScreen> {
         ),
       ),
       body: recipesAsync.when(
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: _neon),
-        ),
+        // Phase 49 · skeleton grid instead of a centred spinner so the
+        // user sees the eventual layout shape immediately on cold open.
+        loading: () => const RecipeGridSkeleton(),
         error: (err, st) {
           AppLogger.error(
             'DiscoverRecipesScreen error',
@@ -130,8 +132,11 @@ class _DiscoverRecipesScreenState extends ConsumerState<DiscoverRecipesScreen> {
                 child: _FilterRow(
                   filters: _filters,
                   active: activeFilter,
-                  onTap: (label) =>
-                      ref.read(filterChipsProvider.notifier).toggle(label),
+                  onTap: (label) {
+                    // Phase 49 · subtle tactile feedback on chip toggles.
+                    AppHaptics.secondaryTap();
+                    ref.read(filterChipsProvider.notifier).toggle(label);
+                  },
                 ),
               ),
               SliverToBoxAdapter(

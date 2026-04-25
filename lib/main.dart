@@ -10,6 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/routing/app_router.dart';
 import 'core/services/analytics_service.dart';
 import 'core/services/app_preferences.dart';
+import 'core/theme/app_theme.dart';
 import 'core/utils/app_logger.dart';
 
 Future<void> main() async {
@@ -298,14 +299,10 @@ class FormAIApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'FormAI',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: _kNeon,
-          brightness: Brightness.dark,
-        ),
-        scaffoldBackgroundColor: Colors.black,
-        useMaterial3: true,
-      ),
+      // Phase 49 · `AppTheme.dark()` adds the floating, neon-bordered
+      // SnackBar defaults on top of the existing seed-based scheme so
+      // every toast across the app reads as part of the brand.
+      theme: AppTheme.dark(),
       routerConfig: router,
     );
   }

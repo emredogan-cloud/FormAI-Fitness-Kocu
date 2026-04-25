@@ -9,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../core/services/analytics_service.dart';
 import '../../../core/services/app_preferences.dart';
+import '../../../core/utils/app_haptics.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/legal_urls.dart';
 import '../../monetization/providers/monetization_provider.dart';
@@ -869,7 +870,16 @@ class _PrimaryButton extends StatelessWidget {
       child: SizedBox(
         width: double.infinity,
         child: FilledButton(
-          onPressed: onPressed,
+          // Phase 49 · "DEVAM" through the wizard is the most-tapped
+          // primary CTA in the onboarding flow; route it through
+          // `AppHaptics.primaryCta()` so each step advances with the
+          // same satisfying medium thump as "Antrenmana Başla".
+          onPressed: onPressed == null
+              ? null
+              : () {
+                  AppHaptics.primaryCta();
+                  onPressed!();
+                },
           style: FilledButton.styleFrom(
             backgroundColor: _neon,
             foregroundColor: Colors.black,

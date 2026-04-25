@@ -57,6 +57,12 @@ dependencies:
   google_sign_in: ^7.2.0
   sign_in_with_apple: ^7.0.1
   crypto: ^3.0.7
+  # Phase 49 · skeleton loaders. The shimmer animation drives the
+  # `SkeletonBox` / `SkeletonLine` widgets in lib/core/widgets/
+  # skeleton_loader.dart, replacing generic CircularProgressIndicators
+  # in the recipe grid, the 30-day grid, and the plan-detail exercise
+  # list while data is in flight.
+  shimmer: ^3.0.0
 
 dev_dependencies:
   flutter_test:

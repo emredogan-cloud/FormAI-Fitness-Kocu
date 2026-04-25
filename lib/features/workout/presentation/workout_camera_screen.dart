@@ -10,6 +10,7 @@ import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
+import '../../../core/utils/app_haptics.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/audio_feedback.dart';
 import '../../../core/widgets/error_card.dart';
@@ -77,6 +78,11 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
   bool _wasResting = false;
   bool _wasPreparing = false;
   String? _formWarning;
+  // Phase 49 · last form-warning string we issued a haptic for. Used
+  // as a single-step debounce so a sustained "diz bükülü tut" warning
+  // (which can fire on every frame for several seconds) only buzzes
+  // the device once per occurrence instead of vibrating continuously.
+  String? _lastFormWarning;
   CrunchState _state = CrunchState.unknown;
 
   Timer? _workoutTimer;
@@ -271,6 +277,10 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         // painter on subsequent frames.
         setState(() => _poses = const []);
       }
+      // Phase 49 · clear the warning debounce so the next exercise
+      // re-haptics on any returning warning (otherwise resuming after
+      // rest with the same form fault would silently swallow the cue).
+      _lastFormWarning = null;
       return;
     }
 
@@ -343,6 +353,17 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         final warning = result.formWarning;
         if (warning != null) {
           _audio.speak(warning);
+          // Phase 49 · double light-tap when the analyzer flags broken
+          // form. Distinct from the per-rep tap so the user can tell
+          // "good rep" and "fix something" apart without looking at
+          // the screen. Throttled by `_lastFormWarning` below so a
+          // sustained warning doesn't buzz the device every frame.
+          if (warning != _lastFormWarning) {
+            _lastFormWarning = warning;
+            unawaited(AppHaptics.warningDoubleTap());
+          }
+        } else {
+          _lastFormWarning = null;
         }
 
         // Mid-rep coaching cue (e.g. Burpee step-2 "Şimdi aşağı in…").
@@ -355,9 +376,11 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         }
 
         if (result.repJustCompleted) {
-          // Light tap on every counted rep so the user feels the beat even
-          // with the phone on the floor and music in their ears.
-          unawaited(HapticFeedback.lightImpact());
+          // Phase 49 · upgraded from a per-rep light tap to a heavy
+          // impact. A counted rep is the unambiguous "you did the
+          // thing" signal — the user's whole reason for being on this
+          // screen — so it earns the strongest haptic in the app.
+          AppHaptics.heavyImpact();
           if (!mounted) return;
           final notifier = ref.read(workoutSessionProvider.notifier);
           notifier.setCurrentReps(result.reps);
@@ -382,9 +405,12 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
           }
 
           if (target != null && reps >= target) {
-            // Firmer thump when a set/exercise finishes, to distinguish
-            // "keep going" from "done".
-            unawaited(HapticFeedback.mediumImpact());
+            // Phase 49 · set/exercise completion uses the milestone
+            // helper (heavy impact). Distinct from the per-rep heavy
+            // tap above only by timing — but in context the user
+            // perceives "rep" vs "set done" because the set-done
+            // thump is followed by the rest overlay's UI swap.
+            AppHaptics.milestone();
             await notifier.completeCurrentExercise();
             if (!mounted) return;
             _analyzer.reset();
@@ -519,9 +545,10 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
   }
 
   Future<void> _onTimerComplete() async {
-    // Time-based exercises don't go through the rep-counting path, so fire
-    // the "set done" medium thump here instead.
-    unawaited(HapticFeedback.mediumImpact());
+    // Phase 49 · time-based exercises don't go through the rep-counting
+    // path, so this is the equivalent "set done" thump. Routed through
+    // `AppHaptics.milestone()` to match the rep-based completion above.
+    AppHaptics.milestone();
     _audio.speak('Süre doldu, harika!');
     if (!mounted) return;
     await ref.read(workoutSessionProvider.notifier).completeCurrentExercise();
@@ -561,7 +588,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       final prevPrep = prevSession?.prepSecondsRemaining ?? 0;
       final prep = session.prepSecondsRemaining;
       if (preparing && prep > 0 && prep != prevPrep) {
-        unawaited(HapticFeedback.selectionClick());
+        AppHaptics.success();
       }
 
       // Voice coach lifecycle announcements. Priority:
@@ -569,8 +596,9 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       // The prep cue replaces the old "exercise start" cue because every
       // exercise is now preceded by a HAZIRLAN! countdown.
       if (sessionJustCompleted) {
-        // Celebratory thump to pair with the TTS finale.
-        unawaited(HapticFeedback.heavyImpact());
+        // Phase 49 · celebratory milestone thump to pair with the
+        // TTS finale.
+        AppHaptics.milestone();
         _audio.speak('Antrenman tamamlandı! Harika bir iş çıkardın.');
       } else if (justStartedRest && exercise != null) {
         _audio.speak(
@@ -875,7 +903,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     if (_isPaused) {
       setState(() => _isPaused = false);
     }
-    unawaited(HapticFeedback.lightImpact());
+    AppHaptics.secondaryTap();
     ref.read(workoutSessionProvider.notifier).previousExercise();
   }
 

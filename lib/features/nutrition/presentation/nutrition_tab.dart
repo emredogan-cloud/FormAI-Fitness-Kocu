@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/cached_image.dart';
 import '../domain/models/macro_target.dart';
 import '../domain/models/recipe.dart';
@@ -50,38 +50,54 @@ class NutritionTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final recipesAsync = ref.watch(recipesProvider);
-    return CustomScrollView(
-      slivers: [
-        _DecisionPanelSliver(expandedHeight: _expandedHeight),
-        const SliverPadding(
-          padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
-          sliver: SliverToBoxAdapter(
-            child: _SectionTitle(title: 'Günün Menüsü'),
-          ),
-        ),
-        const MealPlanSliver(),
-        const SliverPadding(
-          padding: EdgeInsets.fromLTRB(20, 22, 20, 8),
-          sliver: SliverToBoxAdapter(
-            child: _SectionTitle(title: 'Öğün Kategorileri'),
-          ),
-        ),
-        const SliverToBoxAdapter(child: _MealCategoriesSection()),
-        const SliverToBoxAdapter(child: _DiscoverySectionHeader()),
-        SliverToBoxAdapter(
-          child: recipesAsync.when(
-            loading: () => const SizedBox(
-              height: 180,
-              child: Center(
-                child: CircularProgressIndicator(color: _neon),
-              ),
+    // Phase 49 · pull-to-refresh. Invalidates the recipe catalogue +
+    // the daily-menu so a swipe-down on the Beslenme tab pulls fresh
+    // rows from Supabase. Awaiting the recipe future keeps the
+    // RefreshIndicator spinner visible until the first page actually
+    // lands instead of dismissing instantly.
+    Future<void> handleRefresh() async {
+      ref.invalidate(recipesProvider);
+      ref.invalidate(dailyMenuProvider);
+      await ref.read(recipesProvider.future);
+    }
+
+    return RefreshIndicator(
+      onRefresh: handleRefresh,
+      color: _neon,
+      backgroundColor: const Color(0xFF14141B),
+      child: CustomScrollView(
+        slivers: [
+          _DecisionPanelSliver(expandedHeight: _expandedHeight),
+          const SliverPadding(
+            padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
+            sliver: SliverToBoxAdapter(
+              child: _SectionTitle(title: 'Günün Menüsü'),
             ),
-            error: (_, __) => const SizedBox.shrink(),
-            data: (recipes) => _DiscoverySection(recipes: recipes),
           ),
-        ),
-        const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
-      ],
+          const MealPlanSliver(),
+          const SliverPadding(
+            padding: EdgeInsets.fromLTRB(20, 22, 20, 8),
+            sliver: SliverToBoxAdapter(
+              child: _SectionTitle(title: 'Öğün Kategorileri'),
+            ),
+          ),
+          const SliverToBoxAdapter(child: _MealCategoriesSection()),
+          const SliverToBoxAdapter(child: _DiscoverySectionHeader()),
+          SliverToBoxAdapter(
+            child: recipesAsync.when(
+              loading: () => const SizedBox(
+                height: 180,
+                child: Center(
+                  child: CircularProgressIndicator(color: _neon),
+                ),
+              ),
+              error: (_, __) => const SizedBox.shrink(),
+              data: (recipes) => _DiscoverySection(recipes: recipes),
+            ),
+          ),
+          const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
+        ],
+      ),
     );
   }
 }
@@ -312,8 +328,12 @@ class _MacroBar extends ConsumerWidget {
         ClipRRect(
           borderRadius: BorderRadius.circular(4),
           child: TweenAnimationBuilder<double>(
+            // Phase 49 · 500 → 800 ms easeOutCubic so the macro bar
+            // glides into its new value instead of snapping. Pairs
+            // with the calorie ring's tween so the whole hero moves
+            // as one.
             tween: Tween(begin: 0, end: progress),
-            duration: const Duration(milliseconds: 500),
+            duration: const Duration(milliseconds: 800),
             curve: Curves.easeOutCubic,
             builder: (context, value, _) => LinearProgressIndicator(
               value: value,
@@ -467,8 +487,12 @@ class _CalorieRing extends ConsumerWidget {
         children: [
           SizedBox.expand(
             child: TweenAnimationBuilder<double>(
+              // Phase 49 · 600 → 800 ms easeOutCubic. The longer arc
+              // gives the eye time to track the ring sweep when a
+              // user marks a meal complete and the calorie progress
+              // jumps by ~10 % in one tick.
               tween: Tween(begin: 0, end: clamped),
-              duration: const Duration(milliseconds: 600),
+              duration: const Duration(milliseconds: 800),
               curve: Curves.easeOutCubic,
               builder: (context, value, _) => CircularProgressIndicator(
                 value: value,
@@ -732,18 +756,19 @@ class _NextMealPreview extends ConsumerWidget {
   }
 
   void _addToPlan(BuildContext context, WidgetRef ref, Recipe recipe) {
-    HapticFeedback.mediumImpact();
+    // "Hemen Ekle" — primary CTA on the next-best-meal preview.
+    AppHaptics.primaryCta();
     ref
         .read(dailyMenuProvider.notifier)
         .addRecipeToPlan(recipe, recipe.mealType);
+    // Phase 49 · the SnackBar inherits the global theme (floating
+    // chrome + neon hairline border), so we no longer override
+    // backgroundColor / behavior locally — let the theme drive it for
+    // visual consistency across the app.
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        SnackBar(
-          content: Text('${recipe.title} plana eklendi!'),
-          backgroundColor: _neonGreen.withValues(alpha: 0.9),
-          behavior: SnackBarBehavior.floating,
-        ),
+        SnackBar(content: Text('${recipe.title} plana eklendi!')),
       );
   }
 }
@@ -784,7 +809,7 @@ class _WarningCta extends StatelessWidget {
   Widget build(BuildContext context) {
     return OutlinedButton.icon(
       onPressed: () {
-        HapticFeedback.lightImpact();
+        AppHaptics.secondaryTap();
         context.push('/recipe', extra: recipe);
       },
       icon: const Icon(Icons.cancel_outlined, size: 14),
@@ -895,8 +920,10 @@ class _CompactDecisionHeader extends ConsumerWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: TweenAnimationBuilder<double>(
+                // Phase 49 · 500 → 800 ms easeOutCubic to match the
+                // expanded panel's bars + ring.
                 tween: Tween(begin: 0, end: proteinRatio),
-                duration: const Duration(milliseconds: 500),
+                duration: const Duration(milliseconds: 800),
                 curve: Curves.easeOutCubic,
                 builder: (context, value, _) => LinearProgressIndicator(
                   value: value,
@@ -1064,8 +1091,11 @@ class _DiscoverySection extends ConsumerWidget {
               return _DiscoveryFilterChip(
                 label: label,
                 selected: selected,
-                onTap: () =>
-                    ref.read(filterChipsProvider.notifier).toggle(label),
+                onTap: () {
+                  // Phase 49 · subtle tactile feedback on chip toggles.
+                  AppHaptics.secondaryTap();
+                  ref.read(filterChipsProvider.notifier).toggle(label);
+                },
               );
             },
           ),

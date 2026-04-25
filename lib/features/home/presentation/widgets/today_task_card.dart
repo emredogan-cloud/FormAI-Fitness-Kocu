@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/routing/app_router.dart';
+import '../../../../core/utils/app_haptics.dart';
 import '../../../monetization/providers/monetization_provider.dart';
 import '../../../workout/models/workout_day_model.dart';
 
@@ -103,11 +103,13 @@ class TodayTaskCard extends ConsumerWidget {
     if (activeDay.exercises.isEmpty) return;
     final isPro = ref.read(isProProvider);
     if (!isPro && activeDay.dayNumber > kFreeDayLimit) {
-      HapticFeedback.lightImpact();
+      AppHaptics.secondaryTap();
       context.push(AppRoutes.paywall);
       return;
     }
-    HapticFeedback.mediumImpact();
+    // "Antrenmana Başla" — the single most important CTA in the app,
+    // gets the dedicated `primaryCta` semantic helper.
+    AppHaptics.primaryCta();
     context.push(AppRoutes.planDetail);
   }
 
