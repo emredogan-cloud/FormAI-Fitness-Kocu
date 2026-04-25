@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/routing/app_router.dart';
 import '../../../../core/services/app_preferences.dart';
 import '../../../../core/services/notification_service.dart';
+import '../../../../core/theme/theme_mode_provider.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/audio_feedback.dart';
 import '../../../../core/utils/legal_urls.dart';
@@ -205,6 +206,11 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
         const SizedBox(height: 28),
         const _SettingsHeader(title: 'AYARLAR'),
         const SizedBox(height: 10),
+        // Phase 53 · theme picker. Sits at the top of AYARLAR (above
+        // Premium / Sesli Koç / Gizlilik) because dark/light is the
+        // setting users hunt for first when the OS-level pref doesn't
+        // match what they want for FormAI specifically.
+        const _ThemeModeTile(),
         _SettingsTile(
           icon: Icons.workspace_premium,
           title: 'FormAI Premium',
@@ -824,6 +830,121 @@ class _SettingsTile extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Phase 53 · theme picker tile. Renders the same chrome as
+/// [_SettingsTile] (icon + title block) but slots a 3-segment selector
+/// in place of the trailing chevron because the action is a multi-state
+/// pick, not a single-tap drill-in.
+///
+/// Wired to [themeModeProvider] which persists the selection through
+/// SharedPreferences. Default is `ThemeMode.system` so a fresh install
+/// honours whatever the OS is set to before the user ever visits this
+/// tile.
+class _ThemeModeTile extends ConsumerWidget {
+  const _ThemeModeTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final mode = ref.watch(themeModeProvider);
+    final notifier = ref.read(themeModeProvider.notifier);
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsetsDirectional.fromSTEB(14, 14, 14, 14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        color: Colors.white.withValues(alpha: 0.03),
+        border: Border.all(color: Colors.white12, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: _neon.withValues(alpha: 0.18),
+                ),
+                child: const Icon(
+                  Icons.brightness_6_rounded,
+                  color: _neon,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Tema',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Şu an: ${themeModeLabelTr(mode)}',
+                      style: const TextStyle(
+                        color: Colors.white54,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // SegmentedButton sizes itself to its content; wrap in a
+          // SizedBox to stretch full-width so the three segments balance
+          // visually with the tile's title row above.
+          SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<ThemeMode>(
+              segments: const [
+                ButtonSegment(
+                  value: ThemeMode.system,
+                  label: Text('Sistem'),
+                  icon: Icon(Icons.settings_suggest, size: 16),
+                ),
+                ButtonSegment(
+                  value: ThemeMode.light,
+                  label: Text('Açık'),
+                  icon: Icon(Icons.light_mode_outlined, size: 16),
+                ),
+                ButtonSegment(
+                  value: ThemeMode.dark,
+                  label: Text('Koyu'),
+                  icon: Icon(Icons.dark_mode_outlined, size: 16),
+                ),
+              ],
+              selected: {mode},
+              showSelectedIcon: false,
+              onSelectionChanged: (set) {
+                if (set.isEmpty) return;
+                notifier.set(set.first);
+              },
+              style: ButtonStyle(
+                visualDensity: VisualDensity.compact,
+                textStyle: WidgetStateProperty.all(
+                  const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

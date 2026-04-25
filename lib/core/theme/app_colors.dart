@@ -50,8 +50,20 @@ class AppColors {
   static const Color danger = Color(0xFFFF4D6D);
 
   /// Warm warning hue. Streak pills, weekly kcal cards, "low calories
-  /// remaining" status.
+  /// remaining" status. Phase 53 audited against WCAG AA: 4.5:1 needs
+  /// the 14-pt on-light path, which `0xFFF97316` (luminance 0.43)
+  /// fails on white. Use [orangeOnLight] when rendering this hue
+  /// against light surfaces; the original [orange] stays the dark-mode
+  /// constant.
   static const Color orange = Color(0xFFF97316);
+
+  /// Phase 53 accessibility tweak. `Color(0xFFB45309)` (Tailwind
+  /// orange-700) clears 4.74:1 against pure white and 4.55:1 against
+  /// our [lightSurface] — a contrast-passing alternative for warning
+  /// text in light mode. Glyph filling (icon backgrounds with low
+  /// alpha overlays) can keep using [orange]; only foreground text
+  /// or thin lines need the swap.
+  static const Color orangeOnLight = Color(0xFFB45309);
 
   /// Softer amber — rest day cells, "İlk Adım" badge accent.
   static const Color amber = Color(0xFFFFB84D);
@@ -88,4 +100,32 @@ class AppColors {
   /// Inactive cell colour — locked day grid, disabled tiles, faded
   /// chrome.
   static const Color inactive = Color(0xFF1C1C24);
+
+  // -- Light surfaces (Phase 53) --------------------------------------
+  // Phase 53 introduces a Light theme. Most existing widgets paint with
+  // hardcoded hex values from the dark palette and stay legible-but-
+  // off-brand in light mode; the Material widgets that respect the
+  // ThemeData ColorScheme (Scaffold backgrounds, AppBars, default
+  // FilledButtons) flip cleanly via the new tokens below. Bespoke
+  // surfaces will migrate opportunistically.
+
+  /// Crisp off-white scaffold. Picked over pure `0xFFFFFFFF` to avoid
+  /// the harsh white that would otherwise strobe under the neon
+  /// brand accents.
+  static const Color lightBg = Color(0xFFF7F8FA);
+
+  /// Cards and elevated surfaces in light mode.
+  static const Color lightSurface = Color(0xFFFFFFFF);
+
+  /// 1-px outline on cards in light mode. Subtle so it reads as a
+  /// hairline rather than a heavy frame.
+  static const Color lightSurfaceBorder = Color(0xFFE2E5EA);
+
+  /// Primary text on light surfaces. Charcoal rather than pure black so
+  /// long blocks of body copy don't fight the screen.
+  static const Color lightTextPrimary = Color(0xFF111118);
+
+  /// Secondary / metadata text on light surfaces. WCAG AA compliant
+  /// against [lightSurface] (5.07:1).
+  static const Color lightTextSecondary = Color(0xFF565B66);
 }

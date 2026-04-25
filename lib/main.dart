@@ -11,6 +11,7 @@ import 'core/routing/app_router.dart';
 import 'core/services/analytics_service.dart';
 import 'core/services/app_preferences.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_mode_provider.dart';
 import 'core/utils/app_logger.dart';
 
 Future<void> main() async {
@@ -296,13 +297,22 @@ class FormAIApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
+    // Phase 53 · the user's persisted choice flows through
+    // `themeModeProvider`. ThemeMode.system (the default for fresh
+    // installs) lets the OS dark/light setting drive which of the two
+    // builders below wins; explicit Light/Dark overrides force-select.
+    final themeMode = ref.watch(themeModeProvider);
     return MaterialApp.router(
       title: 'FormAI',
       debugShowCheckedModeBanner: false,
-      // Phase 49 · `AppTheme.dark()` adds the floating, neon-bordered
-      // SnackBar defaults on top of the existing seed-based scheme so
-      // every toast across the app reads as part of the brand.
-      theme: AppTheme.dark(),
+      // Phase 49 · the dark builder layers floating, neon-bordered
+      // SnackBars on top of the seed-based ColorScheme so toasts read
+      // as part of the brand. Phase 53 added [AppTheme.light] so
+      // selecting "Açık" or following a light-mode system pref renders
+      // a matching off-white palette without losing the neon CTAs.
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      themeMode: themeMode,
       routerConfig: router,
     );
   }

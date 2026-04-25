@@ -273,55 +273,73 @@ class _PrimaryCta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: _radius,
-          boxShadow: [
-            BoxShadow(
-              color: _neon.withValues(alpha: 0.50),
-              blurRadius: 22,
-              spreadRadius: 0.4,
-            ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: _radius,
-          child: Ink(
+    // Phase 53 · accessibility. The CTA is built from `Ink + InkWell`
+    // wrapped around bespoke chrome — no `ElevatedButton` to
+    // contribute a default semantic label. Wrap with an explicit
+    // `Semantics(button: true, label: ...)` so VoiceOver / TalkBack
+    // announce "Antrenmana başla, düğme" instead of falling back to
+    // reading the all-caps "ANTRENMANA BAŞLA" string verbatim.
+    return Semantics(
+      button: true,
+      enabled: true,
+      label: 'Antrenmana başla',
+      // Hide the inner Text from the a11y tree so the synthesized label
+      // above is the only thing announced — otherwise screen readers
+      // read both, producing "Antrenmana başla. ANTRENMANA BAŞLA".
+      child: ExcludeSemantics(
+        child: SizedBox(
+          width: double.infinity,
+          child: DecoratedBox(
             decoration: BoxDecoration(
               borderRadius: _radius,
-              gradient: const LinearGradient(
-                colors: [_neonDeep, _neon],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              boxShadow: [
+                BoxShadow(
+                  color: _neon.withValues(alpha: 0.50),
+                  blurRadius: 22,
+                  spreadRadius: 0.4,
+                ),
+              ],
             ),
-            child: InkWell(
+            child: Material(
+              color: Colors.transparent,
               borderRadius: _radius,
-              onTap: onTap,
-              child: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 14),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'ANTRENMANA BAŞLA',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.4,
-                      ),
+              child: Ink(
+                decoration: BoxDecoration(
+                  borderRadius: _radius,
+                  gradient: const LinearGradient(
+                    colors: [_neonDeep, _neon],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: InkWell(
+                  borderRadius: _radius,
+                  onTap: onTap,
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 14),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'ANTRENMANA BAŞLA',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.4,
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          color: Colors.white,
+                          size: 12,
+                        ),
+                      ],
                     ),
-                    SizedBox(width: 8),
-                    Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      color: Colors.white,
-                      size: 12,
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),

@@ -129,61 +129,85 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   }
 
   Widget _buildCta() {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: _neon.withValues(alpha: 0.6),
-            blurRadius: 32,
-            spreadRadius: 1,
+    // Phase 53 · the paywall's primary "Devam Et / Try at ₺0,00" path
+    // is the screen's monetisation hinge. Wrap with explicit semantics
+    // so screen readers announce the action instead of trying to read
+    // the price string + arrow icon as separate elements. While `_busy`
+    // we surface a loading state so blind users aren't left tapping a
+    // disabled button.
+    return Semantics(
+      button: true,
+      enabled: !_busy,
+      label: _busy ? 'Yükleniyor' : 'Aboneliğe devam et',
+      child: ExcludeSemantics(
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: _neon.withValues(alpha: 0.6),
+                blurRadius: 32,
+                spreadRadius: 1,
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Ink(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          gradient: const LinearGradient(
-            colors: [_neon, _neonAccent],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: _busy ? null : _purchase,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: _busy
-                  ? const [
-                      SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.2,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ]
-                  : const [
-                      Text(
-                        '₺0,00 karşılığında dene',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.4,
-                          fontSize: 16,
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Icon(
-                        Icons.arrow_forward_rounded,
-                        color: Colors.white,
-                        size: 22,
-                      ),
-                    ],
+          child: Ink(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              gradient: const LinearGradient(
+                colors: [_neon, _neonAccent],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+            ),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(20),
+              onTap: _busy ? null : _purchase,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: _busy
+                      ? const [
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.2,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ]
+                      : const [
+                          // Phase 53 · `maxLines: 2 + ellipsis` so the
+                          // hero CTA copy gracefully wraps when the
+                          // user has the system text scaler cranked
+                          // (TextScaler ~1.6+ pushed the original
+                          // single-line layout into a horizontal
+                          // overflow on a 360 px iPhone SE).
+                          Flexible(
+                            child: Text(
+                              '₺0,00 karşılığında dene',
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1.4,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Icon(
+                            Icons.arrow_forward_rounded,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                        ],
+                ),
+              ),
             ),
           ),
         ),

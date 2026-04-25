@@ -1297,8 +1297,18 @@ class _AiCoachCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 12),
+          // Phase 53 · defensive text scaling. The greeting is hero
+          // copy that has to read at any TextScaler the user picks; an
+          // unbounded Text with the OS scaler at 1.7x (the maximum
+          // setting on iOS Accessibility) would push it past 4 lines
+          // and overlap the Önerilere pill below. Cap to 4 lines with
+          // ellipsis so the layout stays stable while assistive tech
+          // gets the full string via Semantics.
           Text(
             copy,
+            maxLines: 4,
+            overflow: TextOverflow.ellipsis,
+            textScaler: _clampedScaler(context),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 13,
@@ -1331,6 +1341,16 @@ class _AiCoachCard extends ConsumerWidget {
     }
     return 'Bugün hedeflerimize bir adım daha yaklaşıyoruz.';
   }
+
+  /// Phase 53 · accessibility text scaling. The OS-level scaler can
+  /// hit 1.7x on iOS / 2.0x on Android; layouts in this card are
+  /// designed for ~1.0–1.3x, beyond which they overflow. Clamp at
+  /// 1.3 so the user still gets larger-than-default text but the
+  /// hero card doesn't need a redesign per scaler step.
+  TextScaler _clampedScaler(BuildContext context) {
+    final inherited = MediaQuery.textScalerOf(context);
+    return inherited.clamp(maxScaleFactor: 1.3);
+  }
 }
 
 /// Phase 52 · "Günlük Özet Dinle" button anchored top-right of the AI
@@ -1362,26 +1382,37 @@ class _DailySummaryButtonState extends ConsumerState<_DailySummaryButton> {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: _neon.withValues(alpha: 0.18),
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: _isSpeaking ? null : _onTap,
-        child: SizedBox(
-          width: 36,
-          height: 36,
-          child: Center(
-            child: _isSpeaking
-                ? const SizedBox(
-                    width: 14,
-                    height: 14,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: _neon,
-                    ),
-                  )
-                : const Icon(Icons.graphic_eq, color: _neon, size: 18),
+    // Phase 53 · explicit Semantics so VoiceOver / TalkBack announce
+    // the icon-only button as "Günlük özetimi dinle, düğme" rather
+    // than just "düğme". `enabled: !_isSpeaking` mirrors the visual
+    // disabled state for assistive tech.
+    return Semantics(
+      button: true,
+      enabled: !_isSpeaking,
+      label: _isSpeaking ? 'Özet okunuyor' : 'Günlük özetimi dinle',
+      child: ExcludeSemantics(
+        child: Material(
+          color: _neon.withValues(alpha: 0.18),
+          shape: const CircleBorder(),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: _isSpeaking ? null : _onTap,
+            child: SizedBox(
+              width: 36,
+              height: 36,
+              child: Center(
+                child: _isSpeaking
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: _neon,
+                        ),
+                      )
+                    : const Icon(Icons.graphic_eq, color: _neon, size: 18),
+              ),
+            ),
           ),
         ),
       ),
