@@ -9,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_haptics.dart';
 import '../../../../core/utils/app_logger.dart';
+import '../../../../core/utils/string_extensions.dart';
 
 /// Phase 50B · admin form for authoring a `recipes` row.
 ///
@@ -493,14 +494,14 @@ class _AdminRecipeFormState extends ConsumerState<AdminRecipeForm> {
         .toList(growable: false);
   }
 
-  static String _slugify(String input) {
-    final base = input
-        .toLowerCase()
-        .replaceAll(RegExp(r'[^a-z0-9ğüşıöç]+'), '_')
-        .replaceAll(RegExp(r'^_+|_+$'), '');
-    if (base.isEmpty) return 'recipe';
-    return base.length > 40 ? base.substring(0, 40) : base;
-  }
+  /// Phase 51 hotfix · was previously a local regex that PRESERVED
+  /// `ğüşıöç`, which meant a Turkish title like "Tatlı Patates" produced
+  /// the Storage key `<ts>_tatlı_patates.webp`. Supabase Storage rejects
+  /// non-ASCII keys with `Invalid key`, so the slug now goes through the
+  /// shared [StorageFilenameSanitizer] that transliterates Turkish
+  /// glyphs to their ASCII counterparts before stripping.
+  static String _slugify(String input) =>
+      input.sanitizeFileName(maxLength: 40, fallback: 'recipe');
 
   static String? _extractExtension(String? name) {
     if (name == null) return null;

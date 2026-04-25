@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_haptics.dart';
 import '../../../../core/utils/app_logger.dart';
+import '../../../../core/utils/string_extensions.dart';
 
 /// Phase 50C · admin form for authoring a `public.exercises` row.
 ///
@@ -730,23 +731,13 @@ class _AdminExerciseFormState extends ConsumerState<AdminExerciseForm> {
   }
 
   /// ASCII-only slug — strips Turkish diacritics so the resulting URL
-  /// path is portable. Existing migration uses ASCII slugs ('crunch',
-  /// 'push_up') so admin entries should follow suit.
-  static String _slugify(String input) {
-    final transliterated = input
-        .toLowerCase()
-        .replaceAll('ı', 'i')
-        .replaceAll('ğ', 'g')
-        .replaceAll('ü', 'u')
-        .replaceAll('ş', 's')
-        .replaceAll('ö', 'o')
-        .replaceAll('ç', 'c');
-    final base = transliterated
-        .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
-        .replaceAll(RegExp(r'^_+|_+$'), '');
-    if (base.isEmpty) return 'exercise';
-    return base.length > 40 ? base.substring(0, 40) : base;
-  }
+  /// path + Storage key are portable. Existing migration uses ASCII
+  /// slugs ('crunch', 'push_up') so admin entries should follow suit.
+  /// Phase 51 hotfix · delegates to the shared [StorageFilenameSanitizer]
+  /// so the recipe and exercise forms can't drift on transliteration
+  /// rules.
+  static String _slugify(String input) =>
+      input.sanitizeFileName(maxLength: 40, fallback: 'exercise');
 
   static String? _extractExtension(String? name) {
     if (name == null) return null;
