@@ -1,12 +1,16 @@
 -- =============================================================================
--- Phase 43 · Supabase Row Level Security policies for SixPack AI
+-- Phase 43 (Phase 50A revision) · Supabase Row Level Security policies
 -- =============================================================================
--- Locks the app's two production tables down so that:
+-- Locks the app's production tables down so that:
 --
---   • `public.recipes`      — world-readable catalogue, mutation is
---                             service_role-only (admin panel / seed scripts).
---   • `public.user_progress` — strictly self-scoped; `auth.uid()` must
---                              equal `user_id` on every read and write.
+--   • `public.recipes`        — world-readable catalogue. Mutation is
+--                               admin-only via a JWT app_metadata claim
+--                               (Phase 50A) — service_role still bypasses
+--                               RLS for backend scripts.
+--   • `public.exercises`      — world-readable catalogue (Phase 50A). Mutation
+--                               is admin-only via the same JWT claim.
+--   • `public.user_progress`  — strictly self-scoped; `auth.uid()` must
+--                               equal `user_id` on every read and write.
 --
 -- Copy this entire file into the Supabase SQL Editor and run once. It is
 -- idempotent: every policy is preceded by a matching `DROP POLICY IF EXISTS`
@@ -15,12 +19,29 @@
 --
 -- ROLE MODEL (Supabase default):
 --   • `anon`          — API-key-only requests, no JWT. We DO let these read
---                       recipes (public catalogue), but NOT user_progress.
+--                       recipes + exercises (public catalogue), but NOT
+--                       user_progress.
 --   • `authenticated` — any valid JWT, including Supabase anonymous auth
---                       users. These are the primary users of both tables.
+--                       users. Primary readers of all three tables.
 --   • `service_role`  — server-side scripts. Bypasses RLS entirely by
---                       default, so we do not declare policies for it;
---                       admin mutations on `recipes` use this role.
+--                       default, so we do not declare policies for it.
+--
+-- ADMIN ROLE (Phase 50A):
+--   Catalogue mutations (insert / update / delete recipes + exercises) are
+--   gated on a JWT app_metadata claim:
+--
+--       auth.jwt() -> 'app_metadata' ->> 'role' = 'admin'
+--
+--   To grant admin to a user from the Supabase dashboard:
+--
+--       Auth → Users → (pick user) → Raw user app metadata → JSON edit
+--       Set: { "role": "admin" }
+--
+--   `app_metadata` (NOT `user_metadata`) is required because user_metadata
+--   is user-mutable from the client, which would let any user grant
+--   themselves admin. `app_metadata` can only be edited from a trusted
+--   server context (dashboard, service_role calls, migrations) so it is
+--   safe to gate mutations on it.
 --
 -- ROLLBACK: to revert to the fully-open state, run the `DISABLE ROW LEVEL
 -- SECURITY` block at the bottom of this file (commented out by default).
@@ -30,14 +51,18 @@
 -- =============================================================================
 -- SECTION 1 · public.recipes
 -- =============================================================================
--- Read: open to everyone.
--- Write: blocked for authenticated + anon (no matching policy). service_role
---        bypasses RLS so our seed scripts and future admin panel still work.
+-- Read: open to everyone (anon + authenticated).
+-- Write (Phase 50A): admin-only via JWT app_metadata claim. service_role
+--   still bypasses RLS, so seed scripts (`supabase_seed_recipes.sql`,
+--   etc.) keep working without a JWT.
 -- =============================================================================
 
 ALTER TABLE public.recipes ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "recipes_public_read" ON public.recipes;
+DROP POLICY IF EXISTS "recipes_public_read"  ON public.recipes;
+DROP POLICY IF EXISTS "recipes_admin_insert" ON public.recipes;
+DROP POLICY IF EXISTS "recipes_admin_update" ON public.recipes;
+DROP POLICY IF EXISTS "recipes_admin_delete" ON public.recipes;
 
 CREATE POLICY "recipes_public_read"
   ON public.recipes
@@ -45,15 +70,85 @@ CREATE POLICY "recipes_public_read"
   TO authenticated, anon
   USING (true);
 
--- Note: no INSERT / UPDATE / DELETE policies are defined for authenticated
--- or anon. Without a matching permissive policy, Postgres denies the
--- operation. Admin writes must come from service_role (which bypasses
--- RLS) — that's the current `supabase_seed_recipes.sql` +
--- `supabase_seed_categories.sql` invocation model.
+CREATE POLICY "recipes_admin_insert"
+  ON public.recipes
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+  );
+
+CREATE POLICY "recipes_admin_update"
+  ON public.recipes
+  FOR UPDATE
+  TO authenticated
+  USING (
+    (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+  )
+  WITH CHECK (
+    (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+  );
+
+CREATE POLICY "recipes_admin_delete"
+  ON public.recipes
+  FOR DELETE
+  TO authenticated
+  USING (
+    (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+  );
 
 
 -- =============================================================================
--- SECTION 2 · public.user_progress
+-- SECTION 2 · public.exercises (Phase 50A — new table)
+-- =============================================================================
+-- Mirrors the recipes policy: anyone can read the catalogue, admins
+-- (JWT app_metadata role = 'admin') can author. Run
+-- `supabase_exercises_migration.sql` first to create the table.
+-- =============================================================================
+
+ALTER TABLE public.exercises ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "exercises_public_read"  ON public.exercises;
+DROP POLICY IF EXISTS "exercises_admin_insert" ON public.exercises;
+DROP POLICY IF EXISTS "exercises_admin_update" ON public.exercises;
+DROP POLICY IF EXISTS "exercises_admin_delete" ON public.exercises;
+
+CREATE POLICY "exercises_public_read"
+  ON public.exercises
+  FOR SELECT
+  TO authenticated, anon
+  USING (true);
+
+CREATE POLICY "exercises_admin_insert"
+  ON public.exercises
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+  );
+
+CREATE POLICY "exercises_admin_update"
+  ON public.exercises
+  FOR UPDATE
+  TO authenticated
+  USING (
+    (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+  )
+  WITH CHECK (
+    (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+  );
+
+CREATE POLICY "exercises_admin_delete"
+  ON public.exercises
+  FOR DELETE
+  TO authenticated
+  USING (
+    (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+  );
+
+
+-- =============================================================================
+-- SECTION 3 · public.user_progress
 -- =============================================================================
 -- Every row is scoped to `user_id`. Supabase "anonymous auth" users get a
 -- real `auth.uid()` when they call `signInAnonymously()`, so the same
@@ -99,7 +194,7 @@ CREATE POLICY "user_progress_own_delete"
 
 
 -- =============================================================================
--- SECTION 3 · Future schema — public.user_metrics (NOT YET APPLIED)
+-- SECTION 4 · Future schema — public.user_metrics (NOT YET APPLIED)
 -- =============================================================================
 -- Wizard output (weight, height, goal, activity level, diet prefs) is
 -- currently kept in SharedPreferences on-device. Roadmap Phase 43 note:
@@ -197,19 +292,29 @@ CREATE TRIGGER user_metrics_touch_updated_at
 --   SELECT schemaname, tablename, policyname, roles, cmd, qual, with_check
 --   FROM pg_policies
 --   WHERE schemaname = 'public'
---     AND tablename IN ('recipes', 'user_progress');
+--     AND tablename IN ('recipes', 'exercises', 'user_progress');
 --
--- Confirm RLS is ON for both tables:
+-- Confirm RLS is ON for all three tables:
 --
 --   SELECT relname, relrowsecurity
 --   FROM pg_class
---   WHERE relname IN ('recipes', 'user_progress');
+--   WHERE relname IN ('recipes', 'exercises', 'user_progress');
 --
 -- Smoke test from the Supabase SQL editor (runs as service_role, so the
 -- expected result is all rows regardless of user_id):
 --
 --   SELECT count(*) FROM public.recipes;
+--   SELECT count(*) FROM public.exercises;
 --   SELECT count(*) FROM public.user_progress;
+--
+-- Verify the admin-claim guard works as expected (run as a non-admin
+-- authenticated user — should error with "new row violates row-level
+-- security policy"):
+--
+--   INSERT INTO public.exercises (slug, name, type, category, difficulty,
+--     target_muscles, sets, rest_duration_in_seconds)
+--     VALUES ('test_admin_block', 'should fail', 'repBased', 'core',
+--             'beginner', ARRAY['core'], 3, 30);
 
 
 -- =============================================================================
@@ -219,8 +324,16 @@ CREATE TRIGGER user_metrics_touch_updated_at
 -- restores the policies.
 --
 -- ALTER TABLE public.recipes       DISABLE ROW LEVEL SECURITY;
+-- ALTER TABLE public.exercises     DISABLE ROW LEVEL SECURITY;
 -- ALTER TABLE public.user_progress DISABLE ROW LEVEL SECURITY;
 -- DROP POLICY IF EXISTS "recipes_public_read"        ON public.recipes;
+-- DROP POLICY IF EXISTS "recipes_admin_insert"       ON public.recipes;
+-- DROP POLICY IF EXISTS "recipes_admin_update"       ON public.recipes;
+-- DROP POLICY IF EXISTS "recipes_admin_delete"       ON public.recipes;
+-- DROP POLICY IF EXISTS "exercises_public_read"      ON public.exercises;
+-- DROP POLICY IF EXISTS "exercises_admin_insert"     ON public.exercises;
+-- DROP POLICY IF EXISTS "exercises_admin_update"     ON public.exercises;
+-- DROP POLICY IF EXISTS "exercises_admin_delete"     ON public.exercises;
 -- DROP POLICY IF EXISTS "user_progress_own_select"   ON public.user_progress;
 -- DROP POLICY IF EXISTS "user_progress_own_insert"   ON public.user_progress;
 -- DROP POLICY IF EXISTS "user_progress_own_update"   ON public.user_progress;

@@ -28,16 +28,13 @@ class WorkoutRepository {
   // one-shot regeneration the next time `loadOrGenerateProgram` runs.
   static const String _planKey = 'sixpack.user_custom_plan_v3';
   static const String _progressTable = 'user_progress';
+  static const String _exercisesTable = 'exercises';
 
-  // Videos live in the public Supabase Storage bucket `exercises`. The URL
-  // is composed lazily because dotenv.env is empty until main.dart's
-  // _BootGate finishes; all static Exercise fields below use `static final`
-  // so they're only materialised after boot completes (and therefore after
-  // dotenv has loaded SUPABASE_URL).
-  static String _videoUrl(String filename) {
-    final base = dotenv.env['SUPABASE_URL'] ?? '';
-    return '$base/storage/v1/object/public/exercises/$filename';
-  }
+  /// Phase 50A · in-flight cache for the catalogue fetch. Memoised here so
+  /// repeat calls within the same repository instance share a single
+  /// network round-trip; the Riverpod-side [exercisesProvider] adds
+  /// app-level dedup on top so widgets calling concurrently coalesce too.
+  Future<List<Exercise>>? _exercisesFuture;
 
   // ==========================================================================
   // HERO IMAGE URLS — phase 35 swap. The docs/<region>/ jpegs they used to
@@ -84,1100 +81,493 @@ class WorkoutRepository {
   static const String _cardioImg3 = _pushUpImg;
 
   // ==========================================================================
-  // CORE (Karın & Stabilite)
+  // EXERCISE CATALOGUE — Phase 50A · Supabase migration
+  // ==========================================================================
+  // The 41 movements that used to live as `static final Exercise _crunch =
+  // ...` literals here are now seeded into the `public.exercises` table
+  // by `supabase_exercises_migration.sql`. The async getters below are the
+  // single read path; everything in this repository (plan templates,
+  // generator pool, regional filters) hangs off `getAllExercises()`.
+  //
+  // Cache shape:
+  //   • Per-instance `_exercisesFuture` memoises the network call so
+  //     subsequent getXxx() calls in the same session reuse the result.
+  //   • The Riverpod `exercisesProvider` (workout_provider.dart) caches
+  //     across the widget tree, so independent UI consumers also coalesce.
+  //
+  // Failure mode: an empty list is returned (never null) so callers can
+  // pipe straight into `.where(...)` without null-safety wrappers. The
+  // generator's existing `dailyPool.isEmpty` guard already turns an empty
+  // catalogue into "rest-only" days, which is the safest visual fallback
+  // (and far better than crashing the antrenman tab).
   // ==========================================================================
 
-  static final Exercise _crunch = Exercise(
-    id: 'crunch',
-    name: 'Mekik',
-    type: ExerciseType.repBased,
-    targetReps: 12,
-    sets: 3,
-    restDurationInSeconds: 30,
-    category: ExerciseCategory.core,
-    videoUrl: _videoUrl('Crunch.mp4'),
-    description:
-        'Sırt üstü uzan, dizlerini bük ve omuzlarını kontrollü olarak yukarı kaldır.',
-    shortTip: 'Boyuna asma, karnınla çek.',
-    difficulty: 'beginner',
-    targetMuscle: 'core',
-    isCardio: false,
-  );
+  /// Fetches the entire exercise catalogue from Supabase, cached per
+  /// instance. Subsequent calls return the same future without re-hitting
+  /// the network. On error the catalogue resolves to an empty list and
+  /// the failure is logged — see the failure-mode note above for why we
+  /// don't surface a throw.
+  Future<List<Exercise>> getAllExercises() {
+    return _exercisesFuture ??= _fetchExercises();
+  }
 
-  static final Exercise _situp = Exercise(
-    id: 'situp',
-    name: 'Sit-up',
-    type: ExerciseType.repBased,
-    targetReps: 12,
-    sets: 3,
-    restDurationInSeconds: 35,
-    category: ExerciseCategory.core,
-    videoUrl: _videoUrl('SitUp.mp4'),
-    description:
-        'Sırt üstü uzan, gövdeni dizlerine kadar tam olarak kaldır ve kontrollü in.',
-    shortTip: 'Karnını sık, hızı abartma.',
-    difficulty: 'beginner',
-    targetMuscle: 'core',
-    isCardio: false,
-  );
+  /// Filtered view by [ExerciseCategory]. Reads through the same shared
+  /// future as [getAllExercises] so adding more callers does not multiply
+  /// the network cost.
+  Future<List<Exercise>> getExercisesByCategory(
+      ExerciseCategory category) async {
+    final all = await getAllExercises();
+    return all.where((e) => e.category == category).toList(growable: false);
+  }
 
-  static final Exercise _plank = Exercise(
-    id: 'plank',
-    name: 'Plank',
-    type: ExerciseType.timeBased,
-    targetDurationInSeconds: 40,
-    sets: 3,
-    restDurationInSeconds: 45,
-    category: ExerciseCategory.core,
-    videoUrl: _videoUrl('Plank.mp4'),
-    description:
-        'Dirseklerin üstünde sabit dur, vücudunu omuzdan topuğa düz bir çizgi tut.',
-    shortTip: 'Kalçanı düşürme.',
-    difficulty: 'beginner',
-    targetMuscle: 'core',
-    isCardio: false,
-  );
+  /// Filtered view by `target_muscles` membership. Accepts the singular
+  /// muscle string consumed by the generator (`core`, `upper_body`,
+  /// `lower_body`, `full_body`, `cardio`) and matches against the row's
+  /// array for forward-compatibility with multi-muscle entries.
+  Future<List<Exercise>> getExercisesByTarget(String targetMuscle) async {
+    final all = await getAllExercises();
+    return all
+        .where((e) => e.targetMuscle == targetMuscle)
+        .toList(growable: false);
+  }
 
-  static final Exercise _legRaise = Exercise(
-    id: 'leg_raise',
-    name: 'Bacak Kaldırma',
-    type: ExerciseType.repBased,
-    targetReps: 12,
-    sets: 3,
-    restDurationInSeconds: 30,
-    category: ExerciseCategory.core,
-    videoUrl: _videoUrl('LegRaise_demo.mp4'),
-    description:
-        'Sırt üstü uzan, bacaklarını düz tutarak yavaşça 90 dereceye kadar kaldır.',
-    shortTip: 'Belini yere bastır.',
-    difficulty: 'beginner',
-    targetMuscle: 'core',
-    isCardio: false,
-  );
+  /// Filtered view by difficulty bucket (`beginner` | `intermediate` |
+  /// `advanced`). Exposed for the future admin panel's catalogue browser
+  /// so the generator's level-ramp logic isn't the only consumer.
+  Future<List<Exercise>> getExercisesByDifficulty(String difficulty) async {
+    final all = await getAllExercises();
+    return all.where((e) => e.difficulty == difficulty).toList(growable: false);
+  }
 
-  static final Exercise _hangingLegRaise = Exercise(
-    id: 'hanging_leg_raise',
-    name: 'Asılı Bacak Kaldırma',
-    type: ExerciseType.repBased,
-    targetReps: 10,
-    sets: 3,
-    restDurationInSeconds: 45,
-    category: ExerciseCategory.core,
-    videoUrl: _videoUrl('HangingLegRaise.mp4'),
-    description:
-        'Bara tutun, bacaklarını birleştirip kontrollü olarak göğsüne doğru çek.',
-    shortTip: 'Salınımdan kaçın.',
-    difficulty: 'advanced',
-    targetMuscle: 'core',
-    isCardio: false,
-  );
+  Future<List<Exercise>> _fetchExercises() async {
+    try {
+      final rows = await _client.from(_exercisesTable).select().order('slug');
+      return rows.map(_exerciseFromRow).toList(growable: false);
+    } catch (e, st) {
+      AppLogger.error(
+        'WorkoutRepository: exercises fetch failed',
+        e,
+        stackTrace: st,
+        category: 'workout',
+      );
+      // Forget the failed future so the next caller retries instead of
+      // being permanently stuck on an empty catalogue.
+      _exercisesFuture = null;
+      return const [];
+    }
+  }
 
-  static final Exercise _russianTwist = Exercise(
-    id: 'russian_twist',
-    name: 'Rus Dönüşü',
-    type: ExerciseType.repBased,
-    targetReps: 20,
-    sets: 3,
-    restDurationInSeconds: 30,
-    category: ExerciseCategory.core,
-    videoUrl: _videoUrl('RussianTwist.mp4'),
-    description:
-        'Otur, hafifçe geri yaslan ve gövdeni sağdan sola tempolu biçimde döndür.',
-    shortTip: 'Karnını sıkı tut.',
-    difficulty: 'beginner',
-    targetMuscle: 'core',
-    isCardio: false,
-  );
+  /// Maps a `public.exercises` row to the in-memory [Exercise] model. The
+  /// row → Dart contract:
+  ///   • `slug` becomes `Exercise.id` (kept for plan-cache compatibility
+  ///     with installs from before the migration).
+  ///   • The first element of `target_muscles` becomes `targetMuscle`.
+  ///     Multi-muscle entries are tolerated; the rest are ignored until
+  ///     a future generator revision can make use of them.
+  ///   • `instructions` becomes `description`. The split between
+  ///     instructions (long form) and shortTip (one-liner) is preserved.
+  ///   • `video_url` is composed via [_composeVideoUrl] so DB rows can
+  ///     store either filenames (the migration's default) or external
+  ///     http(s) URLs without breaking the player.
+  static Exercise _exerciseFromRow(Map<String, dynamic> row) {
+    return Exercise(
+      id: row['slug'] as String,
+      name: row['name'] as String,
+      type: ExerciseType.values.firstWhere(
+        (v) => v.name == row['type'],
+        orElse: () => ExerciseType.repBased,
+      ),
+      targetReps: row['target_reps'] as int?,
+      targetDurationInSeconds: row['target_duration_in_seconds'] as int?,
+      sets: (row['sets'] as int?) ?? 1,
+      restDurationInSeconds: (row['rest_duration_in_seconds'] as int?) ?? 30,
+      category: ExerciseCategory.values.firstWhere(
+        (v) => v.name == row['category'],
+        orElse: () => ExerciseCategory.core,
+      ),
+      description: (row['instructions'] as String?) ?? '',
+      shortTip: (row['short_tip'] as String?) ?? '',
+      difficulty: (row['difficulty'] as String?) ?? 'beginner',
+      targetMuscle: _firstTargetMuscle(row['target_muscles']),
+      isCardio: (row['is_cardio'] as bool?) ?? false,
+      videoUrl: _composeVideoUrl(row['video_url'] as String?),
+    );
+  }
 
-  static final Exercise _mountainClimber = Exercise(
-    id: 'mountain_climber',
-    name: 'Mountain Climber',
-    type: ExerciseType.repBased,
-    targetReps: 30,
-    sets: 3,
-    restDurationInSeconds: 30,
-    category: ExerciseCategory.core,
-    videoUrl: _videoUrl('MountainClimber.mp4'),
-    description:
-        'Plank pozisyonunda kal, dizlerini sırayla göğsüne hızla çekiştir.',
-    shortTip: 'Kalçayı sabit tut.',
-    difficulty: 'intermediate',
-    targetMuscle: 'core',
-    isCardio: true,
-  );
+  static String _firstTargetMuscle(dynamic raw) {
+    if (raw is List && raw.isNotEmpty) {
+      final first = raw.first;
+      if (first is String && first.isNotEmpty) return first;
+    }
+    if (raw is String && raw.isNotEmpty) return raw;
+    return 'core';
+  }
 
-  static final Exercise _bicycleCrunch = Exercise(
-    id: 'bicycle_crunch',
-    name: 'Bisiklet Mekiği',
-    type: ExerciseType.repBased,
-    targetReps: 16,
-    sets: 3,
-    restDurationInSeconds: 30,
-    category: ExerciseCategory.core,
-    videoUrl: _videoUrl('BicycleCrunch.mp4'),
-    description:
-        'Sırt üstü uzan, karşıt dirsek ve dizini havada birleştir, taraf değiştir.',
-    shortTip: 'Tempolu ama kontrollü.',
-    difficulty: 'beginner',
-    targetMuscle: 'core',
-    isCardio: false,
-  );
-
-  static final Exercise _flutterKick = Exercise(
-    id: 'flutter_kick',
-    name: 'Flutter Kick',
-    type: ExerciseType.timeBased,
-    targetDurationInSeconds: 30,
-    sets: 3,
-    restDurationInSeconds: 30,
-    category: ExerciseCategory.core,
-    videoUrl: _videoUrl('FlutterKick.mp4'),
-    description:
-        'Sırt üstü uzan, bacaklarını kısa ve hızlı kanat çırpar gibi değiştir.',
-    shortTip: 'Karnını gevşetme.',
-    difficulty: 'intermediate',
-    targetMuscle: 'core',
-    isCardio: false,
-  );
+  /// Resolves a row's stored `video_url` into a fully-qualified URL the
+  /// player can stream. Accepts either:
+  ///   • A bare filename ('Crunch.mp4') — wrapped with the project's
+  ///     Supabase Storage base path under the `exercises` bucket.
+  ///   • A complete http(s) URL — used verbatim, so admin entries
+  ///     pointing at YouTube / external CDNs work without schema changes.
+  /// Empty cells return null so the player skips video playback.
+  static String? _composeVideoUrl(String? raw) {
+    if (raw == null || raw.isEmpty) return null;
+    if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
+    final base = dotenv.env['SUPABASE_URL'] ?? '';
+    if (base.isEmpty) return null;
+    return '$base/storage/v1/object/public/exercises/$raw';
+  }
 
   // ==========================================================================
-  // GÖĞÜS (Chest)
+  // "SINIRLARINI ZORLA" + REGIONAL PLAN TEMPLATES
+  // ==========================================================================
+  // Plans are defined as static templates (id + slug list); resolution
+  // against the live exercise catalogue happens lazily in
+  // [getAllPlans] / [getPushLimitsPlans]. Slugs that don't resolve are
+  // silently dropped, so deleting an exercise in Supabase doesn't crash
+  // the dashboard — the affected plan just gets shorter.
   // ==========================================================================
 
-  static final Exercise _pushUp = Exercise(
-    id: 'push_up',
-    name: 'Şınav',
-    type: ExerciseType.repBased,
-    targetReps: 12,
-    sets: 3,
-    restDurationInSeconds: 45,
-    category: ExerciseCategory.chest,
-    videoUrl: _videoUrl('PushUp.mp4'),
-    description:
-        'Eller omuz hizasında, gövdeni düz tutarak yere kadar in ve geri it.',
-    shortTip: 'Dirseğini gövdene yakın tut.',
-    difficulty: 'intermediate',
-    targetMuscle: 'upper_body',
-    isCardio: false,
-  );
-
-  static final Exercise _inclinePushUp = Exercise(
-    id: 'incline_push_up',
-    name: 'Yokuş Yukarı Şınav',
-    type: ExerciseType.repBased,
-    targetReps: 14,
-    sets: 3,
-    restDurationInSeconds: 45,
-    category: ExerciseCategory.chest,
-    videoUrl: _videoUrl('InclinePushUp.mp4'),
-    description:
-        'Ellerini yüksek bir yüzeye dayalı tutarak şınav hareketini uygula.',
-    shortTip: 'Sırtını düz tut.',
-    difficulty: 'beginner',
-    targetMuscle: 'upper_body',
-    isCardio: false,
-  );
-
-  static final Exercise _declinePushUp = Exercise(
-    id: 'decline_push_up',
-    name: 'Yokuş Aşağı Şınav',
-    type: ExerciseType.repBased,
-    targetReps: 10,
-    sets: 3,
-    restDurationInSeconds: 50,
-    category: ExerciseCategory.chest,
-    videoUrl: _videoUrl('DeclinePushUp.mp4'),
-    description:
-        'Ayaklarını yüksek bir yere koy, üst göğsünü hedefleyerek şınav yap.',
-    shortTip: 'Yavaş in, hızlı çık.',
-    difficulty: 'advanced',
-    targetMuscle: 'upper_body',
-    isCardio: false,
-  );
-
-  static final Exercise _chestDip = Exercise(
-    id: 'chest_dip',
-    name: 'Göğüs Dip',
-    type: ExerciseType.repBased,
-    targetReps: 10,
-    sets: 3,
-    restDurationInSeconds: 60,
-    category: ExerciseCategory.chest,
-    videoUrl: _videoUrl('ChestDip.mp4'),
-    description:
-        'Paralel barlarda göğsünü öne eğ, dirseklerini kontrollü olarak büküp aşağı in.',
-    shortTip: 'Omuzları çukurlaştırma.',
-    difficulty: 'advanced',
-    targetMuscle: 'upper_body',
-    isCardio: false,
-  );
-
-  static final Exercise _benchPress = Exercise(
-    id: 'bench_press',
-    name: 'Dambıl Bench Press',
-    type: ExerciseType.repBased,
-    targetReps: 12,
-    sets: 3,
-    restDurationInSeconds: 60,
-    category: ExerciseCategory.chest,
-    videoUrl: _videoUrl('DumbellBenchPress.mp4'),
-    description:
-        'Sırtın bench üstünde, dambılları göğsünden başlayıp yukarı doğru kontrollü it.',
-    shortTip: 'Bilek düz, dirsek 45°.',
-    difficulty: 'intermediate',
-    targetMuscle: 'upper_body',
-    isCardio: false,
-  );
-
-  static final Exercise _chestFly = Exercise(
-    id: 'chest_fly',
-    name: 'Chest Fly',
-    type: ExerciseType.repBased,
-    targetReps: 12,
-    sets: 3,
-    restDurationInSeconds: 50,
-    category: ExerciseCategory.chest,
-    videoUrl: _videoUrl('ChestFly.mp4'),
-    description:
-        'Sırt üstü uzan, kollarını yana aç ve göğsünün üstünde kontrollü olarak kapat.',
-    shortTip: 'Dirseğin hafif bükülü kalsın.',
-    difficulty: 'intermediate',
-    targetMuscle: 'upper_body',
-    isCardio: false,
-  );
-
-  // ==========================================================================
-  // BACAK (Legs)
-  // ==========================================================================
-
-  static final Exercise _squat = Exercise(
-    id: 'squat',
-    name: 'Squat',
-    type: ExerciseType.repBased,
-    targetReps: 15,
-    sets: 3,
-    restDurationInSeconds: 45,
-    category: ExerciseCategory.legs,
-    videoUrl: _videoUrl('Squat.mp4'),
-    description:
-        'Ayakların omuz hizasında; kalçanı geriye it, dizlerini büküp aşağı in ve kalk.',
-    shortTip: 'Topuklarından güç al.',
-    difficulty: 'beginner',
-    targetMuscle: 'lower_body',
-    isCardio: false,
-  );
-
-  static final Exercise _lunge = Exercise(
-    id: 'lunge',
-    name: 'Lunge',
-    type: ExerciseType.repBased,
-    targetReps: 12,
-    sets: 3,
-    restDurationInSeconds: 45,
-    category: ExerciseCategory.legs,
-    videoUrl: _videoUrl('Lunge.mp4'),
-    description:
-        'Geniş bir adım at, ön dizini 90 dereceye kadar büküp kontrollü olarak kalk.',
-    shortTip: 'Ön diz parmak ucunu geçmesin.',
-    difficulty: 'beginner',
-    targetMuscle: 'lower_body',
-    isCardio: false,
-  );
-
-  static final Exercise _bulgarianSplitSquat = Exercise(
-    id: 'bulgarian_split_squat',
-    name: 'Bulgar Split Squat',
-    type: ExerciseType.repBased,
-    targetReps: 10,
-    sets: 3,
-    restDurationInSeconds: 50,
-    category: ExerciseCategory.legs,
-    videoUrl: _videoUrl('BulgarianSplitSquat.mp4'),
-    description:
-        'Arka ayağını yüksek bir yere koy, ön bacakla aşağı in ve patlayıcı şekilde kalk.',
-    shortTip: 'Gövdeni dik tut.',
-    difficulty: 'advanced',
-    targetMuscle: 'lower_body',
-    isCardio: false,
-  );
-
-  static final Exercise _legPress = Exercise(
-    id: 'leg_press',
-    name: 'Leg Press',
-    type: ExerciseType.repBased,
-    targetReps: 12,
-    sets: 3,
-    restDurationInSeconds: 60,
-    category: ExerciseCategory.legs,
-    videoUrl: _videoUrl('Legpress.mp4'),
-    description:
-        'Sırtını desteğe yasla, ayaklarını platforma sabitle ve dizleri kilitlemeden it.',
-    shortTip: 'Topuklarını basılı tut.',
-    difficulty: 'intermediate',
-    targetMuscle: 'lower_body',
-    isCardio: false,
-  );
-
-  static final Exercise _calfRaise = Exercise(
-    id: 'calf_raise',
-    name: 'Calf Raise',
-    type: ExerciseType.timeBased,
-    targetDurationInSeconds: 35,
-    sets: 3,
-    restDurationInSeconds: 30,
-    category: ExerciseCategory.legs,
-    videoUrl: _videoUrl('CalfRaise.mp4'),
-    description: 'Kalf kaldırma. Parmak uçlarında yüksel ve baldırlarını sık.',
-    shortTip: 'Tepe noktasında 1 saniye sık.',
-    difficulty: 'beginner',
-    targetMuscle: 'lower_body',
-    isCardio: false,
-  );
-
-  static final Exercise _wallSit = Exercise(
-    id: 'wall_sit',
-    name: 'Wall Sit',
-    type: ExerciseType.timeBased,
-    targetDurationInSeconds: 45,
-    sets: 3,
-    restDurationInSeconds: 45,
-    category: ExerciseCategory.legs,
-    videoUrl: _videoUrl('WallSit.mp4'),
-    description:
-        'Duvara oturuş. Sırtını duvara daya ve dizlerini doksan derece bükerek bekle.',
-    shortTip: 'Topuğunla bas, çakılı kal.',
-    difficulty: 'beginner',
-    targetMuscle: 'lower_body',
-    isCardio: false,
-  );
-
-  // ==========================================================================
-  // SIRT (Back)
-  // ==========================================================================
-
-  static final Exercise _pullUp = Exercise(
-    id: 'pull_up',
-    name: 'Pull-up',
-    type: ExerciseType.repBased,
-    targetReps: 8,
-    sets: 3,
-    restDurationInSeconds: 60,
-    category: ExerciseCategory.back,
-    videoUrl: _videoUrl('PullUp.mp4'),
-    description:
-        'Bara avuçlar dışta tutun, kürek kemiklerini sıkarak çeneni bara çek.',
-    shortTip: 'Önce kürekten çek.',
-    difficulty: 'advanced',
-    targetMuscle: 'upper_body',
-    isCardio: false,
-  );
-
-  static final Exercise _chinUp = Exercise(
-    id: 'chin_up',
-    name: 'Chin-up',
-    type: ExerciseType.repBased,
-    targetReps: 8,
-    sets: 3,
-    restDurationInSeconds: 60,
-    category: ExerciseCategory.back,
-    videoUrl: _videoUrl('ChinUp.mp4'),
-    description:
-        'Avuç içlerin sana dönük, çeneni bara doğru kontrollü çek ve yavaşça in.',
-    shortTip: 'Salınımdan kaçın.',
-    difficulty: 'advanced',
-    targetMuscle: 'upper_body',
-    isCardio: false,
-  );
-
-  static final Exercise _latPulldown = Exercise(
-    id: 'lat_pulldown',
-    name: 'Lat Pulldown',
-    type: ExerciseType.repBased,
-    targetReps: 12,
-    sets: 3,
-    restDurationInSeconds: 50,
-    category: ExerciseCategory.back,
-    videoUrl: _videoUrl('LatPulldown.mp4'),
-    description:
-        'Otur, barı göğüs hizasına çek ve kürek kemiklerini birbirine sıkıştır.',
-    shortTip: 'Önce sırt, sonra dirsek.',
-    difficulty: 'intermediate',
-    targetMuscle: 'upper_body',
-    isCardio: false,
-  );
-
-  static final Exercise _barbellRow = Exercise(
-    id: 'barbell_row',
-    name: 'Barbell Row',
-    type: ExerciseType.repBased,
-    targetReps: 12,
-    sets: 3,
-    restDurationInSeconds: 60,
-    category: ExerciseCategory.back,
-    videoUrl: _videoUrl('BarbellRow.mp4'),
-    description:
-        'Sırtın nötr ve düz, halteri göbek hizana doğru kontrollü olarak çek.',
-    shortTip: 'Sırtın yuvarlanmasın.',
-    difficulty: 'intermediate',
-    targetMuscle: 'upper_body',
-    isCardio: false,
-  );
-
-  static final Exercise _superman = Exercise(
-    id: 'superman',
-    name: 'Superman',
-    type: ExerciseType.timeBased,
-    targetDurationInSeconds: 25,
-    sets: 3,
-    restDurationInSeconds: 30,
-    category: ExerciseCategory.back,
-    videoUrl: _videoUrl('Superman.mp4'),
-    description:
-        'Superman. Karın üstü yat, kollarını ve bacaklarını aynı anda havaya kaldır.',
-    shortTip: 'Boynunu nötr tut.',
-    difficulty: 'beginner',
-    targetMuscle: 'upper_body',
-    isCardio: false,
-  );
-
-  // ==========================================================================
-  // OMUZ (Shoulders)
-  // ==========================================================================
-
-  static final Exercise _shoulderPress = Exercise(
-    id: 'shoulder_press',
-    name: 'Shoulder Press',
-    type: ExerciseType.repBased,
-    targetReps: 12,
-    sets: 3,
-    restDurationInSeconds: 60,
-    category: ExerciseCategory.shoulders,
-    videoUrl: _videoUrl('ShoulderPress.mp4'),
-    description:
-        'Dambılları omuz hizasından kontrollü olarak tam yukarı it ve geri indir.',
-    shortTip: 'Çekirdek sıkı, bilek nötr.',
-    difficulty: 'intermediate',
-    targetMuscle: 'upper_body',
-    isCardio: false,
-  );
-
-  static final Exercise _lateralRaise = Exercise(
-    id: 'lateral_raise',
-    name: 'Lateral Raise',
-    type: ExerciseType.repBased,
-    targetReps: 12,
-    sets: 3,
-    restDurationInSeconds: 45,
-    category: ExerciseCategory.shoulders,
-    videoUrl: _videoUrl('LateralRaise.mp4'),
-    description:
-        'Kollarını yana doğru omuz seviyesine kadar düz hâlde kontrollü kaldır.',
-    shortTip: 'Trapeze değil, omuza yükle.',
-    difficulty: 'beginner',
-    targetMuscle: 'upper_body',
-    isCardio: false,
-  );
-
-  static final Exercise _frontRaise = Exercise(
-    id: 'front_raise',
-    name: 'Front Raise',
-    type: ExerciseType.repBased,
-    targetReps: 12,
-    sets: 3,
-    restDurationInSeconds: 45,
-    category: ExerciseCategory.shoulders,
-    videoUrl: _videoUrl('FrontRaise.mp4'),
-    description:
-        'Kollarını öne doğru omuz seviyesine kadar düz hâlde kontrollü kaldır.',
-    shortTip: 'Bel yaylanmasın.',
-    difficulty: 'beginner',
-    targetMuscle: 'upper_body',
-    isCardio: false,
-  );
-
-  static final Exercise _arnoldPress = Exercise(
-    id: 'arnold_press',
-    name: 'Arnold Press',
-    type: ExerciseType.repBased,
-    targetReps: 10,
-    sets: 3,
-    restDurationInSeconds: 60,
-    category: ExerciseCategory.shoulders,
-    videoUrl: _videoUrl('ArnoldPress.mp4'),
-    description:
-        'Dambılları yukarı iterken avuç içlerini içeriden dışarıya doğru çevir.',
-    shortTip: 'Dirseğini kilitleme.',
-    difficulty: 'intermediate',
-    targetMuscle: 'upper_body',
-    isCardio: false,
-  );
-
-  static final Exercise _pikePushUp = Exercise(
-    id: 'pike_push_up',
-    name: 'Pike Şınav',
-    type: ExerciseType.repBased,
-    targetReps: 8,
-    sets: 3,
-    restDurationInSeconds: 60,
-    category: ExerciseCategory.shoulders,
-    videoUrl: _videoUrl('PikePushUp.mp4'),
-    description:
-        'Kalçanı yukarı kaldır, başını iki elin arasında inip çıkacak şekilde itele.',
-    shortTip: 'Omuza odaklan, gövdeyi devirme.',
-    difficulty: 'advanced',
-    targetMuscle: 'upper_body',
-    isCardio: false,
-  );
-
-  // ==========================================================================
-  // KOL (Arms)
-  // ==========================================================================
-
-  static final Exercise _bicepsCurl = Exercise(
-    id: 'biceps_curl',
-    name: 'Biceps Curl',
-    type: ExerciseType.repBased,
-    targetReps: 12,
-    sets: 3,
-    restDurationInSeconds: 45,
-    category: ExerciseCategory.arms,
-    videoUrl: _videoUrl('BicepsCurl.mp4'),
-    description:
-        'Dirseklerini gövdene sabitle, dambılı omuzuna doğru kontrollü olarak çek.',
-    shortTip: 'Salınma, biceps çalışsın.',
-    difficulty: 'beginner',
-    targetMuscle: 'upper_body',
-    isCardio: false,
-  );
-
-  static final Exercise _hammerCurl = Exercise(
-    id: 'hammer_curl',
-    name: 'Hammer Curl',
-    type: ExerciseType.repBased,
-    targetReps: 12,
-    sets: 3,
-    restDurationInSeconds: 45,
-    category: ExerciseCategory.arms,
-    videoUrl: _videoUrl('HammerCurl.mp4'),
-    description:
-        'Avuç içlerin içeriye dönük, dambılı omuza doğru kontrollü olarak çek.',
-    shortTip: 'Bilek nötr kalsın.',
-    difficulty: 'beginner',
-    targetMuscle: 'upper_body',
-    isCardio: false,
-  );
-
-  static final Exercise _tricepsDip = Exercise(
-    id: 'triceps_dip',
-    name: 'Triceps Dip',
-    type: ExerciseType.repBased,
-    targetReps: 10,
-    sets: 3,
-    restDurationInSeconds: 60,
-    category: ExerciseCategory.arms,
-    videoUrl: _videoUrl('TricepsDip.mp4'),
-    description:
-        'Sandalye/bar kenarında ellerin destekli; dirseklerini bükerek aşağı in ve geri kalk.',
-    shortTip: 'Dirsek geriye, dışarı değil.',
-    difficulty: 'intermediate',
-    targetMuscle: 'upper_body',
-    isCardio: false,
-  );
-
-  static final Exercise _tricepsPushdown = Exercise(
-    id: 'triceps_pushdown',
-    name: 'Triceps Pushdown',
-    type: ExerciseType.repBased,
-    targetReps: 12,
-    sets: 3,
-    restDurationInSeconds: 50,
-    category: ExerciseCategory.arms,
-    videoUrl: _videoUrl('TricepsPushdown.mp4'),
-    description:
-        'Dirseklerin gövdene sabit, halatı veya barı kontrollü olarak aşağı it.',
-    shortTip: 'Sadece ön kol çalışsın.',
-    difficulty: 'beginner',
-    targetMuscle: 'upper_body',
-    isCardio: false,
-  );
-
-  static final Exercise _closeGripPushUp = Exercise(
-    id: 'close_grip_push_up',
-    name: 'Yakın Tutuş Şınav',
-    type: ExerciseType.repBased,
-    targetReps: 10,
-    sets: 3,
-    restDurationInSeconds: 60,
-    category: ExerciseCategory.arms,
-    videoUrl: _videoUrl('CloseGripPushUp.mp4'),
-    description:
-        'Ellerini daralt, dirseklerini gövdene yakın tutarak şınav hareketini uygula.',
-    shortTip: 'Dirsek dışa kaçmasın.',
-    difficulty: 'intermediate',
-    targetMuscle: 'upper_body',
-    isCardio: false,
-  );
-
-  // ==========================================================================
-  // KARDİYO & FULL BODY
-  // ==========================================================================
-
-  static final Exercise _burpee = Exercise(
-    id: 'burpee',
-    name: 'Burpee',
-    type: ExerciseType.repBased,
-    targetReps: 10,
-    sets: 3,
-    restDurationInSeconds: 50,
-    category: ExerciseCategory.fullBody,
-    videoUrl: _videoUrl('Burpee.mp4'),
-    description:
-        'Aşağı in, ellerin yere değdiğinde plank al, ayaklarını öne çekip patlayıcı zıpla.',
-    shortTip: 'Sürekli ritim, mola yok.',
-    difficulty: 'advanced',
-    targetMuscle: 'full_body',
-    isCardio: true,
-  );
-
-  static final Exercise _jumpingJack = Exercise(
-    id: 'jumping_jack',
-    name: 'Jumping Jack',
-    type: ExerciseType.timeBased,
-    targetDurationInSeconds: 30,
-    sets: 3,
-    restDurationInSeconds: 30,
-    category: ExerciseCategory.fullBody,
-    videoUrl: _videoUrl('JumpingJack.mp4'),
-    description:
-        'Aç-kapat hareketiyle aynı anda kollarını yukarı kaldırıp ritmik şekilde zıpla.',
-    shortTip: 'Yumuşak ayak, sıkı çekirdek.',
-    difficulty: 'beginner',
-    targetMuscle: 'cardio',
-    isCardio: true,
-  );
-
-  static final Exercise _highKnees = Exercise(
-    id: 'high_knees',
-    name: 'High Knees',
-    type: ExerciseType.timeBased,
-    targetDurationInSeconds: 30,
-    sets: 3,
-    restDurationInSeconds: 30,
-    category: ExerciseCategory.fullBody,
-    videoUrl: _videoUrl('HighKness.mp4'),
-    description:
-        'Diz çekme. Olduğun yerde dizlerini göğsüne doğru olabildiğince yüksek çek.',
-    shortTip: 'Kollarını da çalıştır.',
-    difficulty: 'beginner',
-    targetMuscle: 'cardio',
-    isCardio: true,
-  );
-
-  static final Exercise _jumpSquat = Exercise(
-    id: 'jump_squat',
-    name: 'Jump Squat',
-    type: ExerciseType.repBased,
-    targetReps: 12,
-    sets: 3,
-    restDurationInSeconds: 45,
-    category: ExerciseCategory.fullBody,
-    videoUrl: _videoUrl('JumpSquat.mp4'),
-    description:
-        'Squat pozisyonuna in, patlayıcı biçimde havaya zıpla ve yumuşak iniş yap.',
-    shortTip: 'Sessiz iniş, sıkı çekirdek.',
-    difficulty: 'intermediate',
-    targetMuscle: 'full_body',
-    isCardio: true,
-  );
-
-  static final Exercise _skippingRope = Exercise(
-    id: 'skipping_rope',
-    name: 'İp Atlama',
-    type: ExerciseType.timeBased,
-    targetDurationInSeconds: 45,
-    sets: 3,
-    restDurationInSeconds: 30,
-    category: ExerciseCategory.fullBody,
-    videoUrl: _videoUrl('SkippingRope.mp4'),
-    description: 'İp atlama. Temponu koru ve ayak uçlarında zıpla.',
-    shortTip: 'Diz hafif bükülü, ip kısa.',
-    difficulty: 'beginner',
-    targetMuscle: 'cardio',
-    isCardio: true,
-  );
-
-  // ==========================================================================
-  // EXERCISE POOL — flat list of every movement the generator service can
-  // draw from. Kept in insertion order (core → chest → legs → back →
-  // shoulders → arms → cardio/full-body) so rotation through the list
-  // gives a balanced default sequence before any goal-specific filtering.
-  // ==========================================================================
-
-  static final List<Exercise> allExercises = [
-    // Core
-    _crunch,
-    _situp,
-    _plank,
-    _legRaise,
-    _hangingLegRaise,
-    _russianTwist,
-    _mountainClimber,
-    _bicycleCrunch,
-    _flutterKick,
-    // Chest
-    _pushUp,
-    _inclinePushUp,
-    _declinePushUp,
-    _chestDip,
-    _benchPress,
-    _chestFly,
-    // Legs
-    _squat,
-    _lunge,
-    _bulgarianSplitSquat,
-    _legPress,
-    _calfRaise,
-    _wallSit,
-    // Back
-    _pullUp,
-    _chinUp,
-    _latPulldown,
-    _barbellRow,
-    _superman,
-    // Shoulders
-    _shoulderPress,
-    _lateralRaise,
-    _frontRaise,
-    _arnoldPress,
-    _pikePushUp,
-    // Arms
-    _bicepsCurl,
-    _hammerCurl,
-    _tricepsDip,
-    _tricepsPushdown,
-    _closeGripPushUp,
-    // Cardio & Full Body
-    _burpee,
-    _jumpingJack,
-    _highKnees,
-    _jumpSquat,
-    _skippingRope,
+  static const List<_PlanTemplate> _pushLimitsTemplates = [
+    _PlanTemplate(
+      id: 'push_limits_abs_hiit',
+      title: 'Belirgin Karın Kasları HIIT',
+      category: ExerciseCategory.core,
+      level: 'Orta düzey',
+      durationMinutes: 19,
+      exerciseSlugs: [
+        'mountain_climber',
+        'bicycle_crunch',
+        'crunch',
+        'leg_raise',
+        'plank',
+      ],
+      image: 'photos/sınırlarınızorlabelirginkarınkarınkaslarıHIITnewfoto.webp',
+    ),
+    _PlanTemplate(
+      id: 'push_limits_stronger_core',
+      title: 'Daha Güçlü Şekil ve Çekirdek',
+      category: ExerciseCategory.core,
+      level: 'Orta düzey',
+      durationMinutes: 24,
+      exerciseSlugs: [
+        'russian_twist',
+        'leg_raise',
+        'plank',
+        'situp',
+        'bicycle_crunch',
+      ],
+      image: defaultMuscularPhotoUrl,
+    ),
+    _PlanTemplate(
+      id: 'push_limits_iron_pack',
+      title: 'Demir Altı Paket Gücü',
+      category: ExerciseCategory.core,
+      level: 'İleri',
+      durationMinutes: 18,
+      exerciseSlugs: [
+        'hanging_leg_raise',
+        'crunch',
+        'russian_twist',
+        'plank',
+        'flutter_kick',
+      ],
+      image: 'photos/sınırlarınızorlademiraltıpaketgücünewfoto.webp',
+    ),
+    _PlanTemplate(
+      id: 'push_limits_athletic_core',
+      title: 'Atletik Core Kontrolü',
+      category: ExerciseCategory.core,
+      level: 'Başlangıç',
+      durationMinutes: 15,
+      exerciseSlugs: [
+        'plank',
+        'bicycle_crunch',
+        'crunch',
+        'flutter_kick',
+      ],
+      image: defaultLeanPhotoUrl,
+    ),
   ];
 
-  // ==========================================================================
-  // "SINIRLARINI ZORLA" DASHBOARD CARDS
-  // Exposed as top-level static const so the dashboard strip can reference
-  // them directly (and push them into /plan-detail via `extra:`).
-  // ==========================================================================
-
-  static final WorkoutPlan pushLimitsAbsHiit = WorkoutPlan(
-    id: 'push_limits_abs_hiit',
-    title: 'Belirgin Karın Kasları HIIT',
-    category: ExerciseCategory.core,
-    level: 'Orta düzey',
-    durationMinutes: 19,
-    exercises: [
-      _mountainClimber,
-      _bicycleCrunch,
-      _crunch,
-      _legRaise,
-      _plank,
-    ],
-    image: 'photos/sınırlarınızorlabelirginkarınkarınkaslarıHIITnewfoto.webp',
-  );
-
-  static final WorkoutPlan pushLimitsStrongerCore = WorkoutPlan(
-    id: 'push_limits_stronger_core',
-    title: 'Daha Güçlü Şekil ve Çekirdek',
-    category: ExerciseCategory.core,
-    level: 'Orta düzey',
-    durationMinutes: 24,
-    exercises: [
-      _russianTwist,
-      _legRaise,
-      _plank,
-      _situp,
-      _bicycleCrunch,
-    ],
-    image: defaultMuscularPhotoUrl,
-  );
-
-  static final WorkoutPlan pushLimitsIronPack = WorkoutPlan(
-    id: 'push_limits_iron_pack',
-    title: 'Demir Altı Paket Gücü',
-    category: ExerciseCategory.core,
-    level: 'İleri',
-    durationMinutes: 18,
-    exercises: [
-      _hangingLegRaise,
-      _crunch,
-      _russianTwist,
-      _plank,
-      _flutterKick,
-    ],
-    image: 'photos/sınırlarınızorlademiraltıpaketgücünewfoto.webp',
-  );
-
-  static final WorkoutPlan pushLimitsAthleticCore = WorkoutPlan(
-    id: 'push_limits_athletic_core',
-    title: 'Atletik Core Kontrolü',
-    category: ExerciseCategory.core,
-    level: 'Başlangıç',
-    durationMinutes: 15,
-    exercises: [
-      _plank,
-      _bicycleCrunch,
-      _crunch,
-      _flutterKick,
-    ],
-    image: defaultLeanPhotoUrl,
-  );
-
-  // ==========================================================================
-  // REGIONAL PLANS — surfaced on the dashboard's category filter strip.
-  // Each plan groups the exercises above by body region. Empty exercise
-  // lists render as "coming soon" tiles so the chip layout stays
-  // populated even before bespoke routines exist for those regions.
-  // ==========================================================================
-
-  static final List<WorkoutPlan> allPlans = [
-    pushLimitsAbsHiit,
-    pushLimitsStrongerCore,
-    pushLimitsIronPack,
-    pushLimitsAthleticCore,
+  static const List<_PlanTemplate> _regionalTemplates = [
     // ---- Core ----
-    WorkoutPlan(
+    _PlanTemplate(
       id: 'core_steel_abs',
       title: 'Çelik Gibi Karın',
       category: ExerciseCategory.core,
       level: 'Başlangıç',
       durationMinutes: 15,
-      exercises: [
-        _plank,
-        _russianTwist,
-        _legRaise,
-        _mountainClimber,
-        _bicycleCrunch,
+      exerciseSlugs: [
+        'plank',
+        'russian_twist',
+        'leg_raise',
+        'mountain_climber',
+        'bicycle_crunch',
       ],
       image: _coreImg1,
     ),
-    WorkoutPlan(
+    _PlanTemplate(
       id: 'core_athletic',
       title: 'Atletik Core',
       category: ExerciseCategory.core,
       level: 'Orta düzey',
       durationMinutes: 20,
-      exercises: [_crunch, _bicycleCrunch, _legRaise, _flutterKick, _plank],
+      exerciseSlugs: [
+        'crunch',
+        'bicycle_crunch',
+        'leg_raise',
+        'flutter_kick',
+        'plank',
+      ],
       image: _coreImg2,
     ),
     // ---- Göğüs (Chest) ----
-    WorkoutPlan(
+    _PlanTemplate(
       id: 'chest_dumbbell_fast',
       title: 'Dambıl Hızlı Göğüs Yapma',
       category: ExerciseCategory.chest,
       level: 'Orta düzey',
       durationMinutes: 14,
-      exercises: [_benchPress, _chestFly, _pushUp],
+      exerciseSlugs: ['bench_press', 'chest_fly', 'push_up'],
       image: _chestImg2,
     ),
-    WorkoutPlan(
+    _PlanTemplate(
       id: 'chest_activation_growth',
       title: 'Göğüs Aktivasyonu ve Büyüme',
       category: ExerciseCategory.chest,
       level: 'Başlangıç',
       durationMinutes: 6,
-      exercises: [_inclinePushUp, _pushUp],
+      exerciseSlugs: ['incline_push_up', 'push_up'],
       image: _chestImg1,
     ),
-    WorkoutPlan(
+    _PlanTemplate(
       id: 'chest_full_growth_burst',
       title: 'Tam Göğüs Büyümesi ve Patlaması',
       category: ExerciseCategory.chest,
       level: 'İleri',
       durationMinutes: 22,
-      exercises: [
-        _pushUp,
-        _inclinePushUp,
-        _declinePushUp,
-        _chestDip,
-        _benchPress,
-        _chestFly,
+      exerciseSlugs: [
+        'push_up',
+        'incline_push_up',
+        'decline_push_up',
+        'chest_dip',
+        'bench_press',
+        'chest_fly',
       ],
       image: _chestImg3,
     ),
-    WorkoutPlan(
+    _PlanTemplate(
       id: 'chest_fat_burn_basic',
       title: 'Göğüs Yağ Yakma Temel Planı',
       category: ExerciseCategory.chest,
       level: 'Orta düzey',
       durationMinutes: 18,
-      exercises: [_pushUp, _declinePushUp, _chestDip, _chestFly],
+      exerciseSlugs: [
+        'push_up',
+        'decline_push_up',
+        'chest_dip',
+        'chest_fly',
+      ],
       image: _chestImg4,
     ),
     // ---- Sırt (Back) ----
-    WorkoutPlan(
+    _PlanTemplate(
       id: 'back_v_taper',
       title: 'Geniş V-Taper Sırt',
       category: ExerciseCategory.back,
       level: 'Orta düzey',
       durationMinutes: 22,
-      exercises: [_pullUp, _chinUp, _latPulldown, _barbellRow],
+      exerciseSlugs: ['pull_up', 'chin_up', 'lat_pulldown', 'barbell_row'],
       image: _backImg1,
     ),
-    WorkoutPlan(
+    _PlanTemplate(
       id: 'back_posture_basic',
       title: 'Duruş Düzeltici Temel Sırt',
       category: ExerciseCategory.back,
       level: 'Başlangıç',
       durationMinutes: 12,
-      exercises: [_superman, _latPulldown, _barbellRow],
+      exerciseSlugs: ['superman', 'lat_pulldown', 'barbell_row'],
       image: _backImg2,
     ),
     // ---- Omuz (Shoulders) ----
-    WorkoutPlan(
+    _PlanTemplate(
       id: 'shoulders_giant',
       title: 'Dev Omuzlar',
       category: ExerciseCategory.shoulders,
       level: 'Orta düzey',
       durationMinutes: 18,
-      exercises: [_shoulderPress, _lateralRaise, _frontRaise, _arnoldPress],
+      exerciseSlugs: [
+        'shoulder_press',
+        'lateral_raise',
+        'front_raise',
+        'arnold_press',
+      ],
       image: _shouldersImg1,
     ),
-    WorkoutPlan(
+    _PlanTemplate(
       id: 'shoulders_v_taper',
       title: 'V-Tipi Omuz Şekillendirme',
       category: ExerciseCategory.shoulders,
       level: 'Başlangıç',
       durationMinutes: 14,
-      exercises: [_lateralRaise, _frontRaise, _pikePushUp],
+      exerciseSlugs: ['lateral_raise', 'front_raise', 'pike_push_up'],
       image: _shouldersImg2,
     ),
-    WorkoutPlan(
+    _PlanTemplate(
       id: 'shoulders_power_burst',
       title: 'Power Omuz Patlaması',
       category: ExerciseCategory.shoulders,
       level: 'İleri',
       durationMinutes: 22,
-      exercises: [
-        _arnoldPress,
-        _shoulderPress,
-        _lateralRaise,
-        _pikePushUp,
+      exerciseSlugs: [
+        'arnold_press',
+        'shoulder_press',
+        'lateral_raise',
+        'pike_push_up',
       ],
       image: _shouldersImg3,
     ),
     // ---- Kol (Arms) ----
-    WorkoutPlan(
+    _PlanTemplate(
       id: 'arms_steel',
       title: 'Çelik Kollar',
       category: ExerciseCategory.arms,
       level: 'Orta düzey',
       durationMinutes: 14,
-      exercises: [_bicepsCurl, _hammerCurl, _tricepsDip],
+      exerciseSlugs: ['biceps_curl', 'hammer_curl', 'triceps_dip'],
       image: _armsImg1,
     ),
-    WorkoutPlan(
+    _PlanTemplate(
       id: 'arms_explosive_super',
       title: 'Patlayıcı Kol Süper Setleri',
       category: ExerciseCategory.arms,
       level: 'İleri',
       durationMinutes: 20,
-      exercises: [
-        _bicepsCurl,
-        _hammerCurl,
-        _tricepsDip,
-        _tricepsPushdown,
-        _closeGripPushUp,
+      exerciseSlugs: [
+        'biceps_curl',
+        'hammer_curl',
+        'triceps_dip',
+        'triceps_pushdown',
+        'close_grip_push_up',
       ],
       image: _armsImg2,
     ),
-    WorkoutPlan(
+    _PlanTemplate(
       id: 'arms_quick_tone',
       title: 'Hızlı Tonlama Kolları',
       category: ExerciseCategory.arms,
       level: 'Başlangıç',
       durationMinutes: 10,
-      exercises: [_bicepsCurl, _hammerCurl, _tricepsPushdown],
+      exerciseSlugs: ['biceps_curl', 'hammer_curl', 'triceps_pushdown'],
       image: _armsImg3,
     ),
     // ---- Bacak (Legs) ----
-    WorkoutPlan(
+    _PlanTemplate(
       id: 'legs_quad_strength',
       title: 'Büyük ve Güçlü Quadriceps Şekli',
       category: ExerciseCategory.legs,
       level: 'Orta düzey',
       durationMinutes: 18,
-      exercises: [_squat, _lunge, _legPress, _calfRaise],
+      exerciseSlugs: ['squat', 'lunge', 'leg_press', 'calf_raise'],
       image: _legsImg1,
     ),
-    WorkoutPlan(
+    _PlanTemplate(
       id: 'legs_power_day',
       title: 'Bacak Gücü Artışı Günü',
       category: ExerciseCategory.legs,
       level: 'İleri',
       durationMinutes: 25,
-      exercises: [_squat, _bulgarianSplitSquat, _legPress, _calfRaise],
+      exerciseSlugs: [
+        'squat',
+        'bulgarian_split_squat',
+        'leg_press',
+        'calf_raise',
+      ],
       image: _legsImg2,
     ),
-    WorkoutPlan(
+    _PlanTemplate(
       id: 'legs_cardio_strength',
       title: 'Alt Vücut Kardiyo ve Güç',
       category: ExerciseCategory.legs,
       level: 'Orta düzey',
       durationMinutes: 20,
-      exercises: [_squat, _lunge, _calfRaise, _wallSit],
+      exerciseSlugs: ['squat', 'lunge', 'calf_raise', 'wall_sit'],
       image: _legsImg3,
     ),
-    WorkoutPlan(
+    _PlanTemplate(
       id: 'legs_elite_sculpt',
       title: 'Elit Bacak Şekillendirme',
       category: ExerciseCategory.legs,
       level: 'İleri',
       durationMinutes: 28,
-      exercises: [
-        _bulgarianSplitSquat,
-        _legPress,
-        _wallSit,
-        _lunge,
-        _calfRaise,
+      exerciseSlugs: [
+        'bulgarian_split_squat',
+        'leg_press',
+        'wall_sit',
+        'lunge',
+        'calf_raise',
       ],
       image: _legsImg4,
     ),
     // ---- Kardiyo & Full Body ----
-    WorkoutPlan(
+    _PlanTemplate(
       id: 'cardio_fat_burn',
       title: 'Yağ Yakıcı Kardiyo',
       category: ExerciseCategory.fullBody,
       level: 'Orta düzey',
       durationMinutes: 20,
-      exercises: [_burpee, _jumpingJack, _highKnees, _jumpSquat],
+      exerciseSlugs: ['burpee', 'jumping_jack', 'high_knees', 'jump_squat'],
       image: _cardioImg1,
     ),
-    WorkoutPlan(
+    _PlanTemplate(
       id: 'cardio_full_body_burst',
       title: 'Tam Vücut Patlama',
       category: ExerciseCategory.fullBody,
       level: 'İleri',
       durationMinutes: 25,
-      exercises: [
-        _burpee,
-        _jumpSquat,
-        _mountainClimber,
-        _skippingRope,
-        _jumpingJack,
+      exerciseSlugs: [
+        'burpee',
+        'jump_squat',
+        'mountain_climber',
+        'skipping_rope',
+        'jumping_jack',
       ],
       image: _cardioImg2,
     ),
-    WorkoutPlan(
+    _PlanTemplate(
       id: 'cardio_morning_quick',
       title: 'Hızlı Sabah Kardiyosu',
       category: ExerciseCategory.fullBody,
       level: 'Başlangıç',
       durationMinutes: 12,
-      exercises: [_jumpingJack, _highKnees, _skippingRope],
+      exerciseSlugs: ['jumping_jack', 'high_knees', 'skipping_rope'],
       image: _cardioImg3,
     ),
   ];
+
+  /// Materialised Sınırlarını Zorla cards. Resolves the four templates
+  /// against the fetched catalogue; missing slugs drop out silently.
+  Future<List<WorkoutPlan>> getPushLimitsPlans() async {
+    final exercises = await getAllExercises();
+    final bySlug = {for (final e in exercises) e.id: e};
+    return _pushLimitsTemplates
+        .map((t) => t.resolve(bySlug))
+        .toList(growable: false);
+  }
+
+  /// Materialised regional + Sınırlarını Zorla plan list, in the same
+  /// order the dashboard renders them. The strip on the home tab pulls
+  /// the four push-limits cards via [getPushLimitsPlans] for tinting,
+  /// but the regional list still expects them at the head of the array.
+  Future<List<WorkoutPlan>> getAllPlans() async {
+    final exercises = await getAllExercises();
+    final bySlug = {for (final e in exercises) e.id: e};
+    return [
+      ..._pushLimitsTemplates.map((t) => t.resolve(bySlug)),
+      ..._regionalTemplates.map((t) => t.resolve(bySlug)),
+    ];
+  }
 
   // ==========================================================================
   // PROGRAM
@@ -1190,8 +580,8 @@ class WorkoutRepository {
 
   /// Returns the user's 30-day plan with completion flags overlaid from
   /// local + remote progress. On a cold cache (or when a previous cache
-  /// entry is unparseable), falls back to [generator] and persists the
-  /// result before returning.
+  /// entry is unparseable), fetches the exercise catalogue and falls back
+  /// to [generator] before persisting the result.
   Future<List<WorkoutDay>> loadOrGenerateProgram({
     required WorkoutGeneratorService generator,
     String? userGoal,
@@ -1199,15 +589,29 @@ class WorkoutRepository {
   }) async {
     final completed = await _completedDays();
     final cached = _decodeCachedPlan();
-    final plan = cached ??
-        generator.generate30DayPlan(
-          userGoal: userGoal ?? 'sixpack',
-          fitnessLevel: fitnessLevel ?? 'beginner',
-        );
-    if (cached == null) {
+    final List<WorkoutDay> plan;
+    if (cached != null) {
+      plan = cached;
+    } else {
+      // Phase 50A · pool now comes from Supabase. The fetch is only
+      // exercised on a cold plan cache; once a 30-day schedule is
+      // persisted, we never re-touch the catalogue for plan generation
+      // (only for ad-hoc regional / push-limits resolutions).
+      final pool = await getAllExercises();
+      plan = generator.generate30DayPlan(
+        userGoal: userGoal ?? 'sixpack',
+        fitnessLevel: fitnessLevel ?? 'beginner',
+        pool: pool,
+      );
       // Fire-and-forget — cache is advisory; if the write fails we'll
       // simply regenerate the same plan next launch (deterministic).
-      unawaited(_cachePlan(plan));
+      // Empty-pool runs (offline first launch / fetch failure) return a
+      // 30-rest-day stub from the generator; persisting that would mean
+      // the next launch never retries the catalogue fetch, so skip the
+      // write whenever the pool was empty.
+      if (pool.isNotEmpty) {
+        unawaited(_cachePlan(plan));
+      }
     }
     return plan
         .map((day) =>
@@ -1384,6 +788,46 @@ class WorkoutRepository {
     await _prefs.setStringList(
       _completedKey,
       days.map((e) => e.toString()).toList(),
+    );
+  }
+}
+
+/// Internal description of a [WorkoutPlan] keyed by exercise slugs. The
+/// concrete `WorkoutPlan` is rebuilt on demand from [resolve] against
+/// whatever exercises Supabase currently exposes — that decoupling is
+/// what lets a deleted exercise just shrink a plan instead of crashing
+/// the antrenman tab.
+class _PlanTemplate {
+  const _PlanTemplate({
+    required this.id,
+    required this.title,
+    required this.category,
+    required this.level,
+    required this.durationMinutes,
+    required this.exerciseSlugs,
+    this.image,
+  });
+
+  final String id;
+  final String title;
+  final ExerciseCategory category;
+  final String level;
+  final int durationMinutes;
+  final List<String> exerciseSlugs;
+  final String? image;
+
+  WorkoutPlan resolve(Map<String, Exercise> bySlug) {
+    return WorkoutPlan(
+      id: id,
+      title: title,
+      category: category,
+      level: level,
+      durationMinutes: durationMinutes,
+      image: image,
+      exercises: exerciseSlugs
+          .map((s) => bySlug[s])
+          .whereType<Exercise>()
+          .toList(growable: false),
     );
   }
 }

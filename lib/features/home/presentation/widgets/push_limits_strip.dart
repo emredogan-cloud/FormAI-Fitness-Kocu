@@ -1,13 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/routing/app_router.dart';
 import '../../../../core/widgets/cached_image.dart';
-import '../../../workout/data/workout_repository.dart';
 import '../../../workout/models/workout_plan_model.dart';
+import '../../../workout/providers/workout_provider.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonAccent = Color(0xFF4DA6FF);
+
+/// Tints assigned to each push-limits card by ordinal. Kept aligned with
+/// the order returned by `WorkoutRepository.getPushLimitsPlans()`:
+///   [abs_hiit, stronger_core, iron_pack, athletic_core]
+const List<Color> _pushLimitsTints = [
+  _neon,
+  Color(0xFF1FBF8F),
+  _neonAccent,
+  Color(0xFFFF6FB5),
+];
 
 Widget _resolveImage(String image) {
   final fallback = Container(
@@ -30,37 +41,36 @@ Widget _resolveImage(String image) {
   );
 }
 
-class PushLimitsStrip extends StatelessWidget {
+class PushLimitsStrip extends ConsumerWidget {
   const PushLimitsStrip({super.key});
 
-  // Can't be `const` any more — Phase 10 moved exercise video URLs to
-  // runtime (dotenv-backed), so the WorkoutPlan objects these tuples
-  // reference are `static final`, not `static const`.
-  static final List<({WorkoutPlan plan, Color tint})> _items = [
-    (plan: WorkoutRepository.pushLimitsAbsHiit, tint: _neon),
-    (
-      plan: WorkoutRepository.pushLimitsStrongerCore,
-      tint: const Color(0xFF1FBF8F),
-    ),
-    (plan: WorkoutRepository.pushLimitsIronPack, tint: _neonAccent),
-    (
-      plan: WorkoutRepository.pushLimitsAthleticCore,
-      tint: const Color(0xFFFF6FB5),
-    ),
-  ];
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final plansAsync = ref.watch(pushLimitsPlansProvider);
     return SizedBox(
       height: 200,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: _items.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
-        itemBuilder: (context, index) {
-          final item = _items[index];
-          return _PushLimitsCard(plan: item.plan, tint: item.tint);
+      child: plansAsync.when(
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: _neon),
+        ),
+        // Empty state mirrors the loading shell — the dashboard already
+        // has plenty of other content, so a silent fallback is preferable
+        // to a red error banner here. The next FutureProvider rebuild
+        // (e.g. on pull-to-refresh) will retry automatically.
+        error: (_, __) => const SizedBox.shrink(),
+        data: (plans) {
+          if (plans.isEmpty) return const SizedBox.shrink();
+          return ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: plans.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              final plan = plans[index];
+              final tint = _pushLimitsTints[index % _pushLimitsTints.length];
+              return _PushLimitsCard(plan: plan, tint: tint);
+            },
+          );
         },
       ),
     );

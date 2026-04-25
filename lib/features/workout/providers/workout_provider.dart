@@ -11,11 +11,27 @@ import '../models/exercise_model.dart';
 import '../models/workout_day_model.dart';
 import '../models/workout_plan_model.dart';
 
+/// Shared singleton repository instance. Phase 50A · centralises the
+/// in-memory exercise cache so the antrenman tab, push-limits strip and
+/// session notifier all see the same fetched catalogue.
+final workoutRepositoryProvider = Provider<WorkoutRepository>((ref) {
+  final prefs = ref.watch(sharedPreferencesProvider);
+  return WorkoutRepository(prefs);
+});
+
 /// Catalogue of region-tagged plans surfaced on the dashboard's filter
-/// strip. Currently a static list; promote to AsyncNotifier when plans
-/// move behind a Supabase-backed catalogue.
-final workoutPlansProvider = Provider<List<WorkoutPlan>>((ref) {
-  return WorkoutRepository.allPlans;
+/// strip. Phase 50A · resolved asynchronously from the Supabase
+/// `exercises` table, so the consumer must `.when` over the AsyncValue
+/// for loading and error states.
+final workoutPlansProvider = FutureProvider<List<WorkoutPlan>>((ref) {
+  return ref.watch(workoutRepositoryProvider).getAllPlans();
+});
+
+/// "Sınırlarını Zorla" cards for the dashboard strip. Materialised from
+/// the same fetched catalogue that powers [workoutPlansProvider]; the
+/// shared repository keeps both providers off independent network calls.
+final pushLimitsPlansProvider = FutureProvider<List<WorkoutPlan>>((ref) {
+  return ref.watch(workoutRepositoryProvider).getPushLimitsPlans();
 });
 
 class WorkoutSessionState {
@@ -123,8 +139,16 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
 
   @override
   Future<WorkoutSessionState> build() async {
-    final prefs = await SharedPreferences.getInstance();
-    _repository = WorkoutRepository(prefs);
+    // Phase 50A · prefer the shared repository so the in-memory exercise
+    // cache is reused across the antrenman tab, push-limits strip and
+    // this notifier. Fall back to a fresh instance if the override is
+    // missing (e.g. some unit tests stub `sharedPreferencesProvider`).
+    try {
+      _repository = ref.read(workoutRepositoryProvider);
+    } catch (_) {
+      final prefs = await SharedPreferences.getInstance();
+      _repository = WorkoutRepository(prefs);
+    }
     final days = await _loadProgram();
     final activeDay = _firstIncomplete(days);
     ref.onDispose(_cancelRestTimer);

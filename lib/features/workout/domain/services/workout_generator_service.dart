@@ -3,13 +3,12 @@ import 'dart:math' as math;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/app_logger.dart';
-import '../../data/workout_repository.dart';
 import '../../models/exercise_model.dart';
 import '../../models/workout_day_model.dart';
 
-/// Rule-based 30-day plan generator. Consumes the flat [Exercise] pool
-/// exposed on [WorkoutRepository.allExercises] and shapes it into a
-/// 30-entry schedule honouring:
+/// Rule-based 30-day plan generator. Consumes a flat [Exercise] pool
+/// (passed in from `WorkoutRepository.getAllExercises()` since Phase 50A)
+/// and shapes it into a 30-entry schedule honouring:
 ///
 ///   • a rest day every 4th day (4, 8, 12, 16, 20, 24, 28) with an empty
 ///     `exercises` list and the "Dinlenme Günü" title;
@@ -46,10 +45,30 @@ class WorkoutGeneratorService {
   List<WorkoutDay> generate30DayPlan({
     required String userGoal,
     required String fitnessLevel,
+    required List<Exercise> pool,
   }) {
+    if (pool.isEmpty) {
+      // Phase 50A · the Supabase catalogue fetch failed (offline first
+      // launch, transient 5xx, etc.). Returning 30 rest days keeps the
+      // antrenman tab renderable; the repository's loadOrGenerateProgram
+      // refuses to cache an empty-pool plan so the next launch retries.
+      AppLogger.warning(
+        'WorkoutGenerator · empty pool, returning 30-rest-day stub',
+        category: 'workout',
+      );
+      return List<WorkoutDay>.generate(
+        30,
+        (i) => WorkoutDay(
+          dayNumber: i + 1,
+          exercises: const [],
+          title: restDayTitle,
+        ),
+        growable: false,
+      );
+    }
+
     final goal = _normaliseGoal(userGoal);
     final level = _normaliseLevel(fitnessLevel);
-    final pool = WorkoutRepository.allExercises;
     final goalFiltered = _filterByGoal(pool, goal);
 
     // Phase 48 · structured generator log so the dashboard's "all-Core

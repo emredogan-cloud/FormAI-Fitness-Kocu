@@ -1,19 +1,220 @@
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sixpack_ai/features/workout/data/workout_repository.dart';
 import 'package:sixpack_ai/features/workout/domain/services/workout_generator_service.dart';
-import 'package:sixpack_ai/features/workout/models/workout_day_model.dart';
+import 'package:sixpack_ai/features/workout/models/exercise_model.dart';
+
+/// Fixture pool sized to every dimension the generator exercises:
+///   • core / upper_body / lower_body / cardio / full_body coverage so
+///     the goal-based filters all return non-empty results.
+///   • beginner / intermediate / advanced spread so the fitness-level
+///     ramp test (advanced unlocks at week 3) has both populations.
+///   • a mix of rep-based and time-based movements so the progressive
+///     overload test can find a scalable target on day 1 and day 9.
+///
+/// Replaces the pre-Phase-50A reliance on `WorkoutRepository.allExercises`,
+/// which is no longer a static list — exercises are now fetched async
+/// from Supabase, so the generator takes its pool as a parameter and
+/// the test owns its own fixtures.
+const _fixturePool = <Exercise>[
+  // Core (5)
+  Exercise(
+    id: 'crunch',
+    name: 'Mekik',
+    type: ExerciseType.repBased,
+    targetReps: 12,
+    sets: 3,
+    restDurationInSeconds: 30,
+    category: ExerciseCategory.core,
+    difficulty: 'beginner',
+    targetMuscle: 'core',
+    isCardio: false,
+  ),
+  Exercise(
+    id: 'plank',
+    name: 'Plank',
+    type: ExerciseType.timeBased,
+    targetDurationInSeconds: 40,
+    sets: 3,
+    restDurationInSeconds: 45,
+    category: ExerciseCategory.core,
+    difficulty: 'beginner',
+    targetMuscle: 'core',
+    isCardio: false,
+  ),
+  Exercise(
+    id: 'leg_raise',
+    name: 'Bacak Kaldırma',
+    type: ExerciseType.repBased,
+    targetReps: 12,
+    sets: 3,
+    restDurationInSeconds: 30,
+    category: ExerciseCategory.core,
+    difficulty: 'intermediate',
+    targetMuscle: 'core',
+    isCardio: false,
+  ),
+  Exercise(
+    id: 'hanging_leg_raise',
+    name: 'Asılı Bacak Kaldırma',
+    type: ExerciseType.repBased,
+    targetReps: 10,
+    sets: 3,
+    restDurationInSeconds: 45,
+    category: ExerciseCategory.core,
+    difficulty: 'advanced',
+    targetMuscle: 'core',
+    isCardio: false,
+  ),
+  Exercise(
+    id: 'flutter_kick',
+    name: 'Flutter Kick',
+    type: ExerciseType.timeBased,
+    targetDurationInSeconds: 30,
+    sets: 3,
+    restDurationInSeconds: 30,
+    category: ExerciseCategory.core,
+    difficulty: 'intermediate',
+    targetMuscle: 'core',
+    isCardio: false,
+  ),
+  // Upper body (4)
+  Exercise(
+    id: 'push_up',
+    name: 'Şınav',
+    type: ExerciseType.repBased,
+    targetReps: 12,
+    sets: 3,
+    restDurationInSeconds: 45,
+    category: ExerciseCategory.chest,
+    difficulty: 'intermediate',
+    targetMuscle: 'upper_body',
+    isCardio: false,
+  ),
+  Exercise(
+    id: 'pull_up',
+    name: 'Pull-up',
+    type: ExerciseType.repBased,
+    targetReps: 8,
+    sets: 3,
+    restDurationInSeconds: 60,
+    category: ExerciseCategory.back,
+    difficulty: 'advanced',
+    targetMuscle: 'upper_body',
+    isCardio: false,
+  ),
+  Exercise(
+    id: 'lateral_raise',
+    name: 'Lateral Raise',
+    type: ExerciseType.repBased,
+    targetReps: 12,
+    sets: 3,
+    restDurationInSeconds: 45,
+    category: ExerciseCategory.shoulders,
+    difficulty: 'beginner',
+    targetMuscle: 'upper_body',
+    isCardio: false,
+  ),
+  Exercise(
+    id: 'biceps_curl',
+    name: 'Biceps Curl',
+    type: ExerciseType.repBased,
+    targetReps: 12,
+    sets: 3,
+    restDurationInSeconds: 45,
+    category: ExerciseCategory.arms,
+    difficulty: 'beginner',
+    targetMuscle: 'upper_body',
+    isCardio: false,
+  ),
+  // Lower body (3)
+  Exercise(
+    id: 'squat',
+    name: 'Squat',
+    type: ExerciseType.repBased,
+    targetReps: 15,
+    sets: 3,
+    restDurationInSeconds: 45,
+    category: ExerciseCategory.legs,
+    difficulty: 'beginner',
+    targetMuscle: 'lower_body',
+    isCardio: false,
+  ),
+  Exercise(
+    id: 'lunge',
+    name: 'Lunge',
+    type: ExerciseType.repBased,
+    targetReps: 12,
+    sets: 3,
+    restDurationInSeconds: 45,
+    category: ExerciseCategory.legs,
+    difficulty: 'intermediate',
+    targetMuscle: 'lower_body',
+    isCardio: false,
+  ),
+  Exercise(
+    id: 'bulgarian_split_squat',
+    name: 'Bulgar Split Squat',
+    type: ExerciseType.repBased,
+    targetReps: 10,
+    sets: 3,
+    restDurationInSeconds: 50,
+    category: ExerciseCategory.legs,
+    difficulty: 'advanced',
+    targetMuscle: 'lower_body',
+    isCardio: false,
+  ),
+  // Cardio (2)
+  Exercise(
+    id: 'jumping_jack',
+    name: 'Jumping Jack',
+    type: ExerciseType.timeBased,
+    targetDurationInSeconds: 30,
+    sets: 3,
+    restDurationInSeconds: 30,
+    category: ExerciseCategory.fullBody,
+    difficulty: 'beginner',
+    targetMuscle: 'cardio',
+    isCardio: true,
+  ),
+  Exercise(
+    id: 'high_knees',
+    name: 'High Knees',
+    type: ExerciseType.timeBased,
+    targetDurationInSeconds: 30,
+    sets: 3,
+    restDurationInSeconds: 30,
+    category: ExerciseCategory.fullBody,
+    difficulty: 'beginner',
+    targetMuscle: 'cardio',
+    isCardio: true,
+  ),
+  // Full body (2)
+  Exercise(
+    id: 'burpee',
+    name: 'Burpee',
+    type: ExerciseType.repBased,
+    targetReps: 10,
+    sets: 3,
+    restDurationInSeconds: 50,
+    category: ExerciseCategory.fullBody,
+    difficulty: 'advanced',
+    targetMuscle: 'full_body',
+    isCardio: true,
+  ),
+  Exercise(
+    id: 'jump_squat',
+    name: 'Jump Squat',
+    type: ExerciseType.repBased,
+    targetReps: 12,
+    sets: 3,
+    restDurationInSeconds: 45,
+    category: ExerciseCategory.fullBody,
+    difficulty: 'intermediate',
+    targetMuscle: 'full_body',
+    isCardio: true,
+  ),
+];
 
 void main() {
-  // `WorkoutRepository.allExercises` initialises video URLs from
-  // `dotenv.env['SUPABASE_URL']`. Without an initialised dotenv the
-  // first access throws `NotInitializedError`; `loadFromString` with
-  // `isOptional: true` seeds an empty-but-initialised map so the
-  // generator can read through `dotenv.env[...]` without crashing.
-  setUpAll(() {
-    dotenv.loadFromString(envString: '', isOptional: true);
-  });
-
   const service = WorkoutGeneratorService();
 
   group('generate30DayPlan — schedule shape', () {
@@ -21,6 +222,7 @@ void main() {
       final plan = service.generate30DayPlan(
         userGoal: 'sixpack',
         fitnessLevel: 'beginner',
+        pool: _fixturePool,
       );
 
       expect(plan, hasLength(30));
@@ -32,6 +234,7 @@ void main() {
       final plan = service.generate30DayPlan(
         userGoal: 'sixpack',
         fitnessLevel: 'beginner',
+        pool: _fixturePool,
       );
 
       for (final day in plan) {
@@ -55,6 +258,7 @@ void main() {
       final plan = service.generate30DayPlan(
         userGoal: 'sixpack',
         fitnessLevel: 'intermediate',
+        pool: _fixturePool,
       );
 
       for (final day in plan.where((d) => !d.isRestDay)) {
@@ -72,13 +276,33 @@ void main() {
       final a = service.generate30DayPlan(
         userGoal: 'bulk',
         fitnessLevel: 'advanced',
+        pool: _fixturePool,
       );
       final b = service.generate30DayPlan(
         userGoal: 'bulk',
         fitnessLevel: 'advanced',
+        pool: _fixturePool,
       );
 
       expect(a, equals(b));
+    });
+
+    test('empty pool returns a 30-rest-day stub instead of crashing', () {
+      // Phase 50A · graceful degradation when the Supabase fetch fails on
+      // first launch. The stub lets the antrenman tab render without
+      // null-safety wrappers; the repository skips caching it so the
+      // next launch retries the fetch.
+      final plan = service.generate30DayPlan(
+        userGoal: 'sixpack',
+        fitnessLevel: 'beginner',
+        pool: const [],
+      );
+
+      expect(plan, hasLength(30));
+      for (final day in plan) {
+        expect(day.exercises, isEmpty);
+        expect(day.title, WorkoutGeneratorService.restDayTitle);
+      }
     });
   });
 
@@ -93,6 +317,7 @@ void main() {
       final plan = service.generate30DayPlan(
         userGoal: 'sixpack',
         fitnessLevel: 'beginner',
+        pool: _fixturePool,
       );
 
       final dayOne = plan.first;
@@ -122,6 +347,7 @@ void main() {
       final plan = service.generate30DayPlan(
         userGoal: 'bulk',
         fitnessLevel: 'intermediate',
+        pool: _fixturePool,
       );
 
       final dayOne = plan.first;
@@ -154,6 +380,7 @@ void main() {
       final plan = service.generate30DayPlan(
         userGoal: 'tone',
         fitnessLevel: 'intermediate',
+        pool: _fixturePool,
       );
 
       final dayOne = plan.first;
@@ -184,10 +411,12 @@ void main() {
       final unknown = service.generate30DayPlan(
         userGoal: 'totally-made-up-goal',
         fitnessLevel: 'beginner',
+        pool: _fixturePool,
       );
       final sixpack = service.generate30DayPlan(
         userGoal: 'sixpack',
         fitnessLevel: 'beginner',
+        pool: _fixturePool,
       );
 
       expect(unknown, equals(sixpack));
@@ -197,10 +426,12 @@ void main() {
       final turkish = service.generate30DayPlan(
         userGoal: 'sıkılaşmak',
         fitnessLevel: 'beginner',
+        pool: _fixturePool,
       );
       final english = service.generate30DayPlan(
         userGoal: 'tone',
         fitnessLevel: 'beginner',
+        pool: _fixturePool,
       );
 
       expect(turkish, equals(english));
@@ -212,6 +443,7 @@ void main() {
       final plan = service.generate30DayPlan(
         userGoal: 'sixpack',
         fitnessLevel: 'beginner',
+        pool: _fixturePool,
       );
 
       for (final day in plan.where((d) => !d.isRestDay && d.dayNumber <= 14)) {
@@ -230,6 +462,7 @@ void main() {
       final plan = service.generate30DayPlan(
         userGoal: 'bulk',
         fitnessLevel: 'beginner',
+        pool: _fixturePool,
       );
 
       final hasAdvancedPostWeek2 = plan
@@ -248,6 +481,7 @@ void main() {
       final plan = service.generate30DayPlan(
         userGoal: 'bulk',
         fitnessLevel: 'intermediate',
+        pool: _fixturePool,
       );
 
       final firstWeekHasAdvanced = plan
@@ -261,51 +495,82 @@ void main() {
 
   group('progressive overload', () {
     test('week-2 reps scale by ~1.2x vs week-1 for a matching exercise', () {
+      // Phase 50A · the previous version of this test relied on the
+      // cursor wrapping back to position 0 by day 9, which depended on
+      // the legacy 41-exercise catalogue size happening to divide the
+      // cumulative exercise count. With the fixture pool now small and
+      // owned by the test, we instead pick any rep-based movement that
+      // shows up in both week 1 and week 2 and assert the multiplier
+      // applied — a stronger invariant that survives pool resizing.
       final plan = service.generate30DayPlan(
         userGoal: 'sixpack',
         fitnessLevel: 'beginner',
+        pool: _fixturePool,
       );
 
-      WorkoutDay findDay(int dn) => plan.firstWhere((d) => d.dayNumber == dn);
+      final week1Reps = plan
+          .where((d) => !d.isRestDay && d.dayNumber <= 7)
+          .expand((d) => d.exercises)
+          .where((e) => e.targetReps != null)
+          .toList(growable: false);
 
-      // Day 1 and day 9 both fall at the start of a 5-exercise day per
-      // `_dailyExerciseCount` (dayNumber % 3), so the first slot is the
-      // same base exercise — the only difference is the week multiplier.
-      final week1Day = findDay(1);
-      final week2Day = findDay(9);
-      expect(week1Day.exercises, isNotEmpty);
-      expect(week2Day.exercises, isNotEmpty);
+      final week2Reps = plan
+          .where((d) => !d.isRestDay && d.dayNumber > 7 && d.dayNumber <= 14)
+          .expand((d) => d.exercises)
+          .where((e) => e.targetReps != null)
+          .toList(growable: false);
 
-      final w1 = week1Day.exercises.first;
-      final w2 = week2Day.exercises.first;
+      expect(week1Reps, isNotEmpty);
+      expect(week2Reps, isNotEmpty);
+
+      final week2Names = week2Reps.map((e) => e.name).toSet();
+      final w1 = week1Reps.firstWhere(
+        (e) => week2Names.contains(e.name),
+        orElse: () => throw StateError(
+          'no rep-based exercise was shared between week 1 and week 2',
+        ),
+      );
+      final w2 = week2Reps.firstWhere((e) => e.name == w1.name);
+
       expect(
-        w1.name,
-        w2.name,
-        reason: 'sanity-check: deterministic rotation picks the same move',
+        w2.targetReps!,
+        greaterThan(w1.targetReps!),
+        reason: 'week 2 must apply the 1.2x reps multiplier',
+      );
+    });
+
+    test('week-2 time-based moves scale by ~1.2x vs week-1', () {
+      final plan = service.generate30DayPlan(
+        userGoal: 'sixpack',
+        fitnessLevel: 'beginner',
+        pool: _fixturePool,
       );
 
-      if (w1.targetReps != null && w2.targetReps != null) {
-        expect(
-          w2.targetReps!,
-          greaterThan(w1.targetReps!),
-          reason: 'week 2 must apply the 1.2x reps multiplier',
-        );
-      }
-      if (w1.targetDurationInSeconds != null &&
-          w2.targetDurationInSeconds != null) {
-        expect(
-          w2.targetDurationInSeconds!,
-          greaterThan(w1.targetDurationInSeconds!),
-        );
-      }
-    });
-  });
+      final week1Time = plan
+          .where((d) => !d.isRestDay && d.dayNumber <= 7)
+          .expand((d) => d.exercises)
+          .where((e) => e.targetDurationInSeconds != null)
+          .toList(growable: false);
+      final week2Time = plan
+          .where((d) => !d.isRestDay && d.dayNumber > 7 && d.dayNumber <= 14)
+          .expand((d) => d.exercises)
+          .where((e) => e.targetDurationInSeconds != null)
+          .toList(growable: false);
 
-  group('repository exposure', () {
-    test(
-        'WorkoutRepository.allExercises is non-empty so the generator '
-        'always has a pool to rotate through', () {
-      expect(WorkoutRepository.allExercises, isNotEmpty);
+      // Time-based movements are scarcer than rep-based; only assert the
+      // multiplier when the schedule actually shares a name across weeks.
+      final week2Names = week2Time.map((e) => e.name).toSet();
+      final shared =
+          week1Time.where((e) => week2Names.contains(e.name)).toList();
+      if (shared.isEmpty) return;
+
+      final w1 = shared.first;
+      final w2 = week2Time.firstWhere((e) => e.name == w1.name);
+
+      expect(
+        w2.targetDurationInSeconds!,
+        greaterThan(w1.targetDurationInSeconds!),
+      );
     });
   });
 }

@@ -116,7 +116,12 @@ class _AntrenmanTabState extends ConsumerState<AntrenmanTab> {
       (i) => DateTime(weekStart.year, weekStart.month, weekStart.day + i),
     );
 
-    final allPlans = ref.watch(workoutPlansProvider);
+    final plansAsync = ref.watch(workoutPlansProvider);
+    // Phase 50A · the plans list is now async (Supabase-backed). Falling
+    // back to an empty list during loading / error keeps the regional
+    // strip's empty-state copy in charge of the UX rather than chaining
+    // a second loading spinner.
+    final allPlans = plansAsync.value ?? const <WorkoutPlan>[];
     final filteredPlans =
         allPlans.where((p) => p.category == _selectedCategory).toList();
 
