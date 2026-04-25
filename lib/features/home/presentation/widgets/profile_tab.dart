@@ -266,10 +266,13 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
   }
 
   Future<void> _openEditSheet(Map<String, dynamic> initial) async {
+    // Phase 53H · drop the hardcoded `0xFF111118` so the sheet picks
+    // up the active theme's surface tone — white in light mode, dark
+    // in dark mode. Keeps the radius treatment the user expects.
     final result = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF111118),
+      backgroundColor: context.colors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -290,7 +293,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     final password = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF111118),
+      backgroundColor: context.colors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -324,17 +327,22 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
   }
 
   Future<void> _pickReminderTime(BuildContext context) async {
+    // Phase 53H · drop the forced dark colorScheme override so the
+    // TimePicker dialog inherits the active app theme. The previous
+    // builder pinned the picker to a dark `0xFF1A1A22` surface and
+    // white text, which left the dial illegible after the user
+    // toggled to Açık. We still tint the active selection to brand
+    // `_neon` via a primary override so the picker looks like FormAI
+    // chrome in either palette.
     final picked = await showTimePicker(
       context: context,
       initialTime: const TimeOfDay(hour: 19, minute: 0),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
-          colorScheme: const ColorScheme.dark(
-            primary: _neon,
-            onPrimary: Colors.white,
-            surface: Color(0xFF1A1A22),
-            onSurface: Colors.white,
-          ),
+          colorScheme: Theme.of(ctx).colorScheme.copyWith(
+                primary: _neon,
+                onPrimary: Colors.white,
+              ),
         ),
         child: child!,
       ),
@@ -362,7 +370,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF111118),
+      backgroundColor: context.colors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -465,6 +473,10 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53H · sheet handle, sheet title, and every form field flip
+    // through the active ColorScheme. The brand-coloured KAYDET CTA
+    // keeps its neon background because that's the primary action.
+    final scheme = context.colors;
     final insets = MediaQuery.of(context).viewInsets.bottom;
     return Padding(
       padding: EdgeInsets.fromLTRB(20, 18, 20, 20 + insets),
@@ -480,22 +492,23 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.white24,
+                    color: scheme.onSurface.withValues(alpha: 0.24),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Bilgilerini Güncelle',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: scheme.onSurface,
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
                 ),
               ),
               const SizedBox(height: 18),
               _numberField(
+                context: context,
                 controller: _ageCtl,
                 label: 'Yaş',
                 icon: Icons.cake_outlined,
@@ -504,6 +517,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
               ),
               const SizedBox(height: 12),
               _numberField(
+                context: context,
                 controller: _heightCtl,
                 label: 'Boy (cm)',
                 icon: Icons.height,
@@ -512,6 +526,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
               ),
               const SizedBox(height: 12),
               _numberField(
+                context: context,
                 controller: _weightCtl,
                 label: 'Kilo (kg)',
                 icon: Icons.monitor_weight_outlined,
@@ -521,11 +536,14 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 initialValue: _goal,
-                dropdownColor: const Color(0xFF1A1A22),
+                dropdownColor: scheme.surface,
                 iconEnabledColor: _neon,
-                style: const TextStyle(color: Colors.white),
-                decoration:
-                    _decoration(label: 'Hedef', icon: Icons.flag_outlined),
+                style: TextStyle(color: scheme.onSurface),
+                decoration: _decoration(
+                  context: context,
+                  label: 'Hedef',
+                  icon: Icons.flag_outlined,
+                ),
                 items: _goalLabels.entries
                     .map(
                       (e) => DropdownMenuItem(
@@ -562,6 +580,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
   }
 
   Widget _numberField({
+    required BuildContext context,
     required TextEditingController controller,
     required String label,
     required IconData icon,
@@ -572,8 +591,8 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
       controller: controller,
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-      style: const TextStyle(color: Colors.white),
-      decoration: _decoration(label: label, icon: icon),
+      style: TextStyle(color: context.colors.onSurface),
+      decoration: _decoration(context: context, label: label, icon: icon),
       validator: (value) {
         final v = int.tryParse(value?.trim() ?? '');
         if (v == null) return 'Geçerli bir sayı gir';
@@ -583,16 +602,21 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
     );
   }
 
-  InputDecoration _decoration({required String label, required IconData icon}) {
+  InputDecoration _decoration({
+    required BuildContext context,
+    required String label,
+    required IconData icon,
+  }) {
+    final scheme = context.colors;
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(color: Colors.white54),
+      labelStyle: TextStyle(color: scheme.onSurface.withValues(alpha: 0.55)),
       prefixIcon: Icon(icon, color: _neon),
       filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.04),
+      fillColor: scheme.onSurface.withValues(alpha: 0.04),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.white24),
+        borderSide: BorderSide(color: scheme.outlineVariant),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -1112,6 +1136,10 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53H · password sheet flips its handle, headings,
+    // explainer, both inputs, and the visibility-toggle icon through
+    // the active ColorScheme.
+    final scheme = context.colors;
     final insets = MediaQuery.of(context).viewInsets.bottom;
     return Padding(
       padding: EdgeInsets.fromLTRB(20, 18, 20, 20 + insets),
@@ -1127,38 +1155,42 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.white24,
+                    color: scheme.onSurface.withValues(alpha: 0.24),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Şifreyi Değiştir',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: scheme.onSurface,
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
                 ),
               ),
               const SizedBox(height: 6),
-              const Text(
+              Text(
                 'Yeni şifren en az 8 karakter olmalı.',
-                style: TextStyle(color: Colors.white54, fontSize: 12),
+                style: TextStyle(
+                  color: scheme.onSurface.withValues(alpha: 0.55),
+                  fontSize: 12,
+                ),
               ),
               const SizedBox(height: 18),
               TextFormField(
                 controller: _passwordCtl,
                 obscureText: _obscure,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: scheme.onSurface),
                 decoration: _decoration(
+                  context: context,
                   label: 'Yeni şifre',
                   icon: Icons.lock_outline,
                   suffix: IconButton(
                     onPressed: () => setState(() => _obscure = !_obscure),
                     icon: Icon(
                       _obscure ? Icons.visibility : Icons.visibility_off,
-                      color: Colors.white54,
+                      color: scheme.onSurface.withValues(alpha: 0.55),
                     ),
                   ),
                 ),
@@ -1172,8 +1204,9 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
               TextFormField(
                 controller: _confirmCtl,
                 obscureText: _obscure,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: scheme.onSurface),
                 decoration: _decoration(
+                  context: context,
                   label: 'Şifreyi tekrar gir',
                   icon: Icons.lock_outline,
                 ),
@@ -1209,20 +1242,22 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
   }
 
   InputDecoration _decoration({
+    required BuildContext context,
     required String label,
     required IconData icon,
     Widget? suffix,
   }) {
+    final scheme = context.colors;
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(color: Colors.white54),
+      labelStyle: TextStyle(color: scheme.onSurface.withValues(alpha: 0.55)),
       prefixIcon: Icon(icon, color: _neon),
       suffixIcon: suffix,
       filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.04),
+      fillColor: scheme.onSurface.withValues(alpha: 0.04),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.white24),
+        borderSide: BorderSide(color: scheme.outlineVariant),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -1330,6 +1365,7 @@ class _PrivacySheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = context.colors;
     return SafeArea(
       top: false,
       child: Padding(
@@ -1343,7 +1379,7 @@ class _PrivacySheet extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white24,
+                  color: scheme.onSurface.withValues(alpha: 0.24),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -1365,11 +1401,11 @@ class _PrivacySheet extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Gizlilik Politikası ve Veri Güvenliği',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: scheme.onSurface,
                       fontSize: 17,
                       fontWeight: FontWeight.w900,
                       height: 1.3,
@@ -1442,8 +1478,10 @@ class _PrivacySection extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           body,
-          style: const TextStyle(
-            color: Colors.white70,
+          // Phase 53H · privacy section body now reads through onSurface
+          // so the explainer paragraphs surface in light mode.
+          style: TextStyle(
+            color: context.colors.onSurface.withValues(alpha: 0.75),
             fontSize: 13,
             height: 1.5,
           ),

@@ -636,6 +636,12 @@ class _PrimaryActionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     switch (meal.status) {
       case MealStatus.planned:
+        // Phase 53H · the Değiştir button was painting white-on-white
+        // in light mode — both the foreground text + the side border
+        // pinned to white tones. Pull both from onSurface so the
+        // outlined CTA reads as charcoal-on-card in light mode and
+        // white-on-card in dark.
+        final scheme = Theme.of(context).colorScheme;
         return Row(
           children: [
             Expanded(
@@ -647,9 +653,9 @@ class _PrimaryActionRow extends StatelessWidget {
                 icon: const Icon(Icons.sync, size: 16),
                 label: const Text('Değiştir'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.white,
+                  foregroundColor: scheme.onSurface,
                   side: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.25),
+                    color: scheme.onSurface.withValues(alpha: 0.25),
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   textStyle: const TextStyle(
@@ -679,6 +685,10 @@ class _PrimaryActionRow extends StatelessWidget {
         );
       case MealStatus.completed:
       case MealStatus.skipped:
+        // Phase 53H · "Geri Al" button on completed/skipped meals
+        // shared the same white-on-white bug. Pull both fill + label
+        // from the active onSurface tone.
+        final scheme = Theme.of(context).colorScheme;
         return SizedBox(
           width: double.infinity,
           child: FilledButton.icon(
@@ -689,8 +699,8 @@ class _PrimaryActionRow extends StatelessWidget {
             icon: const Icon(Icons.undo, size: 16),
             label: const Text('Geri Al'),
             style: FilledButton.styleFrom(
-              backgroundColor: Colors.white.withValues(alpha: 0.12),
-              foregroundColor: Colors.white,
+              backgroundColor: scheme.onSurface.withValues(alpha: 0.12),
+              foregroundColor: scheme.onSurface,
               padding: const EdgeInsets.symmetric(vertical: 10),
               textStyle: const TextStyle(
                 fontWeight: FontWeight.w900,
