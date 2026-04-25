@@ -5,10 +5,23 @@ import 'package:sixpack_ai/features/nutrition/domain/models/recipe.dart';
 import 'package:sixpack_ai/features/nutrition/presentation/discover_recipes_screen.dart';
 import 'package:sixpack_ai/features/nutrition/providers/nutrition_provider.dart';
 
+/// Phase 48 · `recipesProvider` switched from a `FutureProvider` to an
+/// `AsyncNotifierProvider`, so tests can no longer override it with a
+/// plain async factory. This stub returns the seeded list as the first
+/// page and reports `hasMore = false` so the UI doesn't try to
+/// paginate during tests.
+class _StubRecipesNotifier extends PaginatedRecipesNotifier {
+  _StubRecipesNotifier(this._seed);
+  final List<Recipe> _seed;
+
+  @override
+  Future<List<Recipe>> build() async => _seed;
+}
+
 Widget _host(List<Recipe> recipes) {
   return ProviderScope(
     overrides: [
-      recipesProvider.overrideWith((ref) async => recipes),
+      recipesProvider.overrideWith(() => _StubRecipesNotifier(recipes)),
     ],
     child: const MaterialApp(
       home: DiscoverRecipesScreen(),

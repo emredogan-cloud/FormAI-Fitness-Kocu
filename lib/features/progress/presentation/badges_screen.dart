@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../core/services/app_preferences.dart';
 import '../../workout/models/workout_day_model.dart';
 import '../../workout/providers/workout_provider.dart';
@@ -14,7 +15,9 @@ const Color _pink = Color(0xFFFF4DDB);
 const Color _proteinBlue = Color(0xFF4DA6FF);
 const Color _surface = Color(0xFF0F0F14);
 const Color _surfaceBorder = Color(0xFF1E1E26);
-const int _kcalPerCompletedDay = 250;
+// Phase 48 · centralised in `app_constants.dart`. Local alias kept
+// because the value is referenced repeatedly in unlock predicates.
+const int _kcalPerCompletedDay = AppConstants.kcalPerCompletedDay;
 
 /// Phase 47A · full badges gallery.
 ///

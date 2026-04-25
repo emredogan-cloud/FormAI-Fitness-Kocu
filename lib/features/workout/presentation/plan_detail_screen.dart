@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../core/services/app_preferences.dart';
 import '../../../core/utils/app_logger.dart';
@@ -17,7 +18,8 @@ import '../providers/workout_provider.dart';
 const Color _neon = Color(0xFF8E5BFF);
 const Color _success = Color(0xFF39FF14);
 
-const int _programLength = 30;
+// Phase 48 · centralised in `app_constants.dart`.
+const int _programLength = AppConstants.programLength;
 
 /// Phase 35: the hero at the top of the program view now reflects the
 /// muscle focus of the next incomplete day — title + image both. The
@@ -95,11 +97,12 @@ const Map<String, String> _goalLabels = {
   'sixpack': 'Sadece Six-Pack',
 };
 
-/// Freemium split — the first three days of the 30-day program are free
-/// for everyone, so a non-paying user can experience the coaching loop end
-/// to end before hitting the paywall. Bumping this also updates the lock
-/// visuals and the paywall redirect in `_onDayTap`.
-const int _freeDayLimit = 3;
+/// Freemium split — the first N days of the 30-day program are free
+/// for everyone, so a non-paying user can experience the coaching loop
+/// end to end before hitting the paywall. Bumping this also updates the
+/// lock visuals and the paywall redirect in `_onDayTap`. Phase 48 ·
+/// the literal lives in `AppConstants.freeDayLimit`.
+const int _freeDayLimit = AppConstants.freeDayLimit;
 
 /// Renders [src] as either a network image (when it starts with `http`) or
 /// a bundled asset. Local copy of the dashboard helper so plan-detail can

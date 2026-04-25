@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/routing/app_router.dart';
 import '../../../workout/models/workout_day_model.dart';
 import '../../../workout/providers/workout_provider.dart';
@@ -19,8 +20,11 @@ const Color _surface = Color(0xFF0F0F14);
 const Color _surfaceBorder = Color(0xFF1E1E26);
 const Color _inactive = Color(0xFF1C1C24);
 
-const int _programLength = 30;
-const int _kcalPerDay = 250;
+// Phase 48 · single source of truth for these two values lives in
+// `lib/core/constants/app_constants.dart`. Aliased here so the rest of
+// this file's heavy use-sites stay terse.
+const int _programLength = AppConstants.programLength;
+const int _kcalPerDay = AppConstants.kcalPerCompletedDay;
 
 /// Phase 36b: the Gelişim tab now mirrors the "gelişim_sekmesi_referans"
 /// mock — 2-card top row (program progress + streak), full-width today-

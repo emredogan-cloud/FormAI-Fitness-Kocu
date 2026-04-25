@@ -21,6 +21,12 @@ const Color _proteinColor = Color(0xFF4DA6FF);
 /// reads — no extra Supabase round-trip. The list is a 2-column grid
 /// of recipe cards; every image goes through [CachedImage] so repeat
 /// opens don't re-download.
+///
+/// Phase 48 · subscribes a `ScrollController` so the grid asks the
+/// `recipesProvider` notifier for the next page once the user is
+/// within ~600 px of the current bottom. Pages of 20 fit comfortably
+/// inside the user's first scroll, so `loadMore` typically fires only
+/// once before the catalogue is fully resident.
 class DiscoverRecipesScreen extends ConsumerStatefulWidget {
   const DiscoverRecipesScreen({super.key});
 
@@ -30,8 +36,15 @@ class DiscoverRecipesScreen extends ConsumerStatefulWidget {
 }
 
 class _DiscoverRecipesScreenState extends ConsumerState<DiscoverRecipesScreen> {
-  /// Null = no filter. Tapping the selected chip clears the filter.
-  String? _activeFilter;
+  // Phase 48 · selection persisted in `filterChipsProvider` so the
+  // compact strip on the Beslenme tab and this dedicated grid stay in
+  // lock-step. No more local `_activeFilter` field.
+  final ScrollController _scrollController = ScrollController();
+
+  /// Pixels from the bottom at which we kick off the next-page fetch.
+  /// 600 px buys ~3 grid rows of head-room, so the user rarely sees a
+  /// "loading more" spinner unless their connection is genuinely slow.
+  static const double _loadMoreThreshold = 600;
 
   static const List<String> _filters = [
     'Yüksek Protein',
@@ -41,19 +54,40 @@ class _DiscoverRecipesScreenState extends ConsumerState<DiscoverRecipesScreen> {
     'Vegan',
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    if (position.pixels + _loadMoreThreshold >= position.maxScrollExtent) {
+      ref.read(recipesProvider.notifier).loadMore();
+    }
+  }
+
   /// Exact-match on the raw selected tag. Trim is already done inside
   /// `Recipe._parseTags`, and `toLowerCase` is deliberately avoided
   /// (Turkish İ/I case folding is locale-dependent, and the UI + DB
   /// both ship identical Title Case labels).
-  List<Recipe> _apply(List<Recipe> source) {
-    final selectedTag = _activeFilter;
-    if (selectedTag == null) return source;
-    return source.where((r) => r.tags.any((t) => t == selectedTag)).toList();
+  List<Recipe> _apply(List<Recipe> source, String? activeTag) {
+    if (activeTag == null) return source;
+    return source.where((r) => r.tags.any((t) => t == activeTag)).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     final recipesAsync = ref.watch(recipesProvider);
+    final activeFilter = ref.watch(filterChipsProvider);
     return Scaffold(
       backgroundColor: const Color(0xFF0B0B12),
       appBar: AppBar(
@@ -86,23 +120,24 @@ class _DiscoverRecipesScreenState extends ConsumerState<DiscoverRecipesScreen> {
           );
         },
         data: (recipes) {
-          final filtered = _apply(recipes)
+          final filtered = _apply(recipes, activeFilter)
             ..sort((a, b) => b.tags.length.compareTo(a.tags.length));
+          final hasMore = ref.read(recipesProvider.notifier).hasMore;
           return CustomScrollView(
+            controller: _scrollController,
             slivers: [
               SliverToBoxAdapter(
                 child: _FilterRow(
                   filters: _filters,
-                  active: _activeFilter,
-                  onTap: (label) => setState(() {
-                    _activeFilter = _activeFilter == label ? null : label;
-                  }),
+                  active: activeFilter,
+                  onTap: (label) =>
+                      ref.read(filterChipsProvider.notifier).toggle(label),
                 ),
               ),
               SliverToBoxAdapter(
                 child: _ResultCount(
                   count: filtered.length,
-                  filter: _activeFilter,
+                  filter: activeFilter,
                 ),
               ),
               if (filtered.isEmpty)
@@ -133,6 +168,22 @@ class _DiscoverRecipesScreenState extends ConsumerState<DiscoverRecipesScreen> {
                     ),
                     itemBuilder: (context, index) =>
                         _DiscoverRecipeCard(recipe: filtered[index]),
+                  ),
+                ),
+              if (hasMore && filtered.isNotEmpty)
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    child: Center(
+                      child: SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: _neon,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
             ],

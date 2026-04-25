@@ -16,6 +16,27 @@ final nutritionCalculatorProvider = Provider<NutritionCalculatorService>(
   (ref) => const NutritionCalculatorService(),
 );
 
+/// Phase 48 · global discovery filter chip selection. Was a local
+/// `String? _active` inside `_DiscoverySectionState` (nutrition_tab)
+/// and `_DiscoverRecipesScreenState` (full-screen discover view); both
+/// surfaces now read from this provider so the same chip selection
+/// persists when the user pivots between the compact strip and the
+/// "Tüm Tarifler" grid. Null = no filter applied.
+final filterChipsProvider =
+    NotifierProvider<FilterChipsNotifier, String?>(FilterChipsNotifier.new);
+
+class FilterChipsNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  /// Toggles the chip — tapping the active one clears it, tapping a
+  /// different one swaps to the new selection. Mirrors the prior local
+  /// `setState(() => _active = selected ? null : label)` semantics.
+  void toggle(String label) {
+    state = state == label ? null : label;
+  }
+}
+
 /// Supabase-backed recipe repository. Exposed separately so UI layers
 /// that need more than the basic `fetchRecipes()` (filtered queries,
 /// pagination, future CRUD) can reach it directly.
@@ -23,13 +44,72 @@ final nutritionRepositoryProvider = Provider<NutritionRepository>(
   (ref) => NutritionRepository(),
 );
 
-/// Full recipe catalogue loaded from Supabase. `FutureProvider` so the
-/// UI can branch on `.loading` / `.error` / `.data`, and callers can
-/// `ref.invalidate(recipesProvider)` to retry after a network failure.
-final recipesProvider = FutureProvider<List<Recipe>>((ref) async {
-  final repo = ref.watch(nutritionRepositoryProvider);
-  return repo.fetchRecipes();
-});
+/// Phase 48 · paginated recipe catalogue.
+///
+/// Was a `FutureProvider<List<Recipe>>` that yanked the entire `recipes`
+/// table in one round-trip — fine for the seed catalogue (5-10 rows)
+/// but unworkable once the table grows past ~200 entries (post-launch
+/// projection). Now the notifier lazily requests one page at a time
+/// via [NutritionRepository.fetchRecipes(from:, limit:)], and screens
+/// like `discover_recipes_screen` and `category_recipes_screen` call
+/// `ref.read(recipesProvider.notifier).loadMore()` when the user
+/// scrolls near the bottom.
+///
+/// Read-side semantics for legacy consumers (next-best-meal,
+/// daily-menu) are unchanged: `ref.watch(recipesProvider).value` still
+/// returns the recipes loaded so far. Recommendation engines therefore
+/// work off the first page until the user paginates further, which is
+/// fine because the first 20 are the highest-id (newest) entries.
+final recipesProvider =
+    AsyncNotifierProvider<PaginatedRecipesNotifier, List<Recipe>>(
+  PaginatedRecipesNotifier.new,
+);
+
+/// Notifier that owns the accumulated recipe list + pagination cursor.
+/// `build()` loads page 1; subsequent `loadMore()` calls append the
+/// next page. The notifier is stateful (it holds the current offset
+/// and "has more" flag) but kept inside `state` whenever possible so
+/// Riverpod's normal invalidation semantics still apply.
+class PaginatedRecipesNotifier extends AsyncNotifier<List<Recipe>> {
+  static const int _pageSize = NutritionRepository.defaultPageSize;
+
+  bool _hasMore = true;
+  bool _isLoadingMore = false;
+
+  @override
+  Future<List<Recipe>> build() async {
+    final repo = ref.read(nutritionRepositoryProvider);
+    final firstPage = await repo.fetchRecipes(from: 0, limit: _pageSize);
+    _hasMore = firstPage.length >= _pageSize;
+    return firstPage;
+  }
+
+  /// Whether there's likely more data to fetch. UI scroll-listeners
+  /// should stop calling [loadMore] once this flips to `false`.
+  bool get hasMore => _hasMore;
+
+  /// Appends the next page to [state]. No-op while the previous page
+  /// is still in-flight or after the end of the catalogue is reached.
+  /// Errors leave the existing state intact so a transient network blip
+  /// doesn't wipe what the user is already scrolling through.
+  Future<void> loadMore() async {
+    if (_isLoadingMore || !_hasMore) return;
+    final current = state.value;
+    if (current == null) return;
+    _isLoadingMore = true;
+    try {
+      final repo = ref.read(nutritionRepositoryProvider);
+      final next = await repo.fetchRecipes(
+        from: current.length,
+        limit: _pageSize,
+      );
+      _hasMore = next.length >= _pageSize;
+      state = AsyncData([...current, ...next]);
+    } finally {
+      _isLoadingMore = false;
+    }
+  }
+}
 
 /// The user's daily macro target derived from persisted body metrics.
 /// Lifted out of `nutrition_tab.dart` in phase 23.2 so the next-best-

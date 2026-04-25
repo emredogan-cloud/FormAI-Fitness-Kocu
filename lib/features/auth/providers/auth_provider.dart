@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show Platform;
 import 'dart:math';
@@ -14,7 +15,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/services/app_preferences.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../monetization/providers/monetization_provider.dart';
+import '../../nutrition/providers/daily_menu_provider.dart';
+import '../../nutrition/providers/nutrition_provider.dart';
 import '../../onboarding/providers/wizard_provider.dart';
+import '../../progress/providers/badge_unlocks_provider.dart';
 import '../../workout/providers/workout_provider.dart';
 
 /// Streams Supabase auth state changes (login, logout, refresh).
@@ -116,6 +120,10 @@ class AuthController {
         idToken: idToken,
         accessToken: accessToken,
       );
+      // Phase 48 · ensure the RevenueCat SDK is up before the paywall
+      // resurfaces post-sign-in. Idempotent — no-op if onboarding
+      // already triggered the configure.
+      unawaited(configureRevenueCat());
       return SocialAuthOutcome.success;
     } on GoogleSignInException catch (e, st) {
       if (e.code == GoogleSignInExceptionCode.canceled) {
@@ -166,6 +174,8 @@ class AuthController {
         idToken: idToken,
         nonce: rawNonce,
       );
+      // Phase 48 · same lazy-init story as Google sign-in.
+      unawaited(configureRevenueCat());
       return SocialAuthOutcome.success;
     } on SignInWithAppleAuthorizationException catch (e, st) {
       if (e.code == AuthorizationErrorCode.canceled) {
@@ -258,11 +268,18 @@ class AuthController {
   /// next login / guest session lands on a clean state instead of
   /// inheriting the previous account's 30-day plan, pro entitlement,
   /// preference wrapper, or onboarding wizard state.
+  ///
+  /// Phase 48 · also drops the paginated recipe list, the user's daily
+  /// menu, and the celebrated-badges set so a fresh login starts with
+  /// an empty cache rather than the previous user's recommendations.
   void _invalidateUserScopedProviders() {
     _ref.invalidate(workoutSessionProvider);
     _ref.invalidate(subscriptionProvider);
     _ref.invalidate(appPreferencesProvider);
     _ref.invalidate(wizardProvider);
+    _ref.invalidate(recipesProvider);
+    _ref.invalidate(dailyMenuProvider);
+    _ref.invalidate(celebratedBadgesProvider);
   }
 
   String? _envOrNull(String key) {

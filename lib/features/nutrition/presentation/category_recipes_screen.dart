@@ -17,7 +17,13 @@ const Color _proteinColor = Color(0xFF4DA6FF);
 /// nutrition tab uses, filters by category, and renders a scrollable
 /// list. Tapping a card opens the existing [RecipeDetailScreen] with
 /// `context.push('/recipe', extra: recipe)`.
-class CategoryRecipesScreen extends ConsumerWidget {
+///
+/// Phase 48 · stateful so a `ScrollController` can drive pagination
+/// against the paginated `recipesProvider`. When the user scrolls
+/// within ~600 px of the bottom, the notifier fetches the next page
+/// from Supabase via `.range(from, to)` instead of pulling the whole
+/// catalogue eagerly.
+class CategoryRecipesScreen extends ConsumerStatefulWidget {
   const CategoryRecipesScreen({super.key, required this.categoryType});
 
   /// Route path parameter. One of: `breakfast`, `lunch`, `dinner`,
@@ -26,7 +32,37 @@ class CategoryRecipesScreen extends ConsumerWidget {
   final String categoryType;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CategoryRecipesScreen> createState() =>
+      _CategoryRecipesScreenState();
+}
+
+class _CategoryRecipesScreenState extends ConsumerState<CategoryRecipesScreen> {
+  final ScrollController _scrollController = ScrollController();
+  static const double _loadMoreThreshold = 600;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    if (position.pixels + _loadMoreThreshold >= position.maxScrollExtent) {
+      ref.read(recipesProvider.notifier).loadMore();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final recipesAsync = ref.watch(recipesProvider);
     return Scaffold(
       backgroundColor: const Color(0xFF0B0B12),
@@ -35,7 +71,7 @@ class CategoryRecipesScreen extends ConsumerWidget {
         elevation: 0,
         foregroundColor: Colors.white,
         title: Text(
-          _titleFor(categoryType),
+          _titleFor(widget.categoryType),
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w900,
@@ -60,17 +96,34 @@ class CategoryRecipesScreen extends ConsumerWidget {
           );
         },
         data: (recipes) {
-          final filtered = _filter(recipes, categoryType);
+          final filtered = _filter(recipes, widget.categoryType);
           if (filtered.isEmpty) {
-            return _EmptyCategoryState(category: categoryType);
+            return _EmptyCategoryState(category: widget.categoryType);
           }
+          final hasMore = ref.read(recipesProvider.notifier).hasMore;
           return ListView.separated(
+            controller: _scrollController,
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
-            itemCount: filtered.length,
+            itemCount: filtered.length + (hasMore ? 1 : 0),
             separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, index) => _CategoryRecipeCard(
-              recipe: filtered[index],
-            ),
+            itemBuilder: (context, index) {
+              if (index >= filtered.length) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Center(
+                    child: SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: _neon,
+                      ),
+                    ),
+                  ),
+                );
+              }
+              return _CategoryRecipeCard(recipe: filtered[index]);
+            },
           );
         },
       ),

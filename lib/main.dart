@@ -11,7 +11,6 @@ import 'core/routing/app_router.dart';
 import 'core/services/analytics_service.dart';
 import 'core/services/app_preferences.dart';
 import 'core/utils/app_logger.dart';
-import 'features/monetization/providers/monetization_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -118,11 +117,14 @@ class _BootGateState extends State<_BootGate> {
         host: dotenv.env['POSTHOG_HOST'] ?? 'https://app.posthog.com',
       );
 
-      // RevenueCat configuration — idempotent, tolerates missing API keys in
-      // dev builds. Deliberately NOT awaited into the boot blocker path so a
-      // slow key fetch can't stall the splash; its own internal debouncing
-      // keeps repeat calls safe.
-      await configureRevenueCat();
+      // Phase 48 · RevenueCat configuration deferred. Was an `await
+      // configureRevenueCat()` here on every cold start, blocking the
+      // splash for the platform-channel handshake even on users who
+      // never reach the paywall. Now it's lazily kicked off from
+      // `OnboardingScreen._finish()` (post-wizard) and from
+      // `AuthController.signIn{Google,Apple}()` (post-sign-in), so the
+      // SDK only spins up for users who are actually heading toward
+      // the paywall surface.
       return prefs;
     } catch (e, st) {
       AppLogger.error(

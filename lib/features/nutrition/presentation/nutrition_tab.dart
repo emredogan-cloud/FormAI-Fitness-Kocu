@@ -169,24 +169,25 @@ class _DecisionPanelSliver extends ConsumerWidget {
 // Expanded panel content.
 // ============================================================================
 
-class _ExpandedDecisionPanel extends ConsumerWidget {
+class _ExpandedDecisionPanel extends StatelessWidget {
   const _ExpandedDecisionPanel();
 
+  /// Phase 48 · the panel itself is now stateless — each child block
+  /// is a `Consumer` that subscribes to only the providers it actually
+  /// reads. Previously `ref.watch(macroTargetProvider)` +
+  /// `consumedMacrosProvider` + 3 others all rebuilt the entire panel
+  /// (5 widgets, ~250 lines of build) every time any single field
+  /// flipped. With per-block consumers + `.select()` slicing the
+  /// header row only rebuilds when score/streak change, the macro
+  /// bars only when the protein/carbs/fat ints change, etc.
+  ///
+  /// ClipRect + NeverScrollableScrollPhysics keeps the panel from
+  /// throwing a RenderFlex overflow when the SliverAppBar shrinks
+  /// toward its toolbar height during collapse — the scroll view
+  /// absorbs the squeeze, the clip rect hides the lower content
+  /// instead of painting it into the toolbar area.
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final target = ref.watch(macroTargetProvider);
-    final consumed = ref.watch(consumedMacrosProvider);
-    final score = ref.watch(dailyScoreProvider);
-    final streak = ref.watch(nutritionStreakProvider);
-    final recommendation = ref.watch(nextBestMealProvider);
-    final overCalories =
-        target.calories > 0 && consumed.calories >= target.calories;
-
-    // ClipRect + NeverScrollableScrollPhysics keeps the panel from
-    // throwing a RenderFlex overflow when the SliverAppBar shrinks
-    // toward its toolbar height during collapse — the scroll view
-    // absorbs the squeeze, the clip rect hides the lower content
-    // instead of painting it into the toolbar area.
+  Widget build(BuildContext context) {
     return ClipRect(
       child: SingleChildScrollView(
         physics: const NeverScrollableScrollPhysics(),
@@ -195,26 +196,16 @@ class _ExpandedDecisionPanel extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _DecisionHeaderRow(score: score, streak: streak),
-            const SizedBox(height: 8),
-            Center(
-              child: _CalorieRing(target: target, consumed: consumed),
-            ),
-            const SizedBox(height: 10),
-            _MacroBarsRow(target: target, consumed: consumed),
-            const SizedBox(height: 10),
-            _AiInsightRow(
-              target: target,
-              consumed: consumed,
-              suggestion: recommendation,
-            ),
-            const SizedBox(height: 10),
-            if (recommendation != null)
-              _NextMealPreview(
-                recommendation: recommendation,
-                overCalories: overCalories,
-              ),
+          children: const [
+            _DecisionHeaderRow(),
+            SizedBox(height: 8),
+            Center(child: _CalorieRing()),
+            SizedBox(height: 10),
+            _MacroBarsRow(),
+            SizedBox(height: 10),
+            _AiInsightRow(),
+            SizedBox(height: 10),
+            _NextMealPreview(),
           ],
         ),
       ),
@@ -226,57 +217,62 @@ class _ExpandedDecisionPanel extends ConsumerWidget {
 /// Phase 26 accidentally dropped. Three thin `LinearProgressIndicator`s
 /// stacked tightly — each with its label + "{consumed}g / {target}g"
 /// readout on the right side.
+///
+/// Phase 48 · each `_MacroBar` is its own `Consumer` that selects only
+/// the two ints (target + consumed for that macro) it needs. Tapping
+/// a "Yedim" on a high-protein meal therefore only rebuilds the
+/// Protein bar, not Karb/Yağ, and never the calorie ring above.
 class _MacroBarsRow extends StatelessWidget {
-  const _MacroBarsRow({required this.target, required this.consumed});
-  final MacroTarget target;
-  final MacroTarget consumed;
+  const _MacroBarsRow();
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return const Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _MacroBar(
           label: 'Protein',
-          consumed: consumed.protein,
-          target: target.protein,
           color: _proteinColor,
+          macro: _MacroField.protein,
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: 6),
         _MacroBar(
           label: 'Karb',
-          consumed: consumed.carbs,
-          target: target.carbs,
           color: _carbsColor,
+          macro: _MacroField.carbs,
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: 6),
         _MacroBar(
           label: 'Yağ',
-          consumed: consumed.fat,
-          target: target.fat,
           color: _fatColor,
+          macro: _MacroField.fat,
         ),
       ],
     );
   }
 }
 
-class _MacroBar extends StatelessWidget {
+enum _MacroField { protein, carbs, fat }
+
+class _MacroBar extends ConsumerWidget {
   const _MacroBar({
     required this.label,
-    required this.consumed,
-    required this.target,
     required this.color,
+    required this.macro,
   });
 
   final String label;
-  final int consumed;
-  final int target;
   final Color color;
+  final _MacroField macro;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // `.select` so this bar only rebuilds when its specific macro int
+    // changes — adding a high-protein meal won't invalidate the carb
+    // or fat bars.
+    final target = ref.watch(macroTargetProvider.select(_pick));
+    final consumed = ref.watch(consumedMacrosProvider.select(_pick));
     final progress = target <= 0 ? 0.0 : (consumed / target).clamp(0.0, 1.0);
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -330,15 +326,28 @@ class _MacroBar extends StatelessWidget {
       ],
     );
   }
+
+  int _pick(MacroTarget m) {
+    switch (macro) {
+      case _MacroField.protein:
+        return m.protein;
+      case _MacroField.carbs:
+        return m.carbs;
+      case _MacroField.fat:
+        return m.fat;
+    }
+  }
 }
 
-class _DecisionHeaderRow extends StatelessWidget {
-  const _DecisionHeaderRow({required this.score, required this.streak});
-  final int score;
-  final int streak;
+class _DecisionHeaderRow extends ConsumerWidget {
+  const _DecisionHeaderRow();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // `.select` so this row only rebuilds when score or streak flips,
+    // not on every macro update.
+    final score = ref.watch(dailyScoreProvider);
+    final streak = ref.watch(nutritionStreakProvider);
     final tint = _scoreTint(score);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -434,18 +443,22 @@ class _InlinePill extends StatelessWidget {
   }
 }
 
-class _CalorieRing extends StatelessWidget {
-  const _CalorieRing({required this.target, required this.consumed});
-  final MacroTarget target;
-  final MacroTarget consumed;
+class _CalorieRing extends ConsumerWidget {
+  const _CalorieRing();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // `.select` two ints — adding a meal that touches only protein
+    // shouldn't repaint the calorie ring's CircularProgressIndicator.
+    final targetCalories =
+        ref.watch(macroTargetProvider.select((m) => m.calories));
+    final consumedCalories =
+        ref.watch(consumedMacrosProvider.select((m) => m.calories));
     final progress =
-        target.calories <= 0 ? 0.0 : consumed.calories / target.calories;
+        targetCalories <= 0 ? 0.0 : consumedCalories / targetCalories;
     final color = _colorForProgress(progress);
     final clamped = progress.clamp(0.0, 1.0);
-    final remaining = target.calories - consumed.calories;
+    final remaining = targetCalories - consumedCalories;
     return SizedBox(
       width: 138,
       height: 138,
@@ -470,7 +483,7 @@ class _CalorieRing extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                '${consumed.calories}',
+                '$consumedCalories',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 28,
@@ -483,7 +496,7 @@ class _CalorieRing extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                '/ ${target.calories} kcal',
+                '/ $targetCalories kcal',
                 style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 11,
@@ -520,19 +533,14 @@ class _CalorieRing extends StatelessWidget {
   }
 }
 
-class _AiInsightRow extends StatelessWidget {
-  const _AiInsightRow({
-    required this.target,
-    required this.consumed,
-    required this.suggestion,
-  });
-
-  final MacroTarget target;
-  final MacroTarget consumed;
-  final NextMealRecommendation? suggestion;
+class _AiInsightRow extends ConsumerWidget {
+  const _AiInsightRow();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final target = ref.watch(macroTargetProvider);
+    final consumed = ref.watch(consumedMacrosProvider);
+    final suggestion = ref.watch(nextBestMealProvider);
     final copy = _buildCopy(target, consumed, suggestion);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -636,17 +644,26 @@ class _AiInsightRow extends StatelessWidget {
 /// row with thumb + title + impact string + the single primary CTA
 /// (swapped for a warning outline when the user is already over
 /// their daily calorie target).
+///
+/// Phase 48 · self-watching consumer. Reads `nextBestMealProvider`
+/// directly so the surrounding panel doesn't have to thread it
+/// through; renders an empty `SizedBox.shrink` while the catalogue is
+/// still loading or there's no suggestion to show.
 class _NextMealPreview extends ConsumerWidget {
-  const _NextMealPreview({
-    required this.recommendation,
-    required this.overCalories,
-  });
-
-  final NextMealRecommendation recommendation;
-  final bool overCalories;
+  const _NextMealPreview();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final recommendation = ref.watch(nextBestMealProvider);
+    if (recommendation == null) return const SizedBox.shrink();
+    // `.select` two ints — overCalories only flips when the user
+    // crosses the target line, not on every protein increment.
+    final targetCalories =
+        ref.watch(macroTargetProvider.select((m) => m.calories));
+    final consumedCalories =
+        ref.watch(consumedMacrosProvider.select((m) => m.calories));
+    final overCalories =
+        targetCalories > 0 && consumedCalories >= targetCalories;
     final recipe = recommendation.recipe;
     return Container(
       padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
@@ -821,13 +838,23 @@ class _CompactDecisionHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final target = ref.watch(macroTargetProvider);
-    final consumed = ref.watch(consumedMacrosProvider);
-    final remaining = target.calories - consumed.calories;
+    // Phase 48 · `.select` four ints (target/consumed × calories/protein)
+    // so this collapsed header only rebuilds when one of those four
+    // numbers actually changes. Adding a meal that touches carbs +
+    // fat won't repaint the strip.
+    final targetCalories =
+        ref.watch(macroTargetProvider.select((m) => m.calories));
+    final consumedCalories =
+        ref.watch(consumedMacrosProvider.select((m) => m.calories));
+    final targetProtein =
+        ref.watch(macroTargetProvider.select((m) => m.protein));
+    final consumedProtein =
+        ref.watch(consumedMacrosProvider.select((m) => m.protein));
+    final remaining = targetCalories - consumedCalories;
     final remainingLabel =
         remaining >= 0 ? '$remaining kcal kaldı' : '${-remaining} kcal aşıldı';
-    final proteinRatio = target.protein > 0
-        ? (consumed.protein / target.protein).clamp(0.0, 1.0)
+    final proteinRatio = targetProtein > 0
+        ? (consumedProtein / targetProtein).clamp(0.0, 1.0)
         : 0.0;
     final proteinPct = (proteinRatio * 100).round();
 
@@ -985,21 +1012,13 @@ class _DiscoverAllPill extends StatelessWidget {
   }
 }
 
-/// Phase 27 restoration of the filter chip row + compact recipe strip.
-/// Stateful holder: chip selection lives here so the list re-filters
-/// without a provider round-trip.
-class _DiscoverySection extends StatefulWidget {
+/// Phase 48 · the chip-selection state moved out of this widget into
+/// `filterChipsProvider`, so this surface and the dedicated
+/// /nutrition/discover screen share the same selection. Now a
+/// stateless `ConsumerWidget` — no setState, no per-tab cache.
+class _DiscoverySection extends ConsumerWidget {
   const _DiscoverySection({required this.recipes});
   final List<Recipe> recipes;
-
-  @override
-  State<_DiscoverySection> createState() => _DiscoverySectionState();
-}
-
-class _DiscoverySectionState extends State<_DiscoverySection> {
-  /// Null = no filter active. Tapping the currently-selected chip
-  /// clears the filter.
-  String? _active;
 
   static const List<String> _filters = [
     'Yüksek Protein',
@@ -1015,19 +1034,19 @@ class _DiscoverySectionState extends State<_DiscoverySection> {
   /// would only hide a real bug. Dart's Turkish İ/I case folding is
   /// locale-dependent so `toLowerCase` is deliberately avoided; UI
   /// and DB both use identical Title Case.
-  List<Recipe> _apply(List<Recipe> source) {
-    final selectedTag = _active;
-    if (selectedTag == null) return source;
-    return source.where((r) => r.tags.any((t) => t == selectedTag)).toList();
+  List<Recipe> _apply(List<Recipe> source, String? activeTag) {
+    if (activeTag == null) return source;
+    return source.where((r) => r.tags.any((t) => t == activeTag)).toList();
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final active = ref.watch(filterChipsProvider);
     // Prioritise tagged recipes first so curated content floats to the
     // start of the strip. `filteredRecipes` is what the horizontal
     // strip iterates over — bound explicitly so tapping a chip and
     // re-running [_apply] flows straight through to the ListView.
-    final filteredRecipes = _apply(widget.recipes)
+    final filteredRecipes = _apply(recipes, active)
       ..sort((a, b) => b.tags.length.compareTo(a.tags.length));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1041,13 +1060,12 @@ class _DiscoverySectionState extends State<_DiscoverySection> {
             separatorBuilder: (_, __) => const SizedBox(width: 8),
             itemBuilder: (context, index) {
               final label = _filters[index];
-              final selected = label == _active;
+              final selected = label == active;
               return _DiscoveryFilterChip(
                 label: label,
                 selected: selected,
-                onTap: () => setState(
-                  () => _active = selected ? null : label,
-                ),
+                onTap: () =>
+                    ref.read(filterChipsProvider.notifier).toggle(label),
               );
             },
           ),

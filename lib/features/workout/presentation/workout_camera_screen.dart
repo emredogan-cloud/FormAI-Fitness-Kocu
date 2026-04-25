@@ -247,11 +247,30 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     if (!mounted) return;
     if (_isProcessingFrame || _isPaused) return;
 
-    // Skip pose work entirely while resting OR during the HAZIRLAN! prep
-    // window so we don't count phantom reps before the user is ready and
-    // don't trigger form-warning TTS while recovering / setting up.
+    // Phase 48 · hard skip on rest/prep states.
+    //
+    // The MLKit BlazePose detector is by far the heaviest call in the
+    // frame pipeline (~25-50 ms inference on mid-range Androids,
+    // dominant CPU + GPU thermal contributor). Bailing out *before*
+    // touching `_poseService.detectPose` saves the inference compute
+    // for every frame the user is recovering between sets or watching
+    // the HAZIRLAN! countdown — typically 30-60 seconds per session
+    // and a meaningful battery / heat win on phones held close to the
+    // user's body. Also clears the stale skeleton overlay so the
+    // pose painter doesn't keep redrawing yesterday's joints while
+    // the user repositions for the next exercise.
+    //
+    // Bonus: this gate sits BEFORE the FPS throttle so a long rest
+    // window doesn't consume the timestamp slot — the first frame
+    // after rest ends fires immediately instead of waiting another
+    // 66 ms tick.
     final session = ref.read(workoutSessionProvider).value;
     if ((session?.isResting ?? false) || (session?.isPreparing ?? false)) {
+      if (_poses.isNotEmpty) {
+        // Cheap setState — empty list literal means no-op for the
+        // painter on subsequent frames.
+        setState(() => _poses = const []);
+      }
       return;
     }
 

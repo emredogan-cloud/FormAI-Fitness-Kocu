@@ -189,11 +189,26 @@ String? revenueCatApiKey() {
   return key;
 }
 
-/// Idempotent configuration — main.dart calls this once per app launch.
-/// Any failure is logged and swallowed so a bad key doesn't block the
-/// rest of the boot sequence; the paywall provider also tolerates an
-/// unconfigured SDK.
+/// Phase 48 · single-shot guard. The SDK was previously configured
+/// from `_BootGate._init` on cold start, blocking the splash for the
+/// duration of the platform channel handshake (~250-600 ms on
+/// mid-range Androids). Now `configureRevenueCat` runs lazily — first
+/// from `OnboardingScreen._finish()` after the wizard payload is
+/// saved, and from `AuthController.signInWith{Google,Apple}` after a
+/// successful sign-in — and this flag protects against both a double
+/// configure (RevenueCat throws on the second call) and a redundant
+/// no-key log spam.
+bool _revenueCatConfigured = false;
+
+/// Idempotent configuration. Safe to call from multiple deferred entry
+/// points (post-onboarding, post-sign-in, lazy paywall view); the
+/// `_revenueCatConfigured` guard ensures the underlying SDK call only
+/// fires once. Any failure is logged and swallowed so a bad key
+/// doesn't block the surrounding flow; the paywall provider also
+/// tolerates an unconfigured SDK.
 Future<void> configureRevenueCat() async {
+  if (_revenueCatConfigured) return;
+  _revenueCatConfigured = true;
   final key = revenueCatApiKey();
   if (key == null) {
     AppLogger.info(
@@ -209,6 +224,10 @@ Future<void> configureRevenueCat() async {
     );
     await Purchases.configure(PurchasesConfiguration(key));
   } catch (e, st) {
+    // Reset the flag so a transient init failure can be retried by the
+    // next entry point (e.g. user signs in after the post-onboarding
+    // call failed).
+    _revenueCatConfigured = false;
     AppLogger.error(
       'Purchases.configure failed',
       e,

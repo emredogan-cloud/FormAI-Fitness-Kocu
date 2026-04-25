@@ -11,6 +11,7 @@ import '../../../core/services/analytics_service.dart';
 import '../../../core/services/app_preferences.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/legal_urls.dart';
+import '../../monetization/providers/monetization_provider.dart';
 import '../providers/wizard_provider.dart';
 import 'widgets/illusion_step.dart';
 import 'widgets/photo_option_card.dart';
@@ -101,6 +102,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     // falls back to sixpack + beginner.
     await prefs.saveUserMetrics(wizard.toJson());
     await prefs.completeOnboarding(goal: wizard.targetPhysique?.name);
+    // Phase 48 · the user just committed to the program; the paywall is
+    // the next major surface they may see (post-prediction). Kick off
+    // RevenueCat configuration now so the platform channel handshake
+    // overlaps the prediction render instead of stalling the paywall
+    // open. `configureRevenueCat` is idempotent — calling it again
+    // from sign-in is a no-op.
+    unawaited(configureRevenueCat());
     if (!mounted) return;
 
     // Frictionless auth: silently create an anonymous Supabase session so
