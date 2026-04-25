@@ -82,8 +82,17 @@ class _AdminRecipeFormState extends ConsumerState<AdminRecipeForm> {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 50D · responsive padding. The desktop layout (40 px all
+    // round) bleeds half a phone screen of whitespace at 360 px wide;
+    // tightening to 20 × 24 keeps the form usable on the same hamburger-
+    // drawered admin shell that the dashboard switches to under 600 px.
+    final isMobile = MediaQuery.of(context).size.width < 600;
+    final padding = isMobile
+        ? const EdgeInsets.symmetric(horizontal: 20, vertical: 24)
+        : const EdgeInsets.all(40);
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(40),
+      padding: padding,
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 760),
@@ -92,11 +101,11 @@ class _AdminRecipeFormState extends ConsumerState<AdminRecipeForm> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Tarif Yönetimi',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 26,
+                    fontSize: isMobile ? 22 : 26,
                     fontWeight: FontWeight.w900,
                   ),
                 ),

@@ -8,12 +8,17 @@ import '../../auth/providers/auth_provider.dart';
 import 'widgets/admin_exercise_form.dart';
 import 'widgets/admin_recipe_form.dart';
 
-/// Phase 50B · internal admin shell. Desktop-first layout (the panel is
-/// only useful on a wide screen anyway — picking image files in a 360 px
-/// mobile column is awkward) with a [NavigationRail] sidebar and a
-/// switcher that swaps between three views: a placeholder home, the
-/// recipe authoring form (built out in this phase), and a coming-soon
-/// exercise screen (Phase 50C).
+/// Internal admin shell. Phase 50B shipped a desktop-only layout; Phase
+/// 50D makes it responsive so the same screen works as a permanent
+/// sidebar on a laptop and as a hamburger-driven Drawer on a phone —
+/// which matters because the entry point now lives inside the mobile
+/// Profile tab and admins are testing it from their phones.
+///
+/// Layout switch:
+///   • `width >= 600` (tablet/desktop): permanent left sidebar +
+///     content, identical to the Phase 50B chrome.
+///   • `width <  600` (mobile): a regular `AppBar` + hamburger
+///     `Drawer`, with the same sidebar items inside the drawer.
 ///
 /// Access is gated by the router: anyone without `app_metadata.role =
 /// 'admin'` is bounced back to `/` before this screen mounts. We still
@@ -30,8 +35,15 @@ class AdminDashboardScreen extends ConsumerStatefulWidget {
 
 enum _AdminSection { dashboard, recipes, exercises }
 
+/// Width below which the admin shell collapses the permanent sidebar
+/// into a drawer. 600 px is the standard Material breakpoint used by
+/// the rest of the app for the same kind of switch (`isMobile` checks
+/// in onboarding / dashboard already share this number).
+const double _kAdminMobileBreakpoint = 600;
+
 class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   _AdminSection _selected = _AdminSection.dashboard;
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +61,15 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       );
     }
 
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < _kAdminMobileBreakpoint;
+        return isMobile ? _buildMobile() : _buildDesktop();
+      },
+    );
+  }
+
+  Widget _buildDesktop() {
     return Scaffold(
       backgroundColor: AppColors.darkBg,
       body: SafeArea(
@@ -57,6 +78,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             _AdminSidebar(
               selected: _selected,
               onSelect: (s) => setState(() => _selected = s),
+              onExit: () => context.go(AppRoutes.dashboard),
             ),
             const VerticalDivider(
               width: 1,
@@ -71,13 +93,74 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       ),
     );
   }
+
+  Widget _buildMobile() {
+    return Scaffold(
+      key: _scaffoldKey,
+      backgroundColor: AppColors.darkBg,
+      appBar: AppBar(
+        backgroundColor: AppColors.surface,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: Text(
+          _titleFor(_selected),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w900,
+            fontSize: 17,
+          ),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      drawer: Drawer(
+        backgroundColor: AppColors.surface,
+        // Letting the sidebar fill the drawer's body keeps the chrome
+        // (header + items + exit button) identical to the desktop
+        // sidebar — admins see the same surface in both modes.
+        child: SafeArea(
+          child: _AdminSidebar(
+            selected: _selected,
+            onSelect: (s) {
+              setState(() => _selected = s);
+              Navigator.of(context).pop();
+            },
+            onExit: () {
+              Navigator.of(context).pop();
+              context.go(AppRoutes.dashboard);
+            },
+          ),
+        ),
+      ),
+      body: _AdminContent(section: _selected),
+    );
+  }
+
+  String _titleFor(_AdminSection section) {
+    switch (section) {
+      case _AdminSection.dashboard:
+        return 'FormAI Admin';
+      case _AdminSection.recipes:
+        return 'Tarif Yönetimi';
+      case _AdminSection.exercises:
+        return 'Egzersiz Yönetimi';
+    }
+  }
 }
 
 class _AdminSidebar extends StatelessWidget {
-  const _AdminSidebar({required this.selected, required this.onSelect});
+  const _AdminSidebar({
+    required this.selected,
+    required this.onSelect,
+    required this.onExit,
+  });
 
   final _AdminSection selected;
   final ValueChanged<_AdminSection> onSelect;
+
+  /// Phase 50D · injected so the mobile drawer variant can close the
+  /// drawer before routing back to `/`. The desktop variant just hands
+  /// in `() => context.go(AppRoutes.dashboard)`.
+  final VoidCallback onExit;
 
   @override
   Widget build(BuildContext context) {
@@ -129,7 +212,7 @@ class _AdminSidebar extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(12),
             child: TextButton.icon(
-              onPressed: () => context.go(AppRoutes.dashboard),
+              onPressed: onExit,
               icon: const Icon(
                 Icons.exit_to_app,
                 color: Colors.white60,
@@ -222,24 +305,33 @@ class _AdminHome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(40),
+    // Phase 50D · same mobile breakpoint as the form scaffolds. On a
+    // phone the welcome copy also switches to "menüden" wording — the
+    // sidebar collapses into the hamburger drawer at this width.
+    final isMobile = MediaQuery.of(context).size.width < 600;
+    return SingleChildScrollView(
+      padding: isMobile
+          ? const EdgeInsets.symmetric(horizontal: 20, vertical: 24)
+          : const EdgeInsets.all(40),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Hoş geldin, Admin',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 26,
+              fontSize: isMobile ? 22 : 26,
               fontWeight: FontWeight.w900,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Sol menüden bir bölüm seç. İçerik üretim akışı için '
-            'docs/CONTENT_OPS.md dökümanına bakabilirsin.',
-            style: TextStyle(color: Colors.white60, fontSize: 14),
+          Text(
+            isMobile
+                ? 'Üst soldaki menüden bir bölüm seç. İçerik üretim akışı '
+                    'için docs/CONTENT_OPS.md dökümanına bakabilirsin.'
+                : 'Sol menüden bir bölüm seç. İçerik üretim akışı için '
+                    'docs/CONTENT_OPS.md dökümanına bakabilirsin.',
+            style: const TextStyle(color: Colors.white60, fontSize: 14),
           ),
           const SizedBox(height: 32),
           Wrap(

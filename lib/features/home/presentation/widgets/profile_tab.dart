@@ -184,6 +184,24 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                 'Tüm antrenman ve beslenme verilerini kalıcı olarak siler.',
             onTap: () => context.push(AppRoutes.accountSettings),
           ),
+        // Phase 50D · admin entry point. Conditionally rendered based on
+        // the JWT `app_metadata.role = 'admin'` claim — non-admins never
+        // see this section, so the path stays invisible to regular
+        // users. The router re-checks the claim in its redirect rule
+        // anyway, so even a manually-typed `/admin` URL bounces back
+        // to the dashboard for non-admins; this tile is purely the
+        // discoverability fix for the legitimate admin flow.
+        if (ref.watch(isAdminProvider)) ...[
+          const SizedBox(height: 28),
+          const _SettingsHeader(title: 'YÖNETİM'),
+          const SizedBox(height: 10),
+          _SettingsTile(
+            icon: Icons.admin_panel_settings,
+            title: 'Yönetici Paneli',
+            subtitle: 'Tarif ve egzersiz yönetimi.',
+            onTap: () => context.push(AppRoutes.admin),
+          ),
+        ],
         const SizedBox(height: 28),
         const _SettingsHeader(title: 'AYARLAR'),
         const SizedBox(height: 10),

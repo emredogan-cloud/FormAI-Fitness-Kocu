@@ -109,8 +109,15 @@ class _AdminExerciseFormState extends ConsumerState<AdminExerciseForm> {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 50D · responsive padding so the form stays legible on the
+    // mobile admin drawer (kicks in at < 600 px in admin_dashboard_screen).
+    final isMobile = MediaQuery.of(context).size.width < 600;
+    final padding = isMobile
+        ? const EdgeInsets.symmetric(horizontal: 20, vertical: 24)
+        : const EdgeInsets.all(40);
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(40),
+      padding: padding,
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 760),
@@ -119,11 +126,11 @@ class _AdminExerciseFormState extends ConsumerState<AdminExerciseForm> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Egzersiz Yönetimi',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 26,
+                    fontSize: isMobile ? 22 : 26,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
