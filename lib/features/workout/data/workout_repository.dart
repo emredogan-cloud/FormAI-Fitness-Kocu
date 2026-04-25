@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/utils/app_logger.dart';
+import '../../../core/utils/media_url.dart';
 import '../../../core/utils/placeholder_images.dart';
 import '../domain/services/workout_generator_service.dart';
 import '../models/exercise_model.dart';
@@ -204,18 +204,18 @@ class WorkoutRepository {
   }
 
   /// Resolves a row's stored `video_url` into a fully-qualified URL the
-  /// player can stream. Accepts either:
-  ///   • A bare filename ('Crunch.mp4') — wrapped with the project's
-  ///     Supabase Storage base path under the `exercises` bucket.
-  ///   • A complete http(s) URL — used verbatim, so admin entries
-  ///     pointing at YouTube / external CDNs work without schema changes.
-  /// Empty cells return null so the player skips video playback.
+  /// player can stream. Phase 51 · routes through [MediaUrl.resolve] so
+  /// the same call site benefits from CDN rewriting when `CDN_BASE_URL`
+  /// is set, and falls back to the Supabase Storage public endpoint
+  /// otherwise.
+  ///
+  /// Accepts either a bare filename (legacy seed entries — bucket
+  /// `exercises`) or a complete http(s) URL (admin uploads land in
+  /// `exercises_media` and store the full URL — those are passed
+  /// through unchanged when no CDN is configured, and rewritten when
+  /// one is). Empty cells return null so the player skips playback.
   static String? _composeVideoUrl(String? raw) {
-    if (raw == null || raw.isEmpty) return null;
-    if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
-    final base = dotenv.env['SUPABASE_URL'] ?? '';
-    if (base.isEmpty) return null;
-    return '$base/storage/v1/object/public/exercises/$raw';
+    return MediaUrl.resolve(raw, bucket: 'exercises');
   }
 
   // ==========================================================================

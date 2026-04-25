@@ -1,3 +1,5 @@
+import '../../../../core/utils/media_url.dart';
+
 /// Row from the Supabase `recipes` table. Columns are snake_case on the
 /// server; [Recipe.fromJson] maps them to camelCase fields so the rest
 /// of the app doesn't have to think about SQL naming conventions.
@@ -69,7 +71,14 @@ class Recipe {
       carbs: _asInt(json['carbs']),
       fat: _asInt(json['fat']),
       prepTimeMinutes: _asInt(json['prep_time_minutes']),
-      imageUrl: json['image_url'] as String?,
+      // Phase 51 · route through MediaUrl so a configured CDN_BASE_URL
+      // rewrites Supabase Storage URLs without touching the database.
+      // External URLs (Unsplash etc.) pass through unchanged because
+      // they're already CDN-served by their respective providers.
+      imageUrl: MediaUrl.resolve(
+        json['image_url'] as String?,
+        bucket: 'recipes_images',
+      ),
       instructions: json['instructions'] as String?,
       tags: _parseTags(json['tags']),
     );

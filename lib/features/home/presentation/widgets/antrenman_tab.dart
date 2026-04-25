@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -76,10 +79,27 @@ class _AntrenmanTabState extends ConsumerState<AntrenmanTab> {
         return;
       });
     }
-    precacheImage(const NetworkImage(defaultMuscularPhotoUrl), context)
-        .catchError((_) => null);
-    precacheImage(const NetworkImage(defaultLeanPhotoUrl), context)
-        .catchError((_) => null);
+    // Phase 51 · warm `flutter_cache_manager` (the same disk cache
+    // `CachedNetworkImage` reads from) so the regional plan cards
+    // displaying these defaults skip the network on first render.
+    // The previous `precacheImage(NetworkImage(...))` populated the
+    // framework's in-memory ImageCache, which `CachedNetworkImage`
+    // never consults — meaning every "precached" URL was downloaded
+    // twice, once for the framework cache and again for the disk
+    // cache the cards actually read from.
+    unawaited(_warmDefaults());
+  }
+
+  Future<void> _warmDefaults() async {
+    final cacheManager = DefaultCacheManager();
+    for (final url in const [defaultMuscularPhotoUrl, defaultLeanPhotoUrl]) {
+      try {
+        await cacheManager.downloadFile(url);
+      } catch (_) {
+        // Best-effort. If the prefetch fails, CachedNetworkImage will
+        // run the download itself the first time the URL renders.
+      }
+    }
   }
 
   @override

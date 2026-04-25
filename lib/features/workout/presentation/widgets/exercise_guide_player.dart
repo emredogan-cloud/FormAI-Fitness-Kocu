@@ -1,14 +1,21 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../core/utils/app_logger.dart';
 
 /// Adaptive exercise guide preview.
 ///
-///   • `http://` or `https://` paths stream via
-///     [VideoPlayerController.networkUrl] — the standard path now that
-///     Phase 10 moved the 41 demo clips out of the bundle and into a
-///     public Supabase Storage bucket.
+///   • `http://` or `https://` paths play through Phase 51's disk cache:
+///     a hit on `flutter_cache_manager` short-circuits to
+///     [VideoPlayerController.file]; a miss falls back to
+///     [VideoPlayerController.networkUrl] so playback starts immediately
+///     while a fire-and-forget background download warms the cache for
+///     the next set / launch. Result: each unique URL hits the network
+///     at most once per device.
 ///   • Local `.mp4`/`.mov`/`.webm` asset paths still work via
 ///     [VideoPlayerController.asset] so tests and any future offline
 ///     packs keep rendering without code changes.
@@ -16,6 +23,10 @@ import '../../../../core/utils/app_logger.dart';
 ///     a static [Image.asset] inside the same rounded container.
 ///   • Null/empty paths, or any renderer error, fall through to the neon
 ///     `_FallbackTile` so the PIP panel never goes blank.
+///
+/// On web the cache layer is bypassed: [VideoPlayerController.file]
+/// has no plugin implementation in the browser, and the browser's own
+/// HTTP cache plus the CDN edge already deliver the bandwidth win.
 ///
 /// While the video is buffering (network branch, `!controller.value.isInitialized`)
 /// a small centered [CircularProgressIndicator] overlays the fallback so
@@ -117,8 +128,12 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
     // the scheme; Dart's Uri.parse will normalise either.
     final isRemote = path.startsWith('http');
     final controller = isRemote
-        ? VideoPlayerController.networkUrl(Uri.parse(path))
+        ? await _resolveRemoteController(path)
         : VideoPlayerController.asset(path);
+    if (!mounted) {
+      await controller.dispose();
+      return;
+    }
     _controller = controller;
     try {
       await controller.initialize();
@@ -165,6 +180,75 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
       );
       if (!mounted) return;
       setState(() => _hasError = true);
+    }
+  }
+
+  /// Phase 51 · cache-aware controller factory for remote URLs. Cache
+  /// hit → play from disk file (no network); miss → kick a background
+  /// download to populate the cache for next time, return a network
+  /// controller for immediate playback so the user never waits on the
+  /// download.
+  ///
+  /// Web bypasses the disk cache entirely because
+  /// [VideoPlayerController.file] is unimplemented in the browser
+  /// plugin; the browser's own HTTP cache + the CDN edge cover the
+  /// bandwidth case there.
+  Future<VideoPlayerController> _resolveRemoteController(String path) async {
+    if (kIsWeb) {
+      return VideoPlayerController.networkUrl(Uri.parse(path));
+    }
+
+    final cacheManager = DefaultCacheManager();
+    try {
+      final fileInfo = await cacheManager.getFileFromCache(path);
+      if (fileInfo != null) {
+        AppLogger.info(
+          'ExerciseGuide: video cache HIT — playing from disk',
+          category: 'workout',
+          data: {'path': path, 'cached_path': fileInfo.file.path},
+        );
+        return VideoPlayerController.file(fileInfo.file);
+      }
+    } catch (e, st) {
+      // A cache lookup failure (corrupt index, locked DB) is non-fatal:
+      // we still have the network fallback below, and the lookup error
+      // is informational. Keep the warning quiet so it doesn't drown
+      // out actual playback errors when the user is offline.
+      AppLogger.warning(
+        'ExerciseGuide: cache lookup threw; falling back to network',
+        category: 'workout',
+        data: {'path': path, 'error': e.toString(), 'stack': st.toString()},
+      );
+    }
+
+    AppLogger.info(
+      'ExerciseGuide: video cache MISS — streaming + warming cache',
+      category: 'workout',
+      data: {'path': path},
+    );
+    unawaited(_warmCache(cacheManager, path));
+    return VideoPlayerController.networkUrl(Uri.parse(path));
+  }
+
+  /// Background fetch that populates the cache so future renders of the
+  /// same URL hit the file branch above. Failures are swallowed because
+  /// the user already saw playback start from the network — there's
+  /// nothing to surface to them, but we log so a systemic issue
+  /// (Storage 403, CDN misconfig) lands in the breadcrumb trail.
+  Future<void> _warmCache(BaseCacheManager cacheManager, String path) async {
+    try {
+      await cacheManager.downloadFile(path);
+      AppLogger.info(
+        'ExerciseGuide: cache warmed',
+        category: 'workout',
+        data: {'path': path},
+      );
+    } catch (e, st) {
+      AppLogger.warning(
+        'ExerciseGuide: cache warm failed',
+        category: 'workout',
+        data: {'path': path, 'error': e.toString(), 'stack': st.toString()},
+      );
     }
   }
 

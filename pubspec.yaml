@@ -70,6 +70,12 @@ dependencies:
   # `XFile.readAsBytes()` returns the raw bytes for the Supabase
   # Storage upload pipeline.
   image_picker: ^1.1.2
+  # Phase 51 · explicit dependency on the disk-cache layer that
+  # `cached_network_image` already pulled in transitively. Promoting
+  # it to a direct dep so `ExerciseGuidePlayer` can hand video URLs
+  # to the same cache (cache hit → play from disk; miss → stream +
+  # background download to populate the cache for the next set).
+  flutter_cache_manager: ^3.4.1
 
 dev_dependencies:
   flutter_test:

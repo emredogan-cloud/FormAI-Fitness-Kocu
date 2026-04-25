@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -164,13 +167,29 @@ class _PlanDetailScreenState extends ConsumerState<PlanDetailScreen> {
   }
 
   void _precache(String src) {
-    final ImageProvider provider =
-        src.startsWith('http') ? NetworkImage(src) : AssetImage(src);
-    precacheImage(provider, context).catchError((_) {
-      // Best-effort: failures are fine — the widget's own errorBuilder
-      // will still swap in a fallback at render time.
-      return;
-    });
+    if (src.startsWith('http')) {
+      // Phase 51 · warm `flutter_cache_manager` (the disk cache backing
+      // `CachedNetworkImage`) instead of the framework's in-memory
+      // `ImageCache`. The PIP card later renders through `CachedImage`,
+      // which only consults the disk cache — precaching via
+      // `NetworkImage` would have downloaded the file a second time.
+      unawaited(_precacheRemote(src));
+    } else {
+      precacheImage(AssetImage(src), context).catchError((_) {
+        // Best-effort: failures are fine — the widget's own errorBuilder
+        // will still swap in a fallback at render time.
+        return;
+      });
+    }
+  }
+
+  Future<void> _precacheRemote(String url) async {
+    try {
+      await DefaultCacheManager().downloadFile(url);
+    } catch (e) {
+      // Best-effort. If the prefetch fails, CachedNetworkImage will
+      // attempt the download itself when the image actually renders.
+    }
   }
 
   @override
