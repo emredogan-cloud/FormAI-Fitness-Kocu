@@ -7,7 +7,16 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/routing/app_router.dart';
+import '../../../../core/services/app_preferences.dart';
+import '../../../../core/utils/app_haptics.dart';
+import '../../../../core/utils/app_logger.dart';
+import '../../../../core/utils/audio_feedback.dart';
 import '../../../../core/widgets/skeleton_loader.dart';
+import '../../../auth/providers/auth_provider.dart';
+import '../../../nutrition/domain/models/planned_meal.dart';
+import '../../../nutrition/providers/daily_menu_provider.dart';
+import '../../../nutrition/providers/nutrition_provider.dart';
+import '../../../progress/presentation/widgets/weekly_retrospective_card.dart';
 import '../../../workout/models/workout_day_model.dart';
 import '../../../workout/providers/workout_provider.dart';
 import 'today_task_card.dart';
@@ -138,6 +147,13 @@ class GelisimTab extends ConsumerWidget {
               weeklyKcal: weeklyKcal,
             ),
             const SizedBox(height: 22),
+            // Phase 52 · weekly retrospective. The card returns
+            // SizedBox.shrink on non-Sundays AND self-pads its own
+            // bottom margin on Sundays, so we don't need a second
+            // SizedBox before the AI Coach card — that would produce
+            // a 44 px void on weekdays when the retrospective is
+            // collapsed.
+            const WeeklyRetrospectiveCard(),
             _AiCoachCard(streak: streak, percent: percent),
             const SizedBox(height: 22),
             _BadgesSection(
@@ -1244,24 +1260,40 @@ class _AreaLinePainter extends CustomPainter {
 // to the (placeholder) suggestions view.
 // =============================================================================
 
-class _AiCoachCard extends StatelessWidget {
+/// Phase 52 · context-aware coach card. The greeting branches on the
+/// live streak vs. the persisted `maxStreak` watermark so the card can
+/// distinguish three states the PM specifically called out:
+///
+///   • Champion (`streak >= 7`) — celebrate the run.
+///   • Comeback (`streak == 0 && maxStreak > 0`) — soft re-entry copy
+///     that names how short the bar is. Without `maxStreak` we couldn't
+///     tell a comeback user from a brand-new install.
+///   • Default (everyone else) — generic forward motion copy.
+///
+/// Also hosts the "Günlük Özet Dinle" audio button: tapping fires a
+/// flutter_tts phrase composed from the live macro target, the active
+/// day's dominant target muscle, and the first meal in today's plan.
+class _AiCoachCard extends ConsumerWidget {
   const _AiCoachCard({required this.streak, required this.percent});
   final int streak;
   final double percent;
 
   @override
-  Widget build(BuildContext context) {
-    final copy = _copyFor(streak, percent);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final maxStreak = ref.watch(appPreferencesProvider).maxStreak;
+    final copy = _copyFor(streak: streak, maxStreak: maxStreak);
     return _SoftCard(
       accent: _neon,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              _CoachAvatar(),
-              SizedBox(width: 12),
-              _CardLabel(text: 'AI KOÇ'),
+              const _CoachAvatar(),
+              const SizedBox(width: 12),
+              const _CardLabel(text: 'AI KOÇ'),
+              const Spacer(),
+              _DailySummaryButton(streak: streak),
             ],
           ),
           const SizedBox(height: 12),
@@ -1290,21 +1322,175 @@ class _AiCoachCard extends StatelessWidget {
     );
   }
 
-  String _copyFor(int streak, double percent) {
+  String _copyFor({required int streak, required int maxStreak}) {
     if (streak >= 7) {
-      return 'Disiplin harika gidiyor. Bugün bir mobility '
-          'günü eklemen toparlanmayı hızlandırır.';
+      return 'Şampiyon serisi devam ediyor! Böyle kal.';
     }
-    if (streak >= 3) {
-      return 'Son günlerde tempon çok iyi. Bugün orta yoğunluklu bir '
-          'oturumla seriyi sağlam tutalım.';
+    if (streak == 0 && maxStreak > 0) {
+      return 'Geri dönüş zamanı. 10 dakika yeterli.';
     }
-    if (streak >= 1) {
-      return 'İyi başlangıç. Bugün ufak bir antrenmanla seriyi iki '
-          'günlük yapalım — momentum burada başlıyor.';
+    return 'Bugün hedeflerimize bir adım daha yaklaşıyoruz.';
+  }
+}
+
+/// Phase 52 · "Günlük Özet Dinle" button anchored top-right of the AI
+/// Coach card. Builds the dynamic phrase off live providers so the
+/// summary always reflects whatever the user is actually looking at:
+///
+///   • Calorie target → `macroTargetProvider`.
+///   • Today's dominant target muscle → most-frequent `targetMuscle`
+///     across the active day's exercises (matches the Bölgeler strip's
+///     mapping).
+///   • Suggested meal → first item in today's `dailyMenuProvider` plan.
+///
+/// On tap: spinner replaces the icon while the TTS engine warms up so
+/// the user gets visual confirmation that the press registered (the
+/// platform channel can take ~200 ms on cold first-tap before audio
+/// actually starts).
+class _DailySummaryButton extends ConsumerStatefulWidget {
+  const _DailySummaryButton({required this.streak});
+
+  final int streak;
+
+  @override
+  ConsumerState<_DailySummaryButton> createState() =>
+      _DailySummaryButtonState();
+}
+
+class _DailySummaryButtonState extends ConsumerState<_DailySummaryButton> {
+  bool _isSpeaking = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: _neon.withValues(alpha: 0.18),
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: _isSpeaking ? null : _onTap,
+        child: SizedBox(
+          width: 36,
+          height: 36,
+          child: Center(
+            child: _isSpeaking
+                ? const SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: _neon,
+                    ),
+                  )
+                : const Icon(Icons.graphic_eq, color: _neon, size: 18),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _onTap() async {
+    AppHaptics.secondaryTap();
+    setState(() => _isSpeaking = true);
+    try {
+      final phrase = _composeSummary(ref);
+      final audio = AudioFeedback();
+      await audio.init();
+      // `speak` blocks until the platform reports completion (the
+      // engine is configured with `awaitSpeakCompletion(true)` in
+      // AudioFeedback.init), so the spinner stays visible for the
+      // duration of the utterance.
+      await audio.speak(phrase, cooldown: Duration.zero);
+    } catch (e, st) {
+      AppLogger.error(
+        'Daily summary TTS failed',
+        e,
+        stackTrace: st,
+        category: 'tts',
+      );
+    } finally {
+      if (mounted) setState(() => _isSpeaking = false);
     }
-    return 'Son 2 gündür düşük performans gözüküyor. Bugün hafif '
-        'bir antrenmanla devam etmeni öneriyorum.';
+  }
+
+  String _composeSummary(WidgetRef ref) {
+    final user = ref.read(currentUserProvider);
+    final prefs = ref.read(appPreferencesProvider);
+    final metrics = prefs.userMetrics ?? const <String, dynamic>{};
+    final name = _resolveName(user?.email, metrics);
+
+    final macroTarget = ref.read(macroTargetProvider);
+    final session = ref.read(workoutSessionProvider).value;
+    final activeDay = session == null ? null : _firstActiveDay(session.days);
+    final muscleLabel = _muscleLabel(activeDay);
+
+    final mealAsync = ref.read(dailyMenuProvider);
+    final mealName = _firstMealName(mealAsync.value);
+
+    return 'Günaydın $name. Bugün ${macroTarget.calories} kalori hedefin '
+        'var. Antrenman programında $muscleLabel günü. Sana harika bir '
+        '$mealName önerim var, menüden inceleyebilirsin.';
+  }
+
+  /// Falls back through every signal we have, in priority order, to
+  /// produce a friendly first name. The wizard never asks for a name,
+  /// so this is intentionally lossy — if nothing usable exists we use
+  /// "Şampiyon" so the phrase still reads like a coach greeting.
+  String _resolveName(String? email, Map<String, dynamic> metrics) {
+    final fromMetrics = metrics['firstName'] as String?;
+    if (fromMetrics != null && fromMetrics.trim().isNotEmpty) {
+      return fromMetrics.trim();
+    }
+    if (email != null && email.contains('@')) {
+      final localPart = email.substring(0, email.indexOf('@'));
+      // Strip common email punctuation so "ali.veli" reads as "Ali"
+      // when we capitalise the first segment.
+      final cleaned = localPart.split(RegExp(r'[._+]')).first;
+      if (cleaned.isNotEmpty) {
+        return cleaned[0].toUpperCase() + cleaned.substring(1).toLowerCase();
+      }
+    }
+    return 'Şampiyon';
+  }
+
+  WorkoutDay? _firstActiveDay(List<WorkoutDay> days) {
+    for (final day in days) {
+      if (day.isRestDay) continue;
+      if (!day.isCompleted) return day;
+    }
+    return null;
+  }
+
+  String _muscleLabel(WorkoutDay? day) {
+    if (day == null || day.exercises.isEmpty) return 'tüm vücut';
+    final counts = <String, int>{};
+    for (final exercise in day.exercises) {
+      counts[exercise.targetMuscle] = (counts[exercise.targetMuscle] ?? 0) + 1;
+    }
+    final dominant =
+        counts.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
+    switch (dominant) {
+      case 'core':
+        return 'karın';
+      case 'upper_body':
+        return 'üst vücut';
+      case 'lower_body':
+        return 'alt vücut';
+      case 'cardio':
+        return 'kardiyo';
+      case 'full_body':
+        return 'tüm vücut';
+      default:
+        return 'tüm vücut';
+    }
+  }
+
+  String _firstMealName(List<PlannedMeal>? meals) {
+    if (meals == null || meals.isEmpty) {
+      return 'sağlıklı bir yemek';
+    }
+    final first = meals.first;
+    final title = first.recipe.title.trim();
+    return title.isEmpty ? 'sağlıklı bir yemek' : title;
   }
 }
 

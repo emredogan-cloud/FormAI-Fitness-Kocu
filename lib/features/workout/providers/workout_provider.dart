@@ -295,6 +295,16 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
       await _repository.markDayCompleted(day.dayNumber);
     }
     final refreshed = isAdHoc ? current.days : await _loadProgram();
+    // Phase 52 · maintain the all-time-high streak watermark so the
+    // AI Coach card can detect the "comeback" state (live streak == 0
+    // but a past best exists). The bump runs after `_loadProgram`
+    // because the freshly-completed day is already merged into
+    // `refreshed.isCompleted` — counting the leading run on the old
+    // `current.days` list would miss the just-completed day.
+    if (!isAdHoc) {
+      final newStreak = _streakOf(refreshed);
+      await ref.read(appPreferencesProvider).bumpMaxStreakIfHigher(newStreak);
+    }
     final updatedDay = isAdHoc
         ? day.copyWith(isCompleted: true)
         : refreshed.firstWhere(
@@ -473,6 +483,22 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
       if (!day.isCompleted) return day;
     }
     return null;
+  }
+
+  /// Counts the leading run of completed days. Mirrors the helper in
+  /// `gelisim_tab.dart` / `profile_tab.dart` — a future cleanup could
+  /// lift it onto `WorkoutDay`, but for now we keep the duplication
+  /// quiet and local rather than reshaping the model in a UX phase.
+  int _streakOf(List<WorkoutDay> days) {
+    var streak = 0;
+    for (final day in days) {
+      if (day.isCompleted) {
+        streak += 1;
+      } else {
+        break;
+      }
+    }
+    return streak;
   }
 }
 

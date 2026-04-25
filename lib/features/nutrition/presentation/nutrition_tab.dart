@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/routing/app_router.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/cached_image.dart';
 import '../domain/models/macro_target.dart';
@@ -238,33 +239,54 @@ class _ExpandedDecisionPanel extends StatelessWidget {
 /// the two ints (target + consumed for that macro) it needs. Tapping
 /// a "Yedim" on a high-protein meal therefore only rebuilds the
 /// Protein bar, not Karb/Yağ, and never the calorie ring above.
+///
+/// Phase 52 · the whole strip is now an `InkWell` that routes to the
+/// recipe-discovery screen so a user staring at a half-empty protein
+/// bar gets a one-tap path to "find a recipe that fills this gap".
+/// The inner bars stay non-interactive — wrapping each one separately
+/// would clash with the Riverpod `select`s that already optimise their
+/// rebuilds, and the whole-strip target is a bigger hit area anyway.
 class _MacroBarsRow extends StatelessWidget {
   const _MacroBarsRow();
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _MacroBar(
-          label: 'Protein',
-          color: _proteinColor,
-          macro: _MacroField.protein,
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () {
+          AppHaptics.secondaryTap();
+          context.push(AppRoutes.nutritionDiscover);
+        },
+        child: const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _MacroBar(
+                label: 'Protein',
+                color: _proteinColor,
+                macro: _MacroField.protein,
+              ),
+              SizedBox(height: 6),
+              _MacroBar(
+                label: 'Karb',
+                color: _carbsColor,
+                macro: _MacroField.carbs,
+              ),
+              SizedBox(height: 6),
+              _MacroBar(
+                label: 'Yağ',
+                color: _fatColor,
+                macro: _MacroField.fat,
+              ),
+            ],
+          ),
         ),
-        SizedBox(height: 6),
-        _MacroBar(
-          label: 'Karb',
-          color: _carbsColor,
-          macro: _MacroField.carbs,
-        ),
-        SizedBox(height: 6),
-        _MacroBar(
-          label: 'Yağ',
-          color: _fatColor,
-          macro: _MacroField.fat,
-        ),
-      ],
+      ),
     );
   }
 }

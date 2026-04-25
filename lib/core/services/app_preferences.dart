@@ -44,6 +44,12 @@ class AppPreferences {
   // actually ask the OS to schedule.
   static const String _dailyReminderEnabledKey =
       'sixpack.daily_reminder_enabled';
+  // Phase 52 · monotonic high-water mark of `streak`. Bumped from
+  // `WorkoutSessionNotifier` whenever the live streak crosses its
+  // previous best. Read by the AI Coach card so a user who lost their
+  // streak (live = 0) but used to have one (max > 0) sees the
+  // "comeback" greeting instead of the cold-start default.
+  static const String _maxStreakKey = 'sixpack.max_streak';
 
   bool get isFirstTime => _prefs.getBool(_firstTimeKey) ?? true;
 
@@ -107,5 +113,20 @@ class AppPreferences {
 
   Future<void> setDailyReminderEnabled(bool value) async {
     await _prefs.setBool(_dailyReminderEnabledKey, value);
+  }
+
+  /// Phase 52 · highest streak this user has ever reached. Defaults to
+  /// 0 so a fresh install reads "no past streak". Updated through
+  /// [bumpMaxStreakIfHigher] so callers can't accidentally regress the
+  /// high-water mark when the live streak resets.
+  int get maxStreak => _prefs.getInt(_maxStreakKey) ?? 0;
+
+  /// Bumps [maxStreak] to [candidate] when it represents a new
+  /// personal best. No-op when the candidate is equal or lower than
+  /// the stored max — protects the high-water mark on streak resets,
+  /// which is exactly the signal the "comeback" greeting keys off.
+  Future<void> bumpMaxStreakIfHigher(int candidate) async {
+    if (candidate <= maxStreak) return;
+    await _prefs.setInt(_maxStreakKey, candidate);
   }
 }

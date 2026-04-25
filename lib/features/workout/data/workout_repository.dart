@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/services/notification_service.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/media_url.dart';
 import '../../../core/utils/placeholder_images.dart';
@@ -666,6 +667,15 @@ class WorkoutRepository {
     final merged = _localCompleted()..add(dayNumber);
     await _saveLocal(merged);
 
+    // Phase 52 · momentum retention. Schedule (or replace) a 48 h
+    // streak-warning notification so a user who finishes a workout
+    // gets a "before you lose your streak" ping before the day-3
+    // dropoff. Fire-and-forget — the underlying scheduler is on a
+    // platform channel that can take 30-100 ms, and we don't want
+    // the completion flow to wait on it. Cancellation of the
+    // previous warning happens inside the service.
+    unawaited(NotificationService.instance.scheduleStreakWarning());
+
     final user = _client.auth.currentUser;
     if (user == null) {
       // Not yet signed in (first-run before auth completes, rare). Queue so
@@ -686,6 +696,10 @@ class WorkoutRepository {
     // Drop the cached plan too — a full reset should yield a fresh
     // regeneration against whatever the user's current goal/level is.
     await _prefs.remove(_planKey);
+    // Phase 52 · the user just wiped their streak, so the pending
+    // 48 h "you'll lose your streak" warning would fire about a
+    // streak that no longer exists. Cancel it.
+    unawaited(NotificationService.instance.cancelStreakWarning());
   }
 
   Future<Set<int>> _completedDays() async {
