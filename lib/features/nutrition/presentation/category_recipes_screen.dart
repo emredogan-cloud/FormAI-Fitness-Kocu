@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/theme/theme_extension.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../core/widgets/cached_image.dart';
 import '../../../core/widgets/error_card.dart';
@@ -64,16 +65,21 @@ class _CategoryRecipesScreenState extends ConsumerState<CategoryRecipesScreen> {
   @override
   Widget build(BuildContext context) {
     final recipesAsync = ref.watch(recipesProvider);
+    // Phase 53E · drop the hardcoded `0xFF0B0B12` Scaffold + AppBar
+    // backgrounds. The screen now inherits whatever
+    // `scaffoldBackgroundColor` the active theme ships, and the AppBar
+    // surface + foreground both pull from the live ColorScheme so they
+    // flip with the theme toggle.
+    final scheme = context.colors;
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0B12),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0B0B12),
+        backgroundColor: scheme.surface,
         elevation: 0,
-        foregroundColor: Colors.white,
+        foregroundColor: scheme.onSurface,
         title: Text(
           _titleFor(widget.categoryType),
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: scheme.onSurface,
             fontWeight: FontWeight.w900,
             letterSpacing: 0.4,
           ),
@@ -177,6 +183,13 @@ class _CategoryRecipeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53E · the recipe card was the dominant ghost — entire
+    // list scrolled white-on-white. Card surface, border, recipe
+    // title, kcal value, and protein value all flip via onSurface.
+    // Brand-coloured icons (neon flame, blue dumbbell) stay because
+    // they're the macro identifiers users learn.
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
     return SizedBox(
       height: _cardHeight,
       child: Material(
@@ -189,8 +202,12 @@ class _CategoryRecipeCard extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              color: Colors.white.withValues(alpha: 0.04),
-              border: Border.all(color: Colors.white12),
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.04)
+                  : scheme.surface,
+              border: Border.all(
+                color: isDark ? Colors.white12 : scheme.outlineVariant,
+              ),
             ),
             padding: const EdgeInsets.all(10),
             child: Row(
@@ -228,8 +245,8 @@ class _CategoryRecipeCard extends StatelessWidget {
                               recipe.title,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: scheme.onSurface,
                                 fontSize: 15,
                                 fontWeight: FontWeight.w900,
                                 height: 1.2,
@@ -255,8 +272,8 @@ class _CategoryRecipeCard extends StatelessWidget {
                           const SizedBox(width: 4),
                           Text(
                             '${recipe.calories} kcal',
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: scheme.onSurface,
                               fontSize: 12,
                               fontWeight: FontWeight.w800,
                             ),
@@ -270,8 +287,8 @@ class _CategoryRecipeCard extends StatelessWidget {
                           const SizedBox(width: 4),
                           Text(
                             '${recipe.protein}g P',
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: scheme.onSurface,
                               fontSize: 12,
                               fontWeight: FontWeight.w800,
                             ),
@@ -296,10 +313,18 @@ class _Thumb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53E · thumb fallback flips with the active theme so a
+    // missing image lands on a soft surface tone instead of a black
+    // square in light mode.
+    final scheme = context.colors;
     final fallback = Container(
-      color: Colors.white10,
+      color: scheme.surfaceContainerHighest,
       alignment: Alignment.center,
-      child: const Icon(Icons.restaurant, color: Colors.white54, size: 28),
+      child: Icon(
+        Icons.restaurant,
+        color: scheme.onSurface.withValues(alpha: 0.55),
+        size: 28,
+      ),
     );
     final src = imageUrl;
     if (src == null || src.isEmpty) return fallback;
@@ -318,6 +343,9 @@ class _EmptyCategoryState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53E · empty-state copy + secondary explainer flip with the
+    // active theme.
+    final scheme = context.colors;
     return Padding(
       padding: const EdgeInsets.all(32),
       child: Column(
@@ -338,10 +366,10 @@ class _EmptyCategoryState extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 18),
-          const Text(
+          Text(
             'Bu kategoride henüz tarif yok.',
             style: TextStyle(
-              color: Colors.white,
+              color: scheme.onSurface,
               fontSize: 16,
               fontWeight: FontWeight.w900,
             ),
@@ -350,7 +378,10 @@ class _EmptyCategoryState extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             'Bu kategoriye uygun tarif bulunamadı ($category).',
-            style: const TextStyle(color: Colors.white54, fontSize: 13),
+            style: TextStyle(
+              color: scheme.onSurface.withValues(alpha: 0.55),
+              fontSize: 13,
+            ),
             textAlign: TextAlign.center,
           ),
         ],

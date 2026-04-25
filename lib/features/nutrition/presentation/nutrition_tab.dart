@@ -136,18 +136,27 @@ class _DecisionPanelSliver extends ConsumerWidget {
           final t = range <= 0
               ? 1.0
               : ((constraints.maxHeight - minH) / range).clamp(0.0, 1.0);
+          // Phase 53E · the dark gradient panel under the calorie ring +
+          // macro bars was the real hero in dark mode but pinned the
+          // entire top of the nutrition tab to black-purple in light
+          // mode regardless of the SliverAppBar's `backgroundColor`.
+          // Gate the gradient on `isDarkMode`; light mode falls through
+          // to `surface` so the hero blends into the rest of the
+          // scaffolded white surface.
+          final isDark = context.isDarkMode;
           return Stack(
             children: [
-              // Always-present dark panel background so the status bar
-              // stays dark through the collapse transition.
-              const Positioned.fill(
+              Positioned.fill(
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Color(0xFF14061F), Color(0xFF0B0B12)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    color: isDark ? null : context.colors.surface,
+                    gradient: isDark
+                        ? const LinearGradient(
+                            colors: [Color(0xFF14061F), Color(0xFF0B0B12)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : null,
                   ),
                 ),
               ),
@@ -317,6 +326,11 @@ class _MacroBar extends ConsumerWidget {
     final target = ref.watch(macroTargetProvider.select(_pick));
     final consumed = ref.watch(consumedMacrosProvider.select(_pick));
     final progress = target <= 0 ? 0.0 : (consumed / target).clamp(0.0, 1.0);
+    // Phase 53E · macro labels ("Protein", "Karb", "Yağ") + the
+    // " / Ng" target tail flip with the active theme; the live
+    // consumed value (`{N}g`) keeps the macro brand tint because it's
+    // the live readout the user is watching.
+    final scheme = context.colors;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -325,8 +339,8 @@ class _MacroBar extends ConsumerWidget {
           children: [
             Text(
               label,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: scheme.onSurface,
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
               ),
@@ -343,8 +357,8 @@ class _MacroBar extends ConsumerWidget {
             const SizedBox(width: 2),
             Text(
               '/ ${target}g',
-              style: const TextStyle(
-                color: Colors.white54,
+              style: TextStyle(
+                color: scheme.onSurface.withValues(alpha: 0.55),
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
               ),
@@ -483,8 +497,13 @@ class _InlinePill extends StatelessWidget {
           ],
           Text(
             label,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              // Phase 53E · the score / streak pills sit on a
+              // tint-tinted translucent background. White text reads
+              // on dark mode (tint × 18 % over darkBg) but vanishes on
+              // light mode (tint × 18 % over white). onSurface gives
+              // us legible contrast on both.
+              color: context.colors.onSurface,
               fontSize: 11,
               fontWeight: FontWeight.w800,
               letterSpacing: 0.2,
@@ -542,7 +561,11 @@ class _CalorieRing extends ConsumerWidget {
               Text(
                 '$consumedCalories',
                 style: TextStyle(
-                  color: Colors.white,
+                  // Phase 53E · the centre kcal counter inside the
+                  // ring was the most prominent ghost — pure white on
+                  // a now-light background. onSurface keeps it bright
+                  // in dark mode and charcoal in light.
+                  color: context.colors.onSurface,
                   fontSize: 28,
                   fontWeight: FontWeight.w900,
                   height: 1,
@@ -554,8 +577,8 @@ class _CalorieRing extends ConsumerWidget {
               const SizedBox(height: 2),
               Text(
                 '/ $targetCalories kcal',
-                style: const TextStyle(
-                  color: Colors.white70,
+                style: TextStyle(
+                  color: context.colors.onSurface.withValues(alpha: 0.70),
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                 ),
@@ -599,6 +622,9 @@ class _AiInsightRow extends ConsumerWidget {
     final consumed = ref.watch(consumedMacrosProvider);
     final suggestion = ref.watch(nextBestMealProvider);
     final copy = _buildCopy(target, consumed, suggestion);
+    // Phase 53E · "Protein hedefini kaçırıyorsun" warning + the fix
+    // line below it both flip with the active theme.
+    final scheme = context.colors;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -613,8 +639,8 @@ class _AiInsightRow extends ConsumerWidget {
                 copy.message,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: scheme.onSurface,
                   fontSize: 13,
                   fontWeight: FontWeight.w900,
                   height: 1.25,
@@ -637,8 +663,8 @@ class _AiInsightRow extends ConsumerWidget {
                       copy.fix,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white70,
+                      style: TextStyle(
+                        color: scheme.onSurface.withValues(alpha: 0.70),
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         height: 1.3,
@@ -722,11 +748,15 @@ class _NextMealPreview extends ConsumerWidget {
     final overCalories =
         targetCalories > 0 && consumedCalories >= targetCalories;
     final recipe = recommendation.recipe;
+    // Phase 53E · the next-meal preview strip flips its surface and
+    // the recipe title + impact string with the active theme.
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
     return Container(
       padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        color: Colors.white.withValues(alpha: 0.05),
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : scheme.surface,
         border: Border.all(color: _neonGreen.withValues(alpha: 0.55)),
         boxShadow: [
           BoxShadow(
@@ -756,8 +786,8 @@ class _NextMealPreview extends ConsumerWidget {
                   recipe.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: scheme.onSurface,
                     fontSize: 13,
                     fontWeight: FontWeight.w900,
                     height: 1.15,
@@ -768,8 +798,8 @@ class _NextMealPreview extends ConsumerWidget {
                   recommendation.impactString,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white70,
+                  style: TextStyle(
+                    color: scheme.onSurface.withValues(alpha: 0.70),
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                   ),
@@ -916,6 +946,9 @@ class _CompactDecisionHeader extends ConsumerWidget {
         : 0.0;
     final proteinPct = (proteinRatio * 100).round();
 
+    // Phase 53E · the collapsed app-bar strip — readable in both
+    // palettes via onSurface.
+    final scheme = context.colors;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
@@ -928,20 +961,24 @@ class _CompactDecisionHeader extends ConsumerWidget {
           const SizedBox(width: 6),
           Text(
             remainingLabel,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: scheme.onSurface,
               fontSize: 13,
               fontWeight: FontWeight.w900,
               letterSpacing: 0.2,
             ),
           ),
           const SizedBox(width: 12),
-          Container(width: 1, height: 14, color: Colors.white24),
+          Container(
+            width: 1,
+            height: 14,
+            color: scheme.onSurface.withValues(alpha: 0.24),
+          ),
           const SizedBox(width: 12),
           Text(
             'P %$proteinPct',
-            style: const TextStyle(
-              color: Colors.white70,
+            style: TextStyle(
+              color: scheme.onSurface.withValues(alpha: 0.70),
               fontSize: 12,
               fontWeight: FontWeight.w800,
               letterSpacing: 0.2,
