@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/theme_extension.dart';
 import '../../workout/models/workout_day_model.dart';
 import '../../workout/providers/workout_provider.dart';
 
@@ -109,26 +110,35 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       dayByDate[_dateKey(date)] = day;
     }
 
+    // Phase 53D · scaffold + AppBar use the active theme; gradient halo
+    // is dark-mode-only.
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
     return Scaffold(
-      backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: scheme.surface,
         elevation: 0,
-        foregroundColor: Colors.white,
-        title: const Text(
+        foregroundColor: scheme.onSurface,
+        title: Text(
           'Takvimim',
-          style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 0.4),
+          style: TextStyle(
+            color: scheme.onSurface,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0.4,
+          ),
         ),
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: RadialGradient(
-            center: Alignment(0, -0.85),
-            radius: 1.1,
-            colors: [Color(0xFF1E0A40), Color(0xFF0A0612), Colors.black],
-            stops: [0.0, 0.55, 1.0],
-          ),
-        ),
+        decoration: isDark
+            ? const BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment(0, -0.85),
+                  radius: 1.1,
+                  colors: [Color(0xFF1E0A40), Color(0xFF0A0612), Colors.black],
+                  stops: [0.0, 0.55, 1.0],
+                ),
+              )
+            : null,
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
           children: [
@@ -196,8 +206,8 @@ class _MonthNavigator extends StatelessWidget {
         _NavButton(icon: Icons.chevron_left_rounded, onTap: onBack),
         Text(
           label,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: context.colors.onSurface,
             fontSize: 18,
             fontWeight: FontWeight.w900,
             letterSpacing: 0.4,
@@ -216,6 +226,7 @@ class _NavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = context.colors;
     return Material(
       color: Colors.transparent,
       shape: const CircleBorder(),
@@ -228,10 +239,14 @@ class _NavButton extends StatelessWidget {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.white.withValues(alpha: 0.04),
-            border: Border.all(color: Colors.white24),
+            color: scheme.onSurface.withValues(alpha: 0.04),
+            border: Border.all(color: scheme.outlineVariant),
           ),
-          child: Icon(icon, color: Colors.white70, size: 22),
+          child: Icon(
+            icon,
+            color: scheme.onSurface.withValues(alpha: 0.70),
+            size: 22,
+          ),
         ),
       ),
     );
@@ -244,6 +259,7 @@ class _WeekdayRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final secondary = context.colors.onSurface.withValues(alpha: 0.55);
     return Row(
       children: [
         for (final label in labels)
@@ -251,8 +267,8 @@ class _WeekdayRow extends StatelessWidget {
             child: Text(
               label,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white54,
+              style: TextStyle(
+                color: secondary,
                 fontSize: 11,
                 letterSpacing: 1.6,
                 fontWeight: FontWeight.w800,
@@ -336,6 +352,13 @@ class _DayCell extends StatelessWidget {
     final completed = workoutDay?.isCompleted ?? false;
     final isRest = workoutDay?.isRestDay ?? false;
 
+    // Phase 53D · text colour, neutral fill, and outline ALL flip with
+    // the active theme. Completed / today cells pin onSurface so the
+    // day number reads on either palette; the upcoming "in-program but
+    // not yet" cell now lands on surfaceContainer in light mode.
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
+
     Color bg;
     Color border;
     Color textColor;
@@ -345,7 +368,7 @@ class _DayCell extends StatelessWidget {
     if (completed) {
       bg = _success.withValues(alpha: 0.15);
       border = _success.withValues(alpha: 0.6);
-      textColor = Colors.white;
+      textColor = scheme.onSurface;
       shadow = [
         BoxShadow(color: _success.withValues(alpha: 0.35), blurRadius: 8),
       ];
@@ -357,14 +380,14 @@ class _DayCell extends StatelessWidget {
     } else if (isToday) {
       bg = _neon.withValues(alpha: 0.18);
       border = _neon;
-      textColor = Colors.white;
+      textColor = scheme.onSurface;
       shadow = [
         BoxShadow(color: _neon.withValues(alpha: 0.5), blurRadius: 12),
       ];
     } else if (isRest) {
       bg = _restAmber.withValues(alpha: 0.08);
       border = _restAmber.withValues(alpha: 0.35);
-      textColor = Colors.white70;
+      textColor = scheme.onSurface.withValues(alpha: 0.70);
       overlay = Positioned(
         top: 4,
         right: 4,
@@ -376,14 +399,14 @@ class _DayCell extends StatelessWidget {
       );
     } else if (workoutDay != null) {
       // Upcoming program day — in program but not completed and not today.
-      bg = _inactive;
-      border = Colors.white12;
-      textColor = Colors.white54;
+      bg = isDark ? _inactive : scheme.surfaceContainer;
+      border = isDark ? Colors.white12 : scheme.outlineVariant;
+      textColor = scheme.onSurface.withValues(alpha: 0.55);
     } else {
       // Outside the 30-day program window entirely.
       bg = Colors.transparent;
       border = Colors.transparent;
-      textColor = Colors.white.withValues(alpha: 0.35);
+      textColor = scheme.onSurface.withValues(alpha: 0.35);
     }
 
     return Container(
@@ -418,12 +441,16 @@ class _Legend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: _surface,
+        color: isDark ? _surface : scheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _surfaceBorder),
+        border: Border.all(
+          color: isDark ? _surfaceBorder : scheme.outlineVariant,
+        ),
       ),
       child: Wrap(
         spacing: 16,
@@ -461,8 +488,8 @@ class _LegendItem extends StatelessWidget {
         const SizedBox(width: 6),
         Text(
           label,
-          style: const TextStyle(
-            color: Colors.white70,
+          style: TextStyle(
+            color: context.colors.onSurface.withValues(alpha: 0.70),
             fontSize: 12,
             fontWeight: FontWeight.w700,
           ),
@@ -499,15 +526,19 @@ class _MonthSummaryCard extends StatelessWidget {
       if (day.isRestDay) rest += 1;
     }
 
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: _surface,
+        color: isDark ? _surface : scheme.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: _surfaceBorder),
+        border: Border.all(
+          color: isDark ? _surfaceBorder : scheme.outlineVariant,
+        ),
         boxShadow: [
           BoxShadow(
-            color: _neon.withValues(alpha: 0.10),
+            color: _neon.withValues(alpha: isDark ? 0.10 : 0.05),
             blurRadius: 16,
             spreadRadius: 0.4,
           ),
@@ -516,10 +547,10 @@ class _MonthSummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'BU AY ÖZET',
             style: TextStyle(
-              color: Colors.white70,
+              color: scheme.onSurface.withValues(alpha: 0.70),
               fontSize: 10,
               letterSpacing: 2,
               fontWeight: FontWeight.w800,
@@ -586,8 +617,8 @@ class _SummaryTile extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           label,
-          style: const TextStyle(
-            color: Colors.white70,
+          style: TextStyle(
+            color: context.colors.onSurface.withValues(alpha: 0.70),
             fontSize: 11,
             fontWeight: FontWeight.w700,
           ),

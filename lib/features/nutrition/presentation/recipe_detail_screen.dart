@@ -258,7 +258,12 @@ class _MacroTilesRow extends StatelessWidget {
             label: 'KALORİ',
             value: '${recipe.calories}',
             unit: 'kcal',
-            color: Colors.white,
+            // Phase 53D · pull text colour from the active theme so
+            // the kcal tile reads charcoal on a white card / white on
+            // a dark card. The other three tiles keep their macro
+            // brand tints (protein blue, carbs pink, fat yellow)
+            // because those are the macro-bar colours used elsewhere.
+            color: context.colors.onSurface,
             accent: _neon,
           ),
         ),
@@ -314,11 +319,17 @@ class _MacroTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53D · macro tile chrome flips with the theme. Surface picks
+    // a faint card tone in light mode so the colour-on-card contrast
+    // works; the unit suffix ("kcal" / "g") leans on onSurface for the
+    // same reason.
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        color: Colors.white.withValues(alpha: 0.04),
+        color: isDark ? Colors.white.withValues(alpha: 0.04) : scheme.surface,
         border: Border.all(color: accent.withValues(alpha: 0.35)),
       ),
       child: Column(
@@ -338,10 +349,10 @@ class _MacroTile extends StatelessWidget {
                 TextSpan(text: value),
                 TextSpan(
                   text: ' $unit',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white70,
+                    color: scheme.onSurface.withValues(alpha: 0.70),
                   ),
                 ),
               ],
@@ -375,6 +386,15 @@ class _InstructionsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53D · the instruction body was hardcoded `Colors.white70`
+    // → invisible on a white scaffold. Pull through onSurface with
+    // 0.85 alpha so the body text stays slightly softer than the
+    // section heading without losing legibility on either palette.
+    final bodyStyle = TextStyle(
+      color: context.colors.onSurface.withValues(alpha: 0.85),
+      fontSize: 14,
+      height: 1.5,
+    );
     final sections = _split(text);
     if (sections.isEmpty) {
       return Column(
@@ -382,14 +402,7 @@ class _InstructionsSection extends StatelessWidget {
         children: [
           const _SectionHeading(label: 'Hazırlanışı'),
           const SizedBox(height: 10),
-          Text(
-            text,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
-              height: 1.5,
-            ),
-          ),
+          Text(text, style: bodyStyle),
         ],
       );
     }
@@ -399,14 +412,7 @@ class _InstructionsSection extends StatelessWidget {
         for (var i = 0; i < sections.length; i++) ...[
           _SectionHeading(label: sections[i].heading),
           const SizedBox(height: 10),
-          Text(
-            sections[i].body,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
-              height: 1.5,
-            ),
-          ),
+          Text(sections[i].body, style: bodyStyle),
           if (i != sections.length - 1) const SizedBox(height: 20),
         ],
       ],
@@ -465,10 +471,12 @@ class _SectionHeading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53D · "Malzemeler" / "Hazırlanışı" headings — onSurface so
+    // they stay legible on both palettes.
     return Text(
       label,
-      style: const TextStyle(
-        color: Colors.white,
+      style: TextStyle(
+        color: context.colors.onSurface,
         fontSize: 18,
         fontWeight: FontWeight.w900,
         letterSpacing: 0.3,

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/services/app_preferences.dart';
+import '../../../core/theme/theme_extension.dart';
 import '../../workout/models/workout_day_model.dart';
 import '../../workout/providers/workout_provider.dart';
 
@@ -150,26 +151,37 @@ class BadgesScreen extends ConsumerWidget {
 
     final unlockedCount = badges.where((b) => b.unlocked).length;
 
+    // Phase 53D · let the scaffold + AppBar use the active theme's
+    // surfaces. The signature dark-purple radial halo is dark-mode-only
+    // chrome; in light mode we drop it and the scaffold's lightBg shows
+    // through cleanly.
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
     return Scaffold(
-      backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: scheme.surface,
         elevation: 0,
-        foregroundColor: Colors.white,
-        title: const Text(
+        foregroundColor: scheme.onSurface,
+        title: Text(
           'Rozetler',
-          style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 0.4),
+          style: TextStyle(
+            color: scheme.onSurface,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0.4,
+          ),
         ),
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: RadialGradient(
-            center: Alignment(0, -0.85),
-            radius: 1.1,
-            colors: [Color(0xFF1E0A40), Color(0xFF0A0612), Colors.black],
-            stops: [0.0, 0.55, 1.0],
-          ),
-        ),
+        decoration: isDark
+            ? const BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment(0, -0.85),
+                  radius: 1.1,
+                  colors: [Color(0xFF1E0A40), Color(0xFF0A0612), Colors.black],
+                  stops: [0.0, 0.55, 1.0],
+                ),
+              )
+            : null,
         child: CustomScrollView(
           slivers: [
             SliverToBoxAdapter(
@@ -364,15 +376,21 @@ class _BadgeTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53D · the entire tile (surface, border, label, subtitle)
+    // routed through the active scheme so the gallery reads in both
+    // palettes. Brand-coloured accents (gradient medallion + glow)
+    // stay because they're badge identity.
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 16, 12, 14),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        color: _surface,
+        color: isDark ? _surface : scheme.surface,
         border: Border.all(
           color: data.unlocked
               ? data.accent.withValues(alpha: 0.6)
-              : _surfaceBorder,
+              : (isDark ? _surfaceBorder : scheme.outlineVariant),
           width: data.unlocked ? 1.5 : 1,
         ),
         boxShadow: data.unlocked
@@ -397,7 +415,9 @@ class _BadgeTile extends StatelessWidget {
               data.label,
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: data.unlocked ? Colors.white : Colors.white60,
+                color: data.unlocked
+                    ? scheme.onSurface
+                    : scheme.onSurface.withValues(alpha: 0.55),
                 fontSize: 13.5,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 0.2,
@@ -411,7 +431,9 @@ class _BadgeTile extends StatelessWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: data.unlocked ? Colors.white70 : Colors.white38,
+              color: data.unlocked
+                  ? scheme.onSurface.withValues(alpha: 0.70)
+                  : scheme.onSurface.withValues(alpha: 0.40),
               fontSize: 11,
               fontWeight: FontWeight.w600,
               height: 1.3,
@@ -506,27 +528,30 @@ class _BadgeStatusPill extends StatelessWidget {
         ),
       );
     }
+    // Phase 53D · locked-state pill flips through onSurface so it
+    // reads in both palettes.
+    final scheme = context.colors;
     final pct = (data.progress * 100).round();
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(999),
-        color: Colors.white.withValues(alpha: 0.04),
-        border: Border.all(color: Colors.white12),
+        color: scheme.onSurface.withValues(alpha: 0.05),
+        border: Border.all(color: scheme.outlineVariant),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
             Icons.lock_rounded,
-            color: Colors.white.withValues(alpha: 0.5),
+            color: scheme.onSurface.withValues(alpha: 0.5),
             size: 11,
           ),
           const SizedBox(width: 3),
           Text(
             '%$pct',
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.7),
+              color: scheme.onSurface.withValues(alpha: 0.7),
               fontSize: 10.5,
               fontWeight: FontWeight.w900,
               letterSpacing: 0.4,

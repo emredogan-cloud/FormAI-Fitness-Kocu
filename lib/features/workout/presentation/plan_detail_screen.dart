@@ -728,13 +728,23 @@ class _StandardDayCard extends StatelessWidget {
       subtitle = realDay == null ? 'Yakında' : '$exerciseCount Egzersiz';
     }
 
+    // Phase 53D · the per-day card was painting card surface + day-number
+    // text + subtitle + trailing icon all from hardcoded white tones,
+    // leaving the entire 30-day list invisible on a light scaffold.
+    // Pull each through the active ColorScheme so the cards read in
+    // both modes; brand-coloured states (locked → neon, completed →
+    // success green, rest → coffee amber) keep their identity.
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
     final dimmed = isRest || realDay == null || lockedWorkoutDay;
     final borderColor = lockedWorkoutDay
         ? _neon.withValues(alpha: 0.35)
-        : (completed ? _success.withValues(alpha: 0.45) : Colors.white12);
+        : (completed
+            ? _success.withValues(alpha: 0.45)
+            : (isDark ? Colors.white12 : scheme.outlineVariant));
     final fillColor = lockedWorkoutDay
         ? _neon.withValues(alpha: 0.05)
-        : Colors.white.withValues(alpha: 0.04);
+        : (isDark ? Colors.white.withValues(alpha: 0.04) : scheme.surface);
 
     return Material(
       color: Colors.transparent,
@@ -757,7 +767,9 @@ class _StandardDayCard extends StatelessWidget {
                     Text(
                       '$dayNumber. gün',
                       style: TextStyle(
-                        color: dimmed ? Colors.white60 : Colors.white,
+                        color: dimmed
+                            ? scheme.onSurface.withValues(alpha: 0.55)
+                            : scheme.onSurface,
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
                       ),
@@ -768,7 +780,7 @@ class _StandardDayCard extends StatelessWidget {
                       style: TextStyle(
                         color: lockedWorkoutDay
                             ? _neon.withValues(alpha: 0.85)
-                            : Colors.white54,
+                            : scheme.onSurface.withValues(alpha: 0.55),
                         fontSize: 13,
                         fontWeight: lockedWorkoutDay
                             ? FontWeight.w700
@@ -779,19 +791,27 @@ class _StandardDayCard extends StatelessWidget {
                 ),
               ),
               if (isRest)
-                const Icon(Icons.local_cafe, color: Colors.white54, size: 22)
+                Icon(
+                  Icons.local_cafe,
+                  color: scheme.onSurface.withValues(alpha: 0.55),
+                  size: 22,
+                )
               else if (lockedWorkoutDay)
                 Icon(Icons.lock, color: _neon.withValues(alpha: 0.9), size: 22)
               else if (completed)
                 const Icon(Icons.check_circle, color: _success, size: 22)
               else if (tappable)
-                const Icon(
+                Icon(
                   Icons.chevron_right,
-                  color: Colors.white38,
+                  color: scheme.onSurface.withValues(alpha: 0.40),
                   size: 22,
                 )
               else
-                const Icon(Icons.lock_outline, color: Colors.white24, size: 18),
+                Icon(
+                  Icons.lock_outline,
+                  color: scheme.onSurface.withValues(alpha: 0.25),
+                  size: 18,
+                ),
             ],
           ),
         ),

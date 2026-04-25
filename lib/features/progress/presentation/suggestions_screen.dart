@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/routing/app_router.dart';
+import '../../../core/theme/theme_extension.dart';
 import '../../nutrition/domain/models/macro_target.dart';
 import '../../nutrition/providers/nutrition_provider.dart';
 import '../../workout/models/workout_day_model.dart';
@@ -60,38 +61,45 @@ class SuggestionsScreen extends ConsumerWidget {
       ),
     ];
 
+    // Phase 53D · scaffold + AppBar pull from the active theme; the
+    // dark radial halo only paints in dark mode so light mode reveals
+    // the off-white scaffoldBackgroundColor cleanly.
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
     return Scaffold(
-      backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: scheme.surface,
         elevation: 0,
-        foregroundColor: Colors.white,
-        title: const Text(
+        foregroundColor: scheme.onSurface,
+        title: Text(
           'Öneriler',
           style: TextStyle(
+            color: scheme.onSurface,
             fontWeight: FontWeight.w900,
             letterSpacing: 0.4,
           ),
         ),
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: RadialGradient(
-            center: Alignment(0, -0.85),
-            radius: 1.1,
-            colors: [Color(0xFF1E0A40), Color(0xFF0A0612), Colors.black],
-            stops: [0.0, 0.55, 1.0],
-          ),
-        ),
+        decoration: isDark
+            ? const BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment(0, -0.85),
+                  radius: 1.1,
+                  colors: [Color(0xFF1E0A40), Color(0xFF0A0612), Colors.black],
+                  stops: [0.0, 0.55, 1.0],
+                ),
+              )
+            : null,
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
           children: [
             const _CoachHero(),
             const SizedBox(height: 22),
-            const Text(
+            Text(
               'BUGÜNÜN ÖNERİLERİ',
               style: TextStyle(
-                color: Colors.white70,
+                color: scheme.onSurface.withValues(alpha: 0.70),
                 fontSize: 11,
                 letterSpacing: 2.2,
                 fontWeight: FontWeight.w800,
@@ -356,15 +364,23 @@ class _SuggestionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53D · suggestion card surface + title + description all
+    // route through ColorScheme. Accent-tinted icon square keeps its
+    // brand colour because it's the suggestion's identity (orange =
+    // workout, blue = nutrition, etc.).
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        color: _surface,
-        border: Border.all(color: _surfaceBorder),
+        color: isDark ? _surface : scheme.surface,
+        border: Border.all(
+          color: isDark ? _surfaceBorder : scheme.outlineVariant,
+        ),
         boxShadow: [
           BoxShadow(
-            color: data.accent.withValues(alpha: 0.15),
+            color: data.accent.withValues(alpha: isDark ? 0.15 : 0.08),
             blurRadius: 16,
             spreadRadius: 0.3,
           ),
@@ -390,8 +406,8 @@ class _SuggestionCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   data.title,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: scheme.onSurface,
                     fontSize: 16,
                     fontWeight: FontWeight.w900,
                     height: 1.2,
@@ -403,8 +419,8 @@ class _SuggestionCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             data.description,
-            style: const TextStyle(
-              color: Colors.white70,
+            style: TextStyle(
+              color: scheme.onSurface.withValues(alpha: 0.75),
               fontSize: 13,
               height: 1.5,
             ),
