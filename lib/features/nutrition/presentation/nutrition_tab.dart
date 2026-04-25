@@ -396,6 +396,9 @@ class _DecisionHeaderRow extends ConsumerWidget {
     final score = ref.watch(dailyScoreProvider);
     final streak = ref.watch(nutritionStreakProvider);
     final tint = _scoreTint(score);
+    // Phase 53C · "Bugün" header + date were hardcoded white, leaving
+    // them invisible on the light-mode panel. onSurface flips both.
+    final scheme = context.colors;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -404,10 +407,10 @@ class _DecisionHeaderRow extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
+              Text(
                 'Bugün',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: scheme.onSurface,
                   fontSize: 22,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 0.3,
@@ -416,7 +419,10 @@ class _DecisionHeaderRow extends ConsumerWidget {
               ),
               Text(
                 _formatTurkishDate(DateTime.now()),
-                style: const TextStyle(color: Colors.white54, fontSize: 12),
+                style: TextStyle(
+                  color: scheme.onSurface.withValues(alpha: 0.55),
+                  fontSize: 12,
+                ),
               ),
             ],
           ),
@@ -977,10 +983,12 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53C · "Günün Menüsü" / "Öğün Kategorileri" / "Tarif Keşfet"
+    // headings — pull onSurface so they stay legible in both palettes.
     return Text(
       title,
-      style: const TextStyle(
-        color: Colors.white,
+      style: TextStyle(
+        color: context.colors.onSurface,
         fontSize: 18,
         fontWeight: FontWeight.w900,
         letterSpacing: 0.3,
@@ -1164,6 +1172,12 @@ class _DiscoveryFilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53C · filter chip surface + text + border now flip with
+    // the active theme. Selected chip stays neon-tinted; the
+    // unselected chip uses an onSurface-derived tint that's visible
+    // on both palettes.
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(24),
@@ -1177,9 +1191,13 @@ class _DiscoveryFilterChip extends StatelessWidget {
             borderRadius: BorderRadius.circular(24),
             color: selected
                 ? _neon.withValues(alpha: 0.25)
-                : Colors.white.withValues(alpha: 0.04),
+                : (isDark
+                    ? Colors.white.withValues(alpha: 0.04)
+                    : scheme.surface),
             border: Border.all(
-              color: selected ? _neon : Colors.white24,
+              color: selected
+                  ? _neon
+                  : (isDark ? Colors.white24 : scheme.outlineVariant),
               width: selected ? 1.5 : 1,
             ),
             boxShadow: selected
@@ -1194,7 +1212,9 @@ class _DiscoveryFilterChip extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-              color: selected ? Colors.white : Colors.white70,
+              color: selected
+                  ? scheme.onSurface
+                  : scheme.onSurface.withValues(alpha: 0.70),
               fontSize: 12,
               fontWeight: FontWeight.w800,
               letterSpacing: 0.3,

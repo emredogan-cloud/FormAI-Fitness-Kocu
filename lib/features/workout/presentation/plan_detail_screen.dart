@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../core/services/app_preferences.dart';
+import '../../../core/theme/theme_extension.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/placeholder_images.dart';
 import '../../../core/widgets/cached_image.dart';
@@ -199,8 +200,11 @@ class _PlanDetailScreenState extends ConsumerState<PlanDetailScreen> {
       return _PlanView(plan: p);
     }
     final sessionAsync = ref.watch(workoutSessionProvider);
+    // Phase 53C · drop the hardcoded `Colors.black` so the scaffold
+    // honours the active theme. Hero header retains its purple
+    // gradient because that's brand chrome and reads correctly on
+    // both palettes.
     return Scaffold(
-      backgroundColor: Colors.black,
       body: sessionAsync.when(
         // Phase 49 · skeleton list mirrors the eventual exercise list
         // shape so the user sees a coherent layout instead of a spinner
@@ -815,8 +819,10 @@ class _PlanView extends ConsumerWidget {
     // framing carries visually even when a user scrolls past the button.
     final isPro = ref.watch(isProProvider);
     final locked = !isPro;
+    // Phase 53C · same scaffold migration as the legacy plan branch
+    // above. The hero header keeps its dark purple gradient because
+    // it's an intentional brand element regardless of theme.
     return Scaffold(
-      backgroundColor: Colors.black,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
@@ -1085,12 +1091,21 @@ class _ExerciseTile extends StatelessWidget {
         ? '${exercise.sets} × ${exercise.targetDurationInSeconds ?? 0} sn'
         : '${exercise.sets} set · ${exercise.targetReps ?? 0} tekrar';
 
+    // Phase 53C · the entire exercise tile (surface, border, name,
+    // subtitle, chevron) was hardcoded for dark mode. All five of
+    // those tones now route through the active ColorScheme so the
+    // 30-day plan list reads in light mode the same way it does in
+    // dark.
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 14, 14, 14),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: Colors.white.withValues(alpha: 0.04),
-        border: Border.all(color: Colors.white12),
+        color: isDark ? Colors.white.withValues(alpha: 0.04) : scheme.surface,
+        border: Border.all(
+          color: isDark ? Colors.white12 : scheme.outlineVariant,
+        ),
       ),
       child: Row(
         children: [
@@ -1105,6 +1120,8 @@ class _ExerciseTile extends StatelessWidget {
               exercise.isTimeBased
                   ? Icons.timer_outlined
                   : Icons.repeat_rounded,
+              // Icon sits on the neon-tinted square, so white-on-neon
+              // works in both modes — keep it as the brand emphasis.
               color: Colors.white,
               size: 20,
             ),
@@ -1116,8 +1133,8 @@ class _ExerciseTile extends StatelessWidget {
               children: [
                 Text(
                   exercise.name,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: scheme.onSurface,
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
                   ),
@@ -1125,17 +1142,17 @@ class _ExerciseTile extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: const TextStyle(
-                    color: Colors.white54,
+                  style: TextStyle(
+                    color: scheme.onSurface.withValues(alpha: 0.55),
                     fontSize: 12.5,
                   ),
                 ),
               ],
             ),
           ),
-          const Icon(
+          Icon(
             Icons.chevron_right_rounded,
-            color: Colors.white38,
+            color: scheme.onSurface.withValues(alpha: 0.38),
             size: 22,
           ),
         ],

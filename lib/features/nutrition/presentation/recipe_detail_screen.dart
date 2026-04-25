@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/theme/theme_extension.dart';
 import '../../../core/widgets/cached_image.dart';
 import '../domain/models/daily_meal_slot.dart';
 import '../domain/models/recipe.dart';
@@ -32,14 +33,19 @@ class RecipeDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53C · drop the hardcoded `0xFF0B0B12` scaffold + sliver bg
+    // so the active theme's `scaffoldBackgroundColor` (lightBg in
+    // light, darkBg in dark) drives both surfaces. Title + meta copy
+    // pull through onSurface so the dark text stays legible on the
+    // off-white scaffold.
+    final scheme = context.colors;
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0B12),
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
             expandedHeight: 300,
             pinned: true,
-            backgroundColor: const Color(0xFF0B0B12),
+            backgroundColor: scheme.surface,
             elevation: 0,
             leading: const _BackButton(),
             flexibleSpace: FlexibleSpaceBar(
@@ -56,8 +62,8 @@ class RecipeDetailScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   Text(
                     recipe.title,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: scheme.onSurface,
                       fontSize: 28,
                       fontWeight: FontWeight.w900,
                       height: 1.1,
@@ -71,16 +77,16 @@ class RecipeDetailScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.schedule,
-                        color: Colors.white70,
+                        color: scheme.onSurface.withValues(alpha: 0.7),
                         size: 16,
                       ),
                       const SizedBox(width: 6),
                       Text(
                         '${recipe.prepTimeMinutes} dk',
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: scheme.onSurface,
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
                         ),
@@ -545,7 +551,10 @@ Future<void> _handleAddToPlan(
 Future<DailyMealSlot?> _showSlotPicker(BuildContext context) {
   return showModalBottomSheet<DailyMealSlot>(
     context: context,
-    backgroundColor: const Color(0xFF111119),
+    // Phase 53C · pull the sheet bg from the active theme so the
+    // bottom-sheet picker doesn't punch a dark hole through a
+    // light-mode scaffold.
+    backgroundColor: context.colors.surface,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),

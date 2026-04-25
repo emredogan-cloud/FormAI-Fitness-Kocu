@@ -208,26 +208,33 @@ class _TopHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53C · "Gelişim" headline + streak pill text were
+    // hardcoded white. Pull onSurface for the title block + the pill
+    // copy so the page header reads in light mode.
+    final scheme = context.colors;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const Expanded(
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'Gelişim',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: scheme.onSurface,
                   fontSize: 26,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 0.3,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
                 'İlerlemen bir bakışta.',
-                style: TextStyle(color: Colors.white54, fontSize: 13),
+                style: TextStyle(
+                  color: scheme.onSurface.withValues(alpha: 0.55),
+                  fontSize: 13,
+                ),
               ),
             ],
           ),
@@ -246,8 +253,8 @@ class _TopHeader extends StatelessWidget {
               const SizedBox(width: 6),
               Text(
                 '$streak Günlük Seri',
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: scheme.onSurface,
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 0.3,
@@ -321,8 +328,8 @@ class _ProgramProgressCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   '%$pctInt',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: context.colors.onSurface,
                     fontSize: 34,
                     fontWeight: FontWeight.w900,
                     height: 1.0,
@@ -332,8 +339,8 @@ class _ProgramProgressCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   '$completedCount / $_programLength gün tamamlandı',
-                  style: const TextStyle(
-                    color: Colors.white54,
+                  style: TextStyle(
+                    color: context.colors.onSurface.withValues(alpha: 0.55),
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
@@ -347,7 +354,11 @@ class _ProgramProgressCard extends StatelessWidget {
                     curve: Curves.easeOutCubic,
                     builder: (context, value, _) => Stack(
                       children: [
-                        Container(height: 7, color: Colors.white10),
+                        Container(
+                          height: 7,
+                          color:
+                              context.colors.onSurface.withValues(alpha: 0.10),
+                        ),
                         FractionallySizedBox(
                           widthFactor: value,
                           child: Container(
@@ -364,10 +375,10 @@ class _ProgramProgressCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                const Text(
+                Text(
                   'Harika gidiyorsun, devam et! 💪',
                   style: TextStyle(
-                    color: Colors.white70,
+                    color: context.colors.onSurface.withValues(alpha: 0.70),
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                     height: 1.3,
@@ -451,8 +462,8 @@ class _StreakCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   '$streak gün',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: context.colors.onSurface,
                     fontSize: 34,
                     fontWeight: FontWeight.w900,
                     height: 1.0,
@@ -460,10 +471,10 @@ class _StreakCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
+                Text(
                   'Serini bozma!',
                   style: TextStyle(
-                    color: Colors.white54,
+                    color: context.colors.onSurface.withValues(alpha: 0.55),
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
@@ -785,6 +796,10 @@ class _CompletedCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53C · day-number ink read as white-on-light-green in
+    // light mode, which has poor contrast. Pull from onSurface so it
+    // stays charcoal in light, white in dark.
+    final scheme = context.colors;
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(12),
@@ -823,8 +838,8 @@ class _CompletedCell extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 '$dayNumber',
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: scheme.onSurface,
                   fontSize: 12.5,
                   fontWeight: FontWeight.w900,
                 ),
@@ -879,25 +894,37 @@ class _LockedCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53C · locked cell was painted with the dark-mode `_inactive`
+    // (#1C1C24) regardless of theme — looked like a black square on
+    // an otherwise off-white grid. Switch to surfaceContainer so light
+    // mode lands on a soft gray and dark mode on the legacy tone.
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
     return IgnorePointer(
       child: Opacity(
         opacity: 0.55,
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            color: _inactive,
-            border: Border.all(color: Colors.white12),
+            color: isDark ? _inactive : scheme.surfaceContainer,
+            border: Border.all(
+              color: isDark ? Colors.white12 : scheme.outlineVariant,
+            ),
           ),
           alignment: Alignment.center,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.lock_rounded, color: Colors.white38, size: 12),
+              Icon(
+                Icons.lock_rounded,
+                color: scheme.onSurface.withValues(alpha: 0.45),
+                size: 12,
+              ),
               const SizedBox(height: 2),
               Text(
                 '$dayNumber',
-                style: const TextStyle(
-                  color: Colors.white54,
+                style: TextStyle(
+                  color: scheme.onSurface.withValues(alpha: 0.55),
                   fontSize: 12.5,
                   fontWeight: FontWeight.w700,
                 ),
@@ -1042,8 +1069,8 @@ class _StatChartCard extends StatelessWidget {
                         value,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: context.colors.onSurface,
                           fontSize: 22,
                           fontWeight: FontWeight.w900,
                           height: 1.0,
@@ -1319,8 +1346,11 @@ class _AiCoachCard extends ConsumerWidget {
             maxLines: 4,
             overflow: TextOverflow.ellipsis,
             textScaler: _clampedScaler(context),
-            style: const TextStyle(
-              color: Colors.white,
+            // Phase 53C · greeting copy was hardcoded white, leaving
+            // it invisible on a light AI Coach card. Pull onSurface so
+            // the contextual copy stays readable in both palettes.
+            style: TextStyle(
+              color: context.colors.onSurface,
               fontSize: 13,
               height: 1.55,
               fontWeight: FontWeight.w600,
@@ -1765,8 +1795,14 @@ class _HexBadge extends StatelessWidget {
               data.label,
               maxLines: 1,
               textAlign: TextAlign.center,
+              // Phase 53C · badge labels under the hex were hardcoded
+              // white / white38, leaving them invisible on a light
+              // scaffold. Pull onSurface so unlocked = primary, locked
+              // = dimmed primary.
               style: TextStyle(
-                color: data.unlocked ? Colors.white : Colors.white38,
+                color: data.unlocked
+                    ? context.colors.onSurface
+                    : context.colors.onSurface.withValues(alpha: 0.45),
                 fontSize: 10.5,
                 fontWeight: FontWeight.w800,
               ),
@@ -1928,10 +1964,14 @@ class _CardLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53C · the `color` override path is used for accent-tinted
+    // labels (e.g. orange for the kcal card); when null, default to
+    // the active onSurface so light mode reads charcoal-on-white.
+    final base = color ?? context.colors.onSurface;
     return Text(
       text,
       style: TextStyle(
-        color: (color ?? Colors.white70).withValues(alpha: 0.85),
+        color: base.withValues(alpha: 0.75),
         fontSize: 10,
         letterSpacing: 2,
         fontWeight: FontWeight.w800,
@@ -1946,10 +1986,12 @@ class _SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53C · ROZETLERİN / 30 GÜNLÜK PROGRAM tags read through
+    // onSurface so they flip with the active theme.
     return Text(
       title,
-      style: const TextStyle(
-        color: Colors.white54,
+      style: TextStyle(
+        color: context.colors.onSurface.withValues(alpha: 0.55),
         fontSize: 11,
         letterSpacing: 2.6,
         fontWeight: FontWeight.w800,
