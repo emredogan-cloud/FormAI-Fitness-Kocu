@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/services/app_preferences.dart';
 import '../../../core/services/notification_service.dart';
+import '../../../core/theme/theme_extension.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../onboarding/providers/wizard_provider.dart';
@@ -71,16 +72,19 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     final user = ref.watch(currentUserProvider);
     final reminderEnabled = prefs.dailyReminderEnabled;
 
+    // Phase 53G · the entire account-settings screen was hardcoded for
+    // dark mode. Drop the Scaffold + AppBar `0xFF0B0B12` so the active
+    // ThemeData drives the canvas + chrome.
+    final scheme = context.colors;
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0B12),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0B0B12),
+        backgroundColor: scheme.surface,
         elevation: 0,
-        foregroundColor: Colors.white,
-        title: const Text(
+        foregroundColor: scheme.onSurface,
+        title: Text(
           'Hesap Ayarları',
           style: TextStyle(
-            color: Colors.white,
+            color: scheme.onSurface,
             fontWeight: FontWeight.w900,
             letterSpacing: 0.4,
           ),
@@ -410,7 +414,11 @@ class _AccountTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53G · same migration recipe as the profile_tab _SettingsTile.
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
     final disabled = onTap == null;
+    final secondary = scheme.onSurface.withValues(alpha: 0.55);
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -420,9 +428,12 @@ class _AccountTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            color: Colors.white.withValues(alpha: 0.03),
+            color:
+                isDark ? Colors.white.withValues(alpha: 0.03) : scheme.surface,
             border: Border.all(
-              color: disabled ? Colors.white12 : _neon.withValues(alpha: 0.3),
+              color: disabled
+                  ? (isDark ? Colors.white12 : scheme.outlineVariant)
+                  : _neon.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -437,7 +448,7 @@ class _AccountTile extends StatelessWidget {
                 ),
                 child: Icon(
                   icon,
-                  color: disabled ? Colors.white38 : _neon,
+                  color: disabled ? secondary : _neon,
                   size: 20,
                 ),
               ),
@@ -449,7 +460,7 @@ class _AccountTile extends StatelessWidget {
                     Text(
                       title,
                       style: TextStyle(
-                        color: disabled ? Colors.white54 : Colors.white,
+                        color: disabled ? secondary : scheme.onSurface,
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
                       ),
@@ -457,8 +468,8 @@ class _AccountTile extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
-                      style: const TextStyle(
-                        color: Colors.white54,
+                      style: TextStyle(
+                        color: secondary,
                         fontSize: 12,
                       ),
                     ),
@@ -467,7 +478,7 @@ class _AccountTile extends StatelessWidget {
               ),
               Icon(
                 Icons.chevron_right_rounded,
-                color: disabled ? Colors.white24 : Colors.white38,
+                color: disabled ? secondary.withValues(alpha: 0.5) : secondary,
               ),
             ],
           ),
@@ -490,11 +501,13 @@ class _NotificationToggleTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        color: Colors.white.withValues(alpha: 0.03),
+        color: isDark ? Colors.white.withValues(alpha: 0.03) : scheme.surface,
         border: Border.all(color: _neon.withValues(alpha: 0.3), width: 1),
       ),
       child: Row(
@@ -513,22 +526,25 @@ class _NotificationToggleTile extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 14),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Bildirimler',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: scheme.onSurface,
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                SizedBox(height: 2),
+                const SizedBox(height: 2),
                 Text(
                   'Günlük antrenman hatırlatması (19:00).',
-                  style: TextStyle(color: Colors.white54, fontSize: 12),
+                  style: TextStyle(
+                    color: scheme.onSurface.withValues(alpha: 0.55),
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
@@ -949,20 +965,20 @@ class _DangerCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          const Text(
+          Text(
             'Bu işlem geri alınamaz. Tüm antrenman geçmişiniz, serileriniz '
             've profil bilgileriniz kalıcı olarak silinecektir.',
             style: TextStyle(
-              color: Colors.white70,
+              color: context.colors.onSurface.withValues(alpha: 0.75),
               fontSize: 13,
               height: 1.45,
             ),
           ),
           const SizedBox(height: 18),
-          const Text(
+          Text(
             'Ayrılma sebebin (opsiyonel)',
             style: TextStyle(
-              color: Colors.white60,
+              color: context.colors.onSurface.withValues(alpha: 0.60),
               fontSize: 12,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.4,
@@ -974,7 +990,7 @@ class _DangerCard extends StatelessWidget {
             enabled: !busy,
             maxLines: 3,
             minLines: 2,
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: context.colors.onSurface),
             decoration: _decoration(
               hint: 'Örn: Plan fiyatları yüksek geldi',
             ),
@@ -982,8 +998,8 @@ class _DangerCard extends StatelessWidget {
           const SizedBox(height: 18),
           Text(
             'Onaylamak için "$confirmPhrase" yazın',
-            style: const TextStyle(
-              color: Colors.white60,
+            style: TextStyle(
+              color: context.colors.onSurface.withValues(alpha: 0.60),
               fontSize: 12,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.4,
@@ -994,8 +1010,8 @@ class _DangerCard extends StatelessWidget {
             controller: confirmCtl,
             enabled: !busy,
             textCapitalization: TextCapitalization.characters,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: context.colors.onSurface,
               fontWeight: FontWeight.w800,
               letterSpacing: 2,
             ),

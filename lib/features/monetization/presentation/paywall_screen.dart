@@ -246,11 +246,15 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   }
 
   Widget _buildRestoreButton() {
+    // Phase 53G · was hardcoded `Colors.white70` — invisible on the
+    // light paywall scaffold. onSurface flips legibility on both
+    // palettes; spinner inherits the same colour.
+    final restoreColor = context.colors.onSurface.withValues(alpha: 0.70);
     return Center(
       child: TextButton(
         onPressed: _restoring || _busy ? null : _restore,
         style: TextButton.styleFrom(
-          foregroundColor: Colors.white70,
+          foregroundColor: restoreColor,
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           textStyle: const TextStyle(
             fontSize: 12.5,
@@ -259,12 +263,12 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           ),
         ),
         child: _restoring
-            ? const SizedBox(
+            ? SizedBox(
                 width: 14,
                 height: 14,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: Colors.white70,
+                  color: restoreColor,
                 ),
               )
             : const Text('Satın Alımları Geri Yükle'),
@@ -959,11 +963,18 @@ class _NoPaymentBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53G · the "Şimdi ödeme yok!" badge sits between the plan
+    // cards and the CTA, so it has to read in light mode too. Surface
+    // + label both flip via the active scheme; the neon-gradient
+    // checkmark stays white-on-purple because the icon is on a brand
+    // gradient regardless of theme.
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
     return Center(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
+          color: isDark ? Colors.white.withValues(alpha: 0.05) : scheme.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: _PaywallScreenState._neon.withValues(alpha: 0.4),
@@ -992,10 +1003,10 @@ class _NoPaymentBadge extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 10),
-            const Text(
+            Text(
               'Şimdi ödeme yok!',
               style: TextStyle(
-                color: Colors.white,
+                color: scheme.onSurface,
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.4,
@@ -1039,8 +1050,13 @@ class _LegalFooterState extends State<_LegalFooter> {
 
   @override
   Widget build(BuildContext context) {
-    const baseStyle = TextStyle(
-      color: Colors.white38,
+    // Phase 53G · the fine-print Terms / Privacy footer was painting at
+    // `Colors.white38` — a 38% white that vanishes against a light
+    // scaffold. Pull body copy from onSurface @ 0.55 so it reads as a
+    // muted secondary tone in either palette; the inline links keep
+    // their brand neon underline.
+    final baseStyle = TextStyle(
+      color: context.colors.onSurface.withValues(alpha: 0.55),
       fontSize: 10.5,
       height: 1.4,
     );

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/theme/theme_extension.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../../core/widgets/cached_image.dart';
 import '../../../../core/widgets/error_card.dart';
@@ -321,6 +322,15 @@ class _CollapsedCard extends StatelessWidget {
     final (icon, iconColor, borderColor, suffix, opacity, strike) =
         _visualsFor(status);
 
+    // Phase 53G · the collapsed meal row was painting recipe titles
+    // (e.g. "Fıstık Ezmeli Protein Yulaf Ezmesi") in `Colors.white70`,
+    // which left every meal name invisible on a light scaffold. Card
+    // surface, border, recipe title, strikethrough decoration, and
+    // expand chevron all flip via the active ColorScheme. The neon
+    // slot pill ("KAHVALTI", "ÖĞLE") stays brand purple because it's
+    // the slot identifier.
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
     return Opacity(
       opacity: opacity,
       child: Material(
@@ -333,7 +343,9 @@ class _CollapsedCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
-              color: Colors.white.withValues(alpha: 0.03),
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.03)
+                  : scheme.surface,
               border: Border.all(color: borderColor),
             ),
             child: Row(
@@ -358,17 +370,17 @@ class _CollapsedCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: Colors.white70,
+                      color: scheme.onSurface,
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                       decoration: strike ? TextDecoration.lineThrough : null,
-                      decorationColor: Colors.white38,
+                      decorationColor: scheme.onSurface.withValues(alpha: 0.38),
                     ),
                   ),
                 ),
-                const Icon(
+                Icon(
                   Icons.expand_more_rounded,
-                  color: Colors.white38,
+                  color: scheme.onSurface.withValues(alpha: 0.38),
                   size: 20,
                 ),
               ],
@@ -473,8 +485,8 @@ class _ExpandedCard extends ConsumerWidget {
                         recipe.title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: context.colors.onSurface,
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
                           height: 1.2,
@@ -837,6 +849,12 @@ class _CardShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53G · expanded meal cards now use the active surface in
+    // light mode (was Colors.white@4% — invisible against a white
+    // scaffold). Border falls through to outlineVariant when no
+    // accent is provided.
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(16),
@@ -846,9 +864,11 @@ class _CardShell extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            color: Colors.white.withValues(alpha: 0.04),
+            color:
+                isDark ? Colors.white.withValues(alpha: 0.04) : scheme.surface,
             border: Border.all(
-              color: borderColor ?? Colors.white12,
+              color: borderColor ??
+                  (isDark ? Colors.white12 : scheme.outlineVariant),
               width: glow ? 1.5 : 1,
             ),
             boxShadow: glow
