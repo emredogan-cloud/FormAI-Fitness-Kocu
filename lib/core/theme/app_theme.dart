@@ -29,7 +29,10 @@ class AppTheme {
       scaffoldBackgroundColor: AppColors.darkBg,
       useMaterial3: true,
     );
-    return base.copyWith(snackBarTheme: _snackBarThemeDark());
+    return base.copyWith(
+      snackBarTheme: _snackBarThemeDark(),
+      bottomNavigationBarTheme: _bottomNavThemeDark(),
+    );
   }
 
   /// Phase 53 light theme. Critical surfaces — the Scaffold background,
@@ -63,7 +66,10 @@ class AppTheme {
       scaffoldBackgroundColor: AppColors.lightBg,
       useMaterial3: true,
     );
-    return base.copyWith(snackBarTheme: _snackBarThemeLight());
+    return base.copyWith(
+      snackBarTheme: _snackBarThemeLight(),
+      bottomNavigationBarTheme: _bottomNavThemeLight(),
+    );
   }
 
   static SnackBarThemeData _snackBarThemeDark() {
@@ -88,6 +94,43 @@ class AppTheme {
         vertical: 12,
       ),
       showCloseIcon: false,
+    );
+  }
+
+  /// Phase 53B · pre-resolved bottom-nav theme. Was driven inline from
+  /// `_BottomNav.build()` previously, but on Material 3 the
+  /// BottomNavigationBar widget consults this slot first and falls
+  /// back to a low-contrast canvas tint when it's missing — exactly
+  /// what produced the "still dark in light mode" bug the PM hit.
+  /// Setting it explicitly here means the widget paints correctly
+  /// even if the call site forgets to pass `backgroundColor`.
+  static BottomNavigationBarThemeData _bottomNavThemeDark() {
+    return BottomNavigationBarThemeData(
+      backgroundColor: AppColors.darkBg,
+      selectedItemColor: AppColors.neon,
+      unselectedItemColor: Colors.white.withValues(alpha: 0.55),
+      selectedLabelStyle: const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+      ),
+      unselectedLabelStyle: const TextStyle(fontSize: 12),
+      type: BottomNavigationBarType.fixed,
+      elevation: 0,
+    );
+  }
+
+  static BottomNavigationBarThemeData _bottomNavThemeLight() {
+    return BottomNavigationBarThemeData(
+      backgroundColor: AppColors.lightSurface,
+      selectedItemColor: AppColors.neon,
+      unselectedItemColor: AppColors.lightTextSecondary,
+      selectedLabelStyle: const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+      ),
+      unselectedLabelStyle: const TextStyle(fontSize: 12),
+      type: BottomNavigationBarType.fixed,
+      elevation: 0,
     );
   }
 

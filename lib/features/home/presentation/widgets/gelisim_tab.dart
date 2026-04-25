@@ -103,16 +103,17 @@ class GelisimTab extends ConsumerWidget {
       await ref.read(workoutSessionProvider.future);
     }
 
-    // Phase 53 hotfix · the dark-purple radial halo is signature dark-
-    // mode chrome. In light mode it would clash with white content
-    // beneath, so swap to a transparent fill so the Scaffold's
-    // ColorScheme.surface shows through. The dark-mode gradient
-    // returns unchanged.
+    // Phase 53B · the dark-purple radial halo is signature dark-mode
+    // chrome. In light mode we deliberately let the Scaffold's
+    // `scaffoldBackgroundColor` (lightBg, off-white) show through —
+    // a `Container` with no decoration just means cards painted on
+    // pure `surface` (#FFFFFF) get a subtle gray seam to sit on,
+    // exactly the contrast the PM screenshot was missing.
     final isDark = context.isDarkMode;
     return Container(
-      decoration: BoxDecoration(
-        gradient: isDark
-            ? const RadialGradient(
+      decoration: isDark
+          ? const BoxDecoration(
+              gradient: RadialGradient(
                 center: Alignment(0, -0.85),
                 radius: 1.1,
                 colors: [
@@ -121,10 +122,9 @@ class GelisimTab extends ConsumerWidget {
                   Colors.black,
                 ],
                 stops: [0.0, 0.55, 1.0],
-              )
-            : null,
-        color: isDark ? null : context.colors.surface,
-      ),
+              ),
+            )
+          : null,
       child: RefreshIndicator(
         onRefresh: handleRefresh,
         color: _neon,
@@ -1883,26 +1883,37 @@ class _SoftCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Phase 53 hotfix · static `_surface` / `_surfaceBorder` constants
-    // pinned every card on this tab to the dark palette regardless of
-    // the active theme. Pull from the live ColorScheme so the cards
-    // flip cleanly when the user toggles to Açık.
+    // Phase 53B · cards now sit on pure `surface` (#FFFFFF in light
+    // mode) above the Scaffold's `scaffoldBackgroundColor` (#F7F8FA).
+    // The natural surface-vs-scaffold delta gives the contrast the
+    // previous hotfix lost when it pinned both surfaces to ~white. A
+    // 1.5-px outlineVariant border + soft black-tinted shadow handle
+    // visual elevation in light mode; dark mode keeps its accent
+    // glow.
     final isDark = context.isDarkMode;
-    final cardColor =
-        isDark ? _surface : context.colors.surfaceContainerHighest;
-    final cardBorder = isDark ? _surfaceBorder : context.colors.outlineVariant;
+    final scheme = context.colors;
     return Container(
       padding: padding,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        color: cardColor,
-        border: Border.all(color: cardBorder),
+        color: isDark ? _surface : scheme.surface,
+        border: Border.all(
+          color: isDark ? _surfaceBorder : scheme.outlineVariant,
+          width: isDark ? 1 : 1.5,
+        ),
         boxShadow: [
-          BoxShadow(
-            color: accent.withValues(alpha: isDark ? 0.10 : 0.06),
-            blurRadius: 18,
-            spreadRadius: 0.5,
-          ),
+          if (isDark)
+            BoxShadow(
+              color: accent.withValues(alpha: 0.10),
+              blurRadius: 18,
+              spreadRadius: 0.5,
+            )
+          else
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 2),
+            ),
         ],
       ),
       child: child,

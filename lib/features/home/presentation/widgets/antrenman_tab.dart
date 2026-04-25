@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/routing/app_router.dart';
+import '../../../../core/theme/theme_extension.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/placeholder_images.dart';
 import '../../../../core/widgets/cached_image.dart';
@@ -294,6 +295,11 @@ class _CategoryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53B · unselected chip label was `Colors.white60` —
+    // legible on dark, invisible on light. Pull from onSurface so
+    // the strip flips with the active theme; selected stays neonAccent
+    // because it's the brand-coloured emphasis.
+    final scheme = context.colors;
     return InkWell(
       onTap: onTap,
       child: Column(
@@ -302,7 +308,9 @@ class _CategoryChip extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: selected ? _neonAccent : Colors.white60,
+              color: selected
+                  ? _neonAccent
+                  : scheme.onSurface.withValues(alpha: 0.6),
               fontSize: selected ? 17 : 16,
               fontWeight: selected ? FontWeight.w900 : FontWeight.w600,
             ),
@@ -342,14 +350,21 @@ class _RegionalPlansList extends StatelessWidget {
       // them on a dead-end neutral note. No CTA here on purpose —
       // the user already sees the category filter strip above; the
       // message is the nudge.
+      // Phase 53B · pull surfaces + text from the active ColorScheme
+      // so the empty card flips correctly under both palettes.
+      final scheme = context.colors;
+      final isDark = context.isDarkMode;
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            color: Colors.white.withValues(alpha: 0.04),
-            border: Border.all(color: Colors.white12),
+            color:
+                isDark ? Colors.white.withValues(alpha: 0.04) : scheme.surface,
+            border: Border.all(
+              color: isDark ? Colors.white12 : scheme.outlineVariant,
+            ),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -371,12 +386,12 @@ class _RegionalPlansList extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 14),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Bu bölge için plan bulunmuyor — diğer kategorileri '
                   'keşfedebilirsin.',
                   style: TextStyle(
-                    color: Colors.white70,
+                    color: scheme.onSurface.withValues(alpha: 0.75),
                     fontSize: 13,
                     height: 1.45,
                   ),
@@ -408,6 +423,12 @@ class _PlanTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53B · plan tile sits on the scaffold (transparent), so
+    // text colour has to flip with the active theme. The trailing
+    // chevron pill also picks up the theme so it doesn't stay a
+    // black puck on a white surface.
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
     return InkWell(
       borderRadius: BorderRadius.circular(14),
       onTap: () => _open(context),
@@ -423,11 +444,11 @@ class _PlanTile extends StatelessWidget {
                 height: 64,
                 child: plan.image == null
                     ? Container(
-                        color: Colors.white10,
+                        color: scheme.surfaceContainerHighest,
                         alignment: Alignment.center,
-                        child: const Icon(
+                        child: Icon(
                           Icons.fitness_center,
-                          color: Colors.white54,
+                          color: scheme.onSurface.withValues(alpha: 0.55),
                         ),
                       )
                     : _resolveImage(plan.image!),
@@ -442,8 +463,8 @@ class _PlanTile extends StatelessWidget {
                     plan.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: scheme.onSurface,
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
                       height: 1.2,
@@ -452,8 +473,8 @@ class _PlanTile extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     plan.summary,
-                    style: const TextStyle(
-                      color: Colors.white54,
+                    style: TextStyle(
+                      color: scheme.onSurface.withValues(alpha: 0.55),
                       fontSize: 12.5,
                     ),
                   ),
@@ -462,18 +483,20 @@ class _PlanTile extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Material(
-              color: Colors.black,
-              shape: const CircleBorder(
-                side: BorderSide(color: Colors.white24, width: 1),
+              color: isDark ? Colors.black : scheme.surface,
+              shape: CircleBorder(
+                side: BorderSide(
+                  color: scheme.onSurface.withValues(alpha: 0.24),
+                ),
               ),
               child: InkWell(
                 customBorder: const CircleBorder(),
                 onTap: () => _open(context),
-                child: const Padding(
-                  padding: EdgeInsets.all(8),
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
                   child: Icon(
                     Icons.arrow_forward_rounded,
-                    color: Colors.white,
+                    color: scheme.onSurface,
                     size: 18,
                   ),
                 ),
@@ -619,6 +642,10 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53B · "Sınırlarını Zorla" / "Bölgeler" / etc. titles need
+    // to flip with the active theme. Pull the active onSurface tone
+    // and let the trailing icon tile match.
+    final scheme = context.colors;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
@@ -626,8 +653,8 @@ class _SectionTitle extends StatelessWidget {
           Expanded(
             child: Text(
               title,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: scheme.onSurface,
                 fontSize: 20,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 0.3,

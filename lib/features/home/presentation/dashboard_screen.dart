@@ -11,7 +11,9 @@ import 'widgets/antrenman_tab.dart';
 import 'widgets/gelisim_tab.dart';
 import 'widgets/profile_tab.dart';
 
-const Color _neon = Color(0xFF8E5BFF);
+// Phase 53B · `_neon` no longer needed locally; the bottom nav now
+// reads its accent colour from the centralised `BottomNavigationBarTheme`
+// in AppTheme.dark/light, so the file-level constant is dead.
 const int _nutritionTabIndex = 1;
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -96,12 +98,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     });
 
     return Scaffold(
-      // Phase 53 hotfix · pull from the active ColorScheme so the
-      // Scaffold paints near-white in light mode and the existing
-      // `lightBg` token in our `AppTheme.light()` builder. Pre-hotfix
-      // hardcoded `Colors.black` made the whole shell pin to dark
-      // regardless of `themeMode`.
-      backgroundColor: context.colors.surface,
+      // Phase 53B · drop the explicit override and let the active
+      // `ThemeData.scaffoldBackgroundColor` drive the canvas. In light
+      // mode that's `AppColors.lightBg` (#F7F8FA, an off-white), which
+      // gives cards painted with `surface` (#FFFFFF) the natural
+      // contrast they were missing. The previous hotfix pinned the
+      // scaffold to `surface` directly, which made cards melt into the
+      // background — exactly the bug the PM screenshotted.
       body: SafeArea(
         bottom: false,
         child: IndexedStack(
@@ -183,27 +186,35 @@ class _BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Phase 53 hotfix · the bottom nav is the dashboard's most
-    // visible chrome strip; if it stayed black after a Light mode
-    // switch the user would see a black bar fighting white content
-    // above it. Pull from `surface` so it matches whichever mode
-    // is active, plus a hairline border tinted with the current
-    // theme's outline.
+    // Phase 53B · the bottom nav now reads its colours from the
+    // pre-resolved `Theme.of(context).bottomNavigationBarTheme` set up
+    // in `AppTheme.dark()` / `AppTheme.light()`, so the widget flips
+    // automatically with the user's theme choice. The previous
+    // hotfix wrapped the BottomNavigationBar in a Container with its
+    // own `decoration: BoxDecoration(color: ...)`, which was
+    // double-painting and produced rendering surprises in some
+    // builds — dropping the wrapper lets Material own the chrome
+    // entirely.
+    final navTheme = Theme.of(context).bottomNavigationBarTheme;
     final scheme = context.colors;
-    return Container(
+    return DecoratedBox(
+      // Hairline border above the nav so the strip reads as a distinct
+      // surface even when its background and the scaffold both land on
+      // near-white tones in light mode. The border colour pulls from
+      // outlineVariant so it darkens cleanly on dark mode too.
       decoration: BoxDecoration(
-        color: scheme.surface,
-        border: Border(
-          top: BorderSide(color: scheme.outlineVariant),
-        ),
+        border: Border(top: BorderSide(color: scheme.outlineVariant)),
       ),
       child: BottomNavigationBar(
         currentIndex: index,
         onTap: onChanged,
+        // `backgroundColor` is left null on purpose — the
+        // BottomNavigationBarThemeData on the active ThemeData paints
+        // the Material so we don't fight it from two sides.
+        backgroundColor: navTheme.backgroundColor,
         type: BottomNavigationBarType.fixed,
-        backgroundColor: scheme.surface,
-        selectedItemColor: _neon,
-        unselectedItemColor: scheme.onSurface.withValues(alpha: 0.55),
+        selectedItemColor: navTheme.selectedItemColor,
+        unselectedItemColor: navTheme.unselectedItemColor,
         selectedFontSize: 12,
         unselectedFontSize: 12,
         showUnselectedLabels: true,

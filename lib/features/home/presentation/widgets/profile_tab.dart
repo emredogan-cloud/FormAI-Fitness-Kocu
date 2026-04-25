@@ -625,6 +625,11 @@ class _InfoTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53B · the BİLGİLERİM grid was hardcoded to white text on a
+    // 4 % alpha white surface — illegible in light mode. Theme tokens
+    // restore the contrast in both palettes.
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -634,7 +639,8 @@ class _InfoTile extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            color: Colors.white.withValues(alpha: 0.04),
+            color:
+                isDark ? Colors.white.withValues(alpha: 0.04) : scheme.surface,
             border: Border.all(color: _neon.withValues(alpha: 0.3)),
           ),
           child: Column(
@@ -646,15 +652,19 @@ class _InfoTile extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     label,
-                    style: const TextStyle(
-                      color: Colors.white54,
+                    style: TextStyle(
+                      color: scheme.onSurface.withValues(alpha: 0.55),
                       fontSize: 11,
                       letterSpacing: 1.6,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                   const Spacer(),
-                  const Icon(Icons.edit, color: Colors.white38, size: 14),
+                  Icon(
+                    Icons.edit,
+                    color: scheme.onSurface.withValues(alpha: 0.38),
+                    size: 14,
+                  ),
                 ],
               ),
               const SizedBox(height: 10),
@@ -662,8 +672,8 @@ class _InfoTile extends StatelessWidget {
                 value,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: scheme.onSurface,
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
                 ),
@@ -746,10 +756,13 @@ class _SettingsHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53B · section labels read in both palettes by pulling
+    // onSurface at 0.55 alpha — the same secondary-text recipe the
+    // tile chrome uses below.
     return Text(
       title,
-      style: const TextStyle(
-        color: Colors.white54,
+      style: TextStyle(
+        color: context.colors.onSurface.withValues(alpha: 0.55),
         fontSize: 11,
         letterSpacing: 3,
         fontWeight: FontWeight.w800,
@@ -776,7 +789,16 @@ class _SettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53B · all the hardcoded `Colors.white*` references on this
+    // tile produced white-on-white text in light mode. Pull the
+    // primary / secondary tones from the active ColorScheme so the
+    // tile reads correctly under both palettes. Brand neon stays.
     final disabled = onTap == null;
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
+    final primary =
+        disabled ? scheme.onSurface.withValues(alpha: 0.45) : scheme.onSurface;
+    final secondary = scheme.onSurface.withValues(alpha: 0.55);
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -787,8 +809,12 @@ class _SettingsTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            color: Colors.white.withValues(alpha: 0.03),
-            border: Border.all(color: Colors.white12, width: 1),
+            color:
+                isDark ? Colors.white.withValues(alpha: 0.03) : scheme.surface,
+            border: Border.all(
+              color: isDark ? Colors.white12 : scheme.outlineVariant,
+              width: isDark ? 1 : 1.2,
+            ),
           ),
           child: Row(
             children: [
@@ -801,7 +827,7 @@ class _SettingsTile extends StatelessWidget {
                 ),
                 child: Icon(
                   icon,
-                  color: disabled ? Colors.white38 : _neon,
+                  color: disabled ? secondary : _neon,
                   size: 20,
                 ),
               ),
@@ -813,7 +839,7 @@ class _SettingsTile extends StatelessWidget {
                     Text(
                       title,
                       style: TextStyle(
-                        color: disabled ? Colors.white54 : Colors.white,
+                        color: primary,
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                       ),
@@ -822,8 +848,8 @@ class _SettingsTile extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         subtitle!,
-                        style: const TextStyle(
-                          color: Colors.white54,
+                        style: TextStyle(
+                          color: secondary,
                           fontSize: 12,
                         ),
                       ),
@@ -833,7 +859,7 @@ class _SettingsTile extends StatelessWidget {
               ),
               Icon(
                 Icons.chevron_right_rounded,
-                color: disabled ? Colors.white24 : Colors.white38,
+                color: disabled ? secondary.withValues(alpha: 0.4) : secondary,
               ),
             ],
           ),
@@ -858,13 +884,20 @@ class _ThemeModeTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final mode = ref.watch(themeModeProvider);
+    // Phase 53B · same chrome recipe as `_SettingsTile` so the theme
+    // picker reads correctly in both palettes.
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
     return Container(
       margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsetsDirectional.fromSTEB(14, 14, 14, 14),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        color: Colors.white.withValues(alpha: 0.03),
-        border: Border.all(color: Colors.white12, width: 1),
+        color: isDark ? Colors.white.withValues(alpha: 0.03) : scheme.surface,
+        border: Border.all(
+          color: isDark ? Colors.white12 : scheme.outlineVariant,
+          width: isDark ? 1 : 1.2,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -889,10 +922,10 @@ class _ThemeModeTile extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Tema',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: scheme.onSurface,
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                       ),
@@ -900,8 +933,8 @@ class _ThemeModeTile extends ConsumerWidget {
                     const SizedBox(height: 2),
                     Text(
                       'Şu an: ${themeModeLabelTr(mode)}',
-                      style: const TextStyle(
-                        color: Colors.white54,
+                      style: TextStyle(
+                        color: scheme.onSurface.withValues(alpha: 0.55),
                         fontSize: 12,
                       ),
                     ),
