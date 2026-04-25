@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../auth/providers/auth_provider.dart';
+import 'widgets/admin_exercise_form.dart';
 import 'widgets/admin_recipe_form.dart';
 
 /// Phase 50B · internal admin shell. Desktop-first layout (the panel is
@@ -211,12 +212,7 @@ class _AdminContent extends StatelessWidget {
       case _AdminSection.recipes:
         return const AdminRecipeForm();
       case _AdminSection.exercises:
-        return const _AdminComingSoon(
-          title: 'Egzersiz Yönetimi',
-          message: 'Egzersiz yönetim ekranı Phase 50C ile birlikte gelecek. '
-              'Şu anda egzersizler `supabase_exercises_migration.sql` '
-              'üzerinden yönetilmektedir.',
-        );
+        return const AdminExerciseForm();
     }
   }
 }
@@ -323,62 +319,6 @@ class _AdminStatCard extends StatelessWidget {
             style: const TextStyle(
               color: Colors.white38,
               fontSize: 11.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AdminComingSoon extends StatelessWidget {
-  const _AdminComingSoon({required this.title, required this.message});
-
-  final String title;
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(40),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 26,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.surfaceBorder),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.hourglass_empty,
-                  color: AppColors.amber,
-                  size: 22,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    message,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 13,
-                      height: 1.5,
-                    ),
-                  ),
-                ),
-              ],
             ),
           ),
         ],
