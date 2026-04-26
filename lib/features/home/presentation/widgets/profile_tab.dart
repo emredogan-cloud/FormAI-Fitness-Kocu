@@ -1,8 +1,11 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/routing/app_router.dart';
 import '../../../../core/services/app_preferences.dart';
@@ -12,8 +15,11 @@ import '../../../../core/theme/theme_extension.dart';
 import '../../../../core/theme/theme_mode_provider.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/audio_feedback.dart';
-import '../../../../core/utils/legal_urls.dart';
 import '../../../auth/providers/auth_provider.dart';
+import '../../../feedback/presentation/feedback_sheet.dart';
+import '../../../feedback/services/feedback_service.dart';
+import '../../../monetization/presentation/churn_survey_sheet.dart';
+import '../../../monetization/providers/monetization_provider.dart';
 import '../../../referral/providers/referral_provider.dart';
 import '../../../referral/services/referral_service.dart';
 import '../../../workout/models/workout_day_model.dart';
@@ -231,6 +237,20 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
           subtitle: 'Arkadaşının kodunu gir, ilk ayını birlikte Pro yapın.',
           onTap: () => _openManualReferralDialog(context),
         ),
+        // Phase 56 Lite · BESLENMEM block. Single-tile entry point for
+        // now (Favorilerim); structured as its own section so future
+        // nutrition-personal surfaces (history, AI suggestions
+        // archive) drop in next to it without re-cutting the profile
+        // layout.
+        const SizedBox(height: 28),
+        const _SettingsHeader(title: 'BESLENMEM'),
+        const SizedBox(height: 10),
+        _SettingsTile(
+          icon: Icons.favorite,
+          title: 'Favorilerim',
+          subtitle: 'Beğendiğin tarifler ve alışveriş listesi.',
+          onTap: () => context.push(AppRoutes.nutritionFavorites),
+        ),
         const SizedBox(height: 28),
         const _SettingsHeader(title: 'AYARLAR'),
         const SizedBox(height: 10),
@@ -245,6 +265,19 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
           subtitle: 'Aboneliğini yönet',
           onTap: () => context.push(AppRoutes.paywall),
         ),
+        // Phase 56 Lite · cancel-subscription tile, only rendered when
+        // the user has an active Pro entitlement. Tapping pops the
+        // churn survey first; the survey's analytics breadcrumb is
+        // captured before the user is handed off to the platform's
+        // subscription-management URL where the actual cancellation
+        // happens.
+        if (ref.watch(isProProvider))
+          _SettingsTile(
+            icon: Icons.cancel_outlined,
+            title: 'Aboneliği İptal Et',
+            subtitle: 'App Store / Play Store ile iptal sayfası.',
+            onTap: () => _runChurnFlow(context),
+          ),
         _SettingsTile(
           icon: Icons.volume_up,
           title: 'Sesli Koç Testi',
@@ -257,16 +290,17 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
           subtitle: 'Veri ve izinler',
           onTap: () => _openPrivacySheet(context),
         ),
-        // Phase 47B · Destek satırı. Launches the device mail app
-        // with a pre-filled "SixPack AI Destek" subject line. If the
-        // device can't open a mail client (rare — simulator, no mail
-        // app), we surface a toast with the raw email address so the
-        // user can copy it manually.
+        // Phase 56 Lite · "Destek" → "Destek & Geri Bildirim". The
+        // tile now opens the in-app feedback sheet (subject dropdown +
+        // message), and FeedbackService falls through to the same
+        // mailto path the Phase 47 tile used when Supabase isn't
+        // reachable. Net result: the user always has a path forward,
+        // and we capture structured data when conditions allow it.
         _SettingsTile(
-          icon: Icons.headset_mic_outlined,
-          title: 'Destek',
-          subtitle: 'Bize ulaş: ${LegalUrls.supportEmail}',
-          onTap: () => _openSupport(context),
+          icon: Icons.support_agent,
+          title: 'Destek & Geri Bildirim',
+          subtitle: 'Hata bildir, öneri gönder, soru sor.',
+          onTap: () => _openFeedback(context),
         ),
         if (user?.isAnonymous ?? false)
           _GuestLoginTile(onTap: () => context.push(AppRoutes.auth))
@@ -435,14 +469,48 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     }
   }
 
-  Future<void> _openSupport(BuildContext context) async {
-    final ok = await openSupportMail();
-    if (!context.mounted) return;
-    if (!ok) {
+  /// Phase 56 Lite · in-app feedback. The sheet handles the form and
+  /// hands a [FeedbackResult] back when the user submits successfully.
+  /// We toast a transport-aware message so the user knows whether the
+  /// message landed in Supabase (silent on the server) or whether
+  /// their mail client opened (because Supabase was unreachable / RLS
+  /// rejected the row / the user is fully signed-out).
+  Future<void> _openFeedback(BuildContext context) async {
+    final result = await showFeedbackSheet(context);
+    if (result == null || !context.mounted) return;
+    final message = result.transport == FeedbackTransport.supabase
+        ? 'Mesajın iletildi. Teşekkürler!'
+        : 'Mail uygulaman açıldı — gönderince ulaşır.';
+    _toast(context, message);
+  }
+
+  /// Phase 56 Lite · churn flow. Pops the survey sheet first
+  /// (analytics fires inside the sheet on selection), then deep-links
+  /// the user to the platform-specific subscription-management URL.
+  /// The actual cancel happens on the App Store / Play Store side —
+  /// our job is to capture the *intent* before they leave the app so
+  /// the dashboard sees both the reason and the eventual outcome
+  /// (RevenueCat → entitlement flip).
+  Future<void> _runChurnFlow(BuildContext context) async {
+    final reason = await showChurnSurveySheet(context);
+    if (reason == null || !context.mounted) return;
+    final manageUri = Platform.isIOS
+        ? Uri.parse('https://apps.apple.com/account/subscriptions')
+        : Uri.parse(
+            'https://play.google.com/store/account/subscriptions',
+          );
+    try {
+      await launchUrl(manageUri, mode: LaunchMode.externalApplication);
+    } catch (e, st) {
+      AppLogger.warning(
+        'manage subscriptions launchUrl failed: $e',
+        category: 'monetization',
+        data: {'stack': st.toString()},
+      );
+      if (!context.mounted) return;
       _toast(
         context,
-        'Mail uygulaması açılamadı — ${LegalUrls.supportEmail} adresine '
-        'manuel olarak yazabilirsin.',
+        'Sayfa açılamadı. App Store / Play Store üzerinden iptal edebilirsin.',
       );
     }
   }

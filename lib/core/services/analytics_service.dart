@@ -187,6 +187,39 @@ class AnalyticsService {
     return _capture('referral_redeemed', {'referrer_code': referrerCode});
   }
 
+  /// Phase 56 Lite · fired when the user exports a shopping list from
+  /// the Favorilerim screen. `recipe_count` segments the funnel so we
+  /// can spot whether the export is a one-off "look at my list" vs a
+  /// regular weekly habit.
+  Future<void> shoppingListExported({required int recipeCount}) {
+    return _capture('shopping_list_exported', {
+      'recipe_count': recipeCount,
+    });
+  }
+
+  /// Phase 56 Lite · in-app feedback funnel. Fired on submit
+  /// regardless of which transport (Supabase RPC or mailto fallback)
+  /// ultimately delivered the message — `transport` segments the two.
+  Future<void> feedbackSubmitted({
+    required String subject,
+    required String transport,
+  }) {
+    return _capture('feedback_submitted', {
+      'subject': subject,
+      'transport': transport,
+    });
+  }
+
+  /// Phase 56 Lite · churn-survey response. Fired before the user is
+  /// handed off to the App Store / Play Store cancellation flow so we
+  /// always capture intent even if the user backs out at the last
+  /// step. [reason] is the stable English token (`too_expensive`,
+  /// `reached_goal`, `not_using`, `other`) — never the localised UI
+  /// label, which would shift if we ever localise.
+  Future<void> logChurnReason({required String reason}) {
+    return _capture('churn_reason_logged', {'reason': reason});
+  }
+
   // ==========================================================================
   // iOS App Tracking Transparency — Apple requires this prompt before any
   // cross-app tracking identifier (IDFA) can be read. PostHog uses IDFA

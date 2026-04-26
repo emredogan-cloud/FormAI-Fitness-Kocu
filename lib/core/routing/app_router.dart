@@ -12,6 +12,7 @@ import '../../features/monetization/presentation/paywall_screen.dart';
 import '../../features/nutrition/domain/models/recipe.dart';
 import '../../features/nutrition/presentation/category_recipes_screen.dart';
 import '../../features/nutrition/presentation/discover_recipes_screen.dart';
+import '../../features/nutrition/presentation/favorites_screen.dart';
 import '../../features/nutrition/presentation/recipe_detail_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/onboarding/presentation/prediction_screen.dart';
@@ -59,6 +60,10 @@ class AppRoutes {
   /// `state.uri.queryParameters` so the redirect rule below can pass
   /// the code through without losing it.
   static const String referralLanding = '/referral';
+
+  /// Phase 56 Lite · "Favorilerim" — saved recipes hub with
+  /// shopping-list export. Reached from a Profile-tab tile.
+  static const String nutritionFavorites = '/nutrition/favorites';
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -212,6 +217,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.nutritionDiscover,
         name: 'nutritionDiscover',
         builder: (context, state) => const DiscoverRecipesScreen(),
+      ),
+      // Phase 56 Lite · favourites hub.
+      GoRoute(
+        path: AppRoutes.nutritionFavorites,
+        name: 'nutritionFavorites',
+        builder: (context, state) => const FavoritesScreen(),
       ),
       // Phase 50B · admin panel. The redirect above already forces
       // non-admins to /, so the builder can render unconditionally.

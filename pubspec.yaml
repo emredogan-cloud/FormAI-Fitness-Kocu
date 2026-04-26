@@ -90,6 +90,10 @@ dependencies:
   share_plus: ^13.1.0
   path_provider: ^2.1.5
   app_links: ^6.3.2
+  # Phase 56 Lite · promoted from transitive (sentry / RevenueCat / etc.)
+  # to direct because the in-app feedback service stamps every submission
+  # with the running build's version + build number for triage.
+  package_info_plus: ^10.0.0
   # Phase 55 · home-screen widget bridge. Pushes (today_task_name,
   # progress_percent, streak_count) into a shared `UserDefaults` group
   # on iOS and `SharedPreferences` on Android, then rings the platform

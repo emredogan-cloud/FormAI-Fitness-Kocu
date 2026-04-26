@@ -11,6 +11,7 @@ import '../../referral/providers/referral_provider.dart';
 import '../domain/models/daily_meal_slot.dart';
 import '../domain/models/recipe.dart';
 import '../providers/daily_menu_provider.dart';
+import '../providers/favorite_recipes_provider.dart';
 import 'widgets/recipe_tags.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
@@ -55,7 +56,13 @@ class RecipeDetailScreen extends StatelessWidget {
             // hero image so the icon needs the same dark-translucent
             // chip treatment as `_BackButton` to stay readable on
             // bright photography.
-            actions: [_ShareRecipeButton(recipe: recipe)],
+            //
+            // Phase 56 Lite · favourite toggle paired with share. Heart
+            // first (more frequent action), share second.
+            actions: [
+              _FavoriteRecipeButton(recipe: recipe),
+              _ShareRecipeButton(recipe: recipe),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               background: _HeroImage(imageUrl: recipe.imageUrl),
             ),
@@ -194,6 +201,51 @@ class _HeroImage extends StatelessWidget {
         alignment: Alignment.center,
         child: const Icon(Icons.restaurant, color: Colors.white70, size: 56),
       );
+}
+
+/// Phase 56 Lite · AppBar favourite toggle. Reads the favourites set
+/// via Riverpod so the heart fill tracks the persisted state across
+/// every detail screen instance — opening the same recipe a second
+/// time inherits whatever the user toggled the first time.
+class _FavoriteRecipeButton extends ConsumerWidget {
+  const _FavoriteRecipeButton({required this.recipe});
+  final Recipe recipe;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isFav = ref.watch(favoriteRecipesProvider).contains(recipe.id);
+    return Padding(
+      padding: const EdgeInsets.all(8),
+      child: Material(
+        color: Colors.black.withValues(alpha: 0.55),
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: () async {
+            final added = await ref
+                .read(favoriteRecipesProvider.notifier)
+                .toggle(recipe.id);
+            // Stronger thump on add (positive action), softer on
+            // remove (correction). Same haptic primitive the rest of
+            // the app uses, so taps feel consistent across surfaces.
+            if (added) {
+              AppHaptics.success();
+            } else {
+              AppHaptics.secondaryTap();
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: Icon(
+              isFav ? Icons.favorite : Icons.favorite_border,
+              color: isFav ? const Color(0xFFFF4D6D) : Colors.white,
+              size: 20,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// Phase 54B · AppBar share icon. Reads the user's referral code so
