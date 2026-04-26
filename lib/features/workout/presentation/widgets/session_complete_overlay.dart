@@ -2,11 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/services/app_preferences.dart';
+import '../../../../core/services/share_service.dart';
+import '../../../../core/utils/app_haptics.dart';
 import '../../../../core/widgets/cached_image.dart';
 import '../../../nutrition/domain/models/recipe.dart';
 import '../../../nutrition/providers/nutrition_provider.dart';
+import '../../../referral/providers/referral_provider.dart';
 import '../../models/workout_day_model.dart';
+import '../../providers/workout_provider.dart';
 
 const Color _neon = Color(0xFF00F0FF);
 const Color _neonPurple = Color(0xFF8E5BFF);
@@ -39,6 +44,18 @@ class SessionCompleteOverlay extends ConsumerWidget {
       data: (recipes) => _pickRecoveryRecipe(recipes, prepPref),
       orElse: () => null,
     );
+
+    // Phase 54B · the celebration overlay now closes the loop with a
+    // share CTA. We pull the live program-completion stats off the
+    // workout session so the rendered Story PNG carries the user's
+    // *current* stats — not a stale snapshot from when the workout
+    // started.
+    final session = ref.watch(workoutSessionProvider).value;
+    final completedDays = session?.days.where((d) => d.isCompleted).length ?? 0;
+    final streak = _streakOf(session?.days ?? const []);
+    final percent =
+        ((completedDays / AppConstants.programLength) * 100).round();
+    final referralCode = ref.watch(referralCodeProvider).value;
 
     return Positioned.fill(
       child: Container(
@@ -74,20 +91,62 @@ class SessionCompleteOverlay extends ConsumerWidget {
                   _RecoverySuggestionCard(recipe: suggestion),
                 ],
                 const SizedBox(height: 24),
-                FilledButton(
-                  onPressed: onAcknowledge,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: _neon,
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 28,
-                      vertical: 14,
+                // Phase 54B · two-button row. "Paylaş" hands the live
+                // progress (% complete + streak) to ShareService for an
+                // off-screen Story render; "Tamam" remains the primary
+                // dismiss. Sized 1:1 so neither overshadows the other —
+                // share is opt-in chrome, dismiss is the default flow.
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          AppHaptics.secondaryTap();
+                          ShareService.instance.shareProgress(
+                            context: context,
+                            percent: percent,
+                            completedDays: completedDays,
+                            totalDays: AppConstants.programLength,
+                            streak: streak,
+                            referralCode: referralCode,
+                          );
+                        },
+                        icon: const Icon(Icons.ios_share_rounded, size: 18),
+                        label: const Text('Paylaş'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: _neon,
+                          side: const BorderSide(color: _neon, width: 1.4),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          textStyle: const TextStyle(
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.2,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                  child: const Text(
-                    'Tamam',
-                    style: TextStyle(fontWeight: FontWeight.w900),
-                  ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: onAcknowledge,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: _neon,
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          textStyle: const TextStyle(
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.2,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: const Text('Tamam'),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -95,6 +154,23 @@ class SessionCompleteOverlay extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  /// Phase 54B · streak helper. Counts contiguous completed days
+  /// from the head of the schedule, mirroring the same definition
+  /// used in `gelisim_tab.dart`. Inlined here rather than imported
+  /// from a single source because the helper is two lines and
+  /// extracting a util just for two callers would over-abstract.
+  int _streakOf(List<WorkoutDay> days) {
+    var streak = 0;
+    for (final day in days) {
+      if (day.isCompleted) {
+        streak += 1;
+      } else {
+        break;
+      }
+    }
+    return streak;
   }
 
   /// Picks a recovery recipe prioritised by:

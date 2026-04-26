@@ -8,6 +8,7 @@ import 'package:flutter/rendering.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../features/nutrition/domain/models/recipe.dart';
 import '../utils/app_logger.dart';
 import '../widgets/share_templates.dart';
 import 'analytics_service.dart';
@@ -136,15 +137,21 @@ class ShareService {
   /// Plain-text share for the referral code itself (no PNG asset). Used
   /// by the Profile-tab "Davet Et" CTA where the user is sharing a code
   /// rather than a celebration image.
+  ///
+  /// Phase 54B · marketing copy upgrade. The new wording leans on the
+  /// "AI fitness coach" angle (the hook the PM saw landing in user
+  /// interviews) instead of the bland "join FormAI" pitch. Two-line
+  /// shape so the deep link sits on its own line — most chat clients
+  /// auto-linkify the trailing URL when it isn't glued to copy.
   Future<void> shareReferralCode({
     required String code,
   }) async {
     final analytics = AnalyticsService.instance;
     unawaited(analytics.shareInitiated(surface: 'referral'));
     try {
-      final text =
-          "FormAI'a katıl ve ilk ayını birlikte Pro yapalım! Davet kodum: "
-          '$code\n\nformai://r/$code$_brandHashtagSuffix';
+      final text = 'Spor ve beslenme rutinimi yapay zeka ile yönetiyorum. '
+          "FormAI'a katıl, $code davet kodunu kullanarak ilk ayını "
+          'ücretsiz Pro yapalım! 💪\n\nformai://r/$code$_brandHashtagSuffix';
       final result = await SharePlus.instance.share(
         ShareParams(
           text: text,
@@ -157,6 +164,47 @@ class ShareService {
     } catch (e, st) {
       AppLogger.error(
         'shareReferralCode failed',
+        e,
+        stackTrace: st,
+        category: 'share',
+      );
+    }
+  }
+
+  /// Phase 54B · plain-text share for a recipe. Triggered from the
+  /// recipe detail screen's AppBar share icon. Optimised for organic
+  /// chat distribution (WhatsApp / Telegram / iMessage) — no PNG to
+  /// preview, just a punchy macro callout that doubles as a referral
+  /// hook because every share carries the user's deep-link.
+  Future<void> shareRecipe({
+    required Recipe recipe,
+    String? userCode,
+  }) async {
+    final analytics = AnalyticsService.instance;
+    unawaited(analytics.shareInitiated(surface: 'recipe'));
+    try {
+      final referralLine = userCode == null
+          ? ''
+          : 'Sen de uygulamayı indir, $userCode kodumla ilk ayını ücretsiz '
+              'Pro yap: formai://r/$userCode';
+      final lines = [
+        "FormAI'da harika bir tarif buldum: ${recipe.title}!",
+        'Sadece ${recipe.calories} kcal ve ${recipe.protein}g protein içeriyor.',
+        if (referralLine.isNotEmpty) referralLine,
+      ];
+      final text = lines.join('\n\n') + _brandHashtagSuffix;
+      final result = await SharePlus.instance.share(
+        ShareParams(
+          text: text,
+          subject: "FormAI'da harika bir tarif: ${recipe.title}",
+        ),
+      );
+      if (result.status == ShareResultStatus.success) {
+        unawaited(analytics.shareCompleted(surface: 'recipe'));
+      }
+    } catch (e, st) {
+      AppLogger.error(
+        'shareRecipe failed',
         e,
         stackTrace: st,
         category: 'share',
@@ -244,19 +292,32 @@ class ShareService {
     return file;
   }
 
+  /// Phase 54B · marketing copy upgrade. The lead now anchors on
+  /// "yapay zeka fitness koçumla" (AI fitness coach) — the angle that
+  /// the PM saw landing best in user interviews — and the referral
+  /// line is rephrased so the deep link reads as a peer invitation
+  /// rather than a coupon offer.
   String _composeProgressText(int percent, String? referralCode) {
     final referral = referralCode == null
         ? ''
-        : '\n\nSen de katıl, ilk ayın Pro: formai://r/$referralCode';
-    return 'FormAI ile programımın %$percent\'ini tamamladım! 💪'
+        : '\n\nSen de bana katıl, ilk ayımız Pro olsun: '
+            'formai://r/$referralCode';
+    return 'Yapay zeka fitness koçumla hedeflerime bir adım daha yaklaştım! 🚀 '
+        "FormAI ile programımın %$percent'ini tamamladım."
         '$referral$_brandHashtagSuffix';
   }
 
+  /// Phase 54B · same upgrade arc as `shareProgress`. The trailing
+  /// referral line keeps the "1 ay birlikte Pro" phrasing because the
+  /// PM tested it specifically against the badge surface and saw
+  /// higher tap-through than the generic "katıl" copy.
   String _composeBadgeText(String badgeName, String? referralCode) {
     final referral = referralCode == null
         ? ''
-        : '\n\nSen de başlat, ilk ayın Pro: formai://r/$referralCode';
-    return "FormAI'da '$badgeName' rozetini kazandım! 🏆"
+        : '\n\nSen de bana katıl, ilk ayımız Pro olsun: '
+            'formai://r/$referralCode';
+    return 'Yapay zeka fitness koçumla bir hedefi daha tutturdum! 🏆 '
+        "FormAI'da '$badgeName' rozetini kazandım."
         '$referral$_brandHashtagSuffix';
   }
 }

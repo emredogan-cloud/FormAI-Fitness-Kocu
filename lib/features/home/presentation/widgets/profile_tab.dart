@@ -15,6 +15,7 @@ import '../../../../core/utils/audio_feedback.dart';
 import '../../../../core/utils/legal_urls.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../referral/providers/referral_provider.dart';
+import '../../../referral/services/referral_service.dart';
 import '../../../workout/models/workout_day_model.dart';
 import '../../../workout/providers/workout_provider.dart';
 import 'stat_tile.dart';
@@ -215,6 +216,21 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
         const _SettingsHeader(title: 'ARKADAŞINI DAVET ET'),
         const SizedBox(height: 10),
         const _ReferralCard(),
+        // Phase 54B · manual fallback. Even with deep links wired
+        // through Android intent-filters + iOS CFBundleURLTypes, a
+        // share that lands as plain text in WhatsApp / Instagram DM
+        // doesn't always auto-linkify (older clients, copied
+        // screenshots, etc.) — so a typed "Bir Davet Kodu Kullan" tile
+        // is the safety net the PM asked for. Sits directly under the
+        // user's own card so the relationship between "your code" and
+        // "redeem someone else's" reads as one cohesive block.
+        const SizedBox(height: 8),
+        _SettingsTile(
+          icon: Icons.qr_code_2_rounded,
+          title: 'Bir Davet Kodu Kullan',
+          subtitle: 'Arkadaşının kodunu gir, ilk ayını birlikte Pro yapın.',
+          onTap: () => _openManualReferralDialog(context),
+        ),
         const SizedBox(height: 28),
         const _SettingsHeader(title: 'AYARLAR'),
         const SizedBox(height: 10),
@@ -387,6 +403,36 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
       ),
       builder: (ctx) => const _PrivacySheet(),
     );
+  }
+
+  /// Phase 54B · manual referral redemption dialog. Belt-and-braces for
+  /// the deep-link flow — a 6-char TextField that hands the entered
+  /// code to `ReferralService.redeem` and surfaces the typed
+  /// [ReferralException] message verbatim on error.
+  Future<void> _openManualReferralDialog(BuildContext context) async {
+    final code = await showDialog<String>(
+      context: context,
+      builder: (ctx) => const _RedeemReferralDialog(),
+    );
+    if (code == null || !mounted) return;
+    final service = ref.read(referralServiceProvider);
+    try {
+      await service.redeem(code);
+      if (!context.mounted) return;
+      _toast(context, 'Tebrikler! 1 Aylık Pro hesabınız aktif edildi.');
+    } on ReferralException catch (e) {
+      if (!context.mounted) return;
+      _toast(context, e.localizedMessage());
+    } catch (e, st) {
+      AppLogger.error(
+        'manual referral redeem failed',
+        e,
+        stackTrace: st,
+        category: 'referral',
+      );
+      if (!context.mounted) return;
+      _toast(context, 'Davet alınırken bir hata oluştu.');
+    }
   }
 
   Future<void> _openSupport(BuildContext context) async {
@@ -1664,6 +1710,137 @@ class _ReferralCodeError extends StatelessWidget {
         color: context.colors.error,
         fontSize: 12,
       ),
+    );
+  }
+}
+
+/// Phase 54B · manual fallback dialog for redeeming a friend's invite
+/// code. Pops a 6-character uppercase `TextField` that filters input
+/// to `[A-Z0-9]` so a user can't paste a lowercase code that the
+/// server-side regex would reject. Returns the entered code via
+/// `Navigator.pop(context, value)`; the caller wires that to
+/// `ReferralService.redeem`.
+class _RedeemReferralDialog extends StatefulWidget {
+  const _RedeemReferralDialog();
+
+  @override
+  State<_RedeemReferralDialog> createState() => _RedeemReferralDialogState();
+}
+
+class _RedeemReferralDialogState extends State<_RedeemReferralDialog> {
+  final _controller = TextEditingController();
+  bool _ready = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(() {
+      final next = _controller.text.length == 6;
+      if (next != _ready) setState(() => _ready = next);
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final code = _controller.text.trim().toUpperCase();
+    if (code.length != 6) return;
+    Navigator.of(context).pop(code);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colors;
+    return AlertDialog(
+      backgroundColor: scheme.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Text(
+        'Davet Kodu',
+        style: TextStyle(
+          color: scheme.onSurface,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Arkadaşının 6 karakterlik davet kodunu gir.',
+            style: TextStyle(
+              color: scheme.onSurface.withValues(alpha: 0.65),
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: _controller,
+            maxLength: 6,
+            autofocus: true,
+            textAlign: TextAlign.center,
+            textCapitalization: TextCapitalization.characters,
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]')),
+              // Force-uppercase as the user types so the live readback
+              // matches what the server-side regex expects.
+              TextInputFormatter.withFunction((old, next) => next.copyWith(
+                    text: next.text.toUpperCase(),
+                    selection: next.selection,
+                  )),
+            ],
+            style: TextStyle(
+              color: scheme.onSurface,
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 8,
+            ),
+            decoration: InputDecoration(
+              counterText: '',
+              hintText: 'ABC123',
+              hintStyle: TextStyle(
+                color: scheme.onSurface.withValues(alpha: 0.30),
+                letterSpacing: 8,
+                fontWeight: FontWeight.w700,
+              ),
+              filled: true,
+              fillColor: scheme.onSurface.withValues(alpha: 0.04),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: scheme.onSurface.withValues(alpha: 0.10),
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: _neon, width: 1.4),
+              ),
+            ),
+            onSubmitted: (_) => _ready ? _submit() : null,
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(
+            'Vazgeç',
+            style: TextStyle(color: scheme.onSurface.withValues(alpha: 0.65)),
+          ),
+        ),
+        FilledButton(
+          onPressed: _ready ? _submit : null,
+          style: FilledButton.styleFrom(
+            backgroundColor: _neon,
+            foregroundColor: Colors.white,
+            disabledBackgroundColor: scheme.onSurface.withValues(alpha: 0.15),
+          ),
+          child: const Text('Kullan'),
+        ),
+      ],
     );
   }
 }

@@ -3,8 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/services/share_service.dart';
 import '../../../core/theme/theme_extension.dart';
+import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/cached_image.dart';
+import '../../referral/providers/referral_provider.dart';
 import '../domain/models/daily_meal_slot.dart';
 import '../domain/models/recipe.dart';
 import '../providers/daily_menu_provider.dart';
@@ -48,6 +51,11 @@ class RecipeDetailScreen extends StatelessWidget {
             backgroundColor: scheme.surface,
             elevation: 0,
             leading: const _BackButton(),
+            // Phase 54B · share affordance in the AppBar. Sits on the
+            // hero image so the icon needs the same dark-translucent
+            // chip treatment as `_BackButton` to stay readable on
+            // bright photography.
+            actions: [_ShareRecipeButton(recipe: recipe)],
             flexibleSpace: FlexibleSpaceBar(
               background: _HeroImage(imageUrl: recipe.imageUrl),
             ),
@@ -186,6 +194,41 @@ class _HeroImage extends StatelessWidget {
         alignment: Alignment.center,
         child: const Icon(Icons.restaurant, color: Colors.white70, size: 56),
       );
+}
+
+/// Phase 54B · AppBar share icon. Reads the user's referral code so
+/// the dispatched share text carries `formai://r/<code>`. Uses the
+/// same dark-translucent chip treatment as `_BackButton` so it stays
+/// legible on bright recipe photography.
+class _ShareRecipeButton extends ConsumerWidget {
+  const _ShareRecipeButton({required this.recipe});
+  final Recipe recipe;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final code = ref.watch(referralCodeProvider).value;
+    return Padding(
+      padding: const EdgeInsets.all(8),
+      child: Material(
+        color: Colors.black.withValues(alpha: 0.55),
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: () {
+            AppHaptics.secondaryTap();
+            ShareService.instance.shareRecipe(
+              recipe: recipe,
+              userCode: code,
+            );
+          },
+          child: const Padding(
+            padding: EdgeInsets.all(8),
+            child: Icon(Icons.ios_share_rounded, color: Colors.white, size: 20),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _BackButton extends StatelessWidget {
