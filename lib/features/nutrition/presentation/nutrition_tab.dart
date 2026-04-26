@@ -550,7 +550,14 @@ class _CalorieRing extends ConsumerWidget {
                 value: value,
                 strokeWidth: 10,
                 strokeCap: StrokeCap.round,
-                backgroundColor: color.withValues(alpha: 0.14),
+                // Phase 53I · the unfilled ring track was tinted with the
+                // status color × 14 % alpha — fine on the dark gradient
+                // hero, invisible on the white light-mode surface where
+                // a near-zero kcal day collapsed the whole ring out of
+                // view. Theme-aware grey gives a visible track on both.
+                backgroundColor: context.isDarkMode
+                    ? Colors.grey.shade800
+                    : Colors.grey.shade200,
                 valueColor: AlwaysStoppedAnimation(color),
               ),
             ),
@@ -587,7 +594,13 @@ class _CalorieRing extends ConsumerWidget {
               Text(
                 _remainingLabel(remaining),
                 style: TextStyle(
-                  color: color,
+                  // Phase 53I · "X kcal kaldı" was painted in the live
+                  // status tint (neon green / yellow / pink). On the
+                  // light-mode white scaffold the neon-green/yellow tones
+                  // washed out completely. onSurface keeps the readout
+                  // legible on both palettes; the ring sweep already
+                  // carries the status colour.
+                  color: context.colors.onSurface,
                   fontSize: 10,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 0.4,

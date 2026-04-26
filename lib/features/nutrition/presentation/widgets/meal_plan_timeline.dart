@@ -863,8 +863,21 @@ class _CardShell extends StatelessWidget {
     // light mode (was Colors.white@4% — invisible against a white
     // scaffold). Border falls through to outlineVariant when no
     // accent is provided.
+    //
+    // Phase 53I · the "ŞU AN" / current meal (glow == true) only got a
+    // neon border + outer drop-shadow. In dark mode the surrounding
+    // cards are dim enough that the shadow alone reads as
+    // "highlighted"; on the light scaffold every card is already pure
+    // white, so the active card needs an interior tint to stand apart
+    // from its neighbours. A pale primary wash gives that fill without
+    // muddling readability of the recipe title or macro pills inside.
     final scheme = context.colors;
     final isDark = context.isDarkMode;
+    final fill = glow
+        ? (isDark
+            ? _neon.withValues(alpha: 0.10)
+            : scheme.primary.withValues(alpha: 0.06))
+        : (isDark ? Colors.white.withValues(alpha: 0.04) : scheme.surface);
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(16),
@@ -874,8 +887,7 @@ class _CardShell extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            color:
-                isDark ? Colors.white.withValues(alpha: 0.04) : scheme.surface,
+            color: fill,
             border: Border.all(
               color: borderColor ??
                   (isDark ? Colors.white12 : scheme.outlineVariant),
@@ -945,24 +957,43 @@ class _Chip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 53I · macro pills (`420 kcal`, `32g P`, …) inside expanded
+    // meal cards were filled with `Colors.white@8%` and bordered with
+    // `Colors.white12`. Both vanished against the white light-mode
+    // scaffold, leaving the coloured macro labels floating without any
+    // pill boundary. Theme-aware fill + border keeps the tinted-pill
+    // affordance on both palettes; default text/icon tones flip via
+    // onSurface so they stay legible when no explicit colour is given.
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
-        color: Colors.white.withValues(alpha: 0.08),
-        border: Border.all(color: Colors.white12),
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.08)
+            : scheme.onSurface.withValues(alpha: 0.05),
+        border: Border.all(
+          color: isDark
+              ? Colors.white12
+              : scheme.onSurface.withValues(alpha: 0.10),
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, color: iconColor ?? Colors.white70, size: 12),
+            Icon(
+              icon,
+              color: iconColor ?? scheme.onSurface.withValues(alpha: 0.70),
+              size: 12,
+            ),
             const SizedBox(width: 4),
           ],
           Text(
             label,
             style: TextStyle(
-              color: labelColor ?? Colors.white,
+              color: labelColor ?? scheme.onSurface,
               fontSize: 11,
               fontWeight: FontWeight.w800,
             ),
