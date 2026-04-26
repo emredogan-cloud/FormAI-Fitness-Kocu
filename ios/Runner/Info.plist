@@ -51,5 +51,24 @@
 	<string>Antrenman seanslarını kaydederken mikrofon erişimi kullanılabilir.</string>
 	<key>NSUserTrackingUsageDescription</key>
 	<string>Sana daha iyi ve kişiselleştirilmiş bir deneyim sunabilmemiz için izin ver.</string>
+	<!-- Phase 54 · custom-scheme handler. Catches every `formai://...`
+	     URL dispatched by the share-sheet (referral invites, badge
+	     celebration deep-links). Universal Links over https://formai.app
+	     are configured separately via the Associated Domains entitlement
+	     (.entitlements file) once the apple-app-site-association is
+	     hosted at https://formai.app/.well-known/apple-app-site-association. -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>app.formai.deeplink</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>formai</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

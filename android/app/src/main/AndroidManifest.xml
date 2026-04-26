@@ -37,6 +37,34 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- Phase 54 · custom-scheme deep links. Catches every
+                 `formai://...` URL the share-sheet dispatches (referral
+                 invites, badge celebration deep-links). The router
+                 listener in `DeepLinkService` decodes the path and
+                 routes to the relevant screen.
+
+                 BROWSABLE + DEFAULT make the activity eligible to
+                 handle implicit VIEW intents from browsers and other
+                 apps; without BROWSABLE the OS would silently fall
+                 through to the system chooser instead of FormAI. -->
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="formai"/>
+            </intent-filter>
+            <!-- Phase 54 · App Links over HTTPS. Disabled by default
+                 (`autoVerify="false"`) until the assetlinks.json is
+                 hosted on formai.app — flipping the flag turns these
+                 links into verified App Links that bypass the system
+                 chooser. Until then they still open FormAI but go
+                 through the chooser on first use. -->
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="formai.app"/>
+            </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

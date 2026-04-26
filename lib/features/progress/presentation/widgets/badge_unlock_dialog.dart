@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/services/share_service.dart';
+import '../../../referral/providers/referral_provider.dart';
 import '../../providers/badge_unlocks_provider.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
@@ -136,26 +139,79 @@ class _BadgeUnlockDialogState extends State<_BadgeUnlockDialog>
               ),
             ),
             const SizedBox(height: 22),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: () => Navigator.of(context).pop(),
-                style: FilledButton.styleFrom(
-                  backgroundColor: _neon,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  textStyle: const TextStyle(
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.6,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+            // Phase 54 · "Paylaş" CTA shares the badge as a 1080x1920
+            // PNG via ShareService → OS share sheet. We deliberately
+            // keep the dialog open after sharing so the user lands back
+            // on the celebration UI when the share-sheet dismisses;
+            // they can then tap HARİKA! to dismiss explicitly.
+            Row(
+              children: [
+                Expanded(
+                  child: _SharePillButton(badge: widget.badge),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 2,
+                  child: FilledButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: _neon,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      textStyle: const TextStyle(
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.6,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: const Text('HARİKA!'),
                   ),
                 ),
-                child: const Text('HARİKA!'),
-              ),
+              ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Phase 54 · outlined "Paylaş" button on the badge unlock dialog.
+/// Reads the user's referral code via Riverpod so the rendered share
+/// PNG carries a `formai://r/<code>` deep-link.
+class _SharePillButton extends ConsumerWidget {
+  const _SharePillButton({required this.badge});
+  final BadgeDefinition badge;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final referralCode = ref.watch(referralCodeProvider).value;
+    return OutlinedButton.icon(
+      onPressed: () {
+        HapticFeedback.lightImpact();
+        ShareService.instance.shareBadge(
+          context: context,
+          badgeName: badge.label,
+          badgeSubtitle: badge.subtitle,
+          badgeEmoji: badge.emoji,
+          referralCode: referralCode,
+        );
+      },
+      icon: const Icon(Icons.ios_share_rounded, size: 16),
+      label: const Text('Paylaş'),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: Colors.white,
+        side:
+            BorderSide(color: _neonAccent.withValues(alpha: 0.55), width: 1.4),
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        textStyle: const TextStyle(
+          fontWeight: FontWeight.w800,
+          letterSpacing: 1.2,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
         ),
       ),
     );

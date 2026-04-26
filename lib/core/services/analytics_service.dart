@@ -153,6 +153,40 @@ class AnalyticsService {
     });
   }
 
+  /// Phase 54 · viral-loop instrumentation. Fired the moment the user
+  /// taps a share-affordance — captures *intent to share*, regardless
+  /// of whether the OS share-sheet ultimately resolves successfully.
+  /// [surface] is the originating CTA: `progress`, `badge`, `referral`.
+  Future<void> shareInitiated({required String surface}) {
+    return _capture('share_initiated', {'surface': surface});
+  }
+
+  /// Phase 54 · paired with [shareInitiated]. Fired only when the OS
+  /// share-sheet returns `ShareResultStatus.success` — the user picked
+  /// a destination app and the share intent was actually dispatched.
+  /// Compare initiated vs. completed counts to spot share-sheet
+  /// abandonment (a privacy / friction signal).
+  Future<void> shareCompleted({required String surface}) {
+    return _capture('share_completed', {'surface': surface});
+  }
+
+  /// Phase 54 · referral funnel. Fired exactly once per user, at the
+  /// moment a fresh install lands inside the Profile tab and the
+  /// referral provider materialises a code. Lets us compute "% of
+  /// installs that ever surface a referral code" without polluting
+  /// the share funnel.
+  Future<void> referralCodeSurfaced({required String code}) {
+    return _capture('referral_code_surfaced', {'code': code});
+  }
+
+  /// Phase 54 · fired when `ReferralService.redeem` succeeds against
+  /// the Supabase RPC. `referrer_code` is the code that was redeemed
+  /// (server-side validated — self-referral / unknown codes don't
+  /// reach this point).
+  Future<void> referralRedeemed({required String referrerCode}) {
+    return _capture('referral_redeemed', {'referrer_code': referrerCode});
+  }
+
   // ==========================================================================
   // iOS App Tracking Transparency — Apple requires this prompt before any
   // cross-app tracking identifier (IDFA) can be read. PostHog uses IDFA

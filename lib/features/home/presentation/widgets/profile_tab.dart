@@ -7,12 +7,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/routing/app_router.dart';
 import '../../../../core/services/app_preferences.dart';
 import '../../../../core/services/notification_service.dart';
+import '../../../../core/services/share_service.dart';
 import '../../../../core/theme/theme_extension.dart';
 import '../../../../core/theme/theme_mode_provider.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/audio_feedback.dart';
 import '../../../../core/utils/legal_urls.dart';
 import '../../../auth/providers/auth_provider.dart';
+import '../../../referral/providers/referral_provider.dart';
 import '../../../workout/models/workout_day_model.dart';
 import '../../../workout/providers/workout_provider.dart';
 import 'stat_tile.dart';
@@ -204,6 +206,15 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
             onTap: () => context.push(AppRoutes.admin),
           ),
         ],
+        // Phase 54 · referral block. Drop-in section showing the
+        // user's stable 6-char code with copy + native-share affordances.
+        // Sits above AYARLAR so it's the first thing users see after
+        // their HESAP AYARLARI block — high-conversion zone for the
+        // viral CAC offset.
+        const SizedBox(height: 28),
+        const _SettingsHeader(title: 'ARKADAŞINI DAVET ET'),
+        const SizedBox(height: 10),
+        const _ReferralCard(),
         const SizedBox(height: 28),
         const _SettingsHeader(title: 'AYARLAR'),
         const SizedBox(height: 10),
@@ -1487,6 +1498,172 @@ class _PrivacySection extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Phase 54 · referral card on the Profile tab. Shows the user's stable
+/// 6-char code with copy + native-share affordances. Reads the code
+/// through Riverpod so a fresh install renders a shimmer until the
+/// first generation roundtrip completes.
+class _ReferralCard extends ConsumerWidget {
+  const _ReferralCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final codeAsync = ref.watch(referralCodeProvider);
+    final scheme = context.colors;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          colors: [
+            scheme.primary.withValues(alpha: 0.18),
+            scheme.primary.withValues(alpha: 0.04),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(color: scheme.primary.withValues(alpha: 0.45)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.card_giftcard, color: scheme.primary, size: 22),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Sen ve arkadaşın 1 ay Pro kazanın',
+                  style: TextStyle(
+                    color: scheme.onSurface,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Davet kodunu paylaş — kullanan herkesle birlikte 30 günlük '
+            'Pro hesap kazanırsın.',
+            style: TextStyle(
+              color: scheme.onSurface.withValues(alpha: 0.65),
+              fontSize: 12,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 14),
+          codeAsync.when(
+            loading: () => const _ReferralCodeSkeleton(),
+            error: (_, __) => const _ReferralCodeError(),
+            data: (code) => _ReferralCodeRow(code: code),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReferralCodeRow extends StatelessWidget {
+  const _ReferralCodeRow({required this.code});
+  final String code;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colors;
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: scheme.surface,
+              border: Border.all(
+                color: scheme.onSurface.withValues(alpha: 0.10),
+              ),
+            ),
+            child: Text(
+              code,
+              style: TextStyle(
+                color: scheme.onSurface,
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 5,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        IconButton(
+          icon: Icon(Icons.copy_rounded, color: scheme.onSurface),
+          tooltip: 'Kopyala',
+          onPressed: () {
+            Clipboard.setData(ClipboardData(text: code));
+            HapticFeedback.lightImpact();
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                const SnackBar(content: Text('Kod kopyalandı')),
+              );
+          },
+        ),
+        const SizedBox(width: 4),
+        FilledButton.icon(
+          onPressed: () {
+            HapticFeedback.lightImpact();
+            ShareService.instance.shareReferralCode(code: code);
+          },
+          icon: const Icon(Icons.ios_share_rounded, size: 16),
+          label: const Text('Paylaş'),
+          style: FilledButton.styleFrom(
+            backgroundColor: _neon,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            textStyle: const TextStyle(
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.4,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ReferralCodeSkeleton extends StatelessWidget {
+  const _ReferralCodeSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 44,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: context.colors.onSurface.withValues(alpha: 0.06),
+      ),
+    );
+  }
+}
+
+class _ReferralCodeError extends StatelessWidget {
+  const _ReferralCodeError();
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      'Kod yüklenemedi. Bağlantını kontrol et.',
+      style: TextStyle(
+        color: context.colors.error,
+        fontSize: 12,
+      ),
     );
   }
 }

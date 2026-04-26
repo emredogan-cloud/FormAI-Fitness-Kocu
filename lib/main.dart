@@ -10,6 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/routing/app_router.dart';
 import 'core/services/analytics_service.dart';
 import 'core/services/app_preferences.dart';
+import 'core/services/deep_link_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_mode_provider.dart';
 import 'core/utils/app_logger.dart';
@@ -291,11 +292,31 @@ class _BootErrorScreenState extends State<_BootErrorScreen> {
   }
 }
 
-class FormAIApp extends ConsumerWidget {
+class FormAIApp extends ConsumerStatefulWidget {
   const FormAIApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<FormAIApp> createState() => _FormAIAppState();
+}
+
+class _FormAIAppState extends ConsumerState<FormAIApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Phase 54 · start the deep-link listener as soon as the router is
+    // available. Reading the provider through `ref` ties its lifetime
+    // to this widget, so a hot-restart cleanly disposes the prior
+    // StreamSubscription before booting a new one. We can't await
+    // here (initState is sync) — `start()` resolves any cold-start
+    // initial link asynchronously, which is fine because the router
+    // is already mounted by the time the link resolves.
+    Future<void>.microtask(() {
+      ref.read(deepLinkServiceProvider).start();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(appRouterProvider);
     // Phase 53 · the user's persisted choice flows through
     // `themeModeProvider`. ThemeMode.system (the default for fresh

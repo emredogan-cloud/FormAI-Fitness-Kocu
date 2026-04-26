@@ -76,6 +76,20 @@ dependencies:
   # to the same cache (cache hit → play from disk; miss → stream +
   # background download to populate the cache for the next set).
   flutter_cache_manager: ^3.4.1
+  # Phase 54 · viral-loop stack.
+  #   • share_plus: native iOS / Android share-sheet bridge. Used by
+  #     `ShareService` to hand the rendered Story PNG (1080x1920) or
+  #     Square PNG (1080x1080) over to Instagram / WhatsApp / etc.
+  #   • path_provider: temp-directory access so we can drop the PNG
+  #     bytes onto disk before the share intent picks them up.
+  #   • app_links: universal-link / custom-scheme bridge. Routes
+  #     incoming `formai://` URLs (and in the future, https://formai.app
+  #     deep links) into the Riverpod-owned GoRouter.
+  # share_plus 13.x bumps win32 to ^6.x to align with our wakelock_plus
+  # 1.6.0 pin (10.x's win32 ^5.x conflicted on resolve).
+  share_plus: ^13.1.0
+  path_provider: ^2.1.5
+  app_links: ^6.3.2
 
 dev_dependencies:
   flutter_test:

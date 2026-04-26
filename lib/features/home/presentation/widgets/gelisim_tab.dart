@@ -8,12 +8,14 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/routing/app_router.dart';
 import '../../../../core/services/app_preferences.dart';
+import '../../../../core/services/share_service.dart';
 import '../../../../core/theme/theme_extension.dart';
 import '../../../../core/utils/app_haptics.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/audio_feedback.dart';
 import '../../../../core/widgets/skeleton_loader.dart';
 import '../../../auth/providers/auth_provider.dart';
+import '../../../referral/providers/referral_provider.dart';
 import '../../../nutrition/domain/models/planned_meal.dart';
 import '../../../nutrition/providers/daily_menu_provider.dart';
 import '../../../nutrition/providers/nutrition_provider.dart';
@@ -132,7 +134,11 @@ class GelisimTab extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
           children: [
-            _TopHeader(streak: streak),
+            _TopHeader(
+              streak: streak,
+              percent: percent,
+              completedCount: completedCount,
+            ),
             const SizedBox(height: 22),
             _ProgramStatsColumn(
               percent: percent,
@@ -202,16 +208,28 @@ class GelisimTab extends ConsumerWidget {
 // Top header — title/subtitle block with a streak pill anchored top-right.
 // =============================================================================
 
-class _TopHeader extends StatelessWidget {
-  const _TopHeader({required this.streak});
+class _TopHeader extends ConsumerWidget {
+  const _TopHeader({
+    required this.streak,
+    required this.percent,
+    required this.completedCount,
+  });
   final int streak;
+  final double percent;
+  final int completedCount;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     // Phase 53C · "Gelişim" headline + streak pill text were
     // hardcoded white. Pull onSurface for the title block + the pill
     // copy so the page header reads in light mode.
     final scheme = context.colors;
+    // Phase 54 · share affordance lives top-right of the Gelişim tab.
+    // We pass `referralCode` through to the rendered template so the
+    // exported PNG carries a deep-link the friend can tap to install
+    // (`formai://r/<code>`). Code may still be loading on a fresh
+    // install — the share path tolerates a null code.
+    final referralCode = ref.watch(referralCodeProvider).value;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -263,7 +281,67 @@ class _TopHeader extends StatelessWidget {
             ],
           ),
         ),
+        const SizedBox(width: 8),
+        _ShareProgressButton(
+          percent: (percent * 100).round(),
+          completedCount: completedCount,
+          streak: streak,
+          referralCode: referralCode,
+        ),
       ],
+    );
+  }
+}
+
+class _ShareProgressButton extends StatelessWidget {
+  const _ShareProgressButton({
+    required this.percent,
+    required this.completedCount,
+    required this.streak,
+    required this.referralCode,
+  });
+
+  final int percent;
+  final int completedCount;
+  final int streak;
+  final String? referralCode;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colors;
+    return Material(
+      color: Colors.transparent,
+      shape: const CircleBorder(),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: () {
+          AppHaptics.secondaryTap();
+          ShareService.instance.shareProgress(
+            context: context,
+            percent: percent,
+            completedDays: completedCount,
+            totalDays: _programLength,
+            streak: streak,
+            referralCode: referralCode,
+          );
+        },
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: _neon.withValues(alpha: 0.12),
+            border: Border.all(color: _neon.withValues(alpha: 0.55)),
+          ),
+          alignment: Alignment.center,
+          child: Icon(
+            Icons.ios_share_rounded,
+            color: scheme.onSurface,
+            size: 18,
+          ),
+        ),
+      ),
     );
   }
 }

@@ -19,6 +19,7 @@ import '../../features/progress/presentation/badges_screen.dart';
 import '../../features/progress/presentation/calendar_screen.dart';
 import '../../features/progress/presentation/suggestions_screen.dart';
 import '../../features/progress/providers/badge_unlocks_provider.dart';
+import '../../features/referral/presentation/referral_landing_screen.dart';
 import '../../features/workout/models/workout_plan_model.dart';
 import '../../features/workout/presentation/plan_detail_screen.dart';
 import '../../features/workout/presentation/workout_camera_screen.dart';
@@ -51,6 +52,13 @@ class AppRoutes {
   /// router redirects non-admins to [dashboard] before the screen is
   /// ever instantiated, so this path is invisible to regular users.
   static const String admin = '/admin';
+
+  /// Phase 54 · landing screen for incoming referral deep-links.
+  /// `formai://r/<code>` and `https://formai.app/r/<code>` both resolve
+  /// here via [DeepLinkService]. The screen reads `?code=` from
+  /// `state.uri.queryParameters` so the redirect rule below can pass
+  /// the code through without losing it.
+  static const String referralLanding = '/referral';
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -63,6 +71,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final routeObserver = ref.watch(routeObserverProvider);
 
   String? redirect(path) {
+    // Phase 54 · referral landing is the one surface that survives
+    // both the first-time-install gate AND the auth gate. A fresh
+    // install that arrives via a deep link has to see the invite copy
+    // (and store the code) before being punted into onboarding;
+    // similarly, an existing-but-signed-out user redeeming on a new
+    // device should see the landing first so they know what they're
+    // signing in for.
+    if (path == AppRoutes.referralLanding) return null;
     if (prefs.isFirstTime) {
       return path == AppRoutes.onboarding ? null : AppRoutes.onboarding;
     }
@@ -204,9 +220,63 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'admin',
         builder: (context, state) => const AdminDashboardScreen(),
       ),
+      // Phase 54 · referral landing. Reachable via deep link
+      // (`formai://r/<code>`) or in-app navigation. Code arrives as
+      // `?code=ABCDEF`; missing code falls back to the dashboard so a
+      // malformed link never strands the user on a blank screen.
+      GoRoute(
+        path: AppRoutes.referralLanding,
+        name: 'referralLanding',
+        builder: (context, state) {
+          final code = state.uri.queryParameters['code']?.toUpperCase();
+          if (code == null || code.isEmpty) {
+            return const _MissingReferralCode();
+          }
+          return ReferralLandingScreen(code: code);
+        },
+      ),
     ],
   );
 });
+
+/// Phase 54 · fallback for `/referral` without `?code=...`. Surfaces a
+/// polite "your link is broken" rather than letting the user land on
+/// an empty screen — the share text always carries the code, so
+/// hitting this means the link was truncated or hand-edited.
+class _MissingReferralCode extends StatelessWidget {
+  const _MissingReferralCode();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.link_off,
+                size: 56,
+                color: Colors.white38,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Davet bağlantısı eksik.',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 20),
+              FilledButton(
+                onPressed: () => context.go(AppRoutes.dashboard),
+                child: const Text('Ana ekrana dön'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 /// Tiny fallback shown when someone navigates to `/recipe` without
 /// actually attaching a [Recipe] to `state.extra`. Keeps the app from
