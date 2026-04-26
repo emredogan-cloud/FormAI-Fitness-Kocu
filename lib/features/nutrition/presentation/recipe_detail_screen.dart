@@ -6,7 +6,9 @@ import 'package:go_router/go_router.dart';
 import '../../../core/services/share_service.dart';
 import '../../../core/theme/theme_extension.dart';
 import '../../../core/utils/app_haptics.dart';
+import '../../../core/widgets/branded_media_fallback.dart';
 import '../../../core/widgets/cached_image.dart';
+import '../../../core/widgets/top_toast.dart';
 import '../../referral/providers/referral_provider.dart';
 import '../domain/models/daily_meal_slot.dart';
 import '../domain/models/recipe.dart';
@@ -190,17 +192,13 @@ class _HeroImage extends StatelessWidget {
     );
   }
 
-  Widget _fallback() => Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF6A3DFF), Color(0xFF4DA6FF)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        alignment: Alignment.center,
-        child: const Icon(Icons.restaurant, color: Colors.white70, size: 56),
-      );
+  // Phase 57 · standardised on `BrandedMediaFallback` so a missing
+  // recipe hero reads as "intentional empty state" rather than the
+  // anonymous purple gradient + restaurant icon. The fallback ships
+  // its own gradient + wordmark + contextual icon, so the previous
+  // local copy is dead.
+  Widget _fallback() =>
+      const BrandedMediaFallback(icon: Icons.restaurant_rounded);
 }
 
 /// Phase 56 Lite · AppBar favourite toggle. Reads the favourites set
@@ -233,6 +231,19 @@ class _FavoriteRecipeButton extends ConsumerWidget {
             } else {
               AppHaptics.secondaryTap();
             }
+            // Phase 57 · top-of-screen confirmation toast. Bottom
+            // SnackBar collides with the sticky "Plana Ekle" CTA on
+            // this screen, so the PM asked for a top-anchored drop-down
+            // for the favourite micro-interaction. `TopToast.show`
+            // self-dismisses; we surface the same affordance for the
+            // remove-from-favourites path so the visual feedback is
+            // symmetric.
+            if (!context.mounted) return;
+            TopToast.show(
+              context,
+              message: added ? 'Favorilere eklendi' : 'Favorilerden çıkarıldı',
+              icon: added ? Icons.favorite : Icons.favorite_border,
+            );
           },
           child: Padding(
             padding: const EdgeInsets.all(8),

@@ -1,6 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
+import 'branded_media_fallback.dart';
+
 /// Phase 40: thin wrapper around [CachedNetworkImage] that centralises
 /// the three things every call site cared about:
 ///
@@ -75,14 +77,12 @@ class _DefaultError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFF14141B),
-      alignment: Alignment.center,
-      child: const Icon(
-        Icons.broken_image_outlined,
-        color: Colors.white24,
-        size: 28,
-      ),
-    );
+    // Phase 57 · branded gradient + wordmark instead of the generic
+    // broken-image icon. Affects every CachedImage call site that
+    // doesn't pass its own `errorBuilder`. Sites that pass a custom
+    // builder (recipe / plan thumbnails, etc.) keep their contextual
+    // restaurant / fitness icons because those read better as
+    // "expected empty state" at small sizes.
+    return const BrandedMediaFallback();
   }
 }

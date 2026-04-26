@@ -120,40 +120,95 @@ class FavoritesScreen extends ConsumerWidget {
     }
   }
 
-  /// Builds a deduplicated, human-readable shopping list. Section per
-  /// recipe so the user can cross items off as they shop. The leading
-  /// "FormAI · Alışveriş Listem" header anchors the share preview when
-  /// it lands in WhatsApp / Notes / etc.
+  /// Phase 57 · shopping-list body formatted to the PM's exact spec:
+  ///
+  ///     FormAI Öğün Malzemeleri
+  ///     1) <Meal 1 Name>
+  ///     Malzemeler:
+  ///     - <Ingredient 1>
+  ///     - <Ingredient 2>
+  ///     2) <Meal 2 Name>
+  ///     ...
+  ///
+  /// Per-recipe ingredients are sourced in priority order:
+  ///   1. The structured `recipe.ingredients` text[] column when the
+  ///      backend has migrated to it (Phase 57 schema bump).
+  ///   2. Heuristic extraction from `recipe.instructions` — most
+  ///      curated rows lead with a "Malzemeler:" section so we look
+  ///      for that header and collect the bullets/lines beneath it.
+  ///   3. A polite fallback line so the recipient sees the recipe
+  ///      title + a "malzeme listesi yakında" placeholder rather than
+  ///      an empty section.
   String _buildShoppingListBody(List<Recipe> recipes) {
     if (recipes.isEmpty) return 'Alışveriş listen boş.';
-    final buf = StringBuffer()
-      ..writeln('🛒 FormAI · Alışveriş Listem')
-      ..writeln();
-    final totalCalories = recipes.fold<int>(0, (sum, r) => sum + r.calories);
-    final totalProtein = recipes.fold<int>(0, (sum, r) => sum + r.protein);
-    buf
-      ..writeln(
-          '${recipes.length} tarif · $totalCalories kcal · ${totalProtein}g protein')
-      ..writeln();
-    for (final r in recipes) {
+    final buf = StringBuffer()..writeln('FormAI Öğün Malzemeleri');
+    for (var i = 0; i < recipes.length; i++) {
+      final r = recipes[i];
       buf
-        ..writeln('• ${r.title}')
-        ..writeln(
-            '  ${r.calories} kcal · ${r.protein}g P · ${r.carbs}g K · ${r.fat}g Y · ${r.prepTimeMinutes} dk');
-      final notes = (r.instructions ?? '').trim();
-      if (notes.isNotEmpty) {
-        // Single-line summary — the first sentence is usually the
-        // ingredients list in the curated catalogue. Avoids dumping the
-        // full instructions which would balloon the share preview.
-        final firstSentence = notes.split(RegExp(r'(?<=[.!?])\s+')).first;
-        if (firstSentence.length < 240) {
-          buf.writeln('  $firstSentence');
+        ..writeln('${i + 1}) ${r.title}')
+        ..writeln('Malzemeler:');
+      final items = _ingredientsFor(r);
+      if (items.isEmpty) {
+        buf.writeln('- (malzeme listesi yakında — tarif: formai://)');
+      } else {
+        for (final ing in items) {
+          buf.writeln('- $ing');
         }
       }
-      buf.writeln();
     }
-    buf.write('FormAI ile takip et: formai://');
-    return buf.toString();
+    return buf.toString().trimRight();
+  }
+
+  /// Resolves a clean ingredients list per recipe. Tries the
+  /// structured column first; falls back to a "Malzemeler:" header
+  /// scan inside `instructions`.
+  List<String> _ingredientsFor(Recipe recipe) {
+    if (recipe.ingredients.isNotEmpty) return recipe.ingredients;
+    final raw = (recipe.instructions ?? '').trim();
+    if (raw.isEmpty) return const [];
+    final lines = raw.split(RegExp(r'\r?\n'));
+    final extracted = <String>[];
+    var inBlock = false;
+    for (final line in lines) {
+      final trimmed = line.trim();
+      if (trimmed.isEmpty) {
+        if (inBlock) break; // blank line ends the ingredients block
+        continue;
+      }
+      // Header detection: "Malzemeler" / "Malzemeler:" / "MALZEMELER".
+      if (RegExp(r'^malzemeler\s*:?\s*$', caseSensitive: false)
+          .hasMatch(trimmed)) {
+        inBlock = true;
+        continue;
+      }
+      // Method header ends the ingredients block.
+      if (RegExp(r'^(yapılışı|hazırlanışı|tarif)\s*:?\s*$',
+              caseSensitive: false)
+          .hasMatch(trimmed)) {
+        if (inBlock) break;
+      }
+      if (inBlock) {
+        extracted.add(_stripBullet(trimmed));
+      }
+    }
+    if (extracted.isNotEmpty) return extracted;
+    // No "Malzemeler:" header found — try splitting the first sentence
+    // on commas as a last-resort heuristic for short single-line
+    // recipes ("2 yumurta, 1 dilim peynir, 1 yulaf"). 240-char guard
+    // protects against dumping a paragraph as a single ingredient.
+    final firstSentence = raw.split(RegExp(r'(?<=[.!?])\s+')).first;
+    if (firstSentence.length > 240) return const [];
+    final commaSplit = firstSentence
+        .split(RegExp(r'[,;]'))
+        .map((e) => _stripBullet(e.trim()))
+        .where((e) => e.isNotEmpty)
+        .toList(growable: false);
+    if (commaSplit.length >= 2) return commaSplit;
+    return const [];
+  }
+
+  String _stripBullet(String line) {
+    return line.replaceFirst(RegExp(r'^[-•*•]\s*'), '').trim();
   }
 }
 

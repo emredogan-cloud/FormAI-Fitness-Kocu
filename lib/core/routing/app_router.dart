@@ -121,6 +121,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     refreshListenable: refreshListenable,
     observers: [routeObserver],
     redirect: (context, state) => redirect(state.matchedLocation),
+    // Phase 57 · branded splash instead of the default
+    // "Page Not Found" black-on-white error screen. A widget tap
+    // can race the router on cold start and briefly land on an
+    // unmatched route while DeepLinkService is still resolving the
+    // initial link; this builder makes that intermediate frame look
+    // like a deliberate splash rather than a 404, and self-recovers
+    // by punting the user to the dashboard after a short beat.
+    errorBuilder: (context, state) => const _DeepLinkSplashScreen(),
     routes: [
       GoRoute(
         path: AppRoutes.dashboard,
@@ -141,6 +149,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.workout,
         name: 'workout',
         builder: (context, state) => const WorkoutCameraScreen(),
+      ),
+      // Phase 57 · path alias for the Phase 55 widget / Live-Activity
+      // deep link `formai://workout/today`. When Flutter's
+      // platform-side routeInformation channel feeds GoRouter directly
+      // (as it does on Android cold-start before our `app_links`
+      // listener has a chance to intercept), the path arrives as
+      // `/workout/today` — unmatched, GoRouter previously rendered its
+      // default error page for ~500 ms. Registering the alias makes it
+      // resolve cleanly on first paint; the DeepLinkService listener
+      // is now belt-and-braces.
+      GoRoute(
+        path: '/workout/today',
+        name: 'workoutToday',
+        redirect: (_, __) => AppRoutes.workout,
       ),
       GoRoute(
         path: AppRoutes.paywall,
@@ -249,6 +271,64 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+/// Phase 57 · neutral splash rendered as the GoRouter `errorBuilder`.
+///
+/// Reached when:
+///   • A deep-link path arrives that doesn't match any registered
+///     route (e.g. a future widget version pushes a path the current
+///     build doesn't yet know about).
+///   • The platform feeds an unmatched URI to Flutter's route
+///     information provider on cold start, before our app_links
+///     listener has had a chance to intercept it.
+///
+/// Self-recovers by deferring a `context.go(dashboard)` until the
+/// next frame so the user never gets stuck on this screen — the
+/// brief paint reads as a launch splash rather than a 404.
+class _DeepLinkSplashScreen extends StatefulWidget {
+  const _DeepLinkSplashScreen();
+
+  @override
+  State<_DeepLinkSplashScreen> createState() => _DeepLinkSplashScreenState();
+}
+
+class _DeepLinkSplashScreenState extends State<_DeepLinkSplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Two frames of buffer — one for layout, one to give the
+    // app_links listener a chance to land its route(s) before we
+    // overrule with a dashboard fallback. If the listener resolved
+    // first the route changes, this widget tears down and the
+    // post-frame callback's `go` becomes a no-op against the active
+    // location. 200 ms is deliberately short so the user never
+    // *waits* on this splash.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+      if (!mounted) return;
+      context.go(AppRoutes.dashboard);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      backgroundColor: Color(0xFF0B0B12),
+      body: Center(
+        child: Text(
+          'FormAI',
+          style: TextStyle(
+            color: Color(0xFF00F0FF),
+            fontSize: 36,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 3,
+            shadows: [Shadow(blurRadius: 24, color: Color(0xFF00F0FF))],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 /// Phase 54 · fallback for `/referral` without `?code=...`. Surfaces a
 /// polite "your link is broken" rather than letting the user land on

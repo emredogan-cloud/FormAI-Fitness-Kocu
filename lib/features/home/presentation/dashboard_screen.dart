@@ -15,6 +15,15 @@ import 'widgets/profile_tab.dart';
 // reads its accent colour from the centralised `BottomNavigationBarTheme`
 // in AppTheme.dark/light, so the file-level constant is dead.
 const int _nutritionTabIndex = 1;
+// Phase 57 · the Gelişim tab is the only context where the badge
+// celebration dialog should pop. Ad-hoc and program-day workouts
+// finish on the /workout route, then surface the SessionCompleteOverlay
+// on top before the user dismisses back to the dashboard. Even after
+// pop, the user might land on the Antrenman tab (index 0) — popping a
+// celebration there feels disconnected from the badge UI which lives
+// inside the Gelişim tab. So we hold the dialog until the user is
+// actually on Gelişim.
+const int _gelisimTabIndex = 2;
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -126,6 +135,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
   Future<void> _maybeCelebrate() async {
     if (!mounted || !_routeIsCurrent || _celebrating) return;
+    // Phase 57 · the PM specifically asked that badge unlocks ONLY
+    // surface on the Gelişim (progress) tab. Holding the celebration
+    // until the user lands there mirrors the rest of the badge UI
+    // (badges grid + AI coach copy) which all live on Gelişim. If the
+    // unlock happened off-tab, it stays in `unlockedBadgesProvider \
+    // celebratedBadgesProvider` — the diff that drives this method
+    // re-runs the moment the user switches to Gelişim (see
+    // `_onTabChanged`).
+    if (_index != _gelisimTabIndex) return;
     final unlocked = ref.read(unlockedBadgesProvider);
     final celebrated = ref.read(celebratedBadgesProvider) ?? unlocked;
     final pending = unlocked.difference(celebrated).toList();
@@ -165,6 +183,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     // it fires exactly once per install.
     if (newIndex == _nutritionTabIndex && previous != _nutritionTabIndex) {
       _maybePromptNutritionSheet();
+    }
+    // Phase 57 · drain pending badge celebrations the moment the user
+    // switches into Gelişim. `_maybeCelebrate` is a no-op when the
+    // unlock set hasn't grown since the last seed, so the cost is one
+    // set-difference per tab change — cheap and correct.
+    if (newIndex == _gelisimTabIndex && previous != _gelisimTabIndex) {
+      _maybeCelebrate();
     }
   }
 

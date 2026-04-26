@@ -11,6 +11,17 @@
          reminders after a reboot so users don't silently lose them. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Phase 57 · `flutter_local_notifications` schedules through
+         AlarmManager; on Android 12+ AlarmManager refuses exact alarms
+         unless the app declares one of these permissions. We use
+         `USE_EXACT_ALARM` (auto-granted, intended for alarm/timer/
+         reminder apps where firing on time is essential to UX) plus
+         `SCHEDULE_EXACT_ALARM` as a belt-and-braces fallback for
+         platform variants that gate on the latter. Without this, the
+         daily reminder fell into doze deferral and could be delayed
+         hours or skipped entirely — exactly the bug the PM hit. -->
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
     <application
         android:label="FormAI"
@@ -82,6 +93,27 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/form_ai_widget_info" />
+        </receiver>
+        <!-- Phase 57 · receivers + service required by
+             flutter_local_notifications. The plugin docs spell these
+             out as mandatory for scheduled alarms to fire after device
+             reboot or after the OS reclaims AlarmManager state. The
+             ScheduledNotificationReceiver actually delivers the
+             notification when the alarm fires; without it the alarm
+             goes off but the system has nothing to do, hence the
+             "scheduled but never fires" symptom the PM saw. -->
+        <receiver
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"
+            android:exported="false" />
+        <receiver
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
         </receiver>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

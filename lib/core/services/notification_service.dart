@@ -1,7 +1,11 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
+
+import '../utils/app_logger.dart';
 
 /// Thin wrapper around flutter_local_notifications for the daily FOMO
 /// reminder. Singleton so the plugin instance (and init flag) survives
@@ -29,14 +33,40 @@ class NotificationService {
   static const String _streakChannelName = 'Seri Koruma';
   static const String _streakChannelDesc =
       'Antrenman serini kaybetmek üzereyken bilgilendirici uyarı.';
-  static const String _title = 'Antrenman Vakti! 🔥';
-  static const String _body =
-      'Günlük meydan okumanı tamamlamak için harika bir zaman. '
-      'Serini bozma, hedefine bir adım daha yaklaş!';
-  static const String _streakWarningTitle = 'Seriyi Kaybetme! ⚡';
-  static const String _streakWarningBody =
-      'Hey, seriyi bozmak üzereyiz! 10 dakikalık bir antrenmanla '
-      'momentumu koru.';
+  // Phase 57 · interactive reminder rotation. Picking randomly from a
+  // pool of 4 variants per scheduling call keeps the daily ping from
+  // feeling robotic, mirroring the "your friend is texting you" tone
+  // that performs best in fitness app retention studies. The streak
+  // pool reuses the urgency framing — those notifications fire less
+  // often (only on near-loss) so the variety matters less.
+  static const List<({String title, String body})> _dailyVariants = [
+    (
+      title: 'Bugünün antrenmanı seni bekliyor! 💪',
+      body: 'Sadece 10–15 dakika. Seriyi koruyalım, bir adım daha at.',
+    ),
+    (
+      title: 'Hadi başlayalım! 🔥',
+      body: 'Tek bir set bile bugünü "yapıldı" listesine taşır.',
+    ),
+    (
+      title: 'Şu tatlıyı denemelisin 🥗',
+      body: 'Yüksek proteinli yeni tarifler seni bekliyor — açıver bak.',
+    ),
+    (
+      title: 'Bir hedefin var, unutma 🎯',
+      body: 'Bugün antrenmanı geçersen yarın iki gün geride kalırsın.',
+    ),
+  ];
+  static const List<({String title, String body})> _streakVariants = [
+    (
+      title: 'Seriyi kaybetmek üzeresin! ⚡',
+      body: '48 saat oldu. 10 dakikalık bir oturum momentumu kurtarır.',
+    ),
+    (
+      title: 'Geri dönüş zamanı 🔁',
+      body: 'Serini bozmadan bugün bir set yap; yarın daha da kolaylaşır.',
+    ),
+  ];
 
   Future<void> init() async {
     if (_initialized) return;
@@ -70,6 +100,15 @@ class NotificationService {
   /// POST_NOTIFICATIONS prompt; on iOS it triggers the UN system dialog.
   /// Returns true when the user grants (or when the platform doesn't need
   /// an explicit grant).
+  ///
+  /// Phase 57 · also nudges the OS to allow exact alarms on Android
+  /// 12+. On Android 13+ the `USE_EXACT_ALARM` permission we declare
+  /// in the manifest is auto-granted; on Android 12 the user has to
+  /// flip a setting (`SCHEDULE_EXACT_ALARM`). The plugin returns false
+  /// when the setting is off — we don't block on it because
+  /// `inexactAllowWhileIdle` still works as a fallback, but we log so
+  /// the breadcrumb trail shows a "scheduled inexact" state during
+  /// triage.
   Future<bool> requestPermissions() async {
     await init();
     final android = _plugin.resolvePlatformSpecificImplementation<
@@ -80,6 +119,21 @@ class NotificationService {
     var granted = true;
     if (android != null) {
       granted = (await android.requestNotificationsPermission()) ?? true;
+      try {
+        final exactOk = (await android.requestExactAlarmsPermission()) ?? false;
+        AppLogger.info(
+          'Exact-alarm permission: $exactOk',
+          category: 'notifications',
+        );
+      } catch (e) {
+        // Older Android versions don't expose this surface; safe to
+        // ignore. We only need it on 12+ and the manifest declaration
+        // already covers 13+ auto-grant.
+        AppLogger.info(
+          'requestExactAlarmsPermission unavailable: $e',
+          category: 'notifications',
+        );
+      }
     }
     if (ios != null) {
       granted = (await ios.requestPermissions(
@@ -100,10 +154,19 @@ class NotificationService {
     await _plugin.cancel(id: _dailyReminderId);
 
     final scheduled = _nextInstanceOf(time);
+    final variant = _pickVariant(_dailyVariants);
+    // Phase 57 · `exactAllowWhileIdle` (was `inexactAllowWhileIdle`).
+    // The inexact mode is what doze defers; on Android 12+ the
+    // `USE_EXACT_ALARM` manifest entry auto-grants the system
+    // permission this requires, so a user who picks "remind me at
+    // 19:00" actually gets pinged at 19:00 instead of "sometime
+    // between 19:00 and 21:00 if the device wakes up." `Exact` was
+    // used here originally but threw on devices with the permission
+    // ungranted; the *AllowWhileIdle* variant gracefully degrades.
     await _plugin.zonedSchedule(
       id: _dailyReminderId,
-      title: _title,
-      body: _body,
+      title: variant.title,
+      body: variant.body,
       scheduledDate: scheduled,
       notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
@@ -115,8 +178,13 @@ class NotificationService {
         ),
         iOS: DarwinNotificationDetails(),
       ),
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
+    );
+    AppLogger.info(
+      'Scheduled daily reminder',
+      category: 'notifications',
+      data: {'at': scheduled.toIso8601String(), 'title': variant.title},
     );
   }
 
@@ -151,10 +219,11 @@ class NotificationService {
     await _plugin.cancel(id: _streakWarningId);
 
     final scheduled = tz.TZDateTime.now(tz.local).add(delay);
+    final variant = _pickVariant(_streakVariants);
     await _plugin.zonedSchedule(
       id: _streakWarningId,
-      title: _streakWarningTitle,
-      body: _streakWarningBody,
+      title: variant.title,
+      body: variant.body,
       scheduledDate: scheduled,
       notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
@@ -166,8 +235,21 @@ class NotificationService {
         ),
         iOS: DarwinNotificationDetails(),
       ),
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      // Phase 57 · upgraded to `exactAllowWhileIdle` (see comment in
+      // `scheduleDailyReminder`). The streak warning is the highest-
+      // signal retention nudge we have — being a few hours late
+      // defeats the purpose.
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
+  }
+
+  /// Phase 57 · cheap pseudo-random variant picker. `Random()` (not
+  /// `Random.secure`) is fine here — predictability isn't a concern,
+  /// we just want different copy on each scheduling call.
+  ({String title, String body}) _pickVariant(
+    List<({String title, String body})> pool,
+  ) {
+    return pool[math.Random().nextInt(pool.length)];
   }
 
   /// Drops any pending streak warning. Called from `resetProgress` so

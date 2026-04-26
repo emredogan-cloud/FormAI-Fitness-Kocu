@@ -16,6 +16,7 @@ class Recipe {
     this.imageUrl,
     this.instructions,
     this.tags = const [],
+    this.ingredients = const [],
   });
 
   /// Primary key. Stored as [String] regardless of whether the column is
@@ -53,6 +54,14 @@ class Recipe {
   /// overrides, fall back to macro-based heuristics".
   final List<String> tags;
 
+  /// Phase 57 · structured ingredients list. Optional Postgres
+  /// `text[]` column; when present the share / shopping-list builders
+  /// prefer it over heuristic extraction from `instructions`.
+  /// Mirrors the [_parseTags] tolerance for both List and Postgres
+  /// array-literal payloads so a backend that hasn't migrated to a
+  /// proper text[] yet can still ship rows.
+  final List<String> ingredients;
+
   /// Tolerant parser: coerces numeric fields from either `int` or `num`
   /// (Supabase sometimes returns `double` for integer columns depending
   /// on the driver path), and falls back to 0 for any missing numeric
@@ -81,6 +90,10 @@ class Recipe {
       ),
       instructions: json['instructions'] as String?,
       tags: _parseTags(json['tags']),
+      // Phase 57 · `_parseTags` does the right thing for any
+      // PG text[] column. Reuses the same tolerant parser instead of
+      // duplicating the array-literal logic.
+      ingredients: _parseTags(json['ingredients']),
     );
   }
 

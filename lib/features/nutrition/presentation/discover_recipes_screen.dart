@@ -157,21 +157,20 @@ class _DiscoverRecipesScreenState extends ConsumerState<DiscoverRecipesScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
                   sliver: SliverGrid.builder(
                     itemCount: filtered.length,
-                    // Phase 48 · `mainAxisExtent` instead of `childAspectRatio`.
-                    // The aspect-ratio formulation made each card's height a
-                    // function of the (text-scaled) device width, so on a
-                    // 360-px screen the body section (title + tags + macros)
-                    // got ~105 px and threw a 6-12 px vertical overflow.
-                    // Pinning the height to 252 px gives the body 130 px
-                    // regardless of width, which fits 2-line title +
-                    // single-line tag strip + macro row at all OS-level
-                    // text scales up to ~1.2.
+                    // Phase 48 / 57 · cell height is fixed via
+                    // `mainAxisExtent` so every tile lines up regardless
+                    // of title length. Phase 57 bumped 252 → 276 because
+                    // text scale 1.2+ was nudging the title's second line
+                    // into the tags row, producing the "uneven heights"
+                    // the PM screenshotted. The card body now uses
+                    // sized slots (see `_DiscoverRecipeCard`) so
+                    // shorter titles don't leave bigger gaps either.
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       mainAxisSpacing: 12,
                       crossAxisSpacing: 12,
-                      mainAxisExtent: 252,
+                      mainAxisExtent: 276,
                     ),
                     itemBuilder: (context, index) =>
                         _DiscoverRecipeCard(recipe: filtered[index]),
@@ -368,11 +367,20 @@ class _DiscoverRecipeCard extends StatelessWidget {
                 flex: 2,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+                  // Phase 57 · sized title slot + start-aligned column.
+                  // Previous spaceBetween + Flexible(title) made
+                  // 1-line-title cards visually different from 2-line
+                  // ones because the absorbed slack moved between the
+                  // tags and macros. Pinning the title to a fixed 38 dp
+                  // box (≈ 2 lines at fontSize 13 / line-height 1.2)
+                  // guarantees the tags row always sits at the same Y
+                  // offset across cards. The fixed gaps below absorb
+                  // text-scale variance without overflowing the cell.
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Flexible(
+                      SizedBox(
+                        height: 38,
                         child: Text(
                           recipe.title,
                           maxLines: 2,
@@ -385,11 +393,13 @@ class _DiscoverRecipeCard extends StatelessWidget {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 6),
                       RecipeTagsStrip(
                         recipe: recipe,
                         maxTags: 2,
                         compact: true,
                       ),
+                      const Spacer(),
                       Row(
                         children: [
                           const Icon(

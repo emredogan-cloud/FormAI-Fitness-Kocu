@@ -176,6 +176,13 @@ class ShareService {
   /// chat distribution (WhatsApp / Telegram / iMessage) — no PNG to
   /// preview, just a punchy macro callout that doubles as a referral
   /// hook because every share carries the user's deep-link.
+  ///
+  /// Phase 57 · the share payload now carries the full recipe so the
+  /// recipient can cook it without opening the app: macro line,
+  /// Malzemeler block (structured `recipe.ingredients` when present;
+  /// otherwise heuristic extraction from `instructions`) and the
+  /// Yapılışı block. The referral CTA stays at the tail so the link
+  /// remains the prominent call-to-action.
   Future<void> shareRecipe({
     required Recipe recipe,
     String? userCode,
@@ -187,12 +194,17 @@ class ShareService {
           ? ''
           : 'Sen de uygulamayı indir, $userCode kodumla ilk ayını ücretsiz '
               'Pro yap: formai://r/$userCode';
-      final lines = [
+      final ingredients = _ingredientsFor(recipe);
+      final method = _methodFor(recipe);
+      final sections = <String>[
         "FormAI'da harika bir tarif buldum: ${recipe.title}!",
         'Sadece ${recipe.calories} kcal ve ${recipe.protein}g protein içeriyor.',
+        if (ingredients.isNotEmpty)
+          'Malzemeler:\n${ingredients.map((e) => '- $e').join('\n')}',
+        if (method.isNotEmpty) 'Yapılışı:\n$method',
         if (referralLine.isNotEmpty) referralLine,
       ];
-      final text = lines.join('\n\n') + _brandHashtagSuffix;
+      final text = sections.join('\n\n') + _brandHashtagSuffix;
       final result = await SharePlus.instance.share(
         ShareParams(
           text: text,
@@ -210,6 +222,64 @@ class ShareService {
         category: 'share',
       );
     }
+  }
+
+  /// Phase 57 · shared ingredient extractor. Mirrors
+  /// `FavoritesScreen._ingredientsFor` so the share payload and the
+  /// shopping-list export agree on what counts as an ingredient line.
+  /// Kept inline rather than extracted to a util because the two call
+  /// sites are tiny — a third caller is the trigger to refactor.
+  List<String> _ingredientsFor(Recipe recipe) {
+    if (recipe.ingredients.isNotEmpty) return recipe.ingredients;
+    final raw = (recipe.instructions ?? '').trim();
+    if (raw.isEmpty) return const [];
+    final lines = raw.split(RegExp(r'\r?\n'));
+    final extracted = <String>[];
+    var inBlock = false;
+    for (final line in lines) {
+      final trimmed = line.trim();
+      if (trimmed.isEmpty) {
+        if (inBlock) break;
+        continue;
+      }
+      if (RegExp(r'^malzemeler\s*:?\s*$', caseSensitive: false)
+          .hasMatch(trimmed)) {
+        inBlock = true;
+        continue;
+      }
+      if (RegExp(r'^(yapılışı|hazırlanışı|tarif)\s*:?\s*$',
+              caseSensitive: false)
+          .hasMatch(trimmed)) {
+        if (inBlock) break;
+      }
+      if (inBlock) {
+        extracted.add(_stripBullet(trimmed));
+      }
+    }
+    return extracted;
+  }
+
+  /// Phase 57 · returns the cooking-method block from `instructions`.
+  /// If the instructions text has a "Yapılışı:" / "Hazırlanışı:"
+  /// header, returns everything after it; otherwise returns the whole
+  /// instructions string (capped to 1000 chars so a runaway long
+  /// recipe doesn't flood the recipient's chat).
+  String _methodFor(Recipe recipe) {
+    final raw = (recipe.instructions ?? '').trim();
+    if (raw.isEmpty) return '';
+    final headerMatch = RegExp(
+      r'^\s*(?:yapılışı|hazırlanışı|tarif)\s*:?\s*$',
+      caseSensitive: false,
+      multiLine: true,
+    ).firstMatch(raw);
+    final body =
+        headerMatch == null ? raw : raw.substring(headerMatch.end).trim();
+    if (body.length <= 1000) return body;
+    return '${body.substring(0, 1000).trimRight()}…';
+  }
+
+  String _stripBullet(String line) {
+    return line.replaceFirst(RegExp(r'^[-•*•]\s*'), '').trim();
   }
 
   /// Mounts [widget] in a positioned-off-screen overlay layer, pumps a

@@ -65,29 +65,39 @@ class DeepLinkService {
   /// known shapes are accepted; unknown paths fall through to the
   /// dashboard so a malformed link doesn't strand the user on a
   /// blank screen.
+  ///
+  /// Phase 57 · the previous implementation read everything from
+  /// `uri.pathSegments`, but for a custom-scheme URL like
+  /// `formai://r/ABCDEF` Dart's `Uri` parses `r` as the *host* (the
+  /// authority component) and `pathSegments` as `["ABCDEF"]` — so the
+  /// `segments.first == 'r'` branch never matched, the referral and
+  /// `formai://workout/today` deep links both fell through to the
+  /// dashboard, and the user briefly saw GoRouter's default
+  /// "Page Not Found" while the router rebuilt. Normalising both
+  /// schemes (custom scheme + HTTPS App Link) to a single
+  /// `[host, ...pathSegments]` list fixes the dispatch.
   void _route(Uri uri, {required String source}) {
     AppLogger.info(
       'Deep link received',
       category: 'deeplink',
       data: {'uri': uri.toString(), 'source': source},
     );
-    final segments = uri.pathSegments;
+    final segments = _normalisedSegments(uri);
     if (segments.isEmpty) {
       _router.go(AppRoutes.dashboard);
       return;
     }
-    // formai://r/<code>  → /referral?code=<code>
-    // https://formai.app/r/<code>  → /referral?code=<code>
+    // r/<code>  →  /referral?code=<code>
     if (segments.first == 'r' && segments.length >= 2) {
       final code = segments[1].toUpperCase();
       _router.go('${AppRoutes.referralLanding}?code=$code');
       return;
     }
-    // Phase 55 · formai://workout/today → live workout camera screen.
-    // Triggered from the home-screen widget tap and the Live Activity
-    // tap. The router's auth + first-time gates still apply, so a
-    // signed-out user clicking the widget lands on /auth and gets
-    // bounced through onboarding before the camera surface opens.
+    // workout/today  →  live workout camera screen. Triggered from the
+    // home-screen widget tap and the Live Activity tap. The router's
+    // auth + first-time gates still apply, so a signed-out user
+    // clicking the widget lands on /auth and gets bounced through
+    // onboarding before the camera surface opens.
     if (segments.first == 'workout' &&
         segments.length >= 2 &&
         segments[1] == 'today') {
@@ -95,6 +105,31 @@ class DeepLinkService {
       return;
     }
     _router.go(AppRoutes.dashboard);
+  }
+
+  /// Phase 57 · unify segment extraction across the two scheme shapes.
+  ///
+  /// • Custom scheme `formai://r/CODE` — Dart parses `r` as the
+  ///   `host` and `["CODE"]` as `pathSegments`. We splice the host in
+  ///   so callers see `["r", "CODE"]`.
+  /// • HTTPS App Link `https://formai.app/r/CODE` — host is the
+  ///   marketing domain (irrelevant for routing); `pathSegments` is
+  ///   already `["r", "CODE"]` so we use it as-is.
+  ///
+  /// Trailing-slash variants like `formai://workout/today/` produce
+  /// an empty trailing segment; we strip those so dispatch logic can
+  /// rely on `segments.length >= 2` matching the intuitive count.
+  List<String> _normalisedSegments(Uri uri) {
+    final segments = <String>[];
+    final scheme = uri.scheme.toLowerCase();
+    if (scheme != 'https' && scheme != 'http' && uri.host.isNotEmpty) {
+      segments.add(uri.host);
+    }
+    segments.addAll(uri.pathSegments);
+    while (segments.isNotEmpty && segments.last.isEmpty) {
+      segments.removeLast();
+    }
+    return segments;
   }
 }
 
