@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Phase 55 · Widget Extension entitlements.
+
+  Both the Runner target and this Widget Extension must enable the
+  same `App Groups` capability with this exact identifier so the
+  Flutter `home_widget` and `live_activities` plugins can read/write
+  shared UserDefaults / Document Group files.
+
+  Path of least surprise: in Xcode, select the FormAIWidget target →
+  Signing & Capabilities → "+" → "App Groups" → check
+  group.app.formai.shared. Repeat for the Runner target.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>com.apple.security.application-groups</key>
+    <array>
+        <string>group.app.formai.shared</string>
+    </array>
+</dict>
+</plist>

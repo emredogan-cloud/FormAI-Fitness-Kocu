@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Phase 55 · Android home-screen widget layout.
+  Mirrors the medium iOS variant (4x2 footprint) — title row, progress
+  bar with % readout, streak chip, completion fraction. Painted via
+  `RemoteViews` from FormAIHomeWidgetProvider so every text view ID
+  here must match the setTextViewText calls in the provider.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="14dp"
+    android:background="@drawable/form_ai_widget_background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="FormAI"
+            android:textColor="#B0A8D9"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.2"/>
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+
+        <TextView
+            android:id="@+id/widget_streak"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🔥 0"
+            android:textColor="#FFFFFF"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:background="@drawable/form_ai_widget_pill"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="2dp"/>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/widget_task_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:text="Bugün · Karın Yakıcı"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:singleLine="true"/>
+
+    <TextView
+        android:id="@+id/widget_subtitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:text="5 egzersiz · 18 dk"
+        android:textColor="#B0A8D9"
+        android:textSize="12sp"
+        android:singleLine="true"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ProgressBar
+            android:id="@+id/widget_progress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="6dp"
+            android:max="100"
+            android:progress="0"
+            android:progressTint="#8E5BFF"
+            android:progressBackgroundTint="#23203A"/>
+
+        <TextView
+            android:id="@+id/widget_percent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="%0"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:textStyle="bold"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/widget_completion"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0 / 30"
+            android:textColor="#B0A8D9"
+            android:textSize="11sp"
+            android:textStyle="bold"/>
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Başlat"
+            android:textColor="#000000"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:background="@drawable/form_ai_widget_cta"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="4dp"/>
+    </LinearLayout>
+</LinearLayout>

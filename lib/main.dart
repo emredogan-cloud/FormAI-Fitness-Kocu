@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,6 +13,8 @@ import 'core/routing/app_router.dart';
 import 'core/services/analytics_service.dart';
 import 'core/services/app_preferences.dart';
 import 'core/services/deep_link_service.dart';
+import 'core/services/live_activity_service.dart';
+import 'core/services/widget_sync_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_mode_provider.dart';
 import 'core/utils/app_logger.dart';
@@ -128,6 +132,15 @@ class _BootGateState extends State<_BootGate> {
       // `AuthController.signIn{Google,Apple}()` (post-sign-in), so the
       // SDK only spins up for users who are actually heading toward
       // the paywall surface.
+
+      // Phase 55 · widget bridge. Initialises the App Group on iOS so
+      // a follow-up `HomeWidget.saveWidgetData` lands in the right
+      // suite. Both calls fire-and-forget — a missing entitlement
+      // (e.g. the user is running an old build before the widget
+      // extension is added in Xcode) just means the widget won't
+      // refresh until the configuration is in place.
+      unawaited(WidgetSyncService.instance.init());
+      unawaited(WorkoutLiveActivityService.instance.init());
       return prefs;
     } catch (e, st) {
       AppLogger.error(
@@ -317,6 +330,12 @@ class _FormAIAppState extends ConsumerState<FormAIApp> {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 55 · materialise the widget-sync listener so it begins
+    // pushing snapshots to the home-screen widget the moment
+    // workoutSessionProvider settles. `ref.watch` (vs read) ties the
+    // listener's lifetime to this widget — when the app shell
+    // dismounts the listener tears down with it.
+    ref.watch(widgetSyncListenerProvider);
     final router = ref.watch(appRouterProvider);
     // Phase 53 · the user's persisted choice flows through
     // `themeModeProvider`. ThemeMode.system (the default for fresh

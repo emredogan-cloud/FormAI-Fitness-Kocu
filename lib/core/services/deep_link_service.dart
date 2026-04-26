@@ -83,6 +83,17 @@ class DeepLinkService {
       _router.go('${AppRoutes.referralLanding}?code=$code');
       return;
     }
+    // Phase 55 · formai://workout/today → live workout camera screen.
+    // Triggered from the home-screen widget tap and the Live Activity
+    // tap. The router's auth + first-time gates still apply, so a
+    // signed-out user clicking the widget lands on /auth and gets
+    // bounced through onboarding before the camera surface opens.
+    if (segments.first == 'workout' &&
+        segments.length >= 2 &&
+        segments[1] == 'today') {
+      _router.go(AppRoutes.workout);
+      return;
+    }
     _router.go(AppRoutes.dashboard);
   }
 }

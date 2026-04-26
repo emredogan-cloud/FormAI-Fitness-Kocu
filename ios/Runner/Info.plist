@@ -70,5 +70,16 @@
 			</array>
 		</dict>
 	</array>
+	<!-- Phase 55 · iOS 16.1+ Live Activities flag. Without this key the
+	     `live_activities` plugin's `init` succeeds but `createActivity`
+	     no-ops silently. Both Runner and FormAIWidget targets need it. -->
+	<key>NSSupportsLiveActivities</key>
+	<true/>
+	<!-- Phase 55 · allow updates while the app is in the background.
+	     Required for `WorkoutLiveActivityService.updateWorkout` calls
+	     fired from the workout-camera background isolate as exercises
+	     transition. -->
+	<key>NSSupportsLiveActivitiesFrequentUpdates</key>
+	<true/>
 </dict>
 </plist>

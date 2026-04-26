@@ -66,6 +66,23 @@
                 <data android:scheme="https" android:host="formai.app"/>
             </intent-filter>
         </activity>
+        <!-- Phase 55 · home-screen widget receiver. The provider class
+             reads SharedPreferences keys written by the Flutter
+             `home_widget` package and renders them via RemoteViews.
+             `updatePeriodMillis = 0` in widget-info means the OS never
+             wakes us on a schedule — refresh is push-driven by the
+             app-side `WidgetSyncService.push(...)`. -->
+        <receiver
+            android:name=".widget.FormAIHomeWidgetProvider"
+            android:exported="true"
+            android:label="FormAI">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/form_ai_widget_info" />
+        </receiver>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

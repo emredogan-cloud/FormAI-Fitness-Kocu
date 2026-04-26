@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Phase 55 · widget chrome strings. Kept localisable so a future
+         Turkish/English split can override them without touching the
+         widget XML. -->
+    <string name="form_ai_widget_description">FormAI · Bugünkü antrenman ve serini takip et</string>
+</resources>

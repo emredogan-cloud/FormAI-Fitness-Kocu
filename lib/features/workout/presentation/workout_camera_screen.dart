@@ -10,6 +10,7 @@ import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
+import '../../../core/services/live_activity_service.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/audio_feedback.dart';
@@ -591,6 +592,57 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         AppHaptics.success();
       }
 
+      // Phase 55 · Live Activity sync. Mirrors the same transitions
+      // the voice coach reacts to. Created on first non-null exercise
+      // (i.e. as soon as the session lands), updated on every set /
+      // exercise / rest flip, ended on completion. We don't gate on
+      // `Platform.isIOS` here — the service no-ops on Android, which
+      // keeps this branch readable.
+      if (exercise != null) {
+        final dayNumber = session.activeDay?.dayNumber ?? 0;
+        final totalExercises = session.activeDay?.exercises.length ?? 0;
+        final totalSets = exercise.sets;
+        final isFirstActivityFrame = prevSession?.activeExercise == null;
+        Future<void> activitySync() async {
+          if (sessionJustCompleted) {
+            await WorkoutLiveActivityService.instance.endWorkout();
+          } else if (isFirstActivityFrame) {
+            await WorkoutLiveActivityService.instance.startWorkout(
+              dayNumber: dayNumber,
+              exerciseName: exercise.name,
+              setIndex: set,
+              totalSets: totalSets,
+              currentExerciseIndex: session.activeExerciseIndex,
+              totalExercises: totalExercises,
+              elapsed: Duration.zero,
+              isResting: resting,
+              restSecondsRemaining: session.restSecondsRemaining,
+            );
+          } else if (exerciseChanged ||
+              setChanged ||
+              justStartedRest ||
+              justFinishedRest ||
+              justStartedPrep ||
+              justFinishedPrep) {
+            await WorkoutLiveActivityService.instance.updateWorkout(
+              dayNumber: dayNumber,
+              exerciseName: exercise.name,
+              setIndex: set,
+              totalSets: totalSets,
+              currentExerciseIndex: session.activeExerciseIndex,
+              totalExercises: totalExercises,
+              elapsed: Duration.zero,
+              isResting: resting,
+              restSecondsRemaining: session.restSecondsRemaining,
+            );
+          }
+        }
+
+        unawaited(activitySync());
+      } else if (sessionJustCompleted) {
+        unawaited(WorkoutLiveActivityService.instance.endWorkout());
+      }
+
       // Voice coach lifecycle announcements. Priority:
       //   session complete > rest entry > prep entry.
       // The prep cue replaces the old "exercise start" cue because every
@@ -908,6 +960,11 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
   }
 
   void _exit(BuildContext context) {
+    // Phase 55 · ensure the Live Activity isn't orphaned on the Lock
+    // Screen when the user backs out before the natural completion
+    // path runs. `endWorkout` is idempotent so a duplicate call from
+    // the completion listener is harmless.
+    unawaited(WorkoutLiveActivityService.instance.endWorkout());
     if (context.canPop()) {
       context.pop();
     } else {

@@ -90,6 +90,18 @@ dependencies:
   share_plus: ^13.1.0
   path_provider: ^2.1.5
   app_links: ^6.3.2
+  # Phase 55 · home-screen widget bridge. Pushes (today_task_name,
+  # progress_percent, streak_count) into a shared `UserDefaults` group
+  # on iOS and `SharedPreferences` on Android, then rings the platform
+  # widget-update hook so WidgetKit / AppWidgetProvider rebuilds the
+  # home-screen tile. Native Swift / Kotlin sources live under
+  # ios/FormAIWidget/ and android/app/src/main/kotlin/.../widget/.
+  home_widget: ^0.7.0
+  # Phase 55 · iOS Live Activities + Dynamic Island. The Flutter side
+  # only owns lifecycle (start / update / end); the SwiftUI presentation
+  # for compactLeading / compactTrailing / minimal / expanded ships as
+  # a native Widget Extension under ios/FormAILiveActivity/.
+  live_activities: ^2.4.1
 
 dev_dependencies:
   flutter_test:

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Phase 55 · widget metadata.
+  • minWidth/minHeight match the medium iOS variant (4x2 grid → 250dp x 110dp).
+  • previewLayout shows the actual layout in the picker on Android 12+.
+  • initialLayout is loaded the moment the widget is dropped on the
+    home screen, even before onUpdate runs.
+  • updatePeriodMillis = 0 — we never want the OS to wake the widget
+    on its own; refresh is driven by the Flutter side via
+    `home_widget`'s explicit update intent.
+-->
+<appwidget-provider
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="250dp"
+    android:minHeight="110dp"
+    android:targetCellWidth="4"
+    android:targetCellHeight="2"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="0"
+    android:initialLayout="@layout/form_ai_widget"
+    android:previewLayout="@layout/form_ai_widget"
+    android:previewImage="@drawable/form_ai_widget_preview"
+    android:widgetCategory="home_screen"
+    android:description="@string/form_ai_widget_description"/>
