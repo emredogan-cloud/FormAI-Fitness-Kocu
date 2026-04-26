@@ -50,6 +50,12 @@ class AppPreferences {
   // streak (live = 0) but used to have one (max > 0) sees the
   // "comeback" greeting instead of the cold-start default.
   static const String _maxStreakKey = 'sixpack.max_streak';
+  // Phase 58 · ISO-8601 timestamp of the most recent workout
+  // completion. The smart notification scheduler reads this to decide
+  // whether the user has already done today's workout, which then
+  // picks the appropriate reminder body (Condition A / B / C). Stored
+  // as ISO-8601 so the date check is timezone-aware.
+  static const String _lastWorkoutAtKey = 'sixpack.last_workout_at';
 
   bool get isFirstTime => _prefs.getBool(_firstTimeKey) ?? true;
 
@@ -128,5 +134,34 @@ class AppPreferences {
   Future<void> bumpMaxStreakIfHigher(int candidate) async {
     if (candidate <= maxStreak) return;
     await _prefs.setInt(_maxStreakKey, candidate);
+  }
+
+  /// Phase 58 · the wall-clock moment the user last completed a
+  /// workout. Returns null on a fresh install (no prior completion)
+  /// so callers can disambiguate "no workouts yet" from "haven't
+  /// worked out today".
+  DateTime? get lastWorkoutAt {
+    final raw = _prefs.getString(_lastWorkoutAtKey);
+    if (raw == null) return null;
+    return DateTime.tryParse(raw);
+  }
+
+  Future<void> setLastWorkoutAt(DateTime when) async {
+    await _prefs.setString(_lastWorkoutAtKey, when.toIso8601String());
+  }
+
+  /// Phase 58 · derived: did the user already finish a workout today?
+  /// "Today" is the device's local calendar day, which matches what
+  /// the rest of the app displays. Uses date-only comparison (not
+  /// duration) because a user who trained at 23:50 yesterday should
+  /// still see the "Antrenman Vakti" prompt at 09:00 today, not
+  /// "Yakıt Gerekli".
+  bool get isWorkoutDoneToday {
+    final last = lastWorkoutAt;
+    if (last == null) return false;
+    final now = DateTime.now();
+    return last.year == now.year &&
+        last.month == now.month &&
+        last.day == now.day;
   }
 }

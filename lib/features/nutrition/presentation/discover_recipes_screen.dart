@@ -157,20 +157,27 @@ class _DiscoverRecipesScreenState extends ConsumerState<DiscoverRecipesScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
                   sliver: SliverGrid.builder(
                     itemCount: filtered.length,
-                    // Phase 48 / 57 · cell height is fixed via
-                    // `mainAxisExtent` so every tile lines up regardless
-                    // of title length. Phase 57 bumped 252 → 276 because
-                    // text scale 1.2+ was nudging the title's second line
-                    // into the tags row, producing the "uneven heights"
-                    // the PM screenshotted. The card body now uses
-                    // sized slots (see `_DiscoverRecipeCard`) so
-                    // shorter titles don't leave bigger gaps either.
+                    // Phase 58 · `mainAxisExtent` (fixed pixel height)
+                    // was still throwing "Bottom Overflowed" on devices
+                    // with very long titles + tag chips at text scale
+                    // 1.3+, because the body section was forced into
+                    // 110 dp and the chip strip alone needed 30+. The
+                    // PM-spec'd refactor below moves to
+                    // `childAspectRatio` (cell flexes with screen
+                    // width), pins the image with `AspectRatio(16/9)`
+                    // for a predictable thumb height, and lets the body
+                    // grow into whatever's left via `Expanded`. Title
+                    // is enforced to max 2 lines + ellipsis at the
+                    // widget level so a single 60-char recipe name can
+                    // never overshoot. 0.72 cell ratio gives ~129 dp
+                    // body on a 360 dp screen — plenty for 2-line
+                    // title + tags + macro row even at 1.3 text scale.
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       mainAxisSpacing: 12,
                       crossAxisSpacing: 12,
-                      mainAxisExtent: 276,
+                      childAspectRatio: 0.72,
                     ),
                     itemBuilder: (context, index) =>
                         _DiscoverRecipeCard(recipe: filtered[index]),
@@ -349,48 +356,42 @@ class _DiscoverRecipeCard extends StatelessWidget {
               color: isDark ? Colors.white12 : scheme.outlineVariant,
             ),
           ),
-          // Phase 48 · `Expanded` flex split instead of `AspectRatio` so
-          // the image's height is driven by the cell height (mainAxisExtent
-          // 252) rather than the cell width. The previous AspectRatio(1.3)
-          // grew the image to ~290 px on wide-tablet test viewports and
-          // overflowed the body section by ~40 px. With a 3:2 flex the
-          // image always gets ~60% of the cell and the body the remaining
-          // ~40%, regardless of how wide each column is.
+          // Phase 58 · the image is now pinned by `AspectRatio(16/9)`
+          // — a predictable height that depends only on the cell width,
+          // not on the parent's flex math. The body sits inside an
+          // `Expanded` so it gets exactly the leftover space and can
+          // never push past the cell boundary. With `childAspectRatio`
+          // 0.72 on a 360 dp screen this yields ~88 dp image + ~129 dp
+          // body, which fits a 2-line title + tag strip + macro row
+          // even at 1.3 OS-level text scale.
+          //
+          // The body column starts content from the top
+          // (`MainAxisSize.max` + default start alignment) and uses a
+          // `Spacer` to pin the macro row to the bottom; this keeps
+          // the visual rhythm consistent across cards regardless of
+          // whether a title takes one line or two.
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                flex: 3,
+              AspectRatio(
+                aspectRatio: 16 / 9,
                 child: _Thumb(imageUrl: recipe.imageUrl),
               ),
               Expanded(
-                flex: 2,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
-                  // Phase 57 · sized title slot + start-aligned column.
-                  // Previous spaceBetween + Flexible(title) made
-                  // 1-line-title cards visually different from 2-line
-                  // ones because the absorbed slack moved between the
-                  // tags and macros. Pinning the title to a fixed 38 dp
-                  // box (≈ 2 lines at fontSize 13 / line-height 1.2)
-                  // guarantees the tags row always sits at the same Y
-                  // offset across cards. The fixed gaps below absorb
-                  // text-scale variance without overflowing the cell.
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(
-                        height: 38,
-                        child: Text(
-                          recipe.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: scheme.onSurface,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w900,
-                            height: 1.2,
-                          ),
+                      Text(
+                        recipe.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: scheme.onSurface,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                          height: 1.2,
                         ),
                       ),
                       const SizedBox(height: 6),

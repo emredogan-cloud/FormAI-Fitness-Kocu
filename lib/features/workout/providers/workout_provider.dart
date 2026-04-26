@@ -305,6 +305,12 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
       final newStreak = _streakOf(refreshed);
       await ref.read(appPreferencesProvider).bumpMaxStreakIfHigher(newStreak);
     }
+    // Phase 58 · stamp the wall-clock so the smart notification
+    // scheduler can tell "user trained today" apart from "user
+    // trained yesterday". Tracked for ad-hoc runs too — the
+    // reminder cares about "did you work out today", not "did you
+    // tick the next 30-day box".
+    await ref.read(appPreferencesProvider).setLastWorkoutAt(DateTime.now());
     final updatedDay = isAdHoc
         ? day.copyWith(isCompleted: true)
         : refreshed.firstWhere(

@@ -7,6 +7,25 @@ import 'package:timezone/timezone.dart' as tz;
 
 import '../utils/app_logger.dart';
 
+/// Phase 58 · the three states the smart-reminder scheduler picks
+/// between when stamping the daily ping. The notifier upstream
+/// (`SmartReminderListener`) computes which condition applies from
+/// `lastWorkoutAt` + `consumedMacrosProvider.calories` and feeds it
+/// here.
+///
+/// Tokens are intentionally English so they appear stable in
+/// analytics breadcrumbs even if the UI strings ever localise.
+enum SmartReminderCondition {
+  /// User hasn't worked out today.
+  noWorkout,
+
+  /// Workout done, no nutrition logged yet.
+  workoutNoFood,
+
+  /// Both workout and nutrition logged.
+  bothDone,
+}
+
 /// Thin wrapper around flutter_local_notifications for the daily FOMO
 /// reminder. Singleton so the plugin instance (and init flag) survives
 /// hot reload and rebuilds of the Profile tab.
@@ -33,30 +52,65 @@ class NotificationService {
   static const String _streakChannelName = 'Seri Koruma';
   static const String _streakChannelDesc =
       'Antrenman serini kaybetmek üzereyken bilgilendirici uyarı.';
-  // Phase 57 · interactive reminder rotation. Picking randomly from a
-  // pool of 4 variants per scheduling call keeps the daily ping from
-  // feeling robotic, mirroring the "your friend is texting you" tone
-  // that performs best in fitness app retention studies. The streak
-  // pool reuses the urgency framing — those notifications fire less
-  // often (only on near-loss) so the variety matters less.
-  static const List<({String title, String body})> _dailyVariants = [
+  // Phase 58 · smart-reminder variant pools, keyed by the
+  // [SmartReminderCondition] the user is in at scheduling time.
+  //
+  //   • noWorkout       — user hasn't trained today; nudge them in.
+  //   • workoutNoFood   — workout done, no nutrition logged; pivot
+  //                       the message to recovery / fuel.
+  //   • bothDone        — perfect day; switch to celebration +
+  //                       hydration / rest tone.
+  //
+  // Each pool has at least 2 variants so two consecutive days don't
+  // surface identical copy. Picking is uniform-random at schedule
+  // time. The exact title for `noWorkout` matches the PM's spec
+  // verbatim ("Antrenman Vakti! 💪" / "Hedeflerinden uzaklaşma…");
+  // the rest of each pool offers tonal variation so the user doesn't
+  // see the same string every day.
+  static const List<({String title, String body})> _noWorkoutVariants = [
+    (
+      title: 'Antrenman Vakti! 💪',
+      body:
+          'Hedeflerinden uzaklaşma. Günün egzersizi seni bekliyor, hemen başla!',
+    ),
     (
       title: 'Bugünün antrenmanı seni bekliyor! 💪',
       body: 'Sadece 10–15 dakika. Seriyi koruyalım, bir adım daha at.',
-    ),
-    (
-      title: 'Hadi başlayalım! 🔥',
-      body: 'Tek bir set bile bugünü "yapıldı" listesine taşır.',
-    ),
-    (
-      title: 'Şu tatlıyı denemelisin 🥗',
-      body: 'Yüksek proteinli yeni tarifler seni bekliyor — açıver bak.',
     ),
     (
       title: 'Bir hedefin var, unutma 🎯',
       body: 'Bugün antrenmanı geçersen yarın iki gün geride kalırsın.',
     ),
   ];
+  static const List<({String title, String body})> _workoutNoFoodVariants = [
+    (
+      title: 'Yakıt Gerekli! 🥩',
+      body:
+          'Harika bir antrenman çıkardın. Şimdi toparlanma vakti, bugünün öğünlerini kaydet!',
+    ),
+    (
+      title: 'Toparlanma zamanı 🥗',
+      body: 'Antrenmanı bitirdin — şimdi öğünlerini ekle ve bugünü tamamla.',
+    ),
+  ];
+  static const List<({String title, String body})> _bothDoneVariants = [
+    (
+      title: 'Günü fethettin! 🏆',
+      body: 'Bugün disiplinden kopmadın. Şimdi bol su iç ve dinlenmeye geç.',
+    ),
+    (
+      title: 'Mükemmel bir gün 💧',
+      body: 'Antrenman ✅ Beslenme ✅ — kalan tek şey su ve kaliteli uyku.',
+    ),
+    (
+      title: 'Devam et! ⚡',
+      body: 'Bugün hedeflerini tutturdun. Yarın da aynı disiplinle devam.',
+    ),
+  ];
+
+  // Streak warning fires after 48 h of inactivity; intentionally
+  // separate from the smart-reminder pools because by definition
+  // the user *hasn't* worked out, so it always uses urgency framing.
   static const List<({String title, String body})> _streakVariants = [
     (
       title: 'Seriyi kaybetmek üzeresin! ⚡',
@@ -146,7 +200,24 @@ class NotificationService {
     return granted;
   }
 
-  Future<void> scheduleDailyReminder(TimeOfDay time) async {
+  /// Phase 58 · smart-reminder scheduler. Evaluates the user's daily
+  /// state right now, picks the matching variant pool (Condition A /
+  /// B / C per the spec), and schedules the daily ping with that
+  /// body. Repeats daily at [time]; consumers re-call this whenever
+  /// the user's progress changes (workout completes, meal logged) so
+  /// the next-fire body reflects current state.
+  ///
+  /// "Smart" here is best-effort — `flutter_local_notifications`
+  /// can't run a Dart callback at fire time without a heavyweight
+  /// background-isolate plugin, so we instead re-schedule on every
+  /// state change and let the most recent re-schedule win. In
+  /// practice the user's state during their app session matches
+  /// their state at the scheduled fire time closely enough that the
+  /// notification body reads correctly.
+  Future<void> scheduleDailyReminder(
+    TimeOfDay time, {
+    SmartReminderCondition condition = SmartReminderCondition.noWorkout,
+  }) async {
     await init();
     // Cancel any previously scheduled reminder so edits replace instead of
     // stack up. Otherwise a user adjusting the time would start receiving
@@ -154,7 +225,7 @@ class NotificationService {
     await _plugin.cancel(id: _dailyReminderId);
 
     final scheduled = _nextInstanceOf(time);
-    final variant = _pickVariant(_dailyVariants);
+    final variant = _pickVariant(_variantsFor(condition));
     // Phase 57 · `exactAllowWhileIdle` (was `inexactAllowWhileIdle`).
     // The inexact mode is what doze defers; on Android 12+ the
     // `USE_EXACT_ALARM` manifest entry auto-grants the system
@@ -184,8 +255,24 @@ class NotificationService {
     AppLogger.info(
       'Scheduled daily reminder',
       category: 'notifications',
-      data: {'at': scheduled.toIso8601String(), 'title': variant.title},
+      data: {
+        'at': scheduled.toIso8601String(),
+        'condition': condition.name,
+        'title': variant.title,
+      },
     );
+  }
+
+  List<({String title, String body})> _variantsFor(
+      SmartReminderCondition condition) {
+    switch (condition) {
+      case SmartReminderCondition.noWorkout:
+        return _noWorkoutVariants;
+      case SmartReminderCondition.workoutNoFood:
+        return _workoutNoFoodVariants;
+      case SmartReminderCondition.bothDone:
+        return _bothDoneVariants;
+    }
   }
 
   Future<void> cancelDailyReminder() async {

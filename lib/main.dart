@@ -14,6 +14,7 @@ import 'core/services/analytics_service.dart';
 import 'core/services/app_preferences.dart';
 import 'core/services/deep_link_service.dart';
 import 'core/services/live_activity_service.dart';
+import 'core/services/smart_reminder_scheduler.dart';
 import 'core/services/widget_sync_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_mode_provider.dart';
@@ -336,6 +337,12 @@ class _FormAIAppState extends ConsumerState<FormAIApp> {
     // listener's lifetime to this widget — when the app shell
     // dismounts the listener tears down with it.
     ref.watch(widgetSyncListenerProvider);
+    // Phase 58 · same lifecycle pattern for the smart-reminder
+    // scheduler. Listens to workout + nutrition state changes and
+    // re-stamps the daily notification with the right body
+    // (Antrenman Vakti / Yakıt Gerekli / Günü fethettin) so the
+    // next-fire reflects current progress.
+    ref.watch(smartReminderListenerProvider);
     final router = ref.watch(appRouterProvider);
     // Phase 53 · the user's persisted choice flows through
     // `themeModeProvider`. ThemeMode.system (the default for fresh
