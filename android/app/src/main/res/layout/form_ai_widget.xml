@@ -1,10 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Phase 55 · Android home-screen widget layout.
-  Mirrors the medium iOS variant (4x2 footprint) — title row, progress
-  bar with % readout, streak chip, completion fraction. Painted via
-  `RemoteViews` from FormAIHomeWidgetProvider so every text view ID
-  here must match the setTextViewText calls in the provider.
+  Phase 55B · Android home-screen widget layout (hotfix).
+
+  Phase 55 shipped with `<Space>` spacer views and `paddingHorizontal`/
+  `paddingVertical` attributes. Both broke RemoteViews inflation:
+
+    1. AppWidgets only allow a fixed allow-list of view classes
+       (FrameLayout, LinearLayout, RelativeLayout, GridLayout, plus the
+       leaf views TextView / ProgressBar / ImageView / etc.). `<Space>`
+       is not on it — SystemUI throws `ActionException` and the home
+       screen falls back to the "Bu araç yüklenemiyor" tile.
+    2. `paddingHorizontal` / `paddingVertical` were added in API 26.
+       The app's minSdk is 24, so on API 24–25 devices the layout
+       inflater throws `NotFoundException` before the widget can paint.
+
+  This rewrite uses ONLY allow-listed views and ONLY attributes that
+  have shipped since API 21 (so we sit comfortably above minSdk 24).
+  Header + footer rows are now `RelativeLayout` so we get left/right
+  pinning without needing `<Space>` spacers; padding uses the legacy
+  per-edge attributes.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
@@ -14,60 +28,63 @@
     android:padding="14dp"
     android:background="@drawable/form_ai_widget_background">
 
-    <LinearLayout
+    <!-- Header row: brand label pinned to start, streak pill to end. -->
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:layout_height="wrap_content">
 
         <TextView
+            android:id="@+id/widget_brand"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
             android:text="FormAI"
             android:textColor="#B0A8D9"
             android:textSize="11sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.2"/>
-
-        <Space
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1"/>
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/widget_streak"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/form_ai_widget_pill"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
             android:text="🔥 0"
             android:textColor="#FFFFFF"
             android:textSize="11sp"
-            android:textStyle="bold"
-            android:background="@drawable/form_ai_widget_pill"
-            android:paddingHorizontal="8dp"
-            android:paddingVertical="2dp"/>
-    </LinearLayout>
+            android:textStyle="bold" />
+    </RelativeLayout>
 
     <TextView
         android:id="@+id/widget_task_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
+        android:ellipsize="end"
+        android:maxLines="1"
         android:text="Bugün · Karın Yakıcı"
         android:textColor="#FFFFFF"
         android:textSize="16sp"
-        android:textStyle="bold"
-        android:singleLine="true"/>
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/widget_subtitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="2dp"
+        android:ellipsize="end"
+        android:maxLines="1"
         android:text="5 egzersiz · 18 dk"
         android:textColor="#B0A8D9"
-        android:textSize="12sp"
-        android:singleLine="true"/>
+        android:textSize="12sp" />
 
+    <!-- Progress bar + percent readout. -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -79,12 +96,12 @@
             android:id="@+id/widget_progress"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="0dp"
-            android:layout_weight="1"
             android:layout_height="6dp"
+            android:layout_weight="1"
             android:max="100"
             android:progress="0"
-            android:progressTint="#8E5BFF"
-            android:progressBackgroundTint="#23203A"/>
+            android:progressBackgroundTint="#23203A"
+            android:progressTint="#8E5BFF" />
 
         <TextView
             android:id="@+id/widget_percent"
@@ -94,39 +111,41 @@
             android:text="%0"
             android:textColor="#FFFFFF"
             android:textSize="13sp"
-            android:textStyle="bold"/>
+            android:textStyle="bold" />
     </LinearLayout>
 
-    <LinearLayout
+    <!-- Footer row: completion fraction pinned to start, CTA capsule
+         pinned to end. RelativeLayout instead of Space spacers. -->
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:layout_marginTop="10dp">
 
         <TextView
             android:id="@+id/widget_completion"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
             android:text="0 / 30"
             android:textColor="#B0A8D9"
             android:textSize="11sp"
-            android:textStyle="bold"/>
-
-        <Space
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1"/>
+            android:textStyle="bold" />
 
         <TextView
+            android:id="@+id/widget_cta"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/form_ai_widget_cta"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
             android:text="Başlat"
             android:textColor="#000000"
             android:textSize="11sp"
-            android:textStyle="bold"
-            android:background="@drawable/form_ai_widget_cta"
-            android:paddingHorizontal="12dp"
-            android:paddingVertical="4dp"/>
-    </LinearLayout>
+            android:textStyle="bold" />
+    </RelativeLayout>
 </LinearLayout>

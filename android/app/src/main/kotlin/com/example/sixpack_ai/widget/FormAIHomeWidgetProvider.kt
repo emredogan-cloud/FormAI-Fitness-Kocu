@@ -19,7 +19,6 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.widget.RemoteViews
 import com.example.sixpack_ai.R
 import es.antonborri.home_widget.HomeWidgetPlugin
@@ -64,9 +63,19 @@ class FormAIHomeWidgetProvider : AppWidgetProvider() {
 
     /// Deep-link click target. We route through ACTION_VIEW with the
     /// `formai://` scheme so the same `DeepLinkService` listener that
-    /// handles share-link redirection picks up the widget tap. Using
-    /// `FLAG_UPDATE_CURRENT` lets us re-issue the intent without
-    /// stacking duplicate PendingIntents in the system pool.
+    /// handles share-link redirection picks up the widget tap.
+    ///
+    /// Phase 55B · `FLAG_IMMUTABLE` is now unconditional. Android 12
+    /// (API 31) requires every PendingIntent to declare either
+    /// MUTABLE or IMMUTABLE — omitting both throws
+    /// `IllegalArgumentException: Targeting S+ (version 31 and above)
+    /// requires that one of FLAG_IMMUTABLE or FLAG_MUTABLE be specified
+    /// when creating a PendingIntent`. The previous SDK_INT >= M guard
+    /// covered older devices but the runtime API gate on S+ made the
+    /// guard a footgun on modern phones, which is exactly what the PM
+    /// hit. `FLAG_IMMUTABLE` itself shipped in API 23 (Marshmallow);
+    /// our app's minSdk (24) is above that, so dropping the conditional
+    /// is safe on every supported device.
     private fun buildLaunchPendingIntent(
         context: Context,
         widgetId: Int,
@@ -74,10 +83,8 @@ class FormAIHomeWidgetProvider : AppWidgetProvider() {
     ): PendingIntent {
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(deepLink))
         intent.setPackage(context.packageName)
-        var flags = PendingIntent.FLAG_UPDATE_CURRENT
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            flags = flags or PendingIntent.FLAG_IMMUTABLE
-        }
+        val flags = PendingIntent.FLAG_UPDATE_CURRENT or
+            PendingIntent.FLAG_IMMUTABLE
         return PendingIntent.getActivity(context, widgetId, intent, flags)
     }
 

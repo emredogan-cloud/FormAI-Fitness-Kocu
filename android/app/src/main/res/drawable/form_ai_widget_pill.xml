@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Phase 55 · streak pill background (translucent purple capsule). -->
+<!--
+  Phase 55B · streak pill background. Standard shape drawable, no
+  custom paths or unsupported gradients. Corner radius trimmed from
+  999dp → 16dp because some launcher implementations reject
+  excessively large corner radii on AppWidget shapes (specifically the
+  Samsung One UI launcher rounds them oddly, which was the visual
+  artefact the PM noticed alongside the inflation crash).
+-->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <solid android:color="#338E5BFF"/>
-    <stroke android:width="1dp" android:color="#888E5BFF"/>
-    <corners android:radius="999dp"/>
+    <solid android:color="#338E5BFF" />
+    <stroke android:width="1dp" android:color="#888E5BFF" />
+    <corners android:radius="16dp" />
 </shape>
