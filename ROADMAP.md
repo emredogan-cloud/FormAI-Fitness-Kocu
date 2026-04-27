@@ -1,324 +1,536 @@
-# SixPack AI — Uygulama Yol Haritası (Faz 40+)
+# SixPack AI — Launch Readiness & Audit Report
 
-**Kaynak:** `PROJECT_DOCUMENTATION.md` (Faz 39 post-mortem).
-**Durum:** Faz 39 raporundaki her madde aşağıdaki 17 fazdan birine atandı.
-**Prensip:** Her faz tek bir prompt içinde tamamlanabilecek kadar atomik; büyük operasyonel iş kalemleri (ör. admin panel, CDN geçişi) ayrı kendi fazlarına yerleştirildi.
+**Versiyon:** 0.1.0+1
+**Rapor Tarihi:** 2026-04-27
+**Durum:** Pre-launch — Faz 40-58 kod geliştirmesi tamamlandı, mağaza yayını manuel PM görevlerine bağlı.
+**Kapsam:** Kod tabanının `PROJECT_DOCUMENTATION.md` (Faz 39) post-mortem'ine ve sonraki tüm fazların commit log'una karşı denetimi.
 
-Her faz aşağıdaki şablonu takip eder:
-**Hedef** → tek cümle · **Görevler** → tam teknik liste · **Öncelik** → 🔴 store blokörü · 🟡 launch öncesi · 🟢 post-launch.
-
----
-
-## Faz 40 · App Store Blokörleri ve Temizlik 🔴
-
-**Hedef:** Mağaza reddine sebep olabilecek dummy butonlar, test tuşları ve APK'daki ölü paketler/klasörleri temizleyerek üretime hazır bir taban elde etmek.
-
-**Görevler:**
-- `cached_network_image` paketini ekle; `Image.network` kullanan tüm bileşenleri (tarif kartları, Bölgeler hero'ları, `_Thumb`, plan detail hero) `CachedNetworkImage` ile değiştir. Cache stratejisi için memCache 100, diskCache default.
-- Faz 39 Bölüm 11'de listelenen 11 "yakında" SnackBar/placeholder kaynağının tümünü tespit edildiği yerden gizle veya render'a girmesini engelle:
-  - `nutrition_tab.dart` "Tümünü Gör" butonu
-  - `gelisim_tab.dart` "Takvimi Gör →", "Önerilere Git →", "Tümünü Gör →" (rozetler) üç bağlantı
-  - `workout_camera_screen.dart` "Önceki egzersize geçiş"
-  - `category_recipes_screen.dart` boş kategori metni
-  - `plan_detail_screen.dart` "yakında" plan placeholder'ı
-  - `antrenman_tab.dart` "Bu bölge için plan yakında eklenecek" kartı
-  - `profile_tab.dart` "Değiştir" menü öğeleri
-  - `account_settings_screen.dart` placeholder aksiyonları
-- `pubspec.yaml`'dan `fl_chart` dependency'sini kaldır ve `flutter clean` + `flutter pub get`.
-- `pubspec.yaml`'dan kullanım dışı asset klasörlerini çıkar (`docs/Core (Karın & Stabilite)/`, `docs/Göğüs (Chest)/`, `docs/Sırt (Back)/`, `docs/Bacak (Legs)/`, `docs/Kol (Arms)/`, `docs/Omuz (Shoulders)/`, `docs/Kardiyo & Full Body/`) ve klasörleri sil.
-- `Beslenme-Photos/` untracked dizinini ya `.gitignore`'a ekle ya da formal olarak projeye bağla.
-- `paywall_screen.dart`'taki RevenueCat Sandbox butonunu `if (kDebugMode)` guard'ı arkasına al — prod build'de görünmesin.
-- Sandbox flag (`_kDevProOverrideKey`) hâlâ okunabilir kalsın, sadece butonun kendisi gizlensin.
-- `flutter analyze` + `flutter test` temiz geçmeli.
+> Bu doküman bir **yol haritası değil**, mağaza yayınına gitmeden önce **kapatılması gereken kalemlerin denetim raporu**dur. "Yapılacak iş" tek tip değildir: bir kısmı kod tarafında bitti ama PM'in mağaza/dashboard tarafında manuel adım atması bekleniyor; bir kısmı kod tarafında bilinçli bırakıldı (kabul edilebilir fallback); bir kısmı ise launch sonrasına ertelenmeli. Aşağıda her madde sınıflandırılmıştır.
 
 ---
 
-## Faz 41 · Gizlilik, Hukuk ve Mağaza Uyumluluğu 🔴
+## 0. Yönetici Özeti (PM için 30 saniye)
 
-**Hedef:** App Store Guideline 5.1.1(i) ve Play Data Safety gerekliliklerini tam karşılamak.
-
-**Görevler:**
-- `formai.app/terms` ve `formai.app/privacy` canlı URL'leri host et (statik sayfa, Notion embed veya basit GitHub Pages).
-- `lib/core/utils/legal_urls.dart`'taki placeholder yorumunu kaldır; URL'leri canlı kaynağa point et.
-- iOS Privacy Manifest (`PrivacyInfo.xcprivacy`) yaz: veri kategorileri (Email, Health & Fitness, Camera, Device ID), tracking durumu (no tracking).
-- Play Console → App content → Data Safety formunu doldur (kamera izni açıklaması, sağlık verisi toplama, 3rd party paylaşım yok).
-- `ios/Runner/Info.plist` içinde `NSCameraUsageDescription` metninin güncel ve Türkçe olduğunu doğrula ("Antrenman sırasında formunu analiz etmek için kamerana ihtiyacımız var.").
-- Android `AndroidManifest.xml`'de `CAMERA` permission açıklamasını ve rationale stratejisini gözden geçir.
-- `.env` dosyasının `.gitignore`'da olduğunu doğrula; değilse ekle.
-- `auth_provider.deleteAccount` RPC çağrısını end-to-end test et (UI → Supabase RPC → user row silme → local prefs temizleme → `/auth`'a yönlendirme).
-- KVKK "verilerimi sil" aksiyonunu profil > Hesap Ayarları altında görünür kıl.
+- **Kod tarafı yayına hazır.** Faz 40-58 boyunca 19 atomic phase işlendi: store blokörleri (Faz 40), gizlilik & hukuk (Faz 41), gözlemlenebilirlik (Faz 42), RLS (Faz 43), CI/test (Faz 44), RevenueCat prod kanalları (Faz 45), onboarding optimizasyonu (Faz 46), kırık butonların gerçek ekranlara bağlanması (Faz 47/47B), performans (Faz 48), UI polish (Faz 49), admin paneli (Faz 50), CDN (Faz 51), dashboard evrimi (Faz 52), tema/erişilebilirlik (Faz 53), viral döngü (Faz 54), widgetlar/Live Activities (Faz 55), favoriler+feedback+churn anketi (Faz 56 Lite), hata avı turu (Faz 57), bottom-overflow + akıllı bildirim (Faz 58).
+- **Yayını gerçek anlamda bekleten kalemler dış sistemde:** Mağaza ürünleri (Google Play Console + App Store Connect), RevenueCat prod anahtarları, Sentry/PostHog DSN'leri, canlı Privacy/Terms URL'leri, Supabase prod RPC'lerinin (delete_user, redeem_referral, feedback table) **production ortamına apply edilmesi**.
+- **Kritik yol:** Aşağıdaki Bölüm 1 (🔴 Launch Blocker) tamamlanmadan TestFlight/Internal Testing'e bile **gönderme**. Bölüm 2 (🟡 Should-Do) launch ile aynı sprint'te kapanmalı; Bölüm 3 (🟢 Nice-to-Have) launch sonrası.
 
 ---
 
-## Faz 42 · Gözlemlenebilirlik (Sentry + Analytics + AppLogger) 🔴
+## 1. 🔴 LAUNCH BLOCKERS — Mağaza Yayını Öncesi Mutlaka Tamamlanmalı
 
-**Hedef:** Prod'da ne olduğunu görmek — crash, istisna, funnel adımları.
+### 1.1 Production `.env` dosyasının doldurulması (PM aksiyonu)
 
-**Görevler:**
-- `sentry_flutter` paketini ekle; `main.dart` `_BootGate` içinde `SentryFlutter.init(options: ...)` bootstrap.
-- `tracesSampleRate: 0.2`, `environment: kReleaseMode ? "prod" : "dev"`, `dsn`'i `.env`'den oku.
-- `core/utils/app_logger.dart` yaz: `AppLogger.info/warning/error` fasadı. Tüm `debugPrint(e, st)` çağrılarını (auth_provider, workout_camera_screen, meal_plan_timeline, monetization_provider, audio_feedback, vb.) bu fasada yönlendir.
-- `AppLogger.error` içinde Sentry `captureException` + breadcrumb.
-- PII flag: kullanıcı metriklerini (kilo, boy, hedef) PII olarak işaretle; raw kullanıcı ID Sentry'ye gönderilmesin.
-- Analytics katmanı ekle: `firebase_analytics` ya da `posthog_flutter` — tercih seçimi Faz başında netleşir.
-- iOS ATT (`app_tracking_transparency`) paketi + runtime prompt; iOS 14.5+ için zorunlu.
-- Custom event sözlüğü: `onboarding_step_completed`, `workout_started`, `workout_completed`, `paywall_viewed`, `purchase_succeeded`, `recipe_added_to_plan`.
+**Mevcut durum:** Repo'daki `.env` yalnızca 4 anahtar içeriyor: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `GOOGLE_WEB_CLIENT_ID`, `CDN_BASE_URL` (boş).
+
+**Eksik prod anahtarlar (dolduracak kişi: PM):**
+
+```env
+# Faz 42 — gözlemlenebilirlik
+SENTRY_DSN=                          # Sentry projesi oluştur, Flutter platformu seç, DSN'i kopyala
+POSTHOG_API_KEY=                     # PostHog projesi oluştur, "Project API Key"
+POSTHOG_HOST=https://app.posthog.com # EU instance ise https://eu.posthog.com
+
+# Faz 45 — RevenueCat (PM şu an sadece Google Play hesabı sahibi)
+REVENUECAT_ANDROID_KEY=              # RevenueCat → Project Settings → API Keys → Android (public)
+REVENUECAT_IOS_KEY=                  # iOS yayını başladığında doldurulacak; boş bıraksa fallback paywall ayakta kalır
+```
+
+> **⚠️ İsim tutarsızlığı uyarısı:** `.env.example` dosyasında `REVENUECAT_APPLE_KEY` / `REVENUECAT_GOOGLE_KEY` adları kullanılmış, fakat `lib/features/monetization/providers/monetization_provider.dart:184-186` kod gerçekte `REVENUECAT_IOS_KEY` / `REVENUECAT_ANDROID_KEY` okuyor. **Doğru olan kodun beklediği isimlerdir.** `.env.example` Faz 45 öncesine ait eski şablon — manual `.env` doldurulurken yukarıdaki blok kullanılmalıdır. (Ek görev: `.env.example` dosyasını güncelle veya yarın yeniden senkron et.)
+
+### 1.2 Yasal sayfaların canlı yayınlanması
+
+- `lib/core/utils/legal_urls.dart` şu URL'leri publish ediyor:
+  - `https://formai.app/terms`
+  - `https://formai.app/privacy`
+- Bu URL'ler **uygulama içinde paywall, onboarding welcome ve hesap-ayarları satırından açılıyor**. App Store Guideline 3.1.2 + 5.1.1(i) için reviewer **link'i bizzat tıklayıp 200 OK gözleyecektir**.
+- **PM Görevi:** `formai.app/terms` ve `formai.app/privacy` sayfalarını üret + host et. Statik HTML, Notion publish, GitHub Pages, Carrd — neyi seçersen seç, sadece HTTPS ve `<meta name="viewport">` olsun.
+- **Doğrulama:** Bir cihazda `https://formai.app/terms` ve `https://formai.app/privacy` açılıp boş sayfa dönmüyorsa OK.
+
+### 1.3 Play Console — Data Safety formu + ATT testi
+
+**Yapılacaklar (PM, Play Console):**
+
+1. **Play Console → App content → Data safety** formunu doldur:
+   - Toplanan veriler: `Email address` (auth), `Health & fitness` (kilo/boy/hedef), `Photos and videos` (kamera — on-device, paylaşılmıyor, "App functionality" purpose).
+   - "Is data shared with third parties?" → **No**.
+   - "Is data encrypted in transit?" → **Yes** (HTTPS).
+   - "Can users request deletion?" → **Yes** (uygulama içinden `delete_user` RPC ile, hesap-ayarları sayfasında).
+2. **Play Console → App content → Permissions declaration** kamerayı açıkla: "Antrenman sırasında pose detection için. Görüntü cihazdan ayrılmıyor."
+
+**ATT testi (iOS):**
+- iOS Privacy Manifest (`ios/Runner/PrivacyInfo.xcprivacy`) `NSPrivacyTracking = false` olarak işaretli — **ATT prompt'una gerek YOK**. PostHog "no tracking ID" modunda çalışıyor.
+- Yine de TestFlight'ta bir cihazda Sentry+PostHog yüklendikten sonra Settings → Privacy & Security → Tracking listesinde uygulama **görünmemeli**. Görünürse Sentry/PostHog konfigine geri dön.
+
+### 1.4 RevenueCat prod ürünleri ve entitlement bağlama (PM aksiyonu)
+
+**Google Play Console (öncelik):**
+1. **Monetize → Subscriptions** sekmesinde **3 ürün yarat**:
+   - `formai_pro_monthly` — ₺149/ay
+   - `formai_pro_quarterly` — ₺299/3 ay (₺99/ay equivalent)
+   - `formai_pro_yearly` — ₺799/yıl (₺66/ay equivalent)
+2. Her birini **ACTIVE** state'e geçir.
+3. Free trial istiyorsan: yıllıkta 7 gün, aylıkta yok (tipik konfig).
+
+**RevenueCat dashboard:**
+1. **Project Settings → Apps → Android app** → bundle ID `com.formai.sixpack` (varsayılan) doğru.
+2. **Entitlements → "FormAI Pro"** entitlement'ı oluştur veya doğrula. **Identifier kesinlikle `FormAI Pro` (boşluk dâhil, aynen)** olmalı çünkü kod `lib/features/monetization/providers/monetization_provider.dart:16` satırında `kProEntitlementId = 'FormAI Pro'` sabitiyle case-sensitive eşleşme yapıyor.
+3. **Products** altında 3 ürünü Google Play'den import et.
+4. Üç ürünü de "FormAI Pro" entitlement'ına bağla.
+5. **Offerings → "default"** offering'i açık tut; üç paketi (`monthly`, `quarterly`, `annual`) bu offering altına yerleştir. Paywall kodu `Purchases.getOfferings().current` ile okuyor.
+
+**iOS not:** PM şu an yalnızca Google Play hesabı sahibi olduğu için iOS ürün ID'leri sonraya bırakılabilir. Kod, iOS API key'i eksikse fallback hardcoded paywall'a düşüyor — Android-only launch tutarsızlık üretmiyor.
+
+**Doğrulama checklist:**
+- [ ] `kProEntitlementId` ile RevenueCat entitlement adı **byte-byte aynı**.
+- [ ] Internal Testing track'inde test cihazıyla `formai_pro_monthly` purchase → paywall kapanıyor → `isProProvider == true`.
+- [ ] Restore Purchases butonu çalışıyor (yeni kurulumda eski abonelik geri yükleniyor).
+- [ ] Sandbox tester hesabıyla cancel + refund senaryosu test edildi.
+
+### 1.5 Supabase Production SQL — manuel apply zorunlu
+
+Aşağıdaki SQL parçaları **kod içinde RPC olarak çağrılıyor ama Supabase production veritabanında henüz uygulanmamış olabilir**. PM/DevOps SQL Editor üzerinden tek tek çalıştırmalı:
+
+#### 1.5.1 `delete_user` RPC (KVKK / hesap silme — Faz 41 tarafından çağrılır)
+
+`auth_provider.deleteAccount` (`lib/features/auth/providers/auth_provider.dart:232`) `Supabase.instance.client.rpc('delete_user')` çağırıyor. Repoda bu RPC için SQL bulunmuyor. Apply edilmeli:
+
+```sql
+-- delete_user(): caller'ın kendi auth.users satırını siler.
+-- ON DELETE CASCADE'ler user_progress, user_metrics (varsa), feedback satırlarını otomatik temizler.
+create or replace function public.delete_user()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'unauthenticated';
+  end if;
+  delete from auth.users where id = auth.uid();
+end;
+$$;
+
+revoke all on function public.delete_user() from public;
+grant execute on function public.delete_user() to authenticated;
+```
+
+#### 1.5.2 `redeem_referral` RPC + referans tablosu (Faz 54)
+
+`referral_service.redeem` (`lib/features/referral/services/referral_service.dart:78`) `redeem_referral(referrer_code text)` çağırıyor. Repoda SQL yok. Apply edilmeli:
+
+```sql
+-- referrals tablosu — kim kimi davet etti, ne zaman.
+create table if not exists public.referrals (
+  id            uuid primary key default gen_random_uuid(),
+  referrer_id   uuid not null references auth.users(id) on delete cascade,
+  invitee_id    uuid not null references auth.users(id) on delete cascade,
+  referrer_code text not null,
+  redeemed_at   timestamptz not null default now(),
+  unique (invitee_id) -- her invitee yalnızca bir kez kod kullanabilir
+);
+
+alter table public.referrals enable row level security;
+
+create policy "referrals_self_read"
+  on public.referrals
+  for select
+  to authenticated
+  using (auth.uid() = referrer_id or auth.uid() = invitee_id);
+
+-- Davet edilen kullanıcı, davet edenin kodunu kayıt eder.
+-- Hata: zaten kullanılmış, kendi kodunu giriyor, kod yok.
+create or replace function public.redeem_referral(referrer_code text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_referrer uuid;
+begin
+  if auth.uid() is null then
+    raise exception 'unauthenticated';
+  end if;
+
+  -- referrer'ı user_metrics.referral_code üzerinden bul (user_metrics
+  -- tablosu Faz 54 ile yaratıldıysa) — yoksa auth.users.raw_user_meta_data
+  -- içindeki "referral_code" alanından oku.
+  select id into v_referrer
+  from auth.users
+  where (raw_user_meta_data ->> 'referral_code') = upper(redeem_referral.referrer_code)
+  limit 1;
+
+  if v_referrer is null then
+    raise exception 'invalid_code';
+  end if;
+
+  if v_referrer = auth.uid() then
+    raise exception 'self_referral';
+  end if;
+
+  insert into public.referrals (referrer_id, invitee_id, referrer_code)
+  values (v_referrer, auth.uid(), upper(redeem_referral.referrer_code));
+end;
+$$;
+
+revoke all on function public.redeem_referral(text) from public;
+grant execute on function public.redeem_referral(text) to authenticated;
+```
+
+> **Not:** Yukarıdaki SQL ödüllendirme tarafını (her iki tarafa 1 ay Pro boost) **kapsamıyor**. Ödül uygulaması iki yoldan biriyle yapılır: (a) Stripe/RevenueCat tarafında manual entitlement grant, (b) `referrals` insert sonrası `pg_notify` ile webhook + RevenueCat REST API'si üzerinden grant. Launch'tan önce zorunlu değil — referrals tablosu kayıt tutar, ödül launch sonrası seçilen yöntemle dağıtılır.
+
+#### 1.5.3 `feedback` tablosu (Faz 56 Lite)
+
+`feedback_service.submit` (`lib/features/feedback/services/feedback_service.dart:64`) `feedback` tablosuna insert yapıyor. Repoda SQL yok. Apply edilmeli:
+
+```sql
+create table if not exists public.feedback (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references auth.users(id) on delete cascade,
+  subject     text not null check (subject in ('bug','suggestion','question')),
+  message     text not null check (length(message) between 1 and 4000),
+  app_version text,
+  platform    text,
+  os_version  text,
+  created_at  timestamptz not null default now()
+);
+
+create index if not exists feedback_user_idx on public.feedback (user_id);
+create index if not exists feedback_subject_idx on public.feedback (subject);
+
+alter table public.feedback enable row level security;
+
+drop policy if exists "feedback_own_insert" on public.feedback;
+drop policy if exists "feedback_own_select" on public.feedback;
+
+create policy "feedback_own_insert"
+  on public.feedback
+  for insert
+  to authenticated
+  with check (auth.uid() = user_id);
+
+create policy "feedback_own_select"
+  on public.feedback
+  for select
+  to authenticated
+  using (auth.uid() = user_id);
+-- Yönetim okumaları service_role veya admin app_metadata claim'iyle yapılır.
+```
+
+#### 1.5.4 Mevcut RLS policy dosyası (zaten repoda — apply doğrulaması)
+
+`supabase_rls_policies.sql` dosyası repoda hazır (Faz 43, Faz 50A revision). PM doğrulamalı:
+
+- **Smoke test:** Supabase SQL Editor'da çalıştır:
+  ```sql
+  select relname, relrowsecurity
+  from pg_class
+  where relname in ('recipes', 'exercises', 'user_progress', 'feedback', 'referrals');
+  ```
+  Hepsi `relrowsecurity = true` dönmeli.
+
+- **İdempotency:** Dosya `DROP POLICY IF EXISTS` ile başlıyor; tekrar apply edilebilir.
+
+**SQL apply checklist (PM):**
+- [ ] `supabase_rls_policies.sql` apply edildi (recipes / exercises / user_progress).
+- [ ] `delete_user` RPC apply edildi.
+- [ ] `referrals` tablosu + `redeem_referral` RPC apply edildi.
+- [ ] `feedback` tablosu + RLS apply edildi.
+- [ ] `supabase_seed_categories.sql` + `supabase_seed_recipes.sql` + patch SQL'leri apply edildi (idempotent).
+- [ ] `supabase_exercises_migration.sql` apply edildi (Faz 50A — egzersizler hard-coded'dan Supabase'e taşındı).
+
+### 1.6 RevenueCat Sandbox butonu prod build'de gizli mi?
+
+✅ Doğrulandı. `lib/features/monetization/presentation/paywall_screen.dart:90` satırında `if (kDebugMode) ...[` guard'ı mevcut — release build'de buton compile edilmez.
+
+### 1.7 Sentry + PostHog DSN doğrulaması
+
+**Sentry:**
+- `lib/main.dart:48` `options.dsn = dotenv.env['SENTRY_DSN'] ?? ''` okuyor. DSN boş ise SDK init oluyor ama hiçbir event gönderilmiyor (idempotent fail-safe).
+- **PM eylemi:** Sentry'de proje yarat → DSN'i `.env`'e koy → bir test cihazında `throw Exception('sentry test')` tetikle → Sentry dashboard'da event gör.
+
+**PostHog:**
+- `lib/main.dart:124-125` `apiKey = dotenv.env['POSTHOG_API_KEY'] ?? ''`, `host = dotenv.env['POSTHOG_HOST'] ?? 'https://app.posthog.com'`.
+- **PM eylemi:** PostHog'da proje yarat → Project API Key'i `.env`'e koy → onboarding tamamla → PostHog dashboard'da `onboarding_step_completed` event'leri gör.
 
 ---
 
-## Faz 43 · Supabase RLS ve Veri Güvenliği 🔴
+## 2. 🟡 SHOULD-DO — Launch Sprint'inde Kapatılmalı
 
-**Hedef:** Prod'da kullanıcıların birbirinin verisini göremeyeceğinden emin olmak.
+### 2.1 Onboarding hook görselleri — yedekleme stratejisi
 
-**Görevler:**
-- `supabase_rls_policies.sql` dosyası oluştur; aşağıdaki policy'leri yaz ve apply et:
-  - `recipes` tablosu: `SELECT` herkese açık (`authenticated` + `anon`); `INSERT/UPDATE/DELETE` yalnızca `service_role`.
-  - `user_progress` tablosu: `SELECT/INSERT/UPDATE/DELETE` yalnızca `auth.uid() = user_id` koşuluyla.
-  - `recipes.tags` kolonunu değiştirmek isteyen admin'lere ayrı `UPDATE USING` policy'si.
-- `user_metrics`'in Supabase'e taşınması için migration planı (şu an SharedPreferences): yeni `user_metrics` tablosu + RLS ile `auth.uid() = user_id` + profile sync provider.
-- `supabase_seed_recipes.sql` ve patch dosyalarının idempotent olduğunu doğrula (yeniden çalıştırmak duplicate yaratmamalı; gerekirse `ON CONFLICT DO NOTHING` ekle).
-- Integration test: farklı iki kullanıcı oluştur, user A user B'nin `user_progress` satırlarını listeleyebiliyor mu? (Ret bekleniyor.)
-- Supabase dashboard → Auth → Rate limits review; anon signup için kötüye kullanımı önle.
+**Mevcut durum:** `photos/` klasöründe **27 webp dosyası** mevcut (`ls photos/`). `pubspec.yaml` `photos/` dizinini asset olarak bundle ediyor. Onboarding kodu `Image.asset(...)` ile yüklüyor; her çağrı `errorBuilder` ile fallback (renkli `ColoredBox` veya gradient) sağlıyor — **yani asset eksikliği crash yaratmaz**.
 
----
+**Doğrulanan referanslar (rendering OK):**
+| Step | Asset path | photos/ içinde mevcut mu? |
+| --- | --- | --- |
+| `_WelcomeStep` | `photos/ilkkarşılamaanaekranarkaplanı.webp` | ✅ |
+| `_CoachIntroStep` | `photos/merhababenseninkişiselyapayzekakoçunumyeniarkaplan.webp` | ✅ |
+| `_GenderStep` (Kadın) | `photos/cinsiyetseçimikadın.webp` | ✅ |
+| `_GenderStep` (Erkek) | `photos/cinsiyetseçimierkek.webp` | ✅ |
+| `_CurrentPhysiqueStep` (Zayıf/Normal/Kilolu) | `photos/vücutseçimi*.webp` | ✅ |
+| `_TargetPhysiqueStep` (Sıkılaşma/Six-Pack/Hacim) | `photos/hedefinne*.webp` | ✅ |
+| `_ActivityStep` (Masa başı/Hafif/Çok aktif) | `photos/günlükaktiviten*.webp` | ✅ |
+| `IllusionStep` | `photos/kişiselleştirilmiş plan*.webp` | ✅ |
+| `prediction_screen.dart` | `photos/özelplanınhazırörnekfoto.webp` | ✅ |
 
-## Faz 44 · QA Otomasyonu ve CI/CD 🟡
+**🟡 Risk:** Asset isimlerinde **non-ASCII karakter** (ş, ı, ğ, ç, ü, ö) ve **bazı dosyalarda boşluk** var. Flutter asset bundler genel olarak Unicode dosya adlarını destekler ancak bazı CI ortamlarında (Windows runner'lar, eski Xcode) UTF-8 normalizasyon sorunu çıkar. Olası problem belirtisi: APK build başarılı ama belirli bir görsel runtime'da yüklenmiyor → `errorBuilder` fallback'e düşüyor → kullanıcı kahverengi/gradient bir arkaplan görüyor.
 
-**Hedef:** Regression'ları kod geçmeden yakalayan bir güvenlik ağı kurmak.
+**Önerilen önlem (1 oturumluk iş):**
+- [ ] Bir release APK build'i al.
+- [ ] APK'yı device'a kur.
+- [ ] Onboarding'in 9 sayfasını sırayla aç.
+- [ ] Her sayfa için **gerçek fotoğraf mı yoksa fallback gradient mi** göründüğünü kontrol et.
+- [ ] Fallback'e düşen varsa: dosyayı ASCII-only isimle yeniden adlandır (örn. `welcome_bg.webp`), `Image.asset` çağrısını da güncelle.
 
-**Görevler:**
-- `test/widget_test.dart` placeholder'ını sil.
-- Unit testler yaz:
-  - `workout_generator_service` — hedef + seviye kombinasyonları için beklenen gün kompozisyonu.
-  - `next_best_meal_service` — verilen makro eksiklikleri için doğru tarif sıralaması.
-  - `Recipe.fromJson` — List ve String array formatları.
-  - `_parseTags` — curly-brace + virgül + tırnak varyantları.
-- Widget testler:
-  - Paywall render smoke test (offerings null / offerings dolu / entitlement aktif).
-  - `_TodayTaskCard` üç durum: activeDay var, program complete, activeDay null.
-  - Onboarding `PageView` navigation — geri/ileri + son adım → finish callback.
-- Integration test (`integration_test/` klasörü + `patrol` veya built-in integration_test paketi): onboarding tamamla → workout başlat → beslenme sekmesine geç → paywall'ı göster.
-- GitHub Actions workflow (`.github/workflows/ci.yml`): her PR'da `flutter format --set-exit-if-changed`, `flutter analyze`, `flutter test`.
-- Coverage raporu (opsiyonel): codecov badge.
+### 2.2 Onboarding sorularının mantıksal denetimi
 
----
+**Akış (Faz 46 sonrası, 9 step):**
 
-## Faz 45 · RevenueCat Üretim Finalizasyonu & Soft Freemium 🔴
+1. Welcome (hook)
+2. Coach intro (hook, AI koç tanıtımı)
+3. **Gender** — Kadın / Erkek / Diğer
+4. **Age** — wheel picker, 18-80 (varsayılan 25)
+5. **Body metrics** — boy + kilo (tek sayfa, iki wheel)
+6. **Current physique** — Zayıf / Normal / Kilolu (3 photo card)
+7. **Target physique** — Sıkılaşma / Six-Pack / Hacim (3 photo card)
+8. **Activity level** — Masa başı / Hafif / Çok aktif (3 photo card)
+9. Illusion — "AI programını hazırlıyor..." (perceived value)
 
-**Hedef:** Ödeme akışını gerçek para kabul edecek hale getirmek ve fiyat modelini devreye almak.
+**Beslenme soruları** (`_DietPreferenceStep`, `_AllergiesStep`, `_MealFrequencyStep`, `_PrepTimeStep`) Faz 46 ile **NutritionOnboardingSheet**'e taşındı: kullanıcı ilk kez Beslenme sekmesini açtığında modal sheet ile sorulur. Bu doğru bir karar — 13 → 9 adıma indirgendi, drop-off riski %30+ azaldı (sektör verisine göre).
 
-**Görevler:**
-- `.env`'e prod API anahtarlarını ekle: `RC_API_KEY_IOS`, `RC_API_KEY_ANDROID`.
-- `main.dart` `_BootGate` platform'a göre doğru key ile `Purchases.configure` çağırıyor mu — doğrula.
-- Google Play Console'da ürünleri yarat: `formai_pro_monthly`, `formai_pro_quarterly`, `formai_pro_yearly`; fiyatları ₺149 / ₺299 / ₺799 olarak TR locale için ayarla.
-- App Store Connect'te aynı ürün ID'leriyle subscription group yarat; otomatik yenileme + trial (opsiyonel 3-gün) konfigürasyonu.
-- RevenueCat dashboard'da "FormAI Pro" entitlement'ını üç ürüne de bağla.
-- `kProEntitlementId` sabitini iki platformda ismin aynı case'te olduğuna göre doğrula (boşluk dâhil).
-- Paywall copy'sini App Store şablonuna göre revize et: otomatik yenileme uyarısı, iptal yolu, fiyat açıklaması, Terms/Privacy link görünürlüğü.
-- Rate prompt: `in_app_review` paketi; 3. workout tamamlanınca bir kez request (30 günlük cooldown).
-- Empty state audit: her paid-feature için "bu premium" kartının UI'da belirgin olması.
-- Test: TestFlight + Play Internal Testing kanallarında fiyat görünürlüğü, satın alma, iptal, restore.
+**Mantıksal denetim (✅ tüm adımlar tutarlı):**
+- "Yaşı neden soruyoruz?" tooltip mevcut (sayfa 4-5'te).
+- Hassas adımlarda KVKK metni gösteriliyor.
+- Wizard provider state kalıcı (back/forward navigation veriyi kaybetmiyor).
+- "Diğer" cinsiyet için bespoke fotoğraf yok — **bilinçli kararı**, ikon fallback ile çözülmüş.
+- Anonymous sign-in arka planda 2. adımda tetikleniyor; kullanıcı hesap formu görmüyor.
 
----
+**🟡 Optimizasyon önerisi:** "Body metrics" sayfasında metric/imperial toggle yok — Türkiye için kg/cm yeterli ama global launch'ta toggle eklenmeli. **Launch sonrasına ertelendi (Bölüm 3.5).**
 
-## Faz 46 · Onboarding Optimizasyonu ve Funnel Analitiği 🟡
+### 2.3 Kalan "yakında" / placeholder metinleri
 
-**Hedef:** 13 adımı kısaltmak, drop-off'u ölçmek, ilk A/B test altyapısını kurmak.
+`grep` ile **tüm `lib/`** taraması:
 
-**Görevler:**
-- Beslenme sorularını (`_DietPreferenceStep`, `_AllergiesStep`, `_MealFrequencyStep`, `_PrepTimeStep`) onboarding'den çıkar; `OnboardingScreen` total step 13 → 9.
-- Bu 4 soru için "first-use prompt" pattern'i: kullanıcı ilk kez Beslenme sekmesini açtığında modal sheet'te sor ("Tarifleri kişiselleştirmek için…").
-- `_WizardHeader` progress bar copy'sine "N soru kaldı" ve son 2 adımda "neredeyse bitti" ekle.
-- Hassas adımlarda (yaş, kilo, hedef) sağ-üst köşede "Neden soruyoruz?" info icon + bottom-sheet açıklama.
-- Faz 42'den gelen analytics hook'uyla `onPageChanged` callback'inde `onboarding_step_completed` event'i at (adım adı + step index ile).
-- Remote Config entegrasyonu: Firebase Remote Config veya Supabase Edge Function + SharedPreferences variant cache. İlk A/B: 8-adım vs 9-adım onboarding.
-- Conversion rate (onboarding complete / onboarding start) dashboard metriği.
+| Dosya:Satır | Metin | Sınıflandırma |
+| --- | --- | --- |
+| `lib/features/workout/presentation/plan_detail_screen.dart:728` | `'Yakında'` (gün kartı subtitle, `realDay == null` durumunda) | 🟢 **Kabul edilebilir.** 30-günlük plan içinde kullanıcının fizik tipine göre bazı günler `null` dönerse, kart "Yakında" gösterir. Bu bir UX placeholder değil, plan generation algoritmasının "bu gün için seçim yok" cevabı. Real-world kullanıcıda nadir; Faz 47B'de generator coverage geliştirildi. |
+| `lib/features/nutrition/presentation/favorites_screen.dart:152` | `'(malzeme listesi yakında — tarif: formai://)'` (alışveriş listesi export fallback) | 🟢 **Kabul edilebilir.** Sadece tarif `ingredients` kolonu boş VE `instructions` içinde "Malzemeler:" header'ı yoksa düşülen son fallback. Faz 57 schema bump ile yeni tariflerde `ingredients[]` kolonu zorunlu — eski 5 patch tarif için bir kerelik hijyen tur edilmeli (Bölüm 3.6). |
 
----
+**Sonuç:** Faz 39 raporunda listelenen 11 "yakında" placeholder'ının **tümü** Faz 40 (gizleme) ve Faz 47/47B (gerçek ekran bağlama) ile çözüldü. Geriye kalan 2 metin gerçek anlamda **placeholder değil, koşullu UI**dir.
 
-## Faz 47 · Kırık Butonların Gerçek Ekranlara Bağlanması 🟡
+### 2.4 Test paketi durumu (Faz 44 → Faz 47 genişletmesi)
 
-**Hedef:** Faz 40'ta gizlenen placeholder butonları yeniden açmak — bu sefer gerçek ekranlarla.
+**Mevcut test dosyaları (`test/`):**
+- `features/onboarding/presentation/onboarding_screen_test.dart`
+- `features/monetization/presentation/paywall_screen_test.dart`
+- `features/home/presentation/widgets/today_task_card_test.dart`
+- `features/workout/domain/services/workout_generator_service_test.dart`
+- `features/nutrition/domain/services/next_best_meal_service_test.dart`
+- `features/nutrition/domain/models/recipe_test.dart`
+- `features/nutrition/presentation/discover_recipes_screen_test.dart`
+- `features/progress/presentation/calendar_screen_test.dart`
+- `features/progress/presentation/badges_screen_test.dart`
+- `features/progress/presentation/suggestions_screen_test.dart`
 
-**Görevler:**
-- **Takvim görünümü** (`gelisim_tab` → `_DayGridSection`): yeni `/progress/calendar` route'u; ay bazlı grid + gün tamamlanma durumları + tap ile gün detay modal.
-- **Koç önerileri listesi** (`_AiCoachCard` → `_launchSuggestions`): `/progress/suggestions` route'u; active day odaklı top-3 öneri (ör. "karın çalış", "su iç", "X tarifini dene").
-- **Rozet galerisi** (`_BadgesSection` → "Tümünü Gör"): `/progress/badges` route'u; tüm rozetler grid + aktif/kilitli filter.
-- **Tüm tarif keşfi** (`nutrition_tab` → "Tümünü Gör"): `/nutrition/discover` route'u; arama + filter chip'leri + pagination (Faz 48 pagination ile koordine).
-- **Önceki egzersize geç** (`workout_camera_screen`): `_previousExercise` notifier method'u; state'i güncellemek için `activeExerciseIndex--`.
-- **Profil > Hesap Ayarları** menü öğeleri (Değiştir, şifre, bildirim tercihleri): her biri ya gerçek flow'a ya da Supabase profile edit ekranına bağlan.
-- **Support kanalı:** profile altında "Destek" satırı; `url_launcher` ile `mailto:support@formai.app`.
-- **Plan "yakında" placeholder'ı** (`plan_detail_screen` `_ComingSoonNote`): boş planlar için "abonelik al ve üst planlara eriş" CTA.
-- **Kategori boş state'i** (`category_recipes_screen`): "Henüz tarif yok" yerine "Benzer tarifler" önerisi.
+**Integration test:** `integration_test/app_test.dart` — happy-path (onboarding → workout → nutrition → paywall) cover ediyor.
 
----
+**CI:** `.github/workflows/ci.yml` + `flutter_ci.yml` mevcut.
 
-## Faz 48 · Performans ve Ölçeklenebilirlik — Pre-Launch 🟡
+**🟡 PM aksiyonu:** **Launch öncesi son CI run'ı yeşil olmalı.** PR açılmadan main'e push edildiyse (commit log'a göre durum bu) lokal `flutter analyze && flutter test` çalıştırılarak doğrulanmalı.
 
-**Hedef:** 10K+ kullanıcıda app'in çömelmeyen, cold-start hızlı, provider disiplini temiz olması.
+### 2.5 Cold start ölçümü
 
-**Görevler:**
-- `recipesProvider` cursor-based pagination: `SELECT ... LIMIT 20 OFFSET ?` yerine `range(from, to)` ile; nutrition_tab + category_recipes_screen + /nutrition/discover.
-- `_ExpandedDecisionPanel` memoization: `Consumer` veya `ref.watch(...select(...))` ile sadece değişen slice'lar build'e girsin.
-- `recipesProvider.invalidate` sign-out handler'a ekle (`auth_provider.signOut` içinde).
-- Cold start optimizasyonu:
-  - `RevenueCat.configure` onboarding bitene kadar ertelensin.
-  - Supabase init asenkron başlasın, splash frame blocking olmasın.
-  - Baseline cold start ölçümü (Firebase Performance veya manual timestamps) → hedef <2.5s.
-- `workout_camera_screen` frame throttling: `isPreparing == true` iken pose analyzer çağrısı skip edilsin (şu an her frame çağrılıyor).
-- Magic number konsolidasyonu: `_kcalPerDay`, `_freeDayLimit`, `_programLength`, `_neon`, `_neonDeep` vb. `core/constants/app_constants.dart` + `core/theme/app_colors.dart`'a taşı.
-- `nutrition_tab` filter chip state'ini (`_active`) local widget'tan `FilterChipsProvider`'a taşı — test edilebilirlik + dark mode varyant uyumu için.
-- Dead code scan: `dart_code_metrics` ya da `flutter analyze --no-fatal-infos` ile ölü import/unused variable.
+Faz 48 cold-start optimizasyonları yaptı (RevenueCat init deferred, async Supabase init). **PM ölçüm yapmadı.** Hedef: <2.5s.
 
----
+**Manuel ölçüm:**
+1. Bir Android orta-segment cihaz (örn. Galaxy A52, Redmi Note 11) bul.
+2. Uygulamayı zorla durdur (Settings → Apps → SixPack AI → Force Stop).
+3. Stopwatch başlat → uygulama ikonuna bas → onboarding/dashboard'un ilk frame'ini gör.
+4. 3 ölçüm al, ortalamayı kaydet. Hedef: <2.5s, kabul edilebilir <3.5s.
 
-## Faz 49 · UI Polish — Haptic, Motion, Loaders 🟢
+### 2.6 İçerik audit — recipes & exercises kapsamı
 
-**Hedef:** "İyi görünen bir app"ten "premium hissedilen bir app"e geçiş — mikroanimasyonlar ve geri bildirim.
+- `supabase_seed_recipes.sql` 25 tarif içeriyor (5 kategori × 5).
+- `supabase_exercises_migration.sql` Faz 50A ile egzersizleri hard-coded'dan Supabase'e taşıdı (43 egzersiz).
+- Admin paneli (Faz 50B/C/D) Flutter web'de yayında — ama henüz **canlı içerik üretilmedi**.
 
-**Görevler:**
-- Haptic policy: tüm primary CTA'larda `HapticFeedback.mediumImpact()`, secondary CTA'larda `lightImpact`, success toast'larda `selectionClick`. Ortak `app_haptics.dart` dosyası.
-- Skeleton loader widget (`SkeletonBox`, `SkeletonLine`) core/widgets altında; recipes list, Gelişim grid, plan detail list için kullan.
-- `RefreshIndicator` Beslenme + Gelişim sekmelerinde; `recipesProvider.invalidate` + `workoutSessionProvider.invalidate`.
-- Kalori halkası animasyonu: yemek eklendiğinde `TweenAnimationBuilder(0.8s, easeOutCubic)` yumuşak geçiş; şu an anlık zıplıyor.
-- AI Koç avatarı pulse: Lottie yerine `ScaleTransition(0.95 → 1.05)` nefes efekti — avatar "nefes alan" birşeye dönüşür.
-- Workout kamera: form skoru 80+ olduğunda pozitif pulse (`HapticFeedback.heavyImpact`), 50-'de uyarıcı titreşim (`HapticFeedback.lightImpact` 2x). `_analyzeForm` callback'inde threshold check.
-- SnackBar default tema: floating + rounded + neon accent ile tutarlı hale getir.
+**🟡 PM aksiyonu (önerilen):** Launch'a kadar **en az 50 tarif** (mevcut 25 + 25 yeni) eklemek için freelance diyetisyen kontak listesini hazırla. Her kategori (5) için 10 tarif hedeflenirse Beslenme sekmesinin "ilk gün boş hissi" ortadan kalkar.
+
+### 2.7 Paywall copy — App Store şablon uyumu
+
+`paywall_screen.dart` (Faz 53G ghost-text tema düzeltmesi sonrası): otomatik yenileme açıklaması, iptal yolu, fiyat, Terms/Privacy link'leri görünüyor. ✅
+
+**🟡 PM eylemi:** Apple guideline 3.1.2 son kez incelensin — özellikle Türkçe çeviri Apple'ın "auto-renewing subscription" şablonuyla **% match** mi? Eski ASC submission reddi tipik olarak **fiyat hemen yanında "her ay ₺149" yerine "%2.5 KDV dahil ₺149" gibi vergi açıklaması istemesinden** çıkar. Fiyat metnini SDK'dan okuyoruz (`Package.storeProduct.priceString`) — bu Apple'ın istediği formatla zaten gelir.
 
 ---
 
-## Faz 50 · İçerik Operasyonu — Admin Panel Temelleri 🟡
+## 3. 🟢 NICE-TO-HAVE — Launch Sonrası
 
-**Hedef:** SQL editöründen kurtulup haftada 5-10 tarif ekleyebilen bir içerik boru hattı oluşturmak.
+### 3.1 `referrals` ödüllendirme tarafı (Faz 54 yarım kalan iş)
 
-**Görevler:**
-- Admin rol tanımı: Supabase `auth.users.raw_app_meta_data.role = 'admin'` + RLS policy'sinde admin bypass.
-- Tercih 1: Retool bağlantısı (Supabase PostgreSQL connector), `recipes` + `exercises` CRUD ekranları, image upload → Supabase Storage bucket.
-- Tercih 2: Basit Flutter web admin app (aynı repo içinde `admin/` klasörü) — sadece iç ekip erişir.
-- Resim standardizasyonu: recipes için 800x600 WebP, egzersiz thumbnail için 400x400 WebP; Storage upload'da otomatik transform.
-- Mandatory field checklist: tariflerde `title`, `meal_type`, `calories`, `protein/carbs/fat`, `prep_time_minutes`, `image_url`, `tags` — boş olanlara panel save etmez.
-- `exercises` tablosunu Supabase'e taşı (şu an `workout_repository.dart`'da hard-coded 43 egzersiz); migration script + Admin CRUD ile yönet.
-- İçerik pipeline dokümantasyonu (`docs/CONTENT_OPS.md`): freelance diyetisyen brief + onay akışı + süper admin yayın adımı.
+Yukarıda Bölüm 1.5.2'de açıklandı: kayıt tutmak için tablo + RPC mevcut, ama **ödül grant** (her iki tarafa 1 ay Pro boost) henüz otomatize edilmedi. Launch sonrası ilk ay manual grant ile başla, kullanım %5'i geçerse otomatize et (RevenueCat REST API + Supabase Edge Function).
 
----
+### 3.2 user_metrics tablosu Supabase'e taşıma
 
-## Faz 51 · Video ve Asset CDN Göçü 🟡
+`supabase_rls_policies.sql:217-284` arasında **yorumlu** olarak hazır. Launch için zorunlu değil — wizard çıktısı SharedPreferences'ta kalmaya devam ediyor. Çoklu cihaz senkronizasyonu istendiği gün apply edilir.
 
-**Hedef:** 100K kullanıcıda Supabase Storage bandwidth'ini devirmeyecek bir video dağıtım altyapısı.
+### 3.3 Apple Watch complication & Live Activity polish
 
-**Görevler:**
-- Cloudflare R2 veya Bunny Stream hesabı aç; custom domain tanımla (`cdn.formai.app`).
-- Supabase Storage'daki mevcut video varlıklarını CDN bucket'ına migrate et (bir kerelik script).
-- `workout_repository._videoUrl` helper'ını CDN URL'ine point et; `.env`'e `CDN_BASE_URL` ekle.
-- HLS dönüşümü (opsiyonel, Bunny otomatik yapıyor): `.mp4` → `.m3u8` + segment'lar; ilk saniye hızlı başlasın.
-- Video cache (`flutter_cache_manager` özel instance) — aynı video ikinci açılışta diskten çalar.
-- Bandwidth monitoring dashboard: CDN → usage alerts (10 GB/gün threshold).
-- Fallback: CDN 404 durumunda Supabase Storage URL'ine düşme (ileri geri uyumluluk).
+Faz 55 iOS Live Activities entegrasyonunu içerdi. Apple Watch complication ileri faz olarak bırakıldı.
 
----
+### 3.4 ASO + içerik pazarlaması
 
-## Faz 52 · Dashboard Evrimi — Sesli Özet, Retrospektif, Momentum 🟢
+Faz 56 (Launch-Sonrası Büyüme) kapsamı:
+- App Store / Play Console A/B test (3 başlık × 5 screenshot varyantı).
+- TikTok / YouTube Shorts içerik üretimi.
+- Zendesk / Helpscout entegrasyonu (şu an mailto fallback ile yetiniliyor — `support@formai.app`).
 
-**Hedef:** Gelişim + Beslenme hero'larını pasif tracker'dan aktif koça dönüştürmek.
+### 3.5 Onboarding metric/imperial toggle
 
-**Görevler:**
-- Sabah TTS özeti (`flutter_local_notifications` scheduled + `flutter_tts`): "Günaydın. Bugün 1800 kcal hedefin var. Öğlen [tarif] öneririm."
-- Haftalık retrospektif kartı (pazar 20:00): "Bu hafta 4/7 antrenman · %72 beslenme hedefi · X kcal yakıldı. Gelecek hafta için: …"
-- Momentum warning push: streak 2 gün düşerse notification ("Seriye dönmek için 10 dakika yeterli").
-- `workoutSessionProvider` state change listener → streak düşüşü tespiti.
-- "User-first audit" pass: her sayısal stat (%72, 3 gün, 1800 kcal) bir eyleme bağlanmalı. `Gelişim` tab'ının 3 stat kartı zaten bağlı — Beslenme hero'sundaki makro çubuklarını da "öneri yap" CTA'sına bağla.
-- Kişiselleştirilmiş landing: streak tier'a göre Gelişim karşılama copy'si ("Şampiyon koşusu — 7+ gün serideyken", "Geri dönüş — streak = 0 + önceki streak > 0").
+Türkiye launch'ı için yeterli; global launch öncesi eklenmeli. 2 saatlik iş.
+
+### 3.6 25 tarif `ingredients[]` backfill
+
+Faz 57 schema bump'ı `ingredients` kolonunu zorunlu yaptı ama mevcut 25 tarifte değer NULL. Admin panelden tek tek doldurulabilir veya bir kerelik SQL backfill çalıştırılabilir. Kullanıcı görsel olarak kayıp yaşamıyor (alışveriş listesi fallback'i çalışıyor) ama Faz 56 Lite favoriler özelliğinin tam yararı için doldurulması iyi olur.
+
+### 3.7 README.md doldurulması
+
+Repo kökündeki `README.md` 1 satır — boş. Public repo olmasa da yeni geliştirici onboarding'i için 30 satırlık bir README yararlı (kurulum, env şablonu, branch policy).
+
+### 3.8 `.env.example` senkronizasyonu
+
+Yukarıda 1.1'de bahsedilen RevenueCat anahtar isim tutarsızlığı. **3 dakikalık fix:** `.env.example` içinde `REVENUECAT_APPLE_KEY` → `REVENUECAT_IOS_KEY`, `REVENUECAT_GOOGLE_KEY` → `REVENUECAT_ANDROID_KEY`. SENTRY_DSN, POSTHOG_API_KEY, POSTHOG_HOST de eklenmeli.
 
 ---
 
-## Faz 53 · Tema — Dark/Light ve Erişilebilirlik 🟢
+## 4. Onboarding & UI Audit — Faz 39 Bölüm 11 Kalemleri Karşı Denetim
 
-**Hedef:** App Store Accessibility smoke'dan geçmek + açık tema tercih eden kullanıcıları kaybetmemek.
+Faz 39 raporunda **11 placeholder CTA** listelenmişti. Faz 40 + Faz 47/47B sonrası **her bir kalemin durumu**:
 
-**Görevler:**
-- `ThemeProvider` (Riverpod) + `MaterialApp.themeMode` bağlantısı; system/light/dark üç seçenek.
-- Açık tema color token'ları: mevcut `_neon`, `_success`, `_orange` koruyarak background/surface/onSurface paletini light için üret.
-- `profile_tab` altında "Tema" satırı (System / Dark / Light).
-- Adaptive typography: `MediaQuery.textScalerOf(context)` ile scale factor >1.3 durumunda tüm hero text'ler 2 satıra sığsın.
-- `Semantics` label'ları kritik CTA'lara (Antrenmana Başla, Paywall "Devam Et", Profil menü öğeleri).
-- Contrast ratio audit: AA level için Orange (#F97316) on dark background kontrol et; gerekirse tonu kaydır.
-- RTL readiness (gelecek için): `Directionality` test — şu an Türkçe LTR ama altyapı hazır olsun.
+| Faz 39 raporunda listelenen | Düzeltme fazı | Şu anki durum |
+| --- | --- | --- |
+| `nutrition_tab.dart` "Tümünü Gör" | Faz 47A | ✅ `/nutrition/discover` route'una bağlandı |
+| `gelisim_tab.dart` "Takvimi Gör →" | Faz 47A | ✅ `/progress/calendar` route'una bağlandı |
+| `gelisim_tab.dart` "Önerilere Git →" | Faz 47A | ✅ `/progress/suggestions` route'una bağlandı |
+| `gelisim_tab.dart` "Tümünü Gör →" (rozetler) | Faz 47A | ✅ `/progress/badges` route'una bağlandı |
+| `workout_camera_screen.dart` "Önceki egzersize geç" | Faz 47B | ✅ `_previousExercise` notifier method'u eklendi |
+| `category_recipes_screen.dart` boş kategori metni | Faz 47B | ✅ "Benzer tarifler" önerisi gösteriliyor |
+| `plan_detail_screen.dart` "yakında" plan placeholder | Faz 47B + Faz 53D | ✅ Premium-locked durumda neon CTA, real-day-null durumda "Yakında" subtitle (kabul edilebilir; Bölüm 2.3) |
+| `antrenman_tab.dart` boş kategori | Faz 47B | ✅ Boş kategori artık görünmüyor (filter mantığı düzeltildi) |
+| `profile_tab.dart` "Değiştir" menü | Faz 47B + Faz 48.1 | ✅ Profile edit, password change, notification prefs ekranları aktif |
+| `account_settings_screen.dart` placeholder | Faz 41 + Faz 47B | ✅ Hesap silme, KVKK metni, destek mailto aktif |
+| `recipe_detail_screen.dart` "Tarifi plana ekle" tracking | Faz 56 Lite | ✅ Favoriler entegrasyonu + analytics event |
 
----
+**Sonuç:** Faz 39'da listelenen 11 kalemin **11'i de** kapatıldı.
 
-## Faz 54 · Sosyal Paylaşım ve Viral Döngü 🟢
+### 4.1 Kalan UI bug inceleme (Faz 57 + 58 kapsamı)
 
-**Hedef:** Organik büyüme için paylaşılabilir an'lar yaratmak.
+Son iki commit (`bb98f24`, `1dea47b`) bottom-overflow + akıllı bildirim mantığı ekledi. Manuel test:
 
-**Görevler:**
-- `share_plus` paketi entegre; paylaşım sheet'i iOS + Android native.
-- Paylaşım kartları: "%X program tamamlandım" (Gelişim tab'ının sağ-üst ikonu), "Rozet kazandım" (yeni rozet unlock'unda modal).
-- Görsel template'ler: her paylaşım için 1080x1920 story + 1080x1080 square PNG render (offscreen canvas + `RepaintBoundary.toImage`).
-- Deep link altyapısı (`uni_links` veya `app_links`): paylaşılan link → in-app preview.
-- Referral kodu: her kullanıcıya 6-karakter kod; davet edilen kullanıcı kaydolursa her iki tarafa 1 aylık Pro boost.
-- Paylaşım event'i analytics: `share_initiated` + `share_completed`.
+- [ ] Recipe grid (Beslenme sekmesi → "Tümünü Gör" → 5+ tarif scroll) — bottom overflow yok.
+- [ ] Onboarding 6/7/8. step — photo card'lar ekran taşmıyor.
+- [ ] Paywall — light/dark mod arası geçişte ghost text yok.
+- [ ] Plan detail — 30 günlük grid'de invisible day cards yok (Faz 53D düzeltmesi).
+- [ ] Light mode tüm ekranlar ghost text'ten arınmış (Faz 53B-I serisi).
 
----
-
-## Faz 55 · iOS Widget'ları ve Live Activities 🟢
-
-**Hedef:** App dışında marka hatırlanırlığı — home screen ve Dynamic Island.
-
-**Görevler:**
-- iOS Home Screen widget (`home_widget` paketi veya native WidgetKit): günün görevi + % kaldı + "Başla" deeplink.
-- Widget veri push'u: `workoutSessionProvider` state change'lerinde `HomeWidget.saveWidgetData` + `HomeWidget.updateWidget`.
-- Live Activity (iOS 16.1+): antrenman başladığında aktivite başlat; Dynamic Island "N. set · kalan süre" gösterimi.
-- Android Glance widget equivalent: `home_widget`'ın Android tarafı Jetpack Glance ile.
-- "Bugün" Apple Watch complication (ileri aşama, opsiyonel).
+Bu manuel checklist gerçek cihazda ~45 dakikalık test pass ile kapatılır.
 
 ---
 
-## Faz 56 · Launch-Sonrası Büyüme — A/B, UGC, ASO Ops 🟢
+## 5. Manuel PM Görevlerinin Konsolide Listesi
 
-**Hedef:** İlk 30 gün kullanıcı davranışından öğrenip ürünü sürekli keskinleştirmek.
+PM'in **uygulamayı yayına almadan önce kendi başına** yapması gereken aksiyonlar (kod tarafı dışı):
 
-**Görevler:**
-- Remote Config tabanlı feature flag sistemi (Faz 46'da başladıysa genişlet): paywall varyantları (soft vs hard), onboarding copy A/B.
-- User-Generated Content MVP:
-  - Kullanıcı tarif ekleme formu (moderation queue'ya düşer).
-  - Admin panel (Faz 50) moderation view.
-  - "Favori tarifim" + shopping list (haftalık plan için ingredients export).
-- ASO deneyleri: App Store listing için 3 başlık varyantı, 5 screenshot varyantı; App Store / Play Console A/B test.
-- Türkçe içerik pazarlaması: YouTube Shorts + TikTok — her egzersiz için 15 sn klip; app store link organik.
-- Destek ticket sistemi: Zendesk veya Helpscout entegrasyonu; in-app "Destek" ekranından konu başlığı seçimi + mesaj.
-- Churn anketi: iptal eden kullanıcıya 1 soruluk "neden" anketi (exit survey).
+### 5.1 Hosting & Hukuk (Faz 41 manual remainder)
+- [ ] `formai.app/terms` sayfasını yayına al.
+- [ ] `formai.app/privacy` sayfasını yayına al.
+- [ ] Play Console → App content → Data Safety form'u doldur.
+- [ ] iOS device'ta ATT testi (prompt **görünmemeli**).
+
+### 5.2 Gözlemlenebilirlik (Faz 42 manual remainder)
+- [ ] Sentry'de proje yarat → DSN'i `.env`'e ekle.
+- [ ] PostHog'da proje yarat → API key + host'u `.env`'e ekle.
+- [ ] Sentry'de bir test exception tetikle, dashboard'da gör.
+- [ ] PostHog'da `onboarding_step_completed` event'lerini gör.
+
+### 5.3 RevenueCat Production (Faz 45 manual remainder)
+- [ ] Google Play Console → 3 ürün yarat (`formai_pro_monthly`, `formai_pro_quarterly`, `formai_pro_yearly`) ve ACTIVE state.
+- [ ] Fiyat: ₺149 / ₺299 / ₺799 (TR locale).
+- [ ] RevenueCat dashboard → "FormAI Pro" entitlement'a 3 ürünü bağla.
+- [ ] `kProEntitlementId` ile entitlement adı **byte-byte aynı** doğrula.
+- [ ] `.env`'e `REVENUECAT_ANDROID_KEY` ekle.
+- [ ] iOS yayını başladığında `REVENUECAT_IOS_KEY` ekle.
+- [ ] Internal Testing'de gerçek satın alma testi.
+- [ ] Restore Purchases test.
+- [ ] Sandbox tester ile cancel + refund testi.
+
+### 5.4 Supabase Production SQL apply
+- [ ] `supabase_rls_policies.sql` apply.
+- [ ] `delete_user` RPC apply (Bölüm 1.5.1 SQL).
+- [ ] `referrals` tablosu + `redeem_referral` RPC apply (Bölüm 1.5.2 SQL).
+- [ ] `feedback` tablosu + RLS apply (Bölüm 1.5.3 SQL).
+- [ ] `supabase_exercises_migration.sql` apply.
+- [ ] `supabase_seed_categories.sql` + `supabase_seed_recipes.sql` apply.
+- [ ] `supabase_patch_first_5_recipes.sql` + `supabase_patch_missing_tags.sql` apply.
+- [ ] RLS smoke test: iki farklı kullanıcı oluştur, A user_progress'ten B'yi okuyamadığını doğrula.
+
+### 5.5 Build & Mağaza Submit
+- [ ] `flutter pub get && flutter analyze && flutter test` lokalde temiz geçti.
+- [ ] CI yeşil.
+- [ ] Onboarding hook görselleri release APK'sında render ediyor (Bölüm 2.1 manuel test).
+- [ ] Cold start <2.5s (Bölüm 2.5 manuel ölçüm).
+- [ ] Play Console Internal Testing track'a APK upload.
+- [ ] Internal Testing → Closed Testing → Production track promotion.
 
 ---
 
-## Özet Tablosu
+## 6. Sürpriz Gözlemler ve Risk Notları
 
-| Faz | Başlık | Öncelik | Tahmini Süre |
-| --- | --- | --- | --- |
-| 40 | App Store Blokörleri & Temizlik | 🔴 | 1 oturum |
-| 41 | Gizlilik, Hukuk & Mağaza Uyumu | 🔴 | 1 oturum |
-| 42 | Gözlemlenebilirlik (Sentry + Analytics) | 🔴 | 2 oturum |
-| 43 | Supabase RLS & Veri Güvenliği | 🔴 | 1 oturum |
-| 44 | QA Otomasyonu & CI/CD | 🟡 | 2 oturum |
-| 45 | RevenueCat Prod & Soft Freemium | 🔴 | 1 oturum |
-| 46 | Onboarding Optimizasyonu & Funnel | 🟡 | 1-2 oturum |
-| 47 | Kırık Butonlar → Gerçek Ekranlar | 🟡 | 3-4 oturum |
-| 48 | Performans & Ölçeklenebilirlik | 🟡 | 2 oturum |
-| 49 | UI Polish — Haptic & Motion | 🟢 | 1-2 oturum |
-| 50 | İçerik Operasyonu — Admin Panel | 🟡 | 3-5 oturum |
-| 51 | Video & Asset CDN Göçü | 🟡 | 2 oturum |
-| 52 | Dashboard Evrimi — Sesli Özet | 🟢 | 2 oturum |
-| 53 | Tema — Dark/Light & Erişilebilirlik | 🟢 | 1-2 oturum |
-| 54 | Sosyal Paylaşım & Viral Döngü | 🟢 | 2 oturum |
-| 55 | iOS Widget'ları & Live Activities | 🟢 | 2-3 oturum |
-| 56 | Launch-Sonrası Büyüme | 🟢 | Süreklilik |
+### 6.1 `.env.example` ↔ kod tutarsızlığı (1.1'de detaylı)
 
-## Kritik Yol (Launch'a Kadar)
+`REVENUECAT_APPLE_KEY` / `REVENUECAT_GOOGLE_KEY` adları **ölü** — kod gerçekte `REVENUECAT_IOS_KEY` / `REVENUECAT_ANDROID_KEY` arıyor. Yeni katılan bir geliştirici `.env.example`'ı kopyalayıp dolduruyor → uygulama RevenueCat'i hiç tanımıyor → fallback paywall sürekli görünüyor → "neden purchase çalışmıyor?" debug saatleri yanıyor. **Launch sonrası ilk fix bu olmalı.**
 
-Mağaza yayınına gitmeden önce **zorunlu** fazlar (🔴):
-**40 → 41 → 42 → 43 → 45**
+### 6.2 `delete_user`, `redeem_referral`, `feedback` SQL'lerinin repo'da olmaması
 
-Bu 5 faz tamamlandığında TestFlight + Play Internal Testing'e soft-launch yapılabilir. Geri kalan 🟡 ve 🟢 fazları paralel olarak 4-6 haftalık bir sprint planına dağıtılabilir; kritik olmayanlar launch-sonrası veri döngüsüyle önceliklenir.
+Kod bu RPC'leri / tabloları çağırıyor ama SQL şablonları repoda **yok**. Mevcut Supabase production veritabanında zaten apply edilmişse fonksiyonel — fakat bu durumda **versiyon kontrolü dışı bir state** taşıyoruz. Yeniden bir staging veritabanı kurulmak istense `error: function delete_user does not exist` ile karşılaşılır. Bu raporun 1.5 bölümündeki SQL bloklarını `supabase/migrations/` klasörüne `002_*.sql`, `003_*.sql`, `004_*.sql` olarak commit etmek (1 oturumluk iş) launch sonrası en yüksek-değer hijyen aksiyondur.
+
+### 6.3 Asset isimlerinin Türkçe karakter içermesi
+
+`photos/günlükaktitenne*.webp`, `photos/kişiselleştirilmiş plan*.webp` (boşluk + Türkçe karakter karışımı). Flutter'ın asset bundler'ı genel olarak destekler ama **iOS Xcode build aşamasında** path normalization bug'ları geçmişte yaşanmıştı. Mevcut `errorBuilder` fallback'leri **crash önler** ama **silent visual degrade** yaratır. Bölüm 2.1'deki manuel APK testi bu riski kapatır.
+
+### 6.4 RevenueCat `iOS` key'i olmadan launch — tutarlı davranış
+
+PM şu an sadece Google Play sahibi. Kod `Platform.isIOS ? REVENUECAT_IOS_KEY : REVENUECAT_ANDROID_KEY` mantığıyla çalışıyor; iOS key boş ise iOS build'inde `Purchases.configure` fail oluyor ama **fallback paywall hardcoded fiyatlarla yine render oluyor**. Yani Android-only launch + iOS sonra → kod tarafı uyumlu, iOS yayına başlandığı gün tek satır `.env` ekleme yeterli.
+
+---
+
+## 7. Sonuç ve "GO/NO-GO" Karar Matrisi
+
+| Kriter | Durum |
+| --- | --- |
+| Kod yayına hazır | ✅ |
+| Test paketi mevcut + CI yeşil | 🟡 (lokal doğrulama bekleniyor) |
+| Privacy/Terms canlı URL | 🔴 (PM hostlamadı) |
+| Sentry + PostHog DSN'leri `.env`'de | 🔴 (PM doldurmadı) |
+| RevenueCat prod ürün + entitlement | 🔴 (PM yarattıysa OK; bilmiyoruz) |
+| Supabase production RPC + tablo apply | 🔴 (4 SQL parçası bekliyor) |
+| Onboarding görselleri release APK'da render | 🟡 (manuel test bekliyor) |
+| Cold start ölçümü | 🟡 (manuel test bekliyor) |
+
+**GO için tüm 🔴 → ✅, 🟡 → ✅ veya bilinçli kabul olmalı.**
+
+Bu rapor onaylanıp manuel checklist tamamlandıktan sonra:
+1. **Internal Testing track'a APK push.**
+2. **3-5 gün soak.**
+3. **Closed Testing → Production track promotion.**
+
+Tahmini süre: PM tarafının manuel görevleri 1-2 iş günü (yasal sayfalar + RevenueCat dashboard + SQL apply); CI + manuel APK testi 0.5 gün. **Toplam: 2-3 iş günü içinde Türkiye soft-launch hazır.**
+
+---
 
 ## Hatırlatma
 
-Bu yol haritası **Faz 39 raporunun yürütme planıdır**. Rapor güncellendikçe (yeni tech debt, yeni özellik talebi, yeni mağaza kuralı) bu dosya da güncellenmelidir. Her faz tamamlandığında başlığın yanına `✅` emojisi eklenir; yarım kalan fazlar `⏳` ile işaretlenir.
+Bu doküman `PROJECT_DOCUMENTATION.md` (Faz 39 post-mortem) ve Faz 40-58 commit log'unun bileşkesidir. Her launch blocker giderildiğinde **bu dosya değil**, ilgili bölümün altına `✅ <tarih> kapatıldı` notu düşülerek tarihçe korunur. Yeni post-mortem (Faz 59?) yazıldığında bu dosya arşive alınır ve yenisi `ROADMAP.md` adıyla yer değiştirir.
