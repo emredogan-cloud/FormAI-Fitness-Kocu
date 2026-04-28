@@ -1,4 +1,4 @@
-package com.example.sixpack_ai
+package com.emredogan.formai
 
 import io.flutter.embedding.android.FlutterActivity
 

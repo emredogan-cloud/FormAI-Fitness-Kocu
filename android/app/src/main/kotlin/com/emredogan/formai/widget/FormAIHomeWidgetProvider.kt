@@ -10,7 +10,7 @@
 // XML layout under `res/layout/form_ai_widget.xml`, and attach a
 // PendingIntent so a tap deep-links into the live workout session.
 
-package com.example.sixpack_ai.widget
+package com.emredogan.formai.widget
 
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
@@ -20,7 +20,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.RemoteViews
-import com.example.sixpack_ai.R
+import com.emredogan.formai.R
 import es.antonborri.home_widget.HomeWidgetPlugin
 
 class FormAIHomeWidgetProvider : AppWidgetProvider() {

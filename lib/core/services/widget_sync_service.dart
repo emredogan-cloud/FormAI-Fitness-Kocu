@@ -42,7 +42,7 @@ class WidgetSyncService {
   /// namespace, but we use FQN for clarity given the package id and
   /// the provider package differ in the manifest.
   static const String _androidProvider =
-      'com.example.sixpack_ai.widget.FormAIHomeWidgetProvider';
+      'com.emredogan.formai.widget.FormAIHomeWidgetProvider';
 
   /// iOS widget bundle name registered via `@main` in the
   /// FormAIWidget target's `WidgetBundle`.
