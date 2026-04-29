@@ -9,19 +9,25 @@ const Color _neonAccent = Color(0xFF4DA6FF);
 ///
 /// `value` is the token persisted to wizard state (e.g. `belly_burn`,
 /// `sedentary`). `label` is the user-facing copy. `helper` is an
-/// optional one-liner shown beneath the label.
+/// optional one-liner shown beneath the label. `imageAsset` is an
+/// optional bundled photo path (Phase 60E) — when provided the card
+/// renders a 56x56 thumbnail on the right edge of the card; if the
+/// asset can't be decoded the tile falls back to a stylised gradient
+/// + the option's [icon].
 class InteractiveOption {
   const InteractiveOption({
     required this.value,
     required this.label,
     required this.icon,
     this.helper,
+    this.imageAsset,
   });
 
   final String value;
   final String label;
   final IconData icon;
   final String? helper;
+  final String? imageAsset;
 }
 
 /// Phase 60B · the reusable "interactive" question surface.
@@ -253,6 +259,7 @@ class _OptionCard extends StatelessWidget {
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
                           option.label,
@@ -265,11 +272,15 @@ class _OptionCard extends StatelessWidget {
                           ),
                         ),
                         if (option.helper != null) ...[
-                          const SizedBox(height: 2),
+                          const SizedBox(height: 4),
+                          // Phase 60E · motivational subtext under the
+                          // primary label. PM rule: ~0.7 alpha so it
+                          // reads as supportive but doesn't compete
+                          // with the choice itself.
                           Text(
                             option.helper!,
                             style: const TextStyle(
-                              color: Colors.white54,
+                              color: Colors.white70,
                               fontSize: 12,
                               height: 1.35,
                             ),
@@ -278,15 +289,27 @@ class _OptionCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  AnimatedOpacity(
-                    duration: const Duration(milliseconds: 220),
-                    opacity: selected ? 1.0 : 0.0,
-                    child: const Icon(
-                      Icons.check_circle,
-                      color: _neon,
-                      size: 22,
+                  // Phase 60E · trailing slot. With an image asset the
+                  // card renders a 56x56 photo tile (selection halo +
+                  // a corner check overlay when picked). Without one
+                  // the original check-icon-only behaviour stays.
+                  if (option.imageAsset != null) ...[
+                    const SizedBox(width: 12),
+                    _OptionImageTile(
+                      asset: option.imageAsset!,
+                      icon: option.icon,
+                      selected: selected,
                     ),
-                  ),
+                  ] else
+                    AnimatedOpacity(
+                      duration: const Duration(milliseconds: 220),
+                      opacity: selected ? 1.0 : 0.0,
+                      child: const Icon(
+                        Icons.check_circle,
+                        color: _neon,
+                        size: 22,
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -347,6 +370,102 @@ class _FeedbackBanner extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Phase 60E · trailing image tile rendered when an [InteractiveOption]
+/// supplies an [InteractiveOption.imageAsset]. 56x56, rounded corners,
+/// neon halo + corner check overlay when selected. The
+/// [Image.asset.errorBuilder] catches missing/corrupt assets and
+/// renders a gradient + the option's icon so the layout stays visually
+/// balanced even when an asset path is wrong.
+class _OptionImageTile extends StatelessWidget {
+  const _OptionImageTile({
+    required this.asset,
+    required this.icon,
+    required this.selected,
+  });
+
+  final String asset;
+  final IconData icon;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 240),
+      curve: Curves.easeOutCubic,
+      width: 56,
+      height: 56,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: selected ? _neon : Colors.white.withValues(alpha: 0.15),
+          width: selected ? 1.6 : 1,
+        ),
+        boxShadow: selected
+            ? [
+                BoxShadow(
+                  color: _neon.withValues(alpha: 0.5),
+                  blurRadius: 14,
+                  spreadRadius: -2,
+                ),
+              ]
+            : null,
+      ),
+      child: Stack(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(13),
+            child: Image.asset(
+              asset,
+              fit: BoxFit.cover,
+              width: 56,
+              height: 56,
+              errorBuilder: (_, __, ___) => DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      _neon.withValues(alpha: 0.45),
+                      _neonAccent.withValues(alpha: 0.35),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: Center(
+                  child: Icon(icon, color: Colors.white, size: 26),
+                ),
+              ),
+            ),
+          ),
+          AnimatedOpacity(
+            duration: const Duration(milliseconds: 220),
+            opacity: selected ? 1.0 : 0.0,
+            child: Align(
+              alignment: Alignment.bottomRight,
+              child: Padding(
+                padding: const EdgeInsets.all(2),
+                child: Container(
+                  width: 18,
+                  height: 18,
+                  decoration: BoxDecoration(
+                    color: _neon,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.black, width: 1.4),
+                  ),
+                  child: const Icon(
+                    Icons.check,
+                    size: 11,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

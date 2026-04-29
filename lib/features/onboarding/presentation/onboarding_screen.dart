@@ -22,11 +22,15 @@ import 'widgets/interactive_question_step.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonAccent = Color(0xFF4DA6FF);
-// Phase 60D · 11 pages total.
+// Phase 60E · 12 pages total.
 //
 //   • 2 hook screens (welcome, coach_intro)
+//   • 1 gender screen (Phase 60E) — the missing demographic input that
+//     feeds the macro calculator's sex correction
 //   • 4 interactive AI-styled questions (goal, experience_level,
-//     daily_minutes, activity) — the "premium" Phase-60B surface
+//     daily_minutes, activity) — the "premium" Phase-60B surface,
+//     refreshed in 60E with image-tile cards on goal + helper
+//     subtexts on experience_level
 //   • 1 physical-data screen (CupertinoPicker wheels for age, height,
 //     weight) feeding BMR/TDEE downstream
 //   • 1 pain-point screen (interactive) — surfaces the user's blocker
@@ -35,21 +39,20 @@ const Color _neonAccent = Color(0xFF4DA6FF);
 //   • 1 dynamic-report screen — qualitative "AI Assessment" with
 //     BMI/calorie cards + 92% confidence bar
 //   • 1 pre-paywall summary screen (Phase 60D) — concrete plan card
-//     (goal / 12 weeks / difficulty / weekly cadence / projected
-//     results) before the paywall route
+//     before the paywall route
 //
 // Nutrition steps live in `NutritionOnboardingSheet` and are surfaced
 // on first Beslenme-tab view (Phase 46).
-const int _totalSteps = 11;
+const int _totalSteps = 12;
 const int _hookSteps = 2;
 
 /// Phase 42 · analytics labels per onboarding page. Index-aligned with
 /// the `PageView.children` list below so the funnel reads the same
-/// names the code uses. Phase 60D inserts `pre_paywall_summary` right
-/// before the wizard's _finish/paywall hand-off.
+/// names the code uses. Phase 60E re-adds `gender` at slot 2.
 const List<String> _stepNames = [
   'welcome',
   'coach_intro',
+  'gender',
   'goal',
   'experience_level',
   'daily_minutes',
@@ -199,6 +202,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 children: [
                   _WelcomeStep(onStart: _next),
                   _CoachIntroStep(onContinue: _next),
+                  _GenderStep(onCommitted: _next),
                   _GoalStep(onCommitted: _next),
                   _ExperienceStep(onCommitted: _next),
                   _DailyMinutesStep(onCommitted: _next),
@@ -2217,11 +2221,59 @@ class _BlurSilhouette extends StatelessWidget {
 
 // ───────────────────────── Phase 60B interactive steps ──────────────────────
 //
-// The four screens below are the "AI coaching" surface introduced by
-// Phase 60B. They all delegate to [InteractiveQuestionStep] — selecting
-// a card highlights it, dims its peers, fades in a micro-feedback line,
-// then auto-advances ~1.5s later. Each step writes to a single field
-// on [WizardState] so the wizard payload stays one-row-per-question.
+// The screens below are the "AI coaching" surface introduced by
+// Phase 60B (refreshed in 60E with image-tile cards on goal + helper
+// subtexts on experience_level + a re-introduced gender screen). They
+// all delegate to [InteractiveQuestionStep] — selecting a card
+// highlights it, dims its peers, fades in a micro-feedback line, then
+// auto-advances ~1.5 s later.
+
+/// Phase 60E · gender as the first demographic input. Stores the
+/// existing [Gender] enum (preserved in `WizardState` for the profile
+/// editor) — the wizard's `toJson` already serialises it as the
+/// enum's name, which is the string token downstream services expect.
+class _GenderStep extends ConsumerWidget {
+  const _GenderStep({required this.onCommitted});
+  final VoidCallback onCommitted;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final current = ref.watch(wizardProvider).gender;
+    return InteractiveQuestionStep(
+      title: 'Cinsiyetin?',
+      subtitle: 'Programını sana göre kalibre edelim.',
+      initialValue: current?.name,
+      feedbackText: 'Programını sana özel kalibre ediyorum.',
+      options: const [
+        InteractiveOption(
+          value: 'female',
+          label: 'Kadın',
+          icon: Icons.female_rounded,
+          imageAsset: 'photos/cinsiyetseçimikadın.webp',
+        ),
+        InteractiveOption(
+          value: 'male',
+          label: 'Erkek',
+          icon: Icons.male_rounded,
+          imageAsset: 'photos/cinsiyetseçimierkek.webp',
+        ),
+        InteractiveOption(
+          value: 'other',
+          label: 'Diğer',
+          icon: Icons.transgender_rounded,
+        ),
+      ],
+      onCommitted: (value) {
+        final picked = Gender.values.firstWhere(
+          (g) => g.name == value,
+          orElse: () => Gender.other,
+        );
+        ref.read(wizardProvider.notifier).setGender(picked);
+        onCommitted();
+      },
+    );
+  }
+}
 
 class _GoalStep extends ConsumerWidget {
   const _GoalStep({required this.onCommitted});
@@ -2235,23 +2287,29 @@ class _GoalStep extends ConsumerWidget {
       subtitle: 'Sana en uygun planı bunun üzerine inşa edeceğim.',
       initialValue: current,
       feedbackText:
-          '🔥 Harika seçim! Bu hedefe sahip kullanıcıların %70’i 30 gün '
-          'içinde fark görüyor.',
+          '🔥 Harika seçim! Bu hedefle başlayanların çoğu 30 gün içinde '
+          'fark görüyor.',
+      // Phase 60E · transformation thumbnails on the right of each
+      // card. Where a bundled asset isn't a perfect match (`strength`)
+      // we omit the path and let the icon stay as the visual anchor.
       options: const [
         InteractiveOption(
           value: 'belly_burn',
           label: 'Göbek eritmek',
           icon: Icons.local_fire_department_rounded,
+          imageAsset: 'photos/hedefinneSıkılaşmak.webp',
         ),
         InteractiveOption(
           value: 'muscle_gain',
           label: 'Kas yapmak',
           icon: Icons.fitness_center_rounded,
+          imageAsset: 'photos/hedefinneHacimKazanmak.webp',
         ),
         InteractiveOption(
           value: 'fitness_look',
           label: 'Daha fit görünmek',
           icon: Icons.auto_awesome_rounded,
+          imageAsset: 'photos/hedefinneSadeceSix-Pack.webp',
         ),
         InteractiveOption(
           value: 'strength',
@@ -2279,21 +2337,28 @@ class _ExperienceStep extends ConsumerWidget {
       subtitle: 'Programın zorluğunu seviyene göre kalibre edeceğim.',
       initialValue: current,
       feedbackText: 'Tamam, programını buna göre ayarlıyorum.',
+      // Phase 60E · motivational subtext under each option per
+      // PM mapping. Reads as supportive ("hiç sorun değil") rather
+      // than judgemental.
       options: const [
         InteractiveOption(
           value: 'none',
           label: 'Hiç yapmadım',
           icon: Icons.spa_rounded,
+          helper:
+              'Hiç sorun değil. Sıfırdan başlayıp hızlı gelişim sağlayacağız.',
         ),
         InteractiveOption(
           value: 'occasional',
           label: 'Ara sıra yaptım',
           icon: Icons.directions_walk_rounded,
+          helper: 'Harika, temelini güçlendirip daha iyi sonuç alacağız.',
         ),
         InteractiveOption(
           value: 'regular',
           label: 'Düzenli yapıyorum',
           icon: Icons.fitness_center_rounded,
+          helper: 'Seviyeni bir üst noktaya taşıyacağız.',
         ),
       ],
       onCommitted: (value) {
