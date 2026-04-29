@@ -154,7 +154,7 @@ class _InteractiveQuestionStepState extends State<InteractiveQuestionStep>
             child: Column(
               children: [
                 for (final opt in widget.options) ...[
-                  _OptionCard(
+                  OptionCard(
                     option: opt,
                     selected: _selected == opt.value,
                     dimmed: _committing && _selected != opt.value,
@@ -163,7 +163,7 @@ class _InteractiveQuestionStepState extends State<InteractiveQuestionStep>
                   if (opt != widget.options.last) const SizedBox(height: 12),
                 ],
                 const SizedBox(height: 16),
-                _FeedbackBanner(
+                FeedbackBanner(
                   fade: _feedbackFade,
                   slide: _feedbackSlide,
                   text: widget.feedbackText,
@@ -179,8 +179,14 @@ class _InteractiveQuestionStepState extends State<InteractiveQuestionStep>
 
 /// Single tappable card. Animates border + scale when selected, fades
 /// to ~45% when another option has been picked.
-class _OptionCard extends StatelessWidget {
-  const _OptionCard({
+///
+/// Promoted to public in Phase 60F so the hybrid `_ActivityStep` can
+/// re-use the exact same card visuals (icon + label + helper subtext +
+/// optional [InteractiveOption.imageAsset] thumbnail) without
+/// duplicating ~80 lines of decoration / animation code.
+class OptionCard extends StatelessWidget {
+  const OptionCard({
+    super.key,
     required this.option,
     required this.selected,
     required this.dimmed,
@@ -323,8 +329,12 @@ class _OptionCard extends StatelessWidget {
 /// Micro-feedback banner that fades+slides in once a card has been
 /// picked. Sits below the card list and reads as the AI's "analysis"
 /// reaction to the user's choice.
-class _FeedbackBanner extends StatelessWidget {
-  const _FeedbackBanner({
+///
+/// Public since Phase 60F so the hybrid `_ActivityStep` can render
+/// the same banner without duplication.
+class FeedbackBanner extends StatelessWidget {
+  const FeedbackBanner({
+    super.key,
     required this.fade,
     required this.slide,
     required this.text,

@@ -29,6 +29,7 @@ class WizardState {
     this.experienceLevel,
     this.dailyMinutes,
     this.painPoint,
+    this.activityDescription,
     this.dietPreference = kDefaultDietPreference,
     this.allergies = kDefaultAllergies,
     this.mealFrequency = kDefaultMealFrequency,
@@ -63,6 +64,12 @@ class WizardState {
   /// One of: `motivation`, `consistency`, `no_idea`, `diet`.
   final String? painPoint;
 
+  /// Phase 60F · free-text "describe your day" answer captured by the
+  /// hybrid activity step. Set instead of (not in addition to)
+  /// [activityLevel] when the user opts to write rather than tap a
+  /// preset card. Stays null when the user picks a card.
+  final String? activityDescription;
+
   /// One of: `standart`, `vejetaryen`, `vegan`, `ketojenik`. Keyed in
   /// Turkish ASCII to match the rest of the wizard's persisted tokens.
   final String dietPreference;
@@ -90,6 +97,7 @@ class WizardState {
     String? experienceLevel,
     String? dailyMinutes,
     String? painPoint,
+    String? activityDescription,
     String? dietPreference,
     String? allergies,
     String? mealFrequency,
@@ -107,6 +115,7 @@ class WizardState {
       experienceLevel: experienceLevel ?? this.experienceLevel,
       dailyMinutes: dailyMinutes ?? this.dailyMinutes,
       painPoint: painPoint ?? this.painPoint,
+      activityDescription: activityDescription ?? this.activityDescription,
       dietPreference: dietPreference ?? this.dietPreference,
       allergies: allergies ?? this.allergies,
       mealFrequency: mealFrequency ?? this.mealFrequency,
@@ -126,6 +135,7 @@ class WizardState {
         'experienceLevel': experienceLevel,
         'dailyMinutes': dailyMinutes,
         'painPoint': painPoint,
+        'activityDescription': activityDescription,
         'dietPreference': dietPreference,
         'allergies': allergies,
         'mealFrequency': mealFrequency,
@@ -152,6 +162,8 @@ class WizardController extends Notifier<WizardState> {
       state = state.copyWith(experienceLevel: v);
   void setDailyMinutes(String v) => state = state.copyWith(dailyMinutes: v);
   void setPainPoint(String v) => state = state.copyWith(painPoint: v);
+  void setActivityDescription(String v) =>
+      state = state.copyWith(activityDescription: v);
   void setDietPreference(String v) => state = state.copyWith(dietPreference: v);
   void setAllergies(String v) => state = state.copyWith(allergies: v);
   void setMealFrequency(String v) => state = state.copyWith(mealFrequency: v);

@@ -2381,21 +2381,27 @@ class _DailyMinutesStep extends ConsumerWidget {
       subtitle: 'Antrenman uzunluğunu buna göre planlayacağım.',
       initialValue: current,
       feedbackText: 'Bu süreyle bile ciddi sonuç alabilirsin.',
+      // Phase 60F · motivational subtexts under each option per PM
+      // mapping. Reads as a coach validating the user's choice rather
+      // than a neutral specification.
       options: const [
         InteractiveOption(
           value: '10_15',
           label: '10–15 dakika',
           icon: Icons.timer_outlined,
+          helper: 'Kısa sürede maksimum verim alacağız.',
         ),
         InteractiveOption(
           value: '20_30',
           label: '20–30 dakika',
           icon: Icons.access_time_rounded,
+          helper: 'En ideal aralık. Hızlı gelişim mümkün.',
         ),
         InteractiveOption(
           value: '45_plus',
           label: '45+ dakika',
           icon: Icons.local_fire_department_outlined,
+          helper: 'Daha agresif ilerleyebiliriz.',
         ),
       ],
       onCommitted: (value) {
@@ -2406,48 +2412,337 @@ class _DailyMinutesStep extends ConsumerWidget {
   }
 }
 
-/// Phase 60B · interactive replacement for the old card-based activity
-/// step. Writes to the same [ActivityLevel] enum the BMR/TDEE
-/// calculator already consumes — see
-/// `nutrition_calculator_service.dart` and `workout_provider.dart`.
-class _ActivityStep extends ConsumerWidget {
+/// Phase 60F · hybrid activity step.
+///
+/// Two paths to advance the wizard:
+///   • Tap one of the three preset cards (`Masa başı` / `Hafif
+///     hareketli` / `Çok aktif`) → mirrors the Phase 60B card flow:
+///     selection light haptic, feedback banner fades in, 1.5 s commit
+///     window, then `onCommitted` advances. Writes to the existing
+///     [ActivityLevel] enum that the BMR/TDEE calculator consumes.
+///   • Or focus the free-text input below the cards and describe the
+///     day in their own words → an animated DEVAM ET button appears.
+///     Tapping it writes the trimmed string to
+///     [WizardState.activityDescription] and advances. Stays disabled
+///     while the field is empty.
+///
+/// Cards and feedback banner are reused via the public [OptionCard] /
+/// [FeedbackBanner] widgets so the visual language matches the rest
+/// of the interactive steps exactly.
+class _ActivityStep extends ConsumerStatefulWidget {
   const _ActivityStep({required this.onCommitted});
   final VoidCallback onCommitted;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final current = ref.watch(wizardProvider).activityLevel;
-    return InteractiveQuestionStep(
-      title: 'Günlük aktiviten?',
-      subtitle: 'Kalori ihtiyacını buna göre hesaplıyorum.',
-      initialValue: current?.name,
-      feedbackText:
-          'Kişisel kalori ve program yoğunluğunu buna göre ayarlıyorum.',
-      options: const [
-        InteractiveOption(
-          value: 'sedentary',
-          label: 'Masa başı',
-          icon: Icons.chair_outlined,
+  ConsumerState<_ActivityStep> createState() => _ActivityStepState();
+}
+
+class _ActivityStepState extends ConsumerState<_ActivityStep>
+    with TickerProviderStateMixin {
+  static const List<InteractiveOption> _options = [
+    InteractiveOption(
+      value: 'sedentary',
+      label: 'Masa başı',
+      icon: Icons.chair_outlined,
+      imageAsset: 'photos/günlükaktivitenmasabaşı.webp',
+    ),
+    InteractiveOption(
+      value: 'light',
+      label: 'Hafif hareketli',
+      icon: Icons.directions_walk_rounded,
+      imageAsset: 'photos/günlükaktivitenhafifhareketli.webp',
+    ),
+    InteractiveOption(
+      value: 'active',
+      label: 'Çok aktif',
+      icon: Icons.directions_run_rounded,
+      imageAsset: 'photos/günlükaktivitenneÇokAktif.webp',
+    ),
+  ];
+  static const String _feedbackText =
+      'Kişisel kalori ve program yoğunluğunu buna göre ayarlıyorum.';
+
+  String? _selectedCardValue;
+  bool _committingCard = false;
+
+  late final TextEditingController _textCtrl;
+  late final FocusNode _focusNode;
+  // Once the user enters at least one character we keep the DEVAM ET
+  // button mounted; the disabled state takes over if they later clear
+  // the field. Matches the PM rule "disabled if empty, enabled if
+  // there is text" — the button doesn't disappear once the user has
+  // engaged with the field.
+  bool _hasStartedTyping = false;
+
+  late final AnimationController _feedbackCtrl;
+  late final Animation<double> _feedbackFade;
+  late final Animation<Offset> _feedbackSlide;
+
+  late final AnimationController _ctaCtrl;
+  late final Animation<double> _ctaFade;
+  late final Animation<Offset> _ctaSlide;
+
+  @override
+  void initState() {
+    super.initState();
+    final w = ref.read(wizardProvider);
+    _selectedCardValue = w.activityLevel?.name;
+    _textCtrl = TextEditingController(text: w.activityDescription ?? '');
+    _focusNode = FocusNode();
+    _hasStartedTyping = _textCtrl.text.isNotEmpty;
+    _textCtrl.addListener(_onTextChange);
+
+    _feedbackCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 360),
+    );
+    _feedbackFade =
+        CurvedAnimation(parent: _feedbackCtrl, curve: Curves.easeOutCubic);
+    _feedbackSlide = Tween<Offset>(
+      begin: const Offset(0, 0.35),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _feedbackCtrl, curve: Curves.easeOutCubic),
+    );
+
+    _ctaCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 280),
+    );
+    _ctaFade = CurvedAnimation(parent: _ctaCtrl, curve: Curves.easeOutCubic);
+    _ctaSlide = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _ctaCtrl, curve: Curves.easeOutCubic),
+    );
+    if (_hasStartedTyping) {
+      _ctaCtrl.value = 1.0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _textCtrl.removeListener(_onTextChange);
+    _textCtrl.dispose();
+    _focusNode.dispose();
+    _feedbackCtrl.dispose();
+    _ctaCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onTextChange() {
+    final hasText = _textCtrl.text.isNotEmpty;
+    if (!_hasStartedTyping && hasText) {
+      setState(() => _hasStartedTyping = true);
+      _ctaCtrl.forward();
+    } else {
+      // Re-evaluate the disabled/enabled state on every keystroke even
+      // when the visibility flag hasn't flipped.
+      setState(() {});
+    }
+  }
+
+  Future<void> _pickCard(String value) async {
+    if (_committingCard) return;
+    AppHaptics.secondaryTap();
+    _focusNode.unfocus();
+    setState(() {
+      _selectedCardValue = value;
+      _committingCard = true;
+    });
+    _feedbackCtrl.forward();
+    final level = ActivityLevel.values.firstWhere(
+      (a) => a.name == value,
+      orElse: () => ActivityLevel.light,
+    );
+    ref.read(wizardProvider.notifier).setActivityLevel(level);
+    await Future<void>.delayed(const Duration(milliseconds: 1500));
+    if (!mounted) return;
+    widget.onCommitted();
+  }
+
+  void _commitCustom() {
+    if (_committingCard) return;
+    final text = _textCtrl.text.trim();
+    if (text.isEmpty) return;
+    AppHaptics.secondaryTap();
+    ref.read(wizardProvider.notifier).setActivityDescription(text);
+    widget.onCommitted();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ctaEnabled = _textCtrl.text.trim().isNotEmpty;
+    return Column(
+      children: [
+        const _StepTitle(
+          title: 'Günlük aktiviten?',
+          subtitle: 'Kalori ihtiyacını buna göre hesaplıyorum.',
         ),
-        InteractiveOption(
-          value: 'light',
-          label: 'Hafif hareketli',
-          icon: Icons.directions_walk_rounded,
-        ),
-        InteractiveOption(
-          value: 'active',
-          label: 'Çok aktif',
-          icon: Icons.directions_run_rounded,
+        const SizedBox(height: 20),
+        Expanded(
+          child: SingleChildScrollView(
+            // Keyboard-aware: `resizeToAvoidBottomInset` (default true)
+            // shrinks our Expanded when the IME opens, the
+            // SingleChildScrollView keeps the input + CTA reachable.
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final opt in _options) ...[
+                  OptionCard(
+                    option: opt,
+                    selected: _selectedCardValue == opt.value,
+                    dimmed: _committingCard && _selectedCardValue != opt.value,
+                    onTap: () => _pickCard(opt.value),
+                  ),
+                  if (opt != _options.last) const SizedBox(height: 12),
+                ],
+                const SizedBox(height: 16),
+                FeedbackBanner(
+                  fade: _feedbackFade,
+                  slide: _feedbackSlide,
+                  text: _feedbackText,
+                ),
+                const SizedBox(height: 22),
+                _CustomActivityInput(
+                  controller: _textCtrl,
+                  focusNode: _focusNode,
+                  enabled: !_committingCard,
+                ),
+                const SizedBox(height: 14),
+                if (_hasStartedTyping)
+                  FadeTransition(
+                    opacity: _ctaFade,
+                    child: SlideTransition(
+                      position: _ctaSlide,
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: FilledButton(
+                          onPressed: ctaEnabled ? _commitCustom : null,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: _neon,
+                            foregroundColor: Colors.white,
+                            disabledBackgroundColor:
+                                _neon.withValues(alpha: 0.35),
+                            disabledForegroundColor: Colors.white60,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            textStyle: const TextStyle(
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 2.5,
+                              fontSize: 14,
+                            ),
+                          ),
+                          child: const Text('DEVAM ET'),
+                        ),
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
         ),
       ],
-      onCommitted: (value) {
-        final level = ActivityLevel.values.firstWhere(
-          (a) => a.name == value,
-          orElse: () => ActivityLevel.light,
-        );
-        ref.read(wizardProvider.notifier).setActivityLevel(level);
-        onCommitted();
-      },
+    );
+  }
+}
+
+/// Phase 60F · the free-text "describe your day" input. A label sits
+/// above the [TextField] explaining what to write; the placeholder is
+/// the example day-in-the-life sentence the PM provided. The [enabled]
+/// flag mirrors the parent's commit state so a card-driven advance
+/// can't be raced by a late keystroke.
+class _CustomActivityInput extends StatelessWidget {
+  const _CustomActivityInput({
+    required this.controller,
+    required this.focusNode,
+    required this.enabled,
+  });
+
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(
+              Icons.edit_note_rounded,
+              color: _neonAccent,
+              size: 18,
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                'Gününü açıklarsan daha iyi yardımcı olabiliriz',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.85),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: controller,
+          focusNode: focusNode,
+          enabled: enabled,
+          maxLines: 3,
+          minLines: 3,
+          maxLength: 280,
+          textInputAction: TextInputAction.done,
+          style:
+              const TextStyle(color: Colors.white, fontSize: 14, height: 1.4),
+          cursorColor: _neon,
+          decoration: InputDecoration(
+            hintText: 'Günüm genelde masa başında geçiyor ama akşam yürüyüş '
+                'yapıyorum...',
+            hintStyle: const TextStyle(
+              color: Colors.white38,
+              fontSize: 13,
+              height: 1.4,
+            ),
+            // The PM brief calls out hint disappearing once the user
+            // types — that's Flutter's default TextField behaviour, so
+            // no extra wiring is needed.
+            counterText: '',
+            filled: true,
+            fillColor: Colors.white.withValues(alpha: 0.04),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(
+                color: Colors.white.withValues(alpha: 0.12),
+                width: 1,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(color: _neon, width: 1.4),
+            ),
+            disabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(
+                color: Colors.white.withValues(alpha: 0.06),
+                width: 1,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
