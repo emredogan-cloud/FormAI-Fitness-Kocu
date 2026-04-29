@@ -186,15 +186,77 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 }
 
-class _WelcomeStep extends StatelessWidget {
+/// Phase 60A · immersive hero hook.
+///
+/// Title / subtitle / CTA stagger in via a shared [AnimationController]
+/// so the screen feels composed when the wizard mounts. The background
+/// asset stays static behind a transparent → near-black gradient so the
+/// neon copy remains readable against any frame of the photo.
+class _WelcomeStep extends StatefulWidget {
   const _WelcomeStep({required this.onStart});
   final VoidCallback onStart;
 
   @override
+  State<_WelcomeStep> createState() => _WelcomeStepState();
+}
+
+class _WelcomeStepState extends State<_WelcomeStep>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _intro;
+  late final Animation<double> _titleFade;
+  late final Animation<Offset> _titleSlide;
+  late final Animation<double> _subtitleFade;
+  late final Animation<Offset> _subtitleSlide;
+  late final Animation<double> _ctaFade;
+  late final Animation<Offset> _ctaSlide;
+
+  @override
+  void initState() {
+    super.initState();
+    _intro = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..forward();
+
+    Animation<double> fade(double a, double b) => CurvedAnimation(
+          parent: _intro,
+          curve: Interval(a, b, curve: Curves.easeOutCubic),
+        );
+    Animation<Offset> slide(double a, double b) =>
+        Tween<Offset>(begin: const Offset(0, 0.4), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _intro,
+            curve: Interval(a, b, curve: Curves.easeOutCubic),
+          ),
+        );
+
+    _titleFade = fade(0.0, 0.55);
+    _titleSlide = slide(0.0, 0.55);
+    _subtitleFade = fade(0.2, 0.75);
+    _subtitleSlide = slide(0.2, 0.75);
+    _ctaFade = fade(0.45, 1.0);
+    _ctaSlide = slide(0.45, 1.0);
+  }
+
+  @override
+  void dispose() {
+    _intro.dispose();
+    super.dispose();
+  }
+
+  Widget _appear({
+    required Animation<double> fade,
+    required Animation<Offset> slide,
+    required Widget child,
+  }) {
+    return FadeTransition(
+      opacity: fade,
+      child: SlideTransition(position: slide, child: child),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Full-bleed background shot + dark gradient overlay so the neon copy
-    // stays readable against whatever photo ships in photos/. The overlay
-    // is stronger at the bottom so the CTA sits on a solid patch.
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -217,9 +279,9 @@ class _WelcomeStep extends StatelessWidget {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Colors.black.withValues(alpha: 0.35),
-                Colors.black.withValues(alpha: 0.55),
-                Colors.black.withValues(alpha: 0.9),
+                Colors.transparent,
+                Colors.black.withValues(alpha: 0.5),
+                Colors.black.withValues(alpha: 0.95),
               ],
               stops: const [0.0, 0.55, 1.0],
             ),
@@ -231,73 +293,88 @@ class _WelcomeStep extends StatelessWidget {
             child: Column(
               children: [
                 const Spacer(flex: 3),
-                ShaderMask(
-                  shaderCallback: (rect) => const LinearGradient(
-                    colors: [_neon, _neonAccent],
-                  ).createShader(rect),
-                  child: const Text(
-                    'Vücudunu Yapay Zeka İle Şekillendir',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 30,
-                      fontWeight: FontWeight.w900,
-                      height: 1.15,
-                      letterSpacing: 0.5,
-                      shadows: [
-                        Shadow(blurRadius: 24, color: Colors.black87),
-                      ],
+                _appear(
+                  fade: _titleFade,
+                  slide: _titleSlide,
+                  child: ShaderMask(
+                    shaderCallback: (rect) => const LinearGradient(
+                      colors: [_neon, _neonAccent],
+                    ).createShader(rect),
+                    child: const Text(
+                      'Vücudunu Yapay Zeka ile Şekillendir',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900,
+                        height: 1.12,
+                        letterSpacing: 0.4,
+                        shadows: [
+                          Shadow(blurRadius: 24, color: Colors.black87),
+                        ],
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'Telefonunun kamerası ile her tekrarını izleyen, '
-                  'formunu düzelten ve seni gerçek bir koç gibi motive '
-                  'eden kişisel yapay zeka asistanın.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    height: 1.5,
-                    shadows: [Shadow(blurRadius: 18, color: Colors.black87)],
+                _appear(
+                  fade: _subtitleFade,
+                  slide: _subtitleSlide,
+                  child: const Text(
+                    'Sana özel antrenman ve beslenme planıyla 30 günde '
+                    'hedefine ulaş.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 15,
+                      height: 1.5,
+                      shadows: [Shadow(blurRadius: 18, color: Colors.black87)],
+                    ),
                   ),
                 ),
                 const Spacer(flex: 2),
-                SizedBox(
-                  width: double.infinity,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: _neon.withValues(alpha: 0.55),
-                          blurRadius: 28,
-                          spreadRadius: 1,
-                        ),
-                      ],
-                    ),
-                    child: FilledButton(
-                      onPressed: onStart,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: _neon,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 22),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        textStyle: const TextStyle(
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 4,
-                          fontSize: 18,
-                        ),
+                _appear(
+                  fade: _ctaFade,
+                  slide: _ctaSlide,
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: _neon.withValues(alpha: 0.55),
+                            blurRadius: 28,
+                            spreadRadius: 1,
+                          ),
+                        ],
                       ),
-                      child: const Text('BAŞLA'),
+                      child: FilledButton(
+                        onPressed: widget.onStart,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: _neon,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 22),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          textStyle: const TextStyle(
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 4,
+                            fontSize: 18,
+                          ),
+                        ),
+                        child: const Text('BAŞLA'),
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 12),
-                const _WelcomeLegalLine(),
+                _appear(
+                  fade: _ctaFade,
+                  slide: _ctaSlide,
+                  child: const _WelcomeLegalLine(),
+                ),
               ],
             ),
           ),
@@ -371,9 +448,58 @@ class _WelcomeLegalLineState extends State<_WelcomeLegalLine> {
   }
 }
 
-class _CoachIntroStep extends StatelessWidget {
+/// Phase 60A · the AI coach's first words.
+///
+/// Drives the copy through a [_TypewriterText] so the coach feels like
+/// it's "speaking" in real time. The CTA stays disabled until the line
+/// is fully revealed; tapping the bubble area before then short-circuits
+/// the animation. The visual frame is a chat-bubble + neon halo so the
+/// surface reads as a conversation with the agent, not a static blurb.
+class _CoachIntroStep extends StatefulWidget {
   const _CoachIntroStep({required this.onContinue});
   final VoidCallback onContinue;
+
+  @override
+  State<_CoachIntroStep> createState() => _CoachIntroStepState();
+}
+
+class _CoachIntroStepState extends State<_CoachIntroStep>
+    with SingleTickerProviderStateMixin {
+  static const String _coachLine =
+      'Merhaba! Ben senin kişisel yapay zeka koçunum. '
+      'Şimdi sana birkaç soru soracağım ve tamamen senin '
+      'hedeflerine, vücuduna özel bir plan oluşturacağım.';
+  // ~28ms/char keeps the line under ~4s — long enough to feel deliberate,
+  // short enough that nobody waits long for the CTA to enable.
+  static const Duration _perChar = Duration(milliseconds: 28);
+
+  late final AnimationController _typer;
+  bool _typingDone = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _typer = AnimationController(
+      vsync: this,
+      duration: _perChar * _coachLine.length,
+    )..addStatusListener((status) {
+        if (status == AnimationStatus.completed && mounted) {
+          setState(() => _typingDone = true);
+        }
+      });
+    _typer.forward();
+  }
+
+  @override
+  void dispose() {
+    _typer.dispose();
+    super.dispose();
+  }
+
+  void _skipTyping() {
+    if (_typingDone) return;
+    _typer.value = 1.0;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -392,9 +518,9 @@ class _CoachIntroStep extends StatelessWidget {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Colors.black.withValues(alpha: 0.2),
-                Colors.black.withValues(alpha: 0.55),
-                Colors.black.withValues(alpha: 0.9),
+                Colors.black.withValues(alpha: 0.25),
+                Colors.black.withValues(alpha: 0.6),
+                Colors.black.withValues(alpha: 0.95),
               ],
               stops: const [0.0, 0.5, 1.0],
             ),
@@ -402,56 +528,66 @@ class _CoachIntroStep extends StatelessWidget {
         ),
         SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(28, 24, 28, 28),
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
             child: Column(
               children: [
-                const Spacer(flex: 2),
-                const _PulsingCoachAvatar(),
-                const SizedBox(height: 28),
-                const Text(
-                  'Merhaba 👋',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.w900,
-                    shadows: [Shadow(blurRadius: 20, color: Colors.black)],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8),
-                  child: Text(
-                    'Ben senin kişisel yapay zeka koçunum. '
-                    'Şimdi sana birkaç hızlı soru soracağım ve '
-                    'tamamen sana özel bir program çıkaracağım.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      height: 1.55,
-                      shadows: [Shadow(blurRadius: 16, color: Colors.black87)],
+                Expanded(
+                  // GestureDetector wraps only the avatar + bubble area so
+                  // taps here skip the typewriter while the CTA below
+                  // still owns its own onPressed when enabled.
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: _skipTyping,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const _PulsingCoachAvatar(),
+                        const SizedBox(height: 28),
+                        _TerminalBubble(
+                          typer: _typer,
+                          fullText: _coachLine,
+                          isTypingDone: _typingDone,
+                        ),
+                        const SizedBox(height: 10),
+                        AnimatedOpacity(
+                          duration: const Duration(milliseconds: 240),
+                          opacity: _typingDone ? 0.0 : 1.0,
+                          child: const Text(
+                            'Geçmek için ekrana dokun',
+                            style: TextStyle(
+                              color: Colors.white54,
+                              fontSize: 11,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-                const Spacer(flex: 2),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: onContinue,
-                    icon: const Icon(Icons.arrow_forward_rounded),
-                    label: const Text('DEVAM ET'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: _neon,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      textStyle: const TextStyle(
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 3,
-                        fontSize: 14,
+                AnimatedOpacity(
+                  duration: const Duration(milliseconds: 280),
+                  opacity: _typingDone ? 1.0 : 0.45,
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: _typingDone ? widget.onContinue : null,
+                      icon: const Icon(Icons.arrow_forward_rounded),
+                      label: const Text('DEVAM ET'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: _neon,
+                        foregroundColor: Colors.white,
+                        disabledBackgroundColor: _neon.withValues(alpha: 0.45),
+                        disabledForegroundColor: Colors.white70,
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        textStyle: const TextStyle(
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 3,
+                          fontSize: 14,
+                        ),
                       ),
                     ),
                   ),
@@ -461,6 +597,74 @@ class _CoachIntroStep extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Chat-bubble container that progressively reveals the coach's line as
+/// [typer] advances 0→1. A blinking neon caret trails the cursor while
+/// typing is in flight; it disappears the moment the line is complete.
+class _TerminalBubble extends StatelessWidget {
+  const _TerminalBubble({
+    required this.typer,
+    required this.fullText,
+    required this.isTypingDone,
+  });
+  final Animation<double> typer;
+  final String fullText;
+  final bool isTypingDone;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+          bottomLeft: Radius.circular(4),
+          bottomRight: Radius.circular(20),
+        ),
+        border: Border.all(
+          color: _neon.withValues(alpha: 0.4),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: _neon.withValues(alpha: 0.18),
+            blurRadius: 24,
+            spreadRadius: -2,
+          ),
+        ],
+      ),
+      child: AnimatedBuilder(
+        animation: typer,
+        builder: (context, _) {
+          final int chars =
+              (typer.value * fullText.length).round().clamp(0, fullText.length);
+          final String visible = fullText.substring(0, chars);
+          return Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(text: visible),
+                if (!isTypingDone)
+                  const TextSpan(
+                    text: '▍',
+                    style: TextStyle(color: _neon),
+                  ),
+              ],
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 15,
+                height: 1.55,
+                shadows: [Shadow(blurRadius: 16, color: Colors.black87)],
+              ),
+            ),
+            textAlign: TextAlign.center,
+          );
+        },
+      ),
     );
   }
 }

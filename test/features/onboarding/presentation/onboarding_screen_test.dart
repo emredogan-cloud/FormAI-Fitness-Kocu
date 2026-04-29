@@ -69,7 +69,7 @@ void main() {
       await tester.pump();
 
       expect(
-        find.text('Vücudunu Yapay Zeka İle Şekillendir'),
+        find.text('Vücudunu Yapay Zeka ile Şekillendir'),
         findsOneWidget,
       );
       expect(find.text('BAŞLA'), findsOneWidget);
@@ -89,11 +89,16 @@ void main() {
       // the animation, then settle to let it finish.
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
+      // Phase 60A · the coach copy now types in over ~4s. Pump past the
+      // first ~"Merhaba" reveal so the assertion below is deterministic
+      // regardless of when the page-transition build raced the
+      // typewriter init.
+      await tester.pump(const Duration(milliseconds: 800));
 
       expect(
-        find.text('Merhaba 👋'),
+        find.textContaining('Merhaba'),
         findsOneWidget,
-        reason: 'page 2 is the _CoachIntroStep',
+        reason: 'page 2 is the _CoachIntroStep, line begins "Merhaba!"',
       );
       expect(find.text('DEVAM ET'), findsOneWidget);
     });
