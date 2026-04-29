@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:math' as math;
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -14,34 +17,35 @@ import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/legal_urls.dart';
 import '../../monetization/providers/monetization_provider.dart';
 import '../providers/wizard_provider.dart';
-import 'widgets/illusion_step.dart';
 import 'widgets/interactive_question_step.dart';
-import 'widgets/photo_option_card.dart';
-import 'widgets/wheel_column.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonAccent = Color(0xFF4DA6FF);
-// Phase 60B · 12 pages total.
+// Phase 60C · 10 pages total.
 //
 //   • 2 hook screens (welcome, coach_intro)
 //   • 4 interactive AI-styled questions (goal, experience_level,
-//     daily_minutes, activity) — the new "premium" surface introduced
-//     in Phase 60B with per-pick micro-feedback + auto-advance
-//   • 5 detail questions (gender, age, body_metrics, current_physique,
-//     target_physique) — still card/wheel based, feed BMR + workout
-//     generator
-//   • 1 illusion/finish screen
+//     daily_minutes, activity) — the "premium" Phase-60B surface
+//   • 1 physical-data screen (CupertinoPicker wheels for age, height,
+//     weight) feeding BMR/TDEE downstream
+//   • 1 pain-point screen (interactive) — surfaces the user's blocker
+//   • 1 analysis-illusion screen — labor illusion that cycles AI
+//     "thinking" phrases for ~6 s before the reveal
+//   • 1 dynamic-report screen — final hook with personalised copy +
+//     BMI/calorie cards + 92% confidence bar; CTA routes to /paywall
 //
 // Nutrition steps live in `NutritionOnboardingSheet` and are surfaced
 // on first Beslenme-tab view (Phase 46).
-const int _totalSteps = 12;
+const int _totalSteps = 10;
 const int _hookSteps = 2;
 
 /// Phase 42 · analytics labels per onboarding page. Index-aligned with
 /// the `PageView.children` list below so the funnel reads the same
-/// names the code uses. Phase 60B inserts the four interactive steps
-/// (`goal`, `experience_level`, `daily_minutes`, `activity`) right
-/// after the hooks and replaces the old `activity` card step.
+/// names the code uses. Phase 60C trims the wizard to 10 pages — the
+/// gender / current-physique / target-physique card screens were
+/// dropped in favour of the new analysis-illusion + dynamic-report
+/// reveal pair, and age/body-metrics merged into a single
+/// `physical_data` screen.
 const List<String> _stepNames = [
   'welcome',
   'coach_intro',
@@ -49,12 +53,10 @@ const List<String> _stepNames = [
   'experience_level',
   'daily_minutes',
   'activity',
-  'gender',
-  'age',
-  'body_metrics',
-  'current_physique',
-  'target_physique',
-  'illusion',
+  'physical_data',
+  'pain_point',
+  'analysis_illusion',
+  'dynamic_report',
 ];
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -142,10 +144,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     }
     // Phase 42: now that the user has a session, raise the iOS ATT
     // prompt BEFORE navigating. The ~400 ms internal debounce keeps
-    // the prompt from getting eaten by the prediction route's push.
+    // the prompt from getting eaten by the next route's push.
     await AnalyticsService.instance.requestAttIfNeeded();
     if (!mounted) return;
-    context.go(AppRoutes.prediction);
+    // Phase 60C · the dynamic report screen is now the on-wizard hook
+    // that the prediction screen used to be, so the wizard exits
+    // straight to /paywall instead of stopping over at /prediction.
+    // Anonymous users are allowed at /paywall (the redirect rule only
+    // bounces *registered* users away from /auth back to it), so this
+    // is safe without any router change.
+    context.go(AppRoutes.paywall);
   }
 
   @override
@@ -184,12 +192,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   _ExperienceStep(onCommitted: _next),
                   _DailyMinutesStep(onCommitted: _next),
                   _ActivityStep(onCommitted: _next),
-                  _GenderStep(onSelected: _next),
-                  _AgeStep(onContinue: _next),
-                  _BodyMetricsStep(onContinue: _next),
-                  _CurrentPhysiqueStep(onSelected: _next),
-                  _TargetPhysiqueStep(onSelected: _next),
-                  IllusionStep(onComplete: _finish),
+                  _PhysicalDataStep(onContinue: _next),
+                  _PainPointStep(onCommitted: _next),
+                  _AnalysisIllusionStep(onComplete: _next),
+                  _DynamicReportStep(onComplete: _finish),
                 ],
               ),
             ),
@@ -876,54 +882,25 @@ class _WizardHeader extends StatelessWidget {
 }
 
 class _StepTitle extends StatelessWidget {
-  const _StepTitle({
-    required this.title,
-    this.subtitle,
-    this.whyAskTitle,
-    this.whyAskExplanation,
-  });
+  const _StepTitle({required this.title, this.subtitle});
   final String title;
   final String? subtitle;
 
-  /// Phase 46 · optional "Neden soruyoruz?" tooltip. When
-  /// [whyAskExplanation] is non-null, a subtle `Icons.info_outline`
-  /// button renders flush-right of the title; tapping it surfaces
-  /// [_showWhyAskSheet]. Left null on non-sensitive questions
-  /// (gender, activity, current physique) so the chrome stays quiet
-  /// everywhere it doesn't need to reassure the user.
-  final String? whyAskTitle;
-  final String? whyAskExplanation;
-
   @override
   Widget build(BuildContext context) {
-    final showInfoButton = whyAskExplanation != null;
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.w900,
-                    height: 1.1,
-                  ),
-                ),
-              ),
-              if (showInfoButton) ...[
-                const SizedBox(width: 8),
-                _WhyAskButton(
-                  title: whyAskTitle ?? 'Neden soruyoruz?',
-                  explanation: whyAskExplanation!,
-                ),
-              ],
-            ],
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+              height: 1.1,
+            ),
           ),
           if (subtitle != null) ...[
             const SizedBox(height: 8),
@@ -936,144 +913,6 @@ class _StepTitle extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Subtle info button that sits flush-right of a step title and opens
-/// a `_showWhyAskSheet` on tap. Surface rendering is deliberately
-/// low-contrast so it doesn't compete with the primary answer options
-/// — users who don't need reassurance never see it.
-class _WhyAskButton extends StatelessWidget {
-  const _WhyAskButton({required this.title, required this.explanation});
-  final String title;
-  final String explanation;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: () => _showWhyAskSheet(
-          context,
-          title: title,
-          explanation: explanation,
-        ),
-        child: Container(
-          width: 36,
-          height: 36,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.white.withValues(alpha: 0.06),
-            border: Border.all(
-              color: _neon.withValues(alpha: 0.35),
-              width: 1,
-            ),
-          ),
-          child: const Icon(
-            Icons.info_outline,
-            color: _neon,
-            size: 18,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Phase 46 · "Neden soruyoruz?" reassurance sheet.
-///
-/// Called from the info buttons on sensitive wizard steps (Age,
-/// Body Metrics, Target Physique). Keeps the explanation contained
-/// in a modal so the user can dismiss it without losing their
-/// place in the wizard. Background matches the onboarding purple
-/// gradient so it reads as part of the same flow.
-Future<void> _showWhyAskSheet(
-  BuildContext context, {
-  required String title,
-  required String explanation,
-}) {
-  return showModalBottomSheet<void>(
-    context: context,
-    backgroundColor: Colors.transparent,
-    isScrollControlled: true,
-    builder: (sheetContext) => SafeArea(
-      top: false,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22),
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF221145), Color(0xFF0D0622)],
-          ),
-          border: Border.all(
-            color: _neon.withValues(alpha: 0.35),
-            width: 1,
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.info_outline, color: _neonAccent, size: 20),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  onPressed: () => Navigator.of(sheetContext).pop(),
-                  icon: const Icon(Icons.close, color: Colors.white54),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              explanation,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 14,
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Align(
-              alignment: Alignment.centerRight,
-              child: FilledButton(
-                onPressed: () => Navigator.of(sheetContext).pop(),
-                style: FilledButton.styleFrom(
-                  backgroundColor: _neon,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 22,
-                    vertical: 12,
-                  ),
-                  textStyle: const TextStyle(
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.6,
-                  ),
-                ),
-                child: const Text('ANLADIM'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
 }
 
 class _PrimaryButton extends StatelessWidget {
@@ -1116,419 +955,982 @@ class _PrimaryButton extends StatelessWidget {
   }
 }
 
-class _GenderStep extends ConsumerWidget {
-  const _GenderStep({required this.onSelected});
-  final VoidCallback onSelected;
+// ─────────────────────── Phase 60C reveal-flow steps ────────────────────────
+//
+// Phase 60C closes the wizard with four screens:
+//   • _PhysicalDataStep — three Cupertino scroll wheels (age / height /
+//     weight) with click-haptics, then a 1.5 s "Metabolizmanı
+//     hesaplıyorum…" overlay before advancing.
+//   • _PainPointStep — interactive pain-point question (delegates to
+//     [InteractiveQuestionStep]).
+//   • _AnalysisIllusionStep — labor-illusion screen that cycles five
+//     "AI thinking" phrases at 1.2 s each over a rotating neon core.
+//   • _DynamicReportStep — final reveal with BMI + maintenance-calorie
+//     cards, a personalised "AI assessment" paragraph, and a 92%
+//     confidence bar. Its CTA fires `_finish`, which routes the user
+//     straight to /paywall.
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final selected = ref.watch(wizardProvider).gender;
-
-    void pick(Gender g) {
-      ref.read(wizardProvider.notifier).setGender(g);
-      Future<void>.delayed(const Duration(milliseconds: 220), onSelected);
-    }
-
-    return Column(
-      children: [
-        const _StepTitle(
-          title: 'Cinsiyetin?',
-          subtitle: 'Programını sana göre kalibre edelim.',
-        ),
-        const SizedBox(height: 16),
-        // Fills the full remaining step height: three Expanded cards
-        // share the column evenly so there's no dead space at the bottom.
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-            child: Column(
-              children: [
-                Expanded(
-                  child: PhotoOptionCard(
-                    fallbackIcon: Icons.female,
-                    title: 'Kadın',
-                    subtitle: 'Kadın için optimize edilmiş plan.',
-                    selected: selected == Gender.female,
-                    onTap: () => pick(Gender.female),
-                    image: 'photos/cinsiyetseçimikadın.webp',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: PhotoOptionCard(
-                    fallbackIcon: Icons.male,
-                    title: 'Erkek',
-                    subtitle: 'Erkek için optimize edilmiş plan.',
-                    selected: selected == Gender.male,
-                    onTap: () => pick(Gender.male),
-                    image: 'photos/cinsiyetseçimierkek.webp',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: PhotoOptionCard(
-                    fallbackIcon: Icons.transgender,
-                    title: 'Diğer',
-                    subtitle: 'Tarafsız bir plan oluşturalım.',
-                    selected: selected == Gender.other,
-                    onTap: () => pick(Gender.other),
-                    // No bespoke artwork shipped for "Diğer" — text only.
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _AgeStep extends ConsumerStatefulWidget {
-  const _AgeStep({required this.onContinue});
+class _PhysicalDataStep extends ConsumerStatefulWidget {
+  const _PhysicalDataStep({required this.onContinue});
   final VoidCallback onContinue;
 
   @override
-  ConsumerState<_AgeStep> createState() => _AgeStepState();
+  ConsumerState<_PhysicalDataStep> createState() => _PhysicalDataStepState();
 }
 
-class _AgeStepState extends ConsumerState<_AgeStep> {
+class _PhysicalDataStepState extends ConsumerState<_PhysicalDataStep>
+    with SingleTickerProviderStateMixin {
   static const int _minAge = 18;
   static const int _maxAge = 80;
-  late final FixedExtentScrollController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    final initial = (ref.read(wizardProvider).age ?? 25) - _minAge;
-    _controller = FixedExtentScrollController(initialItem: initial);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(wizardProvider.notifier).setAge(_minAge + initial);
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final age = ref.watch(wizardProvider).age ?? 25;
-    return Column(
-      children: [
-        const _StepTitle(
-          title: 'Yaşın kaç?',
-          subtitle: 'Metabolizmana göre yoğunluğu ayarlayalım.',
-          whyAskTitle: 'Yaşı neden soruyoruz?',
-          whyAskExplanation: 'Bazal metabolizma hızı yaşla birlikte değişir. '
-              'Günlük kalori ihtiyacını ve antrenman yoğunluğunu doğru '
-              'hesaplamak için yaşına ihtiyacımız var. Veriler sadece '
-              'senin hesabında tutulur, üçüncü taraflarla paylaşılmaz.',
-        ),
-        const SizedBox(height: 8),
-        Expanded(
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Container(
-                height: 60,
-                margin: const EdgeInsets.symmetric(horizontal: 48),
-                decoration: BoxDecoration(
-                  border: Border(
-                    top: BorderSide(
-                      color: _neon.withValues(alpha: 0.6),
-                      width: 1.2,
-                    ),
-                    bottom: BorderSide(
-                      color: _neon.withValues(alpha: 0.6),
-                      width: 1.2,
-                    ),
-                  ),
-                ),
-              ),
-              ListWheelScrollView.useDelegate(
-                controller: _controller,
-                itemExtent: 60,
-                perspective: 0.003,
-                diameterRatio: 1.6,
-                physics: const FixedExtentScrollPhysics(),
-                onSelectedItemChanged: (i) {
-                  ref.read(wizardProvider.notifier).setAge(_minAge + i);
-                },
-                childDelegate: ListWheelChildBuilderDelegate(
-                  childCount: _maxAge - _minAge + 1,
-                  builder: (context, i) {
-                    final value = _minAge + i;
-                    final selected = value == age;
-                    return Center(
-                      child: Text(
-                        '$value',
-                        style: TextStyle(
-                          color: selected ? _neon : Colors.white54,
-                          fontSize: selected ? 42 : 28,
-                          fontWeight:
-                              selected ? FontWeight.w900 : FontWeight.w500,
-                          shadows: selected
-                              ? [Shadow(blurRadius: 18, color: _neon)]
-                              : null,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const Positioned(
-                right: 32,
-                child: Text(
-                  'YAŞ',
-                  style: TextStyle(
-                    color: Colors.white38,
-                    fontSize: 12,
-                    letterSpacing: 3,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        _PrimaryButton(label: 'DEVAM', onPressed: widget.onContinue),
-      ],
-    );
-  }
-}
-
-class _BodyMetricsStep extends ConsumerStatefulWidget {
-  const _BodyMetricsStep({required this.onContinue});
-  final VoidCallback onContinue;
-
-  @override
-  ConsumerState<_BodyMetricsStep> createState() => _BodyMetricsStepState();
-}
-
-class _BodyMetricsStepState extends ConsumerState<_BodyMetricsStep> {
   static const int _minHeight = 120;
   static const int _maxHeight = 220;
   static const int _minWeight = 30;
   static const int _maxWeight = 200;
 
-  late final FixedExtentScrollController _heightController;
-  late final FixedExtentScrollController _weightController;
+  late final FixedExtentScrollController _ageCtrl;
+  late final FixedExtentScrollController _heightCtrl;
+  late final FixedExtentScrollController _weightCtrl;
+
+  late final AnimationController _feedbackCtrl;
+  bool _calculating = false;
 
   @override
   void initState() {
     super.initState();
+    final w = ref.read(wizardProvider);
+    final initialAge = (w.age ?? 25).clamp(_minAge, _maxAge) - _minAge;
     final initialHeight =
-        (ref.read(wizardProvider).heightCm ?? 170) - _minHeight;
+        (w.heightCm ?? 170).clamp(_minHeight, _maxHeight) - _minHeight;
     final initialWeight =
-        (ref.read(wizardProvider).weightKg ?? 70) - _minWeight;
-    _heightController = FixedExtentScrollController(initialItem: initialHeight);
-    _weightController = FixedExtentScrollController(initialItem: initialWeight);
+        (w.weightKg ?? 70).clamp(_minWeight, _maxWeight) - _minWeight;
+    _ageCtrl = FixedExtentScrollController(initialItem: initialAge);
+    _heightCtrl = FixedExtentScrollController(initialItem: initialHeight);
+    _weightCtrl = FixedExtentScrollController(initialItem: initialWeight);
+    _feedbackCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 320),
+    );
+    // Pre-populate state with the initial pickers so a user who taps
+    // DEVAM without scrolling still gets a well-formed wizard payload.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(wizardProvider.notifier).setHeight(_minHeight + initialHeight);
-      ref.read(wizardProvider.notifier).setWeight(_minWeight + initialWeight);
+      if (!mounted) return;
+      final notifier = ref.read(wizardProvider.notifier);
+      notifier.setAge(_minAge + initialAge);
+      notifier.setHeight(_minHeight + initialHeight);
+      notifier.setWeight(_minWeight + initialWeight);
     });
   }
 
   @override
   void dispose() {
-    _heightController.dispose();
-    _weightController.dispose();
+    _ageCtrl.dispose();
+    _heightCtrl.dispose();
+    _weightCtrl.dispose();
+    _feedbackCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _commit() async {
+    if (_calculating) return;
+    AppHaptics.primaryCta();
+    setState(() => _calculating = true);
+    _feedbackCtrl.forward();
+    await Future<void>.delayed(const Duration(milliseconds: 1500));
+    if (!mounted) return;
+    widget.onContinue();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        const _StepTitle(
+          title: 'Vücut bilgilerin',
+          subtitle: 'Tam kişiselleştirme için kısa bir veri girişi.',
+        ),
+        const SizedBox(height: 8),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _CupertinoWheel(
+                    label: 'YAŞ',
+                    controller: _ageCtrl,
+                    min: _minAge,
+                    max: _maxAge,
+                    onChanged: (v) =>
+                        ref.read(wizardProvider.notifier).setAge(v),
+                  ),
+                ),
+                Expanded(
+                  child: _CupertinoWheel(
+                    label: 'BOY',
+                    suffix: 'cm',
+                    controller: _heightCtrl,
+                    min: _minHeight,
+                    max: _maxHeight,
+                    onChanged: (v) =>
+                        ref.read(wizardProvider.notifier).setHeight(v),
+                  ),
+                ),
+                Expanded(
+                  child: _CupertinoWheel(
+                    label: 'KİLO',
+                    suffix: 'kg',
+                    controller: _weightCtrl,
+                    min: _minWeight,
+                    max: _maxWeight,
+                    onChanged: (v) =>
+                        ref.read(wizardProvider.notifier).setWeight(v),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        FadeTransition(
+          opacity: _feedbackCtrl,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.2,
+                    valueColor: AlwaysStoppedAnimation(_neon),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Metabolizmanı hesaplıyorum…',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        _PrimaryButton(
+          label: _calculating ? 'HESAPLANIYOR…' : 'DEVAM',
+          onPressed: _calculating ? null : _commit,
+        ),
+      ],
+    );
+  }
+}
+
+/// A single column of [CupertinoPicker] tuned to the onboarding's
+/// dark/neon palette. Fires [HapticFeedback.selectionClick] on every
+/// scroll tick so picking a number feels physical on Android (the
+/// iOS-side click is handled natively by the picker).
+class _CupertinoWheel extends StatelessWidget {
+  const _CupertinoWheel({
+    required this.label,
+    required this.controller,
+    required this.min,
+    required this.max,
+    required this.onChanged,
+    this.suffix,
+  });
+
+  final String label;
+  final String? suffix;
+  final FixedExtentScrollController controller;
+  final int min;
+  final int max;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 12, bottom: 6),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 2.2,
+            ),
+          ),
+        ),
+        Expanded(
+          child: CupertinoPicker(
+            scrollController: controller,
+            itemExtent: 44,
+            squeeze: 1.1,
+            diameterRatio: 1.5,
+            magnification: 1.08,
+            useMagnifier: true,
+            backgroundColor: Colors.transparent,
+            selectionOverlay: Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: _neon.withValues(alpha: 0.6),
+                    width: 1.2,
+                  ),
+                  bottom: BorderSide(
+                    color: _neon.withValues(alpha: 0.6),
+                    width: 1.2,
+                  ),
+                ),
+              ),
+            ),
+            onSelectedItemChanged: (i) {
+              HapticFeedback.selectionClick();
+              onChanged(min + i);
+            },
+            children: [
+              for (int v = min; v <= max; v++)
+                Center(
+                  child: Text.rich(
+                    TextSpan(
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                      ),
+                      children: [
+                        TextSpan(text: '$v'),
+                        if (suffix != null)
+                          TextSpan(
+                            text: ' $suffix',
+                            style: const TextStyle(
+                              color: Colors.white38,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PainPointStep extends ConsumerWidget {
+  const _PainPointStep({required this.onCommitted});
+  final VoidCallback onCommitted;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final current = ref.watch(wizardProvider).painPoint;
+    return InteractiveQuestionStep(
+      title: 'Seni en çok zorlayan ne?',
+      subtitle: 'Programın bu noktayı çözecek şekilde kurulacak.',
+      initialValue: current,
+      feedbackText: 'Bunu çözmek için planını optimize edeceğim.',
+      options: const [
+        InteractiveOption(
+          value: 'motivation',
+          label: 'Motivasyon',
+          icon: Icons.local_fire_department_outlined,
+        ),
+        InteractiveOption(
+          value: 'consistency',
+          label: 'Süreklilik',
+          icon: Icons.repeat_rounded,
+        ),
+        InteractiveOption(
+          value: 'no_idea',
+          label: 'Ne yapacağımı bilmiyorum',
+          icon: Icons.help_outline_rounded,
+        ),
+        InteractiveOption(
+          value: 'diet',
+          label: 'Diyet',
+          icon: Icons.restaurant_menu_rounded,
+        ),
+      ],
+      onCommitted: (value) {
+        ref.read(wizardProvider.notifier).setPainPoint(value);
+        onCommitted();
+      },
+    );
+  }
+}
+
+/// Phase 60C · the "labor illusion" screen that sits between the
+/// pain-point answer and the dynamic report. Cycles through five AI
+/// "thinking" phrases at a fixed 1.2 s cadence over a rotating neon
+/// core graphic, then auto-advances. Total dwell ≈ 6 s so the user
+/// believes the system is doing serious work before the reveal.
+class _AnalysisIllusionStep extends StatefulWidget {
+  const _AnalysisIllusionStep({required this.onComplete});
+  final VoidCallback onComplete;
+
+  @override
+  State<_AnalysisIllusionStep> createState() => _AnalysisIllusionStepState();
+}
+
+class _AnalysisIllusionStepState extends State<_AnalysisIllusionStep>
+    with SingleTickerProviderStateMixin {
+  static const List<String> _phrases = [
+    'Vücudun analiz ediliyor…',
+    'Metabolizma hesaplanıyor…',
+    'Kas potansiyelin değerlendiriliyor…',
+    'Yağ oranı tahmin ediliyor…',
+    'Sana özel plan oluşturuluyor…',
+  ];
+  static const Duration _phraseDuration = Duration(milliseconds: 1200);
+
+  Timer? _timer;
+  int _index = 0;
+  late final AnimationController _coreCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _coreCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2200),
+    )..repeat();
+    _timer = Timer.periodic(_phraseDuration, (timer) {
+      if (!mounted) return;
+      if (_index >= _phrases.length - 1) {
+        timer.cancel();
+        // One last phrase-length beat so the user actually sees the
+        // closing "Sana özel plan…" line before we punt them to the
+        // report.
+        Future<void>.delayed(_phraseDuration, () {
+          if (mounted) widget.onComplete();
+        });
+      } else {
+        setState(() => _index += 1);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _coreCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(wizardProvider);
-    return Column(
-      children: [
-        const _StepTitle(
-          title: 'Boy & Kilo',
-          subtitle: 'Kalori ve set hesaplarını buna göre yapacağız.',
-          whyAskTitle: 'Boy ve kiloyu neden soruyoruz?',
-          whyAskExplanation:
-              'Kalori ihtiyacını ve günlük makro dağılımını (protein, '
-              'karbonhidrat, yağ) doğru hesaplamak için fiziksel '
-              'metriklerine ihtiyacımız var. Ayrıca antrenman şiddetini '
-              've set sayısını sana göre ayarlayabilmemiz için önemli. '
-              'Tüm bilgiler güvenli bir şekilde saklanır.',
-        ),
-        const SizedBox(height: 12),
-        Expanded(
-          child: Row(
-            children: [
-              Expanded(
-                child: WheelColumn(
-                  label: 'BOY (cm)',
-                  controller: _heightController,
-                  min: _minHeight,
-                  max: _maxHeight,
-                  current: state.heightCm ?? 170,
-                  onChanged: (v) =>
-                      ref.read(wizardProvider.notifier).setHeight(v),
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+        child: Column(
+          children: [
+            const Spacer(flex: 2),
+            _AnalysisCore(progress: _coreCtrl),
+            const SizedBox(height: 36),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 320),
+              transitionBuilder: (child, animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.3),
+                      end: Offset.zero,
+                    ).animate(CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeOutCubic,
+                    )),
+                    child: child,
+                  ),
+                );
+              },
+              child: Text(
+                _phrases[_index],
+                key: ValueKey<int>(_index),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  height: 1.4,
+                  letterSpacing: 0.2,
                 ),
               ),
-              Container(width: 1, color: Colors.white12),
-              Expanded(
-                child: WheelColumn(
-                  label: 'KİLO (kg)',
-                  controller: _weightController,
-                  min: _minWeight,
-                  max: _maxWeight,
-                  current: state.weightKg ?? 70,
-                  onChanged: (v) =>
-                      ref.read(wizardProvider.notifier).setWeight(v),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              '${_index + 1} / ${_phrases.length}',
+              style: const TextStyle(
+                color: Colors.white38,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.6,
+              ),
+            ),
+            const Spacer(flex: 3),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Centered animated AI core: a sweep-gradient ring rotates around an
+/// inner neon-bordered disc with a glowing sparkle icon. Pure CPU
+/// drawing — no images required.
+class _AnalysisCore extends StatelessWidget {
+  const _AnalysisCore({required this.progress});
+  final Animation<double> progress;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: progress,
+      builder: (context, _) {
+        final t = progress.value;
+        return SizedBox(
+          width: 200,
+          height: 200,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                width: 200,
+                height: 200,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      _neon.withValues(alpha: 0.25),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+              Transform.rotate(
+                angle: t * 2 * math.pi,
+                child: Container(
+                  width: 170,
+                  height: 170,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: SweepGradient(
+                      colors: [
+                        _neon.withValues(alpha: 0),
+                        _neonAccent,
+                        _neon,
+                        _neon.withValues(alpha: 0),
+                      ],
+                    ),
+                  ),
+                  padding: const EdgeInsets.all(2),
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ),
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.black,
+                  border: Border.all(color: _neon, width: 1.4),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _neon.withValues(alpha: 0.55),
+                      blurRadius: 28,
+                      spreadRadius: -2,
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: Transform.rotate(
+                  angle: -t * math.pi,
+                  child: const Icon(
+                    Icons.auto_awesome,
+                    color: _neon,
+                    size: 44,
+                  ),
                 ),
               ),
             ],
           ),
-        ),
-        _PrimaryButton(label: 'DEVAM', onPressed: widget.onContinue),
-      ],
+        );
+      },
     );
   }
 }
 
-class _CurrentPhysiqueStep extends ConsumerWidget {
-  const _CurrentPhysiqueStep({required this.onSelected});
-  final VoidCallback onSelected;
+/// Phase 60C · the final pre-paywall reveal.
+///
+/// Pulls the wizard payload, renders BMI + maintenance-calorie cards,
+/// a generated "AI Assessment" paragraph that branches on
+/// activityLevel/goal/experienceLevel/painPoint, and a fake 92%
+/// confidence bar. The CTA wires straight into [_finish], which
+/// persists the wizard, signs the user in anonymously, and routes to
+/// /paywall.
+class _DynamicReportStep extends ConsumerStatefulWidget {
+  const _DynamicReportStep({required this.onComplete});
+  final VoidCallback onComplete;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final selected = ref.watch(wizardProvider).currentPhysique;
+  ConsumerState<_DynamicReportStep> createState() => _DynamicReportStepState();
+}
 
-    void pick(Physique p) {
-      ref.read(wizardProvider.notifier).setCurrentPhysique(p);
-      Future<void>.delayed(const Duration(milliseconds: 220), onSelected);
+class _DynamicReportStepState extends ConsumerState<_DynamicReportStep>
+    with SingleTickerProviderStateMixin {
+  static const double _confidenceTarget = 0.92;
+
+  late final AnimationController _intro;
+  late final Animation<double> _confidence;
+  late final Animation<double> _contentFade;
+  late final Animation<Offset> _contentSlide;
+
+  @override
+  void initState() {
+    super.initState();
+    _intro = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..forward();
+    _contentFade = CurvedAnimation(
+      parent: _intro,
+      curve: const Interval(0.0, 0.55, curve: Curves.easeOutCubic),
+    );
+    _contentSlide = Tween<Offset>(
+      begin: const Offset(0, 0.18),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _intro,
+      curve: const Interval(0.0, 0.55, curve: Curves.easeOutCubic),
+    ));
+    _confidence = Tween<double>(begin: 0.0, end: _confidenceTarget).animate(
+      CurvedAnimation(
+        parent: _intro,
+        curve: const Interval(0.45, 1.0, curve: Curves.easeOutCubic),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _intro.dispose();
+    super.dispose();
+  }
+
+  double _bmi(int weightKg, int heightCm) {
+    final h = heightCm / 100.0;
+    if (h <= 0) return 0;
+    return weightKg / (h * h);
+  }
+
+  /// Mifflin-St Jeor with the gender-neutral midpoint correction
+  /// (-78), then TDEE-multiplied by the activity level. We don't ask
+  /// gender any more so the midpoint correction is the fairest default
+  /// — it under/over-shoots both sexes by the same magnitude.
+  int _maintenanceCalories({
+    required int weight,
+    required int height,
+    required int age,
+    required ActivityLevel? activity,
+  }) {
+    final bmr = (10.0 * weight) + (6.25 * height) - (5.0 * age) - 78.0;
+    final mult = switch (activity) {
+      ActivityLevel.sedentary => 1.2,
+      ActivityLevel.light => 1.375,
+      ActivityLevel.active => 1.55,
+      _ => 1.2,
+    };
+    return (bmr * mult).round();
+  }
+
+  String _assessment(WizardState w) {
+    final List<String> sentences = [
+      'Profilini analiz ettim ve harika bir başlangıç noktasındasın.',
+    ];
+    switch (w.activityLevel) {
+      case ActivityLevel.sedentary:
+        sentences.add(
+          'Aktivite seviyen düşük olduğu için yağlanma riskin var; '
+          'ilk haftayı hareket alışkanlığını oturtmaya ayıracağım.',
+        );
+        break;
+      case ActivityLevel.active:
+        sentences.add(
+          'Aktivite seviyen yüksek — temeli zaten attığın için '
+          'ilerlemen ortalamadan daha hızlı olacak.',
+        );
+        break;
+      case ActivityLevel.light:
+      case null:
+        break;
     }
+    switch (w.goal) {
+      case 'belly_burn':
+        sentences.add(
+          'Kilo verme hedefin için kalori açığı yaratıp göbek bölgesine '
+          'odaklı core çalışmaları ekleyeceğim.',
+        );
+        break;
+      case 'muscle_gain':
+        sentences.add(
+          'Kas yapma hedefin için yüksek-protein beslenme ve progresif '
+          'yüklenme ile programını şekillendiriyorum.',
+        );
+        break;
+      case 'fitness_look':
+        sentences.add(
+          'Daha fit görünmek için kardiyo + full-body antrenmanını '
+          'dengeleyeceğim.',
+        );
+        break;
+      case 'strength':
+        sentences.add(
+          'Güçlenme hedefin için bileşik hareketlere ağırlık veren bir '
+          'program tasarladım.',
+        );
+        break;
+    }
+    switch (w.experienceLevel) {
+      case 'none':
+        sentences.add(
+          'Spora yeni başladığın için ilk 30 günde çok hızlı sonuç '
+          'alacaksın — beginner-gain etkisi.',
+        );
+        break;
+      case 'regular':
+        sentences.add(
+          'Düzenli antrenman geçmişin programının yoğunluğunu yukarı '
+          'çekmeme imkân tanıyor.',
+        );
+        break;
+    }
+    switch (w.painPoint) {
+      case 'motivation':
+        sentences.add(
+          'Motivasyonu canlı tutmak için günlük mikro-hedefler ve '
+          'görsel ilerleme grafikleri planlıyorum.',
+        );
+        break;
+      case 'consistency':
+        sentences.add(
+          'Süreklilik için kısa "skip-proof" antrenmanlar ve akıllı '
+          'hatırlatmalar ekleyeceğim.',
+        );
+        break;
+      case 'no_idea':
+        sentences.add(
+          'Ne yapacağını bilmemek artık dert değil — adım adım '
+          'yönlendiren rehber moduyla başlayacağız.',
+        );
+        break;
+      case 'diet':
+        sentences.add(
+          'Diyet konusunda da yanındayım; tercihlerine uygun esnek '
+          'yemek listeleri oluşturacağım.',
+        );
+        break;
+    }
+    return sentences.join(' ');
+  }
 
-    return Column(
-      children: [
-        const _StepTitle(
-          title: 'Şu anki vücudun?',
-          subtitle: 'Sana en yakın olanı seç.',
-        ),
-        const SizedBox(height: 16),
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+  @override
+  Widget build(BuildContext context) {
+    final w = ref.watch(wizardProvider);
+    final weight = w.weightKg ?? 70;
+    final height = w.heightCm ?? 170;
+    final age = w.age ?? 25;
+    final bmi = _bmi(weight, height);
+    final calories = _maintenanceCalories(
+      weight: weight,
+      height: height,
+      age: age,
+      activity: w.activityLevel,
+    );
+    final assessment = _assessment(w);
+
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+        child: FadeTransition(
+          opacity: _contentFade,
+          child: SlideTransition(
+            position: _contentSlide,
             child: Column(
               children: [
-                Expanded(
-                  child: PhotoOptionCard(
-                    image: 'photos/vücutseçimiZayıf.webp',
-                    fallbackIcon: Icons.accessibility,
-                    title: 'Zayıf',
-                    subtitle: 'Düşük yağ, ince yapı.',
-                    selected: selected == Physique.slim,
-                    onTap: () => pick(Physique.slim),
+                ShaderMask(
+                  shaderCallback: (rect) => const LinearGradient(
+                    colors: [_neon, _neonAccent],
+                  ).createShader(rect),
+                  child: const Text(
+                    'Kişisel AI Raporun',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.4,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 4),
+                const Text(
+                  'AI değerlendirmen hazır',
+                  style: TextStyle(color: Colors.white54, fontSize: 13),
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _ReportMetricCard(
+                        label: 'BMI',
+                        value: bmi.toStringAsFixed(1),
+                        icon: Icons.monitor_weight_outlined,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _ReportMetricCard(
+                        label: 'GÜNLÜK KAL.',
+                        value: '$calories',
+                        icon: Icons.local_fire_department_rounded,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
                 Expanded(
-                  child: PhotoOptionCard(
-                    // Filename carries a "vucüt" typo that ships from the
-                    // user's asset export; keep the path verbatim so the
-                    // manifest lookup actually matches.
-                    image: 'photos/vucütseçimiNormal.webp',
-                    fallbackIcon: Icons.accessibility_new,
-                    title: 'Normal',
-                    subtitle: 'Ortalama yapı.',
-                    selected: selected == Physique.normal,
-                    onTap: () => pick(Physique.normal),
+                  child: SingleChildScrollView(
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.04),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: _neon.withValues(alpha: 0.35),
+                          width: 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: _neon.withValues(alpha: 0.15),
+                            blurRadius: 24,
+                            spreadRadius: -4,
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.psychology_outlined,
+                                color: _neonAccent,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'AI DEĞERLENDİRMESİ',
+                                style: TextStyle(
+                                  color: _neonAccent,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1.6,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            assessment,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              height: 1.55,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: PhotoOptionCard(
-                    image: 'photos/vücutseçimikiloluhacimli.webp',
-                    fallbackIcon: Icons.airline_seat_recline_extra,
-                    title: 'Kilolu / Hacimli',
-                    subtitle: 'Fazla yağ veya hacimli yapı.',
-                    selected: selected == Physique.heavy,
-                    onTap: () => pick(Physique.heavy),
+                const SizedBox(height: 14),
+                AnimatedBuilder(
+                  animation: _confidence,
+                  builder: (context, _) {
+                    final pct = (_confidence.value * 100).round();
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Başarı olasılığı',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            Text(
+                              '%$pct',
+                              style: const TextStyle(
+                                color: _neon,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: _confidence.value,
+                            minHeight: 6,
+                            backgroundColor: Colors.white12,
+                            valueColor: const AlwaysStoppedAnimation(_neon),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _neon.withValues(alpha: 0.55),
+                          blurRadius: 26,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                    child: FilledButton(
+                      onPressed: () {
+                        AppHaptics.primaryCta();
+                        widget.onComplete();
+                      },
+                      style: FilledButton.styleFrom(
+                        backgroundColor: _neon,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        textStyle: const TextStyle(
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 2.5,
+                          fontSize: 15,
+                        ),
+                      ),
+                      child: const Text('KİŞİSEL PLANIMI AL'),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
         ),
-      ],
+      ),
     );
   }
 }
 
-class _TargetPhysiqueStep extends ConsumerWidget {
-  const _TargetPhysiqueStep({required this.onSelected});
-  final VoidCallback onSelected;
+class _ReportMetricCard extends StatelessWidget {
+  const _ReportMetricCard({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+  final String label;
+  final String value;
+  final IconData icon;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final selected = ref.watch(wizardProvider).targetPhysique;
-
-    void pick(GoalPhysique g) {
-      ref.read(wizardProvider.notifier).setTargetPhysique(g);
-      Future<void>.delayed(const Duration(milliseconds: 220), onSelected);
-    }
-
-    return Column(
-      children: [
-        const _StepTitle(
-          title: 'Hedefin ne?',
-          subtitle: '30 gün sonra nereye varmak istersin?',
-          whyAskTitle: 'Hedefini neden soruyoruz?',
-          whyAskExplanation:
-              '30 günlük programının tamamı hedefine göre kalibre '
-              'edilir. Sıkılaşmak için kardiyo + full-body ağırlıklı '
-              'bir plan, hacim kazanmak için güç antrenmanları, '
-              'six-pack için ise core + stabilite çalışmaları '
-              'öne çıkar. Bu tercih programının ilk günden doğru '
-              'yönde ilerlemesini sağlar.',
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        color: Colors.white.withValues(alpha: 0.05),
+        border: Border.all(
+          color: _neon.withValues(alpha: 0.4),
+          width: 1,
         ),
-        const SizedBox(height: 16),
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        boxShadow: [
+          BoxShadow(
+            color: _neon.withValues(alpha: 0.2),
+            blurRadius: 16,
+            spreadRadius: -4,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: _neon.withValues(alpha: 0.18),
+              border: Border.all(
+                color: _neon.withValues(alpha: 0.5),
+                width: 1,
+              ),
+            ),
+            child: Icon(icon, color: Colors.white, size: 20),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: PhotoOptionCard(
-                    image: 'photos/hedefinneSıkılaşmak.webp',
-                    fallbackIcon: Icons.local_fire_department,
-                    title: 'Sıkılaşmak',
-                    subtitle: 'Yağ yak, kasları sıkılaştır.',
-                    selected: selected == GoalPhysique.tone,
-                    onTap: () => pick(GoalPhysique.tone),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.white54,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.4,
                   ),
                 ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: PhotoOptionCard(
-                    image: 'photos/hedefinneHacimKazanmak.webp',
-                    fallbackIcon: Icons.fitness_center,
-                    title: 'Hacim Kazanmak',
-                    subtitle: 'Daha kalın, daha güçlü.',
-                    selected: selected == GoalPhysique.bulk,
-                    onTap: () => pick(GoalPhysique.bulk),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: PhotoOptionCard(
-                    image: 'photos/hedefinneSadeceSix-Pack.webp',
-                    fallbackIcon: Icons.bolt,
-                    title: 'Sadece Six-Pack',
-                    subtitle: 'Net çizgiler, belirgin karın.',
-                    selected: selected == GoalPhysique.sixpack,
-                    onTap: () => pick(GoalPhysique.sixpack),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.3,
                   ),
                 ),
               ],
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

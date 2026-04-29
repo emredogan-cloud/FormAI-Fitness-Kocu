@@ -28,6 +28,7 @@ class WizardState {
     this.goal,
     this.experienceLevel,
     this.dailyMinutes,
+    this.painPoint,
     this.dietPreference = kDefaultDietPreference,
     this.allergies = kDefaultAllergies,
     this.mealFrequency = kDefaultMealFrequency,
@@ -56,6 +57,12 @@ class WizardState {
   /// One of: `10_15`, `20_30`, `45_plus`.
   final String? dailyMinutes;
 
+  /// Phase 60C · self-reported obstacle the user wants help with —
+  /// surfaced on the Step-8 pain-point question. The downstream report
+  /// generator branches its closing sentence on this token.
+  /// One of: `motivation`, `consistency`, `no_idea`, `diet`.
+  final String? painPoint;
+
   /// One of: `standart`, `vejetaryen`, `vegan`, `ketojenik`. Keyed in
   /// Turkish ASCII to match the rest of the wizard's persisted tokens.
   final String dietPreference;
@@ -82,6 +89,7 @@ class WizardState {
     String? goal,
     String? experienceLevel,
     String? dailyMinutes,
+    String? painPoint,
     String? dietPreference,
     String? allergies,
     String? mealFrequency,
@@ -98,6 +106,7 @@ class WizardState {
       goal: goal ?? this.goal,
       experienceLevel: experienceLevel ?? this.experienceLevel,
       dailyMinutes: dailyMinutes ?? this.dailyMinutes,
+      painPoint: painPoint ?? this.painPoint,
       dietPreference: dietPreference ?? this.dietPreference,
       allergies: allergies ?? this.allergies,
       mealFrequency: mealFrequency ?? this.mealFrequency,
@@ -116,6 +125,7 @@ class WizardState {
         'goal': goal,
         'experienceLevel': experienceLevel,
         'dailyMinutes': dailyMinutes,
+        'painPoint': painPoint,
         'dietPreference': dietPreference,
         'allergies': allergies,
         'mealFrequency': mealFrequency,
@@ -141,6 +151,7 @@ class WizardController extends Notifier<WizardState> {
   void setExperienceLevel(String v) =>
       state = state.copyWith(experienceLevel: v);
   void setDailyMinutes(String v) => state = state.copyWith(dailyMinutes: v);
+  void setPainPoint(String v) => state = state.copyWith(painPoint: v);
   void setDietPreference(String v) => state = state.copyWith(dietPreference: v);
   void setAllergies(String v) => state = state.copyWith(allergies: v);
   void setMealFrequency(String v) => state = state.copyWith(mealFrequency: v);
