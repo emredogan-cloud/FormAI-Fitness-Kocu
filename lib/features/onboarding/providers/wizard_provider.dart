@@ -25,6 +25,9 @@ class WizardState {
     this.currentPhysique,
     this.targetPhysique,
     this.activityLevel,
+    this.goal,
+    this.experienceLevel,
+    this.dailyMinutes,
     this.dietPreference = kDefaultDietPreference,
     this.allergies = kDefaultAllergies,
     this.mealFrequency = kDefaultMealFrequency,
@@ -38,6 +41,20 @@ class WizardState {
   final Physique? currentPhysique;
   final GoalPhysique? targetPhysique;
   final ActivityLevel? activityLevel;
+
+  /// Phase 60B · motivational driver captured by the interactive
+  /// onboarding Goal step. Distinct from [targetPhysique] (the
+  /// body-shape token consumed by the workout generator). Tokens:
+  /// `belly_burn`, `muscle_gain`, `fitness_look`, `strength`.
+  final String? goal;
+
+  /// Phase 60B · self-reported training history.
+  /// One of: `none`, `occasional`, `regular`.
+  final String? experienceLevel;
+
+  /// Phase 60B · daily time budget the user can commit to training.
+  /// One of: `10_15`, `20_30`, `45_plus`.
+  final String? dailyMinutes;
 
   /// One of: `standart`, `vejetaryen`, `vegan`, `ketojenik`. Keyed in
   /// Turkish ASCII to match the rest of the wizard's persisted tokens.
@@ -62,6 +79,9 @@ class WizardState {
     Physique? currentPhysique,
     GoalPhysique? targetPhysique,
     ActivityLevel? activityLevel,
+    String? goal,
+    String? experienceLevel,
+    String? dailyMinutes,
     String? dietPreference,
     String? allergies,
     String? mealFrequency,
@@ -75,6 +95,9 @@ class WizardState {
       currentPhysique: currentPhysique ?? this.currentPhysique,
       targetPhysique: targetPhysique ?? this.targetPhysique,
       activityLevel: activityLevel ?? this.activityLevel,
+      goal: goal ?? this.goal,
+      experienceLevel: experienceLevel ?? this.experienceLevel,
+      dailyMinutes: dailyMinutes ?? this.dailyMinutes,
       dietPreference: dietPreference ?? this.dietPreference,
       allergies: allergies ?? this.allergies,
       mealFrequency: mealFrequency ?? this.mealFrequency,
@@ -90,6 +113,9 @@ class WizardState {
         'currentPhysique': currentPhysique?.name,
         'targetPhysique': targetPhysique?.name,
         'activityLevel': activityLevel?.name,
+        'goal': goal,
+        'experienceLevel': experienceLevel,
+        'dailyMinutes': dailyMinutes,
         'dietPreference': dietPreference,
         'allergies': allergies,
         'mealFrequency': mealFrequency,
@@ -111,6 +137,10 @@ class WizardController extends Notifier<WizardState> {
       state = state.copyWith(targetPhysique: v);
   void setActivityLevel(ActivityLevel v) =>
       state = state.copyWith(activityLevel: v);
+  void setGoal(String v) => state = state.copyWith(goal: v);
+  void setExperienceLevel(String v) =>
+      state = state.copyWith(experienceLevel: v);
+  void setDailyMinutes(String v) => state = state.copyWith(dailyMinutes: v);
   void setDietPreference(String v) => state = state.copyWith(dietPreference: v);
   void setAllergies(String v) => state = state.copyWith(allergies: v);
   void setMealFrequency(String v) => state = state.copyWith(mealFrequency: v);

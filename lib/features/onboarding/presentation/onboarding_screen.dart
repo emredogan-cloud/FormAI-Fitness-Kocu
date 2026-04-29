@@ -15,34 +15,45 @@ import '../../../core/utils/legal_urls.dart';
 import '../../monetization/providers/monetization_provider.dart';
 import '../providers/wizard_provider.dart';
 import 'widgets/illusion_step.dart';
+import 'widgets/interactive_question_step.dart';
 import 'widgets/photo_option_card.dart';
 import 'widgets/wheel_column.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonAccent = Color(0xFF4DA6FF);
-// Phase 46 · shortened wizard.
+// Phase 60B · 12 pages total.
 //
-// 9 pages total: 2 hook screens + 6 body/fitness questions + 1
-// illusion/finish screen. The four nutrition questions
-// (`_DietPreferenceStep`, `_AllergiesStep`, `_MealFrequencyStep`,
-// `_PrepTimeStep`) were lifted into `NutritionOnboardingSheet` so
-// the critical path to the /prediction payoff is 4 taps shorter.
-const int _totalSteps = 9;
+//   • 2 hook screens (welcome, coach_intro)
+//   • 4 interactive AI-styled questions (goal, experience_level,
+//     daily_minutes, activity) — the new "premium" surface introduced
+//     in Phase 60B with per-pick micro-feedback + auto-advance
+//   • 5 detail questions (gender, age, body_metrics, current_physique,
+//     target_physique) — still card/wheel based, feed BMR + workout
+//     generator
+//   • 1 illusion/finish screen
+//
+// Nutrition steps live in `NutritionOnboardingSheet` and are surfaced
+// on first Beslenme-tab view (Phase 46).
+const int _totalSteps = 12;
 const int _hookSteps = 2;
 
 /// Phase 42 · analytics labels per onboarding page. Index-aligned with
 /// the `PageView.children` list below so the funnel reads the same
-/// names the code uses. Phase 46 drops the four `nutrition_*` entries
-/// — they live in `nutrition_onboarding_step_completed` now.
+/// names the code uses. Phase 60B inserts the four interactive steps
+/// (`goal`, `experience_level`, `daily_minutes`, `activity`) right
+/// after the hooks and replaces the old `activity` card step.
 const List<String> _stepNames = [
   'welcome',
   'coach_intro',
+  'goal',
+  'experience_level',
+  'daily_minutes',
+  'activity',
   'gender',
   'age',
   'body_metrics',
   'current_physique',
   'target_physique',
-  'activity',
   'illusion',
 ];
 
@@ -169,12 +180,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 children: [
                   _WelcomeStep(onStart: _next),
                   _CoachIntroStep(onContinue: _next),
+                  _GoalStep(onCommitted: _next),
+                  _ExperienceStep(onCommitted: _next),
+                  _DailyMinutesStep(onCommitted: _next),
+                  _ActivityStep(onCommitted: _next),
                   _GenderStep(onSelected: _next),
                   _AgeStep(onContinue: _next),
                   _BodyMetricsStep(onContinue: _next),
                   _CurrentPhysiqueStep(onSelected: _next),
                   _TargetPhysiqueStep(onSelected: _next),
-                  _ActivityStep(onSelected: _next),
                   IllusionStep(onComplete: _finish),
                 ],
               ),
@@ -1519,68 +1533,174 @@ class _TargetPhysiqueStep extends ConsumerWidget {
   }
 }
 
-class _ActivityStep extends ConsumerWidget {
-  const _ActivityStep({required this.onSelected});
-  final VoidCallback onSelected;
+// ───────────────────────── Phase 60B interactive steps ──────────────────────
+//
+// The four screens below are the "AI coaching" surface introduced by
+// Phase 60B. They all delegate to [InteractiveQuestionStep] — selecting
+// a card highlights it, dims its peers, fades in a micro-feedback line,
+// then auto-advances ~1.5s later. Each step writes to a single field
+// on [WizardState] so the wizard payload stays one-row-per-question.
+
+class _GoalStep extends ConsumerWidget {
+  const _GoalStep({required this.onCommitted});
+  final VoidCallback onCommitted;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selected = ref.watch(wizardProvider).activityLevel;
-
-    void pick(ActivityLevel a) {
-      ref.read(wizardProvider.notifier).setActivityLevel(a);
-      Future<void>.delayed(const Duration(milliseconds: 220), onSelected);
-    }
-
-    return Column(
-      children: [
-        const _StepTitle(
-          title: 'Günlük aktiviten?',
-          subtitle: 'Programın yoğunluğunu buna göre dengeleyeceğiz.',
+    final current = ref.watch(wizardProvider).goal;
+    return InteractiveQuestionStep(
+      title: 'Hedefin ne?',
+      subtitle: 'Sana en uygun planı bunun üzerine inşa edeceğim.',
+      initialValue: current,
+      feedbackText:
+          '🔥 Harika seçim! Bu hedefe sahip kullanıcıların %70’i 30 gün '
+          'içinde fark görüyor.',
+      options: const [
+        InteractiveOption(
+          value: 'belly_burn',
+          label: 'Göbek eritmek',
+          icon: Icons.local_fire_department_rounded,
         ),
-        const SizedBox(height: 16),
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-            child: Column(
-              children: [
-                Expanded(
-                  child: PhotoOptionCard(
-                    image: 'photos/günlükaktivitenmasabaşı.webp',
-                    fallbackIcon: Icons.chair,
-                    title: 'Masa Başı',
-                    subtitle: 'Çoğunlukla otururum, az hareket ederim.',
-                    selected: selected == ActivityLevel.sedentary,
-                    onTap: () => pick(ActivityLevel.sedentary),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: PhotoOptionCard(
-                    image: 'photos/günlükaktivitenhafifhareketli.webp',
-                    fallbackIcon: Icons.directions_walk,
-                    title: 'Hafif Hareketli',
-                    subtitle: 'Düzenli yürüyüş, hafif egzersiz.',
-                    selected: selected == ActivityLevel.light,
-                    onTap: () => pick(ActivityLevel.light),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: PhotoOptionCard(
-                    image: 'photos/günlükaktivitenneÇokAktif.webp',
-                    fallbackIcon: Icons.directions_run,
-                    title: 'Çok Aktif',
-                    subtitle: 'Düzenli antrenman, yüksek tempo.',
-                    selected: selected == ActivityLevel.active,
-                    onTap: () => pick(ActivityLevel.active),
-                  ),
-                ),
-              ],
-            ),
-          ),
+        InteractiveOption(
+          value: 'muscle_gain',
+          label: 'Kas yapmak',
+          icon: Icons.fitness_center_rounded,
+        ),
+        InteractiveOption(
+          value: 'fitness_look',
+          label: 'Daha fit görünmek',
+          icon: Icons.auto_awesome_rounded,
+        ),
+        InteractiveOption(
+          value: 'strength',
+          label: 'Güçlenmek',
+          icon: Icons.bolt_rounded,
         ),
       ],
+      onCommitted: (value) {
+        ref.read(wizardProvider.notifier).setGoal(value);
+        onCommitted();
+      },
+    );
+  }
+}
+
+class _ExperienceStep extends ConsumerWidget {
+  const _ExperienceStep({required this.onCommitted});
+  final VoidCallback onCommitted;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final current = ref.watch(wizardProvider).experienceLevel;
+    return InteractiveQuestionStep(
+      title: 'Daha önce spor yaptın mı?',
+      subtitle: 'Programın zorluğunu seviyene göre kalibre edeceğim.',
+      initialValue: current,
+      feedbackText: 'Tamam, programını buna göre ayarlıyorum.',
+      options: const [
+        InteractiveOption(
+          value: 'none',
+          label: 'Hiç yapmadım',
+          icon: Icons.spa_rounded,
+        ),
+        InteractiveOption(
+          value: 'occasional',
+          label: 'Ara sıra yaptım',
+          icon: Icons.directions_walk_rounded,
+        ),
+        InteractiveOption(
+          value: 'regular',
+          label: 'Düzenli yapıyorum',
+          icon: Icons.fitness_center_rounded,
+        ),
+      ],
+      onCommitted: (value) {
+        ref.read(wizardProvider.notifier).setExperienceLevel(value);
+        onCommitted();
+      },
+    );
+  }
+}
+
+class _DailyMinutesStep extends ConsumerWidget {
+  const _DailyMinutesStep({required this.onCommitted});
+  final VoidCallback onCommitted;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final current = ref.watch(wizardProvider).dailyMinutes;
+    return InteractiveQuestionStep(
+      title: 'Günde ne kadar zaman ayırabilirsin?',
+      subtitle: 'Antrenman uzunluğunu buna göre planlayacağım.',
+      initialValue: current,
+      feedbackText: 'Bu süreyle bile ciddi sonuç alabilirsin.',
+      options: const [
+        InteractiveOption(
+          value: '10_15',
+          label: '10–15 dakika',
+          icon: Icons.timer_outlined,
+        ),
+        InteractiveOption(
+          value: '20_30',
+          label: '20–30 dakika',
+          icon: Icons.access_time_rounded,
+        ),
+        InteractiveOption(
+          value: '45_plus',
+          label: '45+ dakika',
+          icon: Icons.local_fire_department_outlined,
+        ),
+      ],
+      onCommitted: (value) {
+        ref.read(wizardProvider.notifier).setDailyMinutes(value);
+        onCommitted();
+      },
+    );
+  }
+}
+
+/// Phase 60B · interactive replacement for the old card-based activity
+/// step. Writes to the same [ActivityLevel] enum the BMR/TDEE
+/// calculator already consumes — see
+/// `nutrition_calculator_service.dart` and `workout_provider.dart`.
+class _ActivityStep extends ConsumerWidget {
+  const _ActivityStep({required this.onCommitted});
+  final VoidCallback onCommitted;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final current = ref.watch(wizardProvider).activityLevel;
+    return InteractiveQuestionStep(
+      title: 'Günlük aktiviten?',
+      subtitle: 'Kalori ihtiyacını buna göre hesaplıyorum.',
+      initialValue: current?.name,
+      feedbackText:
+          'Kişisel kalori ve program yoğunluğunu buna göre ayarlıyorum.',
+      options: const [
+        InteractiveOption(
+          value: 'sedentary',
+          label: 'Masa başı',
+          icon: Icons.chair_outlined,
+        ),
+        InteractiveOption(
+          value: 'light',
+          label: 'Hafif hareketli',
+          icon: Icons.directions_walk_rounded,
+        ),
+        InteractiveOption(
+          value: 'active',
+          label: 'Çok aktif',
+          icon: Icons.directions_run_rounded,
+        ),
+      ],
+      onCommitted: (value) {
+        final level = ActivityLevel.values.firstWhere(
+          (a) => a.name == value,
+          orElse: () => ActivityLevel.light,
+        );
+        ref.read(wizardProvider.notifier).setActivityLevel(level);
+        onCommitted();
+      },
     );
   }
 }
