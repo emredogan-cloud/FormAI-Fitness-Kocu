@@ -102,7 +102,12 @@ enum _OnboardingPhase { questions, calculating, ready }
 class _NutritionOnboardingSheetState
     extends ConsumerState<NutritionOnboardingSheet> {
   static const int _total = 4;
-  static const Duration _laborIllusionDuration = Duration(milliseconds: 2500);
+  // Phase 61B · widened from 2.5 s to 6.8 s so the calculating panel
+  // can play through the full 4-phrase AI-coach sequence (4 × 1.7 s)
+  // before flipping to the ready panel. Persistence still runs
+  // concurrently via `_persistPreferences`, so this is purely the
+  // *visible* labor — no real work is being delayed.
+  static const Duration _laborIllusionDuration = Duration(milliseconds: 6800);
   final PageController _controller = PageController();
   int _index = 0;
   bool _busy = false;
@@ -260,34 +265,55 @@ class _CalculatingPanel extends StatefulWidget {
 
 class _CalculatingPanelState extends State<_CalculatingPanel>
     with SingleTickerProviderStateMixin {
-  static const List<String> _statusLines = [
-    'Makrolarınız hesaplanıyor...',
-    'Size özel tarifler seçiliyor...',
-    'Beslenme planınız hazırlanıyor...',
+  /// Phase 61B · the four AI-coach phrases the panel cycles through
+  /// before the parent flips to `_OnboardingPhase.ready`. Spec'd by
+  /// the PM in first-person voice so the loading reads as "the AI is
+  /// doing real work" rather than a generic spinner caption.
+  static const List<String> _phrases = [
+    'Senin için en uygun tarifler analiz ediliyor...',
+    'Kalori ve makrolar optimize ediliyor...',
+    'Lezzet + hedef dengesi kuruluyor...',
+    'Planın oluşturuluyor...',
   ];
 
+  /// 1.7 s × 4 phrases = 6.8 s sequence — matches the parent's bumped
+  /// `_laborIllusionDuration` so the last phrase is on screen when
+  /// the phase flips.
+  static const Duration _phraseDuration = Duration(milliseconds: 1700);
+
+  // Reverse-repeating controller drives both the alpha-pulsing
+  // boxShadow and the new Phase-61B `Transform.scale` "breathing"
+  // effect (1.0 → 1.06 → 1.0).
   late final AnimationController _ctrl = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1400),
   )..repeat(reverse: true);
 
-  Timer? _statusTimer;
-  int _statusIndex = 0;
+  Timer? _phraseTimer;
+  int _phraseIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    // Cycle through the status lines so the panel reads as "multiple
-    // things happening" instead of a single static spinner.
-    _statusTimer = Timer.periodic(const Duration(milliseconds: 800), (_) {
-      if (!mounted) return;
-      setState(() => _statusIndex = (_statusIndex + 1) % _statusLines.length);
+    // Phase 61B · ladder timer (not modulo-cycling). Once the last
+    // phrase shows, the timer cancels itself so the panel sits on the
+    // closing line until the parent's `_laborTimer` flips the phase.
+    _phraseTimer = Timer.periodic(_phraseDuration, (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      if (_phraseIndex >= _phrases.length - 1) {
+        timer.cancel();
+        return;
+      }
+      setState(() => _phraseIndex += 1);
     });
   }
 
   @override
   void dispose() {
-    _statusTimer?.cancel();
+    _phraseTimer?.cancel();
     _ctrl.dispose();
     super.dispose();
   }
@@ -302,32 +328,40 @@ class _CalculatingPanelState extends State<_CalculatingPanel>
           AnimatedBuilder(
             animation: _ctrl,
             builder: (context, _) {
-              final glow = 0.35 + _ctrl.value * 0.45;
-              return Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    colors: [_neon, Color(0xFF4DA6FF)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _neon.withValues(alpha: glow),
-                      blurRadius: 32,
-                      spreadRadius: 2,
+              final t = _ctrl.value;
+              final glow = 0.35 + t * 0.45;
+              // Phase 61B · subtle scale pulse so the orb reads as
+              // "breathing" rather than a static disc with a glow.
+              // Capped at +6% so it never feels jittery.
+              final scale = 1.0 + t * 0.06;
+              return Transform.scale(
+                scale: scale,
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: const LinearGradient(
+                      colors: [_neon, Color(0xFF4DA6FF)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                  ],
-                ),
-                alignment: Alignment.center,
-                child: const SizedBox(
-                  width: 56,
-                  height: 56,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 3,
-                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: _neon.withValues(alpha: glow),
+                        blurRadius: 32,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  alignment: Alignment.center,
+                  child: const SizedBox(
+                    width: 56,
+                    height: 56,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               );
@@ -345,10 +379,25 @@ class _CalculatingPanelState extends State<_CalculatingPanel>
           ),
           const SizedBox(height: 12),
           AnimatedSwitcher(
-            duration: const Duration(milliseconds: 280),
+            duration: const Duration(milliseconds: 320),
+            transitionBuilder: (child, animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 0.25),
+                    end: Offset.zero,
+                  ).animate(CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutCubic,
+                  )),
+                  child: child,
+                ),
+              );
+            },
             child: Text(
-              _statusLines[_statusIndex],
-              key: ValueKey<int>(_statusIndex),
+              _phrases[_phraseIndex],
+              key: ValueKey<int>(_phraseIndex),
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: Colors.white70,
@@ -487,7 +536,11 @@ class _SheetHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final progress = step / total;
     final remaining = total - step;
-    final copy = remaining <= 1 ? 'Neredeyse bitti!' : '$remaining soru kaldı';
+    // Phase 61B · the PM moved from "N soru kaldı" / "Neredeyse
+    // bitti!" to a "Son N adım" countdown — the new phrasing reads as
+    // a finish-line ladder ("last 3 steps") rather than the older
+    // assignment-counter framing.
+    final copy = remaining > 0 ? 'Son $remaining adım' : 'Son adım';
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Column(
@@ -680,7 +733,7 @@ class _DietPreferencePage extends ConsumerWidget {
       children: [
         const _PageTitle(
           title: 'Diyet Tercihin Nedir?',
-          subtitle: 'Tarifleri bu tercihine göre filtreleyeceğiz.',
+          subtitle: 'Senin yaşam tarzına uygun tarifleri seçeceğim.',
         ),
         const SizedBox(height: 12),
         Expanded(
@@ -747,7 +800,7 @@ class _AllergiesPage extends ConsumerWidget {
       children: [
         const _PageTitle(
           title: 'Herhangi bir gıda alerjin var mı?',
-          subtitle: 'Tariflerden bu içeriği çıkaracağız.',
+          subtitle: 'Sana zarar verebilecek içerikleri tamamen çıkarıyorum.',
         ),
         const SizedBox(height: 12),
         Expanded(
@@ -802,7 +855,7 @@ class _MealFrequencyPage extends ConsumerWidget {
       children: [
         const _PageTitle(
           title: 'Günde kaç öğün yersin?',
-          subtitle: 'Kalori dağılımını öğün sayına göre planlayacağız.',
+          subtitle: 'Günlük enerjini en verimli şekilde dağıtıyorum.',
         ),
         const SizedBox(height: 12),
         Expanded(
@@ -855,7 +908,7 @@ class _PrepTimePage extends ConsumerWidget {
       children: [
         const _PageTitle(
           title: 'Yemek hazırlamak için ne kadar vaktin var?',
-          subtitle: 'Tarifleri süresine göre dengeleyeceğiz.',
+          subtitle: 'Hayat temposuna uygun tarifler seçiyorum.',
         ),
         const SizedBox(height: 12),
         Expanded(
