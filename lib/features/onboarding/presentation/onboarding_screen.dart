@@ -19,6 +19,7 @@ import '../../monetization/providers/monetization_provider.dart';
 import '../domain/ai_personalization_engine.dart';
 import '../providers/wizard_provider.dart';
 import 'widgets/interactive_question_step.dart';
+import 'widgets/onboarding_image.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonAccent = Color(0xFF4DA6FF);
@@ -74,6 +75,25 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final PageController _controller = PageController();
   int _index = 0;
+  bool _didPrecacheAssets = false;
+
+  /// Phase 60G · the photos rendered by gender / goal / activity tiles
+  /// plus the pre-paywall hero. We push them through `precacheImage`
+  /// once at mount so the user never sees a placeholder flash when
+  /// they swipe into the relevant page — and so the PM can swap any
+  /// of these assets for a higher-res AI-generated version later
+  /// without the user catching a decode hitch.
+  static const List<String> _precacheImagePaths = [
+    'photos/cinsiyetseçimikadın.webp',
+    'photos/cinsiyetseçimierkek.webp',
+    'photos/hedefinneSıkılaşmak.webp',
+    'photos/hedefinneHacimKazanmak.webp',
+    'photos/hedefinneSadeceSix-Pack.webp',
+    'photos/günlükaktivitenmasabaşı.webp',
+    'photos/günlükaktivitenhafifhareketli.webp',
+    'photos/günlükaktivitenneÇokAktif.webp',
+    'photos/kullanıcıbilgilerinegörekişiselplanoluşturma.webp',
+  ];
 
   @override
   void initState() {
@@ -86,6 +106,23 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       stepIndex: 0,
       stepName: _stepNames.first,
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_didPrecacheAssets) return;
+    _didPrecacheAssets = true;
+    // Fire-and-forget — `OnboardingImage`'s placeholder layer covers
+    // the case where any of these decode slowly or are missing on
+    // disk. The `.catchError` swallows the "asset not found" exception
+    // that `precacheImage` throws so a missing path doesn't break the
+    // wizard.
+    for (final path in _precacheImagePaths) {
+      unawaited(
+        precacheImage(AssetImage(path), context).catchError((Object _) {}),
+      );
+    }
   }
 
   @override
@@ -1977,6 +2014,14 @@ class _PrePaywallSummaryStepState extends ConsumerState<_PrePaywallSummaryStep>
   }
 }
 
+/// Phase 60G · the detailed Plan Card. Top half is a full-bleed hero
+/// image (with `AI KİŞİSEL PLAN` chip + `12 HAFTA` badge floated
+/// over it and a bottom dim-gradient for legibility); bottom half is
+/// the structured detail block — a 2x2 stat grid plus a full-width
+/// projected-results highlight tile. The previous Phase-60D version
+/// rendered a 96 px placeholder and 5 stacked rows; this richer card
+/// is what the PM is reverting toward in their "Image + Details"
+/// brief.
 class _SummaryCard extends StatelessWidget {
   const _SummaryCard({required this.report});
   final AiReport report;
@@ -1984,7 +2029,6 @@ class _SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(22),
@@ -2000,63 +2044,115 @@ class _SummaryCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Center(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: _neon.withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: _neon.withValues(alpha: 0.55)),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
+      // ClipRRect keeps the hero image's bottom corners flush with the
+      // card's outer radius so the image looks "sealed" into the card.
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(22),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const _PlanHeroImage(),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(Icons.auto_awesome, color: _neon, size: 14),
-                  SizedBox(width: 6),
-                  Text(
-                    'AI KİŞİSEL PLAN',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.6,
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _SummaryStatTile(
+                          label: 'HEDEF',
+                          value: report.goalLabel,
+                          icon: Icons.flag_rounded,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _SummaryStatTile(
+                          label: 'SÜRE',
+                          value: report.durationLabel,
+                          icon: Icons.calendar_month_rounded,
+                        ),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _SummaryStatTile(
+                          label: 'ZORLUK',
+                          value: report.difficultyLabel,
+                          icon: Icons.bolt_rounded,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _SummaryStatTile(
+                          label: 'HAFTALIK',
+                          value: '${report.weeklyWorkoutCount} gün',
+                          icon: Icons.fitness_center_rounded,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  _SummaryResultTile(text: report.estimatedResults),
                 ],
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 180-px hero panel — uses the unified [OnboardingImage] surface so
+/// the PM can drop replacement art into `photos/` without flicker. The
+/// foreground chips are positioned: AI plan tag top-left, duration
+/// badge top-right, gradient-shrouded "Hedefin için" label bottom-left.
+class _PlanHeroImage extends StatelessWidget {
+  const _PlanHeroImage();
+
+  static const String _heroAsset =
+      'photos/kullanıcıbilgilerinegörekişiselplanoluşturma.webp';
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 180,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // OnboardingImage is rendered with borderRadius 0 because the
+          // outer card already clips to its 22-px radius — adding our
+          // own would create a faint inset ring.
+          const OnboardingImage(
+            asset: _heroAsset,
+            fallbackIcon: Icons.auto_awesome,
+            borderRadius: 0,
           ),
-          const SizedBox(height: 16),
-          const _BeforeAfterPlaceholder(),
-          const SizedBox(height: 18),
-          _SummaryRow(
-            label: 'HEDEF',
-            value: report.goalLabel,
-            icon: Icons.flag_rounded,
-          ),
-          _SummaryRow(
-            label: 'SÜRE',
-            value: report.durationLabel,
-            icon: Icons.calendar_month_rounded,
-          ),
-          _SummaryRow(
-            label: 'ZORLUK',
-            value: report.difficultyLabel,
-            icon: Icons.bolt_rounded,
-          ),
-          _SummaryRow(
-            label: 'HAFTALIK ANTRENMAN',
-            value: '${report.weeklyWorkoutCount} gün',
-            icon: Icons.fitness_center_rounded,
-          ),
-          _SummaryRow(
-            label: 'TAHMİNİ SONUÇ',
-            value: report.estimatedResults,
-            icon: Icons.trending_up_rounded,
-            isLast: true,
+          const _AiHeroChip(),
+          const _DurationHeroBadge(),
+          Positioned(
+            left: 14,
+            right: 14,
+            bottom: 12,
+            child: Text(
+              'Senin için kurguladığım 12 haftalık yol haritası',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w800,
+                height: 1.3,
+                letterSpacing: 0.2,
+                shadows: [
+                  Shadow(blurRadius: 14, color: Colors.black87),
+                  Shadow(blurRadius: 4, color: Colors.black87),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -2064,22 +2160,171 @@ class _SummaryCard extends StatelessWidget {
   }
 }
 
-class _SummaryRow extends StatelessWidget {
-  const _SummaryRow({
-    required this.label,
-    required this.value,
-    required this.icon,
-    this.isLast = false,
-  });
-  final String label;
-  final String value;
-  final IconData icon;
-  final bool isLast;
+class _AiHeroChip extends StatelessWidget {
+  const _AiHeroChip();
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: isLast ? 0 : 14),
+    return Positioned(
+      top: 12,
+      left: 12,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: _neon.withValues(alpha: 0.6)),
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.auto_awesome, color: _neon, size: 12),
+            SizedBox(width: 6),
+            Text(
+              'AI KİŞİSEL PLAN',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 9.5,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.4,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DurationHeroBadge extends StatelessWidget {
+  const _DurationHeroBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: 12,
+      right: 12,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [_neon, _neonAccent],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: _neon.withValues(alpha: 0.55),
+              blurRadius: 14,
+              spreadRadius: -2,
+            ),
+          ],
+        ),
+        child: const Text(
+          '12 HAFTA',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 9.5,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.4,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Compact stat tile for the 2x2 grid in the plan card.
+class _SummaryStatTile extends StatelessWidget {
+  const _SummaryStatTile({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _neon.withValues(alpha: 0.3), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: _neon, size: 16),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.white54,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.3,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+              height: 1.2,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Full-width "TAHMİNİ SONUÇ" callout sitting under the stat grid.
+/// The neon background + trending icon makes this the visual climax
+/// of the plan card.
+class _SummaryResultTile extends StatelessWidget {
+  const _SummaryResultTile({required this.text});
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            _neon.withValues(alpha: 0.22),
+            _neonAccent.withValues(alpha: 0.18),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _neon.withValues(alpha: 0.55), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: _neon.withValues(alpha: 0.18),
+            blurRadius: 16,
+            spreadRadius: -4,
+          ),
+        ],
+      ),
       child: Row(
         children: [
           Container(
@@ -2088,20 +2333,25 @@ class _SummaryRow extends StatelessWidget {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: _neon.withValues(alpha: 0.2),
-              border: Border.all(color: _neon.withValues(alpha: 0.5)),
+              color: Colors.black.withValues(alpha: 0.4),
+              border: Border.all(color: _neon, width: 1),
             ),
-            child: Icon(icon, color: _neon, size: 18),
+            child: const Icon(
+              Icons.trending_up_rounded,
+              color: _neonAccent,
+              size: 20,
+            ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    color: Colors.white54,
+                const Text(
+                  'TAHMİNİ SONUÇ',
+                  style: TextStyle(
+                    color: Colors.white60,
                     fontSize: 10,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1.4,
@@ -2109,12 +2359,12 @@ class _SummaryRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  value,
+                  text,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    height: 1.25,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                    height: 1.3,
                   ),
                 ),
               ],
@@ -2122,99 +2372,6 @@ class _SummaryRow extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-/// Subtle "before / after" placeholder rendered as a horizontal neon
-/// bar with two soft silhouettes. We don't ship a real image here —
-/// the real before/after composite lives on the paywall hero — but
-/// hinting at the transformation reinforces the value of the plan
-/// preview.
-class _BeforeAfterPlaceholder extends StatelessWidget {
-  const _BeforeAfterPlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 96,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: LinearGradient(
-          colors: [
-            Colors.white.withValues(alpha: 0.04),
-            _neon.withValues(alpha: 0.18),
-            Colors.white.withValues(alpha: 0.04),
-          ],
-        ),
-        border: Border.all(color: _neon.withValues(alpha: 0.35)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _BlurSilhouette(
-              label: 'ÖNCE',
-              accent: Colors.white24,
-            ),
-          ),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 4),
-            child: Icon(
-              Icons.arrow_forward_rounded,
-              color: _neon,
-              size: 22,
-            ),
-          ),
-          Expanded(
-            child: _BlurSilhouette(
-              label: 'SONRA',
-              accent: _neonAccent.withValues(alpha: 0.7),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BlurSilhouette extends StatelessWidget {
-  const _BlurSilhouette({required this.label, required this.accent});
-  final String label;
-  final Color accent;
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        Container(
-          width: 56,
-          height: 64,
-          decoration: BoxDecoration(
-            color: accent.withValues(alpha: 0.4),
-            borderRadius: BorderRadius.circular(28),
-            boxShadow: [
-              BoxShadow(
-                color: accent.withValues(alpha: 0.3),
-                blurRadius: 18,
-                spreadRadius: 1,
-              ),
-            ],
-          ),
-        ),
-        Positioned(
-          bottom: 6,
-          child: Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.4,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/utils/app_haptics.dart';
+import 'onboarding_image.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonAccent = Color(0xFF4DA6FF);
@@ -387,10 +388,12 @@ class FeedbackBanner extends StatelessWidget {
 
 /// Phase 60E · trailing image tile rendered when an [InteractiveOption]
 /// supplies an [InteractiveOption.imageAsset]. 56x56, rounded corners,
-/// neon halo + corner check overlay when selected. The
-/// [Image.asset.errorBuilder] catches missing/corrupt assets and
-/// renders a gradient + the option's icon so the layout stays visually
-/// balanced even when an asset path is wrong.
+/// neon halo + corner check overlay when selected.
+///
+/// Phase 60G · the actual photo rendering (placeholder gradient,
+/// fade-in frameBuilder, error fallback, dim-overlay) is delegated to
+/// [OnboardingImage] so the gender / goal / activity tiles + the
+/// pre-paywall hero all share one image surface.
 class _OptionImageTile extends StatelessWidget {
   const _OptionImageTile({
     required this.asset,
@@ -427,29 +430,10 @@ class _OptionImageTile extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(13),
-            child: Image.asset(
-              asset,
-              fit: BoxFit.cover,
-              width: 56,
-              height: 56,
-              errorBuilder: (_, __, ___) => DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      _neon.withValues(alpha: 0.45),
-                      _neonAccent.withValues(alpha: 0.35),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: Center(
-                  child: Icon(icon, color: Colors.white, size: 26),
-                ),
-              ),
-            ),
+          OnboardingImage(
+            asset: asset,
+            fallbackIcon: icon,
+            borderRadius: 13,
           ),
           AnimatedOpacity(
             duration: const Duration(milliseconds: 220),

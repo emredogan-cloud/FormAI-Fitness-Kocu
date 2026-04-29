@@ -199,7 +199,12 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                           // overflow on a 360 px iPhone SE).
                           Flexible(
                             child: Text(
-                              '₺0,00 ile başla',
+                              // Phase 60G · reverted to the legacy CTA
+                              // copy. "Karşılığında dene" reads as a
+                              // verb-led trial offer, which the PM
+                              // wants back paired with the new inline
+                              // trial badge inside the yearly plan.
+                              '₺0,00 karşılığında dene',
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               textAlign: TextAlign.center,
@@ -421,11 +426,12 @@ class _HeroSection extends StatelessWidget {
               _PaywallScreenState._neonAccent,
             ],
           ).createShader(rect),
-          // Phase 60D · the headline reads as the user *unlocking their
-          // own plan* (not a generic upsell pitch). Confirms what every
-          // step in the wizard just promised: this plan is theirs.
+          // Phase 60G · reverted to the legacy headline copy. The
+          // "alın!" call-to-action verb out-performed the static
+          // "hazır" form during the in-house copy review and is the
+          // PM's preferred line going forward.
           child: const Text(
-            'Kişiselleştirilmiş planın hazır',
+            'Kişiselleştirilmiş planınızı alın!',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white,
@@ -932,6 +938,18 @@ class _PlanCard extends StatelessWidget {
                           ),
                         ),
                       ],
+                      // Phase 60G · the new in-card trial badge for the
+                      // recommended (yearly) package only. The PM-spec'd
+                      // copy "7 gün ücretsiz dene — şimdi ödeme yok"
+                      // is split onto two lines because the card's
+                      // inner width (~80 px on a 360 px viewport) won't
+                      // fit it as a single line without aggressive
+                      // shrinking. The neon-tinted background + border
+                      // makes it read as a risk-removal callout.
+                      if (_isHighlighted) ...[
+                        const SizedBox(height: 8),
+                        const _InlineTrialBadge(),
+                      ],
                     ],
                   ),
                   Container(
@@ -1000,6 +1018,59 @@ class _PlanCard extends StatelessWidget {
   }
 }
 
+/// Phase 60G · trial badge rendered inside the highlighted (yearly)
+/// _PlanCard. Two-line layout — the PM-spec'd "7 gün ücretsiz dene
+/// — şimdi ödeme yok" line doesn't fit on a single line at the
+/// card's ~80 px inner width without shrinking the type beyond
+/// readability, so we split on the em-dash. Neon-tinted background +
+/// 1 px border so it reads as a risk-removal pill, not body copy.
+class _InlineTrialBadge extends StatelessWidget {
+  const _InlineTrialBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colors;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      decoration: BoxDecoration(
+        color: _PaywallScreenState._neon.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: _PaywallScreenState._neon.withValues(alpha: 0.55),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '7 gün ücretsiz dene',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: scheme.onSurface,
+              fontSize: 9.5,
+              fontWeight: FontWeight.w900,
+              height: 1.15,
+              letterSpacing: 0.3,
+            ),
+          ),
+          Text(
+            'şimdi ödeme yok',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: scheme.onSurface.withValues(alpha: 0.7),
+              fontSize: 8.5,
+              fontWeight: FontWeight.w700,
+              height: 1.2,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _NoPaymentBadge extends StatelessWidget {
   const _NoPaymentBadge();
 
@@ -1045,36 +1116,20 @@ class _NoPaymentBadge extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 10),
-            // Phase 60D · risk-removal copy. "7 gün ücretsiz dene"
-            // leads with the value (free trial) and the previous
-            // "Şimdi ödeme yok!" reassurance is collapsed into a
-            // muted secondary line so the badge still answers
-            // "what does this cost me right now?" without competing
-            // for top billing.
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '7 gün ücretsiz dene',
-                  style: TextStyle(
-                    color: scheme.onSurface,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  'Şimdi ödeme yok',
-                  style: TextStyle(
-                    color: scheme.onSurface.withValues(alpha: 0.65),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.4,
-                  ),
-                ),
-              ],
+            // Phase 60G · the external badge reverts to its legacy
+            // single-line "Şimdi ödeme yok!" form. The full "7 gün
+            // ücretsiz dene — şimdi ödeme yok" callout has been
+            // promoted to a more powerful position: inside the
+            // highlighted yearly _PlanCard, where the user is
+            // evaluating price.
+            Text(
+              'Şimdi ödeme yok!',
+              style: TextStyle(
+                color: scheme.onSurface,
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.4,
+              ),
             ),
           ],
         ),

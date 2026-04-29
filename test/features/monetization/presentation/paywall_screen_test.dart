@@ -60,13 +60,13 @@ void main() {
       await tester.pump();
 
       // Hero copy renders.
-      expect(find.text('Kişiselleştirilmiş planın hazır'), findsOneWidget);
+      expect(find.text('Kişiselleştirilmiş planınızı alın!'), findsOneWidget);
       // The three plan pickers (1 Ay / 3 Ay / 12 Ay) are all on screen.
       expect(find.text('1 Ay'), findsOneWidget);
       expect(find.text('3 Ay'), findsOneWidget);
       expect(find.text('12 Ay'), findsOneWidget);
       // Primary CTA still reads as "try for free".
-      expect(find.text('₺0,00 ile başla'), findsOneWidget);
+      expect(find.text('₺0,00 karşılığında dene'), findsOneWidget);
       // Restore button renders regardless of offerings availability.
       expect(find.text('Satın Alımları Geri Yükle'), findsOneWidget);
     },
@@ -86,12 +86,14 @@ void main() {
       await tester.pump();
 
       expect(find.byType(PaywallScreen), findsOneWidget);
-      // Phase 60D · risk-removal badge promotes "7 gün ücretsiz dene"
-      // to the headline; the original "Şimdi ödeme yok" survives as a
-      // muted secondary line under it.
+      // Phase 60G · external badge reverted to legacy "Şimdi ödeme
+      // yok!" single-line. The "7 gün ücretsiz dene" half lives
+      // inside the yearly _PlanCard now (the highlighted plan), so
+      // the literal text still appears once on the screen — but the
+      // string asserted here is the line that survived in-card.
+      expect(find.text('Şimdi ödeme yok!'), findsOneWidget);
       expect(find.text('7 gün ücretsiz dene'), findsOneWidget);
-      expect(find.text('Şimdi ödeme yok'), findsOneWidget);
-      expect(find.text('₺0,00 ile başla'), findsOneWidget);
+      expect(find.text('₺0,00 karşılığında dene'), findsOneWidget);
     },
   );
 
@@ -109,7 +111,7 @@ void main() {
       // in this state (otherwise Pro users who get deep-linked here
       // would hit a redscreen).
       expect(find.byType(PaywallScreen), findsOneWidget);
-      expect(find.text('Kişiselleştirilmiş planın hazır'), findsOneWidget);
+      expect(find.text('Kişiselleştirilmiş planınızı alın!'), findsOneWidget);
     },
   );
 }
