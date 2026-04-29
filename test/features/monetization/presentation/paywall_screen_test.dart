@@ -60,13 +60,13 @@ void main() {
       await tester.pump();
 
       // Hero copy renders.
-      expect(find.text('Kişiselleştirilmiş planınızı alın!'), findsOneWidget);
+      expect(find.text('Kişiselleştirilmiş planın hazır'), findsOneWidget);
       // The three plan pickers (1 Ay / 3 Ay / 12 Ay) are all on screen.
       expect(find.text('1 Ay'), findsOneWidget);
       expect(find.text('3 Ay'), findsOneWidget);
       expect(find.text('12 Ay'), findsOneWidget);
       // Primary CTA still reads as "try for free".
-      expect(find.text('₺0,00 karşılığında dene'), findsOneWidget);
+      expect(find.text('₺0,00 ile başla'), findsOneWidget);
       // Restore button renders regardless of offerings availability.
       expect(find.text('Satın Alımları Geri Yükle'), findsOneWidget);
     },
@@ -86,8 +86,12 @@ void main() {
       await tester.pump();
 
       expect(find.byType(PaywallScreen), findsOneWidget);
-      expect(find.text('Şimdi ödeme yok!'), findsOneWidget);
-      expect(find.text('₺0,00 karşılığında dene'), findsOneWidget);
+      // Phase 60D · risk-removal badge promotes "7 gün ücretsiz dene"
+      // to the headline; the original "Şimdi ödeme yok" survives as a
+      // muted secondary line under it.
+      expect(find.text('7 gün ücretsiz dene'), findsOneWidget);
+      expect(find.text('Şimdi ödeme yok'), findsOneWidget);
+      expect(find.text('₺0,00 ile başla'), findsOneWidget);
     },
   );
 
@@ -105,7 +109,7 @@ void main() {
       // in this state (otherwise Pro users who get deep-linked here
       // would hit a redscreen).
       expect(find.byType(PaywallScreen), findsOneWidget);
-      expect(find.text('Kişiselleştirilmiş planınızı alın!'), findsOneWidget);
+      expect(find.text('Kişiselleştirilmiş planın hazır'), findsOneWidget);
     },
   );
 }

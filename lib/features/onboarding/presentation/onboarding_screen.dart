@@ -16,12 +16,13 @@ import '../../../core/utils/app_haptics.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/legal_urls.dart';
 import '../../monetization/providers/monetization_provider.dart';
+import '../domain/ai_personalization_engine.dart';
 import '../providers/wizard_provider.dart';
 import 'widgets/interactive_question_step.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonAccent = Color(0xFF4DA6FF);
-// Phase 60C · 10 pages total.
+// Phase 60D · 11 pages total.
 //
 //   • 2 hook screens (welcome, coach_intro)
 //   • 4 interactive AI-styled questions (goal, experience_level,
@@ -31,21 +32,21 @@ const Color _neonAccent = Color(0xFF4DA6FF);
 //   • 1 pain-point screen (interactive) — surfaces the user's blocker
 //   • 1 analysis-illusion screen — labor illusion that cycles AI
 //     "thinking" phrases for ~6 s before the reveal
-//   • 1 dynamic-report screen — final hook with personalised copy +
-//     BMI/calorie cards + 92% confidence bar; CTA routes to /paywall
+//   • 1 dynamic-report screen — qualitative "AI Assessment" with
+//     BMI/calorie cards + 92% confidence bar
+//   • 1 pre-paywall summary screen (Phase 60D) — concrete plan card
+//     (goal / 12 weeks / difficulty / weekly cadence / projected
+//     results) before the paywall route
 //
 // Nutrition steps live in `NutritionOnboardingSheet` and are surfaced
 // on first Beslenme-tab view (Phase 46).
-const int _totalSteps = 10;
+const int _totalSteps = 11;
 const int _hookSteps = 2;
 
 /// Phase 42 · analytics labels per onboarding page. Index-aligned with
 /// the `PageView.children` list below so the funnel reads the same
-/// names the code uses. Phase 60C trims the wizard to 10 pages — the
-/// gender / current-physique / target-physique card screens were
-/// dropped in favour of the new analysis-illusion + dynamic-report
-/// reveal pair, and age/body-metrics merged into a single
-/// `physical_data` screen.
+/// names the code uses. Phase 60D inserts `pre_paywall_summary` right
+/// before the wizard's _finish/paywall hand-off.
 const List<String> _stepNames = [
   'welcome',
   'coach_intro',
@@ -57,6 +58,7 @@ const List<String> _stepNames = [
   'pain_point',
   'analysis_illusion',
   'dynamic_report',
+  'pre_paywall_summary',
 ];
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -91,6 +93,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   void _next() {
     if (_index >= _totalSteps - 1) return;
+    // Phase 60D · UX rule §4: every forward step transition fires a
+    // medium impact so the user feels the wizard *progressing* rather
+    // than just sliding silently. Light impact on the tap that
+    // initiated the transition is fired by the calling widget.
+    AppHaptics.primaryCta();
     _controller.nextPage(
       duration: const Duration(milliseconds: 380),
       curve: Curves.easeOutCubic,
@@ -99,6 +106,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   void _back() {
     if (_index == 0) return;
+    AppHaptics.secondaryTap();
     _controller.previousPage(
       duration: const Duration(milliseconds: 320),
       curve: Curves.easeOutCubic,
@@ -106,6 +114,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Future<void> _finish() async {
+    // Phase 60D · the wizard's exit transition is also a "step
+    // transition" per the UX rules — medium impact on the way out.
+    AppHaptics.primaryCta();
     final wizard = ref.read(wizardProvider);
     final prefs = ref.read(appPreferencesProvider);
     // Persist the full wizard payload BEFORE flipping the firstTime flag
@@ -195,7 +206,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   _PhysicalDataStep(onContinue: _next),
                   _PainPointStep(onCommitted: _next),
                   _AnalysisIllusionStep(onComplete: _next),
-                  _DynamicReportStep(onComplete: _finish),
+                  _DynamicReportStep(onComplete: _next),
+                  _PrePaywallSummaryStep(onComplete: _finish),
                 ],
               ),
             ),
@@ -370,7 +382,10 @@ class _WelcomeStepState extends State<_WelcomeStep>
                         ],
                       ),
                       child: FilledButton(
-                        onPressed: widget.onStart,
+                        onPressed: () {
+                          AppHaptics.secondaryTap();
+                          widget.onStart();
+                        },
                         style: FilledButton.styleFrom(
                           backgroundColor: _neon,
                           foregroundColor: Colors.white,
@@ -591,7 +606,12 @@ class _CoachIntroStepState extends State<_CoachIntroStep>
                   child: SizedBox(
                     width: double.infinity,
                     child: FilledButton.icon(
-                      onPressed: _typingDone ? widget.onContinue : null,
+                      onPressed: _typingDone
+                          ? () {
+                              AppHaptics.secondaryTap();
+                              widget.onContinue();
+                            }
+                          : null,
                       icon: const Icon(Icons.arrow_forward_rounded),
                       label: const Text('DEVAM ET'),
                       style: FilledButton.styleFrom(
@@ -927,14 +947,14 @@ class _PrimaryButton extends StatelessWidget {
       child: SizedBox(
         width: double.infinity,
         child: FilledButton(
-          // Phase 49 · "DEVAM" through the wizard is the most-tapped
-          // primary CTA in the onboarding flow; route it through
-          // `AppHaptics.primaryCta()` so each step advances with the
-          // same satisfying medium thump as "Antrenmana Başla".
+          // Phase 60D · UX rule §4: light haptic on the *tap* moment
+          // (the user committing to advance); the wizard's `_next()`
+          // fires the medium "transition" haptic when the page
+          // actually slides.
           onPressed: onPressed == null
               ? null
               : () {
-                  AppHaptics.primaryCta();
+                  AppHaptics.secondaryTap();
                   onPressed!();
                 },
           style: FilledButton.styleFrom(
@@ -1032,7 +1052,9 @@ class _PhysicalDataStepState extends ConsumerState<_PhysicalDataStep>
 
   Future<void> _commit() async {
     if (_calculating) return;
-    AppHaptics.primaryCta();
+    // Light tap-feedback only — the medium "transition" thump is fired
+    // by the wizard's _next() when it advances 1.5 s later.
+    AppHaptics.secondaryTap();
     setState(() => _calculating = true);
     _feedbackCtrl.forward();
     await Future<void>.delayed(const Duration(milliseconds: 1500));
@@ -1532,136 +1554,16 @@ class _DynamicReportStepState extends ConsumerState<_DynamicReportStep>
     super.dispose();
   }
 
-  double _bmi(int weightKg, int heightCm) {
-    final h = heightCm / 100.0;
-    if (h <= 0) return 0;
-    return weightKg / (h * h);
-  }
-
-  /// Mifflin-St Jeor with the gender-neutral midpoint correction
-  /// (-78), then TDEE-multiplied by the activity level. We don't ask
-  /// gender any more so the midpoint correction is the fairest default
-  /// — it under/over-shoots both sexes by the same magnitude.
-  int _maintenanceCalories({
-    required int weight,
-    required int height,
-    required int age,
-    required ActivityLevel? activity,
-  }) {
-    final bmr = (10.0 * weight) + (6.25 * height) - (5.0 * age) - 78.0;
-    final mult = switch (activity) {
-      ActivityLevel.sedentary => 1.2,
-      ActivityLevel.light => 1.375,
-      ActivityLevel.active => 1.55,
-      _ => 1.2,
-    };
-    return (bmr * mult).round();
-  }
-
-  String _assessment(WizardState w) {
-    final List<String> sentences = [
-      'Profilini analiz ettim ve harika bir başlangıç noktasındasın.',
-    ];
-    switch (w.activityLevel) {
-      case ActivityLevel.sedentary:
-        sentences.add(
-          'Aktivite seviyen düşük olduğu için yağlanma riskin var; '
-          'ilk haftayı hareket alışkanlığını oturtmaya ayıracağım.',
-        );
-        break;
-      case ActivityLevel.active:
-        sentences.add(
-          'Aktivite seviyen yüksek — temeli zaten attığın için '
-          'ilerlemen ortalamadan daha hızlı olacak.',
-        );
-        break;
-      case ActivityLevel.light:
-      case null:
-        break;
-    }
-    switch (w.goal) {
-      case 'belly_burn':
-        sentences.add(
-          'Kilo verme hedefin için kalori açığı yaratıp göbek bölgesine '
-          'odaklı core çalışmaları ekleyeceğim.',
-        );
-        break;
-      case 'muscle_gain':
-        sentences.add(
-          'Kas yapma hedefin için yüksek-protein beslenme ve progresif '
-          'yüklenme ile programını şekillendiriyorum.',
-        );
-        break;
-      case 'fitness_look':
-        sentences.add(
-          'Daha fit görünmek için kardiyo + full-body antrenmanını '
-          'dengeleyeceğim.',
-        );
-        break;
-      case 'strength':
-        sentences.add(
-          'Güçlenme hedefin için bileşik hareketlere ağırlık veren bir '
-          'program tasarladım.',
-        );
-        break;
-    }
-    switch (w.experienceLevel) {
-      case 'none':
-        sentences.add(
-          'Spora yeni başladığın için ilk 30 günde çok hızlı sonuç '
-          'alacaksın — beginner-gain etkisi.',
-        );
-        break;
-      case 'regular':
-        sentences.add(
-          'Düzenli antrenman geçmişin programının yoğunluğunu yukarı '
-          'çekmeme imkân tanıyor.',
-        );
-        break;
-    }
-    switch (w.painPoint) {
-      case 'motivation':
-        sentences.add(
-          'Motivasyonu canlı tutmak için günlük mikro-hedefler ve '
-          'görsel ilerleme grafikleri planlıyorum.',
-        );
-        break;
-      case 'consistency':
-        sentences.add(
-          'Süreklilik için kısa "skip-proof" antrenmanlar ve akıllı '
-          'hatırlatmalar ekleyeceğim.',
-        );
-        break;
-      case 'no_idea':
-        sentences.add(
-          'Ne yapacağını bilmemek artık dert değil — adım adım '
-          'yönlendiren rehber moduyla başlayacağız.',
-        );
-        break;
-      case 'diet':
-        sentences.add(
-          'Diyet konusunda da yanındayım; tercihlerine uygun esnek '
-          'yemek listeleri oluşturacağım.',
-        );
-        break;
-    }
-    return sentences.join(' ');
-  }
-
   @override
   Widget build(BuildContext context) {
-    final w = ref.watch(wizardProvider);
-    final weight = w.weightKg ?? 70;
-    final height = w.heightCm ?? 170;
-    final age = w.age ?? 25;
-    final bmi = _bmi(weight, height);
-    final calories = _maintenanceCalories(
-      weight: weight,
-      height: height,
-      age: age,
-      activity: w.activityLevel,
-    );
-    final assessment = _assessment(w);
+    // Phase 60D · all derivation lives in [AiPersonalizationEngine] now —
+    // both this screen and the pre-paywall summary read the same
+    // structured report so the two surfaces stay coherent.
+    final report =
+        AiPersonalizationEngine.generateReport(ref.watch(wizardProvider));
+    final bmi = report.bmi;
+    final calories = report.maintenanceCalories;
+    final assessment = report.assessment;
 
     return SafeArea(
       child: Padding(
@@ -1828,7 +1730,7 @@ class _DynamicReportStepState extends ConsumerState<_DynamicReportStep>
                     ),
                     child: FilledButton(
                       onPressed: () {
-                        AppHaptics.primaryCta();
+                        AppHaptics.secondaryTap();
                         widget.onComplete();
                       },
                       style: FilledButton.styleFrom(
@@ -1931,6 +1833,384 @@ class _ReportMetricCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ──────────────────────── Phase 60D pre-paywall summary ─────────────────────
+//
+// _PrePaywallSummaryStep sits between the dynamic AI report and the
+// paywall. Where the report screen sells the *insight* the AI gathered,
+// this screen sells the *plan* itself: goal, duration, difficulty,
+// weekly cadence, projected results — pulled out of the same engine.
+// The CTA fires `_finish`, which is the only path out of the wizard
+// and routes the user straight to /paywall.
+
+class _PrePaywallSummaryStep extends ConsumerStatefulWidget {
+  const _PrePaywallSummaryStep({required this.onComplete});
+  final VoidCallback onComplete;
+
+  @override
+  ConsumerState<_PrePaywallSummaryStep> createState() =>
+      _PrePaywallSummaryStepState();
+}
+
+class _PrePaywallSummaryStepState extends ConsumerState<_PrePaywallSummaryStep>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _intro;
+  late final Animation<double> _cardFade;
+  late final Animation<Offset> _cardSlide;
+
+  @override
+  void initState() {
+    super.initState();
+    _intro = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..forward();
+    _cardFade = CurvedAnimation(parent: _intro, curve: Curves.easeOutCubic);
+    _cardSlide = Tween<Offset>(
+      begin: const Offset(0, 0.18),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _intro, curve: Curves.easeOutCubic));
+  }
+
+  @override
+  void dispose() {
+    _intro.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final report =
+        AiPersonalizationEngine.generateReport(ref.watch(wizardProvider));
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+        child: Column(
+          children: [
+            ShaderMask(
+              shaderCallback: (rect) => const LinearGradient(
+                colors: [_neon, _neonAccent],
+              ).createShader(rect),
+              child: const Text(
+                'Bu plan sana özel oluşturuldu.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.4,
+                  height: 1.2,
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'AI motorun seni baştan sona dinledi ve aşağıdaki paketi '
+              'senin için kurdu.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white60,
+                fontSize: 13,
+                height: 1.45,
+              ),
+            ),
+            const SizedBox(height: 18),
+            Expanded(
+              child: SingleChildScrollView(
+                child: FadeTransition(
+                  opacity: _cardFade,
+                  child: SlideTransition(
+                    position: _cardSlide,
+                    child: _SummaryCard(report: report),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _neon.withValues(alpha: 0.55),
+                      blurRadius: 26,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+                child: FilledButton.icon(
+                  onPressed: () {
+                    AppHaptics.secondaryTap();
+                    widget.onComplete();
+                  },
+                  icon: const Icon(Icons.arrow_forward_rounded),
+                  label: const Text('PLANIMI GÖR'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: _neon,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    textStyle: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 2.5,
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SummaryCard extends StatelessWidget {
+  const _SummaryCard({required this.report});
+  final AiReport report;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: _neon.withValues(alpha: 0.4),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: _neon.withValues(alpha: 0.2),
+            blurRadius: 28,
+            spreadRadius: -4,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: _neon.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: _neon.withValues(alpha: 0.55)),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.auto_awesome, color: _neon, size: 14),
+                  SizedBox(width: 6),
+                  Text(
+                    'AI KİŞİSEL PLAN',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.6,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const _BeforeAfterPlaceholder(),
+          const SizedBox(height: 18),
+          _SummaryRow(
+            label: 'HEDEF',
+            value: report.goalLabel,
+            icon: Icons.flag_rounded,
+          ),
+          _SummaryRow(
+            label: 'SÜRE',
+            value: report.durationLabel,
+            icon: Icons.calendar_month_rounded,
+          ),
+          _SummaryRow(
+            label: 'ZORLUK',
+            value: report.difficultyLabel,
+            icon: Icons.bolt_rounded,
+          ),
+          _SummaryRow(
+            label: 'HAFTALIK ANTRENMAN',
+            value: '${report.weeklyWorkoutCount} gün',
+            icon: Icons.fitness_center_rounded,
+          ),
+          _SummaryRow(
+            label: 'TAHMİNİ SONUÇ',
+            value: report.estimatedResults,
+            icon: Icons.trending_up_rounded,
+            isLast: true,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SummaryRow extends StatelessWidget {
+  const _SummaryRow({
+    required this.label,
+    required this.value,
+    required this.icon,
+    this.isLast = false,
+  });
+  final String label;
+  final String value;
+  final IconData icon;
+  final bool isLast;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: isLast ? 0 : 14),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: _neon.withValues(alpha: 0.2),
+              border: Border.all(color: _neon.withValues(alpha: 0.5)),
+            ),
+            child: Icon(icon, color: _neon, size: 18),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.white54,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    height: 1.25,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Subtle "before / after" placeholder rendered as a horizontal neon
+/// bar with two soft silhouettes. We don't ship a real image here —
+/// the real before/after composite lives on the paywall hero — but
+/// hinting at the transformation reinforces the value of the plan
+/// preview.
+class _BeforeAfterPlaceholder extends StatelessWidget {
+  const _BeforeAfterPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 96,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          colors: [
+            Colors.white.withValues(alpha: 0.04),
+            _neon.withValues(alpha: 0.18),
+            Colors.white.withValues(alpha: 0.04),
+          ],
+        ),
+        border: Border.all(color: _neon.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _BlurSilhouette(
+              label: 'ÖNCE',
+              accent: Colors.white24,
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 4),
+            child: Icon(
+              Icons.arrow_forward_rounded,
+              color: _neon,
+              size: 22,
+            ),
+          ),
+          Expanded(
+            child: _BlurSilhouette(
+              label: 'SONRA',
+              accent: _neonAccent.withValues(alpha: 0.7),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BlurSilhouette extends StatelessWidget {
+  const _BlurSilhouette({required this.label, required this.accent});
+  final String label;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Container(
+          width: 56,
+          height: 64,
+          decoration: BoxDecoration(
+            color: accent.withValues(alpha: 0.4),
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: accent.withValues(alpha: 0.3),
+                blurRadius: 18,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+        ),
+        Positioned(
+          bottom: 6,
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.4,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

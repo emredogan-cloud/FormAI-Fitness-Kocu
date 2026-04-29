@@ -199,7 +199,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                           // overflow on a 360 px iPhone SE).
                           Flexible(
                             child: Text(
-                              '₺0,00 karşılığında dene',
+                              '₺0,00 ile başla',
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               textAlign: TextAlign.center,
@@ -421,8 +421,11 @@ class _HeroSection extends StatelessWidget {
               _PaywallScreenState._neonAccent,
             ],
           ).createShader(rect),
+          // Phase 60D · the headline reads as the user *unlocking their
+          // own plan* (not a generic upsell pitch). Confirms what every
+          // step in the wizard just promised: this plan is theirs.
           child: const Text(
-            'Kişiselleştirilmiş planınızı alın!',
+            'Kişiselleştirilmiş planın hazır',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white,
@@ -440,7 +443,46 @@ class _HeroSection extends StatelessWidget {
           textAlign: TextAlign.center,
           style: TextStyle(color: Colors.white60, fontSize: 13, height: 1.45),
         ),
+        const SizedBox(height: 12),
+        // Phase 60D · social-proof tag right under the hero subtitle so
+        // the user sees crowd-validation before the price comparison
+        // even renders. Numbers stay round and rough — never fabricate
+        // a precision figure for marketing copy.
+        const _SocialProofTag(),
       ],
+    );
+  }
+}
+
+/// Phase 60D · "🔥 10.000+ kişi kullanıyor" pill. Sits between the hero
+/// subtitle and the plan-card row so the user sees crowd validation
+/// before evaluating the price.
+class _SocialProofTag extends StatelessWidget {
+  const _SocialProofTag();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: _PaywallScreenState._neon.withValues(alpha: 0.16),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: _PaywallScreenState._neon.withValues(alpha: 0.55),
+            width: 1,
+          ),
+        ),
+        child: const Text(
+          '🔥 10.000+ kişi kullanıyor',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 12.5,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.3,
+          ),
+        ),
+      ),
     );
   }
 }
@@ -1003,14 +1045,36 @@ class _NoPaymentBadge extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 10),
-            Text(
-              'Şimdi ödeme yok!',
-              style: TextStyle(
-                color: scheme.onSurface,
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.4,
-              ),
+            // Phase 60D · risk-removal copy. "7 gün ücretsiz dene"
+            // leads with the value (free trial) and the previous
+            // "Şimdi ödeme yok!" reassurance is collapsed into a
+            // muted secondary line so the badge still answers
+            // "what does this cost me right now?" without competing
+            // for top billing.
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '7 gün ücretsiz dene',
+                  style: TextStyle(
+                    color: scheme.onSurface,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  'Şimdi ödeme yok',
+                  style: TextStyle(
+                    color: scheme.onSurface.withValues(alpha: 0.65),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.4,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

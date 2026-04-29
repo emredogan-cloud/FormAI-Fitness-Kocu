@@ -95,7 +95,10 @@ class _InteractiveQuestionStepState extends State<InteractiveQuestionStep>
 
   Future<void> _pick(String value) async {
     if (_committing) return;
-    AppHaptics.primaryCta();
+    // Phase 60D · UX rule §4: light impact on the *selection* moment
+    // (the user picked an option). The medium "transition" tap fires
+    // 1.5 s later from the wizard's `_next()` when the page advances.
+    AppHaptics.secondaryTap();
     setState(() {
       _selected = value;
       _committing = true;
