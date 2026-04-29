@@ -11,10 +11,12 @@ const Color _neonAccent = Color(0xFF4DA6FF);
 /// `value` is the token persisted to wizard state (e.g. `belly_burn`,
 /// `sedentary`). `label` is the user-facing copy. `helper` is an
 /// optional one-liner shown beneath the label. `imageAsset` is an
-/// optional bundled photo path (Phase 60E) — when provided the card
-/// renders a 56x56 thumbnail on the right edge of the card; if the
-/// asset can't be decoded the tile falls back to a stylised gradient
-/// + the option's [icon].
+/// optional bundled photo path — when provided (Phase 60H), the card
+/// switches to a Fitify-style side-image layout: the photo flush-
+/// mounts to the right ~45% of the card with a left-to-right dark
+/// gradient blend, while text + helper sit on the left ~55%. Without
+/// an asset the card falls back to a text-only layout with a trailing
+/// selection check icon.
 class InteractiveOption {
   const InteractiveOption({
     required this.value,
@@ -181,10 +183,15 @@ class _InteractiveQuestionStepState extends State<InteractiveQuestionStep>
 /// Single tappable card. Animates border + scale when selected, fades
 /// to ~45% when another option has been picked.
 ///
-/// Promoted to public in Phase 60F so the hybrid `_ActivityStep` can
-/// re-use the exact same card visuals (icon + label + helper subtext +
-/// optional [InteractiveOption.imageAsset] thumbnail) without
-/// duplicating ~80 lines of decoration / animation code.
+/// Phase 60H · "Fitify-style" side-image layout. When the option
+/// supplies an [InteractiveOption.imageAsset] the card splits into a
+/// padded text area on the left (~55%) and a flush-mounted image on
+/// the right (~45%) — the image touches the card's top, right, and
+/// bottom edges. A `Colors.black → Colors.transparent` left-to-right
+/// gradient is laid over the image so it appears to bleed out of the
+/// dark left half of the card. Cards without an image (`Diğer`,
+/// `strength`, etc.) fall back to the pre-60H all-text layout with a
+/// trailing check icon.
 class OptionCard extends StatelessWidget {
   const OptionCard({
     super.key,
@@ -201,6 +208,7 @@ class OptionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasImage = option.imageAsset != null;
     return AnimatedScale(
       scale: selected ? 1.025 : 1.0,
       duration: const Duration(milliseconds: 220),
@@ -217,7 +225,6 @@ class OptionCard extends StatelessWidget {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 240),
               curve: Curves.easeOutCubic,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
               decoration: BoxDecoration(
                 color: selected
                     ? _neon.withValues(alpha: 0.18)
@@ -237,92 +244,238 @@ class OptionCard extends StatelessWidget {
                       ]
                     : null,
               ),
-              child: Row(
-                children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 240),
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: selected
-                          ? _neon.withValues(alpha: 0.25)
-                          : Colors.white.withValues(alpha: 0.06),
-                      border: Border.all(
-                        color: selected
-                            ? _neonAccent
-                            : Colors.white.withValues(alpha: 0.12),
-                        width: 1,
-                      ),
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(
-                      option.icon,
-                      color: selected ? Colors.white : Colors.white70,
-                      size: 22,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          option.label,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight:
-                                selected ? FontWeight.w800 : FontWeight.w600,
-                            letterSpacing: 0.2,
-                          ),
-                        ),
-                        if (option.helper != null) ...[
-                          const SizedBox(height: 4),
-                          // Phase 60E · motivational subtext under the
-                          // primary label. PM rule: ~0.7 alpha so it
-                          // reads as supportive but doesn't compete
-                          // with the choice itself.
-                          Text(
-                            option.helper!,
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 12,
-                              height: 1.35,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  // Phase 60E · trailing slot. With an image asset the
-                  // card renders a 56x56 photo tile (selection halo +
-                  // a corner check overlay when picked). Without one
-                  // the original check-icon-only behaviour stays.
-                  if (option.imageAsset != null) ...[
-                    const SizedBox(width: 12),
-                    _OptionImageTile(
-                      asset: option.imageAsset!,
-                      icon: option.icon,
-                      selected: selected,
-                    ),
-                  ] else
-                    AnimatedOpacity(
-                      duration: const Duration(milliseconds: 220),
-                      opacity: selected ? 1.0 : 0.0,
-                      child: const Icon(
-                        Icons.check_circle,
-                        color: _neon,
-                        size: 22,
-                      ),
-                    ),
-                ],
-              ),
+              // `clipBehavior` lets the right-side image bleed all the
+              // way to the card's rounded corners without renders
+              // leaking past the radius.
+              clipBehavior: Clip.antiAlias,
+              child: hasImage
+                  ? _CardWithImage(option: option, selected: selected)
+                  : _CardTextOnly(option: option, selected: selected),
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Phase 60H · Fitify-style row. Left: padded icon + label + helper.
+/// Right: flush full-height image with the centerLeft→centerRight
+/// dark fade and a corner check overlay.
+class _CardWithImage extends StatelessWidget {
+  const _CardWithImage({required this.option, required this.selected});
+  final InteractiveOption option;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return IntrinsicHeight(
+      child: ConstrainedBox(
+        // Floor the card height so a single-line option (e.g. "Kadın",
+        // "Erkek") still gives the image a respectable canvas — the
+        // intrinsic-height of just the text would otherwise produce a
+        // ~50 px tall image that reads as a sliver.
+        constraints: const BoxConstraints(minHeight: 96),
+        child: Row(
+          children: [
+            Expanded(
+              flex: 11,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 8, 16),
+                child: _CardTextContent(option: option, selected: selected),
+              ),
+            ),
+            Expanded(
+              flex: 9,
+              child: _SideImagePanel(
+                asset: option.imageAsset!,
+                icon: option.icon,
+                selected: selected,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Pre-60H all-text variant kept for cards without a bundled image
+/// asset (`Diğer`, `Güçlenmek`). Same internal padding the legacy
+/// design used so the option list stays visually coherent next to the
+/// new side-image cards.
+class _CardTextOnly extends StatelessWidget {
+  const _CardTextOnly({required this.option, required this.selected});
+  final InteractiveOption option;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      child: Row(
+        children: [
+          Expanded(
+            child: _CardTextContent(option: option, selected: selected),
+          ),
+          AnimatedOpacity(
+            duration: const Duration(milliseconds: 220),
+            opacity: selected ? 1.0 : 0.0,
+            child: const Icon(
+              Icons.check_circle,
+              color: _neon,
+              size: 22,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Shared icon-bubble + label + helper block used by both the side-
+/// image and text-only variants so the typography stays identical
+/// between them.
+class _CardTextContent extends StatelessWidget {
+  const _CardTextContent({required this.option, required this.selected});
+  final InteractiveOption option;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 240),
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: selected
+                ? _neon.withValues(alpha: 0.25)
+                : Colors.white.withValues(alpha: 0.06),
+            border: Border.all(
+              color:
+                  selected ? _neonAccent : Colors.white.withValues(alpha: 0.12),
+              width: 1,
+            ),
+          ),
+          alignment: Alignment.center,
+          child: Icon(
+            option.icon,
+            color: selected ? Colors.white : Colors.white70,
+            size: 22,
+          ),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                option.label,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                  letterSpacing: 0.2,
+                ),
+              ),
+              if (option.helper != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  option.helper!,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Phase 60H · the right-hand image panel. Stacks the photo, the
+/// dark-to-transparent left-blend gradient, and the selection check
+/// pill. The outer card's `Clip.antiAlias` rounds this panel's right
+/// corners; the panel itself doesn't carry its own borderRadius so
+/// the image flush-mounts to the card edges per PM brief.
+class _SideImagePanel extends StatelessWidget {
+  const _SideImagePanel({
+    required this.asset,
+    required this.icon,
+    required this.selected,
+  });
+
+  final String asset;
+  final IconData icon;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Image fills the panel via OnboardingImage (placeholder +
+        // fade-in + error fallback). dimOverlay disabled because we
+        // layer our own directional gradient on top.
+        OnboardingImage(
+          asset: asset,
+          fallbackIcon: icon,
+          borderRadius: 0,
+          dimOverlay: false,
+        ),
+        // Phase 60H · seamless dark-to-transparent left blend per PM
+        // brief. Reads as if the image is bleeding out of the card's
+        // dark left half.
+        const DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [Colors.black, Colors.transparent],
+            ),
+          ),
+        ),
+        AnimatedOpacity(
+          duration: const Duration(milliseconds: 220),
+          opacity: selected ? 1.0 : 0.0,
+          child: Align(
+            alignment: Alignment.topRight,
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Container(
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  color: _neon,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.black, width: 1.4),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _neon.withValues(alpha: 0.6),
+                      blurRadius: 12,
+                      spreadRadius: -2,
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.check,
+                  size: 13,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -381,85 +534,6 @@ class FeedbackBanner extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// Phase 60E · trailing image tile rendered when an [InteractiveOption]
-/// supplies an [InteractiveOption.imageAsset]. 56x56, rounded corners,
-/// neon halo + corner check overlay when selected.
-///
-/// Phase 60G · the actual photo rendering (placeholder gradient,
-/// fade-in frameBuilder, error fallback, dim-overlay) is delegated to
-/// [OnboardingImage] so the gender / goal / activity tiles + the
-/// pre-paywall hero all share one image surface.
-class _OptionImageTile extends StatelessWidget {
-  const _OptionImageTile({
-    required this.asset,
-    required this.icon,
-    required this.selected,
-  });
-
-  final String asset;
-  final IconData icon;
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 240),
-      curve: Curves.easeOutCubic,
-      width: 56,
-      height: 56,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: selected ? _neon : Colors.white.withValues(alpha: 0.15),
-          width: selected ? 1.6 : 1,
-        ),
-        boxShadow: selected
-            ? [
-                BoxShadow(
-                  color: _neon.withValues(alpha: 0.5),
-                  blurRadius: 14,
-                  spreadRadius: -2,
-                ),
-              ]
-            : null,
-      ),
-      child: Stack(
-        children: [
-          OnboardingImage(
-            asset: asset,
-            fallbackIcon: icon,
-            borderRadius: 13,
-          ),
-          AnimatedOpacity(
-            duration: const Duration(milliseconds: 220),
-            opacity: selected ? 1.0 : 0.0,
-            child: Align(
-              alignment: Alignment.bottomRight,
-              child: Padding(
-                padding: const EdgeInsets.all(2),
-                child: Container(
-                  width: 18,
-                  height: 18,
-                  decoration: BoxDecoration(
-                    color: _neon,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.black, width: 1.4),
-                  ),
-                  child: const Icon(
-                    Icons.check,
-                    size: 11,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

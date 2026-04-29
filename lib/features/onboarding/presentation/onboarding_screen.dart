@@ -78,11 +78,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   bool _didPrecacheAssets = false;
 
   /// Phase 60G · the photos rendered by gender / goal / activity tiles
-  /// plus the pre-paywall hero. We push them through `precacheImage`
-  /// once at mount so the user never sees a placeholder flash when
-  /// they swipe into the relevant page — and so the PM can swap any
-  /// of these assets for a higher-res AI-generated version later
-  /// without the user catching a decode hitch.
+  /// plus the pre-paywall plan card. We push them through
+  /// `precacheImage` once at mount so the user never sees a
+  /// placeholder flash when they swipe into the relevant page — and
+  /// so the PM can swap any of these assets for a higher-res
+  /// AI-generated version later without the user catching a decode
+  /// hitch.
+  ///
+  /// Phase 60H swaps the pre-paywall hero from the generic
+  /// "plan-creation" art to the AI coach face so the screen mirrors
+  /// the coach-intro identity right before the paywall.
   static const List<String> _precacheImagePaths = [
     'photos/cinsiyetseçimikadın.webp',
     'photos/cinsiyetseçimierkek.webp',
@@ -92,7 +97,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     'photos/günlükaktivitenmasabaşı.webp',
     'photos/günlükaktivitenhafifhareketli.webp',
     'photos/günlükaktivitenneÇokAktif.webp',
-    'photos/kullanıcıbilgilerinegörekişiselplanoluşturma.webp',
+    'photos/kişiselyapayzekakoçfoto.webp',
   ];
 
   @override
@@ -2022,6 +2027,12 @@ class _PrePaywallSummaryStepState extends ConsumerState<_PrePaywallSummaryStep>
 /// rendered a 96 px placeholder and 5 stacked rows; this richer card
 /// is what the PM is reverting toward in their "Image + Details"
 /// brief.
+/// Phase 60H · the AI plan card.
+///
+/// Side-image layout matching the option cards: stat rows stack on
+/// the left, the AI coach face panel anchors the right ~45% of the
+/// card. A neon `BoxShadow` sits behind the entire card to make it
+/// feel "alive" and high-value.
 class _SummaryCard extends StatelessWidget {
   const _SummaryCard({required this.report});
   final AiReport report;
@@ -2033,199 +2044,68 @@ class _SummaryCard extends StatelessWidget {
         color: Colors.white.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
-          color: _neon.withValues(alpha: 0.4),
+          color: _neon.withValues(alpha: 0.45),
           width: 1,
         ),
         boxShadow: [
+          // Phase 60H · "premium accent" glow per PM brief — low alpha,
+          // high blur so the card breathes neon without taking on a
+          // hard outline.
           BoxShadow(
-            color: _neon.withValues(alpha: 0.2),
-            blurRadius: 28,
-            spreadRadius: -4,
+            color: _neon.withValues(alpha: 0.32),
+            blurRadius: 38,
+            spreadRadius: 2,
           ),
         ],
       ),
-      // ClipRRect keeps the hero image's bottom corners flush with the
-      // card's outer radius so the image looks "sealed" into the card.
       child: ClipRRect(
         borderRadius: BorderRadius.circular(22),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const _PlanHeroImage(),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                flex: 11,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 8, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Expanded(
-                        child: _SummaryStatTile(
-                          label: 'HEDEF',
-                          value: report.goalLabel,
-                          icon: Icons.flag_rounded,
-                        ),
+                      _PlanStatRow(
+                        label: 'HEDEF',
+                        value: report.goalLabel,
+                        icon: Icons.flag_rounded,
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _SummaryStatTile(
-                          label: 'SÜRE',
-                          value: report.durationLabel,
-                          icon: Icons.calendar_month_rounded,
-                        ),
+                      const SizedBox(height: 10),
+                      _PlanStatRow(
+                        label: 'SÜRE',
+                        value: report.durationLabel,
+                        icon: Icons.calendar_month_rounded,
                       ),
+                      const SizedBox(height: 10),
+                      _PlanStatRow(
+                        label: 'ZORLUK',
+                        value: report.difficultyLabel,
+                        icon: Icons.bolt_rounded,
+                      ),
+                      const SizedBox(height: 10),
+                      _PlanStatRow(
+                        label: 'HAFTALIK',
+                        value: '${report.weeklyWorkoutCount} gün',
+                        icon: Icons.fitness_center_rounded,
+                      ),
+                      const SizedBox(height: 12),
+                      _PlanResultTile(text: report.estimatedResults),
                     ],
                   ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _SummaryStatTile(
-                          label: 'ZORLUK',
-                          value: report.difficultyLabel,
-                          icon: Icons.bolt_rounded,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _SummaryStatTile(
-                          label: 'HAFTALIK',
-                          value: '${report.weeklyWorkoutCount} gün',
-                          icon: Icons.fitness_center_rounded,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  _SummaryResultTile(text: report.estimatedResults),
-                ],
+                ),
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// 180-px hero panel — uses the unified [OnboardingImage] surface so
-/// the PM can drop replacement art into `photos/` without flicker. The
-/// foreground chips are positioned: AI plan tag top-left, duration
-/// badge top-right, gradient-shrouded "Hedefin için" label bottom-left.
-class _PlanHeroImage extends StatelessWidget {
-  const _PlanHeroImage();
-
-  static const String _heroAsset =
-      'photos/kullanıcıbilgilerinegörekişiselplanoluşturma.webp';
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 180,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          // OnboardingImage is rendered with borderRadius 0 because the
-          // outer card already clips to its 22-px radius — adding our
-          // own would create a faint inset ring.
-          const OnboardingImage(
-            asset: _heroAsset,
-            fallbackIcon: Icons.auto_awesome,
-            borderRadius: 0,
-          ),
-          const _AiHeroChip(),
-          const _DurationHeroBadge(),
-          Positioned(
-            left: 14,
-            right: 14,
-            bottom: 12,
-            child: Text(
-              'Senin için kurguladığım 12 haftalık yol haritası',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12.5,
-                fontWeight: FontWeight.w800,
-                height: 1.3,
-                letterSpacing: 0.2,
-                shadows: [
-                  Shadow(blurRadius: 14, color: Colors.black87),
-                  Shadow(blurRadius: 4, color: Colors.black87),
-                ],
+              const Expanded(
+                flex: 9,
+                child: _AiCoachPanel(),
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AiHeroChip extends StatelessWidget {
-  const _AiHeroChip();
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(
-      top: 12,
-      left: 12,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.6),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: _neon.withValues(alpha: 0.6)),
-        ),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.auto_awesome, color: _neon, size: 12),
-            SizedBox(width: 6),
-            Text(
-              'AI KİŞİSEL PLAN',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 9.5,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.4,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _DurationHeroBadge extends StatelessWidget {
-  const _DurationHeroBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(
-      top: 12,
-      right: 12,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [_neon, _neonAccent],
-          ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: _neon.withValues(alpha: 0.55),
-              blurRadius: 14,
-              spreadRadius: -2,
-            ),
-          ],
-        ),
-        child: const Text(
-          '12 HAFTA',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 9.5,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.4,
+            ],
           ),
         ),
       ),
@@ -2233,9 +2113,12 @@ class _DurationHeroBadge extends StatelessWidget {
   }
 }
 
-/// Compact stat tile for the 2x2 grid in the plan card.
-class _SummaryStatTile extends StatelessWidget {
-  const _SummaryStatTile({
+/// Compact icon + label/value row sized for the plan card's narrow
+/// (~55%) left column. Smaller icon-bubble + tighter type than the
+/// older 2x2 [_SummaryStatTile] grid so the four stats + the result
+/// callout fit alongside the AI coach image.
+class _PlanStatRow extends StatelessWidget {
+  const _PlanStatRow({
     required this.label,
     required this.value,
     required this.icon,
@@ -2247,45 +2130,120 @@ class _SummaryStatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: _neon.withValues(alpha: 0.18),
+            border: Border.all(color: _neon.withValues(alpha: 0.5)),
+          ),
+          child: Icon(icon, color: _neon, size: 15),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white54,
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const SizedBox(height: 1),
+              Text(
+                value,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w900,
+                  height: 1.2,
+                  letterSpacing: 0.1,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// "TAHMİNİ SONUÇ" callout — slimmed down for the narrow left column
+/// of the side-image plan card. Smaller icon, tighter padding, but
+/// preserves the neon-tinted background that makes it the visual
+/// climax of the card.
+class _PlanResultTile extends StatelessWidget {
+  const _PlanResultTile({required this.text});
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _neon.withValues(alpha: 0.3), width: 1),
+        gradient: LinearGradient(
+          colors: [
+            _neon.withValues(alpha: 0.24),
+            _neonAccent.withValues(alpha: 0.18),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _neon.withValues(alpha: 0.55), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: _neon.withValues(alpha: 0.18),
+            blurRadius: 14,
+            spreadRadius: -4,
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
+          const Row(
             children: [
-              Icon(icon, color: _neon, size: 16),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  label,
-                  style: const TextStyle(
-                    color: Colors.white54,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.3,
-                  ),
+              Icon(
+                Icons.trending_up_rounded,
+                color: _neonAccent,
+                size: 14,
+              ),
+              SizedBox(width: 4),
+              Text(
+                'TAHMİNİ SONUÇ',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.2,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 2),
           Text(
-            value,
-            maxLines: 2,
+            text,
+            maxLines: 3,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 14,
+              fontSize: 12.5,
               fontWeight: FontWeight.w900,
-              height: 1.2,
-              letterSpacing: 0.2,
+              height: 1.3,
             ),
           ),
         ],
@@ -2294,80 +2252,81 @@ class _SummaryStatTile extends StatelessWidget {
   }
 }
 
-/// Full-width "TAHMİNİ SONUÇ" callout sitting under the stat grid.
-/// The neon background + trending icon makes this the visual climax
-/// of the plan card.
-class _SummaryResultTile extends StatelessWidget {
-  const _SummaryResultTile({required this.text});
-  final String text;
+/// Phase 60H · the right-hand AI coach panel for the plan card.
+/// Same flush-mounted, gradient-blended layout as the option cards'
+/// `_SideImagePanel`, plus a "Senin AI Koçun" badge floated near the
+/// top to reinforce the AI persona on the screen the user sees right
+/// before the paywall.
+class _AiCoachPanel extends StatelessWidget {
+  const _AiCoachPanel();
+
+  static const String _coachAsset = 'photos/kişiselyapayzekakoçfoto.webp';
+
+  @override
+  Widget build(BuildContext context) {
+    return const Stack(
+      fit: StackFit.expand,
+      children: [
+        OnboardingImage(
+          asset: _coachAsset,
+          fallbackIcon: Icons.smart_toy_rounded,
+          borderRadius: 0,
+          dimOverlay: false,
+        ),
+        // Same dark-to-transparent left blend the option cards use, so
+        // the coach feels visually continuous with the dark left half
+        // of the card.
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [Colors.black, Colors.transparent],
+            ),
+          ),
+        ),
+        Positioned(
+          top: 10,
+          left: 6,
+          right: 6,
+          child: Center(child: _SeninAiKocunBadge()),
+        ),
+      ],
+    );
+  }
+}
+
+class _SeninAiKocunBadge extends StatelessWidget {
+  const _SeninAiKocunBadge();
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            _neon.withValues(alpha: 0.22),
-            _neonAccent.withValues(alpha: 0.18),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _neon.withValues(alpha: 0.55), width: 1),
+        color: Colors.black.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _neon.withValues(alpha: 0.7)),
         boxShadow: [
           BoxShadow(
-            color: _neon.withValues(alpha: 0.18),
-            blurRadius: 16,
-            spreadRadius: -4,
+            color: _neon.withValues(alpha: 0.4),
+            blurRadius: 10,
+            spreadRadius: -2,
           ),
         ],
       ),
-      child: Row(
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 38,
-            height: 38,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.black.withValues(alpha: 0.4),
-              border: Border.all(color: _neon, width: 1),
-            ),
-            child: const Icon(
-              Icons.trending_up_rounded,
-              color: _neonAccent,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'TAHMİNİ SONUÇ',
-                  style: TextStyle(
-                    color: Colors.white60,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  text,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w900,
-                    height: 1.3,
-                  ),
-                ),
-              ],
+          Icon(Icons.auto_awesome, color: _neon, size: 10),
+          SizedBox(width: 4),
+          Text(
+            'Senin AI Koçun',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 9.5,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.5,
             ),
           ),
         ],
