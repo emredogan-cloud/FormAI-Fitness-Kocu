@@ -5,30 +5,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/app_preferences.dart';
-import '../../../onboarding/presentation/widgets/photo_option_card.dart';
+import '../../../onboarding/presentation/widgets/interactive_question_step.dart';
 import '../../../onboarding/providers/wizard_provider.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _success = Color(0xFF22C55E);
 
-// Food + meal-frequency photos — duplicated from `onboarding_screen.dart`
-// (where the nutrition steps used to live) so the deferred flow keeps
-// the same visual identity. URLs are exercised in production via
-// `supabase_seed_recipes.sql` so they are guaranteed to resolve.
-const String _dietStandardImg =
-    'https://images.unsplash.com/photo-1544025162-d76694265947?w=800&q=80';
-const String _dietVegetarianImg =
-    'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80';
-const String _dietVeganImg =
-    'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&q=80';
-const String _dietKetoImg =
-    'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=800&q=80';
-const String _mealFreq2Img =
-    'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=800&q=80';
-const String _mealFreq3Img =
-    'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80';
-const String _mealFreq4Img =
-    'https://images.unsplash.com/photo-1525351484163-7529414344d8?w=800&q=80';
+// Phase 61A · the four nutrition pages now standardise on the
+// Phase-60H Fitify-style [OptionCard], pointing at bundled
+// `photos/...` paths instead of the previous Unsplash URLs. Until the
+// PM ships the curated food photography (diet_standard.webp etc.),
+// `OnboardingImage`'s placeholder gradient + the option's icon stand
+// in — that fallback is the same the rest of the onboarding uses, so
+// the sheet stays visually coherent with the main wizard whether or
+// not the assets have landed yet.
 
 const List<String> _stepNames = [
   'nutrition_diet_preference',
@@ -602,22 +592,85 @@ class _PageTitle extends StatelessWidget {
 // ============================================================================
 // Pages — adapted from the removed `_DietPreferenceStep`, `_AllergiesStep`,
 // `_MealFrequencyStep` and `_PrepTimeStep` widgets in onboarding_screen.dart.
+//
+// Phase 61A · all four pages share the same Fitify-style [OptionCard]
+// the main onboarding uses, with bundled `photos/...` paths on every
+// option (including allergies + prep-time, which were icon-only before).
+// Where the bundled asset hasn't shipped yet, `OnboardingImage`'s
+// gradient + icon fallback stands in — same fallback the rest of the
+// onboarding shows, so the sheet stays visually coherent.
 // ============================================================================
 
-/// Phase 48 · fixed minimum card height for the four nutrition steps so
-/// short Android screens (e.g. 5"-class devices, ~640 px logical height
-/// after status / nav bars) can scroll instead of throwing a 17 px
-/// `RenderFlex` overflow when four cards + the page title don't fit.
-const double _kNutritionCardMinHeight = 110;
+/// Compact builder shared by all four pages. Renders a column of
+/// [OptionCard]s with consistent spacing and the existing 220 ms quick
+/// commit (deliberately shorter than the main wizard's 1.5 s window
+/// since this sheet is a deferred *post-onboarding* surface).
+Widget _nutritionOptionsList({
+  required List<InteractiveOption> options,
+  required String? selectedValue,
+  required ValueChanged<String> onPicked,
+  bool disabled = false,
+}) {
+  return SingleChildScrollView(
+    padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+    child: Column(
+      children: [
+        for (final opt in options) ...[
+          OptionCard(
+            option: opt,
+            selected: selectedValue == opt.value,
+            dimmed: false,
+            onTap: disabled ? () {} : () => onPicked(opt.value),
+          ),
+          if (opt != options.last) const SizedBox(height: 10),
+        ],
+      ],
+    ),
+  );
+}
 
 class _DietPreferencePage extends ConsumerWidget {
   const _DietPreferencePage({required this.onSelected});
   final VoidCallback onSelected;
 
+  // Visual concepts the PM provided in the brief: grilled meat / plant
+  // bowl / vibrant plant plate / high-fat keto plate. Asset paths are
+  // bundled `photos/diet_*.webp` placeholders that fall back to a
+  // gradient + the option icon until the curated photography lands.
+  static const List<InteractiveOption> _options = [
+    InteractiveOption(
+      value: 'standart',
+      label: 'Standart',
+      helper: 'Her şeyi yiyebilirim.',
+      icon: Icons.restaurant_menu_rounded,
+      imageAsset: 'photos/diet_standard.webp',
+    ),
+    InteractiveOption(
+      value: 'vejetaryen',
+      label: 'Vejetaryen',
+      helper: 'Et yemem, yumurta/süt olabilir.',
+      icon: Icons.grass_rounded,
+      imageAsset: 'photos/diet_vegetarian.webp',
+    ),
+    InteractiveOption(
+      value: 'vegan',
+      label: 'Vegan',
+      helper: 'Hiçbir hayvansal ürün tüketmem.',
+      icon: Icons.eco_rounded,
+      imageAsset: 'photos/diet_vegan.webp',
+    ),
+    InteractiveOption(
+      value: 'ketojenik',
+      label: 'Ketojenik',
+      helper: 'Düşük karbonhidrat, yüksek yağ.',
+      icon: Icons.local_fire_department_rounded,
+      imageAsset: 'photos/diet_keto.webp',
+    ),
+  ];
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selected = ref.watch(wizardProvider).dietPreference;
-
     void pick(String value) {
       ref.read(wizardProvider.notifier).setDietPreference(value);
       Future<void>.delayed(const Duration(milliseconds: 220), onSelected);
@@ -631,55 +684,10 @@ class _DietPreferencePage extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-            child: Column(
-              children: [
-                _NutritionCardSlot(
-                  child: PhotoOptionCard(
-                    image: _dietStandardImg,
-                    fallbackIcon: Icons.restaurant_menu,
-                    title: 'Standart',
-                    subtitle: 'Her şeyi yiyebilirim.',
-                    selected: selected == 'standart',
-                    onTap: () => pick('standart'),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                _NutritionCardSlot(
-                  child: PhotoOptionCard(
-                    image: _dietVegetarianImg,
-                    fallbackIcon: Icons.grass,
-                    title: 'Vejetaryen',
-                    subtitle: 'Et yemem, yumurta/süt olabilir.',
-                    selected: selected == 'vejetaryen',
-                    onTap: () => pick('vejetaryen'),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                _NutritionCardSlot(
-                  child: PhotoOptionCard(
-                    image: _dietVeganImg,
-                    fallbackIcon: Icons.eco,
-                    title: 'Vegan',
-                    subtitle: 'Hiçbir hayvansal ürün tüketmem.',
-                    selected: selected == 'vegan',
-                    onTap: () => pick('vegan'),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                _NutritionCardSlot(
-                  child: PhotoOptionCard(
-                    image: _dietKetoImg,
-                    fallbackIcon: Icons.local_fire_department,
-                    title: 'Ketojenik',
-                    subtitle: 'Düşük karbonhidrat, yüksek yağ.',
-                    selected: selected == 'ketojenik',
-                    onTap: () => pick('ketojenik'),
-                  ),
-                ),
-              ],
-            ),
+          child: _nutritionOptionsList(
+            options: _options,
+            selectedValue: selected,
+            onPicked: pick,
           ),
         ),
       ],
@@ -687,28 +695,49 @@ class _DietPreferencePage extends ConsumerWidget {
   }
 }
 
-/// Wrapper that stamps a deterministic minimum height on every option
-/// card inside the four nutrition wizard pages. Without it the cards
-/// shrink to fit and lose their photographic anchoring; with it the
-/// page either fits exactly or scrolls — never overflows.
-class _NutritionCardSlot extends StatelessWidget {
-  const _NutritionCardSlot({required this.child});
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(height: _kNutritionCardMinHeight, child: child);
-  }
-}
-
 class _AllergiesPage extends ConsumerWidget {
   const _AllergiesPage({required this.onSelected});
   final VoidCallback onSelected;
 
+  // Phase 61A · was icon-only / empty gradient in pre-60H. Each option
+  // now points at a bundled `photos/allergy_*.webp` placeholder per PM
+  // brief (none / nuts / dairy / gluten visuals). Until the photos
+  // ship, OnboardingImage's gradient + icon fallback keeps the cards
+  // looking like the rest of the flow.
+  static const List<InteractiveOption> _options = [
+    InteractiveOption(
+      value: 'yok',
+      label: 'Yok',
+      helper: 'Bilinen bir alerjim yok.',
+      icon: Icons.verified_user_rounded,
+      imageAsset: 'photos/allergy_none.webp',
+    ),
+    InteractiveOption(
+      value: 'kuruyemis',
+      label: 'Kuruyemiş',
+      helper: 'Badem, fıstık, ceviz vb.',
+      icon: Icons.emoji_nature_rounded,
+      imageAsset: 'photos/allergy_nuts.webp',
+    ),
+    InteractiveOption(
+      value: 'sut_urunleri',
+      label: 'Süt Ürünleri',
+      helper: 'Süt, peynir, yoğurt vb.',
+      icon: Icons.icecream_rounded,
+      imageAsset: 'photos/allergy_dairy.webp',
+    ),
+    InteractiveOption(
+      value: 'gluten',
+      label: 'Glüten',
+      helper: 'Buğday, arpa, çavdar vb.',
+      icon: Icons.bakery_dining_rounded,
+      imageAsset: 'photos/allergy_gluten.webp',
+    ),
+  ];
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selected = ref.watch(wizardProvider).allergies;
-
     void pick(String value) {
       ref.read(wizardProvider.notifier).setAllergies(value);
       Future<void>.delayed(const Duration(milliseconds: 220), onSelected);
@@ -722,51 +751,10 @@ class _AllergiesPage extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-            child: Column(
-              children: [
-                _NutritionCardSlot(
-                  child: PhotoOptionCard(
-                    fallbackIcon: Icons.verified_user,
-                    title: 'Yok',
-                    subtitle: 'Bilinen bir alerjim yok.',
-                    selected: selected == 'yok',
-                    onTap: () => pick('yok'),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                _NutritionCardSlot(
-                  child: PhotoOptionCard(
-                    fallbackIcon: Icons.emoji_nature,
-                    title: 'Kuruyemiş',
-                    subtitle: 'Badem, fıstık, ceviz vb.',
-                    selected: selected == 'kuruyemis',
-                    onTap: () => pick('kuruyemis'),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                _NutritionCardSlot(
-                  child: PhotoOptionCard(
-                    fallbackIcon: Icons.icecream,
-                    title: 'Süt Ürünleri',
-                    subtitle: 'Süt, peynir, yoğurt vb.',
-                    selected: selected == 'sut_urunleri',
-                    onTap: () => pick('sut_urunleri'),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                _NutritionCardSlot(
-                  child: PhotoOptionCard(
-                    fallbackIcon: Icons.bakery_dining,
-                    title: 'Glüten',
-                    subtitle: 'Buğday, arpa, çavdar vb.',
-                    selected: selected == 'gluten',
-                    onTap: () => pick('gluten'),
-                  ),
-                ),
-              ],
-            ),
+          child: _nutritionOptionsList(
+            options: _options,
+            selectedValue: selected,
+            onPicked: pick,
           ),
         ),
       ],
@@ -778,10 +766,33 @@ class _MealFrequencyPage extends ConsumerWidget {
   const _MealFrequencyPage({required this.onSelected});
   final VoidCallback onSelected;
 
+  static const List<InteractiveOption> _options = [
+    InteractiveOption(
+      value: '2_ogun',
+      label: '2 Öğün',
+      helper: 'Aralıklı oruç (16:8) tarzı beslenirim.',
+      icon: Icons.hourglass_top_rounded,
+      imageAsset: 'photos/meals_2.webp',
+    ),
+    InteractiveOption(
+      value: '3_ogun',
+      label: '3 Öğün',
+      helper: 'Standart — kahvaltı, öğle, akşam.',
+      icon: Icons.restaurant_rounded,
+      imageAsset: 'photos/meals_3.webp',
+    ),
+    InteractiveOption(
+      value: '4_ogun',
+      label: '4+ Öğün',
+      helper: 'Atıştırmalık severim.',
+      icon: Icons.lunch_dining_rounded,
+      imageAsset: 'photos/meals_4.webp',
+    ),
+  ];
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selected = ref.watch(wizardProvider).mealFrequency;
-
     void pick(String value) {
       ref.read(wizardProvider.notifier).setMealFrequency(value);
       Future<void>.delayed(const Duration(milliseconds: 220), onSelected);
@@ -795,44 +806,10 @@ class _MealFrequencyPage extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-            child: Column(
-              children: [
-                _NutritionCardSlot(
-                  child: PhotoOptionCard(
-                    image: _mealFreq2Img,
-                    fallbackIcon: Icons.hourglass_top,
-                    title: '2 Öğün',
-                    subtitle: 'Aralıklı oruç (16:8) tarzı beslenirim.',
-                    selected: selected == '2_ogun',
-                    onTap: () => pick('2_ogun'),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                _NutritionCardSlot(
-                  child: PhotoOptionCard(
-                    image: _mealFreq3Img,
-                    fallbackIcon: Icons.restaurant,
-                    title: '3 Öğün',
-                    subtitle: 'Standart — kahvaltı, öğle, akşam.',
-                    selected: selected == '3_ogun',
-                    onTap: () => pick('3_ogun'),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                _NutritionCardSlot(
-                  child: PhotoOptionCard(
-                    image: _mealFreq4Img,
-                    fallbackIcon: Icons.lunch_dining,
-                    title: '4+ Öğün',
-                    subtitle: 'Atıştırmalık severim.',
-                    selected: selected == '4_ogun',
-                    onTap: () => pick('4_ogun'),
-                  ),
-                ),
-              ],
-            ),
+          child: _nutritionOptionsList(
+            options: _options,
+            selectedValue: selected,
+            onPicked: pick,
           ),
         ),
       ],
@@ -845,10 +822,30 @@ class _PrepTimePage extends ConsumerWidget {
   final VoidCallback onSelected;
   final bool busy;
 
+  // Phase 61A · was icon-only previously. PM's visual concepts: quick
+  // = simple yogurt/salad shot; slow = kitchen cooking scene. Until
+  // those photos ship, the OnboardingImage fallback keeps the cards
+  // consistent with the rest of the flow.
+  static const List<InteractiveOption> _options = [
+    InteractiveOption(
+      value: 'hizli',
+      label: 'Hızlı & Pratik',
+      helper: '10-15 dakika içinde hazırlanan tarifler.',
+      icon: Icons.timer_rounded,
+      imageAsset: 'photos/prep_quick.webp',
+    ),
+    InteractiveOption(
+      value: 'yavas',
+      label: 'Mutfakta Vakit',
+      helper: '30+ dakika. Pişirmekten keyif alırım.',
+      icon: Icons.soup_kitchen_rounded,
+      imageAsset: 'photos/prep_slow.webp',
+    ),
+  ];
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selected = ref.watch(wizardProvider).prepTime;
-
     void pick(String value) {
       ref.read(wizardProvider.notifier).setPrepTime(value);
       Future<void>.delayed(const Duration(milliseconds: 220), onSelected);
@@ -862,31 +859,11 @@ class _PrepTimePage extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-            child: Column(
-              children: [
-                _NutritionCardSlot(
-                  child: PhotoOptionCard(
-                    fallbackIcon: Icons.timer,
-                    title: 'Hızlı & Pratik',
-                    subtitle: '10-15 dakika içinde hazırlanan tarifler.',
-                    selected: selected == 'hizli',
-                    onTap: busy ? () {} : () => pick('hizli'),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                _NutritionCardSlot(
-                  child: PhotoOptionCard(
-                    fallbackIcon: Icons.soup_kitchen,
-                    title: 'Mutfakta Vakit',
-                    subtitle: '30+ dakika. Pişirmekten keyif alırım.',
-                    selected: selected == 'yavas',
-                    onTap: busy ? () {} : () => pick('yavas'),
-                  ),
-                ),
-              ],
-            ),
+          child: _nutritionOptionsList(
+            options: _options,
+            selectedValue: selected,
+            onPicked: pick,
+            disabled: busy,
           ),
         ),
       ],
