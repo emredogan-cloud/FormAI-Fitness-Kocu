@@ -11,6 +11,14 @@
 -- the statement is a safe no-op. Dollar-quoted strings ($$...$$) let the
 -- instructions carry literal newlines and Turkish apostrophes without
 -- escaping.
+--
+-- Phase 69 · each UPDATE now also rewrites `image_url` to the bundled
+-- `photos/meals/<slug>.webp` asset path so the recipe detail screen
+-- renders the new dietitian-shot cover photos instead of the legacy
+-- Unsplash thumbnail. The Flutter `CachedImage` wrapper auto-detects
+-- the local path (anything not starting with `http`) and switches to
+-- `Image.asset` — no client-side change required beyond Phase 69's
+-- `cached_image.dart` dispatch.
 -- =============================================================================
 
 UPDATE public.recipes
@@ -29,7 +37,8 @@ HAZIRLANIŞI:
 2. Kaynamaya başlayınca ateşi kısın ve kremsi kıvam alana kadar 4-5 dakika daha pişirin.
 3. Tencereyi ateşten alın, chia tohumunu ekleyip 1 dakika dinlenmeye bırakın.
 4. Kaseye aktarın; fıstık ezmesini ılıkken üzerine ekleyerek erimesini sağlayın.
-5. Dilimli muz, kırık ceviz ve tarçını serpin, bal ile tatlandırıp sıcak servis edin.$$
+5. Dilimli muz, kırık ceviz ve tarçını serpin, bal ile tatlandırıp sıcak servis edin.$$,
+    image_url = 'photos/meals/fistik_ezmeli_yulaf_lapasi.webp'
 WHERE title = 'Fıstık Ezmeli Yulaf Lapası';
 
 UPDATE public.recipes
@@ -51,7 +60,8 @@ HAZIRLANIŞI:
 3. Pişmiş kinoayı, rokayı, salatalık, kiraz domates ve peynir küplerini geniş bir salata kasesinde birleştirin.
 4. Tavuğu eğik şekilde kalın dilimler halinde doğrayıp salatanın üzerine yerleştirin.
 5. Zeytinyağı ve limon suyunu küçük bir kapta çırpın, salatanın üzerine gezdirin.
-6. Ayçekirdeğini serpip hemen servis edin.$$
+6. Ayçekirdeğini serpip hemen servis edin.$$,
+    image_url = 'photos/meals/izgara_tavuklu_kinoa_salatasi.webp'
 WHERE title = 'Izgara Tavuklu Kinoa Salatası';
 
 UPDATE public.recipes
@@ -71,7 +81,8 @@ HAZIRLANIŞI:
 3. Tepsiyi çıkarıp diğer kenara kuşkonmazları ekleyin; ortaya somonu derisi alta gelecek şekilde yerleştirin.
 4. Somonun üzerini tuz, karabiber ve ezilmiş sarımsakla ovun; üzerine limon dilimleri ve kekik dalını koyun, kalan yağı gezdirin.
 5. Tepsiyi fırına geri verin ve 12-14 dakika daha pişirin (somon ortadan hafif pembe görünecek).
-6. 2 dakika dinlendirip tabaklara alın ve sıcak servis edin.$$
+6. 2 dakika dinlendirip tabaklara alın ve sıcak servis edin.$$,
+    image_url = 'photos/meals/firinlanmis_somon_tatli_patates.webp'
 WHERE title = 'Fırınlanmış Somon ve Tatlı Patates';
 
 UPDATE public.recipes
@@ -90,7 +101,8 @@ HAZIRLANIŞI:
 3. Karışımı iki adet servis kavanozuna eşit şekilde paylaştırın.
 4. 5 dakika bekleyin, kavanozları yeniden karıştırarak chia'nın dibe çökmesini engelleyin.
 5. Kavanozların ağzını kapatıp buzdolabında en az 4 saat (ideali bir gece) dinlendirin.
-6. Servis etmeden önce üzerine kırık fındık ve dilim çilek ekleyip sunun.$$
+6. Servis etmeden önce üzerine kırık fındık ve dilim çilek ekleyip sunun.$$,
+    image_url = 'photos/meals/yuksek_proteinli_cikolatali_puding.webp'
 WHERE title = 'Yüksek Proteinli Çikolatalı Puding';
 
 UPDATE public.recipes
@@ -111,5 +123,6 @@ HAZIRLANIŞI:
 4. Her yumurtayı ayrı ayrı kâsede kırın; suda hafif bir girdap oluşturup yumurtayı yavaşça boşaltın.
 5. 2-3 dakika (akışkan sarı için) haşlayın, oluklu kaşıkla çıkarıp kağıt havlu üzerinde süzün.
 6. Ezilmiş avokadoyu tost dilimlerine bolca sürün, her tostun üstüne bir poşe yumurta yerleştirin.
-7. Üzerine pul biber, zeytinyağı ve doğranmış kekiği serpip hemen servis edin.$$
+7. Üzerine pul biber, zeytinyağı ve doğranmış kekiği serpip hemen servis edin.$$,
+    image_url = 'photos/meals/avokadolu_tam_bugday_tost.webp'
 WHERE title = 'Avokadolu Tam Buğday Tost';

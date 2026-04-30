@@ -55,7 +55,7 @@ INSERT INTO public.recipes (
   'main',
   520, 52, 35, 18,
   25,
-  'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80',
+  'photos/meals/izgara_tavuk_kinoa_kasesi.webp',
   $$MALZEMELER:
 - 180g tavuk göğsü fileto
 - 60g kinoa (kuru ölçü)
@@ -77,7 +77,7 @@ HAZIRLANIŞI:
   'dinner',
   580, 45, 42, 25,
   30,
-  'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=800&q=80',
+  'photos/meals/firinda_somon_tatli_patates.webp',
   $$MALZEMELER:
 - 170g somon fileto
 - 200g tatlı patates (küp doğranmış)
@@ -98,7 +98,7 @@ HAZIRLANIŞI:
   'breakfast',
   320, 45, 10, 10,
   10,
-  'https://images.unsplash.com/photo-1525351484163-7529414344d8?w=800&q=80',
+  'photos/meals/yumurta_aki_omleti_hindi_eti.webp',
   $$MALZEMELER:
 - 5 adet yumurta akı
 - 1 bütün yumurta
@@ -119,7 +119,7 @@ HAZIRLANIŞI:
   'breakfast',
   380, 42, 32, 8,
   5,
-  'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=800&q=80',
+  'photos/meals/suzme_yogurtlu_protein_kasesi.webp',
   $$MALZEMELER:
 - 250g süzme yoğurt (yağsız)
 - 30g vanilyalı whey protein tozu
@@ -141,7 +141,7 @@ HAZIRLANIŞI:
   'dinner',
   560, 55, 18, 28,
   20,
-  'https://images.unsplash.com/photo-1544025162-d76694265947?w=800&q=80',
+  'photos/meals/izgara_bonfile_brokoli.webp',
   $$MALZEMELER:
 - 200g sığır bonfile
 - 200g brokoli
@@ -165,7 +165,7 @@ HAZIRLANIŞI:
   'lunch',
   290, 28, 22, 10,
   15,
-  'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&q=80',
+  'photos/meals/izgara_sebzeli_ton_baligi_salatasi.webp',
   $$MALZEMELER:
 - 120g suyu süzülmüş ton balığı konservesi
 - 1 avuç marul yaprağı
@@ -188,7 +188,7 @@ HAZIRLANIŞI:
   'lunch',
   180, 8, 28, 4,
   25,
-  'https://images.unsplash.com/photo-1547592180-85f173990554?w=800&q=80',
+  'photos/meals/sebzeli_ev_corbasi.webp',
   $$MALZEMELER:
 - 1 havuç (küp)
 - 1 kabak (küp)
@@ -211,7 +211,7 @@ HAZIRLANIŞI:
   'lunch',
   310, 32, 18, 12,
   15,
-  'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80',
+  'photos/meals/tavuk_gogsu_marul_sarma.webp',
   $$MALZEMELER:
 - 120g haşlanmış tavuk göğsü (didiklenmiş)
 - 6 iri marul yaprağı
@@ -233,7 +233,7 @@ HAZIRLANIŞI:
   'dinner',
   280, 30, 12, 11,
   15,
-  'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80',
+  'photos/meals/izgara_karides_roka_salatasi.webp',
   $$MALZEMELER:
 - 150g temizlenmiş karides
 - 50g roka
@@ -256,7 +256,7 @@ HAZIRLANIŞI:
   'breakfast',
   240, 20, 30, 3,
   5,
-  'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=800&q=80',
+  'photos/meals/meyveli_suzme_yogurt.webp',
   $$MALZEMELER:
 - 200g süzme yoğurt (yağsız)
 - 100g taze böğürtlen
@@ -277,7 +277,7 @@ HAZIRLANIŞI:
   'lunch',
   720, 45, 85, 20,
   20,
-  'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=80',
+  'photos/meals/tavuklu_yulafli_wrap.webp',
   $$MALZEMELER:
 - 2 büyük tam buğday lavaş
 - 180g ızgara tavuk göğsü
@@ -299,7 +299,7 @@ HAZIRLANIŞI:
   'dinner',
   820, 55, 95, 22,
   30,
-  'https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=800&q=80',
+  'photos/meals/kiymali_yuksek_protein_makarna.webp',
   $$MALZEMELER:
 - 120g tam buğday makarna
 - 150g yağsız dana kıyma
@@ -323,7 +323,7 @@ HAZIRLANIŞI:
   'breakfast',
   680, 32, 90, 22,
   10,
-  'https://images.unsplash.com/photo-1517093602195-b40af9688b92?w=800&q=80',
+  'photos/meals/fistik_ezmeli_muzlu_yulaf_ezmesi.webp',
   $$MALZEMELER:
 - 80g yulaf ezmesi
 - 250 ml süt
@@ -345,7 +345,7 @@ HAZIRLANIŞI:
   'lunch',
   780, 50, 78, 28,
   25,
-  'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80',
+  'photos/meals/bonfileli_burrito.webp',
   $$MALZEMELER:
 - 1 büyük tam buğday tortilla
 - 160g ızgara bonfile (dilimli)
@@ -368,7 +368,7 @@ HAZIRLANIŞI:
   'breakfast',
   650, 40, 75, 18,
   15,
-  'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800&q=80',
+  'photos/meals/protein_pankek_yigini.webp',
   $$MALZEMELER:
 - 60g yulaf unu
 - 30g vanilyalı whey protein tozu
@@ -393,7 +393,7 @@ HAZIRLANIŞI:
   'lunch',
   420, 22, 58, 10,
   20,
-  'https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?w=800&q=80',
+  'photos/meals/akdeniz_kinoa_salatasi.webp',
   $$MALZEMELER:
 - 100g kinoa (kuru ölçü)
 - 100g haşlanmış nohut
@@ -417,7 +417,7 @@ HAZIRLANIŞI:
   'lunch',
   450, 42, 48, 8,
   25,
-  'https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=800&q=80',
+  'photos/meals/izgara_hindi_pirinc_kasesi.webp',
   $$MALZEMELER:
 - 160g hindi göğsü fileto
 - 70g esmer pirinç (kuru ölçü)
@@ -439,7 +439,7 @@ HAZIRLANIŞI:
   'lunch',
   380, 22, 55, 6,
   30,
-  'https://images.unsplash.com/photo-1547592180-85f173990554?w=800&q=80',
+  'photos/meals/sebzeli_mercimek_corbasi.webp',
   $$MALZEMELER:
 - 120g kırmızı mercimek
 - 1 soğan
@@ -462,7 +462,7 @@ HAZIRLANIŞI:
   'dinner',
   440, 38, 42, 9,
   25,
-  'https://images.unsplash.com/photo-1547496502-affa22d38842?w=800&q=80',
+  'photos/meals/firinda_levrek_kuskus.webp',
   $$MALZEMELER:
 - 180g levrek fileto
 - 80g kuskus (kuru ölçü)
@@ -485,7 +485,7 @@ HAZIRLANIŞI:
   'breakfast',
   320, 24, 42, 4,
   5,
-  'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=800&q=80',
+  'photos/meals/suzme_yogurtlu_meyve_parfe.webp',
   $$MALZEMELER:
 - 250g süzme yoğurt (yağsız)
 - 60g şekersiz granola
@@ -506,7 +506,7 @@ HAZIRLANIŞI:
   'lunch',
   480, 22, 65, 14,
   20,
-  'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80',
+  'photos/meals/nohutlu_kinoa_buddha_kasesi.webp',
   $$MALZEMELER:
 - 80g kinoa (kuru ölçü)
 - 150g haşlanmış nohut
@@ -529,7 +529,7 @@ HAZIRLANIŞI:
   'dinner',
   520, 28, 60, 16,
   25,
-  'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=800&q=80',
+  'photos/meals/tofu_soteli_kahverengi_pirinc.webp',
   $$MALZEMELER:
 - 180g katı tofu
 - 70g esmer pirinç (kuru ölçü)
@@ -554,7 +554,7 @@ HAZIRLANIŞI:
   'breakfast',
   340, 12, 42, 14,
   5,
-  'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=800&q=80',
+  'photos/meals/chia_tohumu_pudingi.webp',
   $$MALZEMELER:
 - 40g chia tohumu
 - 300 ml şekersiz badem sütü
@@ -575,7 +575,7 @@ HAZIRLANIŞI:
   'lunch',
   450, 18, 62, 12,
   15,
-  'https://images.unsplash.com/photo-1565299507177-b0ac66763828?w=800&q=80',
+  'photos/meals/mercimek_koftesi_wrap.webp',
   $$MALZEMELER:
 - 2 tam buğday lavaş
 - 150g ev yapımı mercimek köftesi
@@ -597,7 +597,7 @@ HAZIRLANIŞI:
   'snack',
   380, 15, 52, 14,
   5,
-  'https://images.unsplash.com/photo-1502741224143-90386d7f8c82?w=800&q=80',
+  'photos/meals/fistik_ezmeli_muzlu_vegan_smoothie.webp',
   $$MALZEMELER:
 - 1 dondurulmuş muz
 - 300 ml yulaf sütü
@@ -615,6 +615,41 @@ HAZIRLANIŞI:
   ARRAY['Vegan']
 )
 ON CONFLICT (title) DO NOTHING;
+
+-- =============================================================================
+-- Phase 69 · idempotent image_url upgrade for the 25 seed recipes
+-- =============================================================================
+-- The INSERT block above ships the new local-asset paths for fresh DB
+-- seeds. Existing installs (where rows already exist with the old
+-- Unsplash URLs) won't pick those up because of the ON CONFLICT
+-- DO NOTHING clause. The UPDATE below covers that upgrade path —
+-- safe to re-run because it's keyed on the unique title.
+-- =============================================================================
+UPDATE public.recipes SET image_url = 'photos/meals/izgara_tavuk_kinoa_kasesi.webp'         WHERE title = 'Izgara Tavuk ve Kinoa Kasesi';
+UPDATE public.recipes SET image_url = 'photos/meals/firinda_somon_tatli_patates.webp'       WHERE title = 'Fırında Somon ve Tatlı Patates';
+UPDATE public.recipes SET image_url = 'photos/meals/yumurta_aki_omleti_hindi_eti.webp'      WHERE title = 'Yumurta Akı Omleti ve Hindi Eti';
+UPDATE public.recipes SET image_url = 'photos/meals/suzme_yogurtlu_protein_kasesi.webp'     WHERE title = 'Süzme Yoğurtlu Protein Kasesi';
+UPDATE public.recipes SET image_url = 'photos/meals/izgara_bonfile_brokoli.webp'            WHERE title = 'Izgara Bonfile ve Brokoli';
+UPDATE public.recipes SET image_url = 'photos/meals/izgara_sebzeli_ton_baligi_salatasi.webp' WHERE title = 'Izgara Sebzeli Ton Balığı Salatası';
+UPDATE public.recipes SET image_url = 'photos/meals/sebzeli_ev_corbasi.webp'                WHERE title = 'Sebzeli Ev Çorbası';
+UPDATE public.recipes SET image_url = 'photos/meals/tavuk_gogsu_marul_sarma.webp'           WHERE title = 'Tavuk Göğsü Marul Sarma';
+UPDATE public.recipes SET image_url = 'photos/meals/izgara_karides_roka_salatasi.webp'      WHERE title = 'Izgara Karides ve Roka Salatası';
+UPDATE public.recipes SET image_url = 'photos/meals/meyveli_suzme_yogurt.webp'              WHERE title = 'Meyveli Süzme Yoğurt';
+UPDATE public.recipes SET image_url = 'photos/meals/tavuklu_yulafli_wrap.webp'              WHERE title = 'Tavuklu Yulaflı Wrap';
+UPDATE public.recipes SET image_url = 'photos/meals/kiymali_yuksek_protein_makarna.webp'    WHERE title = 'Kıymalı Yüksek Protein Makarna';
+UPDATE public.recipes SET image_url = 'photos/meals/fistik_ezmeli_muzlu_yulaf_ezmesi.webp'  WHERE title = 'Fıstık Ezmeli Muzlu Yulaf Ezmesi';
+UPDATE public.recipes SET image_url = 'photos/meals/bonfileli_burrito.webp'                 WHERE title = 'Bonfileli Burrito';
+UPDATE public.recipes SET image_url = 'photos/meals/protein_pankek_yigini.webp'             WHERE title = 'Protein Pankek Yığını';
+UPDATE public.recipes SET image_url = 'photos/meals/akdeniz_kinoa_salatasi.webp'            WHERE title = 'Akdeniz Kinoa Salatası';
+UPDATE public.recipes SET image_url = 'photos/meals/izgara_hindi_pirinc_kasesi.webp'        WHERE title = 'Izgara Hindi ve Pirinç Kasesi';
+UPDATE public.recipes SET image_url = 'photos/meals/sebzeli_mercimek_corbasi.webp'          WHERE title = 'Sebzeli Mercimek Çorbası';
+UPDATE public.recipes SET image_url = 'photos/meals/firinda_levrek_kuskus.webp'             WHERE title = 'Fırında Levrek ve Kuskus';
+UPDATE public.recipes SET image_url = 'photos/meals/suzme_yogurtlu_meyve_parfe.webp'        WHERE title = 'Süzme Yoğurtlu Meyve Parfe';
+UPDATE public.recipes SET image_url = 'photos/meals/nohutlu_kinoa_buddha_kasesi.webp'       WHERE title = 'Nohutlu Kinoa Buddha Kasesi';
+UPDATE public.recipes SET image_url = 'photos/meals/tofu_soteli_kahverengi_pirinc.webp'     WHERE title = 'Tofu Soteli Kahverengi Pirinç';
+UPDATE public.recipes SET image_url = 'photos/meals/chia_tohumu_pudingi.webp'               WHERE title = 'Chia Tohumu Pudingi';
+UPDATE public.recipes SET image_url = 'photos/meals/mercimek_koftesi_wrap.webp'             WHERE title = 'Mercimek Köftesi Wrap';
+UPDATE public.recipes SET image_url = 'photos/meals/fistik_ezmeli_muzlu_vegan_smoothie.webp' WHERE title = 'Fıstık Ezmeli Muzlu Vegan Smoothie';
 
 -- =============================================================================
 -- Sanity check — should return 25 rows after a fresh run.

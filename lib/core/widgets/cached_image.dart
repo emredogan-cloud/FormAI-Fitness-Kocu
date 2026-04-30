@@ -46,6 +46,25 @@ class CachedImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 69 · local-asset dispatch. The recipe seeds (and the workout
+    // repository before them) now mix Unsplash URLs with bundled
+    // `photos/...` paths; treating both shapes here means call sites
+    // don't need to branch on the URL form. `Image.asset` still honours
+    // the same `memCacheHeight` knob via `cacheHeight`.
+    if (!url.startsWith('http')) {
+      return Image.asset(
+        url,
+        fit: fit,
+        alignment: alignment,
+        cacheHeight: memCacheHeight,
+        cacheWidth: memCacheWidth,
+        errorBuilder: (context, error, stack) {
+          final builder = errorBuilder;
+          if (builder != null) return builder(context, error, stack);
+          return const _DefaultError();
+        },
+      );
+    }
     return CachedNetworkImage(
       imageUrl: url,
       fit: fit,

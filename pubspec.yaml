@@ -131,6 +131,11 @@ flutter:
     # used pre-Phase-35; the strip now points at Unsplash URLs and the
     # binary weight (~2 MB across 7 folders) was dead bundle space.
     - "photos/"
+    # Phase 69 · per-recipe meal cover photos (real VP8 WebP, ~280 KB
+    # each). Flutter asset declarations are not recursive, so the
+    # subdirectory has to be listed explicitly even though `photos/`
+    # is already declared above.
+    - "photos/meals/"
 
 # Launcher icon source. Uses a square PNG (derived from the onboarding
 # webp by ImageMagick convert) because flutter_launcher_icons needs PNG
