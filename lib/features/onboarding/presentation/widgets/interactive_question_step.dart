@@ -237,6 +237,12 @@ class OptionCard extends StatelessWidget {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 240),
               curve: Curves.easeOutCubic,
+              // Phase 65 · fixed compact card height so 4-option screens
+              // (and hybrid card+TextField screens like Activity / Pain
+              // Point) fit within the viewport without scrolling. The
+              // pre-65 layout let the image's intrinsic size + 96 px
+              // floor push 4 stacked cards past the screen boundary.
+              height: 88,
               decoration: BoxDecoration(
                 color: selected
                     ? _neon.withValues(alpha: 0.18)
@@ -281,33 +287,29 @@ class _CardWithImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IntrinsicHeight(
-      child: ConstrainedBox(
-        // Floor the card height so a single-line option (e.g. "Kadın",
-        // "Erkek") still gives the image a respectable canvas — the
-        // intrinsic-height of just the text would otherwise produce a
-        // ~50 px tall image that reads as a sliver.
-        constraints: const BoxConstraints(minHeight: 96),
-        child: Row(
-          children: [
-            Expanded(
-              flex: 11,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 8, 16),
-                child: _CardTextContent(option: option, selected: selected),
-              ),
-            ),
-            Expanded(
-              flex: 9,
-              child: _SideImagePanel(
-                asset: option.imageAsset!,
-                icon: option.icon,
-                selected: selected,
-              ),
-            ),
-          ],
+    // Phase 65 · the parent OptionCard now pins the card to a fixed
+    // 88 px height, so we no longer need IntrinsicHeight + a 96 px
+    // floor. `crossAxisAlignment: stretch` lets the side-image panel
+    // (Stack.expand) fill the full card height with BoxFit.cover.
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          flex: 11,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
+            child: _CardTextContent(option: option, selected: selected),
+          ),
         ),
-      ),
+        Expanded(
+          flex: 9,
+          child: _SideImagePanel(
+            asset: option.imageAsset!,
+            icon: option.icon,
+            selected: selected,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -323,8 +325,11 @@ class _CardTextOnly extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 65 · vertical padding tightened from 18 → 10 so this
+    // image-less variant sits at the same compact height (88) as the
+    // image cards without overflowing on hybrid card+input screens.
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
           Expanded(
@@ -388,6 +393,8 @@ class _CardTextContent extends StatelessWidget {
             children: [
               Text(
                 option.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 16,
@@ -399,6 +406,8 @@ class _CardTextContent extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   option.helper!,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 12,
