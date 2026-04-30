@@ -131,7 +131,11 @@ class _InteractiveQuestionStepState extends State<InteractiveQuestionStep>
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+          // Phase 68 · top padding 24 → 16 to recover 8 px of viewport
+          // for the taller (102 px) cards below; subtitle gap stays at
+          // 8 because the title/subtitle pair already reads as a single
+          // header block.
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -158,7 +162,10 @@ class _InteractiveQuestionStepState extends State<InteractiveQuestionStep>
             ],
           ),
         ),
-        const SizedBox(height: 20),
+        // Phase 68 · 20 → 14. Title block is the largest absorbable gap
+        // and the cards now have enough internal weight that a tighter
+        // header→cards transition still reads as deliberate.
+        const SizedBox(height: 14),
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
@@ -171,9 +178,15 @@ class _InteractiveQuestionStepState extends State<InteractiveQuestionStep>
                     dimmed: _committing && _selected != opt.value,
                     onTap: () => _pick(opt.value),
                   ),
-                  if (opt != widget.options.last) const SizedBox(height: 12),
+                  // Phase 68 · 12 → 8 between cards. On 4-option screens
+                  // this reclaims 12 px (3 separators) — the dominant
+                  // lever for absorbing the height bump.
+                  if (opt != widget.options.last) const SizedBox(height: 8),
                 ],
-                const SizedBox(height: 16),
+                // Phase 68 · 16 → 12 ahead of the feedback banner; the
+                // banner reads against the dim'd card stack, so a tighter
+                // gap doesn't muddy the visual hierarchy.
+                const SizedBox(height: 12),
                 FeedbackBanner(
                   fade: _feedbackFade,
                   slide: _feedbackSlide,
@@ -237,12 +250,14 @@ class OptionCard extends StatelessWidget {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 240),
               curve: Curves.easeOutCubic,
-              // Phase 65 · fixed compact card height so 4-option screens
-              // (and hybrid card+TextField screens like Activity / Pain
-              // Point) fit within the viewport without scrolling. The
-              // pre-65 layout let the image's intrinsic size + 96 px
-              // floor push 4 stacked cards past the screen boundary.
-              height: 88,
+              // Phase 68 · "Goldilocks" bump from 88 → 102 (~16%) so the
+              // side image regains visual grandeur without re-introducing
+              // the pre-65 overflow. The list-level spacings (between
+              // cards, subtitle→cards, title top padding) absorb the
+              // extra 14 px × 4 cards on 4-option screens — see the
+              // SizedBox tightening below in this file and the matching
+              // hybrid-screen tweaks in `onboarding_screen.dart`.
+              height: 102,
               decoration: BoxDecoration(
                 color: selected
                     ? _neon.withValues(alpha: 0.18)

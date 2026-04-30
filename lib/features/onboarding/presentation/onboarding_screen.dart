@@ -2889,7 +2889,9 @@ class _ActivityStepState extends ConsumerState<_ActivityStep>
           title: 'Günlük aktiviten?',
           subtitle: 'Kalori ihtiyacını buna göre hesaplıyorum.',
         ),
-        const SizedBox(height: 20),
+        // Phase 68 · header→cards 20 → 14 to absorb the card-height bump
+        // (88 → 102) without re-introducing scroll on the hybrid step.
+        const SizedBox(height: 14),
         Expanded(
           child: SingleChildScrollView(
             // Keyboard-aware: `resizeToAvoidBottomInset` (default true)
@@ -2906,21 +2908,28 @@ class _ActivityStepState extends ConsumerState<_ActivityStep>
                     dimmed: _committingCard && _selectedCardValue != opt.value,
                     onTap: () => _pickCard(opt.value),
                   ),
-                  if (opt != _options.last) const SizedBox(height: 12),
+                  // Phase 68 · 12 → 8 between cards.
+                  if (opt != _options.last) const SizedBox(height: 8),
                 ],
-                const SizedBox(height: 16),
+                // Phase 68 · 16 → 12 cards→banner.
+                const SizedBox(height: 12),
                 FeedbackBanner(
                   fade: _feedbackFade,
                   slide: _feedbackSlide,
                   text: _feedbackText,
                 ),
-                const SizedBox(height: 22),
+                // Phase 68 · banner→input tightened 22 → 14 per PM brief
+                // ("reduce the margins around the text input"). Keeps
+                // the input reachable above the keyboard fold without
+                // squashing the visual rhythm.
+                const SizedBox(height: 14),
                 _CustomActivityInput(
                   controller: _textCtrl,
                   focusNode: _focusNode,
                   enabled: !_committingCard,
                 ),
-                const SizedBox(height: 14),
+                // Phase 68 · input→CTA 14 → 10.
+                const SizedBox(height: 10),
                 if (_hasStartedTyping)
                   FadeTransition(
                     opacity: _ctaFade,
@@ -3217,7 +3226,8 @@ class _HybridQuestionStepState extends State<_HybridQuestionStep>
           title: widget.title,
           subtitle: widget.subtitle,
         ),
-        const SizedBox(height: 20),
+        // Phase 68 · header→cards 20 → 14, mirroring the activity step.
+        const SizedBox(height: 14),
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
@@ -3231,15 +3241,18 @@ class _HybridQuestionStepState extends State<_HybridQuestionStep>
                     dimmed: _committingCard && _selectedCardValue != opt.value,
                     onTap: () => _pickCard(opt.value),
                   ),
-                  if (opt != widget.options.last) const SizedBox(height: 12),
+                  // Phase 68 · 12 → 8 between cards.
+                  if (opt != widget.options.last) const SizedBox(height: 8),
                 ],
-                const SizedBox(height: 16),
+                // Phase 68 · 16 → 12 cards→banner.
+                const SizedBox(height: 12),
                 FeedbackBanner(
                   fade: _feedbackFade,
                   slide: _feedbackSlide,
                   text: widget.feedbackText,
                 ),
-                const SizedBox(height: 22),
+                // Phase 68 · banner→input 22 → 14 per PM brief.
+                const SizedBox(height: 14),
                 _CustomDescriptionInput(
                   controller: _textCtrl,
                   focusNode: _focusNode,
@@ -3247,7 +3260,8 @@ class _HybridQuestionStepState extends State<_HybridQuestionStep>
                   label: widget.inputLabel,
                   hint: widget.inputHint,
                 ),
-                const SizedBox(height: 14),
+                // Phase 68 · input→CTA 14 → 10.
+                const SizedBox(height: 10),
                 if (_hasStartedTyping)
                   FadeTransition(
                     opacity: _ctaFade,
