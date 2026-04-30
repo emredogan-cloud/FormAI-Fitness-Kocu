@@ -1295,18 +1295,26 @@ class _CupertinoWheel extends StatelessWidget {
   }
 }
 
+/// Phase 63A · hybrid pain-point step.
+///
+/// Tap a preset card and the wizard auto-advances; or type a more
+/// specific obstacle in your own words and the DEVAM ET button writes
+/// the trimmed string to [WizardState.painPointDescription] before
+/// advancing. Identical machinery to the experience step — both flow
+/// through [_HybridQuestionStep].
 class _PainPointStep extends ConsumerWidget {
   const _PainPointStep({required this.onCommitted});
   final VoidCallback onCommitted;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final current = ref.watch(wizardProvider).painPoint;
-    return InteractiveQuestionStep(
+    final wizard = ref.watch(wizardProvider);
+    return _HybridQuestionStep(
       title: 'Seni en çok zorlayan ne?',
       subtitle: 'Programın bu noktayı çözecek şekilde kurulacak.',
-      initialValue: current,
       feedbackText: 'Bunu çözmek için planını optimize edeceğim.',
+      initialCardValue: wizard.painPoint,
+      initialDescription: wizard.painPointDescription,
       options: const [
         InteractiveOption(
           value: 'motivation',
@@ -1329,8 +1337,15 @@ class _PainPointStep extends ConsumerWidget {
           icon: Icons.restaurant_menu_rounded,
         ),
       ],
-      onCommitted: (value) {
+      inputLabel: 'Seni tam olarak neyin zorladığını detaylandırabilirsin',
+      inputHint: 'Örn: Akşamları çok yorgun oluyorum ve diyeti '
+          'bozuyorum...',
+      onCardCommitted: (value) {
         ref.read(wizardProvider.notifier).setPainPoint(value);
+        onCommitted();
+      },
+      onTextCommitted: (text) {
+        ref.read(wizardProvider.notifier).setPainPointDescription(text);
         onCommitted();
       },
     );
@@ -1902,10 +1917,19 @@ class _PrePaywallSummaryStep extends ConsumerStatefulWidget {
 }
 
 class _PrePaywallSummaryStepState extends ConsumerState<_PrePaywallSummaryStep>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _intro;
   late final Animation<double> _cardFade;
   late final Animation<Offset> _cardSlide;
+
+  // Phase 63A · the trust-booster confidence bar fills from 0 → 92 %
+  // on entry. Driven by its own short controller (separate from
+  // [_intro]) so the bar fill lands a beat after the summary card has
+  // settled, drawing the eye down toward the CTA.
+  late final AnimationController _trustCtrl;
+  late final Animation<double> _trustFill;
+
+  static const double _confidenceTarget = 0.92;
 
   @override
   void initState() {
@@ -1919,11 +1943,26 @@ class _PrePaywallSummaryStepState extends ConsumerState<_PrePaywallSummaryStep>
       begin: const Offset(0, 0.18),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _intro, curve: Curves.easeOutCubic));
+
+    _trustCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    );
+    _trustFill = Tween<double>(begin: 0.0, end: _confidenceTarget).animate(
+      CurvedAnimation(parent: _trustCtrl, curve: Curves.easeOutCubic),
+    );
+    // Start the bar a touch after the summary card lands so the user
+    // sees the % climb rather than it being already-filled when the
+    // page mounts.
+    Future<void>.delayed(const Duration(milliseconds: 350), () {
+      if (mounted) _trustCtrl.forward();
+    });
   }
 
   @override
   void dispose() {
     _intro.dispose();
+    _trustCtrl.dispose();
     super.dispose();
   }
 
@@ -1976,6 +2015,14 @@ class _PrePaywallSummaryStepState extends ConsumerState<_PrePaywallSummaryStep>
               ),
             ),
             const SizedBox(height: 14),
+            // Phase 63A · trust-booster sits between the AI summary
+            // card and the CTA so the high-conversion "92 %" lands on
+            // the user right before they tap "Planımı Gör".
+            FadeTransition(
+              opacity: _cardFade,
+              child: _TrustBoosterPanel(fill: _trustFill),
+            ),
+            const SizedBox(height: 14),
             SizedBox(
               width: double.infinity,
               child: DecoratedBox(
@@ -2015,6 +2062,110 @@ class _PrePaywallSummaryStepState extends ConsumerState<_PrePaywallSummaryStep>
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Phase 63A · pre-paywall trust booster.
+///
+/// Glowing container with a neon-bordered confidence bar that fills
+/// 0 → 92 % once the page settles, paired with a coach-voice line
+/// that reads as the AI vouching for its own work. Lives between the
+/// summary card and the "Planımı Gör" CTA so the % climb is the last
+/// thing the user sees before tapping through.
+class _TrustBoosterPanel extends StatelessWidget {
+  const _TrustBoosterPanel({required this.fill});
+
+  final Animation<double> fill;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: fill,
+      builder: (context, _) {
+        final pct = (fill.value * 100).round();
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                _neon.withValues(alpha: 0.16),
+                _neonAccent.withValues(alpha: 0.10),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: _neon.withValues(alpha: 0.55),
+              width: 1.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: _neon.withValues(alpha: 0.32),
+                blurRadius: 24,
+                spreadRadius: -4,
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.verified_rounded,
+                    color: _neonAccent,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Başarı Olasılığı',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.95),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '%$pct',
+                    style: const TextStyle(
+                      color: _neon,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(999),
+                child: LinearProgressIndicator(
+                  value: fill.value,
+                  minHeight: 8,
+                  backgroundColor: Colors.white.withValues(alpha: 0.08),
+                  valueColor: const AlwaysStoppedAnimation(_neon),
+                ),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'Bu program, girdiğin veriler çaprazlanarak tamamen sana özel '
+                'milimetrik olarak hesaplandı.',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12.5,
+                  height: 1.45,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -2379,6 +2530,15 @@ class _GenderStep extends ConsumerWidget {
           icon: Icons.transgender_rounded,
         ),
       ],
+      // Phase 63A · sleek AI insight beneath the three cards. Fills
+      // the empty space without bloating the cards themselves and
+      // keeps the page reading as the AI explaining its reasoning.
+      bottomSlot: const _AiInsightCard(
+        headline: '💡 Yapay Zeka Notu',
+        body: 'Fiziksel özelliklerine ve biyomekaniğine en uygun '
+            'antrenman iskeletini kurabilmek için cinsiyet verini '
+            'analiz ediyoruz.',
+      ),
       onCommitted: (value) {
         final picked = Gender.values.firstWhere(
           (g) => g.name == value,
@@ -2441,21 +2601,30 @@ class _GoalStep extends ConsumerWidget {
   }
 }
 
+/// Phase 63A · hybrid experience step.
+///
+/// Same shape as [_ActivityStep]: tap a preset card and the wizard
+/// auto-advances with the existing 1.5 s commit window, OR type a
+/// free-text training history and an animated DEVAM ET button writes
+/// the trimmed string to [WizardState.experienceDescription] before
+/// advancing. Built on top of the shared [_HybridQuestionStep] so the
+/// pain-point step + any future hybrid use the exact same machinery.
 class _ExperienceStep extends ConsumerWidget {
   const _ExperienceStep({required this.onCommitted});
   final VoidCallback onCommitted;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final current = ref.watch(wizardProvider).experienceLevel;
-    return InteractiveQuestionStep(
+    final wizard = ref.watch(wizardProvider);
+    return _HybridQuestionStep(
       title: 'Daha önce spor yaptın mı?',
       subtitle: 'Programın zorluğunu seviyene göre kalibre edeceğim.',
-      initialValue: current,
       feedbackText: 'Tamam, programını buna göre ayarlıyorum.',
-      // Phase 60E · motivational subtext under each option per
-      // PM mapping. Reads as supportive ("hiç sorun değil") rather
-      // than judgemental.
+      initialCardValue: wizard.experienceLevel,
+      initialDescription: wizard.experienceDescription,
+      // Phase 60E · motivational subtext under each option per PM
+      // mapping. Reads as supportive ("hiç sorun değil") rather than
+      // judgemental.
       options: const [
         InteractiveOption(
           value: 'none',
@@ -2477,8 +2646,15 @@ class _ExperienceStep extends ConsumerWidget {
           helper: 'Seviyeni bir üst noktaya taşıyacağız.',
         ),
       ],
-      onCommitted: (value) {
+      inputLabel: 'Spor geçmişinizi anlatırsanız daha iyi yardımcı oluruz',
+      inputHint: 'Örn: Lisede basketbol oynardım ama 2 yıldır spor '
+          'yapmıyorum...',
+      onCardCommitted: (value) {
         ref.read(wizardProvider.notifier).setExperienceLevel(value);
+        onCommitted();
+      },
+      onTextCommitted: (text) {
+        ref.read(wizardProvider.notifier).setExperienceDescription(text);
         onCommitted();
       },
     );
@@ -2520,6 +2696,14 @@ class _DailyMinutesStep extends ConsumerWidget {
           helper: 'Daha agresif ilerleyebiliriz.',
         ),
       ],
+      // Phase 63A · motivational AI Coach insight that fills the dead
+      // space below the three cards. Reinforces the consistency-over-
+      // duration framing the rest of the wizard already leans on.
+      bottomSlot: const _AiInsightCard(
+        headline: '💡 AI Koçun Diyor ki:',
+        body: 'Günde sadece 15 dakika bile, hiç yapmamaktan %100 daha '
+            'etkilidir. İstikrar, süreden çok daha önemlidir.',
+      ),
       onCommitted: (value) {
         ref.read(wizardProvider.notifier).setDailyMinutes(value);
         onCommitted();
@@ -2859,6 +3043,415 @@ class _CustomActivityInput extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ============================================================================
+// Phase 63A · generic hybrid question step.
+//
+// Mirrors [_ActivityStep] for any wizard question that wants a "tap a
+// card OR type a longer answer" hybrid. Used by [_ExperienceStep] and
+// [_PainPointStep] so all hybrid screens share identical animation
+// timings, focus management, and DEVAM ET visibility logic.
+//
+// The activity step is intentionally NOT migrated onto this widget:
+// [ActivityLevel] is an enum (not a string) and that step has its own
+// integration with the BMR/TDEE calculator. Future cleanup can fold
+// it in if the enum gets relaxed; for now the two coexist.
+// ============================================================================
+
+class _HybridQuestionStep extends StatefulWidget {
+  const _HybridQuestionStep({
+    required this.title,
+    required this.subtitle,
+    required this.options,
+    required this.feedbackText,
+    required this.initialCardValue,
+    required this.initialDescription,
+    required this.onCardCommitted,
+    required this.onTextCommitted,
+    required this.inputLabel,
+    required this.inputHint,
+  });
+
+  final String title;
+  final String? subtitle;
+  final List<InteractiveOption> options;
+  final String feedbackText;
+  final String? initialCardValue;
+  final String? initialDescription;
+
+  /// Fired when the user taps one of the [options]. The string is the
+  /// `value` of the picked option — the caller writes it into
+  /// whichever wizard slot owns this step.
+  final ValueChanged<String> onCardCommitted;
+
+  /// Fired when the user types into the free-text field and taps
+  /// DEVAM ET. The string is the trimmed text the caller writes into
+  /// the matching `*Description` slot.
+  final ValueChanged<String> onTextCommitted;
+
+  final String inputLabel;
+  final String inputHint;
+
+  @override
+  State<_HybridQuestionStep> createState() => _HybridQuestionStepState();
+}
+
+class _HybridQuestionStepState extends State<_HybridQuestionStep>
+    with TickerProviderStateMixin {
+  String? _selectedCardValue;
+  bool _committingCard = false;
+
+  late final TextEditingController _textCtrl;
+  late final FocusNode _focusNode;
+  // Once the user enters at least one character we keep DEVAM ET
+  // mounted; the disabled state takes over if they later clear the
+  // field. Same UX rule the activity step follows.
+  bool _hasStartedTyping = false;
+
+  late final AnimationController _feedbackCtrl;
+  late final Animation<double> _feedbackFade;
+  late final Animation<Offset> _feedbackSlide;
+
+  late final AnimationController _ctaCtrl;
+  late final Animation<double> _ctaFade;
+  late final Animation<Offset> _ctaSlide;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedCardValue = widget.initialCardValue;
+    _textCtrl = TextEditingController(text: widget.initialDescription ?? '');
+    _focusNode = FocusNode();
+    _hasStartedTyping = _textCtrl.text.isNotEmpty;
+    _textCtrl.addListener(_onTextChange);
+
+    _feedbackCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 360),
+    );
+    _feedbackFade =
+        CurvedAnimation(parent: _feedbackCtrl, curve: Curves.easeOutCubic);
+    _feedbackSlide = Tween<Offset>(
+      begin: const Offset(0, 0.35),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _feedbackCtrl, curve: Curves.easeOutCubic),
+    );
+
+    _ctaCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 280),
+    );
+    _ctaFade = CurvedAnimation(parent: _ctaCtrl, curve: Curves.easeOutCubic);
+    _ctaSlide = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _ctaCtrl, curve: Curves.easeOutCubic),
+    );
+    if (_hasStartedTyping) {
+      _ctaCtrl.value = 1.0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _textCtrl.removeListener(_onTextChange);
+    _textCtrl.dispose();
+    _focusNode.dispose();
+    _feedbackCtrl.dispose();
+    _ctaCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onTextChange() {
+    final hasText = _textCtrl.text.isNotEmpty;
+    if (!_hasStartedTyping && hasText) {
+      setState(() => _hasStartedTyping = true);
+      _ctaCtrl.forward();
+    } else {
+      setState(() {});
+    }
+  }
+
+  Future<void> _pickCard(String value) async {
+    if (_committingCard) return;
+    AppHaptics.secondaryTap();
+    _focusNode.unfocus();
+    setState(() {
+      _selectedCardValue = value;
+      _committingCard = true;
+    });
+    _feedbackCtrl.forward();
+    await Future<void>.delayed(const Duration(milliseconds: 1500));
+    if (!mounted) return;
+    widget.onCardCommitted(value);
+  }
+
+  void _commitCustom() {
+    if (_committingCard) return;
+    final text = _textCtrl.text.trim();
+    if (text.isEmpty) return;
+    AppHaptics.secondaryTap();
+    widget.onTextCommitted(text);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ctaEnabled = _textCtrl.text.trim().isNotEmpty;
+    return Column(
+      children: [
+        _StepTitle(
+          title: widget.title,
+          subtitle: widget.subtitle,
+        ),
+        const SizedBox(height: 20),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final opt in widget.options) ...[
+                  OptionCard(
+                    option: opt,
+                    selected: _selectedCardValue == opt.value,
+                    dimmed: _committingCard && _selectedCardValue != opt.value,
+                    onTap: () => _pickCard(opt.value),
+                  ),
+                  if (opt != widget.options.last) const SizedBox(height: 12),
+                ],
+                const SizedBox(height: 16),
+                FeedbackBanner(
+                  fade: _feedbackFade,
+                  slide: _feedbackSlide,
+                  text: widget.feedbackText,
+                ),
+                const SizedBox(height: 22),
+                _CustomDescriptionInput(
+                  controller: _textCtrl,
+                  focusNode: _focusNode,
+                  enabled: !_committingCard,
+                  label: widget.inputLabel,
+                  hint: widget.inputHint,
+                ),
+                const SizedBox(height: 14),
+                if (_hasStartedTyping)
+                  FadeTransition(
+                    opacity: _ctaFade,
+                    child: SlideTransition(
+                      position: _ctaSlide,
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: FilledButton(
+                          onPressed: ctaEnabled ? _commitCustom : null,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: _neon,
+                            foregroundColor: Colors.white,
+                            disabledBackgroundColor:
+                                _neon.withValues(alpha: 0.35),
+                            disabledForegroundColor: Colors.white60,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            textStyle: const TextStyle(
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 2.5,
+                              fontSize: 14,
+                            ),
+                          ),
+                          child: const Text('DEVAM ET'),
+                        ),
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Phase 63A · parameterised free-text input shared by every hybrid
+/// step. Same chrome as [_CustomActivityInput] (which kept its
+/// hardcoded copy because the activity step still uses it directly),
+/// but takes [label] and [hint] so the experience and pain-point
+/// steps can supply their own coach-voice copy.
+class _CustomDescriptionInput extends StatelessWidget {
+  const _CustomDescriptionInput({
+    required this.controller,
+    required this.focusNode,
+    required this.enabled,
+    required this.label,
+    required this.hint,
+  });
+
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final bool enabled;
+  final String label;
+  final String hint;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(
+              Icons.edit_note_rounded,
+              color: _neonAccent,
+              size: 18,
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.85),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: controller,
+          focusNode: focusNode,
+          enabled: enabled,
+          maxLines: 3,
+          minLines: 3,
+          maxLength: 280,
+          textInputAction: TextInputAction.done,
+          style:
+              const TextStyle(color: Colors.white, fontSize: 14, height: 1.4),
+          cursorColor: _neon,
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: const TextStyle(
+              color: Colors.white38,
+              fontSize: 13,
+              height: 1.4,
+            ),
+            counterText: '',
+            filled: true,
+            fillColor: Colors.white.withValues(alpha: 0.04),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(
+                color: Colors.white.withValues(alpha: 0.12),
+                width: 1,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(color: _neon, width: 1.4),
+            ),
+            disabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(
+                color: Colors.white.withValues(alpha: 0.06),
+                width: 1,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ============================================================================
+// Phase 63A · "AI Insight" card.
+//
+// Glassmorphism-style block dropped into the dead space below the cards
+// on the gender + daily-minutes steps. The lead emoji + headline fix
+// the card as the AI coach speaking; the body explains why the answer
+// matters or reinforces a motivational beat. Visually consistent with
+// the rest of the dark/neon onboarding palette so it never reads as a
+// disclaimer or a footnote.
+// ============================================================================
+class _AiInsightCard extends StatelessWidget {
+  const _AiInsightCard({required this.headline, required this.body});
+
+  final String headline;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            _neon.withValues(alpha: 0.10),
+            _neonAccent.withValues(alpha: 0.06),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: _neon.withValues(alpha: 0.35),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: _neon.withValues(alpha: 0.18),
+            blurRadius: 20,
+            spreadRadius: -6,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.auto_awesome_rounded,
+                color: _neonAccent,
+                size: 16,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  headline,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.95),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            body,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 13,
+              height: 1.45,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

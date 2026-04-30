@@ -37,6 +37,8 @@ class WizardState {
     this.dailyMinutes,
     this.painPoint,
     this.activityDescription,
+    this.experienceDescription,
+    this.painPointDescription,
     this.dietPreference = kDefaultDietPreference,
     this.allergies = kDefaultAllergies,
     this.mealFrequency = kDefaultMealFrequency,
@@ -79,6 +81,18 @@ class WizardState {
   /// [activityLevel] when the user opts to write rather than tap a
   /// preset card. Stays null when the user picks a card.
   final String? activityDescription;
+
+  /// Phase 63A · free-text "tell me about your training history" answer
+  /// captured by the hybrid experience step. Set instead of (not in
+  /// addition to) [experienceLevel] when the user types rather than
+  /// tapping a card. Stays null when the user picks a card.
+  final String? experienceDescription;
+
+  /// Phase 63A · free-text "what specifically holds you back" answer
+  /// captured by the hybrid pain-point step. Set instead of (not in
+  /// addition to) [painPoint] when the user types rather than tapping
+  /// a card. Stays null when the user picks a card.
+  final String? painPointDescription;
 
   /// One of: `standart`, `vejetaryen`, `vegan`, `ketojenik`. Keyed in
   /// Turkish ASCII to match the rest of the wizard's persisted tokens.
@@ -125,6 +139,8 @@ class WizardState {
     String? dailyMinutes,
     String? painPoint,
     String? activityDescription,
+    String? experienceDescription,
+    String? painPointDescription,
     String? dietPreference,
     String? allergies,
     String? mealFrequency,
@@ -146,6 +162,9 @@ class WizardState {
       dailyMinutes: dailyMinutes ?? this.dailyMinutes,
       painPoint: painPoint ?? this.painPoint,
       activityDescription: activityDescription ?? this.activityDescription,
+      experienceDescription:
+          experienceDescription ?? this.experienceDescription,
+      painPointDescription: painPointDescription ?? this.painPointDescription,
       dietPreference: dietPreference ?? this.dietPreference,
       allergies: allergies ?? this.allergies,
       mealFrequency: mealFrequency ?? this.mealFrequency,
@@ -169,6 +188,8 @@ class WizardState {
         'dailyMinutes': dailyMinutes,
         'painPoint': painPoint,
         'activityDescription': activityDescription,
+        'experienceDescription': experienceDescription,
+        'painPointDescription': painPointDescription,
         'dietPreference': dietPreference,
         'allergies': allergies,
         'mealFrequency': mealFrequency,
@@ -200,6 +221,10 @@ class WizardController extends Notifier<WizardState> {
   void setPainPoint(String v) => state = state.copyWith(painPoint: v);
   void setActivityDescription(String v) =>
       state = state.copyWith(activityDescription: v);
+  void setExperienceDescription(String v) =>
+      state = state.copyWith(experienceDescription: v);
+  void setPainPointDescription(String v) =>
+      state = state.copyWith(painPointDescription: v);
   void setDietPreference(String v) => state = state.copyWith(dietPreference: v);
   void setAllergies(String v) => state = state.copyWith(allergies: v);
   void setMealFrequency(String v) => state = state.copyWith(mealFrequency: v);

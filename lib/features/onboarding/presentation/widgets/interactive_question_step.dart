@@ -54,6 +54,7 @@ class InteractiveQuestionStep extends StatefulWidget {
     required this.onCommitted,
     this.initialValue,
     this.commitDelay = const Duration(milliseconds: 1500),
+    this.bottomSlot,
   });
 
   final String title;
@@ -63,6 +64,13 @@ class InteractiveQuestionStep extends StatefulWidget {
   final ValueChanged<String> onCommitted;
   final String? initialValue;
   final Duration commitDelay;
+
+  /// Phase 63A · optional widget rendered below the feedback banner.
+  /// Used by the gender + daily-minutes steps to fill the dead space
+  /// at the bottom with an "AI Insight" card. The inner column is
+  /// scrollable, so the slot will stay reachable even on small
+  /// devices when the cards already fill the visible area.
+  final Widget? bottomSlot;
 
   @override
   State<InteractiveQuestionStep> createState() =>
@@ -152,7 +160,7 @@ class _InteractiveQuestionStepState extends State<InteractiveQuestionStep>
         ),
         const SizedBox(height: 20),
         Expanded(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
             child: Column(
               children: [
@@ -171,6 +179,10 @@ class _InteractiveQuestionStepState extends State<InteractiveQuestionStep>
                   slide: _feedbackSlide,
                   text: widget.feedbackText,
                 ),
+                if (widget.bottomSlot != null) ...[
+                  const SizedBox(height: 18),
+                  widget.bottomSlot!,
+                ],
               ],
             ),
           ),
