@@ -94,6 +94,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     'photos/hedefinneSıkılaşmak.webp',
     'photos/hedefinneHacimKazanmak.webp',
     'photos/hedefinneSadeceSix-Pack.webp',
+    // Phase 64 · `hedef_guclenmek.webp` is the PM-shipped art for the
+    // strength goal option (was text-only pre-Phase 64). Listed here
+    // so the asset is warmed before the user lands on the goal step.
+    'photos/hedef_guclenmek.webp',
     'photos/günlükaktivitenmasabaşı.webp',
     'photos/günlükaktivitenhafifhareketli.webp',
     'photos/günlükaktivitenneÇokAktif.webp',
@@ -2591,6 +2595,11 @@ class _GoalStep extends ConsumerWidget {
           value: 'strength',
           label: 'Güçlenmek',
           icon: Icons.bolt_rounded,
+          // Phase 64 · the PM-shipped `hedef_guclenmek.webp` (chalked-
+          // hand-on-barbell shot generated from the Phase 63B prompt
+          // brief) lands the strength option on the same Fitify side-
+          // image layout the other three goal cards already use.
+          imageAsset: 'photos/hedef_guclenmek.webp',
         ),
       ],
       onCommitted: (value) {

@@ -117,6 +117,38 @@ class _NutritionOnboardingSheetState
   bool _busy = false;
   _OnboardingPhase _phase = _OnboardingPhase.questions;
 
+  // Phase 64 · prevent the 22 sheet-card webps from decoding for the
+  // first time mid-page-flip. We warm them all on first
+  // `didChangeDependencies` (when [BuildContext] is safe to use) so
+  // the page transitions stay buttery-smooth. The list mirrors the
+  // `imageAsset` paths of every option below; if a path is added or
+  // removed, this list has to follow.
+  static const List<String> _precacheImagePaths = [
+    'photos/nutrition_goal_fat_loss.webp',
+    'photos/nutrition_goal_muscle.webp',
+    'photos/nutrition_goal_balanced.webp',
+    'photos/diet_standard.webp',
+    'photos/diet_vegetarian.webp',
+    'photos/diet_vegan.webp',
+    'photos/diet_keto.webp',
+    'photos/allergy_none.webp',
+    'photos/allergy_nuts.webp',
+    'photos/allergy_dairy.webp',
+    'photos/allergy_gluten.webp',
+    'photos/meals_2.webp',
+    'photos/meals_3.webp',
+    'photos/meals_4.webp',
+    'photos/prep_quick.webp',
+    'photos/prep_slow.webp',
+    'photos/water_low.webp',
+    'photos/water_medium.webp',
+    'photos/water_high.webp',
+    'photos/taste_sweet.webp',
+    'photos/taste_savory.webp',
+    'photos/taste_mixed.webp',
+  ];
+  bool _didPrecacheAssets = false;
+
   @override
   void initState() {
     super.initState();
@@ -127,6 +159,23 @@ class _NutritionOnboardingSheetState
       stepIndex: 0,
       stepName: _stepNames.first,
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_didPrecacheAssets) return;
+    _didPrecacheAssets = true;
+    // Fire-and-forget — `OnboardingImage`'s placeholder layer covers
+    // the case where any of these decode slowly or are missing on
+    // disk. The `.catchError` swallows the "asset not found" exception
+    // that `precacheImage` throws so a missing path doesn't break the
+    // sheet.
+    for (final path in _precacheImagePaths) {
+      unawaited(
+        precacheImage(AssetImage(path), context).catchError((Object _) {}),
+      );
+    }
   }
 
   @override
