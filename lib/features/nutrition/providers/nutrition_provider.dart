@@ -78,14 +78,20 @@ final recipesProvider =
 ///
 /// This family asks Postgres to do the filtering and returns the
 /// complete category in one round-trip — no pagination, no
-/// page-1-blindness. Keyed on the same route token
-/// `CategoryRecipesScreen` receives (`breakfast` / `lunch` / `dinner` /
-/// `snack` / `dessert` / `budget`), so navigating between categories
-/// fans out to independent providers Riverpod will memoize.
+/// page-1-blindness. Keyed on a record so Riverpod memoizes
+/// `(token: 'budget', mealType: 'breakfast')` independently from
+/// `(token: 'budget', mealType: 'lunch')` — the dashboard expansion
+/// adds a "Pratik & Ekonomik" strip whose five sub-cards each route
+/// to a different `(token, mealType)` pair.
+typedef CategoryRecipesKey = ({String token, String? mealType});
+
 final categoryRecipesProvider =
-    FutureProvider.family<List<Recipe>, String>((ref, categoryToken) {
+    FutureProvider.family<List<Recipe>, CategoryRecipesKey>((ref, key) {
   final repo = ref.watch(nutritionRepositoryProvider);
-  return repo.fetchRecipesByCategory(categoryToken);
+  return repo.fetchRecipesByCategory(
+    key.token,
+    mealTypeSubFilter: key.mealType,
+  );
 });
 
 /// Notifier that owns the accumulated recipe list + pagination cursor.

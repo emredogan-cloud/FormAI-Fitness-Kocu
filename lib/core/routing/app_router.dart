@@ -213,10 +213,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'nutritionCategory',
         builder: (context, state) {
           // `type` is the English meal-type token (breakfast / lunch /
-          // dinner / snack / dessert). The screen itself is tolerant of
-          // unknown values and shows an empty state rather than crashing.
+          // dinner / snack / dessert) or the Phase 83 `'budget'`
+          // sentinel. The screen itself is tolerant of unknown values
+          // and shows an empty state rather than crashing.
+          //
+          // Phase 83 dashboard expansion · the optional `?meal=<token>`
+          // query parameter narrows the budget bucket to a single
+          // meal_type. Only consulted by the screen when `type` is
+          // `'budget'`; ignored for the five canonical categories
+          // (where meal_type is already the primary filter).
           final type = state.pathParameters['type'] ?? 'breakfast';
-          return CategoryRecipesScreen(categoryType: type);
+          final subFilter = state.uri.queryParameters['meal'];
+          return CategoryRecipesScreen(
+            categoryType: type,
+            mealTypeSubFilter: subFilter,
+          );
         },
       ),
       // Phase 47A · progress + discovery surfaces.

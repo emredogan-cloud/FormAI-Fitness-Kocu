@@ -84,7 +84,25 @@ class NutritionTab extends ConsumerWidget {
               child: _SectionTitle(title: 'Öğün Kategorileri'),
             ),
           ),
-          const SliverToBoxAdapter(child: _MealCategoriesSection()),
+          const SliverToBoxAdapter(
+            child: _MealCategoriesSection(entries: _mealCategoryEntries),
+          ),
+          // Phase 83 dashboard expansion · "Pratik & Ekonomik" strip
+          // wedged between the meal-type categories and the discovery
+          // section. Same `_MealCategoriesSection` widget, different
+          // entry list, so the visual rhythm of the dashboard is
+          // unchanged. Title carries an inline subtitle with the
+          // bucket's pitch — kept inline rather than extending
+          // `_SectionTitle` because no other section needs a subtitle.
+          const SliverPadding(
+            padding: EdgeInsets.fromLTRB(20, 22, 20, 8),
+            sliver: SliverToBoxAdapter(
+              child: _BudgetSectionHeader(),
+            ),
+          ),
+          const SliverToBoxAdapter(
+            child: _MealCategoriesSection(entries: _budgetCategoryEntries),
+          ),
           const SliverToBoxAdapter(child: _DiscoverySectionHeader()),
           SliverToBoxAdapter(
             child: recipesAsync.when(
@@ -1047,6 +1065,37 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
+/// Phase 83 dashboard expansion · two-line section header used only by
+/// the "Pratik & Ekonomik" strip. Renders the same big title type
+/// `_SectionTitle` ships with, plus a smaller secondary line beneath
+/// pitching the bucket. Kept as a separate widget rather than
+/// extending `_SectionTitle` with an optional subtitle field because
+/// no other section on the dashboard wants the subtitle treatment.
+class _BudgetSectionHeader extends StatelessWidget {
+  const _BudgetSectionHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colors;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionTitle(title: 'Pratik & Ekonomik'),
+        const SizedBox(height: 4),
+        Text(
+          'Hızlı, ucuz ve pratik öğünler',
+          style: TextStyle(
+            color: scheme.onSurface.withValues(alpha: 0.6),
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            letterSpacing: 0.2,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 // ============================================================================
 // Compact recipe discovery section. Title row shows "Tarif Keşfet" +
 // "Tümünü Gör" (phase 26 spec), followed by a short horizontal list.
@@ -1277,75 +1326,22 @@ class _DiscoveryFilterChip extends StatelessWidget {
 }
 
 /// Phase 27 — horizontal row of tappable category cards. Each card
-/// routes to `/nutrition/category/{type}` where the screen lists all
-/// recipes matching that meal-type bucket.
+/// routes to `/nutrition/category/{type}` (with optional
+/// `?meal=<sub>` query when the entry carries a [_CategoryEntry.subType])
+/// where the screen lists all matching recipes.
+///
+/// Phase 83 dashboard expansion · the section is now parameterized
+/// over its [entries] list so the same widget renders both the
+/// existing five-card meal-type strip and the new budget strip
+/// without a duplicate widget. `_MealCategoryCard` stays the single
+/// source of card layout — only the data driving each instance differs.
 ///
 /// Rendered as a StatelessWidget because the cards have no local
 /// state; each tap goes straight through `context.push`.
 class _MealCategoriesSection extends StatelessWidget {
-  const _MealCategoriesSection();
+  const _MealCategoriesSection({required this.entries});
 
-  /// Category entries pair each Turkish display label with the
-  /// lowercase English `meal_type` the DB stores. The route push uses
-  /// the English `type`; [CategoryRecipesScreen] compares it against
-  /// `r.mealType == type` with strict equality. URLs are the verbatim
-  /// list from the phase 30 spec — one per category, each tested to
-  /// resolve against Unsplash.
-  static const List<_CategoryEntry> _categories = [
-    _CategoryEntry(
-      label: 'Kahvaltı',
-      type: 'breakfast',
-      tint: Color(0xFFFFB84D),
-      // Phase 31 reverted to the Phase 29 breakfast URL (the one on the
-      // spec in Phase 30 was 404-ing on test devices).
-      imageUrl:
-          'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?auto=format&fit=crop&w=600&q=80',
-    ),
-    _CategoryEntry(
-      label: 'Öğle Yemeği',
-      type: 'lunch',
-      tint: Color(0xFF4DA6FF),
-      imageUrl:
-          'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&q=80',
-    ),
-    _CategoryEntry(
-      label: 'Akşam Yemeği',
-      type: 'dinner',
-      tint: Color(0xFF8E5BFF),
-      imageUrl:
-          'https://images.unsplash.com/photo-1544025162-d76694265947?w=600&q=80',
-    ),
-    _CategoryEntry(
-      label: 'Ara Öğün',
-      type: 'snack',
-      tint: Color(0xFF39FF14),
-      imageUrl:
-          'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&q=80',
-    ),
-    _CategoryEntry(
-      label: 'Sporcu Tatlısı',
-      type: 'dessert',
-      tint: Color(0xFFFF4DDB),
-      imageUrl:
-          'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=600&q=80',
-    ),
-    // Phase 83 · Pratik & Ekonomik (Budget) bucket. Unlike the five
-    // entries above, `type: 'budget'` is NOT a `meal_type` value — it's
-    // a sentinel that [CategoryRecipesScreen._filter] resolves to a
-    // tag-based filter on `'Pratik & Ekonomik'`. The Unsplash URL below
-    // is a temporary placeholder reused from the `snack` slot; the
-    // intent is for the PM to swap it for a budget-meal-specific
-    // hero shot once one is sourced (the Phase 83 pilot ships 10
-    // candidate webps via docs/MEAL_IMAGE_PROMPTS.md any of which
-    // could be lifted into the card slot).
-    _CategoryEntry(
-      label: 'Pratik & Ekonomik',
-      type: 'budget',
-      tint: Color(0xFFFFA726),
-      imageUrl:
-          'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&q=80',
-    ),
-  ];
+  final List<_CategoryEntry> entries;
 
   @override
   Widget build(BuildContext context) {
@@ -1354,15 +1350,108 @@ class _MealCategoriesSection extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: _categories.length,
+        itemCount: entries.length,
         separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (context, index) => _MealCategoryCard(
-          entry: _categories[index],
+          entry: entries[index],
         ),
       ),
     );
   }
 }
+
+/// Original five-card list pinned to the canonical `meal_type` tokens.
+/// Phase 31 reverted the breakfast URL to the Phase 29 image because
+/// the Phase 30 spec URL was 404-ing on test devices; the four others
+/// were tested at the same time and have stayed stable since.
+const List<_CategoryEntry> _mealCategoryEntries = [
+  _CategoryEntry(
+    label: 'Kahvaltı',
+    type: 'breakfast',
+    tint: Color(0xFFFFB84D),
+    imageUrl:
+        'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?auto=format&fit=crop&w=600&q=80',
+  ),
+  _CategoryEntry(
+    label: 'Öğle Yemeği',
+    type: 'lunch',
+    tint: Color(0xFF4DA6FF),
+    imageUrl:
+        'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&q=80',
+  ),
+  _CategoryEntry(
+    label: 'Akşam Yemeği',
+    type: 'dinner',
+    tint: Color(0xFF8E5BFF),
+    imageUrl:
+        'https://images.unsplash.com/photo-1544025162-d76694265947?w=600&q=80',
+  ),
+  _CategoryEntry(
+    label: 'Ara Öğün',
+    type: 'snack',
+    tint: Color(0xFF39FF14),
+    imageUrl:
+        'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&q=80',
+  ),
+  _CategoryEntry(
+    label: 'Sporcu Tatlısı',
+    type: 'dessert',
+    tint: Color(0xFFFF4DDB),
+    imageUrl:
+        'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=600&q=80',
+  ),
+];
+
+/// Phase 83 dashboard expansion · five sub-cards under the new
+/// "Pratik & Ekonomik" strip. Each entry carries `type: 'budget'`
+/// (the tag-based sentinel) AND a `subType` corresponding to a
+/// `meal_type` value, producing the intersection
+/// `tags @> ARRAY['Pratik & Ekonomik'] AND meal_type = $sub` server-side.
+/// Image URLs intentionally mirror [_mealCategoryEntries] for the
+/// same meal-types so the two strips read as visually parallel until
+/// the PM sources budget-specific hero shots.
+const List<_CategoryEntry> _budgetCategoryEntries = [
+  _CategoryEntry(
+    label: 'Kahvaltı',
+    type: 'budget',
+    subType: 'breakfast',
+    tint: Color(0xFFFFB84D),
+    imageUrl:
+        'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?auto=format&fit=crop&w=600&q=80',
+  ),
+  _CategoryEntry(
+    label: 'Öğle Yemeği',
+    type: 'budget',
+    subType: 'lunch',
+    tint: Color(0xFF4DA6FF),
+    imageUrl:
+        'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&q=80',
+  ),
+  _CategoryEntry(
+    label: 'Akşam Yemeği',
+    type: 'budget',
+    subType: 'dinner',
+    tint: Color(0xFF8E5BFF),
+    imageUrl:
+        'https://images.unsplash.com/photo-1544025162-d76694265947?w=600&q=80',
+  ),
+  _CategoryEntry(
+    label: 'Tatlı Çeşitleri',
+    type: 'budget',
+    subType: 'dessert',
+    tint: Color(0xFFFF4DDB),
+    imageUrl:
+        'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=600&q=80',
+  ),
+  _CategoryEntry(
+    label: 'Atıştırmalıklar',
+    type: 'budget',
+    subType: 'snack',
+    tint: Color(0xFF39FF14),
+    imageUrl:
+        'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&q=80',
+  ),
+];
 
 class _CategoryEntry {
   const _CategoryEntry({
@@ -1370,11 +1459,32 @@ class _CategoryEntry {
     required this.type,
     required this.tint,
     required this.imageUrl,
+    this.subType,
   });
   final String label;
   final String type;
   final Color tint;
   final String imageUrl;
+
+  /// Phase 83 dashboard expansion · optional `meal_type` sub-filter.
+  /// Set on the budget strip's five sub-cards so each card routes to
+  /// the intersection of `tags @> ['Pratik & Ekonomik']` AND
+  /// `meal_type = subType`. Null for the canonical five-card strip
+  /// where [type] already IS the meal_type.
+  final String? subType;
+}
+
+/// URL builder for a category card tap. Yields the bare path for the
+/// canonical five-card strip and the path-plus-query form
+/// (`/nutrition/category/budget?meal=breakfast`) for the budget strip's
+/// sub-cards. Centralised so the route grammar lives in one place
+/// alongside the entry definitions instead of being inlined into the
+/// card widget.
+String _categoryRouteFor(_CategoryEntry entry) {
+  final base = '/nutrition/category/${entry.type}';
+  final sub = entry.subType;
+  if (sub == null || sub.isEmpty) return base;
+  return '$base?meal=${Uri.encodeQueryComponent(sub)}';
 }
 
 class _MealCategoryCard extends StatelessWidget {
@@ -1391,7 +1501,7 @@ class _MealCategoryCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () => context.push('/nutrition/category/${entry.type}'),
+          onTap: () => context.push(_categoryRouteFor(entry)),
           child: Stack(
             fit: StackFit.expand,
             children: [

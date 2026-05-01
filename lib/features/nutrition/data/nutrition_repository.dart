@@ -75,12 +75,29 @@ class NutritionRepository {
   /// on the `text[]` column. Returns the complete filtered list because
   /// individual category sizes are bounded (today: <20 each, plausibly
   /// <100 long-term — well within a single round-trip budget).
-  Future<List<Recipe>> fetchRecipesByCategory(String categoryToken) async {
-    final builder = _client.from(_table).select();
-    final filtered = categoryToken == budgetCategoryToken
-        ? builder.contains('tags', const [budgetCategoryTagLabel])
-        : builder.eq('meal_type', categoryToken);
-    final rows = await filtered.order('id', ascending: true);
+  ///
+  /// Phase 83 dashboard expansion · optional [mealTypeSubFilter]. The
+  /// new "Pratik & Ekonomik" dashboard strip exposes five sub-cards
+  /// (Kahvaltı / Öğle / Akşam / Tatlı Çeşitleri / Atıştırmalıklar) —
+  /// each tap routes here with token `'budget'` AND a `meal_type`
+  /// hint, producing the intersection
+  /// `tags @> ARRAY['Pratik & Ekonomik'] AND meal_type = $sub`. Ignored
+  /// for non-budget tokens (where the meal_type is already the
+  /// primary filter).
+  Future<List<Recipe>> fetchRecipesByCategory(
+    String categoryToken, {
+    String? mealTypeSubFilter,
+  }) async {
+    var query = _client.from(_table).select();
+    if (categoryToken == budgetCategoryToken) {
+      query = query.contains('tags', const [budgetCategoryTagLabel]);
+      if (mealTypeSubFilter != null && mealTypeSubFilter.isNotEmpty) {
+        query = query.eq('meal_type', mealTypeSubFilter);
+      }
+    } else {
+      query = query.eq('meal_type', categoryToken);
+    }
+    final rows = await query.order('id', ascending: true);
     return rows.map<Recipe>(Recipe.fromJson).toList(growable: false);
   }
 }

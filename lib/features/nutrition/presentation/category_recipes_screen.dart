@@ -28,7 +28,11 @@ const Color _proteinColor = Color(0xFF4DA6FF);
 /// `_onScroll` never triggered the next page). Server-side filtering
 /// makes the page-1 question moot: every match comes back at once.
 class CategoryRecipesScreen extends ConsumerWidget {
-  const CategoryRecipesScreen({super.key, required this.categoryType});
+  const CategoryRecipesScreen({
+    super.key,
+    required this.categoryType,
+    this.mealTypeSubFilter,
+  });
 
   /// Route path parameter. One of: `breakfast`, `lunch`, `dinner`,
   /// `snack`, `dessert`, `budget`. Unknown values render an empty
@@ -36,9 +40,19 @@ class CategoryRecipesScreen extends ConsumerWidget {
   /// an empty list for any unrecognised `meal_type`.
   final String categoryType;
 
+  /// Phase 83 dashboard expansion · optional `?meal=<token>` query
+  /// parameter. Only consulted when [categoryType] is `'budget'`; the
+  /// repository chains an `eq('meal_type', mealTypeSubFilter)` onto the
+  /// existing `contains('tags', ['Pratik & Ekonomik'])` so the
+  /// dashboard strip's five sub-cards each route to the intersection
+  /// (e.g. budget AND breakfast).
+  final String? mealTypeSubFilter;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final recipesAsync = ref.watch(categoryRecipesProvider(categoryType));
+    final recipesAsync = ref.watch(categoryRecipesProvider(
+      (token: categoryType, mealType: mealTypeSubFilter),
+    ));
     // Phase 53E · drop the hardcoded `0xFF0B0B12` Scaffold + AppBar
     // backgrounds. The screen now inherits whatever
     // `scaffoldBackgroundColor` the active theme ships, and the AppBar
@@ -51,7 +65,7 @@ class CategoryRecipesScreen extends ConsumerWidget {
         elevation: 0,
         foregroundColor: scheme.onSurface,
         title: Text(
-          _titleFor(categoryType),
+          _titleFor(categoryType, mealTypeSubFilter),
           style: TextStyle(
             color: scheme.onSurface,
             fontWeight: FontWeight.w900,
@@ -69,12 +83,18 @@ class CategoryRecipesScreen extends ConsumerWidget {
             err,
             stackTrace: st,
             category: 'nutrition',
-            data: {'category': categoryType},
+            data: {
+              'category': categoryType,
+              'mealTypeSubFilter': mealTypeSubFilter,
+            },
           );
           return ErrorCard(
             message: 'Tarifler yüklenirken bir sorun oluştu.',
-            onRetry: () =>
-                ref.invalidate(categoryRecipesProvider(categoryType)),
+            onRetry: () => ref.invalidate(
+              categoryRecipesProvider(
+                (token: categoryType, mealType: mealTypeSubFilter),
+              ),
+            ),
           );
         },
         data: (recipes) {
@@ -96,23 +116,36 @@ class CategoryRecipesScreen extends ConsumerWidget {
   /// Maps the route param to the Turkish AppBar title. Unknown values
   /// fall back to a generic "Tarifler" so a malformed deeplink still
   /// renders a sensible header.
-  static String _titleFor(String type) {
-    switch (type.toLowerCase()) {
-      case 'breakfast':
-        return 'Kahvaltı Tarifleri';
-      case 'lunch':
-        return 'Öğle Yemeği Tarifleri';
-      case 'dinner':
-        return 'Akşam Yemeği Tarifleri';
-      case 'snack':
-        return 'Ara Öğün Tarifleri';
-      case 'dessert':
-        return 'Sporcu Tatlıları';
-      case 'budget':
-        return 'Pratik & Ekonomik';
-      default:
-        return 'Tarifler';
+  ///
+  /// Phase 83 dashboard expansion · when [type] is `'budget'` AND
+  /// [subFilter] resolves to a known meal_type, the title combines
+  /// both (e.g. "Pratik & Ekonomik · Kahvaltı") so the user sees what
+  /// they actually filtered on instead of a generic "Pratik & Ekonomik"
+  /// that hides the sub-bucket.
+  static String _titleFor(String type, String? subFilter) {
+    final base = switch (type.toLowerCase()) {
+      'breakfast' => 'Kahvaltı Tarifleri',
+      'lunch' => 'Öğle Yemeği Tarifleri',
+      'dinner' => 'Akşam Yemeği Tarifleri',
+      'snack' => 'Ara Öğün Tarifleri',
+      'dessert' => 'Sporcu Tatlıları',
+      'budget' => 'Pratik & Ekonomik',
+      _ => 'Tarifler',
+    };
+    if (type.toLowerCase() != 'budget' ||
+        subFilter == null ||
+        subFilter.isEmpty) {
+      return base;
     }
+    final subLabel = switch (subFilter.toLowerCase()) {
+      'breakfast' => 'Kahvaltı',
+      'lunch' => 'Öğle Yemeği',
+      'dinner' => 'Akşam Yemeği',
+      'snack' => 'Atıştırmalıklar',
+      'dessert' => 'Tatlı Çeşitleri',
+      _ => null,
+    };
+    return subLabel == null ? base : '$base · $subLabel';
   }
 }
 
