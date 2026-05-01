@@ -153,3 +153,125 @@ Ultra realistic food photography, [meal description], modern ceramic plate, soft
 ### Avokadolu Tam Buğday Tost
 **File Path:** `photos/meals/avokadolu_tam_bugday_tost.webp`
 **Prompt:** Ultra realistic food photography, two slices of toasted whole wheat bread topped with smashed avocado and a perfectly poached egg each, finished with red pepper flakes, olive oil and fresh thyme, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+---
+
+## Phase 72 — Pending Generation
+
+Live-DB recipes added after Phase 66 that still need a Midjourney
+pass. Replace `<TODO: english description>` with a one-line plate
+description and feed the prompt verbatim to Midjourney v6, then drop
+the output at the file path indicated.
+
+### Avokadolu Yumurtalı Tam Buğday Tost
+**File Path:** `photos/meals/avokadolu_yumurtali_tam_bugday_tost.webp`
+**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Chia Tohumlu Vegan Pancake
+**File Path:** `photos/meals/chia_tohumlu_vegan_pancake.webp`
+**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Elma Dilimleri ve Fıstık Ezmesi
+**File Path:** `photos/meals/elma_dilimleri_fistik_ezmesi.webp`
+**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Ev Yapımı Protein Bar
+**File Path:** `photos/meals/ev_yapimi_protein_bar.webp`
+**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Fırın Somonu ve Tatlı Patates Püresi
+**File Path:** `photos/meals/firin_somonu_tatli_patates_puresi.webp`
+**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Fırın Tarçınlı Elma
+**File Path:** `photos/meals/firin_tarcinli_elma.webp`
+**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Fırında Hindi ve Esmer Pirinç
+**File Path:** `photos/meals/firinda_hindi_esmer_pirinc.webp`
+**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Fıstık Ezmeli Protein Yulaf Ezmesi
+**File Path:** `photos/meals/fistik_ezmeli_protein_yulaf_ezmesi.webp`
+**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Hindi Göğsülü Avokadolu Wrap
+**File Path:** `photos/meals/hindi_gogsulu_avokadolu_wrap.webp`
+**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Hindi Köfte ve Izgara Kabak
+**File Path:** `photos/meals/hindi_kofte_izgara_kabak.webp`
+**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Ispanaklı Peynirli Omlet
+**File Path:** `photos/meals/ispanakli_peynirli_omlet.webp`
+**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Izgara Bonfile ve Közlenmiş Sebze
+**File Path:** `photos/meals/izgara_bonfile_kozlenmis_sebze.webp`
+**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Izgara Levrek ve Buharda Sebze
+**File Path:** `photos/meals/izgara_levrek_buharda_sebze.webp`
+**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Izgara Somon & Tatlı Patates
+**File Path:** `photos/meals/izgara_somon_tatli_patates.webp`
+**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Izgara Tavuklu Hafif Sezar Salata
+**File Path:** `photos/meals/izgara_tavuklu_hafif_sezar_salata.webp`
+**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Karides Stir-Fry ve Yasemin Pirinci
+**File Path:** `photos/meals/karides_stirfry_yasemin_pirinci.webp`
+**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Kırmızı Mercimek Çorbası ve Tam Buğday Ekmeği
+**File Path:** `photos/meals/kirmizi_mercimek_corbasi_tam_bugday_ekmegi.webp`
+**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Meyveli Vegan Smoothie Kasesi
+**File Path:** `photos/meals/meyveli_vegan_smoothie_kasesi.webp`
+**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Muzlu Vegan Dondurma
+**File Path:** `photos/meals/muzlu_vegan_dondurma.webp`
+**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Protein Omlet & Avokado
+**File Path:** `photos/meals/protein_omlet_avokado.webp`
+**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Süzme Peynir ve Böğürtlen
+**File Path:** `photos/meals/suzme_peynir_bogurtlen.webp`
+**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Vejetaryen Quinoa Power Bowl
+**File Path:** `photos/meals/vejetaryen_quinoa_power_bowl.webp`
+**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Yoğurtlu Granola Parfe
+**File Path:** `photos/meals/yogurtlu_granola_parfe.webp`
+**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Yüksek Protein Cheesecake Isırıkları
+**File Path:** `photos/meals/yuksek_protein_cheesecake_isiriklari.webp`
+**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Yüksek Proteinli Çikolatalı Puding (Sporcu Tatlısı)
+**File Path:** `photos/meals/yuksek_proteinli_cikolatali_puding_sporcu_tatlisi.webp`
+**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Çikolatalı Chia Tohumu Pudingi
+**File Path:** `photos/meals/cikolatali_chia_tohumu_pudingi.webp`
+**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Çikolatalı Muzlu Protein Shake
+**File Path:** `photos/meals/cikolatali_muzlu_protein_shake.webp`
+**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Çikolatalı Protein Puding
+**File Path:** `photos/meals/cikolatali_protein_puding.webp`
+**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
