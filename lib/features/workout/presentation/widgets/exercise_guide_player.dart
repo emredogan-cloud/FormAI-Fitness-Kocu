@@ -221,7 +221,7 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
     // Also surface the resolved URL via `debugPrint` so the PM can
     // grep `🔥 VIDEO_URL_DEBUG` in `flutter run` output and see
     // exactly what string ExoPlayer is being handed.
-    final sanitizedUrl = path
+    final stripped = path
         .trim()
         .replaceAll('"', '')
         .replaceAll("'", '')
@@ -229,6 +229,12 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
         .replaceAll('”', '')
         .replaceAll('‘', '')
         .replaceAll('’', '');
+    // Phase 79 · final percent-encoding pass. `Uri.encodeFull` preserves
+    // URL-reserved characters (`:/?#[]@!$&'()*+,;=`) so http(s) URLs stay
+    // intact while any stray non-ASCII / unencoded byte that survived the
+    // upstream sanitization gets escaped, eliminating the residual 400s
+    // ExoPlayer was returning on otherwise-valid Storage URLs.
+    final sanitizedUrl = Uri.encodeFull(stripped);
     debugPrint('🔥 VIDEO_URL_DEBUG: $sanitizedUrl');
 
     if (kIsWeb) {

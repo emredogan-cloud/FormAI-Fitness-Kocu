@@ -188,8 +188,14 @@ class WorkoutRepository {
   /// inconsistent casing/extensions there, and the Storage bucket is
   /// the canonical source.
   static String? _composeVideoUrl(String slug) {
-    if (slug.isEmpty) return null;
-    final fileName = '${StringCase.snakeToPascal(slug)}.mp4';
+    // Phase 79 · strip all whitespace (incl. tabs / newlines / non-breaking
+    // spaces) before the snake_case → PascalCase conversion. A DB row whose
+    // `slug` accidentally has a trailing newline or stray space would
+    // otherwise leak into the filename ("Push Up.mp4" instead of
+    // "PushUp.mp4") and Supabase Storage 400s the request.
+    final sanitizedSlug = slug.trim().replaceAll(RegExp(r'\s+'), '');
+    if (sanitizedSlug.isEmpty) return null;
+    final fileName = '${StringCase.snakeToPascal(sanitizedSlug)}.mp4';
     return MediaUrl.resolve(fileName, bucket: 'exercises');
   }
 
