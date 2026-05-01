@@ -165,113 +165,113 @@ the output at the file path indicated.
 
 ### Avokadolu Yumurtalı Tam Buğday Tost
 **File Path:** `photos/meals/avokadolu_yumurtali_tam_bugday_tost.webp`
-**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+**Prompt:** Ultra realistic food photography, two slices of toasted whole wheat bread topped with smashed avocado and a soft poached egg, finished with red pepper flakes, sea salt and fresh microgreens, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
 
 ### Chia Tohumlu Vegan Pancake
 **File Path:** `photos/meals/chia_tohumlu_vegan_pancake.webp`
-**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+**Prompt:** Ultra realistic food photography, stack of fluffy vegan pancakes made with chia seeds and oat flour, topped with sliced banana, fresh raspberries and a drizzle of maple syrup, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
 
 ### Elma Dilimleri ve Fıstık Ezmesi
 **File Path:** `photos/meals/elma_dilimleri_fistik_ezmesi.webp`
-**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+**Prompt:** Ultra realistic food photography, fresh red apple slices fanned out beside a small bowl of creamy natural peanut butter, sprinkled with chia seeds and a few crushed almonds, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
 
 ### Ev Yapımı Protein Bar
 **File Path:** `photos/meals/ev_yapimi_protein_bar.webp`
-**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+**Prompt:** Ultra realistic food photography, homemade no-bake protein bars stacked together, made with rolled oats, chopped dates, dark chocolate chips and a swirl of almond butter on top, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
 
 ### Fırın Somonu ve Tatlı Patates Püresi
 **File Path:** `photos/meals/firin_somonu_tatli_patates_puresi.webp`
-**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+**Prompt:** Ultra realistic food photography, oven-baked salmon fillet served beside a smooth sweet potato purée, garnished with steamed asparagus tips and fresh dill, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
 
 ### Fırın Tarçınlı Elma
 **File Path:** `photos/meals/firin_tarcinli_elma.webp`
-**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+**Prompt:** Ultra realistic food photography, baked apple slices dusted with cinnamon and a light honey drizzle, finished with a few toasted walnut pieces, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
 
 ### Fırında Hindi ve Esmer Pirinç
 **File Path:** `photos/meals/firinda_hindi_esmer_pirinc.webp`
-**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+**Prompt:** Ultra realistic food photography, sliced oven-roasted turkey breast resting over a bed of fluffy brown rice with steamed green beans and a sprig of fresh rosemary, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
 
 ### Fıstık Ezmeli Protein Yulaf Ezmesi
 **File Path:** `photos/meals/fistik_ezmeli_protein_yulaf_ezmesi.webp`
-**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+**Prompt:** Ultra realistic food photography, creamy bowl of high-protein oatmeal topped with a generous swirl of natural peanut butter, sliced banana, chia seeds and a sprinkle of cocoa nibs, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
 
 ### Hindi Göğsülü Avokadolu Wrap
 **File Path:** `photos/meals/hindi_gogsulu_avokadolu_wrap.webp`
-**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+**Prompt:** Ultra realistic food photography, whole wheat wrap filled with sliced roasted turkey breast, fresh avocado, crisp lettuce and light mayo, cut in half and stacked, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
 
 ### Hindi Köfte ve Izgara Kabak
 **File Path:** `photos/meals/hindi_kofte_izgara_kabak.webp`
-**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+**Prompt:** Ultra realistic food photography, juicy grilled turkey meatballs paired with charred zucchini ribbons and a small dollop of garlic yogurt sauce, garnished with fresh parsley, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
 
 ### Ispanaklı Peynirli Omlet
 **File Path:** `photos/meals/ispanakli_peynirli_omlet.webp`
-**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+**Prompt:** Ultra realistic food photography, fluffy folded omelette stuffed with sautéed baby spinach and crumbled feta cheese, topped with cracked black pepper and a sprig of dill, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
 
 ### Izgara Bonfile ve Közlenmiş Sebze
 **File Path:** `photos/meals/izgara_bonfile_kozlenmis_sebze.webp`
-**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+**Prompt:** Ultra realistic food photography, sliced grilled beef tenderloin medallions served with charred roasted bell peppers, eggplant and zucchini, drizzled with extra virgin olive oil, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
 
 ### Izgara Levrek ve Buharda Sebze
 **File Path:** `photos/meals/izgara_levrek_buharda_sebze.webp`
-**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+**Prompt:** Ultra realistic food photography, grilled sea bass fillet topped with lemon slices and fresh thyme, served alongside steamed broccoli, baby carrots and asparagus tips, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
 
 ### Izgara Somon & Tatlı Patates
 **File Path:** `photos/meals/izgara_somon_tatli_patates.webp`
-**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+**Prompt:** Ultra realistic food photography, grilled salmon fillet with crispy seared edges, served beside roasted sweet potato cubes and steamed broccoli florets, garnished with lemon wedges, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
 
 ### Izgara Tavuklu Hafif Sezar Salata
 **File Path:** `photos/meals/izgara_tavuklu_hafif_sezar_salata.webp`
-**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+**Prompt:** Ultra realistic food photography, crisp romaine lettuce tossed with grilled chicken breast strips, shaved parmesan, whole wheat croutons and a light yogurt-based caesar dressing, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
 
 ### Karides Stir-Fry ve Yasemin Pirinci
 **File Path:** `photos/meals/karides_stirfry_yasemin_pirinci.webp`
-**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+**Prompt:** Ultra realistic food photography, sizzling shrimp stir-fry with red bell peppers, snap peas and broccoli over fluffy jasmine rice, sprinkled with sesame seeds and sliced spring onions, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
 
 ### Kırmızı Mercimek Çorbası ve Tam Buğday Ekmeği
 **File Path:** `photos/meals/kirmizi_mercimek_corbasi_tam_bugday_ekmegi.webp`
-**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+**Prompt:** Ultra realistic food photography, creamy red lentil soup garnished with dried mint flakes and a swirl of olive oil, served with a slice of toasted whole wheat bread on the side, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
 
 ### Meyveli Vegan Smoothie Kasesi
 **File Path:** `photos/meals/meyveli_vegan_smoothie_kasesi.webp`
-**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+**Prompt:** Ultra realistic food photography, thick vegan smoothie bowl with a vibrant berry base topped with sliced strawberries, blueberries, kiwi, granola, coconut flakes and chia seeds, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
 
 ### Muzlu Vegan Dondurma
 **File Path:** `photos/meals/muzlu_vegan_dondurma.webp`
-**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+**Prompt:** Ultra realistic food photography, scoops of creamy banana nice cream made from frozen bananas, topped with crushed walnuts, cocoa nibs and a drizzle of date syrup, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
 
 ### Protein Omlet & Avokado
 **File Path:** `photos/meals/protein_omlet_avokado.webp`
-**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+**Prompt:** Ultra realistic food photography, high-protein egg omelette folded over melted cheese, served with sliced fresh avocado fanned alongside, sprinkled with chili flakes and chives, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
 
 ### Süzme Peynir ve Böğürtlen
 **File Path:** `photos/meals/suzme_peynir_bogurtlen.webp`
-**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+**Prompt:** Ultra realistic food photography, bowl of creamy strained cottage cheese topped with fresh blackberries, a drizzle of honey and a sprinkle of crushed almonds, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
 
 ### Vejetaryen Quinoa Power Bowl
 **File Path:** `photos/meals/vejetaryen_quinoa_power_bowl.webp`
-**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+**Prompt:** Ultra realistic food photography, vegetarian power bowl of fluffy quinoa with roasted chickpeas, sliced avocado, cherry tomatoes, baby spinach, shredded carrots and a tahini-lemon drizzle, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
 
 ### Yoğurtlu Granola Parfe
 **File Path:** `photos/meals/yogurtlu_granola_parfe.webp`
-**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+**Prompt:** Ultra realistic food photography, layered parfait of thick Greek yogurt, crunchy honey granola, fresh strawberries and blueberries in a tall clear glass, finished with a drizzle of honey, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
 
 ### Yüksek Protein Cheesecake Isırıkları
 **File Path:** `photos/meals/yuksek_protein_cheesecake_isiriklari.webp`
-**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+**Prompt:** Ultra realistic food photography, bite-sized no-bake protein cheesecake squares with a graham crust and creamy vanilla top, garnished with fresh raspberries and a dusting of crushed pistachio, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
 
 ### Yüksek Proteinli Çikolatalı Puding (Sporcu Tatlısı)
 **File Path:** `photos/meals/yuksek_proteinli_cikolatali_puding_sporcu_tatlisi.webp`
-**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+**Prompt:** Ultra realistic food photography, rich high-protein chocolate pudding in a small glass jar, topped with whipped coconut cream, dark chocolate shavings and a few fresh raspberries, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
 
 ### Çikolatalı Chia Tohumu Pudingi
 **File Path:** `photos/meals/cikolatali_chia_tohumu_pudingi.webp`
-**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+**Prompt:** Ultra realistic food photography, creamy chocolate chia seed pudding in a glass jar, topped with sliced banana, fresh strawberries and a sprinkle of cocoa nibs, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
 
 ### Çikolatalı Muzlu Protein Shake
 **File Path:** `photos/meals/cikolatali_muzlu_protein_shake.webp`
-**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+**Prompt:** Ultra realistic food photography, tall glass of frothy chocolate banana protein shake topped with whipped cream, a dusting of cocoa powder and a fresh banana slice on the rim, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
 
 ### Çikolatalı Protein Puding
 **File Path:** `photos/meals/cikolatali_protein_puding.webp`
-**Prompt:** Ultra realistic food photography, <TODO: english description>, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+**Prompt:** Ultra realistic food photography, smooth chocolate protein pudding in a small ramekin, dusted with cocoa powder and garnished with crushed hazelnuts and a fresh mint leaf, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
 

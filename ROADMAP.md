@@ -404,6 +404,12 @@ Repo kökündeki `README.md` 1 satır — boş. Public repo olmasa da yeni geli�
 
 Yukarıda 1.1'de bahsedilen RevenueCat anahtar isim tutarsızlığı. **3 dakikalık fix:** `.env.example` içinde `REVENUECAT_APPLE_KEY` → `REVENUECAT_IOS_KEY`, `REVENUECAT_GOOGLE_KEY` → `REVENUECAT_ANDROID_KEY`. SENTRY_DSN, POSTHOG_API_KEY, POSTHOG_HOST de eklenmeli.
 
+### 3.9 `recipes` tablosundaki yinelenen satırlar (Faz 72 keşfi)
+
+Faz 72 sync script'i canlı DB'de **107 satır** buldu fakat **~82 benzersiz başlık** — yani 25 satır aynı `title` ile yinelenmiş durumda. Faz 43 seed'i `recipes_title_unique` UNIQUE constraint'ini eklemesi gerekiyordu; production DB'de ya hiç apply edilmedi ya da sonradan düşürüldü. Yan etki: `lib/scripts/sync_recipes_db.dart` raporu yinelenen başlıkları görsel olarak fold'luyor ama UPDATE'leri her satıra ayrı ayrı uyguluyor — yani fonksiyonel hasar yok, sadece tablo şişkin.
+
+**Aksiyon:** kısa bir dedupe SQL pass'i (`DELETE FROM public.recipes r1 USING public.recipes r2 WHERE r1.ctid < r2.ctid AND r1.title = r2.title;` — Faz 43 seed'inin idempotency primer'ıyla aynı pattern), ardından `ALTER TABLE public.recipes ADD CONSTRAINT recipes_title_unique UNIQUE (title);` komutunu yeniden çalıştır. Constraint'i tekrar ekleyemiyorsan önce yinelenen satırların gerçekten eşdeğer olduğunu manuel doğrula (admin panelinden farklı `instructions` / `ingredients` ile eklenmiş olabilirler — o durumda korumak istediğin satırı seç). Launch sonrası tech-debt; fonksiyonelliği bloklamıyor.
+
 ---
 
 ## 4. Onboarding & UI Audit — Faz 39 Bölüm 11 Kalemleri Karşı Denetim
