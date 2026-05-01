@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/services/notification_service.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/media_url.dart';
+import '../../../core/utils/string_case.dart';
 import '../domain/services/workout_generator_service.dart';
 import '../models/exercise_model.dart';
 import '../models/workout_day_model.dart';
@@ -21,12 +22,13 @@ class WorkoutRepository {
 
   static const String _completedKey = 'sixpack.completed_days';
   static const String _pendingSyncKey = 'sixpack.pending_sync_days';
-  // Bumped v2 → v3 in phase 48: the generator's `_filterByGoal` switched
-  // from concatenated single-muscle pools to a round-robin interleave so
-  // early days actually surface variety. Existing installs still hold
-  // a v2 cache produced by the all-core feeder; the key bump forces a
-  // one-shot regeneration the next time `loadOrGenerateProgram` runs.
-  static const String _planKey = 'sixpack.user_custom_plan_v3';
+  // Bumped v3 → v4 in phase 75: the cached plan stores resolved
+  // `videoUrl` strings on each exercise, and pre-75 plans baked in the
+  // old `video_url`-column-derived URLs (which were lowercased / 404ing
+  // against case-sensitive Storage). The key bump forces a one-shot
+  // regeneration so the slug-to-PascalCase URLs land on existing installs
+  // without users having to "Reset progress" by hand.
+  static const String _planKey = 'sixpack.user_custom_plan_v4';
   static const String _progressTable = 'user_progress';
   static const String _exercisesTable = 'exercises';
 
@@ -129,12 +131,16 @@ class WorkoutRepository {
   ///     a future generator revision can make use of them.
   ///   • `instructions` becomes `description`. The split between
   ///     instructions (long form) and shortTip (one-liner) is preserved.
-  ///   • `video_url` is composed via [_composeVideoUrl] so DB rows can
-  ///     store either filenames (the migration's default) or external
-  ///     http(s) URLs without breaking the player.
+  ///   • `videoUrl` is composed from `slug` via [_composeVideoUrl]
+  ///     (Phase 75) — the row's `video_url` column is intentionally
+  ///     unused because live-DB drift left some rows with a snake_case
+  ///     slug derivative there while Supabase Storage holds PascalCase
+  ///     filenames. Sourcing the URL from `slug` guarantees the right
+  ///     casing every time.
   static Exercise _exerciseFromRow(Map<String, dynamic> row) {
+    final slug = row['slug'] as String;
     return Exercise(
-      id: row['slug'] as String,
+      id: slug,
       name: row['name'] as String,
       type: ExerciseType.values.firstWhere(
         (v) => v.name == row['type'],
@@ -153,7 +159,7 @@ class WorkoutRepository {
       difficulty: (row['difficulty'] as String?) ?? 'beginner',
       targetMuscle: _firstTargetMuscle(row['target_muscles']),
       isCardio: (row['is_cardio'] as bool?) ?? false,
-      videoUrl: _composeVideoUrl(row['video_url'] as String?),
+      videoUrl: _composeVideoUrl(slug),
     );
   }
 
@@ -166,19 +172,25 @@ class WorkoutRepository {
     return 'core';
   }
 
-  /// Resolves a row's stored `video_url` into a fully-qualified URL the
-  /// player can stream. Phase 51 · routes through [MediaUrl.resolve] so
-  /// the same call site benefits from CDN rewriting when `CDN_BASE_URL`
-  /// is set, and falls back to the Supabase Storage public endpoint
-  /// otherwise.
+  /// Composes the public Supabase Storage URL the player streams.
   ///
-  /// Accepts either a bare filename (legacy seed entries — bucket
-  /// `exercises`) or a complete http(s) URL (admin uploads land in
-  /// `exercises_media` and store the full URL — those are passed
-  /// through unchanged when no CDN is configured, and rewritten when
-  /// one is). Empty cells return null so the player skips playback.
-  static String? _composeVideoUrl(String? raw) {
-    return MediaUrl.resolve(raw, bucket: 'exercises');
+  /// Phase 75 · the URL is derived purely from the exercise `slug`:
+  ///   1. Convert the snake_case slug to PascalCase via
+  ///      [StringCase.snakeToPascal] (Storage is case-sensitive — see
+  ///      [StringCase] for the mismatch this fixes).
+  ///   2. Append `.mp4`.
+  ///   3. Route through [MediaUrl.resolve] against the `exercises`
+  ///      bucket so a configured `CDN_BASE_URL` still rewrites the
+  ///      Supabase host while the bucket + filename tail stay intact.
+  ///
+  /// Pre-Phase-75 the function read the row's `video_url` column. That
+  /// path was abandoned because live-DB drift left some rows with
+  /// inconsistent casing/extensions there, and the Storage bucket is
+  /// the canonical source.
+  static String? _composeVideoUrl(String slug) {
+    if (slug.isEmpty) return null;
+    final fileName = '${StringCase.snakeToPascal(slug)}.mp4';
+    return MediaUrl.resolve(fileName, bucket: 'exercises');
   }
 
   // ==========================================================================

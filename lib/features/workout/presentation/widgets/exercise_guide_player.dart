@@ -272,7 +272,10 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
   @override
   Widget build(BuildContext context) {
     if (_hasError) {
-      return _FallbackTile(exerciseName: widget.exerciseName);
+      return _FallbackTile(
+        exerciseName: widget.exerciseName,
+        errorMode: true,
+      );
     }
     if (!_ready) {
       // Show the fallback chrome + a centered spinner while the network
@@ -304,15 +307,20 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
         child: Image.asset(
           widget.assetPath!,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) =>
-              _FallbackTile(exerciseName: widget.exerciseName),
+          errorBuilder: (_, __, ___) => _FallbackTile(
+            exerciseName: widget.exerciseName,
+            errorMode: true,
+          ),
         ),
       );
     }
 
     final controller = _controller;
     if (controller == null) {
-      return _FallbackTile(exerciseName: widget.exerciseName);
+      return _FallbackTile(
+        exerciseName: widget.exerciseName,
+        errorMode: true,
+      );
     }
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
@@ -327,32 +335,40 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
 }
 
 class _FallbackTile extends StatelessWidget {
-  const _FallbackTile({this.exerciseName});
+  const _FallbackTile({this.exerciseName, this.errorMode = false});
+
   final String? exerciseName;
+
+  /// Phase 75 · when true the tile reads as a permanent failure
+  /// ("Video yüklenemedi" + alert icon) instead of a benign loading
+  /// placeholder. The build() spinner overlay above only fires on the
+  /// loading branch, so without this flag the user could not tell
+  /// whether playback was still buffering or had silently failed.
+  final bool errorMode;
 
   @override
   Widget build(BuildContext context) {
+    final accent = errorMode
+        ? const Color(0xFFFF6B6B) // soft red — visible against dark
+        : const Color(0xFF00F0FF); // brand cyan
     return Container(
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.75),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFF00F0FF).withValues(alpha: 0.6),
-          width: 1,
-        ),
+        border: Border.all(color: accent.withValues(alpha: 0.6), width: 1),
       ),
       padding: const EdgeInsets.all(8),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.fitness_center,
-            color: Color(0xFF00F0FF),
+          Icon(
+            errorMode ? Icons.error_outline : Icons.fitness_center,
+            color: accent,
             size: 28,
           ),
           const SizedBox(height: 6),
           Text(
-            exerciseName ?? 'Yükleniyor...',
+            errorMode ? 'Video yüklenemedi' : (exerciseName ?? 'Yükleniyor...'),
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -363,6 +379,20 @@ class _FallbackTile extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
+          if (errorMode && exerciseName != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              exerciseName!,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.45),
+                fontSize: 9,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ],
       ),
     );
