@@ -65,6 +65,29 @@ final recipesProvider =
   PaginatedRecipesNotifier.new,
 );
 
+/// Phase 83 hotfix · per-category recipe list, server-side filtered.
+///
+/// `CategoryRecipesScreen` used to read [recipesProvider] and filter the
+/// loaded page client-side. With 35+ rows in the `recipes` table that
+/// approach silently broke for the new "Pratik & Ekonomik" tag bucket
+/// because the random UUID ordering scattered the matching rows past
+/// page 1, and the screen's empty filtered list never grew tall enough
+/// to trigger `_onScroll → loadMore()`. The result was a category card
+/// that opened to either an empty state or a list with a stuck bottom
+/// spinner, depending on how many matches happened to land on page 1.
+///
+/// This family asks Postgres to do the filtering and returns the
+/// complete category in one round-trip — no pagination, no
+/// page-1-blindness. Keyed on the same route token
+/// `CategoryRecipesScreen` receives (`breakfast` / `lunch` / `dinner` /
+/// `snack` / `dessert` / `budget`), so navigating between categories
+/// fans out to independent providers Riverpod will memoize.
+final categoryRecipesProvider =
+    FutureProvider.family<List<Recipe>, String>((ref, categoryToken) {
+  final repo = ref.watch(nutritionRepositoryProvider);
+  return repo.fetchRecipesByCategory(categoryToken);
+});
+
 /// Notifier that owns the accumulated recipe list + pagination cursor.
 /// `build()` loads page 1; subsequent `loadMore()` calls append the
 /// next page. The notifier is stateful (it holds the current offset

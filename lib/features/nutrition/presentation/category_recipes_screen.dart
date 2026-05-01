@@ -14,57 +14,31 @@ const Color _neon = Color(0xFF8E5BFF);
 const Color _proteinColor = Color(0xFF4DA6FF);
 
 /// Dedicated "all recipes in this meal category" screen pushed via
-/// `/nutrition/category/:type`. Reads the same `recipesProvider` the
-/// nutrition tab uses, filters by category, and renders a scrollable
-/// list. Tapping a card opens the existing [RecipeDetailScreen] with
-/// `context.push('/recipe', extra: recipe)`.
+/// `/nutrition/category/:type`. Reads the dedicated
+/// [categoryRecipesProvider] family, which asks Postgres to filter by
+/// `meal_type` (or by the `'Pratik & Ekonomik'` tag for the Phase 83
+/// `budget` sentinel) and returns the complete result in one round-trip.
 ///
-/// Phase 48 · stateful so a `ScrollController` can drive pagination
-/// against the paginated `recipesProvider`. When the user scrolls
-/// within ~600 px of the bottom, the notifier fetches the next page
-/// from Supabase via `.range(from, to)` instead of pulling the whole
-/// catalogue eagerly.
-class CategoryRecipesScreen extends ConsumerStatefulWidget {
+/// Phase 83 hotfix · was previously stateful with a `ScrollController`
+/// driving paginated `loadMore()` calls against the global
+/// [recipesProvider], filtering the loaded page client-side. That
+/// flow silently broke once the catalogue grew past the 20-row first
+/// page (UUID ordering scattered budget rows past page 1, the screen
+/// rendered an empty state, the empty state didn't scroll, so
+/// `_onScroll` never triggered the next page). Server-side filtering
+/// makes the page-1 question moot: every match comes back at once.
+class CategoryRecipesScreen extends ConsumerWidget {
   const CategoryRecipesScreen({super.key, required this.categoryType});
 
   /// Route path parameter. One of: `breakfast`, `lunch`, `dinner`,
-  /// `snack`, `dessert`. Unknown values render an empty state rather
-  /// than crashing.
+  /// `snack`, `dessert`, `budget`. Unknown values render an empty
+  /// state rather than crashing — the server-side filter just returns
+  /// an empty list for any unrecognised `meal_type`.
   final String categoryType;
 
   @override
-  ConsumerState<CategoryRecipesScreen> createState() =>
-      _CategoryRecipesScreenState();
-}
-
-class _CategoryRecipesScreenState extends ConsumerState<CategoryRecipesScreen> {
-  final ScrollController _scrollController = ScrollController();
-  static const double _loadMoreThreshold = 600;
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(_onScroll);
-  }
-
-  @override
-  void dispose() {
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    if (!_scrollController.hasClients) return;
-    final position = _scrollController.position;
-    if (position.pixels + _loadMoreThreshold >= position.maxScrollExtent) {
-      ref.read(recipesProvider.notifier).loadMore();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final recipesAsync = ref.watch(recipesProvider);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final recipesAsync = ref.watch(categoryRecipesProvider(categoryType));
     // Phase 53E · drop the hardcoded `0xFF0B0B12` Scaffold + AppBar
     // backgrounds. The screen now inherits whatever
     // `scaffoldBackgroundColor` the active theme ships, and the AppBar
@@ -77,7 +51,7 @@ class _CategoryRecipesScreenState extends ConsumerState<CategoryRecipesScreen> {
         elevation: 0,
         foregroundColor: scheme.onSurface,
         title: Text(
-          _titleFor(widget.categoryType),
+          _titleFor(categoryType),
           style: TextStyle(
             color: scheme.onSurface,
             fontWeight: FontWeight.w900,
@@ -95,53 +69,29 @@ class _CategoryRecipesScreenState extends ConsumerState<CategoryRecipesScreen> {
             err,
             stackTrace: st,
             category: 'nutrition',
+            data: {'category': categoryType},
           );
           return ErrorCard(
             message: 'Tarifler yüklenirken bir sorun oluştu.',
-            onRetry: () => ref.invalidate(recipesProvider),
+            onRetry: () =>
+                ref.invalidate(categoryRecipesProvider(categoryType)),
           );
         },
         data: (recipes) {
-          final filtered = _filter(recipes, widget.categoryType);
-          if (filtered.isEmpty) {
-            return _EmptyCategoryState(category: widget.categoryType);
+          if (recipes.isEmpty) {
+            return _EmptyCategoryState(category: categoryType);
           }
-          final hasMore = ref.read(recipesProvider.notifier).hasMore;
           return ListView.separated(
-            controller: _scrollController,
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
-            itemCount: filtered.length + (hasMore ? 1 : 0),
+            itemCount: recipes.length,
             separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              if (index >= filtered.length) {
-                return const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Center(
-                    child: SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: _neon,
-                      ),
-                    ),
-                  ),
-                );
-              }
-              return _CategoryRecipeCard(recipe: filtered[index]);
-            },
+            itemBuilder: (context, index) =>
+                _CategoryRecipeCard(recipe: recipes[index]),
           );
         },
       ),
     );
   }
-
-  /// Phase 83 · sentinel route token for the tag-based "Pratik &
-  /// Ekonomik" bucket. Unlike the other tokens this is NOT a
-  /// `meal_type` value; [_filter] special-cases it to match recipes
-  /// whose `tags` contain the corresponding label.
-  static const String _budgetType = 'budget';
-  static const String _budgetTagLabel = 'Pratik & Ekonomik';
 
   /// Maps the route param to the Turkish AppBar title. Unknown values
   /// fall back to a generic "Tarifler" so a malformed deeplink still
@@ -158,31 +108,11 @@ class _CategoryRecipesScreenState extends ConsumerState<CategoryRecipesScreen> {
         return 'Ara Öğün Tarifleri';
       case 'dessert':
         return 'Sporcu Tatlıları';
-      case _budgetType:
+      case 'budget':
         return 'Pratik & Ekonomik';
       default:
         return 'Tarifler';
     }
-  }
-
-  /// Exact-match filter (phase 30). No more trim/`toLowerCase` —
-  /// Dart's case folding on Turkish characters isn't guaranteed to
-  /// round-trip (İ / i / I / ı), and the seed + route both use
-  /// identical lowercase English tokens (`breakfast`, `lunch`,
-  /// `dinner`, `snack`, `dessert`), so a direct `==` compare is
-  /// cleaner and can never silently fail on Unicode edge cases.
-  ///
-  /// Phase 83 · the `budget` sentinel routes through tag-based
-  /// matching instead of [Recipe.mealType] equality, so the
-  /// "Pratik & Ekonomik" bucket can pull recipes from across all
-  /// five meal types without a schema change.
-  static List<Recipe> _filter(List<Recipe> recipes, String type) {
-    if (type == _budgetType) {
-      return recipes
-          .where((r) => r.tags.contains(_budgetTagLabel))
-          .toList();
-    }
-    return recipes.where((r) => r.mealType == type).toList();
   }
 }
 

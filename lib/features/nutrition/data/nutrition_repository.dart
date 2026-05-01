@@ -47,4 +47,40 @@ class NutritionRepository {
         .range(from, from + limit - 1);
     return rows.map<Recipe>(Recipe.fromJson).toList(growable: false);
   }
+
+  /// Phase 83 · sentinel route token used by `CategoryRecipesScreen` for
+  /// the tag-based "Pratik & Ekonomik" bucket. Mirrors the constant in
+  /// `category_recipes_screen.dart` — kept in sync manually because both
+  /// sides need to recognise the same string and a shared constants file
+  /// would be a layering churn we don't yet need.
+  static const String budgetCategoryToken = 'budget';
+  static const String budgetCategoryTagLabel = 'Pratik & Ekonomik';
+
+  /// Phase 83 hotfix · server-side category fetch.
+  ///
+  /// Replaces the prior client-side flow where the paginated catalogue
+  /// (page size 20, ordered by random UUID) was filtered after-the-fact
+  /// in `_CategoryRecipesScreenState._filter`. With 35+ rows in the
+  /// `recipes` table the budget rows scattered across pages — page 1
+  /// could return zero matching tags, leaving the category screen stuck
+  /// on an empty state because `_onScroll` only fires `loadMore()` when
+  /// the user reaches the bottom of a list that, in the empty-filtered
+  /// case, never grew tall enough to scroll.
+  ///
+  /// New shape: ask Postgres to do the filtering. For the five existing
+  /// `meal_type` tokens (`breakfast` / `lunch` / `dinner` / `snack` /
+  /// `dessert`) it's an `eq()`; for the Phase 83 `budget` sentinel it's
+  /// `.contains('tags', ['Pratik & Ekonomik'])` which the supabase-flutter
+  /// SDK translates into a `tags @> ARRAY['Pratik & Ekonomik']` predicate
+  /// on the `text[]` column. Returns the complete filtered list because
+  /// individual category sizes are bounded (today: <20 each, plausibly
+  /// <100 long-term — well within a single round-trip budget).
+  Future<List<Recipe>> fetchRecipesByCategory(String categoryToken) async {
+    final builder = _client.from(_table).select();
+    final filtered = categoryToken == budgetCategoryToken
+        ? builder.contains('tags', const [budgetCategoryTagLabel])
+        : builder.eq('meal_type', categoryToken);
+    final rows = await filtered.order('id', ascending: true);
+    return rows.map<Recipe>(Recipe.fromJson).toList(growable: false);
+  }
 }
