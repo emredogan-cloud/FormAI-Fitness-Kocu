@@ -117,6 +117,20 @@ class MediaUrl {
     } on Object {
       return null;
     }
+    // Phase 76 · strip wrapping double or single quotes so an .env
+    // value like `CDN_BASE_URL=""` (intended as "empty") doesn't come
+    // through as the literal 2-char string `""`. Without this guard
+    // the resolver composes URLs like `""/exercises/Situp.mp4`, which
+    // then fail downstream — the video player tries to load it as a
+    // bundled asset and hits FileNotFoundException on
+    // `flutter_assets/""/exercises/Situp.mp4`.
+    if (raw.length >= 2) {
+      final first = raw.codeUnitAt(0);
+      final last = raw.codeUnitAt(raw.length - 1);
+      if ((first == 0x22 && last == 0x22) || (first == 0x27 && last == 0x27)) {
+        raw = raw.substring(1, raw.length - 1).trim();
+      }
+    }
     if (raw.isEmpty) return null;
     return raw.endsWith('/') ? raw.substring(0, raw.length - 1) : raw;
   }

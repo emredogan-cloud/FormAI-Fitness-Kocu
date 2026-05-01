@@ -16,11 +16,14 @@ import '../../../../core/utils/app_logger.dart';
 ///     while a fire-and-forget background download warms the cache for
 ///     the next set / launch. Result: each unique URL hits the network
 ///     at most once per device.
-///   • Local `.mp4`/`.mov`/`.webm` asset paths still work via
-///     [VideoPlayerController.asset] so tests and any future offline
-///     packs keep rendering without code changes.
 ///   • Image extensions (`.jpg`/`.jpeg`/`.png`/`.webp`/`.gif`) render as
 ///     a static [Image.asset] inside the same rounded container.
+///   • Phase 76 · video playback is network-only. A non-http path (e.g.
+///     a bundled `assets/...` reference) falls through to
+///     `_FallbackTile` rather than being passed to
+///     [VideoPlayerController.asset] — that branch was producing
+///     `FileNotFoundException` crashes on malformed-URL inputs, and
+///     no current call site needs offline video playback.
 ///   • Null/empty paths, or any renderer error, fall through to the neon
 ///     `_FallbackTile` so the PIP panel never goes blank.
 ///
@@ -123,13 +126,29 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
       return;
     }
 
-    // Remote streaming branch (Phase 10 default) vs local asset branch.
-    // startsWith('http') covers both http and https so we don't special-case
-    // the scheme; Dart's Uri.parse will normalise either.
-    final isRemote = path.startsWith('http');
-    final controller = isRemote
-        ? await _resolveRemoteController(path)
-        : VideoPlayerController.asset(path);
+    // Phase 76 · video playback is strictly a network-streaming flow.
+    // Anything that isn't a fully-qualified `http(s)://` URL gets the
+    // fallback tile rather than being passed to
+    // `VideoPlayerController.asset` — that path was producing
+    // `flutter_assets/""/exercises/Situp.mp4` FileNotFoundException
+    // crashes when an upstream env-config bug surfaced a malformed
+    // bare path here. The image-extension branch above already covers
+    // every legitimate bundled-asset case (jpg/png/webp/etc.).
+    final isRemote = path.startsWith('http://') || path.startsWith('https://');
+    if (!isRemote) {
+      AppLogger.warning(
+        'ExerciseGuide: non-http video path rejected; falling back',
+        category: 'workout',
+        data: {'path': path, 'exercise': widget.exerciseName},
+      );
+      setState(() {
+        _hasError = true;
+        _ready = false;
+        _isImage = false;
+      });
+      return;
+    }
+    final controller = await _resolveRemoteController(path);
     if (!mounted) {
       await controller.dispose();
       return;
