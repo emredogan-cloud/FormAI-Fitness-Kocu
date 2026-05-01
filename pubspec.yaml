@@ -136,6 +136,9 @@ flutter:
     # subdirectory has to be listed explicitly even though `photos/`
     # is already declared above.
     - "photos/meals/"
+    # Phase 70 · per-plan workout dashboard thumbnails (real VP8 WebP,
+    # ~95 KB each). Same recursion caveat as photos/meals/ above.
+    - "photos/workouts/"
 
 # Launcher icon source. Uses a square PNG (derived from the onboarding
 # webp by ImageMagick convert) because flutter_launcher_icons needs PNG

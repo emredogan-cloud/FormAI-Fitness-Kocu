@@ -7,7 +7,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/services/notification_service.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/media_url.dart';
-import '../../../core/utils/placeholder_images.dart';
 import '../domain/services/workout_generator_service.dart';
 import '../models/exercise_model.dart';
 import '../models/workout_day_model.dart';
@@ -38,49 +37,12 @@ class WorkoutRepository {
   Future<List<Exercise>>? _exercisesFuture;
 
   // ==========================================================================
-  // HERO IMAGE URLS — phase 35 swap. The docs/<region>/ jpegs they used to
-  // point at were generic stock, so the Bölgeler strip now pulls cinematic
-  // neon-lit Unsplash shots instead. Two IDs (`defaultMuscularPhotoUrl`,
-  // `defaultLeanPhotoUrl`) are already validated; the two new literals
-  // (`_gymDarkImg`, `_pushUpImg`) are widely-cited fitness stock photos
-  // and have a graceful `Image.network` fallback behind them if either
-  // ever 404s.
-  // ==========================================================================
-
-  /// Moody low-key gym shot with iron-grey tones. Used as the visual
-  /// anchor for back / legs / cardio plans — the dark palette lets the
-  /// neon-violet card borders pop.
-  static const String _gymDarkImg =
-      'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=800&q=80';
-
-  /// Dynamic push-up action shot. Paired with chest / arm / explosive
-  /// routines because the body-weight pose reads instantly as an active
-  /// workout even at thumbnail size.
-  static const String _pushUpImg =
-      'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=800&q=80';
-
-  static const String _coreImg1 = defaultLeanPhotoUrl;
-  static const String _coreImg2 = _gymDarkImg;
-  static const String _chestImg1 = defaultMuscularPhotoUrl;
-  static const String _chestImg2 = _pushUpImg;
-  static const String _chestImg3 = _gymDarkImg;
-  static const String _chestImg4 = defaultMuscularPhotoUrl;
-  static const String _backImg1 = _gymDarkImg;
-  static const String _backImg2 = defaultMuscularPhotoUrl;
-  static const String _legsImg1 = _gymDarkImg;
-  static const String _legsImg2 = defaultLeanPhotoUrl;
-  static const String _legsImg3 = _gymDarkImg;
-  static const String _legsImg4 = _pushUpImg;
-  static const String _shouldersImg1 = defaultMuscularPhotoUrl;
-  static const String _shouldersImg2 = _gymDarkImg;
-  static const String _shouldersImg3 = _pushUpImg;
-  static const String _armsImg1 = defaultMuscularPhotoUrl;
-  static const String _armsImg2 = _pushUpImg;
-  static const String _armsImg3 = _gymDarkImg;
-  static const String _cardioImg1 = _pushUpImg;
-  static const String _cardioImg2 = _gymDarkImg;
-  static const String _cardioImg3 = _pushUpImg;
-
+  // HERO IMAGE PATHS — phase 70. The Phase 35 Unsplash URLs and the two
+  // Phase 53 default photo constants the templates used to share are
+  // gone; every plan now points at a bespoke bundled VP8 WebP under
+  // `photos/workouts/`. The path slug exactly matches the plan `id` so
+  // adding a new template only requires generating the matching asset
+  // and listing the slug — no new constant indirection here.
   // ==========================================================================
   // EXERCISE CATALOGUE — Phase 50A · Supabase migration
   // ==========================================================================
@@ -243,7 +205,7 @@ class WorkoutRepository {
         'leg_raise',
         'plank',
       ],
-      image: 'photos/sınırlarınızorlabelirginkarınkarınkaslarıHIITnewfoto.webp',
+      image: 'photos/workouts/push_limits_abs_hiit.webp',
     ),
     _PlanTemplate(
       id: 'push_limits_stronger_core',
@@ -258,7 +220,7 @@ class WorkoutRepository {
         'situp',
         'bicycle_crunch',
       ],
-      image: defaultMuscularPhotoUrl,
+      image: 'photos/workouts/push_limits_stronger_core.webp',
     ),
     _PlanTemplate(
       id: 'push_limits_iron_pack',
@@ -273,7 +235,7 @@ class WorkoutRepository {
         'plank',
         'flutter_kick',
       ],
-      image: 'photos/sınırlarınızorlademiraltıpaketgücünewfoto.webp',
+      image: 'photos/workouts/push_limits_iron_pack.webp',
     ),
     _PlanTemplate(
       id: 'push_limits_athletic_core',
@@ -287,7 +249,7 @@ class WorkoutRepository {
         'crunch',
         'flutter_kick',
       ],
-      image: defaultLeanPhotoUrl,
+      image: 'photos/workouts/push_limits_athletic_core.webp',
     ),
   ];
 
@@ -306,7 +268,7 @@ class WorkoutRepository {
         'mountain_climber',
         'bicycle_crunch',
       ],
-      image: _coreImg1,
+      image: 'photos/workouts/core_steel_abs.webp',
     ),
     _PlanTemplate(
       id: 'core_athletic',
@@ -321,7 +283,7 @@ class WorkoutRepository {
         'flutter_kick',
         'plank',
       ],
-      image: _coreImg2,
+      image: 'photos/workouts/core_athletic.webp',
     ),
     // ---- Göğüs (Chest) ----
     _PlanTemplate(
@@ -331,7 +293,7 @@ class WorkoutRepository {
       level: 'Orta düzey',
       durationMinutes: 14,
       exerciseSlugs: ['bench_press', 'chest_fly', 'push_up'],
-      image: _chestImg2,
+      image: 'photos/workouts/chest_dumbbell_fast.webp',
     ),
     _PlanTemplate(
       id: 'chest_activation_growth',
@@ -340,7 +302,7 @@ class WorkoutRepository {
       level: 'Başlangıç',
       durationMinutes: 6,
       exerciseSlugs: ['incline_push_up', 'push_up'],
-      image: _chestImg1,
+      image: 'photos/workouts/chest_activation_growth.webp',
     ),
     _PlanTemplate(
       id: 'chest_full_growth_burst',
@@ -356,7 +318,7 @@ class WorkoutRepository {
         'bench_press',
         'chest_fly',
       ],
-      image: _chestImg3,
+      image: 'photos/workouts/chest_full_growth_burst.webp',
     ),
     _PlanTemplate(
       id: 'chest_fat_burn_basic',
@@ -370,7 +332,7 @@ class WorkoutRepository {
         'chest_dip',
         'chest_fly',
       ],
-      image: _chestImg4,
+      image: 'photos/workouts/chest_fat_burn_basic.webp',
     ),
     // ---- Sırt (Back) ----
     _PlanTemplate(
@@ -380,7 +342,7 @@ class WorkoutRepository {
       level: 'Orta düzey',
       durationMinutes: 22,
       exerciseSlugs: ['pull_up', 'chin_up', 'lat_pulldown', 'barbell_row'],
-      image: _backImg1,
+      image: 'photos/workouts/back_v_taper.webp',
     ),
     _PlanTemplate(
       id: 'back_posture_basic',
@@ -389,7 +351,7 @@ class WorkoutRepository {
       level: 'Başlangıç',
       durationMinutes: 12,
       exerciseSlugs: ['superman', 'lat_pulldown', 'barbell_row'],
-      image: _backImg2,
+      image: 'photos/workouts/back_posture_basic.webp',
     ),
     // ---- Omuz (Shoulders) ----
     _PlanTemplate(
@@ -404,7 +366,7 @@ class WorkoutRepository {
         'front_raise',
         'arnold_press',
       ],
-      image: _shouldersImg1,
+      image: 'photos/workouts/shoulders_giant.webp',
     ),
     _PlanTemplate(
       id: 'shoulders_v_taper',
@@ -413,7 +375,7 @@ class WorkoutRepository {
       level: 'Başlangıç',
       durationMinutes: 14,
       exerciseSlugs: ['lateral_raise', 'front_raise', 'pike_push_up'],
-      image: _shouldersImg2,
+      image: 'photos/workouts/shoulders_v_taper.webp',
     ),
     _PlanTemplate(
       id: 'shoulders_power_burst',
@@ -427,7 +389,7 @@ class WorkoutRepository {
         'lateral_raise',
         'pike_push_up',
       ],
-      image: _shouldersImg3,
+      image: 'photos/workouts/shoulders_power_burst.webp',
     ),
     // ---- Kol (Arms) ----
     _PlanTemplate(
@@ -437,7 +399,7 @@ class WorkoutRepository {
       level: 'Orta düzey',
       durationMinutes: 14,
       exerciseSlugs: ['biceps_curl', 'hammer_curl', 'triceps_dip'],
-      image: _armsImg1,
+      image: 'photos/workouts/arms_steel.webp',
     ),
     _PlanTemplate(
       id: 'arms_explosive_super',
@@ -452,7 +414,7 @@ class WorkoutRepository {
         'triceps_pushdown',
         'close_grip_push_up',
       ],
-      image: _armsImg2,
+      image: 'photos/workouts/arms_explosive_super.webp',
     ),
     _PlanTemplate(
       id: 'arms_quick_tone',
@@ -461,7 +423,7 @@ class WorkoutRepository {
       level: 'Başlangıç',
       durationMinutes: 10,
       exerciseSlugs: ['biceps_curl', 'hammer_curl', 'triceps_pushdown'],
-      image: _armsImg3,
+      image: 'photos/workouts/arms_quick_tone.webp',
     ),
     // ---- Bacak (Legs) ----
     _PlanTemplate(
@@ -471,7 +433,7 @@ class WorkoutRepository {
       level: 'Orta düzey',
       durationMinutes: 18,
       exerciseSlugs: ['squat', 'lunge', 'leg_press', 'calf_raise'],
-      image: _legsImg1,
+      image: 'photos/workouts/legs_quad_strength.webp',
     ),
     _PlanTemplate(
       id: 'legs_power_day',
@@ -485,7 +447,7 @@ class WorkoutRepository {
         'leg_press',
         'calf_raise',
       ],
-      image: _legsImg2,
+      image: 'photos/workouts/legs_power_day.webp',
     ),
     _PlanTemplate(
       id: 'legs_cardio_strength',
@@ -494,7 +456,7 @@ class WorkoutRepository {
       level: 'Orta düzey',
       durationMinutes: 20,
       exerciseSlugs: ['squat', 'lunge', 'calf_raise', 'wall_sit'],
-      image: _legsImg3,
+      image: 'photos/workouts/legs_cardio_strength.webp',
     ),
     _PlanTemplate(
       id: 'legs_elite_sculpt',
@@ -509,7 +471,7 @@ class WorkoutRepository {
         'lunge',
         'calf_raise',
       ],
-      image: _legsImg4,
+      image: 'photos/workouts/legs_elite_sculpt.webp',
     ),
     // ---- Kardiyo & Full Body ----
     _PlanTemplate(
@@ -519,7 +481,7 @@ class WorkoutRepository {
       level: 'Orta düzey',
       durationMinutes: 20,
       exerciseSlugs: ['burpee', 'jumping_jack', 'high_knees', 'jump_squat'],
-      image: _cardioImg1,
+      image: 'photos/workouts/cardio_fat_burn.webp',
     ),
     _PlanTemplate(
       id: 'cardio_full_body_burst',
@@ -534,7 +496,7 @@ class WorkoutRepository {
         'skipping_rope',
         'jumping_jack',
       ],
-      image: _cardioImg2,
+      image: 'photos/workouts/cardio_full_body_burst.webp',
     ),
     _PlanTemplate(
       id: 'cardio_morning_quick',
@@ -543,7 +505,7 @@ class WorkoutRepository {
       level: 'Başlangıç',
       durationMinutes: 12,
       exerciseSlugs: ['jumping_jack', 'high_knees', 'skipping_rope'],
-      image: _cardioImg3,
+      image: 'photos/workouts/cardio_morning_quick.webp',
     ),
   ];
 
