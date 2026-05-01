@@ -17,16 +17,24 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 /// Resolution rules (in order):
 ///   1. `null` / empty input → `null`. Callers treat that as "no media,
 ///      render fallback".
-///   2. Bare filename (no scheme, e.g. `'Crunch.mp4'`) → composed under
-///      `bucket`. Prefers `<CDN_BASE_URL>/<bucket>/<filename>` when a
-///      CDN is configured; falls back to
+///   2. Bundled local-asset path (starts with `photos/` or `assets/`,
+///      e.g. `'photos/meals/foo.webp'`) → passed through unchanged.
+///      The Phase 69 [CachedImage] dispatch routes any non-`http(s)`
+///      URL through `Image.asset`, so preserving the literal path is
+///      what makes asset-backed meal/workout covers render. Without
+///      this branch the path would fall into the "bare filename" rule
+///      below and be rewritten into a 404-ing Supabase Storage URL.
+///   3. Bare filename (no scheme, no path prefix, e.g. `'Crunch.mp4'`)
+///      → composed under `bucket`. Prefers
+///      `<CDN_BASE_URL>/<bucket>/<filename>` when a CDN is configured;
+///      falls back to
 ///      `<SUPABASE_URL>/storage/v1/object/public/<bucket>/<filename>`.
-///   3. Full http(s) URL pointing at the configured Supabase Storage
+///   4. Full http(s) URL pointing at the configured Supabase Storage
 ///      public endpoint → rewritten so the host portion is the CDN,
 ///      preserving the bucket + path tail. Lets admin-uploaded media
 ///      (which `getPublicUrl()` returns as a full Supabase URL) flip
 ///      onto the CDN without touching the database.
-///   4. Full http(s) URL pointing anywhere else (Unsplash, third-party
+///   5. Full http(s) URL pointing anywhere else (Unsplash, third-party
 ///      CDNs already in use) → passed through unchanged. Rewriting
 ///      arbitrary external URLs would break them.
 class MediaUrl {
@@ -40,6 +48,20 @@ class MediaUrl {
     if (raw == null) return null;
     final trimmed = raw.trim();
     if (trimmed.isEmpty) return null;
+
+    // Phase 71 · bundled local-asset passthrough. Recipes seeded after
+    // phase 69 (and workout plans seeded after phase 70) ship their
+    // cover photos as `photos/<feature>/<slug>.webp` paths bundled in
+    // the Flutter asset manifest. Without this guard the path would
+    // fall through to the "bare filename" branch below and get
+    // rewritten as `<supabase>/storage/v1/object/public/<bucket>/photos/...`
+    // — a 404 against Supabase Storage that surfaces as the fallback
+    // tile in every meal card. CachedImage's
+    // `if (!url.startsWith('http'))` dispatch then routes the
+    // preserved path through `Image.asset`.
+    if (trimmed.startsWith('photos/') || trimmed.startsWith('assets/')) {
+      return trimmed;
+    }
 
     final cdn = _normalisedCdnBase();
     final supabase = _normalisedSupabaseBase();
