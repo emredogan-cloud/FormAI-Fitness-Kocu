@@ -96,16 +96,16 @@ android {
                 signingConfigs.getByName("debug")
             }
 
-            // Phase 77 · ProGuard / R8 keep rules are referenced here so
-            // that whenever code shrinking is enabled in a future commit
-            // (`isMinifyEnabled = true`) the ML Kit + MediaPipe classes
-            // stay intact. R8 stripping the native-bound classes was the
-            // most likely cause of the JNI `NoSuchFieldError` crash the
-            // PM hit in Phase 77; keeping `isMinifyEnabled = false` for
-            // now (current default) avoids new release-build behaviour
-            // changes in this commit while leaving the rules wired up
-            // for the moment minification gets turned on.
-            isMinifyEnabled = false
+            // Phase 78 · the Flutter Gradle Plugin auto-applies
+            // `isShrinkResources = true` to the release build type
+            // (see flutter_tools/.../FlutterPlugin.kt). Phase 77
+            // overrode `isMinifyEnabled = false` here, which produced
+            // the configure-time error "Removing unused resources
+            // requires unused code shrinking to be turned on". We
+            // align with the framework default (minify on) so the
+            // Phase 77 ProGuard keep rules for ML Kit + MediaPipe
+            // actually get exercised on release builds.
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
