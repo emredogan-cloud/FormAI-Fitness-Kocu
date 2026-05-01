@@ -274,4 +274,3 @@ the output at the file path indicated.
 ### Çikolatalı Protein Puding
 **File Path:** `photos/meals/cikolatali_protein_puding.webp`
 **Prompt:** Ultra realistic food photography, smooth chocolate protein pudding in a small ramekin, dusted with cocoa powder and garnished with crushed hazelnuts and a fresh mint leaf, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
-

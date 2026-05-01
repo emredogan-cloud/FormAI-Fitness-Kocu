@@ -48,7 +48,7 @@ class WorkoutRepository {
   // ==========================================================================
   // The 41 movements that used to live as `static final Exercise _crunch =
   // ...` literals here are now seeded into the `public.exercises` table
-  // by `supabase_exercises_migration.sql`. The async getters below are the
+  // by `supabase/sql/exercises_migration.sql`. The async getters below are the
   // single read path; everything in this repository (plan templates,
   // generator pool, regional filters) hangs off `getAllExercises()`.
   //
