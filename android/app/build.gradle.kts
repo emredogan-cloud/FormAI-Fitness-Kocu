@@ -50,7 +50,14 @@ android {
         applicationId = "com.emredogan.formai"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        // Phase 77 · pinned to API 24 because newer ML Kit / MediaPipe
+        // releases (`google_mlkit_pose_detection` 0.14+ and the
+        // `mlkit_vision_mediapipe` native libs it pulls in) require
+        // 24+. The pre-77 default was Flutter's, which can resolve to
+        // 21 and produced JNI `NoSuchFieldError` crashes when the
+        // older Android runtime tried to bind to fields the newer
+        // library introduced.
+        minSdk = 24
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -88,6 +95,21 @@ android {
             } else {
                 signingConfigs.getByName("debug")
             }
+
+            // Phase 77 · ProGuard / R8 keep rules are referenced here so
+            // that whenever code shrinking is enabled in a future commit
+            // (`isMinifyEnabled = true`) the ML Kit + MediaPipe classes
+            // stay intact. R8 stripping the native-bound classes was the
+            // most likely cause of the JNI `NoSuchFieldError` crash the
+            // PM hit in Phase 77; keeping `isMinifyEnabled = false` for
+            // now (current default) avoids new release-build behaviour
+            // changes in this commit while leaving the rules wired up
+            // for the moment minification gets turned on.
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 }

@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:video_player/video_player.dart';
@@ -213,18 +213,36 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
   /// plugin; the browser's own HTTP cache + the CDN edge cover the
   /// bandwidth case there.
   Future<VideoPlayerController> _resolveRemoteController(String path) async {
+    // Phase 77 · belt-and-braces sanitization. ExoPlayer was returning
+    // 400 Bad Request even after Phase 76's quote-stripping in
+    // `MediaUrl._normalised`, so trim once more right at the player
+    // boundary and strip any stray ASCII / curly quote characters that
+    // could have crept in via copy-paste in the .env or admin panel.
+    // Also surface the resolved URL via `debugPrint` so the PM can
+    // grep `🔥 VIDEO_URL_DEBUG` in `flutter run` output and see
+    // exactly what string ExoPlayer is being handed.
+    final sanitizedUrl = path
+        .trim()
+        .replaceAll('"', '')
+        .replaceAll("'", '')
+        .replaceAll('“', '')
+        .replaceAll('”', '')
+        .replaceAll('‘', '')
+        .replaceAll('’', '');
+    debugPrint('🔥 VIDEO_URL_DEBUG: $sanitizedUrl');
+
     if (kIsWeb) {
-      return VideoPlayerController.networkUrl(Uri.parse(path));
+      return VideoPlayerController.networkUrl(Uri.parse(sanitizedUrl));
     }
 
     final cacheManager = DefaultCacheManager();
     try {
-      final fileInfo = await cacheManager.getFileFromCache(path);
+      final fileInfo = await cacheManager.getFileFromCache(sanitizedUrl);
       if (fileInfo != null) {
         AppLogger.info(
           'ExerciseGuide: video cache HIT — playing from disk',
           category: 'workout',
-          data: {'path': path, 'cached_path': fileInfo.file.path},
+          data: {'path': sanitizedUrl, 'cached_path': fileInfo.file.path},
         );
         return VideoPlayerController.file(fileInfo.file);
       }
@@ -236,17 +254,21 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
       AppLogger.warning(
         'ExerciseGuide: cache lookup threw; falling back to network',
         category: 'workout',
-        data: {'path': path, 'error': e.toString(), 'stack': st.toString()},
+        data: {
+          'path': sanitizedUrl,
+          'error': e.toString(),
+          'stack': st.toString(),
+        },
       );
     }
 
     AppLogger.info(
       'ExerciseGuide: video cache MISS — streaming + warming cache',
       category: 'workout',
-      data: {'path': path},
+      data: {'path': sanitizedUrl},
     );
-    unawaited(_warmCache(cacheManager, path));
-    return VideoPlayerController.networkUrl(Uri.parse(path));
+    unawaited(_warmCache(cacheManager, sanitizedUrl));
+    return VideoPlayerController.networkUrl(Uri.parse(sanitizedUrl));
   }
 
   /// Background fetch that populates the cache so future renders of the
