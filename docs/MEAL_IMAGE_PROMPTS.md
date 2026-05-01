@@ -320,3 +320,435 @@ Pilot batch of 10 quick, low-cost, high-protein Turkish meals. Source SQL: `supa
 ### Tahin Pekmez Ekmek
 **File Path:** `photos/meals/tahin_pekmez_ekmek.webp`
 **Prompt:** Ultra realistic food photography, two slices of toasted whole wheat bread spread with a swirled tahini and grape molasses mixture, dusted with cinnamon, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+---
+
+## Pratik & Ekonomik — Batch 2
+
+100 budget meals expanding the Phase 83 pilot from 10 to 110, distributed 20 per meal_type (breakfast / lunch / dinner / snack / dessert). Source SQL: `supabase/sql/phase83_budget_meals_batch2.sql`. Generate each webp at 1080×1080 and save to the indicated path.
+
+### Menemen Klasik
+**File Path:** `photos/meals/menemen_klasik.webp`
+**Prompt:** Ultra realistic food photography, classic Turkish menemen with scrambled eggs in a tomato and green pepper base with diced onion, served bubbling in a small black cast iron skillet, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Sade Yumurtalı Ekmek
+**File Path:** `photos/meals/sade_yumurtali_ekmek.webp`
+**Prompt:** Ultra realistic food photography, two pan-fried sunny-side-up eggs served with two slices of golden whole wheat bread, sprinkled with cracked black pepper, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Lor Peynirli Bal Ekmek
+**File Path:** `photos/meals/lor_peynirli_bal_ekmek.webp`
+**Prompt:** Ultra realistic food photography, two slices of whole wheat bread spread with creamy Turkish curd cheese (lor) drizzled with golden honey and dusted with cinnamon, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Kaşar Peynirli Tava Tost
+**File Path:** `photos/meals/kasar_peynirli_tava_tost.webp`
+**Prompt:** Ultra realistic food photography, golden grilled whole wheat sandwich filled with melted Turkish kaşar cheese, sliced diagonally to show the cheese pull, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Sütlü Yulaf Ezmesi
+**File Path:** `photos/meals/sutlu_yulaf_ezmesi.webp`
+**Prompt:** Ultra realistic food photography, creamy hot oatmeal in milk drizzled with golden honey and dusted with cinnamon, served in a small ceramic bowl, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Domatesli Sahanda Yumurta
+**File Path:** `photos/meals/domatesli_sahanda_yumurta.webp`
+**Prompt:** Ultra realistic food photography, two sunny-side-up eggs cooked over a bed of sautéed diced tomatoes in a small black cast iron skillet, sprinkled with cracked pepper, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Soğanlı Patates Kavurma
+**File Path:** `photos/meals/soganli_patates_kavurma.webp`
+**Prompt:** Ultra realistic food photography, golden sautéed potato cubes with caramelized diced onions, sprinkled with red pepper flakes, served in a small skillet, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Bazlama Tava Tost
+**File Path:** `photos/meals/bazlama_tava_tost.webp`
+**Prompt:** Ultra realistic food photography, warm Turkish bazlama flatbread sliced open and filled with white cheese, fresh tomato slices and black olives, garnished with mint, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Bal-Cevizli Süzme Yoğurt
+**File Path:** `photos/meals/bal_cevizli_suzme_yogurt.webp`
+**Prompt:** Ultra realistic food photography, thick strained Turkish yogurt topped with golden honey and crushed walnut pieces, dusted with cinnamon, served in a small ceramic bowl, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Tereyağlı Bal Ekmek
+**File Path:** `photos/meals/tereyagli_bal_ekmek.webp`
+**Prompt:** Ultra realistic food photography, two slices of toasted whole wheat bread spread with melting butter and drizzled with golden honey, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Reçelli Tam Buğday Tost
+**File Path:** `photos/meals/receli_tam_bugday_tost.webp`
+**Prompt:** Ultra realistic food photography, two golden toasted whole wheat bread slices spread with butter and topped with vibrant red fruit jam, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Kakaolu Yulaf Lapası
+**File Path:** `photos/meals/kakaolu_yulaf_lapasi.webp`
+**Prompt:** Ultra realistic food photography, rich chocolate oatmeal made with cocoa powder and milk, drizzled with honey and dusted with cinnamon, served in a small ceramic bowl, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Maydanozlu Sade Omlet
+**File Path:** `photos/meals/maydanozlu_sade_omlet.webp`
+**Prompt:** Ultra realistic food photography, fluffy folded plain omelette with chopped fresh parsley flecks visible throughout, lightly seasoned, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Çiğ Sebze Kahvaltı Tabağı
+**File Path:** `photos/meals/cig_sebze_kahvalti_tabagi.webp`
+**Prompt:** Ultra realistic food photography, classic Turkish breakfast plate with sliced cucumber, sliced tomato, black olives, white cheese cubes, drizzled with olive oil and garnished with fresh mint, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Salam ve Sade Tabak
+**File Path:** `photos/meals/salam_ve_sade_tabak.webp`
+**Prompt:** Ultra realistic food photography, breakfast plate with sliced Turkish turkey salami, kaşar cheese cubes, a slice of whole wheat bread, fresh tomato and black olives, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Pratik Yumurtalı Pişi
+**File Path:** `photos/meals/pratik_yumurtali_pisi.webp`
+**Prompt:** Ultra realistic food photography, golden pan-fried Turkish pişi flatbread split open and filled with sunny-side-up egg and crumbled white cheese, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Yoğurtlu Yumurta Salatası
+**File Path:** `photos/meals/yogurtlu_yumurta_salatasi.webp`
+**Prompt:** Ultra realistic food photography, creamy hard-boiled egg salad mixed with strained yogurt and chopped parsley, served in a small ceramic bowl, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Mısır Gevrekli Süt
+**File Path:** `photos/meals/misir_gevrekli_sut.webp`
+**Prompt:** Ultra realistic food photography, bowl of cornflakes with cold milk and fresh banana slices on top, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Muzlu Sıcak Yulaf Lapası
+**File Path:** `photos/meals/muzlu_sicak_yulaf_lapasi.webp`
+**Prompt:** Ultra realistic food photography, hot creamy oatmeal topped with caramelized banana slices, drizzled with honey and dusted with cinnamon, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Hızlı Krep ve Reçel
+**File Path:** `photos/meals/hizli_krep_ve_recel.webp`
+**Prompt:** Ultra realistic food photography, thin rolled crepes filled with vibrant red fruit jam and dusted with powdered sugar, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Ton Balıklı Makarna Salatası
+**File Path:** `photos/meals/ton_balikli_makarna_salatasi.webp`
+**Prompt:** Ultra realistic food photography, cold pasta salad with flaked tuna, diced tomato, diced cucumber, drizzled with olive oil and lemon, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Yumurtalı Patates Salatası
+**File Path:** `photos/meals/yumurtali_patates_salatasi.webp`
+**Prompt:** Ultra realistic food photography, classic potato salad with diced boiled potatoes, sliced hard-boiled eggs, finely chopped onion and fresh parsley, dressed with yogurt and olive oil, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Klasik Mercimek Çorbası
+**File Path:** `photos/meals/klasik_mercimek_corbasi.webp`
+**Prompt:** Ultra realistic food photography, smooth Turkish red lentil soup with a swirl of melted butter and red pepper flakes on top, served in a small ceramic bowl with a lemon wedge, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Beyaz Pilav ve Sade Yoğurt
+**File Path:** `photos/meals/beyaz_pilav_ve_sade_yogurt.webp`
+**Prompt:** Ultra realistic food photography, fluffy buttered Turkish white rice pilaf served alongside a generous bowl of thick strained yogurt, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Domates Soslu Sade Makarna
+**File Path:** `photos/meals/domates_soslu_sade_makarna.webp`
+**Prompt:** Ultra realistic food photography, simple pasta in rich red tomato sauce with caramelized onions, sprinkled with black pepper, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Tereyağlı Limonlu Makarna
+**File Path:** `photos/meals/tereyagli_limonlu_makarna.webp`
+**Prompt:** Ultra realistic food photography, glossy buttered pasta with lemon zest and lemon juice, finished with cracked black pepper, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Tavuklu Bulgur Salatası
+**File Path:** `photos/meals/tavuklu_bulgur_salatasi.webp`
+**Prompt:** Ultra realistic food photography, cold bulgur salad with diced cooked chicken breast, fresh diced tomato and cucumber, dressed with olive oil and lemon, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Sade Mercimek Yemeği
+**File Path:** `photos/meals/sade_mercimek_yemegi.webp`
+**Prompt:** Ultra realistic food photography, simple Turkish red lentil stew with sautéed onion and tomato paste seasoned with cumin, served in a small ceramic bowl, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Yumurtalı Erişte
+**File Path:** `photos/meals/yumurtali_eriste.webp`
+**Prompt:** Ultra realistic food photography, Turkish homemade noodles tossed with scrambled eggs and butter-sautéed onion, sprinkled with black pepper, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Şehriye Çorbası Yumurtalı
+**File Path:** `photos/meals/sehriye_corbasi_yumurtali.webp`
+**Prompt:** Ultra realistic food photography, Turkish vermicelli soup with delicate egg ribbons and a swirl of melted butter, finished with dried mint, served in a small ceramic bowl, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Tavuk Suyu Pirinç Çorbası
+**File Path:** `photos/meals/tavuk_suyu_pirinc_corbasi.webp`
+**Prompt:** Ultra realistic food photography, golden chicken broth rice soup with fluffy rice grains and egg-lemon thickening, served with a lemon wedge, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Sebzeli Bulgur Pilavı
+**File Path:** `photos/meals/sebzeli_bulgur_pilavi.webp`
+**Prompt:** Ultra realistic food photography, fluffy bulgur pilaf with diced carrots, green peppers and onion, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Pratik Patates Köftesi
+**File Path:** `photos/meals/pratik_patates_koftesi.webp`
+**Prompt:** Ultra realistic food photography, golden pan-fried potato patties with crispy edges, served on a small ceramic plate, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Yumurtalı Sebze Sote
+**File Path:** `photos/meals/yumurtali_sebze_sote.webp`
+**Prompt:** Ultra realistic food photography, sautéed eggplant cubes with green peppers and tomato topped with sunny-side-up eggs in a small black skillet, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Yoğurtlu Patates Salatası
+**File Path:** `photos/meals/yogurtlu_patates_salatasi.webp`
+**Prompt:** Ultra realistic food photography, creamy Turkish yogurt potato salad with diced boiled potatoes, garlic and fresh parsley, drizzled with olive oil, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Hindi Etli Pratik Bulgur
+**File Path:** `photos/meals/hindi_etli_pratik_bulgur.webp`
+**Prompt:** Ultra realistic food photography, fluffy bulgur pilaf cooked with ground turkey, sautéed onion and tomato paste, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Tavuk Göğsü Salatası
+**File Path:** `photos/meals/tavuk_gogsu_salatasi.webp`
+**Prompt:** Ultra realistic food photography, sliced grilled chicken breast over fresh lettuce with sliced cucumber and tomato, drizzled with olive oil and lemon, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Patates Çorbası
+**File Path:** `photos/meals/patates_corbasi.webp`
+**Prompt:** Ultra realistic food photography, smooth Turkish potato soup with grated carrot and butter swirl, served in a small ceramic bowl, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Soğan-Domates Çorbası
+**File Path:** `photos/meals/sogan_domates_corbasi.webp`
+**Prompt:** Ultra realistic food photography, rustic onion and tomato soup with golden caramelized onions and bread croutons floating on top, served in a small ceramic bowl, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Beyaz Peynirli Sade Makarna
+**File Path:** `photos/meals/beyaz_peynirli_sade_makarna.webp`
+**Prompt:** Ultra realistic food photography, simple pasta tossed with crumbled Turkish white cheese and dried mint, drizzled with olive oil, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Tavuk Sote ve Pilav
+**File Path:** `photos/meals/tavuk_sote_ve_pilav.webp`
+**Prompt:** Ultra realistic food photography, Turkish chicken sauté with diced chicken breast in tomato paste sauce served alongside fluffy white rice pilaf, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Tencerede Sebzeli Yumurta
+**File Path:** `photos/meals/tencerede_sebzeli_yumurta.webp`
+**Prompt:** Ultra realistic food photography, one-pot dish with sautéed diced potatoes, green peppers and tomatoes topped with sunny-side-up eggs, served in a small skillet, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Soğanlı Hızlı Tavuk Sote
+**File Path:** `photos/meals/soganli_hizli_tavuk_sote.webp`
+**Prompt:** Ultra realistic food photography, diced chicken breast sautéed with deeply caramelized onions in tomato paste sauce, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Domates Soslu Köfte
+**File Path:** `photos/meals/domates_soslu_kofte.webp`
+**Prompt:** Ultra realistic food photography, Turkish meatballs simmered in fresh tomato sauce with diced onion, served in a small ceramic bowl, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Tencerede Patates Köftesi
+**File Path:** `photos/meals/tencerede_patates_koftesi.webp`
+**Prompt:** Ultra realistic food photography, Turkish meatballs and potato cubes simmered in tomato paste sauce, served in a small ceramic bowl, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Hızlı Tavuk Pirzola
+**File Path:** `photos/meals/hizli_tavuk_pirzola.webp`
+**Prompt:** Ultra realistic food photography, grilled Turkish chicken cutlet with garlic-lemon marinade, served with a lemon wedge, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Sade Köfte Tava
+**File Path:** `photos/meals/sade_kofte_tava.webp`
+**Prompt:** Ultra realistic food photography, classic Turkish pan-fried meatballs seasoned with cumin and black pepper, served in a small skillet, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Salçalı Tavada Yumurta
+**File Path:** `photos/meals/salcali_tavada_yumurta.webp`
+**Prompt:** Ultra realistic food photography, three sunny-side-up eggs cooked in a tomato paste and onion sauce in a small black skillet, sprinkled with red pepper flakes, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Sebzeli Pratik Köfte
+**File Path:** `photos/meals/sebzeli_pratik_kofte.webp`
+**Prompt:** Ultra realistic food photography, Turkish meatballs with mixed grated carrot and diced green pepper, pan-fried golden, served on a small ceramic plate, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Tavuklu Bulgur Pilavı
+**File Path:** `photos/meals/tavuklu_bulgur_pilavi.webp`
+**Prompt:** Ultra realistic food photography, fluffy bulgur pilaf cooked with diced chicken breast and onion, finished with butter, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Sade Patates Tavası
+**File Path:** `photos/meals/sade_patates_tavasi.webp`
+**Prompt:** Ultra realistic food photography, golden pan-fried potato wedges with red pepper flakes and dried oregano, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Domatesli Sade Tavuk
+**File Path:** `photos/meals/domatesli_sade_tavuk.webp`
+**Prompt:** Ultra realistic food photography, simple chicken breast cubes sautéed with fresh tomatoes and green pepper, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Yoğurtlu Sade Tavuk Sote
+**File Path:** `photos/meals/yogurtlu_sade_tavuk_sote.webp`
+**Prompt:** Ultra realistic food photography, sautéed chicken breast cubes finished with a creamy garlic yogurt sauce, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Pratik Yoğurtlu Mantı
+**File Path:** `photos/meals/pratik_yogurtlu_manti.webp`
+**Prompt:** Ultra realistic food photography, Turkish mantı dumplings topped with creamy garlic yogurt and a drizzle of red pepper flake butter, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Tavuk-Patates Tencere
+**File Path:** `photos/meals/tavuk_patates_tencere.webp`
+**Prompt:** Ultra realistic food photography, one-pot dish with diced chicken breast and potato cubes in a tomato-based sauce, served in a small ceramic bowl, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Yumurtalı Patates Tava
+**File Path:** `photos/meals/yumurtali_patates_tava.webp`
+**Prompt:** Ultra realistic food photography, golden pan-fried potato cubes topped with two sunny-side-up eggs, sprinkled with cracked pepper, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Kıymalı Sade Makarna
+**File Path:** `photos/meals/kiymali_sade_makarna.webp`
+**Prompt:** Ultra realistic food photography, pasta with rich ground beef tomato sauce and onion, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Tava Pırasası Yumurtalı
+**File Path:** `photos/meals/tava_pirasasi_yumurtali.webp`
+**Prompt:** Ultra realistic food photography, sautéed Turkish leek slices with onion topped with sunny-side-up eggs, served in a small skillet, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Sucuklu Sade Patates
+**File Path:** `photos/meals/sucuklu_sade_patates.webp`
+**Prompt:** Ultra realistic food photography, golden sautéed potato cubes with sliced Turkish sucuk sausage and onion, sprinkled with red pepper flakes, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Salçalı Yumurtalı Köfte
+**File Path:** `photos/meals/salcali_yumurtali_kofte.webp`
+**Prompt:** Ultra realistic food photography, Turkish meatballs in a rich tomato paste sauce topped with sunny-side-up eggs, served in a small skillet, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Ev Yapımı Patates Cipsi
+**File Path:** `photos/meals/ev_yapimi_patates_cipsi.webp`
+**Prompt:** Ultra realistic food photography, homemade thin-sliced potato chips seasoned with red pepper flakes and salt, served on a small ceramic plate, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Salatalık Sticks ve Yoğurt Sosu
+**File Path:** `photos/meals/salatalik_sticks_ve_yogurt_sosu.webp`
+**Prompt:** Ultra realistic food photography, fresh cucumber sticks arranged around a small ceramic bowl of strained yogurt dip with garlic and dried mint, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Hazır Çiğ Köfte
+**File Path:** `photos/meals/hazir_cig_kofte.webp`
+**Prompt:** Ultra realistic food photography, Turkish çiğ köfte balls wrapped in fresh lettuce leaves with a lemon wedge on the side, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Yoğurtlu Havuç Atıştırması
+**File Path:** `photos/meals/yogurtlu_havuc_atistirmasi.webp`
+**Prompt:** Ultra realistic food photography, Turkish carrot yogurt salad with grated sautéed carrots in creamy garlic yogurt, sprinkled with chopped parsley, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Sade Domates Salatası
+**File Path:** `photos/meals/sade_domates_salatasi.webp`
+**Prompt:** Ultra realistic food photography, simple sliced tomato salad with thin onion rings, drizzled with olive oil and dried oregano, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Soğanlı Marul Salatası
+**File Path:** `photos/meals/soganli_marul_salatasi.webp`
+**Prompt:** Ultra realistic food photography, fresh lettuce salad with thin red onion rings and tomato slices, dressed with olive oil and lemon, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Yumurtalı Sade Krep
+**File Path:** `photos/meals/yumurtali_sade_krep.webp`
+**Prompt:** Ultra realistic food photography, thin rolled plain crepe with golden edges, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Yumurta-Peynirli Sandviç
+**File Path:** `photos/meals/yumurta_peynirli_sandvic.webp`
+**Prompt:** Ultra realistic food photography, whole wheat sandwich with sliced hard-boiled egg, white cheese, lettuce and tomato, sliced diagonally, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Domates ve Beyaz Peynir Tabağı
+**File Path:** `photos/meals/domates_ve_beyaz_peynir_tabagi.webp`
+**Prompt:** Ultra realistic food photography, sliced fresh tomatoes with cubes of Turkish white cheese and black olives, drizzled with olive oil, garnished with mint, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Salatalık ve Beyaz Peynir
+**File Path:** `photos/meals/salatalik_ve_beyaz_peynir.webp`
+**Prompt:** Ultra realistic food photography, sliced fresh cucumber with cubes of Turkish white cheese, drizzled with olive oil and garnished with fresh mint, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Sade Patates Püresi
+**File Path:** `photos/meals/sade_patates_puresi.webp`
+**Prompt:** Ultra realistic food photography, creamy mashed potatoes with a small pat of butter melting on top, sprinkled with cracked pepper, served in a small ceramic bowl, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Sade Mısır Salatası
+**File Path:** `photos/meals/sade_misir_salatasi.webp`
+**Prompt:** Ultra realistic food photography, vibrant yellow corn salad with diced green pepper and onion, dressed with olive oil and lemon, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Sarımsaklı Cacık
+**File Path:** `photos/meals/sarimsakli_cacik.webp`
+**Prompt:** Ultra realistic food photography, classic Turkish cacık cold yogurt soup with grated cucumber, garlic and dried mint, garnished with fresh mint leaves, served in a small ceramic bowl, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Sade Köy Ekmeği ve Tereyağı
+**File Path:** `photos/meals/sade_koy_ekmegi_ve_tereyagi.webp`
+**Prompt:** Ultra realistic food photography, two slices of rustic Turkish village bread spread with melting butter, sprinkled with sea salt, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Karışık Zeytin ve Peynir Tabağı
+**File Path:** `photos/meals/karisik_zeytin_ve_peynir_tabagi.webp`
+**Prompt:** Ultra realistic food photography, plate of mixed green and black olives with cubes of Turkish white cheese, drizzled with olive oil and sprinkled with dried oregano, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Tahinli Sade Yoğurt
+**File Path:** `photos/meals/tahinli_sade_yogurt.webp`
+**Prompt:** Ultra realistic food photography, thick strained yogurt swirled with golden tahini and honey, dusted with cinnamon, served in a small ceramic bowl, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Yoğurtlu Patlıcan Ezmesi
+**File Path:** `photos/meals/yogurtlu_patlican_ezmesi.webp`
+**Prompt:** Ultra realistic food photography, Turkish smoky charred eggplant dip with strained yogurt and garlic, drizzled with olive oil and topped with chopped parsley, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Sade Bulgurlu Salata
+**File Path:** `photos/meals/sade_bulgurlu_salata.webp`
+**Prompt:** Ultra realistic food photography, fine bulgur salad with diced tomato, cucumber, onion and chopped parsley, dressed with olive oil and lemon, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Çiğ Sebze ve Yoğurtlu Sos
+**File Path:** `photos/meals/cig_sebze_ve_yogurtlu_sos.webp`
+**Prompt:** Ultra realistic food photography, fresh raw vegetable sticks (carrot, cucumber, green pepper) arranged around a small ceramic bowl of garlic-mint yogurt dip, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Patates Pofuduk
+**File Path:** `photos/meals/patates_pofuduk.webp`
+**Prompt:** Ultra realistic food photography, golden pan-fried potato fritters made from mashed boiled potatoes with onion and parsley, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Hızlı İrmik Helvası
+**File Path:** `photos/meals/hizli_irmik_helvasi.webp`
+**Prompt:** Ultra realistic food photography, classic Turkish semolina halva with toasted pine nuts dusted with cinnamon, scooped into a small mound, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Tahin-Pekmez Topları
+**File Path:** `photos/meals/tahin_pekmez_toplari.webp`
+**Prompt:** Ultra realistic food photography, no-bake energy balls made from oats, tahini and grape molasses, rolled in shredded coconut, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Muzlu Yoğurt Tatlısı
+**File Path:** `photos/meals/muzlu_yogurt_tatlisi.webp`
+**Prompt:** Ultra realistic food photography, thick yogurt dessert topped with sliced bananas, honey drizzle and chopped walnuts, dusted with cinnamon, served in a small ceramic bowl, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Cevizli Yoğurt Tatlısı
+**File Path:** `photos/meals/cevizli_yogurt_tatlisi.webp`
+**Prompt:** Ultra realistic food photography, thick strained yogurt topped with crushed walnuts, golden honey, cinnamon and shredded coconut, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Mikrodalgada Tarçınlı Elma
+**File Path:** `photos/meals/mikrodalgada_tarcinli_elma.webp`
+**Prompt:** Ultra realistic food photography, warm cinnamon-baked apple cubes in a small ceramic dish, glistening with honey and butter, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Reçelli Yoğurt Kasesi
+**File Path:** `photos/meals/receli_yogurt_kasesi.webp`
+**Prompt:** Ultra realistic food photography, thick yogurt topped with vibrant red fruit jam and a sprinkle of golden granola, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Çikolatalı Yulaf Topları
+**File Path:** `photos/meals/cikolatali_yulaf_toplari.webp`
+**Prompt:** Ultra realistic food photography, no-bake chocolate oat balls made with cocoa, peanut butter and honey, rolled in shredded coconut, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Pekmezli Yoğurt Mousse
+**File Path:** `photos/meals/pekmezli_yogurt_mousse.webp`
+**Prompt:** Ultra realistic food photography, strained yogurt mousse swirled with grape molasses creating a marble pattern, topped with crushed walnuts, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Limon-Bal Yoğurt
+**File Path:** `photos/meals/limon_bal_yogurt.webp`
+**Prompt:** Ultra realistic food photography, refreshing strained yogurt with lemon zest, lemon juice and a swirl of golden honey, served in a small ceramic bowl, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Pratik Sütlaç
+**File Path:** `photos/meals/pratik_sutlac.webp`
+**Prompt:** Ultra realistic food photography, classic Turkish rice pudding (sütlaç) dusted with cinnamon, served in a small ceramic ramekin, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Hindistan Cevizli Chia Pudingi
+**File Path:** `photos/meals/hindistan_cevizli_chia_pudingi.webp`
+**Prompt:** Ultra realistic food photography, coconut milk chia seed pudding topped with banana slices and shredded coconut, drizzled with honey, served in a small mason jar, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Bal-Tarçınlı Ekmek Tatlısı
+**File Path:** `photos/meals/bal_tarcinli_ekmek_tatlisi.webp`
+**Prompt:** Ultra realistic food photography, golden Turkish-style French toast with cinnamon-egg batter, drizzled with honey, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Yoğurtlu Çilek Mousse
+**File Path:** `photos/meals/yogurtlu_cilek_mousse.webp`
+**Prompt:** Ultra realistic food photography, creamy strained yogurt mousse swirled with fresh strawberry purée, topped with whole strawberries, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Cevizli Hurma Topları
+**File Path:** `photos/meals/cevizli_hurma_toplari.webp`
+**Prompt:** Ultra realistic food photography, no-bake date and walnut energy balls dusted with cocoa powder and rolled in shredded coconut, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Muz-Tahin Sandviç
+**File Path:** `photos/meals/muz_tahin_sandvic.webp`
+**Prompt:** Ultra realistic food photography, whole wheat sandwich filled with sliced banana, tahini and grape molasses, sliced diagonally, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Donmuş Muz Dilimleri
+**File Path:** `photos/meals/donmus_muz_dilimleri.webp`
+**Prompt:** Ultra realistic food photography, frozen banana slices half-dipped in dark chocolate, sprinkled with shredded coconut and crushed walnuts, served on parchment paper, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Pekmezli Süt Tatlısı
+**File Path:** `photos/meals/pekmezli_sut_tatlisi.webp`
+**Prompt:** Ultra realistic food photography, smooth Turkish milk pudding topped with grape molasses, crushed walnuts and a dusting of cinnamon, served in a small ceramic ramekin, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Tarçınlı Yulaf Tatlısı
+**File Path:** `photos/meals/tarcinli_yulaf_tatlisi.webp`
+**Prompt:** Ultra realistic food photography, warm cinnamon oatmeal dessert drizzled with honey and topped with crushed walnuts, served in a small ceramic bowl, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Sade Un Helvası
+**File Path:** `photos/meals/sade_un_helvasi.webp`
+**Prompt:** Ultra realistic food photography, classic Turkish flour halva with toasted pine nuts, scooped into a small mound, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Pratik Muhallebi
+**File Path:** `photos/meals/pratik_muhallebi.webp`
+**Prompt:** Ultra realistic food photography, smooth Turkish milk pudding (muhallebi) dusted with cinnamon, served in a small ceramic ramekin, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+---
+
+## Budget Category Covers
+
+Five hero compositions for the dashboard "Pratik & Ekonomik" strip's sub-cards. Unlike the per-meal prompts above, these are deliberately multi-food scenes — the cards live next to the canonical "Öğün Kategorileri" strip, so the visual language must read as "a bucket of meals" rather than a single dish. File paths are placeholder; once generated, swap the `imageUrl` on the corresponding `_budgetCategoryEntries` entry in `lib/features/nutrition/presentation/nutrition_tab.dart`.
+
+### Pratik & Ekonomik · Kahvaltı (cover)
+**File Path:** `photos/meals/budget_cover_breakfast.webp`
+**Prompt:** Ultra realistic food photography, Turkish budget breakfast spread with menemen in a small skillet, white cheese cubes, sliced tomatoes and cucumbers, black olives, simit bread and a glass of tea, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Pratik & Ekonomik · Öğle Yemeği (cover)
+**File Path:** `photos/meals/budget_cover_lunch.webp`
+**Prompt:** Ultra realistic food photography, Turkish budget lunch spread with red lentil soup, white rice pilaf, simple bulgur salad, sliced tomato salad and a glass of ayran, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Pratik & Ekonomik · Akşam Yemeği (cover)
+**File Path:** `photos/meals/budget_cover_dinner.webp`
+**Prompt:** Ultra realistic food photography, Turkish budget dinner spread with chicken sauté, fluffy bulgur pilaf, sautéed potato wedges, white cheese plate and yogurt bowl, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Pratik & Ekonomik · Tatlı Çeşitleri (cover)
+**File Path:** `photos/meals/budget_cover_dessert.webp`
+**Prompt:** Ultra realistic food photography, Turkish budget dessert spread with semolina halva, rice pudding ramekins, yogurt with honey and walnuts, tahini-molasses energy balls and stewed cinnamon apples, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
+
+### Pratik & Ekonomik · Atıştırmalıklar (cover)
+**File Path:** `photos/meals/budget_cover_snack.webp`
+**Prompt:** Ultra realistic food photography, Turkish budget snack spread with cucumber sticks and yogurt dip, mixed olives and cheese plate, homemade potato chips, sliced tomato salad and a small cacık bowl, modern ceramic plate, soft natural lighting, top-down angle, minimal clean background, high detail, 4k
