@@ -136,6 +136,13 @@ class _CategoryRecipesScreenState extends ConsumerState<CategoryRecipesScreen> {
     );
   }
 
+  /// Phase 83 · sentinel route token for the tag-based "Pratik &
+  /// Ekonomik" bucket. Unlike the other tokens this is NOT a
+  /// `meal_type` value; [_filter] special-cases it to match recipes
+  /// whose `tags` contain the corresponding label.
+  static const String _budgetType = 'budget';
+  static const String _budgetTagLabel = 'Pratik & Ekonomik';
+
   /// Maps the route param to the Turkish AppBar title. Unknown values
   /// fall back to a generic "Tarifler" so a malformed deeplink still
   /// renders a sensible header.
@@ -151,6 +158,8 @@ class _CategoryRecipesScreenState extends ConsumerState<CategoryRecipesScreen> {
         return 'Ara Öğün Tarifleri';
       case 'dessert':
         return 'Sporcu Tatlıları';
+      case _budgetType:
+        return 'Pratik & Ekonomik';
       default:
         return 'Tarifler';
     }
@@ -162,7 +171,17 @@ class _CategoryRecipesScreenState extends ConsumerState<CategoryRecipesScreen> {
   /// identical lowercase English tokens (`breakfast`, `lunch`,
   /// `dinner`, `snack`, `dessert`), so a direct `==` compare is
   /// cleaner and can never silently fail on Unicode edge cases.
+  ///
+  /// Phase 83 · the `budget` sentinel routes through tag-based
+  /// matching instead of [Recipe.mealType] equality, so the
+  /// "Pratik & Ekonomik" bucket can pull recipes from across all
+  /// five meal types without a schema change.
   static List<Recipe> _filter(List<Recipe> recipes, String type) {
+    if (type == _budgetType) {
+      return recipes
+          .where((r) => r.tags.contains(_budgetTagLabel))
+          .toList();
+    }
     return recipes.where((r) => r.mealType == type).toList();
   }
 }

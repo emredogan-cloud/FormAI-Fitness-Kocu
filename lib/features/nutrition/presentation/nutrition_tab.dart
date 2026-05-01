@@ -1329,6 +1329,22 @@ class _MealCategoriesSection extends StatelessWidget {
       imageUrl:
           'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=600&q=80',
     ),
+    // Phase 83 · Pratik & Ekonomik (Budget) bucket. Unlike the five
+    // entries above, `type: 'budget'` is NOT a `meal_type` value — it's
+    // a sentinel that [CategoryRecipesScreen._filter] resolves to a
+    // tag-based filter on `'Pratik & Ekonomik'`. The Unsplash URL below
+    // is a temporary placeholder reused from the `snack` slot; the
+    // intent is for the PM to swap it for a budget-meal-specific
+    // hero shot once one is sourced (the Phase 83 pilot ships 10
+    // candidate webps via docs/MEAL_IMAGE_PROMPTS.md any of which
+    // could be lifted into the card slot).
+    _CategoryEntry(
+      label: 'Pratik & Ekonomik',
+      type: 'budget',
+      tint: Color(0xFFFFA726),
+      imageUrl:
+          'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&q=80',
+    ),
   ];
 
   @override
