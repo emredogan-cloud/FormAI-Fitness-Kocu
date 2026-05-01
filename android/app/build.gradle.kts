@@ -118,20 +118,16 @@ flutter {
     source = "../.."
 }
 
-// Phase 79 · pin the underlying ML Kit pose-detection native artifacts to
-// a single Maven version. The Flutter wrapper (`google_mlkit_pose_detection`)
-// pulls these in transitively alongside `google_mlkit_commons`; when the
-// resolved versions disagree we hit a JNI `NoSuchFieldError` from
-// `PoseMiniBenchmarkWorker` referencing the obfuscated `zzib` class with a
-// field layout that no longer matches the loaded class. Forcing both
-// `pose-detection` and `pose-detection-accurate` to 17.0.1-beta7 (the line
-// the wrapper was published against) eliminates the collision.
-configurations.all {
-    resolutionStrategy {
-        force("com.google.mlkit:pose-detection:17.0.1-beta7")
-        force("com.google.mlkit:pose-detection-accurate:17.0.1-beta7")
-    }
-}
+// Phase 81 · the Phase 79 `configurations.all { resolutionStrategy.force(...) }`
+// block that pinned `pose-detection` and `pose-detection-accurate` to
+// 17.0.1-beta7 has been removed. The Flutter wrapper `google_mlkit_pose_detection`
+// 0.14.1 actually declares `implementation("com.google.mlkit:pose-detection:18.0.0-beta5")`
+// in its own `android/build.gradle` (verifiable in pub-cache), so the
+// Phase 79 force was a downgrade — the wrapper's compiled Java code
+// expected 18.x class signatures (including `com.google.mlkit.vision.common.Detector`)
+// that 17.x didn't have, producing the `NoClassDefFoundError` on workout-screen
+// open. Letting the wrapper's transitive resolution stand restores the
+// 18.0.0-beta5 line everything was built against.
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")

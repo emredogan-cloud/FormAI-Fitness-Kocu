@@ -57,3 +57,23 @@
 # references. Both gaps are closed below.
 -keep class com.google.android.gms.vision.** { *; }
 -dontwarn com.google.android.gms.**
+
+# =============================================================================
+# Phase 81 · Firebase components keep rule.
+# =============================================================================
+# ML Kit's vision-common layer is wired to Firebase's component framework
+# (`com.google.firebase.components.ComponentRegistrar` discovery + DI).
+# The Phase 81 root cause turned out to be the Phase 79 native-artifact
+# downgrade (forced 17.0.1-beta7 vs the 18.0.0-beta5 the wrapper was
+# built against), but R8 was also pruning the Firebase-components
+# bridge in some configurations. Keeping it explicitly closes that
+# door even after the version-force regression is undone.
+#
+# Other rules from the Phase 81 directive
+# (`com.google.mlkit.vision.common.**`, `com.google.mlkit.vision.pose.**`,
+# the `mlkit_vision_pose_common` internal subpackage) are intentionally
+# NOT re-listed because the existing `com.google.mlkit.**` and
+# `com.google.android.gms.internal.mlkit_vision_**` wildcards above
+# already cover them — ProGuard's `**` matches across package levels.
+-keep class com.google.firebase.components.** { *; }
+-dontwarn com.google.firebase.components.**
