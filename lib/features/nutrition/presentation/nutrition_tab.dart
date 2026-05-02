@@ -1407,49 +1407,43 @@ const List<_CategoryEntry> _mealCategoryEntries = [
 /// (the tag-based sentinel) AND a `subType` corresponding to a
 /// `meal_type` value, producing the intersection
 /// `tags @> ARRAY['Pratik & Ekonomik'] AND meal_type = $sub` server-side.
-/// Image URLs intentionally mirror [_mealCategoryEntries] for the
-/// same meal-types so the two strips read as visually parallel until
-/// the PM sources budget-specific hero shots.
+/// Image URLs are budget-specific bundled assets so the strip reads
+/// distinct from the regular [_mealCategoryEntries] strip above.
 const List<_CategoryEntry> _budgetCategoryEntries = [
   _CategoryEntry(
     label: 'Kahvaltı',
     type: 'budget',
     subType: 'breakfast',
     tint: Color(0xFFFFB84D),
-    imageUrl:
-        'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?auto=format&fit=crop&w=600&q=80',
+    imageUrl: 'photos/meals/budget_cover_breakfast.webp',
   ),
   _CategoryEntry(
     label: 'Öğle Yemeği',
     type: 'budget',
     subType: 'lunch',
     tint: Color(0xFF4DA6FF),
-    imageUrl:
-        'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&q=80',
+    imageUrl: 'photos/meals/budget_cover_lunch.webp',
   ),
   _CategoryEntry(
     label: 'Akşam Yemeği',
     type: 'budget',
     subType: 'dinner',
     tint: Color(0xFF8E5BFF),
-    imageUrl:
-        'https://images.unsplash.com/photo-1544025162-d76694265947?w=600&q=80',
+    imageUrl: 'photos/meals/budget_cover_dinner.webp',
   ),
   _CategoryEntry(
     label: 'Tatlı Çeşitleri',
     type: 'budget',
     subType: 'dessert',
     tint: Color(0xFFFF4DDB),
-    imageUrl:
-        'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=600&q=80',
+    imageUrl: 'photos/meals/budget_cover_dessert.webp',
   ),
   _CategoryEntry(
     label: 'Atıştırmalıklar',
     type: 'budget',
     subType: 'snack',
     tint: Color(0xFF39FF14),
-    imageUrl:
-        'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&q=80',
+    imageUrl: 'photos/meals/budget_cover_snack.webp',
   ),
 ];
 
