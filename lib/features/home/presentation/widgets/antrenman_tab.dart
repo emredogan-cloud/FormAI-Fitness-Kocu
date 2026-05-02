@@ -16,7 +16,7 @@ import '../../../workout/models/workout_day_model.dart';
 import '../../../workout/models/workout_plan_model.dart';
 import '../../../workout/providers/workout_provider.dart';
 import 'challenge_hero_card.dart';
-import 'push_limits_strip.dart';
+import 'equipment_strip.dart';
 import 'weekly_goal_card.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
@@ -177,9 +177,9 @@ class _AntrenmanTabState extends ConsumerState<AntrenmanTab> {
           ),
         ),
         const SizedBox(height: 28),
-        const _SectionTitle(title: 'Sınırlarını Zorla'),
+        const _SectionTitle(title: 'Ekipmanlı Egzersizler'),
         const SizedBox(height: 12),
-        const PushLimitsStrip(),
+        const EquipmentStrip(),
         const SizedBox(height: 28),
         const _SectionTitle(
           title: 'Bölgeler',
@@ -642,7 +642,7 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Phase 53B · "Sınırlarını Zorla" / "Bölgeler" / etc. titles need
+    // Phase 53B · "Ekipmanlı Egzersizler" / "Bölgeler" / etc. titles need
     // to flip with the active theme. Pull the active onSurface tone
     // and let the trailing icon tile match.
     final scheme = context.colors;

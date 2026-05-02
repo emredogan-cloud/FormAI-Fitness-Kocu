@@ -27,11 +27,12 @@ final workoutPlansProvider = FutureProvider<List<WorkoutPlan>>((ref) {
   return ref.watch(workoutRepositoryProvider).getAllPlans();
 });
 
-/// "Sınırlarını Zorla" cards for the dashboard strip. Materialised from
-/// the same fetched catalogue that powers [workoutPlansProvider]; the
-/// shared repository keeps both providers off independent network calls.
-final pushLimitsPlansProvider = FutureProvider<List<WorkoutPlan>>((ref) {
-  return ref.watch(workoutRepositoryProvider).getPushLimitsPlans();
+/// "Ekipmanlı Egzersizler" cards for the dashboard strip. Materialised
+/// from the same fetched catalogue that powers [workoutPlansProvider];
+/// the shared repository keeps both providers off independent network
+/// calls.
+final equipmentPlansProvider = FutureProvider<List<WorkoutPlan>>((ref) {
+  return ref.watch(workoutRepositoryProvider).getEquipmentPlans();
 });
 
 class WorkoutSessionState {
@@ -240,7 +241,7 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
       isSessionComplete: false,
     ));
     // Ad-hoc run — dayNumber 0 so the funnel can segment program days
-    // from Sınırlarını Zorla / regional launches.
+    // from Ekipmanlı Egzersizler / regional launches.
     AnalyticsService.instance.workoutStarted(
       dayNumber: 0,
       exerciseName: exercises.first.name,

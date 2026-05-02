@@ -3,29 +3,43 @@
 Master AI image generation prompt sheet for every dashboard workout module on the **Antrenman** tab. Use these prompts verbatim with Midjourney v6 (or any equivalent text-to-image model) to generate the premium thumbnail set.
 
 **Source of truth:** `lib/features/workout/data/workout_repository.dart`
-**Total items:** 25 (4 in *Sınırlarını Zorla* + 21 across 7 *Bölgeler* sub-categories)
+**Total items:** 28 (7 in *Ekipmanlı Egzersizler* + 21 across 7 *Bölgeler* sub-categories)
 **Target asset folder:** `photos/workouts/`
 **Format:** WebP, 1:1 (square) or 4:3 thumbnail framing, 1024×1024 source preferred.
 
 ---
 
-## Sınırlarını Zorla
+## Ekipmanlı Egzersizler
 
-### Sınırlarını Zorla - Belirgin Karın Kasları HIIT
-**File Path:** `photos/workouts/push_limits_abs_hiit.webp`
-**Prompt:** Ultra realistic fitness photography, athlete in mid-air performing an explosive burpee jump during a high-intensity HIIT abs circuit, muscular physique, dark cinematic gym background, high contrast, dramatic neon edge lighting, sweat details, highly detailed, 4k, dynamic angle.
+Phase 85 · seven equipment-only muscle-group cards on the Antrenman dashboard, ordered chest → back → shoulders → biceps → triceps → legs → core.
 
-### Sınırlarını Zorla - Daha Güçlü Şekil ve Çekirdek
-**File Path:** `photos/workouts/push_limits_stronger_core.webp`
-**Prompt:** Ultra realistic fitness photography, muscular athlete performing weighted Russian twists with intense focus on chiseled oblique and core development, muscular physique, dark cinematic gym background, high contrast, dramatic neon edge lighting, sweat details, highly detailed, 4k, dynamic angle.
+### Ekipmanlı Egzersizler - Göğüs (Ekipmanlı Göğüs Gücü)
+**File Path:** `photos/workouts/equipment_chest_strength.webp`
+**Prompt:** Ultra realistic fitness photography, muscular athlete performing barbell bench press in a modern gym, dramatic lighting, high contrast, strong shadows, cinematic look, highly detailed, 4k.
 
-### Sınırlarını Zorla - Demir Altı Paket Gücü
-**File Path:** `photos/workouts/push_limits_iron_pack.webp`
-**Prompt:** Ultra realistic fitness photography, shredded athlete performing strict hanging leg raises showcasing a deeply defined iron-cut six-pack, muscular physique, dark cinematic gym background, high contrast, dramatic neon edge lighting, sweat details, highly detailed, 4k, dynamic angle.
+### Ekipmanlı Egzersizler - Sırt (Ekipmanlı Sırt Genişliği)
+**File Path:** `photos/workouts/equipment_back_width.webp`
+**Prompt:** Ultra realistic fitness photography, broad-backed athlete performing wide-grip lat pulldown showcasing a sculpted V-taper, modern gym, dramatic lighting, high contrast, strong shadows, cinematic look, highly detailed, 4k.
 
-### Sınırlarını Zorla - Atletik Core Kontrolü
-**File Path:** `photos/workouts/push_limits_athletic_core.webp`
-**Prompt:** Ultra realistic fitness photography, lean athlete holding a long forearm plank with absolute control demonstrating tight athletic core stability, muscular physique, dark cinematic gym background, high contrast, dramatic neon edge lighting, sweat details, highly detailed, 4k, dynamic angle.
+### Ekipmanlı Egzersizler - Omuz (Yuvarlak Omuz Şekillendirme)
+**File Path:** `photos/workouts/equipment_shoulders_round.webp`
+**Prompt:** Ultra realistic fitness photography, muscular athlete pressing dumbbells overhead with rounded capped deltoid heads visible, modern gym, dramatic lighting, high contrast, strong shadows, cinematic look, highly detailed, 4k.
+
+### Ekipmanlı Egzersizler - Kol / Biceps (Ekipmanlı Biceps Pompası)
+**File Path:** `photos/workouts/equipment_arms_biceps.webp`
+**Prompt:** Ultra realistic fitness photography, muscular athlete performing seated dumbbell concentration curl with peak biceps contraction visible, modern gym, dramatic lighting, high contrast, strong shadows, cinematic look, highly detailed, 4k.
+
+### Ekipmanlı Egzersizler - Triceps (Ekipmanlı Triceps Yoğunluğu)
+**File Path:** `photos/workouts/equipment_arms_triceps.webp`
+**Prompt:** Ultra realistic fitness photography, muscular athlete performing cable triceps pushdown with horseshoe triceps definition, modern gym, dramatic lighting, high contrast, strong shadows, cinematic look, highly detailed, 4k.
+
+### Ekipmanlı Egzersizler - Bacak (Ekipmanlı Bacak Gücü)
+**File Path:** `photos/workouts/equipment_legs_power.webp`
+**Prompt:** Ultra realistic fitness photography, powerful athlete performing barbell back squat in a power rack with thick quadriceps engaged, modern gym, dramatic lighting, high contrast, strong shadows, cinematic look, highly detailed, 4k.
+
+### Ekipmanlı Egzersizler - Karın (Ağırlıklı Karın Şekillendirme)
+**File Path:** `photos/workouts/equipment_core_loaded.webp`
+**Prompt:** Ultra realistic fitness photography, muscular athlete performing kneeling cable crunch with weight stack, deeply chiseled six-pack visible, modern gym, dramatic lighting, high contrast, strong shadows, cinematic look, highly detailed, 4k.
 
 ---
 

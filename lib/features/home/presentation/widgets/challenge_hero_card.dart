@@ -4,7 +4,7 @@ const Color _neon = Color(0xFF8E5BFF);
 
 /// Dashboard hero card for the user's personalized 30-day program.
 ///
-/// Rebuilt in phase 19.5 to mirror the `PushLimitsStrip` layout: a
+/// Rebuilt in phase 19.5 to mirror the `EquipmentStrip` layout: a
 /// full-bleed image at the back, a dark bottom-weighted gradient to
 /// keep text readable, then the headline + day number + progress +
 /// BAŞLA button stacked on top. The prior version used a `Positioned`

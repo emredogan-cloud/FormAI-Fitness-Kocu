@@ -200,74 +200,119 @@ class WorkoutRepository {
   }
 
   // ==========================================================================
-  // "SINIRLARINI ZORLA" + REGIONAL PLAN TEMPLATES
+  // "EKİPMANLI EGZERSİZLER" + REGIONAL PLAN TEMPLATES
   // ==========================================================================
   // Plans are defined as static templates (id + slug list); resolution
   // against the live exercise catalogue happens lazily in
-  // [getAllPlans] / [getPushLimitsPlans]. Slugs that don't resolve are
+  // [getAllPlans] / [getEquipmentPlans]. Slugs that don't resolve are
   // silently dropped, so deleting an exercise in Supabase doesn't crash
   // the dashboard — the affected plan just gets shorter.
+  //
+  // Phase 85 · the four core "Sınırlarını Zorla" templates were replaced
+  // with seven muscle-group cards driven entirely off equipment-only
+  // slugs. The slug curation IS the equipment classification — there's
+  // no runtime equipment field on Exercise (yet), so the only way a
+  // bodyweight movement could end up on this strip is by being added to
+  // one of the lists below. Re-curate carefully.
   // ==========================================================================
 
-  static const List<_PlanTemplate> _pushLimitsTemplates = [
+  static const List<_PlanTemplate> _equipmentTemplates = [
     _PlanTemplate(
-      id: 'push_limits_abs_hiit',
-      title: 'Belirgin Karın Kasları HIIT',
-      category: ExerciseCategory.core,
+      id: 'equipment_chest_strength',
+      title: 'Ekipmanlı Göğüs Gücü',
+      category: ExerciseCategory.chest,
       level: 'Orta düzey',
-      durationMinutes: 19,
+      durationMinutes: 22,
       exerciseSlugs: [
-        'mountain_climber',
-        'bicycle_crunch',
-        'crunch',
-        'leg_raise',
-        'plank',
+        'bench_press',
+        'incline_bench_press',
+        'chest_fly',
+        'chest_dip',
       ],
-      image: 'photos/workouts/push_limits_abs_hiit.webp',
+      image: 'photos/workouts/equipment_chest_strength.webp',
     ),
     _PlanTemplate(
-      id: 'push_limits_stronger_core',
-      title: 'Daha Güçlü Şekil ve Çekirdek',
-      category: ExerciseCategory.core,
+      id: 'equipment_back_width',
+      title: 'Ekipmanlı Sırt Genişliği',
+      category: ExerciseCategory.back,
       level: 'Orta düzey',
       durationMinutes: 24,
       exerciseSlugs: [
-        'russian_twist',
-        'leg_raise',
-        'plank',
-        'situp',
-        'bicycle_crunch',
+        'pull_up',
+        'lat_pulldown',
+        'barbell_row',
+        'chin_up',
       ],
-      image: 'photos/workouts/push_limits_stronger_core.webp',
+      image: 'photos/workouts/equipment_back_width.webp',
     ),
     _PlanTemplate(
-      id: 'push_limits_iron_pack',
-      title: 'Demir Altı Paket Gücü',
+      id: 'equipment_shoulders_round',
+      title: 'Yuvarlak Omuz Şekillendirme',
+      category: ExerciseCategory.shoulders,
+      level: 'Orta düzey',
+      durationMinutes: 20,
+      exerciseSlugs: [
+        'shoulder_press',
+        'arnold_press',
+        'lateral_raise',
+        'front_raise',
+      ],
+      image: 'photos/workouts/equipment_shoulders_round.webp',
+    ),
+    _PlanTemplate(
+      id: 'equipment_arms_biceps',
+      title: 'Ekipmanlı Biceps Pompası',
+      category: ExerciseCategory.arms,
+      level: 'Orta düzey',
+      durationMinutes: 14,
+      exerciseSlugs: [
+        'biceps_curl',
+        'hammer_curl',
+        'concentration_curl',
+      ],
+      image: 'photos/workouts/equipment_arms_biceps.webp',
+    ),
+    _PlanTemplate(
+      id: 'equipment_arms_triceps',
+      title: 'Ekipmanlı Triceps Yoğunluğu',
+      category: ExerciseCategory.arms,
+      level: 'Orta düzey',
+      durationMinutes: 14,
+      exerciseSlugs: [
+        'triceps_pushdown',
+        'skull_crusher',
+        'triceps_dip',
+      ],
+      image: 'photos/workouts/equipment_arms_triceps.webp',
+    ),
+    _PlanTemplate(
+      id: 'equipment_legs_power',
+      title: 'Ekipmanlı Bacak Gücü',
+      category: ExerciseCategory.legs,
+      level: 'İleri',
+      durationMinutes: 28,
+      exerciseSlugs: [
+        'barbell_squat',
+        'leg_press',
+        'romanian_deadlift',
+        'leg_extension',
+        'leg_curl',
+      ],
+      image: 'photos/workouts/equipment_legs_power.webp',
+    ),
+    _PlanTemplate(
+      id: 'equipment_core_loaded',
+      title: 'Ağırlıklı Karın Şekillendirme',
       category: ExerciseCategory.core,
       level: 'İleri',
       durationMinutes: 18,
       exerciseSlugs: [
+        'cable_crunch',
         'hanging_leg_raise',
-        'crunch',
-        'russian_twist',
-        'plank',
-        'flutter_kick',
+        'weighted_russian_twist',
+        'ab_wheel_rollout',
       ],
-      image: 'photos/workouts/push_limits_iron_pack.webp',
-    ),
-    _PlanTemplate(
-      id: 'push_limits_athletic_core',
-      title: 'Atletik Core Kontrolü',
-      category: ExerciseCategory.core,
-      level: 'Başlangıç',
-      durationMinutes: 15,
-      exerciseSlugs: [
-        'plank',
-        'bicycle_crunch',
-        'crunch',
-        'flutter_kick',
-      ],
-      image: 'photos/workouts/push_limits_athletic_core.webp',
+      image: 'photos/workouts/equipment_core_loaded.webp',
     ),
   ];
 
@@ -527,27 +572,33 @@ class WorkoutRepository {
     ),
   ];
 
-  /// Materialised Sınırlarını Zorla cards. Resolves the four templates
-  /// against the fetched catalogue; missing slugs drop out silently.
-  Future<List<WorkoutPlan>> getPushLimitsPlans() async {
+  /// Materialised Ekipmanlı Egzersizler cards. Resolves the seven
+  /// muscle-group templates against the fetched catalogue; missing
+  /// slugs drop out silently so the same template stays shippable
+  /// before its corresponding Phase 85 exercises land in Supabase.
+  Future<List<WorkoutPlan>> getEquipmentPlans() async {
     final exercises = await getAllExercises();
     final bySlug = {for (final e in exercises) e.id: e};
-    return _pushLimitsTemplates
+    return _equipmentTemplates
         .map((t) => t.resolve(bySlug))
         .toList(growable: false);
   }
 
-  /// Materialised regional + Sınırlarını Zorla plan list, in the same
-  /// order the dashboard renders them. The strip on the home tab pulls
-  /// the four push-limits cards via [getPushLimitsPlans] for tinting,
-  /// but the regional list still expects them at the head of the array.
+  /// Materialised regional plan list for the Bölgeler chip strip.
+  ///
+  /// Phase 85 · this used to also prepend the four push-limits cards
+  /// (which were all `category: core`) so the Core chip showed them at
+  /// the top of the regional list. With the strip rebuilt as seven
+  /// equipment cards spread across chest/back/shoulders/arms/legs/core,
+  /// folding them in here would surface the same plan twice (once on
+  /// the equipment strip, once under whichever Bölgeler chip matched).
+  /// The equipment strip is now the only entry point for those plans.
   Future<List<WorkoutPlan>> getAllPlans() async {
     final exercises = await getAllExercises();
     final bySlug = {for (final e in exercises) e.id: e};
-    return [
-      ..._pushLimitsTemplates.map((t) => t.resolve(bySlug)),
-      ..._regionalTemplates.map((t) => t.resolve(bySlug)),
-    ];
+    return _regionalTemplates
+        .map((t) => t.resolve(bySlug))
+        .toList(growable: false);
   }
 
   // ==========================================================================

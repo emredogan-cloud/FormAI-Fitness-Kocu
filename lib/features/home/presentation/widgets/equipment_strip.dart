@@ -10,14 +10,17 @@ import '../../../workout/providers/workout_provider.dart';
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonAccent = Color(0xFF4DA6FF);
 
-/// Tints assigned to each push-limits card by ordinal. Kept aligned with
-/// the order returned by `WorkoutRepository.getPushLimitsPlans()`:
-///   [abs_hiit, stronger_core, iron_pack, athletic_core]
-const List<Color> _pushLimitsTints = [
+/// Tints assigned to each equipment card by ordinal. Kept aligned with
+/// the order returned by `WorkoutRepository.getEquipmentPlans()`:
+///   [chest, back, shoulders, biceps, triceps, legs, core]
+const List<Color> _equipmentTints = [
   _neon,
   Color(0xFF1FBF8F),
   _neonAccent,
   Color(0xFFFF6FB5),
+  Color(0xFFFFB84D),
+  Color(0xFF39FF14),
+  Color(0xFFFF4DDB),
 ];
 
 Widget _resolveImage(String image) {
@@ -41,12 +44,12 @@ Widget _resolveImage(String image) {
   );
 }
 
-class PushLimitsStrip extends ConsumerWidget {
-  const PushLimitsStrip({super.key});
+class EquipmentStrip extends ConsumerWidget {
+  const EquipmentStrip({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final plansAsync = ref.watch(pushLimitsPlansProvider);
+    final plansAsync = ref.watch(equipmentPlansProvider);
     return SizedBox(
       height: 200,
       child: plansAsync.when(
@@ -67,8 +70,8 @@ class PushLimitsStrip extends ConsumerWidget {
             separatorBuilder: (_, __) => const SizedBox(width: 12),
             itemBuilder: (context, index) {
               final plan = plans[index];
-              final tint = _pushLimitsTints[index % _pushLimitsTints.length];
-              return _PushLimitsCard(plan: plan, tint: tint);
+              final tint = _equipmentTints[index % _equipmentTints.length];
+              return _EquipmentCard(plan: plan, tint: tint);
             },
           );
         },
@@ -77,8 +80,8 @@ class PushLimitsStrip extends ConsumerWidget {
   }
 }
 
-class _PushLimitsCard extends StatelessWidget {
-  const _PushLimitsCard({required this.plan, required this.tint});
+class _EquipmentCard extends StatelessWidget {
+  const _EquipmentCard({required this.plan, required this.tint});
 
   final WorkoutPlan plan;
   final Color tint;
