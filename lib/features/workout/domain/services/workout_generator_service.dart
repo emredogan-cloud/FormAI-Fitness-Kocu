@@ -160,9 +160,20 @@ class WorkoutGeneratorService {
         v == 'cut') {
       return _Goal.tone;
     }
-    // Unknown input → default to a balanced core-centric plan, which is
-    // the app's primary positioning ("30 günde karın kası").
-    return _Goal.sixpack;
+    // Phase 86 · default fell through. Previously this returned `sixpack`
+    // (heavy on core), which combined with an empty/missing onboarding
+    // payload silently gave every install a core-led plan. The new
+    // default is `tone` — its bucket merge already includes core +
+    // cardio + fullbody + lower_body, so a user we know nothing about
+    // gets a balanced full-body plan instead of a core-only one. Log
+    // the fall-through so an empty wizard payload is debuggable from
+    // the structured logs alone.
+    AppLogger.warning(
+      'WorkoutGenerator · goal fell through to default `tone`',
+      category: 'workout',
+      data: {'userGoal_raw': raw},
+    );
+    return _Goal.tone;
   }
 
   /// Accepts the difficulty strings published by Phase 16 (beginner /
@@ -177,6 +188,21 @@ class WorkoutGeneratorService {
     if (v == 'intermediate' || v == 'light' || v == 'orta') {
       return _Level.intermediate;
     }
+    if (v == 'beginner' ||
+        v == 'sedentary' ||
+        v == 'baslangic' ||
+        v == 'başlangıç') {
+      return _Level.beginner;
+    }
+    // Phase 86 · default fell through. Beginner stays the safe default
+    // (the level filter only protects beginners from `advanced` work,
+    // so erring beginner-side never surfaces an unsafe progression),
+    // but log it so an empty/typo'd onboarding value is debuggable.
+    AppLogger.warning(
+      'WorkoutGenerator · level fell through to default `beginner`',
+      category: 'workout',
+      data: {'fitnessLevel_raw': raw},
+    );
     return _Level.beginner;
   }
 
@@ -189,14 +215,21 @@ class WorkoutGeneratorService {
     // first cursor position.
     switch (goal) {
       case _Goal.sixpack:
-        // Primary emphasis on core, but cardio + full_body sprinkled in
-        // every day so even Day 1 reads as a balanced ab-finisher rather
-        // than nine consecutive crunches.
+        // Phase 86 · diluted from a 3-bucket (core/cardio/full_body)
+        // merge to a 4-bucket merge by folding lower_body in. Compound
+        // lower-body work (squats, lunges) engages the entire core
+        // anyway, and adding it as a peer bucket drops the early-week
+        // windows from ~50–67% core down to ~30–50% core without
+        // compromising the "sixpack-led" feel — the bucket head order
+        // still puts core first, so day 1 still starts with a core
+        // movement; the rotation just brings in more variety after.
         final core = pool.where((e) => e.targetMuscle == 'core').toList();
         final cardio = pool.where((e) => e.targetMuscle == 'cardio').toList();
         final fullBody =
             pool.where((e) => e.targetMuscle == 'full_body').toList();
-        return _roundRobinMerge([core, cardio, fullBody]);
+        final lower =
+            pool.where((e) => e.targetMuscle == 'lower_body').toList();
+        return _roundRobinMerge([core, cardio, fullBody, lower]);
       case _Goal.bulk:
         // Hypertrophy focus → upper-body and lower-body compound work,
         // alternating muscles each pick so a single day naturally rotates

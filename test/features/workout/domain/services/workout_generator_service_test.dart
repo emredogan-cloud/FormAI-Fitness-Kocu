@@ -307,13 +307,16 @@ void main() {
   });
 
   group('goal-aware daily composition', () {
-    test('sixpack plan day 1 leads with a core movement and stays core-heavy',
-        () {
-      // Phase 48 · the generator now round-robin-interleaves the goal
-      // buckets ([core, cardio, full_body] for sixpack) so day 1 reads
-      // as a balanced ab-finisher rather than nine consecutive crunches.
-      // The invariants we still want: the first exercise is core (the
-      // bucket head), and a clear majority of the day stays core.
+    test('sixpack plan day 1 leads with core but stays balanced', () {
+      // Phase 48 · the generator round-robin-interleaves the goal
+      // buckets so day 1 reads as a balanced ab-finisher rather than
+      // nine consecutive crunches.
+      // Phase 86 · the sixpack bucket merge expanded from 3-way
+      // (core/cardio/full_body) to 4-way by folding lower_body in. This
+      // reduces day-1 core share from ~50% down to ~30%, addressing the
+      // "always falls back to core" complaint without losing the
+      // sixpack lead — the bucket head order still places core first,
+      // so day 1's first exercise is always a core movement.
       final plan = service.generate30DayPlan(
         userGoal: 'sixpack',
         fitnessLevel: 'beginner',
@@ -323,17 +326,26 @@ void main() {
       final dayOne = plan.first;
       final coreCount =
           dayOne.exercises.where((e) => e.targetMuscle == 'core').length;
+      final muscleGroups = dayOne.exercises.map((e) => e.targetMuscle).toSet();
 
       expect(
         dayOne.exercises.first.targetMuscle,
         'core',
         reason: 'sixpack rotation must lead with the core bucket head',
       );
+      // No single muscle group may exceed half the day. Strict less-than
+      // — exactly half is still considered "biased" enough to fail.
       expect(
         coreCount * 2,
-        greaterThanOrEqualTo(dayOne.exercises.length),
-        reason: 'sixpack day 1 must remain at least 50% core after Phase 48 '
-            'interleave introduces cardio + full_body variety',
+        lessThan(dayOne.exercises.length),
+        reason: 'sixpack day 1 must not exceed 50% core after the Phase 86 '
+            'lower_body dilution',
+      );
+      expect(
+        muscleGroups.length,
+        greaterThanOrEqualTo(3),
+        reason: 'sixpack day 1 must surface at least three muscle groups '
+            'so the merged list reads as variety, not a core wall',
       );
     });
 
@@ -407,19 +419,25 @@ void main() {
       );
     });
 
-    test('unknown goal falls back to the sixpack (core-first) default', () {
+    test('unknown goal falls back to the tone (balanced) default', () {
+      // Phase 86 · the empty/unknown-goal default flipped from sixpack
+      // to tone so a missing onboarding payload yields a balanced
+      // cardio + full_body + core + lower_body plan instead of a
+      // core-led one. The fall-through is structured-logged in
+      // _normaliseGoal so the empty-payload case is debuggable from
+      // production telemetry.
       final unknown = service.generate30DayPlan(
         userGoal: 'totally-made-up-goal',
         fitnessLevel: 'beginner',
         pool: _fixturePool,
       );
-      final sixpack = service.generate30DayPlan(
-        userGoal: 'sixpack',
+      final tone = service.generate30DayPlan(
+        userGoal: 'tone',
         fitnessLevel: 'beginner',
         pool: _fixturePool,
       );
 
-      expect(unknown, equals(sixpack));
+      expect(unknown, equals(tone));
     });
 
     test('Turkish goal aliases map to their English equivalents', () {

@@ -22,13 +22,23 @@ class WorkoutRepository {
 
   static const String _completedKey = 'sixpack.completed_days';
   static const String _pendingSyncKey = 'sixpack.pending_sync_days';
-  // Bumped v3 → v4 in phase 75: the cached plan stores resolved
-  // `videoUrl` strings on each exercise, and pre-75 plans baked in the
-  // old `video_url`-column-derived URLs (which were lowercased / 404ing
-  // against case-sensitive Storage). The key bump forces a one-shot
-  // regeneration so the slug-to-PascalCase URLs land on existing installs
-  // without users having to "Reset progress" by hand.
-  static const String _planKey = 'sixpack.user_custom_plan_v4';
+  // Bumped v4 → v5 in phase 86: the goal/level normaliser now defaults
+  // to `tone` instead of `sixpack` when onboarding is empty, and the
+  // bucket interleave was rewritten to spread shorter buckets evenly
+  // through the merged list. Existing v4 caches were generated under
+  // the old core-biased path and must be regenerated to pick up the
+  // fix; bumping the key forces that on next launch without users
+  // having to "Reset progress" by hand. (Prior bump v3 → v4 in phase 75
+  // was a similar one-shot for video URL casing.)
+  static const String _planKey = 'sixpack.user_custom_plan_v5';
+  /// Companion key holding a `goal:level` fingerprint of the inputs
+  /// that produced the cached plan. Read at decode time; if the
+  /// current onboarding inputs no longer match, the cached plan is
+  /// treated as stale and regenerated. Closes the gap where a user
+  /// changes their goal in profile-edit but keeps seeing the original
+  /// plan because the cache had no concept of input identity.
+  static const String _planFingerprintKey =
+      'sixpack.user_custom_plan_fingerprint_v5';
   static const String _progressTable = 'user_progress';
   static const String _exercisesTable = 'exercises';
 
@@ -620,7 +630,11 @@ class WorkoutRepository {
     String? fitnessLevel,
   }) async {
     final completed = await _completedDays();
-    final cached = _decodeCachedPlan();
+    // Phase 86 · the cache is now keyed by an input fingerprint so a
+    // profile-edit that changes goal or activity level invalidates the
+    // stored plan instead of silently serving the old one.
+    final fingerprint = _fingerprint(userGoal, fitnessLevel);
+    final cached = _decodeCachedPlan(fingerprint);
     final List<WorkoutDay> plan;
     if (cached != null) {
       plan = cached;
@@ -642,7 +656,7 @@ class WorkoutRepository {
       // the next launch never retries the catalogue fetch, so skip the
       // write whenever the pool was empty.
       if (pool.isNotEmpty) {
-        unawaited(_cachePlan(plan));
+        unawaited(_cachePlan(plan, fingerprint));
       }
     }
     return plan
@@ -651,10 +665,34 @@ class WorkoutRepository {
         .toList(growable: false);
   }
 
+  /// Stable identity for the inputs that produced a cached plan. Null
+  /// raw values collapse to empty strings so a transition from
+  /// `null → "sixpack"` (i.e. user finishes onboarding for the first
+  /// time) is detectable as a fingerprint change.
+  String _fingerprint(String? userGoal, String? fitnessLevel) =>
+      '${userGoal ?? ''}|${fitnessLevel ?? ''}';
+
   /// Reads + decodes the cached plan. Returns null for any failure mode:
-  /// missing key, malformed JSON, wrong root type, enum drift, or a
-  /// length mismatch — all of which mean "regenerate from scratch".
-  List<WorkoutDay>? _decodeCachedPlan() {
+  /// missing key, malformed JSON, wrong root type, enum drift, length
+  /// mismatch, or a fingerprint mismatch — all of which mean
+  /// "regenerate from scratch".
+  List<WorkoutDay>? _decodeCachedPlan(String currentFingerprint) {
+    final cachedFp = _prefs.getString(_planFingerprintKey);
+    if (cachedFp != currentFingerprint) {
+      // First-run + post-onboarding-edit both land here. Logging at
+      // info-level so the structured log explains why a regeneration
+      // happened on this launch — useful when a user reports their
+      // plan unexpectedly changed.
+      AppLogger.info(
+        'WorkoutRepository · plan cache miss — input fingerprint changed',
+        category: 'workout',
+        data: {
+          'cached_fingerprint': cachedFp ?? '',
+          'current_fingerprint': currentFingerprint,
+        },
+      );
+      return null;
+    }
     final raw = _prefs.getString(_planKey);
     if (raw == null || raw.isEmpty) return null;
     try {
@@ -678,12 +716,18 @@ class WorkoutRepository {
     }
   }
 
-  Future<void> _cachePlan(List<WorkoutDay> plan) async {
+  Future<void> _cachePlan(List<WorkoutDay> plan, String fingerprint) async {
     try {
       final encoded = jsonEncode(
         plan.map((d) => d.toJson()).toList(growable: false),
       );
       await _prefs.setString(_planKey, encoded);
+      // Persist the fingerprint AFTER the plan write so a partial
+      // success (plan written, fingerprint failed) leaves the cache
+      // looking stale to the next read instead of looking valid against
+      // an outdated identity. setString is independent per-key, but the
+      // ordering still helps when both happen to fail.
+      await _prefs.setString(_planFingerprintKey, fingerprint);
     } catch (e, st) {
       AppLogger.error(
         'WorkoutRepository: plan cache encode failed',
@@ -727,6 +771,7 @@ class WorkoutRepository {
     // Drop the cached plan too — a full reset should yield a fresh
     // regeneration against whatever the user's current goal/level is.
     await _prefs.remove(_planKey);
+    await _prefs.remove(_planFingerprintKey);
     // Phase 52 · the user just wiped their streak, so the pending
     // 48 h "you'll lose your streak" warning would fire about a
     // streak that no longer exists. Cancel it.
