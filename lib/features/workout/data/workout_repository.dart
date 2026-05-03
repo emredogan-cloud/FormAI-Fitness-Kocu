@@ -32,6 +32,7 @@ class WorkoutRepository {
   // having to "Reset progress" by hand. (Prior bump v3 → v4 in phase 75
   // was a similar one-shot for video URL casing.)
   static const String _planKey = 'sixpack.user_custom_plan_v5';
+
   /// Companion key holding a `goal:level` fingerprint of the inputs
   /// that produced the cached plan. Read at decode time; if the
   /// current onboarding inputs no longer match, the cached plan is
