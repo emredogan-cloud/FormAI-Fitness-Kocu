@@ -413,7 +413,17 @@ class _HeroHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 87 · hero rebuilt as a full-bleed image to match the
+    // ChallengeHeroCard treatment on the dashboard. The previous
+    // `Positioned(right: -10, width: 220)` panel was deliberate but
+    // visually inconsistent: the same asset went from full-bleed on the
+    // dashboard hero card to a 220-px right strip on the detail screen.
+    // Full-bleed + a stronger bottom-weighted dark gradient keeps the
+    // title and chip readable while letting the photo carry the visual.
     return DecoratedBox(
+      // Fallback gradient — only visible if `_resolveImage` errors out
+      // (network failure on the Unsplash URL). Same brand purple→blue
+      // the previous design used as the primary background.
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [Color(0xFF6A3DFF), Color(0xFF4DA6FF)],
@@ -424,20 +434,10 @@ class _HeroHeader extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Positioned(
-            right: -10,
-            top: 50,
-            bottom: 0,
-            width: 220,
-            child: ColorFiltered(
-              colorFilter: ColorFilter.mode(
-                _neon.withValues(alpha: 0.55),
-                BlendMode.softLight,
-              ),
-              child: _resolveImage(copy.imageUrl),
-            ),
-          ),
-          // Soft vignette so the bottom of the hero blends into the dark list.
+          Positioned.fill(child: _resolveImage(copy.imageUrl)),
+          // Bottom-weighted dark gradient mirroring ChallengeHeroCard so
+          // the headline + chip on top of the image stay readable across
+          // any photo lighting. 15% at top → 90% at bottom.
           Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
@@ -445,9 +445,11 @@ class _HeroHeader extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.transparent,
-                    Colors.black.withValues(alpha: 0.25),
+                    Colors.black.withValues(alpha: 0.15),
+                    Colors.black.withValues(alpha: 0.55),
+                    Colors.black.withValues(alpha: 0.90),
                   ],
+                  stops: const [0.25, 0.6, 1.0],
                 ),
               ),
             ),
@@ -902,6 +904,10 @@ class _PlanHeroHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Phase 87 · matches the _HeroHeader rewrite — full-bleed image
+    // instead of the 220-px right strip, with a strong bottom-weighted
+    // gradient for title legibility. Plans without an image fall back
+    // to the brand purple→blue gradient (the DecoratedBox below).
     return DecoratedBox(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -914,19 +920,7 @@ class _PlanHeroHeader extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           if (plan.image != null)
-            Positioned(
-              right: -10,
-              top: 50,
-              bottom: 0,
-              width: 220,
-              child: ColorFiltered(
-                colorFilter: ColorFilter.mode(
-                  _neon.withValues(alpha: 0.55),
-                  BlendMode.softLight,
-                ),
-                child: _resolveImage(plan.image!),
-              ),
-            ),
+            Positioned.fill(child: _resolveImage(plan.image!)),
           Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
@@ -934,9 +928,11 @@ class _PlanHeroHeader extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.transparent,
-                    Colors.black.withValues(alpha: 0.25),
+                    Colors.black.withValues(alpha: 0.15),
+                    Colors.black.withValues(alpha: 0.55),
+                    Colors.black.withValues(alpha: 0.90),
                   ],
+                  stops: const [0.25, 0.6, 1.0],
                 ),
               ),
             ),
