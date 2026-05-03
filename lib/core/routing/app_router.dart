@@ -87,10 +87,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     if (prefs.isFirstTime) {
       return path == AppRoutes.onboarding ? null : AppRoutes.onboarding;
     }
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) {
+    // Phase 88 · gate on `currentSession`, not `currentUser`. Both are
+    // sourced from the same persisted Hive box, but `currentSession`
+    // also covers the "access token expired and refresh failed (network
+    // down)" edge — Supabase keeps the session row in cache so the
+    // redirect doesn't bounce an offline user to /auth just because the
+    // /auth/v1/token round-trip failed. `session.user` is then the same
+    // identity object the rest of this redirect needs (anonymous flag,
+    // app_metadata claim, etc.).
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null) {
       return path == AppRoutes.auth ? null : AppRoutes.auth;
     }
+    final user = session.user;
     // First-time anon sign-in lands users at /onboarding momentarily before
     // we punt them to the prediction hook. A *registered* user who hits
     // /auth has nothing to do there and gets forwarded to the paywall;

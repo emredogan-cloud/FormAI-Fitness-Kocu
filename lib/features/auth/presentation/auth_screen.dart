@@ -135,15 +135,15 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   Future<void> _runSocial(
     _SocialProvider provider,
-    Future<SocialAuthOutcome> Function() run, {
+    Future<SocialAuthResult> Function() run, {
     required String errorMessage,
   }) async {
     if (_busy || _social != null) return;
     setState(() => _social = provider);
     try {
-      final outcome = await run();
+      final result = await run();
       if (!mounted) return;
-      switch (outcome) {
+      switch (result.outcome) {
         case SocialAuthOutcome.success:
           await _persistWizardMetrics();
           _goToPaywall();
@@ -151,7 +151,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           // Silent — user bailed out of the native sheet.
           break;
         case SocialAuthOutcome.error:
-          _toast(errorMessage);
+          // Phase 88 · prefer the controller's specific message (e.g. an
+          // AuthException from Supabase rejecting the id token) so the
+          // user sees the actual cause rather than the generic "tekrar
+          // dene" copy. The fallback handles the legacy enum-only paths.
+          _toast(result.errorMessage ?? errorMessage);
       }
     } finally {
       if (mounted) setState(() => _social = null);

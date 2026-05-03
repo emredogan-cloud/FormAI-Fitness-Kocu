@@ -114,6 +114,48 @@ class _BootGateState extends State<_BootGate> {
           anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
         );
         _supabaseInitialized = true;
+
+        // Phase 88 · defensive guest recovery.
+        //
+        // The router's auth gate accepts any non-null `currentSession`,
+        // but if Supabase has fully discarded an anonymous user's
+        // session (e.g. refresh token expired beyond the 30-day default,
+        // or the disk cache was wiped) the user would otherwise land
+        // on /auth and lose all in-app affordances. We persist a
+        // `auth.was_anonymous` flag whenever auth state moves through
+        // an anonymous identity; on cold start, if no session exists
+        // but the flag was set, we silently re-create an anonymous
+        // user so the redirect doesn't evict them.
+        //
+        // Trade-off: the recovered anonymous user has a NEW user_id —
+        // any user_progress / favorites / feedback rows from the prior
+        // anon identity are RLS-locked away. That's an acceptable loss
+        // for an identity that, by definition, was already disposable;
+        // the alternative (forcing /auth) is worse for retention.
+        Supabase.instance.client.auth.onAuthStateChange.listen((authState) {
+          final user = authState.session?.user;
+          // signedOut → preserve the last-known flag so a subsequent
+          // cold start can still trigger the recovery path.
+          if (user == null) return;
+          unawaited(prefs.setBool('auth.was_anonymous', user.isAnonymous));
+        });
+
+        if (Supabase.instance.client.auth.currentSession == null &&
+            prefs.getBool('auth.was_anonymous') == true) {
+          try {
+            await Supabase.instance.client.auth.signInAnonymously();
+            AppLogger.info(
+              'auth: anon recovery succeeded',
+              category: 'auth',
+            );
+          } catch (e, st) {
+            AppLogger.warning(
+              'auth: anon recovery failed; falling through to /auth',
+              category: 'auth',
+              data: {'error': e.toString(), 'stack': st.toString()},
+            );
+          }
+        }
       }
 
       // Phase 42: PostHog analytics. Await it so the first analytics

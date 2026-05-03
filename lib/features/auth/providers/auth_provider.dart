@@ -74,6 +74,22 @@ class _AuthRefreshListenable extends ChangeNotifier {
 /// surface an error toast.
 enum SocialAuthOutcome { success, cancelled, error }
 
+/// Phase 88 · richer return shape for the social sign-in methods.
+///
+/// The plain enum hid the underlying failure reason from the UI — most
+/// notably an `AuthException` from Supabase rejecting the id token
+/// (typical cause: `GOOGLE_WEB_CLIENT_ID` doesn't match the audience
+/// claim Supabase's Google provider expects). Surfacing the message
+/// at the toast layer turns "Google ile giriş başarısız oldu" into
+/// something that reveals the actual root cause without a Sentry
+/// round-trip.
+///
+/// `errorMessage` is non-null only when `outcome == error`; it stays
+/// null on success and cancellation. Callers can use the bare outcome
+/// for branching and only consult the message when actually showing a
+/// toast.
+typedef SocialAuthResult = ({SocialAuthOutcome outcome, String? errorMessage});
+
 /// Outcome of a [AuthController.deleteAccount] attempt. The UI uses this
 /// to decide whether to show a success SnackBar or a retry toast.
 enum DeleteAccountOutcome { success, error }
@@ -92,7 +108,7 @@ class AuthController {
 
   final Ref _ref;
 
-  Future<SocialAuthOutcome> signInWithGoogle() async {
+  Future<SocialAuthResult> signInWithGoogle() async {
     try {
       final signIn = GoogleSignIn.instance;
       // `initialize` is idempotent on the plugin side but the public API
@@ -116,7 +132,10 @@ class AuthController {
           'signInWithGoogle: idToken was null',
           category: 'auth',
         );
-        return SocialAuthOutcome.error;
+        return (
+          outcome: SocialAuthOutcome.error,
+          errorMessage: 'Google id token alınamadı.',
+        );
       }
       // Access token is best-effort — Supabase only strictly requires the
       // id token, but passing the access token lets Supabase revoke the
@@ -142,10 +161,23 @@ class AuthController {
       // resurfaces post-sign-in. Idempotent — no-op if onboarding
       // already triggered the configure.
       unawaited(configureRevenueCat());
-      return SocialAuthOutcome.success;
+      return (outcome: SocialAuthOutcome.success, errorMessage: null);
+    } on AuthException catch (e, st) {
+      // Phase 88 · Supabase rejected the id token. Most common cause:
+      // GOOGLE_WEB_CLIENT_ID in .env doesn't match what the Supabase
+      // Google provider was configured with, so the audience claim
+      // fails verification. Surface the underlying message so the
+      // toast points at the real cause instead of a generic "try again".
+      AppLogger.error(
+        'signInWithGoogle Supabase AuthException: ${e.message}',
+        e,
+        stackTrace: st,
+        category: 'auth',
+      );
+      return (outcome: SocialAuthOutcome.error, errorMessage: e.message);
     } on GoogleSignInException catch (e, st) {
       if (e.code == GoogleSignInExceptionCode.canceled) {
-        return SocialAuthOutcome.cancelled;
+        return (outcome: SocialAuthOutcome.cancelled, errorMessage: null);
       }
       AppLogger.error(
         'signInWithGoogle GoogleSignInException: ${e.code}',
@@ -153,7 +185,10 @@ class AuthController {
         stackTrace: st,
         category: 'auth',
       );
-      return SocialAuthOutcome.error;
+      return (
+        outcome: SocialAuthOutcome.error,
+        errorMessage: 'Google: ${e.code.name}',
+      );
     } catch (e, st) {
       AppLogger.error(
         'signInWithGoogle failed',
@@ -161,11 +196,11 @@ class AuthController {
         stackTrace: st,
         category: 'auth',
       );
-      return SocialAuthOutcome.error;
+      return (outcome: SocialAuthOutcome.error, errorMessage: e.toString());
     }
   }
 
-  Future<SocialAuthOutcome> signInWithApple() async {
+  Future<SocialAuthResult> signInWithApple() async {
     try {
       // Nonce pattern from Supabase docs: send the SHA-256 hash to Apple
       // (embedded in the returned id token) and the raw value to Supabase
@@ -185,7 +220,10 @@ class AuthController {
           'signInWithApple: identityToken was null',
           category: 'auth',
         );
-        return SocialAuthOutcome.error;
+        return (
+          outcome: SocialAuthOutcome.error,
+          errorMessage: 'Apple identity token alınamadı.',
+        );
       }
       await Supabase.instance.client.auth.signInWithIdToken(
         provider: OAuthProvider.apple,
@@ -194,10 +232,18 @@ class AuthController {
       );
       // Phase 48 · same lazy-init story as Google sign-in.
       unawaited(configureRevenueCat());
-      return SocialAuthOutcome.success;
+      return (outcome: SocialAuthOutcome.success, errorMessage: null);
+    } on AuthException catch (e, st) {
+      AppLogger.error(
+        'signInWithApple Supabase AuthException: ${e.message}',
+        e,
+        stackTrace: st,
+        category: 'auth',
+      );
+      return (outcome: SocialAuthOutcome.error, errorMessage: e.message);
     } on SignInWithAppleAuthorizationException catch (e, st) {
       if (e.code == AuthorizationErrorCode.canceled) {
-        return SocialAuthOutcome.cancelled;
+        return (outcome: SocialAuthOutcome.cancelled, errorMessage: null);
       }
       AppLogger.error(
         'signInWithApple AuthorizationException: ${e.code}',
@@ -205,7 +251,10 @@ class AuthController {
         stackTrace: st,
         category: 'auth',
       );
-      return SocialAuthOutcome.error;
+      return (
+        outcome: SocialAuthOutcome.error,
+        errorMessage: 'Apple: ${e.code.name}',
+      );
     } catch (e, st) {
       AppLogger.error(
         'signInWithApple failed',
@@ -213,7 +262,7 @@ class AuthController {
         stackTrace: st,
         category: 'auth',
       );
-      return SocialAuthOutcome.error;
+      return (outcome: SocialAuthOutcome.error, errorMessage: e.toString());
     }
   }
 
