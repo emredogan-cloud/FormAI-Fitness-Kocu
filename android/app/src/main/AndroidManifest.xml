@@ -5,6 +5,13 @@
          remote asset/REST traffic in release builds. The debug manifest
          already declares this for the Flutter dev tools. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Phase 89 · `connectivity_plus` reads the active network type
+         (none / wifi / mobile / ethernet / vpn) without making a
+         network call, which is what powers the workout-camera
+         offline overlay and the Google/Apple sign-in offline guard.
+         Required permission per the plugin docs. Self-granted; no
+         runtime prompt. -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Android 13+ requires runtime POST_NOTIFICATIONS permission for
          flutter_local_notifications to post the daily workout reminder;
          RECEIVE_BOOT_COMPLETED lets the plugin re-register scheduled

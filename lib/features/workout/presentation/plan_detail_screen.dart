@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../core/services/app_preferences.dart';
+import '../../../core/services/connectivity_service.dart';
 import '../../../core/theme/theme_extension.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/placeholder_images.dart';
@@ -312,9 +313,37 @@ class _PlanDetailScreenState extends ConsumerState<PlanDetailScreen> {
       return;
     }
     if (realDay == null || realDay.exercises.isEmpty) return;
+    // Phase 89 · workout videos stream from Supabase Storage; without a
+    // connection the camera screen would render but every PIP slot
+    // would fall through to the "Video yüklenemedi" tile. Block at the
+    // entry instead so the user sees a single clear message.
+    if (!await _ensureOnlineForWorkout(context, ref)) return;
     await ref.read(workoutSessionProvider.notifier).startDay(dayNumber);
     if (!context.mounted) return;
     context.push(AppRoutes.workout);
+  }
+
+  /// Phase 89 · pre-flight network check shared by both workout entry
+  /// points (`_onDayTap` for the program-day tiles, `_PlanStartCta` for
+  /// regional / equipment plans). Returns `true` when the device is
+  /// online; otherwise surfaces a SnackBar and returns `false` so the
+  /// caller skips the navigation.
+  Future<bool> _ensureOnlineForWorkout(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final online = await ref.read(connectivityServiceProvider).isOnline();
+    if (online) return true;
+    if (!context.mounted) return false;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Bu içeriğe erişmek için internet bağlantısı gereklidir.',
+        ),
+        duration: Duration(seconds: 3),
+      ),
+    );
+    return false;
   }
 
   WorkoutDay? _findDay(List<WorkoutDay> days, int dayNumber) {
@@ -1055,11 +1084,31 @@ class _PlanStartCta extends ConsumerWidget {
           ),
           child: InkWell(
             borderRadius: BorderRadius.circular(20),
-            onTap: () {
+            onTap: () async {
               if (locked) {
                 context.push(AppRoutes.paywall);
                 return;
               }
+              // Phase 89 · same offline gate as `_onDayTap`. The
+              // helper lives on `_PlanDetailScreenState`, so duplicate
+              // the inline check here rather than threading a callback
+              // — the SnackBar is the only side effect.
+              final online =
+                  await ref.read(connectivityServiceProvider).isOnline();
+              if (!online) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Bu içeriğe erişmek için internet bağlantısı '
+                      'gereklidir.',
+                    ),
+                    duration: Duration(seconds: 3),
+                  ),
+                );
+                return;
+              }
+              if (!context.mounted) return;
               // Seed the session with this plan's exercises (ad-hoc
               // day, won't persist to the 30-day ledger) then hand off to
               // the camera screen so the user drops straight into the

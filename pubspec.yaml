@@ -107,6 +107,14 @@ dependencies:
   # a native Widget Extension under ios/FormAILiveActivity/.
   live_activities: ^2.4.1
   change_app_package_name: ^1.5.0
+  # Phase 89 · offline detection. Powers `connectivityProvider`
+  # (lib/core/services/connectivity_service.dart) which gates the
+  # workout-camera entry, the Google/Apple sign-in buttons, and the
+  # Supabase catalogue fetch. The plugin reads platform-native
+  # connectivity status — fast, doesn't itself make network calls —
+  # so the offline detection happens before we even attempt a
+  # Supabase round-trip that would otherwise hang for 30 s.
+  connectivity_plus: ^6.0.5
 
 dev_dependencies:
   flutter_test:

@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/routing/app_router.dart';
 import '../../../core/services/app_preferences.dart';
+import '../../../core/services/connectivity_service.dart';
 import '../../onboarding/providers/wizard_provider.dart';
 import '../providers/auth_provider.dart';
 
@@ -125,20 +126,36 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         _SocialProvider.google,
         () => ref.read(authControllerProvider).signInWithGoogle(),
         errorMessage: 'Google ile giriş başarısız oldu. Lütfen tekrar dene.',
+        offlineMessage:
+            'Google ile giriş yapmak için internet bağlantısı gereklidir.',
       );
 
   Future<void> _signInWithApple() => _runSocial(
         _SocialProvider.apple,
         () => ref.read(authControllerProvider).signInWithApple(),
         errorMessage: 'Apple ile giriş başarısız oldu. Lütfen tekrar dene.',
+        offlineMessage:
+            'Apple ile giriş yapmak için internet bağlantısı gereklidir.',
       );
 
   Future<void> _runSocial(
     _SocialProvider provider,
     Future<SocialAuthResult> Function() run, {
     required String errorMessage,
+    required String offlineMessage,
   }) async {
     if (_busy || _social != null) return;
+    // Phase 89 · OAuth flows make multiple network round-trips (id-token
+    // exchange + Supabase signInWithIdToken). Without a connection the
+    // native sheet may still appear but the final exchange hangs for
+    // the HTTP timeout (~30 s) before the error toast lands. Pre-check
+    // so the user sees a clear "İnternet gerekli" message instantly.
+    final online = await ref.read(connectivityServiceProvider).isOnline();
+    if (!online) {
+      if (!mounted) return;
+      _toast(offlineMessage);
+      return;
+    }
     setState(() => _social = provider);
     try {
       final result = await run();

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -115,6 +116,24 @@ class WorkoutRepository {
   }
 
   Future<List<Exercise>> _fetchExercises() async {
+    // Phase 89 · short-circuit when the platform reports no active
+    // network interface. Without this the Supabase round-trip waits
+    // for the full HTTP/TCP timeout (~30 s) before falling through to
+    // the empty-pool path — a perceivable freeze every cold start
+    // on a flight or in an elevator. Empty-pool is already a graceful
+    // fallback (`generate30DayPlan` returns 30 rest days), and we
+    // null out `_exercisesFuture` before returning so the next call
+    // retries once the connection is back.
+    final results = await Connectivity().checkConnectivity();
+    final isOnline = results.any((r) => r != ConnectivityResult.none);
+    if (!isOnline) {
+      AppLogger.warning(
+        'WorkoutRepository: offline — skipping exercises fetch',
+        category: 'workout',
+      );
+      _exercisesFuture = null;
+      return const [];
+    }
     try {
       final rows = await _client.from(_exercisesTable).select().order('slug');
       return rows.map(_exerciseFromRow).toList(growable: false);
