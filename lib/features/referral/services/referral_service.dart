@@ -132,9 +132,9 @@ class ReferralService {
     final user = _client.auth.currentUser;
     if (user == null) return false;
     try {
-      await _client
-          .from('user_metrics')
-          .upsert({'user_id': user.id, 'referral_code': code});
+      await _client.from('user_metrics').upsert(
+          {'user_id': user.id, 'referral_code': code},
+          onConflict: 'user_id');
       return true;
     } on PostgrestException catch (e) {
       // 23505 = unique_violation (collision). Anything else is a real

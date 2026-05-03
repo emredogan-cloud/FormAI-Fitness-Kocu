@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io' show Platform;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:home_widget/home_widget.dart';
@@ -37,10 +36,11 @@ class WidgetSyncService {
   static const String _appGroupId = 'group.app.formai.shared';
 
   /// Android provider class FQN. Must match the AndroidManifest
-  /// receiver entry. The simple-class form (`FormAIHomeWidgetProvider`)
-  /// works too when the provider lives under the application's
-  /// namespace, but we use FQN for clarity given the package id and
-  /// the provider package differ in the manifest.
+  /// receiver entry. Passed via `qualifiedAndroidName` so the
+  /// `home_widget` plugin uses it verbatim — the `androidName`
+  /// channel arg is prepended with `context.packageName` on the
+  /// native side, which double-prefixed the package and produced
+  /// `ClassNotFoundException: com.emredogan.formai.com.emredogan.formai.widget.FormAIHomeWidgetProvider`.
   static const String _androidProvider =
       'com.emredogan.formai.widget.FormAIHomeWidgetProvider';
 
@@ -106,8 +106,7 @@ class WidgetSyncService {
         ),
       ]);
       await HomeWidget.updateWidget(
-        name: Platform.isIOS ? _iosWidgetName : _androidProvider,
-        androidName: _androidProvider,
+        qualifiedAndroidName: _androidProvider,
         iOSName: _iosWidgetName,
       );
     } catch (e, st) {
