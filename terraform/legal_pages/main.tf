@@ -18,22 +18,14 @@ provider "aws" {
 # ---------------------------------------------------------------------------
 
 locals {
-  bucket_name = "${replace(var.domain_name, ".", "-")}-legal-pages"
+  # Globally unique S3 bucket name. If you fork this template and the name
+  # is already taken, append your own suffix (e.g. -<initials>).
+  bucket_name = "formai-legal-pages-bucket-unique"
   tags = {
     Project   = "FormAI"
     Component = "legal-pages"
     ManagedBy = "terraform"
   }
-}
-
-# ---------------------------------------------------------------------------
-# Route53 — assumes a public hosted zone for var.domain_name already exists.
-# Used both for ACM DNS validation and for the CloudFront alias record.
-# ---------------------------------------------------------------------------
-
-data "aws_route53_zone" "primary" {
-  name         = var.domain_name
-  private_zone = false
 }
 
 # ---------------------------------------------------------------------------
@@ -102,70 +94,31 @@ resource "aws_s3_bucket_policy" "legal_pages_public_read" {
 # ---------------------------------------------------------------------------
 
 resource "aws_s3_object" "terms" {
-  bucket       = aws_s3_bucket.legal_pages.id
-  key          = "terms.html"
-  source       = "${path.module}/../../web/public/terms.html"
-  etag         = filemd5("${path.module}/../../web/public/terms.html")
-  content_type = "text/html"
+  bucket        = aws_s3_bucket.legal_pages.id
+  key           = "terms.html"
+  source        = "${path.module}/../../web/public/terms.html"
+  etag          = filemd5("${path.module}/../../web/public/terms.html")
+  content_type  = "text/html"
   cache_control = "public, max-age=300"
 
   depends_on = [aws_s3_bucket_policy.legal_pages_public_read]
 }
 
 resource "aws_s3_object" "privacy" {
-  bucket       = aws_s3_bucket.legal_pages.id
-  key          = "privacy.html"
-  source       = "${path.module}/../../web/public/privacy.html"
-  etag         = filemd5("${path.module}/../../web/public/privacy.html")
-  content_type = "text/html"
+  bucket        = aws_s3_bucket.legal_pages.id
+  key           = "privacy.html"
+  source        = "${path.module}/../../web/public/privacy.html"
+  etag          = filemd5("${path.module}/../../web/public/privacy.html")
+  content_type  = "text/html"
   cache_control = "public, max-age=300"
 
   depends_on = [aws_s3_bucket_policy.legal_pages_public_read]
 }
 
 # ---------------------------------------------------------------------------
-# ACM certificate — must be in us-east-1 to be usable by CloudFront.
-# Covers the apex (formai.app) and the wildcard (*.formai.app).
-# ---------------------------------------------------------------------------
-
-resource "aws_acm_certificate" "legal_pages" {
-  domain_name               = var.domain_name
-  subject_alternative_names = ["*.${var.domain_name}"]
-  validation_method         = "DNS"
-
-  tags = local.tags
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-resource "aws_route53_record" "acm_validation" {
-  for_each = {
-    for dvo in aws_acm_certificate.legal_pages.domain_validation_options : dvo.domain_name => {
-      name   = dvo.resource_record_name
-      record = dvo.resource_record_value
-      type   = dvo.resource_record_type
-    }
-  }
-
-  zone_id = data.aws_route53_zone.primary.zone_id
-  name    = each.value.name
-  type    = each.value.type
-  ttl     = 60
-  records = [each.value.record]
-
-  allow_overwrite = true
-}
-
-resource "aws_acm_certificate_validation" "legal_pages" {
-  certificate_arn         = aws_acm_certificate.legal_pages.arn
-  validation_record_fqdns = [for r in aws_route53_record.acm_validation : r.fqdn]
-}
-
-# ---------------------------------------------------------------------------
-# CloudFront — fronts the S3 website endpoint, terminates TLS using the
-# ACM cert, redirects all HTTP traffic to HTTPS.
+# CloudFront — fronts the S3 website endpoint and terminates TLS using
+# the default *.cloudfront.net certificate (zero cost; no custom domain).
+# Redirects all HTTP traffic to HTTPS.
 # ---------------------------------------------------------------------------
 
 resource "aws_cloudfront_distribution" "legal_pages" {
@@ -174,8 +127,6 @@ resource "aws_cloudfront_distribution" "legal_pages" {
   comment             = "FormAI legal pages (terms + privacy)"
   default_root_object = "index.html"
   price_class         = "PriceClass_100"
-
-  aliases = [var.domain_name]
 
   origin {
     domain_name = aws_s3_bucket_website_configuration.legal_pages.website_endpoint
@@ -215,27 +166,8 @@ resource "aws_cloudfront_distribution" "legal_pages" {
   }
 
   viewer_certificate {
-    acm_certificate_arn      = aws_acm_certificate_validation.legal_pages.certificate_arn
-    ssl_support_method       = "sni-only"
-    minimum_protocol_version = "TLSv1.2_2021"
+    cloudfront_default_certificate = true
   }
 
   tags = local.tags
-}
-
-# ---------------------------------------------------------------------------
-# Route53 alias — point apex domain (formai.app) at the CloudFront dist.
-# CloudFront's hosted zone ID is the global constant Z2FDTNDATAQYW2.
-# ---------------------------------------------------------------------------
-
-resource "aws_route53_record" "apex_alias" {
-  zone_id = data.aws_route53_zone.primary.zone_id
-  name    = var.domain_name
-  type    = "A"
-
-  alias {
-    name                   = aws_cloudfront_distribution.legal_pages.domain_name
-    zone_id                = aws_cloudfront_distribution.legal_pages.hosted_zone_id
-    evaluate_target_health = false
-  }
 }

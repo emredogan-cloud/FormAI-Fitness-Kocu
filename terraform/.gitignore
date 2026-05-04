@@ -1,0 +1,21 @@
+# Local .terraform directories — provider binaries (often hundreds of MB)
+**/.terraform/*
+
+# .tfstate files — contain secrets; manage state remotely (S3 + DynamoDB) instead
+*.tfstate
+*.tfstate.*
+
+# Crash log files
+crash.log
+crash.*.log
+
+# Sensitive variable files (anything with secrets)
+*.tfvars
+*.tfvars.json
+
+# CLI configuration
+.terraformrc
+terraform.rc
+
+# .terraform.lock.hcl is intentionally NOT ignored — commit it to pin
+# provider versions across the team.

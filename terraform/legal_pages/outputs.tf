@@ -1,5 +1,5 @@
 output "cloudfront_domain_name" {
-  description = "CloudFront distribution domain (e.g. dxxxxxxxx.cloudfront.net). Use this URL to verify the deployment before DNS propagates."
+  description = "CloudFront distribution domain (e.g. dxxxxxxxx.cloudfront.net). This is the live HTTPS hostname for the legal pages — paste it into App Store Connect / Play Console listings."
   value       = aws_cloudfront_distribution.legal_pages.domain_name
 }
 
@@ -19,11 +19,11 @@ output "s3_website_endpoint" {
 }
 
 output "terms_url" {
-  description = "Public HTTPS URL of the Terms of Use page once DNS has propagated."
-  value       = "https://${var.domain_name}/terms.html"
+  description = "Public HTTPS URL of the Terms of Use page (served via the default CloudFront domain — ready to click as soon as the distribution is deployed)."
+  value       = "https://${aws_cloudfront_distribution.legal_pages.domain_name}/terms.html"
 }
 
 output "privacy_url" {
-  description = "Public HTTPS URL of the Privacy Policy page once DNS has propagated."
-  value       = "https://${var.domain_name}/privacy.html"
+  description = "Public HTTPS URL of the Privacy Policy page (served via the default CloudFront domain — ready to click as soon as the distribution is deployed)."
+  value       = "https://${aws_cloudfront_distribution.legal_pages.domain_name}/privacy.html"
 }
