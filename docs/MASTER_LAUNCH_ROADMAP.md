@@ -139,7 +139,7 @@ Aşağıdakilerin **tümü** ✅ olmadan TestFlight / Internal Testing'e bile g�
     | `formai_pro_quarterly` | 3 ay | ₺299 | Yok |
     | `formai_pro_yearly` | 1 yıl | ₺799 | 7 gün |
 - **Aksiyon (RevenueCat dashboard):**
-  - Project Settings → Apps → Android app → bundle ID = `com.formai.sixpack`.
+  - Project Settings → Apps → Android app → bundle ID = `com.emredogan.formai` (üretim `applicationId`'si — `android/app/build.gradle.kts:50`).
   - Entitlements → **`FormAI Pro`** (boşluk dâhil, byte-byte aynı; kod `lib/features/monetization/providers/monetization_provider.dart:16`'ten okuyor).
   - Products → 3 ürünü Google Play'den import et.
   - 3 ürünü `FormAI Pro` entitlement'ına bağla.

@@ -8,14 +8,14 @@ import 'app_logger.dart';
 /// satisfies App Store guideline 3.1.2 + 5.1.1(i), and Play Store Data
 /// Safety link-out.
 ///
-/// Phase 41: promoted from placeholder to canonical. Hosting lives on
-/// `formai.app` (marketing static site); any URL change here must be
-/// accompanied by a matching update in App Store Connect and Play
-/// Console listing metadata.
+/// Phase 85: hosted on AWS S3 + CloudFront via the default
+/// `*.cloudfront.net` cert (zero-cost, no custom domain). Any URL change
+/// here must be mirrored in App Store Connect and Play Console listing
+/// metadata.
 class LegalUrls {
   const LegalUrls._();
-  static const String terms = 'https://formai.app/terms';
-  static const String privacy = 'https://formai.app/privacy';
+  static const String terms = 'https://d2srybp77lgcpy.cloudfront.net/terms.html';
+  static const String privacy = 'https://d2srybp77lgcpy.cloudfront.net/privacy.html';
 
   /// Phase 47B · canonical destek (support) inbox. Reachable via the
   /// profile-tab's "Destek" tile (`openSupportMail`) and referenced in
