@@ -107,6 +107,32 @@ Aşağıda her fazın **tıklama-tıklama tarifi** var. Sırayla yap; bir öncek
    - **Declarations:** "Developer Program Policies" + "US export laws" iki checkbox'ı işaretle.
 3. **Create app** butonuna bas. App detay sayfasına yönlendirileceksin.
 
+### B.1.5 Package Name Ownership Verification (Android Developer Identity)
+
+> **Neden gerekli?** Google, `com.emredogan.formai` namespace'inin gerçekten sana ait olduğundan emin olmak ister. Bunu, Play Console'un sana verdiği özel bir kodu APK/AAB içine bir asset dosyası olarak gömüp upload etmenle doğrular. Bu adım atlanırsa Play Console "Package name verification pending" uyarısı verir ve hiçbir release yayınlatmaz.
+
+> **Phase 87 not:** Bu repo'da bu adım zaten tamamlanmıştır (`android/app/src/main/assets/adi-registration.properties` dosyası mevcut). Future package name değişikliklerinde aynı flow tekrarlanır.
+
+1. **Play Console → app → Setup → App integrity → Developer identity** ekranında "Verify package ownership" CTA'sı çıkar.
+2. Google sana **tek satırlık bir verification snippet** gösterir (örn. `DB27CRRZGEI32AAAAAAAAAAAAAAAA`). Bu kodu kopyala.
+3. Yerel projede dosyayı oluştur:
+   ```bash
+   mkdir -p android/app/src/main/assets
+   echo -n "DB27CRRZGEI32AAAAAAAAAAAAAAAA" > android/app/src/main/assets/adi-registration.properties
+   ```
+   - Dosya adı **kesin olarak** `adi-registration.properties` olmalı (büyük/küçük harf önemli).
+   - İçerik **sadece** snippet olmalı — extra newline veya boşluk **yok**.
+4. Signed APK derle:
+   ```bash
+   flutter build apk --release
+   # Çıktı: build/app/outputs/flutter-apk/app-release.apk
+   ```
+   - Eğer Google bu adımda **debug APK** kabul ediyorsa (bazı projelerde olur): `flutter build apk --debug` → `build/app/outputs/flutter-apk/app-debug.apk`.
+   - Release APK için `android/key.properties` + `upload-keystore.jks` hazır olmalı (Faz B.2 önkoşulu ile aynı).
+5. Play Console'un Developer Identity ekranına dön → **"Upload signed APK"** butonu → derlenmiş APK'yı yükle.
+6. Google APK içindeki `assets/adi-registration.properties` dosyasını okur, snippet'i doğrular ve "Package name verified ✓" rozeti verir. (1-5 dakika sürebilir.)
+7. Doğrulama tamamlanınca Faz B.2'ye geç (`.aab` derle + Closed Testing upload).
+
 ### B.2 İlk `.aab` derle (yerel terminal)
 
 > **Önkoşul:** Android keystore (`upload-keystore.jks`) hazır olmalı. Daha önce `flutter build appbundle --release` çıktın varsa bu adımı atla.
