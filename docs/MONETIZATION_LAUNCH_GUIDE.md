@@ -173,6 +173,77 @@ Aşağıda her fazın **tıklama-tıklama tarifi** var. Sırayla yap; bir öncek
    ```
    - **🚨 KRİTİK:** Skeleton pubspec ile yapılan APK çalışmaz — `.env` yok, asset'ler yok, material-design font yok. Closed Testing veya production release **asla** skeleton pubspec ile derleme. Verification yeşil tik aldıktan sonra ilk iş pubspec'i revert + Faz B.2 ile **gerçek** `.aab`'yi derlemek.
 
+### B.1.7 İmza Uyuşmazlığı (Signature Mismatch) Çözümü (Phase 89)
+
+> **Hata mesajı:** Play Console verification adımında *"The uploaded APK has a different signature"* / *"İmza uyuşmazlığı"* uyarısı çıkar. Bu, APK'nın imzalandığı anahtarla Google'ın `com.emredogan.formai` için kayıt ettiği fingerprint **eşleşmiyor** demektir.
+
+> **Yanlış refleks:** Yeni bir `upload-keystore.jks` üretmek. Bu **DURUMU KÖTÜLEŞTİRİR** — yeni keystore'un fingerprint'i de mevcut kayıtla eşleşmeyecek ve Google bir önceki upload key'i unutmayacağı için update push'lama yeteneğini **kalıcı olarak** kaybedebilirsin. Mevcut `android/app/upload-keystore.jks` (Phase 59C'de üretilmiş, alias `upload`, 2053'e kadar geçerli) korunur — silinmez, üzerine yazılmaz.
+
+#### Sebep diagnoz akışı (sırayla çalıştır)
+
+1. **Mevcut upload key fingerprint'ini al:**
+   ```bash
+   keytool -list -v -keystore android/app/upload-keystore.jks -storepass formai123 -alias upload | grep "SHA-256"
+   ```
+   Çıktı (örnek): `A4:0A:5F:81:5F:D9:EA:F5:DB:D9:D1:66:2E:A5:84:28:80:36:72:93:A6:AE:AE:49:9C:69:6D:3B:DF:F4:33:18`
+
+2. **Debug key fingerprint'ini al** (Flutter `--debug` build'leri bunu kullanır):
+   ```bash
+   keytool -list -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey | grep "SHA-256"
+   ```
+
+3. **Az önce derlenen APK'nın gerçekte hangi anahtarla imzalandığını gör:**
+   ```bash
+   apksigner verify --print-certs build/app/outputs/flutter-apk/app-arm64-v8a-release.apk | grep "SHA-256"
+   ```
+
+4. **Karşılaştır:**
+   - APK fingerprint = adım 2 (debug key) → APK yanlışlıkla **debug build** olarak yapılmış. Çözüm: aşağıdaki "Force Clean Release Build" akışını çalıştır.
+   - APK fingerprint = adım 1 (upload key) ama Google hala reddediyor → Google başka bir key kayıt etmiş. Çözüm: aşağıdaki "Path A — Upload Key Reset".
+
+#### Force Clean Release Build (debug fallback'i elimine etmek için)
+
+`android/app/build.gradle.kts:93-97` `key.properties` dosyası **olmadığında** debug imzaya düşer. Build environment'ında `key.properties` varlığını ve cache'i temizleyip yeniden derle:
+
+```bash
+# Proje kökünden çalıştır
+ls -la android/key.properties      # var olmalı (gitignored)
+ls -la android/app/upload-keystore.jks   # var olmalı (gitignored, 2728 bytes)
+
+flutter clean
+flutter pub get
+flutter build apk --release --split-per-abi
+
+# Doğrula — fingerprint adım 1 ile eşleşmeli
+apksigner verify --print-certs build/app/outputs/flutter-apk/app-arm64-v8a-release.apk | grep "SHA-256"
+```
+
+Eşleşiyorsa Play Console'a `app-arm64-v8a-release.apk` yükle. Eşleşmiyorsa — `flutter doctor -v` çıktısını kontrol et, Gradle cache'i temizle (`cd android && ./gradlew clean`), tekrar build et.
+
+#### Path A — Upload Key Reset (Google yanlış fingerprint kayıt etmişse)
+
+> **Ne zaman uygula:** APK gerçekten upload key ile imzalanmış (adım 3 ↔ adım 1 eşleşti) ama Google hala "different signature" diyor. Bu, `com.emredogan.formai` paket adı altında daha önce **başka bir key** ile bir APK upload'lanmış demektir (eski test build, farklı makine, vb.). Google upload key'i namespace'e bağlar ve değişimi sadece resmi reset akışıyla kabul eder.
+
+1. **Public certificate'i mevcut keystore'dan çıkar (PEM formatında):**
+   ```bash
+   keytool -export -rfc \
+     -keystore android/app/upload-keystore.jks \
+     -alias upload \
+     -storepass formai123 \
+     -file upload-cert.pem
+   ```
+   `upload-cert.pem` dosyası ~1-2 KB olur. **Bu public cert; private key değil — Google'a göndermek güvenlidir.**
+
+2. **Play Console → app → Setup → App integrity → App signing → "Request upload key reset"** linkine tıkla.
+
+3. Açılan formda **sebep** olarak "Lost or compromised key" değil, **"Other"** seç (henüz prod release yok, sadece verification mismatch). Açıklama: *"Phase 88 verification step uploaded a debug-signed APK by mistake; need to register the correct upload key."* (veya gerçek sebep ne ise.)
+
+4. **`upload-cert.pem` dosyasını upload et.** Google 1-2 iş günü içinde reset onayı maili gönderir.
+
+5. Onay geldikten sonra B.1.5/B.1.6'daki verification adımını **aynı `upload-keystore.jks`** ile tekrar yap — bu sefer Google fingerprint'i tanır ve "Package name verified ✓" verir.
+
+> **🔒 Güvenlik notu:** `formai123` zayıf bir parola ve `key.properties` içinde plaintext olarak duruyor. Verification dansı için tolerans gösteriyoruz; **public release öncesi** parolayı 20+ karakter rastgele bir parolaya çevir (`keytool -storepasswd` + `keytool -keypasswd` + `key.properties` güncelleme). Aksi halde keystore yanlışlıkla leak olursa imza yetkisi kaybedilir.
+
 ### B.2 İlk `.aab` derle (yerel terminal)
 
 > **Önkoşul:** Android keystore (`upload-keystore.jks`) hazır olmalı. Daha önce `flutter build appbundle --release` çıktın varsa bu adımı atla.
