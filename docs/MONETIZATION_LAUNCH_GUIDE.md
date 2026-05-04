@@ -133,6 +133,46 @@ Aşağıda her fazın **tıklama-tıklama tarifi** var. Sırayla yap; bir öncek
 6. Google APK içindeki `assets/adi-registration.properties` dosyasını okur, snippet'i doğrular ve "Package name verified ✓" rozeti verir. (1-5 dakika sürebilir.)
 7. Doğrulama tamamlanınca Faz B.2'ye geç (`.aab` derle + Closed Testing upload).
 
+### B.1.6 Skeleton APK — Eğer Verification APK 160 MB'ı Aşıyorsa (Phase 88)
+
+> **Sorun:** Play Console'un Developer Identity ekranı upload edilen APK için **160 MB hard limit** uygular. FormAI'nin tam release APK'sı (~180 MB universal) bu sınırı aşar. Sebepler: 3 ABI native libs (~91 MB toplam), ML Kit pose modelleri (~12 MB), 64 MB meal görselleri, 7 MB workout görselleri.
+>
+> **Çözüm:** Sadece ownership verification için, geçici bir "skeleton" APK derle — verification snippet bundle edilmiş kalır, ağır asset'ler bundle dışı bırakılır, ABI başına bölünür. Bu APK Google'a sadece namespace ownership ispatlamak için yüklenir; **kullanıcılara dağıtılmaz, kalıcı release değildir**.
+
+**Adımlar:**
+
+1. **`pubspec.yaml`'da `flutter:` asset bloğunu geçici olarak yorum satırına çevir:**
+   ```yaml
+   #flutter:
+    # uses-material-design: true
+     #assets:
+     #  - .env
+      # - "photos/"
+      # - "photos/meals/"
+      # - "photos/workouts/"
+   ```
+   - `adi-registration.properties` dosyası `android/app/src/main/assets/` altında oturduğu için Flutter'ın `flutter:` asset bloğundan **bağımsız** olarak APK'ya gömülür (native Android assets path'i; `flutter_assets/`'tan ayrı). Yani bu dosya skeleton build'de de bundle'a girer.
+
+2. **Split-per-ABI APK derle:**
+   ```bash
+   flutter clean
+   flutter pub get
+   flutter build apk --release --split-per-abi
+   # Çıktılar:
+   # build/app/outputs/flutter-apk/app-arm64-v8a-release.apk     (~40-50 MB)
+   # build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk   (~35-45 MB)
+   # build/app/outputs/flutter-apk/app-x86_64-release.apk        (~45-55 MB)
+   ```
+   - **Universal APK yerine `--split-per-abi` kullanmak APK'yı ~3x küçültür** çünkü her APK sadece tek ABI native lib'i içerir (universal hepsini içerir).
+   - Play Console'a **`app-arm64-v8a-release.apk`** yükle (modern Android cihazlarda en yaygın ABI).
+   - Boyut hala 160 MB'ı aşıyorsa: `flutter build apk --debug --split-per-abi` ile debug build dene; debug APK genelde release'in yarısı boyutunda olur (Google verification step'i debug APK'yı bazen kabul eder).
+
+3. **Doğrulama bitince, derhal pubspec.yaml'ı eski haline döndür:**
+   ```bash
+   git checkout pubspec.yaml
+   ```
+   - **🚨 KRİTİK:** Skeleton pubspec ile yapılan APK çalışmaz — `.env` yok, asset'ler yok, material-design font yok. Closed Testing veya production release **asla** skeleton pubspec ile derleme. Verification yeşil tik aldıktan sonra ilk iş pubspec'i revert + Faz B.2 ile **gerçek** `.aab`'yi derlemek.
+
 ### B.2 İlk `.aab` derle (yerel terminal)
 
 > **Önkoşul:** Android keystore (`upload-keystore.jks`) hazır olmalı. Daha önce `flutter build appbundle --release` çıktın varsa bu adımı atla.
