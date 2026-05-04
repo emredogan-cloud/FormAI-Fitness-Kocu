@@ -139,7 +139,7 @@ POSTHOG_HOST="https://us.posthog.com"   # veya https://eu.posthog.com
 5. Açılan modaldan **"Play Store"** seç (Android için).
 6. Form:
    - **App name:** `FormAI Android`
-   - **Google Play package name:** `com.formai.sixpack` (kodun beklediği bundle ID; `lib/features/monetization/providers/monetization_provider.dart` ile uyumlu).
+   - **Google Play package name:** `com.emredogan.formai` (kodun beklediği bundle ID; `lib/features/monetization/providers/monetization_provider.dart` ile uyumlu).
    - **Service Account credentials JSON:** Şimdilik atlayabilirsin (purchase verification için sonra gerekecek). "Save" / "Add" bas.
 7. App eklendikten sonra "Apps" listesinde **`FormAI Android`** satırına tıkla.
 8. Sayfanın üst kısmında **"API keys"** veya **"Public API keys"** bölümünü göreceksin.
@@ -156,7 +156,7 @@ POSTHOG_HOST="https://us.posthog.com"   # veya https://eu.posthog.com
 1. **Project Settings → Apps → "+ Add app"** → **"App Store"** seç.
 2. Form:
    - **App name:** `FormAI iOS`
-   - **App Store bundle ID:** `com.formai.sixpack` (Android ile aynı).
+   - **App Store bundle ID:** `com.emredogan.formai` (Android ile aynı).
    - "Save" / "Add" bas.
 3. Eklenen app'e tıkla → **"Public app-specific API key"** alanını bul. Format:
    ```
@@ -233,7 +233,7 @@ flutter run --release   # release modu Sentry/PostHog'u tetikler
 | PostHog event'leri Live events'de görünmüyor                       | Yanlış `POSTHOG_HOST` (US key + EU host veya tersi)      | API key'i hangi region'da oluşturduğunu hatırla; host'u eşleştir                                     |
 | Paywall fallback'a (hardcoded) düşüyor                             | RevenueCat key isimleri yanlış (APPLE_KEY/GOOGLE_KEY)    | İsimleri `REVENUECAT_IOS_KEY` / `REVENUECAT_ANDROID_KEY` olarak düzelt                               |
 | Satın alma "There was an error" hatası veriyor                     | RevenueCat'te Google Play credentials JSON eklenmemiş    | RevenueCat → Apps → FormAI Android → Service Account JSON'unu Play Console'dan üret + yükle          |
-| Restore Purchases boş dönüyor                                      | Test hesabıyla satın alma yapılmamış veya farklı app ID  | Bundle ID `com.formai.sixpack`'in hem Play Console hem RevenueCat'te aynı olduğunu doğrula           |
+| Restore Purchases boş dönüyor                                      | Test hesabıyla satın alma yapılmamış veya farklı app ID  | Bundle ID `com.emredogan.formai`'in hem Play Console hem RevenueCat'te aynı olduğunu doğrula           |
 
 ---
 

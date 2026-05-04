@@ -73,7 +73,7 @@ REVENUECAT_IOS_KEY=                  # iOS yayını başladığında doldurulaca
 3. Free trial istiyorsan: yıllıkta 7 gün, aylıkta yok (tipik konfig).
 
 **RevenueCat dashboard:**
-1. **Project Settings → Apps → Android app** → bundle ID `com.formai.sixpack` (varsayılan) doğru.
+1. **Project Settings → Apps → Android app** → bundle ID `com.emredogan.formai` (üretim `applicationId`'si — `android/app/build.gradle.kts:50`).
 2. **Entitlements → "FormAI Pro"** entitlement'ı oluştur veya doğrula. **Identifier kesinlikle `FormAI Pro` (boşluk dâhil, aynen)** olmalı çünkü kod `lib/features/monetization/providers/monetization_provider.dart:16` satırında `kProEntitlementId = 'FormAI Pro'` sabitiyle case-sensitive eşleşme yapıyor.
 3. **Products** altında 3 ürünü Google Play'den import et.
 4. Üç ürünü de "FormAI Pro" entitlement'ına bağla.
