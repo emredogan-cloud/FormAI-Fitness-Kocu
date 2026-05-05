@@ -28,7 +28,7 @@ val keystoreProperties = Properties().apply {
 }
 
 android {
-    namespace = "com.emredogan.formai"
+    namespace = "com.formai.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -47,7 +47,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.emredogan.formai"
+        applicationId = "com.formai.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         // Phase 77 · pinned to API 24 because newer ML Kit / MediaPipe

@@ -40,9 +40,9 @@ class WidgetSyncService {
   /// `home_widget` plugin uses it verbatim — the `androidName`
   /// channel arg is prepended with `context.packageName` on the
   /// native side, which double-prefixed the package and produced
-  /// `ClassNotFoundException: com.emredogan.formai.com.emredogan.formai.widget.FormAIHomeWidgetProvider`.
+  /// `ClassNotFoundException: com.formai.app.com.formai.app.widget.FormAIHomeWidgetProvider`.
   static const String _androidProvider =
-      'com.emredogan.formai.widget.FormAIHomeWidgetProvider';
+      'com.formai.app.widget.FormAIHomeWidgetProvider';
 
   /// iOS widget bundle name registered via `@main` in the
   /// FormAIWidget target's `WidgetBundle`.
