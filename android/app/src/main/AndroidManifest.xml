@@ -91,7 +91,7 @@
              wakes us on a schedule — refresh is push-driven by the
              app-side `WidgetSyncService.push(...)`. -->
         <receiver
-            android:name="com.emredogan.formai.widget.FormAIHomeWidgetProvider"
+            android:name="com.formai.app.widget.FormAIHomeWidgetProvider"
             android:exported="true"
             android:label="FormAI">
             <intent-filter>
