@@ -1,4 +1,4 @@
-package com.formai.app
+package com.emredogan.formaifit
 
 import io.flutter.embedding.android.FlutterActivity
 
