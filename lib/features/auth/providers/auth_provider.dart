@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart' show ChangeNotifier, Listenable;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -158,9 +159,18 @@ class AuthController {
         accessToken: accessToken,
       );
       // Phase 48 · ensure the RevenueCat SDK is up before the paywall
-      // resurfaces post-sign-in. Idempotent — no-op if onboarding
-      // already triggered the configure.
-      unawaited(configureRevenueCat());
+      // resurfaces post-sign-in. Phase 94 promoted this from
+      // `unawaited(configureRevenueCat())` to a serialised
+      // `await` + `Purchases.logIn(...)` so the SDK's anonymous
+      // app-user-ID is aliased to the freshly-minted Supabase UUID
+      // BEFORE the user reaches the paywall purchase action.
+      // Without the alias, an anonymous purchase made later would be
+      // associated with the throwaway RC anonymous ID and would
+      // disappear on the next sign-in — the bug Phase 94 was
+      // commissioned to fix. configureRevenueCat is idempotent and
+      // costs ~250-600 ms once per cold start; the user is already
+      // in a "signing in" progress state, so the latency is invisible.
+      await _aliasRevenueCatToSupabaseUser();
       return (outcome: SocialAuthOutcome.success, errorMessage: null);
     } on AuthException catch (e, st) {
       // Phase 88 · Supabase rejected the id token. Most common cause:
@@ -230,8 +240,8 @@ class AuthController {
         idToken: idToken,
         nonce: rawNonce,
       );
-      // Phase 48 · same lazy-init story as Google sign-in.
-      unawaited(configureRevenueCat());
+      // Phase 94 · same RC-aliasing pattern as the Google path.
+      await _aliasRevenueCatToSupabaseUser();
       return (outcome: SocialAuthOutcome.success, errorMessage: null);
     } on AuthException catch (e, st) {
       AppLogger.error(
@@ -347,6 +357,38 @@ class AuthController {
     _ref.invalidate(recipesProvider);
     _ref.invalidate(dailyMenuProvider);
     _ref.invalidate(celebratedBadgesProvider);
+  }
+
+  /// Phase 94 · alias the RevenueCat anonymous app-user-ID to the
+  /// Supabase user that we just signed in. Wraps configureRevenueCat
+  /// (idempotent) so this is safe to call from any sign-in surface
+  /// — the modal AuthGate, the standalone /auth screen, or a future
+  /// account-link flow — without each call site needing to know the
+  /// SDK lifecycle.
+  ///
+  /// Failures are logged + swallowed: a missed alias is recoverable
+  /// (the next purchase still succeeds against the RC anonymous ID,
+  /// it just wouldn't be linkable to the Supabase user without a
+  /// follow-up logIn). Throwing here would leak into the social-auth
+  /// outcome and tell the user "Google sign-in failed" when in fact
+  /// only the RC alias did.
+  Future<void> _aliasRevenueCatToSupabaseUser() async {
+    try {
+      await configureRevenueCat();
+      final user = Supabase.instance.client.auth.currentUser;
+      // Skip if the auth-state stream hasn't published yet (rare —
+      // signInWithIdToken resolves with the new user attached) or
+      // if the resulting user is anonymous, which would defeat the
+      // whole purpose of the alias.
+      if (user == null || user.isAnonymous) return;
+      await Purchases.logIn(user.id);
+    } catch (e, st) {
+      AppLogger.warning(
+        'RevenueCat alias failed; purchase will fall back to anon RC id',
+        category: 'monetization',
+        data: {'error': e.toString(), 'stack': st.toString()},
+      );
+    }
   }
 
   String? _envOrNull(String key) {
