@@ -77,3 +77,59 @@
 # already cover them — ProGuard's `**` matches across package levels.
 -keep class com.google.firebase.components.** { *; }
 -dontwarn com.google.firebase.components.**
+
+# =============================================================================
+# Phase 94 · belt-and-braces keep rules for startup-critical native
+# bridges. Every plugin below ships its own consumer ProGuard rules
+# inside the AAR, so these are mostly belt-and-braces — but a single
+# stripped JNI binding on the cold-start path = a permanent black
+# screen on the first .aab the user installs from Play, and the
+# Phase 92 incident showed how easily that can ship undetected. The
+# extra ~30 KB on the release artifact is a cheap insurance policy.
+# =============================================================================
+
+# Sentry — the SDK reaches into a fair bit of itself reflectively to
+# discover integrations / event processors at init. A stripped
+# integration would surface as a startup throw inside the
+# `SentryFlutter.init` options builder.
+-keep class io.sentry.** { *; }
+-keepattributes LineNumberTable,SourceFile
+-renamesourcefileattribute SourceFile
+-dontwarn io.sentry.**
+
+# PostHog — the analytics plugin exposes a singleton via reflection
+# and queues events through a worker thread that boots from a static
+# init block. Pruning that path produces the "Posthog().setup() never
+# returns" hang that black-screened the splash.
+-keep class com.posthog.** { *; }
+-dontwarn com.posthog.**
+
+# RevenueCat — the BillingClient bridge resolves Google Play Billing
+# product details via reflection on Play Services classes. Without
+# the keep, the IAP flow opens but immediately reports
+# "configuration_error" and the paywall hangs.
+-keep class com.revenuecat.purchases.** { *; }
+-dontwarn com.revenuecat.purchases.**
+
+# google_sign_in v7 — major rewrite from v6. The plugin uses the
+# CredentialManager API and registers nested classes that R8 has
+# been observed to prune in 8.x configurations.
+-keep class com.google.android.gms.auth.api.** { *; }
+-keep class com.google.android.libraries.identity.** { *; }
+-dontwarn com.google.android.gms.auth.api.**
+-dontwarn com.google.android.libraries.identity.**
+
+# flutter_local_notifications — uses Gson + reflection to serialise
+# scheduled notification payloads through AlarmManager. Stripped
+# fields = silent reminder loss, not a black screen, but bundling
+# the rule keeps the failure mode consistent with everything else
+# we keep.
+-keep class com.dexterous.flutterlocalnotifications.** { *; }
+-keepclassmembers class * { @com.google.gson.annotations.SerializedName <fields>; }
+-dontwarn com.dexterous.flutterlocalnotifications.**
+
+# home_widget — the Kotlin provider class is reflected by name
+# (`qualifiedAndroidName` in `WidgetSyncService`) and the OS
+# resolves it via ClassLoader.forName. R8 must not rename it.
+-keep class com.emredogan.formaifit.widget.** { *; }
+-keep class es.antonborri.home_widget.** { *; }
