@@ -10,6 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show User;
 import '../../../core/services/analytics_service.dart';
 import '../../../core/theme/theme_extension.dart';
 import '../../../core/utils/legal_urls.dart';
+import '../../../core/widgets/skeleton_loader.dart';
 import '../../auth/presentation/auth_modal_bottom_sheet.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../onboarding/providers/wizard_provider.dart';
@@ -123,7 +124,15 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     // RevenueCat failed to fetch offerings. `current` is the actual
     // signal that a buyable Package exists.
     final subscription = ref.watch(subscriptionProvider);
-    final canPurchase = subscription.value?.offerings?.current != null;
+    final offerings = subscription.value?.offerings;
+    final canPurchase = offerings?.current != null;
+    // Phase 95 · drives the per-card price slot. True only while the
+    // RevenueCat fetch is genuinely in flight; once `_load` resolves —
+    // even on the catch path that returns a no-offerings
+    // `SubscriptionState` — `isLoading` flips to false and the card
+    // falls through to the marketing-spec fallback price. This is the
+    // explicit "loaded with no offering" signal the spec asked for.
+    final offeringsLoading = subscription.isLoading;
 
     // Phase 53F · drop the Scaffold's hardcoded `Colors.black` so the
     // active theme's `scaffoldBackgroundColor` flows through (lightBg
@@ -157,7 +166,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   children: [
                     _HeroSection(gender: ref.watch(wizardProvider).gender),
                     const SizedBox(height: 24),
-                    _buildPlansRow(),
+                    _buildPlansRow(
+                      offerings: offerings,
+                      isLoading: offeringsLoading,
+                    ),
                     const SizedBox(height: 18),
                     const _NoPaymentBadge(),
                     const SizedBox(height: 16),
@@ -191,7 +203,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     );
   }
 
-  Widget _buildPlansRow() {
+  Widget _buildPlansRow({
+    required Offerings? offerings,
+    required bool isLoading,
+  }) {
     return SizedBox(
       height: 230,
       child: Row(
@@ -202,6 +217,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               plan: _Plan.monthly,
               isSelected: _selected == _Plan.monthly,
               onTap: () => setState(() => _selected = _Plan.monthly),
+              package: _packageForPlan(_Plan.monthly, offerings),
+              isLoading: isLoading,
             ),
           ),
           const SizedBox(width: 8),
@@ -210,6 +227,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               plan: _Plan.yearly,
               isSelected: _selected == _Plan.yearly,
               onTap: () => setState(() => _selected = _Plan.yearly),
+              package: _packageForPlan(_Plan.yearly, offerings),
+              isLoading: isLoading,
             ),
           ),
           const SizedBox(width: 8),
@@ -218,6 +237,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               plan: _Plan.quarterly,
               isSelected: _selected == _Plan.quarterly,
               onTap: () => setState(() => _selected = _Plan.quarterly),
+              package: _packageForPlan(_Plan.quarterly, offerings),
+              isLoading: isLoading,
             ),
           ),
         ],
@@ -899,11 +920,33 @@ class _PlanCard extends StatelessWidget {
     required this.plan,
     required this.isSelected,
     required this.onTap,
+    required this.package,
+    required this.isLoading,
   });
 
   final _Plan plan;
   final bool isSelected;
   final VoidCallback onTap;
+
+  /// Phase 95 · the resolved RevenueCat package for this plan, or null
+  /// when no Offering has loaded yet (`isLoading == true`) or RC was
+  /// never configured / failed to fetch (`isLoading == false`,
+  /// fall-through to [_fallbackPrice]). The card uses the package's
+  /// [StoreProduct.priceString] verbatim — RC formats it in the device
+  /// locale (₺ for tr-TR, $ for en-US, etc.) so we don't rebuild the
+  /// formatting ourselves.
+  final Package? package;
+
+  /// Phase 95 · `true` while `subscriptionProvider` is in
+  /// `AsyncLoading` — i.e. the cold-start `Purchases.getOfferings()`
+  /// fetch is still pending. The card swaps the price text for a
+  /// shimmering [SkeletonBox] in this state. Flips to `false` the
+  /// moment `_load()` resolves on either the success OR catch path,
+  /// at which point a null [package] means "RC failed / misconfigured"
+  /// and we fall back to the marketing-spec hardcoded price (per the
+  /// spec: "Only use fallback text if Purchases.getOfferings()
+  /// explicitly fails or returns null").
+  final bool isLoading;
 
   bool get _isHighlighted => plan == _Plan.yearly;
 
@@ -913,7 +956,13 @@ class _PlanCard extends StatelessWidget {
         _Plan.quarterly => '3 Ay',
       };
 
-  String get _price => switch (plan) {
+  /// Marketing-spec fallback shown ONLY when RevenueCat's offering
+  /// fetch resolved without a Package for this plan. Never displayed
+  /// while loading — the [SkeletonBox] takes that frame. The numbers
+  /// here mirror the Play Console SKU's reference prices for the
+  /// tr-TR market so the static fallback isn't wildly inconsistent
+  /// with what a working configuration would show.
+  String get _fallbackPrice => switch (plan) {
         _Plan.monthly => '₺249,99',
         _Plan.yearly => '₺999,99',
         _Plan.quarterly => '₺499,99',
@@ -925,7 +974,60 @@ class _PlanCard extends StatelessWidget {
         _Plan.quarterly => '/ 3 ay',
       };
 
+  /// Decoy reference price for the highlighted yearly card — pure
+  /// marketing copy ("was 2999.99"), not a discounted price the store
+  /// reports. Stays hardcoded; RevenueCat's `discounts` /
+  /// `introductoryPrice` fields don't model the "fictional anchor"
+  /// pattern this decoy uses.
   String? get _decoy => plan == _Plan.yearly ? '₺2.999,99 idi' : null;
+
+  /// Phase 95 · resolves the price slot to one of three widgets, in
+  /// priority order:
+  ///
+  ///   1. **Real**: `package.storeProduct.priceString` from the live
+  ///      RevenueCat Offering. This is the localised, store-billed
+  ///      price (e.g. "₺999,99" on a tr-TR device, "$29.99" on
+  ///      en-US). Wrapped in `FittedBox(scaleDown)` so a longer
+  ///      currency string (e.g. "BR$ 1.999,99") doesn't blow out the
+  ///      card's inner width.
+  ///   2. **Loading**: a shimmering [SkeletonBox] while
+  ///      `Purchases.getOfferings()` is in flight. Sized to roughly
+  ///      match the eventual text height so the card doesn't jump
+  ///      when the price lands.
+  ///   3. **Fallback**: hardcoded marketing-spec price, only when
+  ///      the load resolved without a Package (RC misconfigured /
+  ///      dev-fallback / no offerings). Same visual treatment as
+  ///      the real branch so a bad config still renders a usable
+  ///      paywall instead of an empty card.
+  Widget _buildPriceSlot(ColorScheme scheme) {
+    final fontSize = _isHighlighted ? 22.0 : 18.0;
+    final priceStyle = TextStyle(
+      color: scheme.onSurface,
+      fontSize: fontSize,
+      fontWeight: FontWeight.w900,
+      height: 1,
+    );
+    final livePrice = package?.storeProduct.priceString;
+    if (livePrice != null && livePrice.isNotEmpty) {
+      return FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(livePrice, style: priceStyle),
+      );
+    }
+    if (isLoading) {
+      // Slightly wider for the highlighted (yearly) card to mirror
+      // the typical 6-digit + currency-symbol price width.
+      return SkeletonBox(
+        width: _isHighlighted ? 92 : 76,
+        height: fontSize,
+        borderRadius: 6,
+      );
+    }
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(_fallbackPrice, style: priceStyle),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -995,18 +1097,7 @@ class _PlanCard extends StatelessWidget {
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          _price,
-                          style: TextStyle(
-                            color: scheme.onSurface,
-                            fontSize: _isHighlighted ? 22 : 18,
-                            fontWeight: FontWeight.w900,
-                            height: 1,
-                          ),
-                        ),
-                      ),
+                      _buildPriceSlot(scheme),
                       const SizedBox(height: 2),
                       Text(
                         _per,
