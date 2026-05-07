@@ -5,9 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
+import 'package:supabase_flutter/supabase_flutter.dart' show User;
+
 import '../../../core/services/analytics_service.dart';
 import '../../../core/theme/theme_extension.dart';
 import '../../../core/utils/legal_urls.dart';
+import '../../auth/presentation/auth_modal_bottom_sheet.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../../onboarding/providers/wizard_provider.dart';
 import '../providers/monetization_provider.dart';
 
@@ -28,6 +32,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   bool _busy = false;
   bool _restoring = false;
 
+  /// Phase 94 · single-fire latch so the auth gate doesn't re-trigger
+  /// after a successful sign-in (the auth state stream rebuilds the
+  /// paywall when it transitions; without the latch we'd race-loop the
+  /// gate as the user moves from anonymous → registered, because the
+  /// `ref.listen` callback fires once per state delivery).
+  bool _authGateShown = false;
+
   @override
   void initState() {
     super.initState();
@@ -36,10 +47,84 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     // is reached from multiple surfaces we'll wire a `source` param
     // later via a constructor arg.
     AnalyticsService.instance.paywallViewed();
+    // Phase 94 · the auth gate trigger lives in `build()` via
+    // `ref.listen(currentUserProvider, …)` plus a synchronous
+    // first-pass call to the same handler. The previous
+    // post-frame-in-initState approach was unreliable: it only
+    // checked the auth state once at first frame and didn't react to
+    // transitions (user signs out from another surface, anon-recovery
+    // refires after a refresh-token cycle, etc.). The reactive
+    // pattern covers both the cold-mount case (synthetic initial
+    // fire from `ref.read` in build) and any subsequent state change.
+  }
+
+  /// Phase 94 · auth-gate dispatcher. Called from two sites in
+  /// `build()`: (1) `ref.listen` on every real transition of
+  /// [currentUserProvider]; (2) a synchronous first-pass call with
+  /// `ref.read`'s current value, synthesising the
+  /// `fireImmediately: true` semantics that Riverpod 3.x dropped
+  /// from `ref.listen`. The [_authGateShown] latch ensures the gate
+  /// route is pushed at most once per paywall mount even though the
+  /// handler is invoked many times.
+  ///
+  /// Side-effect navigation is deferred to a post-frame callback
+  /// because the synchronous first-pass call happens DURING the
+  /// build phase — calling `Navigator.push` synchronously there
+  /// throws "Tried to push a route while building widgets". Setting
+  /// the latch BEFORE scheduling means subsequent listen fires (e.g.
+  /// the auth-state stream re-emitting the same anonymous user
+  /// during refresh-token rotation) short-circuit at the first
+  /// check, so only one post-frame callback ever runs.
+  void _onAuthStateChanged(User? previous, User? next) {
+    if (_authGateShown) return;
+    final needsAuth = next == null || next.isAnonymous;
+    if (!needsAuth) return;
+    _authGateShown = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      showAuthGate(context);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    // Phase 94 · forced auth gate, reactively wired.
+    //
+    // `ref.listen` is the canonical Riverpod pattern for reacting to
+    // state changes from inside `build()` — it fires on every
+    // transition of `currentUserProvider` (sign-in succeeds, sign-out
+    // from another surface, anon-recovery on cold start, etc.) and
+    // is safe to register here.
+    //
+    // Catch — Riverpod 3.x DROPPED the `fireImmediately` flag from
+    // `ref.listen`; only `ref.listenManual` retains it. Without the
+    // flag, the listener fires only on *changes*, and the failure
+    // case the gate exists to catch (anonymous user hitting the
+    // paywall with state already settled before mount) produces no
+    // change → no fire → no gate. We synthesise the missing
+    // fire-immediately by calling the same handler once with the
+    // synchronous current value via `ref.read`. The handler's
+    // `_authGateShown` latch dedupes between this synthetic initial
+    // fire and any real transition that lands in the same frame.
+    ref.listen<User?>(currentUserProvider, _onAuthStateChanged);
+    _onAuthStateChanged(null, ref.read(currentUserProvider));
+
+    // Phase 94 · purchase-button gating. The "first-click race"
+    // happens when the user taps the CTA before
+    // `Purchases.getOfferings()` has resolved — the BillingClient
+    // launch then races the offering fetch and Google Play Billing's
+    // first click silently no-ops. Watching the AsyncNotifier here
+    // surfaces the loading state to the CTA (spinner + disabled)
+    // until the active Offering is hydrated.
+    //
+    // We drill into `offerings.current` (not just `value != null`)
+    // because the Notifier returns a `SubscriptionState` synchronously
+    // even on the catch path — so `value` is non-null even when
+    // RevenueCat failed to fetch offerings. `current` is the actual
+    // signal that a buyable Package exists.
+    final subscription = ref.watch(subscriptionProvider);
+    final canPurchase = subscription.value?.offerings?.current != null;
+
     // Phase 53F · drop the Scaffold's hardcoded `Colors.black` so the
     // active theme's `scaffoldBackgroundColor` flows through (lightBg
     // in light mode, darkBg in dark). The brand purple gradient stays
@@ -76,7 +161,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                     const SizedBox(height: 18),
                     const _NoPaymentBadge(),
                     const SizedBox(height: 16),
-                    _buildCta(),
+                    _buildCta(canPurchase: canPurchase),
                     const SizedBox(height: 6),
                     _buildRestoreButton(),
                     const SizedBox(height: 6),
@@ -140,17 +225,24 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     );
   }
 
-  Widget _buildCta() {
+  Widget _buildCta({required bool canPurchase}) {
     // Phase 53 · the paywall's primary "Devam Et / Try at ₺0,00" path
     // is the screen's monetisation hinge. Wrap with explicit semantics
     // so screen readers announce the action instead of trying to read
-    // the price string + arrow icon as separate elements. While `_busy`
-    // we surface a loading state so blind users aren't left tapping a
-    // disabled button.
+    // the price string + arrow icon as separate elements.
+    //
+    // Phase 94 · the loading-state branch now triggers on EITHER
+    // an in-flight purchase (`_busy`) OR an unresolved RevenueCat
+    // offering (`!canPurchase`). The latter prevents the
+    // "first-click race" where a user taps the CTA in the ~250-600 ms
+    // between paywall mount and `Purchases.getOfferings()` resolving:
+    // BillingClient was launching against a null Package, the first
+    // tap silently no-op'd, and the user thought the app was broken.
+    final waiting = _busy || !canPurchase;
     return Semantics(
       button: true,
-      enabled: !_busy,
-      label: _busy ? 'Yükleniyor' : 'Aboneliğe devam et',
+      enabled: !waiting,
+      label: waiting ? 'Yükleniyor' : 'Aboneliğe devam et',
       child: ExcludeSemantics(
         child: DecoratedBox(
           decoration: BoxDecoration(
@@ -174,12 +266,12 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
             ),
             child: InkWell(
               borderRadius: BorderRadius.circular(20),
-              onTap: _busy ? null : _purchase,
+              onTap: waiting ? null : _purchase,
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: _busy
+                  children: waiting
                       ? const [
                           SizedBox(
                             width: 20,
