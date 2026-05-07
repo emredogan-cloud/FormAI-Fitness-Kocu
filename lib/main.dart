@@ -20,52 +20,158 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/theme_mode_provider.dart';
 import 'core/utils/app_logger.dart';
 
+/// Phase 94 · release-build resilience.
+///
+/// The Phase 92 `.aab` shipped to Internal Testing booted to a permanent
+/// black screen on real devices. Root cause was a chain of three
+/// vanish-in-release patterns:
+///
+///   1. No `FlutterError.onError` / `PlatformDispatcher.onError` /
+///      `runZonedGuarded` outer handlers, so any uncaught bootstrap
+///      error renders a silent black screen in release (debug prints to
+///      the console, masking the issue locally).
+///   2. `SentryFlutter.init` wrapped `runApp` via `appRunner` with no
+///      try/catch around the init call itself — any throw from the
+///      options builder, DSN parse, or native channel handshake
+///      meant `runApp` was never reached.
+///   3. `dotenv.env[k]` throws `NotInitializedError` (verified at
+///      `media_url.dart:110`) when `dotenv.load()` failed silently.
+///      `?? ''` does not catch a synchronous throw, so a missing /
+///      malformed `.env` cascaded straight into Sentry's options
+///      builder and killed bootstrap before `_BootGate` ever mounted.
+///
+/// The body below installs the missing safety net once, at the top of
+/// the bootstrap, and guarantees `runApp(_BootGate(...))` is reached
+/// exactly once even when every dependency below it is broken.
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  // Portrait lock — Redmi Note 11R (and similar low-end Androids) started
-  // freezing on landscape rotation during workouts because the ML Kit pose
-  // detector re-allocates tensors on every resize and the camera preview
-  // briefly ran out of memory. Locking orientation sidesteps both that and
-  // the scattered layout overflows the landscape composition surfaced.
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
+  // `runZonedGuarded` catches *async* errors that escape the framework
+  // (futures with no awaiter, microtasks, isolate-spawned errors). The
+  // FlutterError.onError + PlatformDispatcher.onError handlers cover
+  // sync framework + platform errors. Together they surface every
+  // class of uncaught error to Sentry instead of a silent black frame.
+  await runZonedGuarded<Future<void>>(() async {
+    WidgetsFlutterBinding.ensureInitialized();
 
-  // Phase 42: dotenv must load BEFORE SentryFlutter.init so the DSN is
-  // available. Fails silently if `.env` is missing (dev builds without
-  // keys) — Sentry will init with an empty DSN and no-op, which is the
-  // desired behaviour in that case.
+    // Hooked BEFORE any other framework call so an early throw
+    // (orientation lock, dotenv, SystemChrome) is captured rather
+    // than swallowed by a Flutter framework default handler that
+    // silently no-ops in release.
+    FlutterError.onError = (details) {
+      FlutterError.presentError(details);
+      _captureSafe(details.exception, details.stack);
+    };
+    PlatformDispatcher.instance.onError = (error, stack) {
+      _captureSafe(error, stack);
+      return true;
+    };
+    // ErrorWidget.builder defaults to a red box in debug and an
+    // opaque grey box in release — the grey box is the symptom users
+    // describe as "the screen turned black". Replace with a branded
+    // splash so a downstream widget-build crash degrades to a
+    // recognisable surface instead.
+    ErrorWidget.builder = (FlutterErrorDetails details) {
+      _captureSafe(details.exception, details.stack);
+      return const _BootSplash();
+    };
+
+    // Portrait lock — Redmi Note 11R (and similar low-end Androids)
+    // started freezing on landscape rotation during workouts because
+    // the ML Kit pose detector re-allocates tensors on every resize.
+    await SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+
+    // Phase 94 · `.env` bundling state is now a first-class signal,
+    // not a swallowed exception. The flag rides into `_BootGate` so
+    // the error screen can distinguish "couldn't reach Supabase"
+    // (network) from "ship-time misconfiguration" (asset missing).
+    var dotenvLoaded = false;
+    try {
+      await dotenv.load(fileName: '.env');
+      dotenvLoaded = true;
+    } catch (e, st) {
+      debugPrint('[BOOT] dotenv.load failed: $e');
+      debugPrintStack(stackTrace: st);
+    }
+
+    // Phase 94 · the previous build wrapped `runApp` inside
+    // `SentryFlutter.init`'s `appRunner` with no try/catch around
+    // init itself. If init threw — a malformed DSN, a native
+    // platform-channel timeout, anything raised inside the options
+    // builder via `dotenv.env[]` — `runApp` was never reached and
+    // the user saw a permanent black frame. We now ALWAYS call
+    // `runApp` even when Sentry init fails, and we never let the
+    // options builder throw because every env-var read is wrapped
+    // in `_envSafe`.
+    var bootedViaSentry = false;
+    try {
+      await SentryFlutter.init(
+        (options) {
+          options.dsn = _envSafe('SENTRY_DSN');
+          options.tracesSampleRate = 0.2;
+          options.environment = kReleaseMode ? 'prod' : 'dev';
+          // PII scrubber — Sentry attaches the device IP and a User
+          // slot by default; we clear the email / ipAddress / data
+          // fields before the event leaves the device.
+          options.beforeSend = (event, hint) {
+            final user = event.user;
+            if (user != null) {
+              user.ipAddress = null;
+              user.email = null;
+              user.data = null;
+            }
+            return event;
+          };
+        },
+        appRunner: () {
+          bootedViaSentry = true;
+          runApp(_BootGate(dotenvLoaded: dotenvLoaded));
+        },
+      );
+    } catch (e, st) {
+      debugPrint('[BOOT] SentryFlutter.init failed: $e');
+      debugPrintStack(stackTrace: st);
+    }
+    // If Sentry init threw (or its appRunner was never invoked) we
+    // still owe the user a screen. This is the line that turns a
+    // black screen into the retry / error UI.
+    if (!bootedViaSentry) {
+      runApp(_BootGate(dotenvLoaded: dotenvLoaded));
+    }
+  }, (error, stack) {
+    // Last-line defense: any zone-escaping async error lands here.
+    debugPrint('[BOOT] uncaught zone error: $error');
+    debugPrintStack(stackTrace: stack);
+    _captureSafe(error, stack);
+  });
+}
+
+/// Reads a key from `dotenv.env` without ever throwing, even when
+/// `dotenv.load()` was never run successfully (which raises
+/// `NotInitializedError` on the first env access). Returns an empty
+/// string for missing or malformed values; callers that care about
+/// "was this configured at all" should use [_BootGate]'s
+/// `dotenvLoaded` signal, not the value of an individual key.
+String _envSafe(String key) {
   try {
-    await dotenv.load(fileName: '.env');
+    return dotenv.env[key] ?? '';
   } catch (_) {
-    // Swallow; _BootGate re-checks and surfaces the retry screen for
-    // cases that actually break initialisation (Supabase URL missing).
+    return '';
   }
+}
 
-  await SentryFlutter.init(
-    (options) {
-      options.dsn = dotenv.env['SENTRY_DSN'] ?? '';
-      options.tracesSampleRate = 0.2;
-      options.environment = kReleaseMode ? 'prod' : 'dev';
-      // PII scrubber — Sentry attaches the device IP and a User slot by
-      // default; we clear the email / ipAddress / data fields before
-      // the event leaves the device. Supabase user_id stays on `id` so
-      // funnels can still group events per user; nothing sensitive
-      // (weight, height, goals) ever reaches the User slot in the
-      // first place because `AppLogger.error` never sets it.
-      options.beforeSend = (event, hint) {
-        final user = event.user;
-        if (user != null) {
-          user.ipAddress = null;
-          user.email = null;
-          user.data = null;
-        }
-        return event;
-      };
-    },
-    appRunner: () => runApp(const _BootGate()),
-  );
+/// Sentry capture wrapper that never re-throws — the global error
+/// handlers must be infallible, otherwise an exception from the
+/// handler itself would re-trigger the same handler and we'd loop.
+void _captureSafe(Object error, StackTrace? stack) {
+  try {
+    Sentry.captureException(error, stackTrace: stack);
+  } catch (_) {
+    // Swallow — we already printed via `debugPrint`. Sentry being
+    // down (no DSN, native channel dead) must never escalate into a
+    // crash of our own crash handler.
+  }
 }
 
 const Color _kNeon = Color(0xFF00F0FF);
@@ -76,7 +182,16 @@ const Color _kNeon = Color(0xFF00F0FF);
 // screen users were seeing at login time. Phase 6 added retry-on-failure
 // so offline launches no longer lock users on a splash forever.
 class _BootGate extends StatefulWidget {
-  const _BootGate();
+  const _BootGate({this.dotenvLoaded = true});
+
+  /// Whether `dotenv.load(.env)` succeeded in `main()`. False means the
+  /// asset was missing or unparseable; every env read will return empty
+  /// and downstream services (Supabase, RevenueCat, Sentry, PostHog)
+  /// will run in fallback mode. The gate uses this to short-circuit
+  /// straight to a configuration-error screen instead of attempting
+  /// Supabase.initialize with empty credentials, which would either
+  /// throw or hang.
+  final bool dotenvLoaded;
 
   @override
   State<_BootGate> createState() => _BootGateState();
@@ -104,15 +219,38 @@ class _BootGateState extends State<_BootGate> {
 
   Future<SharedPreferences> _init() async {
     try {
+      // Phase 94 · short-circuit on missing `.env`. Reaching
+      // `Supabase.initialize(url: '', anonKey: '')` either throws a
+      // synchronous AssertionError ("URL must not be empty") or, on
+      // some plugin versions, waits forever for the platform channel
+      // to confirm a malformed URL — both look like a black screen
+      // to the user. Throwing a clearly-tagged error here lets the
+      // FutureBuilder render `_BootErrorScreen` with an actionable
+      // message instead.
+      if (!widget.dotenvLoaded) {
+        throw const _MissingConfigurationError();
+      }
+      final supabaseUrl = _envSafe('SUPABASE_URL');
+      final supabaseKey = _envSafe('SUPABASE_ANON_KEY');
+      if (supabaseUrl.isEmpty || supabaseKey.isEmpty) {
+        throw const _MissingConfigurationError();
+      }
+
       // dotenv already loaded in `main()` before Sentry.init, so we only
       // cross the SharedPreferences platform channel here.
       final prefs = await SharedPreferences.getInstance();
 
       if (!_supabaseInitialized) {
+        // Phase 94 · 8-second timeout. Supabase's auth refresh
+        // round-trip can wedge on a captive WiFi (TCP connects but
+        // the response never arrives), and without the timeout the
+        // splash sat there until the OS killed the app. The timeout
+        // surfaces the failure as a TimeoutException → caught below
+        // → retry screen rather than a black screen.
         await Supabase.initialize(
-          url: dotenv.env['SUPABASE_URL'] ?? '',
-          anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
-        );
+          url: supabaseUrl,
+          anonKey: supabaseKey,
+        ).timeout(const Duration(seconds: 8));
         _supabaseInitialized = true;
 
         // Phase 88 · defensive guest recovery.
@@ -158,14 +296,36 @@ class _BootGateState extends State<_BootGate> {
         }
       }
 
-      // Phase 42: PostHog analytics. Await it so the first analytics
+      // Phase 42 · PostHog analytics. Awaited so the first analytics
       // event (typically `paywall_viewed` on auto-prompt, or
       // `onboarding_step_completed` on welcome) actually lands — the
-      // setup() call in posthog_flutter buffers until done.
-      await AnalyticsService.instance.init(
-        apiKey: dotenv.env['POSTHOG_API_KEY'] ?? '',
-        host: dotenv.env['POSTHOG_HOST'] ?? 'https://app.posthog.com',
-      );
+      // `setup()` call in posthog_flutter buffers until done.
+      //
+      // Phase 94 · 5-second timeout + null-safe await. PostHog's
+      // native `setup` has been observed to hang on cold-start in
+      // release builds when the device has no DNS (airplane mode,
+      // captive WiFi pre-auth) — the SDK queues the init request
+      // against an internal worker thread that never resolves, the
+      // splash never lifts, and the user sees a black screen. The
+      // timeout downgrades that hang to a logged warning and lets
+      // the rest of bootstrap finish.
+      final posthogHost = _envSafe('POSTHOG_HOST');
+      await AnalyticsService.instance
+          .init(
+            apiKey: _envSafe('POSTHOG_API_KEY'),
+            host: posthogHost.isEmpty
+                ? 'https://app.posthog.com'
+                : posthogHost,
+          )
+          .timeout(
+            const Duration(seconds: 5),
+            onTimeout: () {
+              AppLogger.warning(
+                'PostHog init timed out — analytics disabled',
+                category: 'analytics',
+              );
+            },
+          );
 
       // Phase 48 · RevenueCat configuration deferred. Was an `await
       // configureRevenueCat()` here on every cold start, blocking the
@@ -202,9 +362,18 @@ class _BootGateState extends State<_BootGate> {
       future: _bootstrap,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
+          // Phase 94 · differentiate "device offline / Supabase down"
+          // from "ship-time misconfiguration". The latter cannot be
+          // recovered by tapping retry — it needs a new build — so
+          // we surface a distinct message instead of leading the
+          // user into an infinite "TEKRAR DENE" loop.
+          final isConfigError = snapshot.error is _MissingConfigurationError;
           return MaterialApp(
             debugShowCheckedModeBanner: false,
-            home: _BootErrorScreen(onRetry: _retry),
+            home: _BootErrorScreen(
+              onRetry: _retry,
+              isConfigError: isConfigError,
+            ),
           );
         }
         if (!snapshot.hasData) {
@@ -247,9 +416,23 @@ class _BootSplash extends StatelessWidget {
   }
 }
 
+/// Phase 94 · sentinel error type that lets the FutureBuilder
+/// distinguish a config / build-time failure from a network /
+/// transient failure when picking the error-screen copy.
+class _MissingConfigurationError implements Exception {
+  const _MissingConfigurationError();
+  @override
+  String toString() =>
+      '_MissingConfigurationError: .env missing or required keys empty.';
+}
+
 class _BootErrorScreen extends StatefulWidget {
-  const _BootErrorScreen({required this.onRetry});
+  const _BootErrorScreen({
+    required this.onRetry,
+    this.isConfigError = false,
+  });
   final VoidCallback onRetry;
+  final bool isConfigError;
 
   @override
   State<_BootErrorScreen> createState() => _BootErrorScreenState();
@@ -266,6 +449,7 @@ class _BootErrorScreenState extends State<_BootErrorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isConfig = widget.isConfigError;
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
@@ -283,27 +467,35 @@ class _BootErrorScreenState extends State<_BootErrorScreen> {
                     color: _kNeon.withValues(alpha: 0.12),
                     border: Border.all(color: _kNeon.withValues(alpha: 0.5)),
                   ),
-                  child: const Icon(
-                    Icons.wifi_off_rounded,
+                  child: Icon(
+                    isConfig
+                        ? Icons.error_outline_rounded
+                        : Icons.wifi_off_rounded,
                     color: _kNeon,
                     size: 30,
                   ),
                 ),
                 const SizedBox(height: 18),
-                const Text(
-                  'Bağlantı kurulamadı.',
+                Text(
+                  isConfig
+                      ? 'Uygulama yapılandırılamadı.'
+                      : 'Bağlantı kurulamadı.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 20,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Lütfen internetinizi kontrol edin.',
+                Text(
+                  isConfig
+                      ? 'Lütfen Play Store üzerinden son sürümü yükleyin '
+                          've sorun devam ederse destek ekibiyle iletişime '
+                          'geçin.'
+                      : 'Lütfen internetinizi kontrol edin.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 14,
                     height: 1.4,
