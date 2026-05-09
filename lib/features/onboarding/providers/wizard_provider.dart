@@ -26,6 +26,7 @@ const String kDefaultTastePreference = 'karisik';
 class WizardState {
   const WizardState({
     this.name,
+    this.bodyFeelings = const <String>{},
     this.gender,
     this.age,
     this.heightCm,
@@ -54,6 +55,15 @@ class WizardState {
   /// coach intro and gender, used by the assessment engine's greeting
   /// line and (eventually) by push-notification copy.
   final String? name;
+
+  /// Phase 111 · multi-select emotional self-recognition captured on
+  /// the body-feelings step (between gender and goal). Tokens are
+  /// emotional self-statements the user identifies with — `tired`,
+  /// `lost_form`, `low_discipline`, `low_energy`, `mirror_avoid`,
+  /// `dont_know_start`, `want_old_self`, `want_better`. Empty set is
+  /// a valid answer (user skipped). The personalisation engine
+  /// reads this set to weight assessment paragraph branches.
+  final Set<String> bodyFeelings;
 
   final Gender? gender;
   final int? age;
@@ -135,6 +145,7 @@ class WizardState {
 
   WizardState copyWith({
     String? name,
+    Set<String>? bodyFeelings,
     Gender? gender,
     int? age,
     int? heightCm,
@@ -159,6 +170,7 @@ class WizardState {
   }) {
     return WizardState(
       name: name ?? this.name,
+      bodyFeelings: bodyFeelings ?? this.bodyFeelings,
       gender: gender ?? this.gender,
       age: age ?? this.age,
       heightCm: heightCm ?? this.heightCm,
@@ -186,6 +198,7 @@ class WizardState {
 
   Map<String, dynamic> toJson() => {
         'name': name,
+        'bodyFeelings': bodyFeelings.toList(),
         'gender': gender?.name,
         'age': age,
         'heightCm': heightCm,
@@ -215,6 +228,8 @@ class WizardController extends Notifier<WizardState> {
   WizardState build() => const WizardState();
 
   void setName(String v) => state = state.copyWith(name: v);
+  void setBodyFeelings(Set<String> v) =>
+      state = state.copyWith(bodyFeelings: v);
   void setGender(Gender v) => state = state.copyWith(gender: v);
   void setAge(int v) => state = state.copyWith(age: v);
   void setHeight(int v) => state = state.copyWith(heightCm: v);
