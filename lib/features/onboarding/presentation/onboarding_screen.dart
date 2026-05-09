@@ -23,6 +23,7 @@ import 'steps/act_5_commitment_step.dart';
 import 'steps/interlude_after_goal_step.dart';
 import 'steps/interlude_before_pain_point_step.dart';
 import 'steps/name_capture_step.dart';
+import 'steps/setup_thinking_step.dart';
 
 /// Cinematic rebuild · the wizard orchestrator. Owns the step index,
 /// the navigation transitions, and the exit-to-paywall finisher.
@@ -32,39 +33,43 @@ import 'steps/name_capture_step.dart';
 /// and fade while incoming scenes rise and settle in the same 480 ms
 /// window. The wizard reads as scene progression, not page snapping.
 ///
-/// The 15-step act mapping:
+/// The 16-step act mapping:
 ///   • Act 1 (welcome) — emotional hook, immersive hero.
-///   • Act 2 (coach_intro → name_capture) — Form introduces itself
-///     and asks "Bu yolculukta sana nasıl sesleneyim?" The bonding
-///     zone is three contiguous header-less screens so it reads as
-///     one conversation.
+///   • Act 2 (coach_intro → name_capture → SETUP THINKING) — Form
+///     introduces itself, asks the user's name, then visibly
+///     *prepares* (Phase 110 thinking moment — composing dots → "I
+///     need to learn a few things from you" line). The bonding zone
+///     is four contiguous header-less screens so it reads as one
+///     conversation that ends with Form rolling up its sleeves.
 ///   • Act 3 (gender → goal → INTERLUDE → experience → daily_minutes
 ///     → activity → physical_data → INTERLUDE → pain_point) —
-///     transformation buildup. The two interludes (post-goal +
-///     pre-pain-point) are Form-speaking moments that turn the
-///     middle from a questionnaire tunnel into a relationship arc:
-///     predictive empathy after the goal declaration, vulnerability
-///     setup before the hardest answer.
+///     transformation buildup. Two interludes (post-goal +
+///     pre-pain-point) turn the middle from a questionnaire tunnel
+///     into a relationship arc.
 ///   • Act 4 (analysis_illusion → dynamic_report) — labor-illusion +
 ///     personalised AI report reveal.
 ///   • Act 5 (pre_paywall_summary) — commitment moment.
 ///
-/// `_hookSteps = 3` keeps the chrome header hidden through the
-/// bonding zone. Interludes (any step name with the `interlude_`
-/// prefix) also hide the header — the data-step counter skips them
-/// so progress reads cleanly when chrome reappears.
+/// Header chrome stays hidden when [_dataStepNumber] returns null:
+/// during the four-step bonding zone (welcome / coach_intro /
+/// name_capture / interlude_setup_thinking) and during any
+/// `interlude_*` step. The data-step counter skips both so the
+/// progress rail reads cleanly when chrome reappears.
 ///
 /// New screens (habit anchor, push opt-in, identity declaration,
 /// microcommitment, first-workout prompt) get added inside the
 /// appropriate act file as they ship — the orchestrator only
 /// extends [_stepNames] and the [_buildStep] switch.
-const int _totalSteps = 15;
+const int _totalSteps = 16;
 const int _hookSteps = 3;
 
 const List<String> _stepNames = [
   'welcome',
   'coach_intro',
   'name_capture',
+  // Bonding-zone Form-speaking moment that bridges name_capture
+  // and the question phase. Header-less via the `interlude_` prefix.
+  'interlude_setup_thinking',
   'gender',
   'goal',
   'interlude_after_goal',
@@ -218,28 +223,30 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       case 2:
         return NameCaptureStep(onContinue: _next);
       case 3:
-        return GenderStep(onCommitted: _next);
+        return SetupThinkingStep(onContinue: _next);
       case 4:
-        return GoalStep(onCommitted: _next);
+        return GenderStep(onCommitted: _next);
       case 5:
-        return InterludeAfterGoalStep(onContinue: _next);
+        return GoalStep(onCommitted: _next);
       case 6:
-        return ExperienceStep(onCommitted: _next);
+        return InterludeAfterGoalStep(onContinue: _next);
       case 7:
-        return DailyMinutesStep(onCommitted: _next);
+        return ExperienceStep(onCommitted: _next);
       case 8:
-        return ActivityStep(onCommitted: _next);
+        return DailyMinutesStep(onCommitted: _next);
       case 9:
-        return PhysicalDataStep(onContinue: _next);
+        return ActivityStep(onCommitted: _next);
       case 10:
-        return InterludeBeforePainPointStep(onContinue: _next);
+        return PhysicalDataStep(onContinue: _next);
       case 11:
-        return PainPointStep(onCommitted: _next);
+        return InterludeBeforePainPointStep(onContinue: _next);
       case 12:
-        return AnalysisIllusionStep(onComplete: _next);
+        return PainPointStep(onCommitted: _next);
       case 13:
-        return DynamicReportStep(onComplete: _next);
+        return AnalysisIllusionStep(onComplete: _next);
       case 14:
+        return DynamicReportStep(onComplete: _next);
+      case 15:
         return PrePaywallSummaryStep(onComplete: _finish);
       default:
         return const SizedBox.shrink();
