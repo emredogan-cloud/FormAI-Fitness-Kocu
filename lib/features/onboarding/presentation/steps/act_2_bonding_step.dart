@@ -6,6 +6,7 @@ import '../../../../core/motion/kinetic_text_reveal.dart';
 import '../../../../core/motion/motion_tokens.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_haptics.dart';
+import '../widgets/living_coach_avatar.dart';
 
 /// Act 2 · AI companion bonding.
 ///
@@ -148,7 +149,7 @@ class _CoachIntroStepState extends State<CoachIntroStep>
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const _LivingCoachAvatar(),
+                        const LivingCoachAvatar(),
                         const SizedBox(height: 28),
                         BreathingBox(
                           minAlpha: 0.95,
@@ -289,94 +290,6 @@ class _CoachBubble extends StatelessWidget {
   }
 }
 
-/// The coach avatar — outer radial halo + inner circular photo.
-///
-/// Two breathing layers, intentionally out of phase:
-///   • Outer halo: 3.6-second cycle via [BreathingBox] (radial gradient
-///     fades 0.55 → 1.0 alpha).
-///   • Inner photo: 2.4-second cycle via [GlowPulse] (boxshadow alpha
-///     0.30 → 0.55, blur 22 → 30).
-///
-/// The differing periods drift the layers in and out of phase, so the
-/// avatar reads as *alive* rather than *blinking on a metronome*. Each
-/// primitive is `RepaintBoundary`-isolated internally so the parent
-/// rebuild on `_typingDone` doesn't trigger a full repaint of the
-/// avatar.
-///
-/// Stays a static webp until the artist delivers the Rive-driven
-/// living-coach .riv asset; the cinematic primitives carry the
-/// "presence" feel in the meantime.
-class _LivingCoachAvatar extends StatelessWidget {
-  const _LivingCoachAvatar();
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 220,
-      height: 220,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          BreathingBox(
-            minAlpha: 0.55,
-            maxAlpha: 1.0,
-            duration: const Duration(milliseconds: 3600),
-            child: Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    AppColors.neon.withValues(alpha: 0.55),
-                    AppColors.neonAccent.withValues(alpha: 0.28),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.55, 1.0],
-                ),
-              ),
-            ),
-          ),
-          GlowPulse(
-            color: AppColors.neon,
-            minAlpha: 0.30,
-            maxAlpha: 0.55,
-            minBlur: 22,
-            maxBlur: 30,
-            spread: -2,
-            duration: const Duration(milliseconds: 2400),
-            child: Container(
-              width: 140,
-              height: 140,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: AppColors.neon.withValues(alpha: 0.7),
-                  width: 1.5,
-                ),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Image.asset(
-                'photos/kişiselyapayzekakoçfoto.webp',
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const DecoratedBox(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [AppColors.neon, AppColors.neonAccent],
-                    ),
-                  ),
-                  child: Center(
-                    child: Icon(
-                      Icons.smart_toy_rounded,
-                      color: Colors.white,
-                      size: 56,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+// _LivingCoachAvatar moved to widgets/living_coach_avatar.dart so the
+// name-capture step (and any future Form-speaks moment) can re-use the
+// same two-layer breathing identity.
