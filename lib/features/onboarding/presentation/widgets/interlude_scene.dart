@@ -5,6 +5,7 @@ import '../../../../core/motion/kinetic_text_reveal.dart';
 import '../../../../core/motion/motion_tokens.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_haptics.dart';
+import 'coach_mood.dart';
 import 'living_coach_avatar.dart';
 
 /// Shared scene for Act 3's two strategic interludes. Form fills the
@@ -26,6 +27,7 @@ class InterludeScene extends StatefulWidget {
     super.key,
     required this.text,
     required this.onContinue,
+    this.mood = CoachMood.idle,
     this.dwellAfterTyping = const Duration(milliseconds: 1500),
     this.charDuration = const Duration(milliseconds: 30),
     this.avatarSize = 156,
@@ -37,6 +39,11 @@ class InterludeScene extends StatefulWidget {
 
   /// Fires after the typewriter completes + [dwellAfterTyping].
   final VoidCallback onContinue;
+
+  /// Form's emotional state for this interlude. Lets each interlude
+  /// caller specify *how* Form delivers the line — `reassuring` for
+  /// post-goal empathy, `reflective` for the pre-pain-point setup.
+  final CoachMood mood;
 
   final Duration dwellAfterTyping;
   final Duration charDuration;
@@ -122,6 +129,7 @@ class _InterludeSceneState extends State<InterludeScene>
                 LivingCoachAvatar(
                   size: widget.avatarSize,
                   innerSize: widget.avatarInnerSize,
+                  mood: widget.mood,
                 ),
                 const SizedBox(height: 36),
                 KineticTextReveal(

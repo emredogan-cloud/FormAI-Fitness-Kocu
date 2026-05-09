@@ -6,6 +6,7 @@ import '../../../../core/motion/kinetic_text_reveal.dart';
 import '../../../../core/motion/motion_tokens.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_haptics.dart';
+import '../widgets/coach_mood.dart';
 import '../widgets/living_coach_avatar.dart';
 
 /// Act 2 · AI companion bonding.
@@ -149,7 +150,17 @@ class _CoachIntroStepState extends State<CoachIntroStep>
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const LivingCoachAvatar(),
+                        // Form starts in `idle` while the typewriter
+                        // unfolds, then shifts to `listening` when the
+                        // line completes — the avatar visibly transitions
+                        // (faster pulse, slight forward lean) to signal
+                        // "I'm waiting for you now." 500ms cross-fade
+                        // inside LivingCoachAvatar smooths the change.
+                        LivingCoachAvatar(
+                          mood: _typingDone
+                              ? CoachMood.listening
+                              : CoachMood.idle,
+                        ),
                         const SizedBox(height: 28),
                         BreathingBox(
                           minAlpha: 0.95,
