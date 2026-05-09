@@ -20,6 +20,7 @@ import 'steps/act_2_bonding_step.dart';
 import 'steps/act_3_buildup_steps.dart';
 import 'steps/act_4_revelation_steps.dart';
 import 'steps/act_5_commitment_step.dart';
+import 'steps/name_capture_step.dart';
 
 /// Cinematic rebuild · the wizard orchestrator. Owns the step index,
 /// the navigation transitions, and the exit-to-paywall finisher.
@@ -29,9 +30,12 @@ import 'steps/act_5_commitment_step.dart';
 /// and fade while incoming scenes rise and settle in the same 480 ms
 /// window. The wizard reads as scene progression, not page snapping.
 ///
-/// The 12-step act mapping:
+/// The 13-step act mapping:
 ///   • Act 1 (welcome) — emotional hook, immersive hero.
-///   • Act 2 (coach_intro) — the named coach Form introduces itself.
+///   • Act 2 (coach_intro → name_capture) — the named coach Form
+///     introduces itself, then asks the user "Bu yolculukta sana
+///     nasıl sesleneyim?" The bonding zone is three contiguous
+///     header-less screens so it reads as one conversation.
 ///   • Act 3 (gender → goal → experience → daily_minutes → activity →
 ///     physical_data → pain_point) — transformation buildup, data
 ///     collection wrapped in coach voice.
@@ -40,16 +44,21 @@ import 'steps/act_5_commitment_step.dart';
 ///   • Act 5 (pre_paywall_summary) — commitment moment, plan card +
 ///     trust booster + paywall handoff.
 ///
-/// New screens (name capture, habit anchor, push opt-in, identity
-/// declaration, microcommitment, first-workout prompt) get added inside
-/// the appropriate act file as they ship — the orchestrator only
-/// extends [_stepNames] and the [_buildStep] switch.
-const int _totalSteps = 12;
-const int _hookSteps = 2;
+/// `_hookSteps = 3` keeps the chrome header hidden through the bonding
+/// zone (welcome + coach_intro + name_capture) so the wizard's chrome
+/// only appears when data collection actually begins.
+///
+/// New screens (habit anchor, push opt-in, identity declaration,
+/// microcommitment, first-workout prompt) get added inside the
+/// appropriate act file as they ship — the orchestrator only extends
+/// [_stepNames] and the [_buildStep] switch.
+const int _totalSteps = 13;
+const int _hookSteps = 3;
 
 const List<String> _stepNames = [
   'welcome',
   'coach_intro',
+  'name_capture',
   'gender',
   'goal',
   'experience_level',
@@ -192,24 +201,26 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       case 1:
         return CoachIntroStep(onContinue: _next);
       case 2:
-        return GenderStep(onCommitted: _next);
+        return NameCaptureStep(onContinue: _next);
       case 3:
-        return GoalStep(onCommitted: _next);
+        return GenderStep(onCommitted: _next);
       case 4:
-        return ExperienceStep(onCommitted: _next);
+        return GoalStep(onCommitted: _next);
       case 5:
-        return DailyMinutesStep(onCommitted: _next);
+        return ExperienceStep(onCommitted: _next);
       case 6:
-        return ActivityStep(onCommitted: _next);
+        return DailyMinutesStep(onCommitted: _next);
       case 7:
-        return PhysicalDataStep(onContinue: _next);
+        return ActivityStep(onCommitted: _next);
       case 8:
-        return PainPointStep(onCommitted: _next);
+        return PhysicalDataStep(onContinue: _next);
       case 9:
-        return AnalysisIllusionStep(onComplete: _next);
+        return PainPointStep(onCommitted: _next);
       case 10:
-        return DynamicReportStep(onComplete: _next);
+        return AnalysisIllusionStep(onComplete: _next);
       case 11:
+        return DynamicReportStep(onComplete: _next);
+      case 12:
         return PrePaywallSummaryStep(onComplete: _finish);
       default:
         return const SizedBox.shrink();

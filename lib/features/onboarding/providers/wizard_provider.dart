@@ -25,6 +25,7 @@ const String kDefaultTastePreference = 'karisik';
 
 class WizardState {
   const WizardState({
+    this.name,
     this.gender,
     this.age,
     this.heightCm,
@@ -47,6 +48,12 @@ class WizardState {
     this.waterIntake = kDefaultWaterIntake,
     this.tastePreference = kDefaultTastePreference,
   });
+
+  /// Cinematic rebuild · the name Form will use when speaking to the
+  /// user. Captured by the dedicated `NameCaptureStep` between the
+  /// coach intro and gender, used by the assessment engine's greeting
+  /// line and (eventually) by push-notification copy.
+  final String? name;
 
   final Gender? gender;
   final int? age;
@@ -127,6 +134,7 @@ class WizardState {
   final String tastePreference;
 
   WizardState copyWith({
+    String? name,
     Gender? gender,
     int? age,
     int? heightCm,
@@ -150,6 +158,7 @@ class WizardState {
     String? tastePreference,
   }) {
     return WizardState(
+      name: name ?? this.name,
       gender: gender ?? this.gender,
       age: age ?? this.age,
       heightCm: heightCm ?? this.heightCm,
@@ -176,6 +185,7 @@ class WizardState {
   }
 
   Map<String, dynamic> toJson() => {
+        'name': name,
         'gender': gender?.name,
         'age': age,
         'heightCm': heightCm,
@@ -204,6 +214,7 @@ class WizardController extends Notifier<WizardState> {
   @override
   WizardState build() => const WizardState();
 
+  void setName(String v) => state = state.copyWith(name: v);
   void setGender(Gender v) => state = state.copyWith(gender: v);
   void setAge(int v) => state = state.copyWith(age: v);
   void setHeight(int v) => state = state.copyWith(heightCm: v);

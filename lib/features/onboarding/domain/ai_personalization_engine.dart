@@ -82,9 +82,16 @@ class AiPersonalizationEngine {
   // ───────────────────────────── assessment ────────────────────────────────
 
   static String _assessment(WizardState s) {
-    final parts = <String>[
-      'Profilini analiz ettim ve sana özel bir yol haritası çıkardım.',
-    ];
+    // Greet by name when we have one. The name capture step asks Form
+    // "Bu yolculukta sana nasıl sesleneyim?" between coach intro and
+    // gender; landing here without a name means the user skipped that
+    // step somehow (e.g. legacy save), so we fall back to the un-named
+    // greeting instead of a brittle empty-vocative.
+    final greeting = _normalizeName(s.name) != null
+        ? '${_normalizeName(s.name)}, profilini analiz ettim ve sana '
+            'özel bir yol haritası çıkardım.'
+        : 'Profilini analiz ettim ve sana özel bir yol haritası çıkardım.';
+    final parts = <String>[greeting];
 
     // Quote-back. Pain-point > experience > activity (pain-point is the most
     // emotionally loaded answer). Without this, the user types 60 seconds of
@@ -182,6 +189,20 @@ class AiPersonalizationEngine {
     }
 
     return parts.join(' ');
+  }
+
+  /// Normalises the captured name for assessment-paragraph display.
+  /// Trims whitespace, returns null on empty so the greeting branch can
+  /// fall back. Capitalises the first character so "emre" → "Emre"
+  /// while leaving the rest of the string alone — this avoids
+  /// destroying the Turkish dotted/dotless I distinction that
+  /// `String.toLowerCase()` mishandles under the default locale.
+  static String? _normalizeName(String? raw) {
+    if (raw == null) return null;
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return null;
+    if (trimmed.length == 1) return trimmed.toUpperCase();
+    return trimmed[0].toUpperCase() + trimmed.substring(1);
   }
 
   /// Pulls the first usable sentence out of a free-text answer. Returns null
