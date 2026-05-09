@@ -1,16 +1,33 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../core/motion/breathing_box.dart';
+import '../../../../core/motion/glow_pulse.dart';
+import '../../../../core/motion/motion_tokens.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_haptics.dart';
 import '../../../../core/utils/legal_urls.dart';
 
 /// Act 1 · Emotional hook.
 ///
-/// Immersive welcome screen — full-bleed photo background, neon-gradient
-/// title, staggered subtitle + CTA + legal line. The very first surface
-/// the user sees on a cold launch into onboarding. Stays static now;
-/// motion-primitive upgrades land in the follow-up cinematic pass.
+/// The very first surface a user sees on a cold launch into onboarding.
+/// Stays composed of the same elements as before — full-bleed photo,
+/// gradient title, subtitle, CTA, legal line — but layers in cinematic
+/// atmosphere:
+///
+///   • A 16-second background parallax (gentle vertical translate +
+///     scale, easeInOutCubic). Imperceptible per-frame; the screen
+///     feels "alive" without anyone being able to point at the motion.
+///   • Title wrapped in [BreathingBox] (0.92 → 1.0, 4.2 s) once the
+///     entrance settles. Reads as "the brand is breathing", not
+///     "something is fading."
+///   • CTA wrapped in [GlowPulse] (alpha 0.45 → 0.70, blur 24 → 36
+///     over 3 s) once the entrance settles. Says "I'm waiting for
+///     you" without competing for attention.
+///
+/// Ambient effects gate on `_entranceDone` so the entrance timing isn't
+/// muddied by overlapping pulses. After the title settles, the screen
+/// shifts from "introducing itself" to "waiting for the user."
 
 class WelcomeStep extends StatefulWidget {
   const WelcomeStep({super.key, required this.onStart});
@@ -21,7 +38,7 @@ class WelcomeStep extends StatefulWidget {
 }
 
 class _WelcomeStepState extends State<WelcomeStep>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _intro;
   late final Animation<double> _titleFade;
   late final Animation<Offset> _titleSlide;
@@ -30,6 +47,15 @@ class _WelcomeStepState extends State<WelcomeStep>
   late final Animation<double> _ctaFade;
   late final Animation<Offset> _ctaSlide;
 
+  /// Slow vertical pan of the background hero — 16 s up + 16 s down.
+  /// Imperceptible per-frame; the user feels the screen breathing
+  /// without consciously noticing why.
+  late final AnimationController _bgPan;
+
+  /// Flips true when the entrance choreography settles. Gates the
+  /// ambient breathing/glow so they don't compete with the entrance.
+  bool _entranceDone = false;
+
   @override
   void initState() {
     super.initState();
@@ -37,16 +63,26 @@ class _WelcomeStepState extends State<WelcomeStep>
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     )..forward();
+    _intro.addStatusListener((s) {
+      if (s == AnimationStatus.completed && mounted) {
+        setState(() => _entranceDone = true);
+      }
+    });
+
+    _bgPan = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 16),
+    )..repeat(reverse: true);
 
     Animation<double> fade(double a, double b) => CurvedAnimation(
           parent: _intro,
-          curve: Interval(a, b, curve: Curves.easeOutCubic),
+          curve: Interval(a, b, curve: MotionTokens.enterEase),
         );
     Animation<Offset> slide(double a, double b) =>
         Tween<Offset>(begin: const Offset(0, 0.4), end: Offset.zero).animate(
           CurvedAnimation(
             parent: _intro,
-            curve: Interval(a, b, curve: Curves.easeOutCubic),
+            curve: Interval(a, b, curve: MotionTokens.enterEase),
           ),
         );
 
@@ -61,6 +97,7 @@ class _WelcomeStepState extends State<WelcomeStep>
   @override
   void dispose() {
     _intro.dispose();
+    _bgPan.dispose();
     super.dispose();
   }
 
@@ -80,15 +117,35 @@ class _WelcomeStepState extends State<WelcomeStep>
     return Stack(
       fit: StackFit.expand,
       children: [
-        Image.asset(
-          'photos/ilkkarşılamaanaekranarkaplanı.webp',
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => const DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment.topCenter,
-                radius: 1.4,
-                colors: [Color(0xFF1A0B3D), Colors.black],
+        // Background hero with slow ambient parallax. Translates up to
+        // 10 px and scales 1.04 → 1.065 over the 16 s loop. The
+        // RepaintBoundary keeps the rest of the screen from re-painting
+        // when only the background transforms.
+        RepaintBoundary(
+          child: AnimatedBuilder(
+            animation: _bgPan,
+            builder: (context, child) {
+              final t = MotionTokens.reassuranceEase.transform(_bgPan.value);
+              return Transform.translate(
+                offset: Offset(0, -10.0 * t),
+                child: Transform.scale(
+                  scale: 1.04 + (0.025 * t),
+                  alignment: Alignment.center,
+                  child: child,
+                ),
+              );
+            },
+            child: Image.asset(
+              'photos/ilkkarşılamaanaekranarkaplanı.webp',
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment.topCenter,
+                    radius: 1.4,
+                    colors: [Color(0xFF1A0B3D), Colors.black],
+                  ),
+                ),
               ),
             ),
           ),
@@ -116,22 +173,28 @@ class _WelcomeStepState extends State<WelcomeStep>
                 _appear(
                   fade: _titleFade,
                   slide: _titleSlide,
-                  child: ShaderMask(
-                    shaderCallback: (rect) => const LinearGradient(
-                      colors: [AppColors.neon, AppColors.neonAccent],
-                    ).createShader(rect),
-                    child: const Text(
-                      'Vücudunu Yapay Zeka ile Şekillendir',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 32,
-                        fontWeight: FontWeight.w900,
-                        height: 1.12,
-                        letterSpacing: 0.4,
-                        shadows: [
-                          Shadow(blurRadius: 24, color: Colors.black87),
-                        ],
+                  child: BreathingBox(
+                    enabled: _entranceDone,
+                    minAlpha: 0.92,
+                    maxAlpha: 1.0,
+                    duration: const Duration(milliseconds: 4200),
+                    child: ShaderMask(
+                      shaderCallback: (rect) => const LinearGradient(
+                        colors: [AppColors.neon, AppColors.neonAccent],
+                      ).createShader(rect),
+                      child: const Text(
+                        'Vücudunu Yapay Zeka ile Şekillendir',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 32,
+                          fontWeight: FontWeight.w900,
+                          height: 1.12,
+                          letterSpacing: 0.4,
+                          shadows: [
+                            Shadow(blurRadius: 24, color: Colors.black87),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -141,8 +204,8 @@ class _WelcomeStepState extends State<WelcomeStep>
                   fade: _subtitleFade,
                   slide: _subtitleSlide,
                   child: const Text(
-                    'Sana özel antrenman ve beslenme planıyla 30 günde '
-                    'hedefine ulaş.',
+                    '12 hafta · 4 antrenman/hafta · AI ile kalibre. '
+                    'Sana özel bir yol haritası.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white70,
@@ -156,19 +219,19 @@ class _WelcomeStepState extends State<WelcomeStep>
                 _appear(
                   fade: _ctaFade,
                   slide: _ctaSlide,
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.neon.withValues(alpha: 0.55),
-                            blurRadius: 28,
-                            spreadRadius: 1,
-                          ),
-                        ],
-                      ),
+                  child: GlowPulse(
+                    enabled: _entranceDone,
+                    color: AppColors.neon,
+                    minAlpha: 0.45,
+                    maxAlpha: 0.70,
+                    minBlur: 24,
+                    maxBlur: 36,
+                    spread: 1,
+                    shape: BoxShape.rectangle,
+                    borderRadius: BorderRadius.circular(20),
+                    duration: const Duration(milliseconds: 3000),
+                    child: SizedBox(
+                      width: double.infinity,
                       child: FilledButton(
                         onPressed: () {
                           AppHaptics.secondaryTap();
