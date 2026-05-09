@@ -25,6 +25,7 @@ import 'steps/interlude_after_goal_step.dart';
 import 'steps/interlude_before_pain_point_step.dart';
 import 'steps/name_capture_step.dart';
 import 'steps/setup_thinking_step.dart';
+import 'steps/social_proof_step.dart';
 
 /// Cinematic rebuild · the wizard orchestrator. Owns the step index,
 /// the navigation transitions, and the exit-to-paywall finisher.
@@ -61,7 +62,7 @@ import 'steps/setup_thinking_step.dart';
 /// microcommitment, first-workout prompt) get added inside the
 /// appropriate act file as they ship — the orchestrator only
 /// extends [_stepNames] and the [_buildStep] switch.
-const int _totalSteps = 17;
+const int _totalSteps = 18;
 const int _hookSteps = 3;
 
 const List<String> _stepNames = [
@@ -87,13 +88,17 @@ const List<String> _stepNames = [
   'pain_point',
   'analysis_illusion',
   'dynamic_report',
+  // Phase 113 · social proof scene between the personal report and
+  // the commitment ask. Auto-scrolling testimonials + Form in proud
+  // mood. Header-less (`interlude_` prefix) — trust-building beat,
+  // not a data-collection screen.
+  'interlude_social_proof',
   'pre_paywall_summary',
 ];
 
-/// Number of non-hook, non-interlude steps. Phase 111 added
-/// `body_feelings`, bumping this from 10 → 11. The header's
-/// "x / 11" math stays accurate because [_dataStepNumber] counts
-/// non-interlude steps after the hook zone.
+/// Number of non-hook, non-interlude steps. Stays at 11 — Phase 113's
+/// social proof scene is interlude-prefixed so [_dataStepNumber]
+/// skips it for the chrome counter math.
 const int _totalDataSteps = 11;
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -254,6 +259,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       case 15:
         return DynamicReportStep(onComplete: _next);
       case 16:
+        return SocialProofStep(onContinue: _next);
+      case 17:
         return PrePaywallSummaryStep(onComplete: _finish);
       default:
         return const SizedBox.shrink();
