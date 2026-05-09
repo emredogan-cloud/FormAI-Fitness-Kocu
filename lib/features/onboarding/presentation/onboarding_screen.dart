@@ -20,6 +20,7 @@ import 'steps/act_2_bonding_step.dart';
 import 'steps/act_3_buildup_steps.dart';
 import 'steps/act_4_revelation_steps.dart';
 import 'steps/act_5_commitment_step.dart';
+import 'steps/body_feelings_step.dart';
 import 'steps/interlude_after_goal_step.dart';
 import 'steps/interlude_before_pain_point_step.dart';
 import 'steps/name_capture_step.dart';
@@ -60,7 +61,7 @@ import 'steps/setup_thinking_step.dart';
 /// microcommitment, first-workout prompt) get added inside the
 /// appropriate act file as they ship — the orchestrator only
 /// extends [_stepNames] and the [_buildStep] switch.
-const int _totalSteps = 16;
+const int _totalSteps = 17;
 const int _hookSteps = 3;
 
 const List<String> _stepNames = [
@@ -71,6 +72,11 @@ const List<String> _stepNames = [
   // and the question phase. Header-less via the `interlude_` prefix.
   'interlude_setup_thinking',
   'gender',
+  // Phase 111 · emotional self-recognition multi-select. Inserted
+  // between gender (demographic) and goal (intent) so the user
+  // identifies *how they feel about themselves* before choosing
+  // what to change.
+  'body_feelings',
   'goal',
   'interlude_after_goal',
   'experience_level',
@@ -84,12 +90,11 @@ const List<String> _stepNames = [
   'pre_paywall_summary',
 ];
 
-/// Number of non-hook, non-interlude steps. Hardcoded to 10 (gender,
-/// goal, experience, daily_minutes, activity, physical_data,
-/// pain_point, analysis_illusion, dynamic_report, pre_paywall_summary)
-/// so the header's "x / 10" math doesn't drift when interludes get
-/// added or moved. Verified against [_stepNames] in [initState].
-const int _totalDataSteps = 10;
+/// Number of non-hook, non-interlude steps. Phase 111 added
+/// `body_feelings`, bumping this from 10 → 11. The header's
+/// "x / 11" math stays accurate because [_dataStepNumber] counts
+/// non-interlude steps after the hook zone.
+const int _totalDataSteps = 11;
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -227,26 +232,28 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       case 4:
         return GenderStep(onCommitted: _next);
       case 5:
-        return GoalStep(onCommitted: _next);
+        return BodyFeelingsStep(onCommitted: _next);
       case 6:
-        return InterludeAfterGoalStep(onContinue: _next);
+        return GoalStep(onCommitted: _next);
       case 7:
-        return ExperienceStep(onCommitted: _next);
+        return InterludeAfterGoalStep(onContinue: _next);
       case 8:
-        return DailyMinutesStep(onCommitted: _next);
+        return ExperienceStep(onCommitted: _next);
       case 9:
-        return ActivityStep(onCommitted: _next);
+        return DailyMinutesStep(onCommitted: _next);
       case 10:
-        return PhysicalDataStep(onContinue: _next);
+        return ActivityStep(onCommitted: _next);
       case 11:
-        return InterludeBeforePainPointStep(onContinue: _next);
+        return PhysicalDataStep(onContinue: _next);
       case 12:
-        return PainPointStep(onCommitted: _next);
+        return InterludeBeforePainPointStep(onContinue: _next);
       case 13:
-        return AnalysisIllusionStep(onComplete: _next);
+        return PainPointStep(onCommitted: _next);
       case 14:
-        return DynamicReportStep(onComplete: _next);
+        return AnalysisIllusionStep(onComplete: _next);
       case 15:
+        return DynamicReportStep(onComplete: _next);
+      case 16:
         return PrePaywallSummaryStep(onComplete: _finish);
       default:
         return const SizedBox.shrink();
