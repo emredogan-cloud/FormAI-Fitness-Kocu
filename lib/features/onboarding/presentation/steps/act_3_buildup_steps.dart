@@ -850,26 +850,33 @@ class PainPointStep extends ConsumerWidget {
       },
       initialCardValue: wizard.painPoint,
       initialDescription: wizard.painPointDescription,
+      // Phase 114 · option order tuned per audit §3.6 to put the
+      // shame-trigger answer ("Ne yapacağımı bilmiyorum") last so
+      // the user has already normalised the choice through the
+      // first three options before considering it. Order:
+      // consistency (most common, normalising) → motivation
+      // (acceptable everyday struggle) → diet (concrete) →
+      // no_idea (the answer that requires the most courage).
       options: const [
-        InteractiveOption(
-          value: 'motivation',
-          label: 'Motivasyon',
-          icon: Icons.local_fire_department_outlined,
-        ),
         InteractiveOption(
           value: 'consistency',
           label: 'Süreklilik',
           icon: Icons.repeat_rounded,
         ),
         InteractiveOption(
-          value: 'no_idea',
-          label: 'Ne yapacağımı bilmiyorum',
-          icon: Icons.help_outline_rounded,
+          value: 'motivation',
+          label: 'Motivasyon',
+          icon: Icons.local_fire_department_outlined,
         ),
         InteractiveOption(
           value: 'diet',
           label: 'Diyet',
           icon: Icons.restaurant_menu_rounded,
+        ),
+        InteractiveOption(
+          value: 'no_idea',
+          label: 'Ne yapacağımı bilmiyorum',
+          icon: Icons.help_outline_rounded,
         ),
       ],
       inputLabel: 'Seni tam olarak neyin zorladığını detaylandırabilirsin',

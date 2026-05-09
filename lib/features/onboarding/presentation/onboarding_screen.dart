@@ -72,12 +72,14 @@ const List<String> _stepNames = [
   // Bonding-zone Form-speaking moment that bridges name_capture
   // and the question phase. Header-less via the `interlude_` prefix.
   'interlude_setup_thinking',
-  'gender',
-  // Phase 111 · emotional self-recognition multi-select. Inserted
-  // between gender (demographic) and goal (intent) so the user
-  // identifies *how they feel about themselves* before choosing
-  // what to change.
+  // Phase 114 · emotional self-recognition leads — body_feelings
+  // moved ahead of gender. The first thing the user does after
+  // bonding is acknowledge how they *feel about themselves*; the
+  // gender + goal steps that follow then carry that emotional
+  // context. Starting with demographic (gender) felt clinical;
+  // starting with feelings sets the stakes immediately.
   'body_feelings',
+  'gender',
   'goal',
   'interlude_after_goal',
   'experience_level',
@@ -235,9 +237,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       case 3:
         return SetupThinkingStep(onContinue: _next);
       case 4:
-        return GenderStep(onCommitted: _next);
-      case 5:
         return BodyFeelingsStep(onCommitted: _next);
+      case 5:
+        return GenderStep(onCommitted: _next);
       case 6:
         return GoalStep(onCommitted: _next);
       case 7:
