@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/motion/motion_tokens.dart';
+import '../../../core/motion/scene_transition.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../core/services/analytics_service.dart';
 import '../../../core/services/app_preferences.dart';
@@ -19,9 +21,13 @@ import 'steps/act_3_buildup_steps.dart';
 import 'steps/act_4_revelation_steps.dart';
 import 'steps/act_5_commitment_step.dart';
 
-/// Cinematic rebuild · the wizard orchestrator. Owns the [PageController],
-/// the index state, the navigation transitions, and the exit-to-paywall
-/// finisher. Every step widget lives in its own act file under `steps/`.
+/// Cinematic rebuild · the wizard orchestrator. Owns the step index,
+/// the navigation transitions, and the exit-to-paywall finisher.
+///
+/// Transitions are powered by [SceneTransition] (the motion primitive
+/// at lib/core/motion/scene_transition.dart) — outgoing scenes recede
+/// and fade while incoming scenes rise and settle in the same 480 ms
+/// window. The wizard reads as scene progression, not page snapping.
 ///
 /// The 12-step act mapping:
 ///   • Act 1 (welcome) — emotional hook, immersive hero.
@@ -36,8 +42,8 @@ import 'steps/act_5_commitment_step.dart';
 ///
 /// New screens (name capture, habit anchor, push opt-in, identity
 /// declaration, microcommitment, first-workout prompt) get added inside
-/// the appropriate act file as they ship — the orchestrator only extends
-/// [_stepNames] and the PageView children list.
+/// the appropriate act file as they ship — the orchestrator only
+/// extends [_stepNames] and the [_buildStep] switch.
 const int _totalSteps = 12;
 const int _hookSteps = 2;
 
@@ -64,7 +70,6 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 }
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
-  final PageController _controller = PageController();
   int _index = 0;
   bool _didPrecacheAssets = false;
 
@@ -89,7 +94,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   void initState() {
     super.initState();
     // Capture step_index=0 so the funnel has an "entered onboarding"
-    // event. PageView.onPageChanged never emits for the initial page.
+    // event. The wizard's _next() / _back() emit subsequent steps.
     AnalyticsService.instance.onboardingStepCompleted(
       stepIndex: 0,
       stepName: _stepNames.first,
@@ -108,31 +113,30 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     }
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
   void _next() {
     if (_index >= _totalSteps - 1) return;
     // UX rule §4: every forward step transition fires a medium impact so
-    // the user feels the wizard *progressing* rather than just sliding
-    // silently. Light impact on the tap that initiated the transition is
-    // fired by the calling widget.
+    // the user feels the wizard *progressing*. Light impact on the tap
+    // that initiated the transition is fired by the calling widget.
     AppHaptics.primaryCta();
-    _controller.nextPage(
-      duration: const Duration(milliseconds: 380),
-      curve: Curves.easeOutCubic,
+    setState(() => _index += 1);
+    AnalyticsService.instance.onboardingStepCompleted(
+      stepIndex: _index,
+      stepName: _index < _stepNames.length
+          ? _stepNames[_index]
+          : 'unknown_$_index',
     );
   }
 
   void _back() {
     if (_index == 0) return;
     AppHaptics.secondaryTap();
-    _controller.previousPage(
-      duration: const Duration(milliseconds: 320),
-      curve: Curves.easeOutCubic,
+    setState(() => _index -= 1);
+    AnalyticsService.instance.onboardingStepCompleted(
+      stepIndex: _index,
+      stepName: _index < _stepNames.length
+          ? _stepNames[_index]
+          : 'unknown_$_index',
     );
   }
 
@@ -181,6 +185,37 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     context.go(AppRoutes.paywall);
   }
 
+  Widget _buildStep(int i) {
+    switch (i) {
+      case 0:
+        return WelcomeStep(onStart: _next);
+      case 1:
+        return CoachIntroStep(onContinue: _next);
+      case 2:
+        return GenderStep(onCommitted: _next);
+      case 3:
+        return GoalStep(onCommitted: _next);
+      case 4:
+        return ExperienceStep(onCommitted: _next);
+      case 5:
+        return DailyMinutesStep(onCommitted: _next);
+      case 6:
+        return ActivityStep(onCommitted: _next);
+      case 7:
+        return PhysicalDataStep(onContinue: _next);
+      case 8:
+        return PainPointStep(onCommitted: _next);
+      case 9:
+        return AnalysisIllusionStep(onComplete: _next);
+      case 10:
+        return DynamicReportStep(onComplete: _next);
+      case 11:
+        return PrePaywallSummaryStep(onComplete: _finish);
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final showHeader = _index >= _hookSteps;
@@ -189,38 +224,29 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            if (showHeader)
-              WizardHeader(
+            // Header cross-fades + sizes in/out at the same cadence as
+            // the scene transition so the boundary between Act 2
+            // (full-bleed) and Act 3 (chrome visible) reads as a single
+            // coordinated moment instead of a snap.
+            AnimatedCrossFade(
+              firstChild: WizardHeader(
                 step: _index - _hookSteps + 1,
                 total: _totalSteps - _hookSteps,
                 onBack: _index == 0 ? null : _back,
               ),
+              secondChild: const SizedBox(width: double.infinity),
+              crossFadeState: showHeader
+                  ? CrossFadeState.showFirst
+                  : CrossFadeState.showSecond,
+              duration: MotionTokens.sceneCrossfade,
+              firstCurve: MotionTokens.enterEase,
+              secondCurve: MotionTokens.enterEase,
+              sizeCurve: MotionTokens.enterEase,
+            ),
             Expanded(
-              child: PageView(
-                controller: _controller,
-                physics: const NeverScrollableScrollPhysics(),
-                onPageChanged: (i) {
-                  setState(() => _index = i);
-                  AnalyticsService.instance.onboardingStepCompleted(
-                    stepIndex: i,
-                    stepName:
-                        i < _stepNames.length ? _stepNames[i] : 'unknown_$i',
-                  );
-                },
-                children: [
-                  WelcomeStep(onStart: _next),
-                  CoachIntroStep(onContinue: _next),
-                  GenderStep(onCommitted: _next),
-                  GoalStep(onCommitted: _next),
-                  ExperienceStep(onCommitted: _next),
-                  DailyMinutesStep(onCommitted: _next),
-                  ActivityStep(onCommitted: _next),
-                  PhysicalDataStep(onContinue: _next),
-                  PainPointStep(onCommitted: _next),
-                  AnalysisIllusionStep(onComplete: _next),
-                  DynamicReportStep(onComplete: _next),
-                  PrePaywallSummaryStep(onComplete: _finish),
-                ],
+              child: SceneTransition(
+                sceneKey: ValueKey<int>(_index),
+                scene: _buildStep(_index),
               ),
             ),
           ],
