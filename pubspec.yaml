@@ -1,7 +1,7 @@
 name: sixpack_ai
 description: "SixPack AI - 30 Günde Karın Kası. AI-powered fitness coaching."
 publish_to: 'none'
-version: 0.1.0+1
+version: 0.1.0+5
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -115,6 +115,16 @@ dependencies:
   # so the offline detection happens before we even attempt a
   # Supabase round-trip that would otherwise hang for 30 s.
   connectivity_plus: ^6.0.5
+  # Onboarding cinematic rebuild · the AI coach "Form" runs on a Rive
+  # state machine driven by Riverpod. Eight facial states (idle,
+  # listening, thinking, surprised, encouraging, celebrating,
+  # reflecting, concerned) are picked based on the user's wizard
+  # answers. Rive was chosen over Lottie because it supports
+  # interactive state machines — Lottie can only play canned linear
+  # sequences, which can't react to the user. The .riv asset itself
+  # ships under assets/rive/ once the artist delivers it; until then
+  # the coach falls back to the existing static webp + GlowPulse halo.
+  rive: ^0.13.20
 
 dev_dependencies:
   flutter_test:
@@ -129,24 +139,24 @@ dev_dependencies:
   # below (flutter_launcher_icons:) keeps parsing on future upgrades.
   flutter_launcher_icons: ^0.14.1
 
-#flutter:
- # uses-material-design: true
-  #assets:
-  #  - .env
+flutter:
+  uses-material-design: true
+  assets:
+    - .env
     # Bespoke onboarding + prediction artwork (all Turkish-named PNG/JPEG/
     # WEBP files live at the photos/ root). Folder is quoted for safety.
     # Phase 40 removed the `docs/<region>/` jpegs that the Bölgeler strip
     # used pre-Phase-35; the strip now points at Unsplash URLs and the
     # binary weight (~2 MB across 7 folders) was dead bundle space.
-   # - "photos/"
+    - "photos/"
     # Phase 69 · per-recipe meal cover photos (real VP8 WebP, ~280 KB
     # each). Flutter asset declarations are not recursive, so the
     # subdirectory has to be listed explicitly even though `photos/`
     # is already declared above.
-   # - "photos/meals/"
+    - "photos/meals/"
     # Phase 70 · per-plan workout dashboard thumbnails (real VP8 WebP,
     # ~95 KB each). Same recursion caveat as photos/meals/ above.
-   # - "photos/workouts/"
+    - "photos/workouts/"
 
 # Launcher icon source. Uses a square PNG (derived from the onboarding
 # webp by ImageMagick convert) because flutter_launcher_icons needs PNG
