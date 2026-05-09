@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/motion/arrival_pulse.dart';
 import '../../../../core/motion/breathing_box.dart';
 import '../../../../core/motion/glow_pulse.dart';
 import '../../../../core/motion/kinetic_text_reveal.dart';
@@ -46,7 +47,7 @@ class CoachIntroStep extends StatefulWidget {
 }
 
 class _CoachIntroStepState extends State<CoachIntroStep>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   // Cinematic rebuild · the coach now has a name (Form) and the line is
   // structured as three beats per the audit (§2.3): identity, promise,
   // effort-transparency. The "90 saniye" line sets a time-budget
@@ -57,9 +58,25 @@ class _CoachIntroStepState extends State<CoachIntroStep>
       '12 haftada vücudunu nasıl değiştireceğini sana göstereceğim. '
       'Önce seni tanıyalım — bu 90 saniye sürüyor.';
 
+  // Phase 108 · Form arrival choreography.
+  //
+  // The screen used to mount with the avatar already present — felt
+  // like "Form was always here." Reference video (~0:00–0:06) shows
+  // the character arriving as a deliberate moment. Adapted for
+  // FormAI's premium aesthetic: avatar fades + scales 0.88 → 1.0
+  // (easeOutBack overshoot), an [ArrivalPulse] ring radiates outward
+  // (scanning gesture), and a light haptic lands at the ring's peak.
+  // The user feels "the AI noticed me" — calm AI acknowledgment, not
+  // cartoon hand-wave.
+  static const Duration _entryDuration = Duration(milliseconds: 1100);
+
   final RevealController _reveal = RevealController();
   late final AnimationController _bgPan;
+  late final AnimationController _entry;
+  late final Animation<double> _entryFade;
+  late final Animation<double> _entryScale;
   bool _typingDone = false;
+  bool _arrivalHapticFired = false;
 
   @override
   void initState() {
@@ -68,11 +85,41 @@ class _CoachIntroStepState extends State<CoachIntroStep>
       vsync: this,
       duration: const Duration(seconds: 15),
     )..repeat(reverse: true);
+
+    _entry = AnimationController(
+      vsync: this,
+      duration: _entryDuration,
+    );
+    // Avatar fades in on the first 40 % of the entry window —
+    // settles before the scale overshoot lands so the user reads
+    // "Form materialised, then arrived." Scale runs longer (70 %)
+    // with easeOutBack, giving a slight overshoot on landing.
+    _entryFade = CurvedAnimation(
+      parent: _entry,
+      curve: const Interval(0.0, 0.4, curve: Curves.easeOutCubic),
+    );
+    _entryScale = Tween<double>(begin: 0.88, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _entry,
+        curve: const Interval(0.0, 0.7, curve: Curves.easeOutBack),
+      ),
+    );
+    // Light haptic at the ring's peak (~halfway through the entry)
+    // so the felt impact lands at the moment the user perceives
+    // the scanning ring at full radius. Only fires once.
+    _entry.addListener(() {
+      if (!_arrivalHapticFired && _entry.value >= 0.55) {
+        _arrivalHapticFired = true;
+        AppHaptics.secondaryTap();
+      }
+    });
+    _entry.forward();
   }
 
   @override
   void dispose() {
     _bgPan.dispose();
+    _entry.dispose();
     super.dispose();
   }
 
@@ -150,16 +197,29 @@ class _CoachIntroStepState extends State<CoachIntroStep>
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Form starts in `idle` while the typewriter
-                        // unfolds, then shifts to `listening` when the
-                        // line completes — the avatar visibly transitions
-                        // (faster pulse, slight forward lean) to signal
-                        // "I'm waiting for you now." 500ms cross-fade
-                        // inside LivingCoachAvatar smooths the change.
-                        LivingCoachAvatar(
-                          mood: _typingDone
-                              ? CoachMood.listening
-                              : CoachMood.idle,
+                        // Phase 108 · Form's arrival. ArrivalPulse
+                        // ring radiates outward starting 200 ms in,
+                        // while the avatar itself fades + scales up
+                        // with a slight overshoot (easeOutBack).
+                        // Mood progresses idle → listening once the
+                        // typewriter completes, same as before.
+                        ArrivalPulse(
+                          color: AppColors.neon,
+                          maxRadius: 240,
+                          duration: const Duration(milliseconds: 1100),
+                          startDelay:
+                              const Duration(milliseconds: 200),
+                          child: FadeTransition(
+                            opacity: _entryFade,
+                            child: ScaleTransition(
+                              scale: _entryScale,
+                              child: LivingCoachAvatar(
+                                mood: _typingDone
+                                    ? CoachMood.listening
+                                    : CoachMood.idle,
+                              ),
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 28),
                         BreathingBox(
@@ -170,6 +230,13 @@ class _CoachIntroStepState extends State<CoachIntroStep>
                             controller: _reveal,
                             text: _coachLine,
                             onComplete: _onTypingComplete,
+                            // Phase 108 · hold the typewriter until
+                            // Form's arrival has settled, so the user
+                            // reads "Form arrived → Form began
+                            // speaking", not both at once. Delay
+                            // matches the entry duration plus a
+                            // small grace beat.
+                            startDelay: const Duration(milliseconds: 1200),
                           ),
                         ),
                         const SizedBox(height: 10),
@@ -254,11 +321,17 @@ class _CoachBubble extends StatelessWidget {
     required this.controller,
     required this.text,
     required this.onComplete,
+    this.startDelay = Duration.zero,
   });
 
   final RevealController controller;
   final String text;
   final VoidCallback onComplete;
+
+  /// Delay before the typewriter inside this bubble begins. Lets the
+  /// caller (CoachIntroStep · Phase 108) hold the speech until Form's
+  /// arrival choreography settles.
+  final Duration startDelay;
 
   @override
   Widget build(BuildContext context) {
@@ -288,6 +361,7 @@ class _CoachBubble extends StatelessWidget {
         text: text,
         controller: controller,
         onComplete: onComplete,
+        startDelay: startDelay,
         caret: true,
         caretColor: AppColors.neon,
         style: const TextStyle(
