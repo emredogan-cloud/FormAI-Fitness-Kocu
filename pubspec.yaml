@@ -168,8 +168,15 @@ flutter:
 # webp by ImageMagick convert) because flutter_launcher_icons needs PNG
 # input. Regenerate native icons whenever this file changes via:
 #   flutter pub run flutter_launcher_icons
+#
+# Phase 120 · moved out of photos/ → tool/. The previous location
+# accidentally bundled the 1.35 MB source PNG into every debug APK
+# (because pubspec's `flutter:assets:` declares the whole `photos/`
+# directory). This icon is read once at icon-generation time and
+# never at runtime, so bundling it was pure waste — ~1.4 MB removed
+# from every debug install + ~50-200 ms saved per `adb install`.
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "photos/app_icon.png"
+  image_path: "tool/app_icon.png"
   remove_alpha_ios: true
