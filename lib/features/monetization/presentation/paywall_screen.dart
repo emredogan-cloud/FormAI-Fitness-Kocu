@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +11,9 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show User;
 
 import '../../../core/services/analytics_service.dart';
+import '../../../core/services/connectivity_service.dart';
 import '../../../core/theme/theme_extension.dart';
+import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/legal_urls.dart';
 import '../../../core/widgets/skeleton_loader.dart';
 import '../../auth/presentation/auth_modal_bottom_sheet.dart';
@@ -40,6 +45,24 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   /// `ref.listen` callback fires once per state delivery).
   bool _authGateShown = false;
 
+  /// Phase 96 · mirrors `Purchases.isConfigured`. We can't call the
+  /// async getter inline from `build()`, so the value is read once on
+  /// mount and re-read after each connectivity transition (and after a
+  /// successful offerings reload). Buy + Restore stay disabled with a
+  /// spinner until this is true AND offerings have loaded — closing
+  /// the "first-click race" the previous CTA gating only half-covered.
+  bool _purchasesConfigured = false;
+
+  /// Phase 96 · last observed online state, consulted by the
+  /// connectivity listener so we only react to actual transitions
+  /// (offline → online) instead of every duplicate `true` event the
+  /// `connectivity_plus` stream may emit (e.g. WiFi handoff still
+  /// reports a non-`none` interface). Initialised to `null` so the
+  /// first event always lands as "discovered initial state" — no
+  /// redundant invalidation on mount when we were online the whole
+  /// time.
+  bool? _lastOnline;
+
   @override
   void initState() {
     super.initState();
@@ -57,6 +80,87 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     // refires after a refresh-token cycle, etc.). The reactive
     // pattern covers both the cold-mount case (synthetic initial
     // fire from `ref.read` in build) and any subsequent state change.
+
+    // Phase 96 · seed `_purchasesConfigured` so the CTA can flip out of
+    // the spinner state on cold mount when the SDK was already
+    // configured during onboarding / a previous session. The async
+    // getter is fire-and-forget; the build method handles the not-yet
+    // case by keeping the spinner up.
+    _refreshSdkReady();
+  }
+
+  /// Phase 96 · refresh the cached `Purchases.isConfigured` value.
+  /// Called on mount and after each offline → online transition so the
+  /// CTA's gating reflects the SDK's actual state instead of the
+  /// snapshot we took once at boot.
+  Future<void> _refreshSdkReady() async {
+    try {
+      final ready = await Purchases.isConfigured;
+      if (!mounted) return;
+      if (_purchasesConfigured != ready) {
+        setState(() => _purchasesConfigured = ready);
+      }
+    } catch (e, st) {
+      AppLogger.warning(
+        'Purchases.isConfigured probe failed; CTA stays gated',
+        category: 'monetization',
+        data: {'error': e.toString(), 'stack': st.toString()},
+      );
+    }
+  }
+
+  /// Phase 96 · drives the "internet flickered, now we're back" reset.
+  ///
+  /// Two things happen in order:
+  ///   1. `Purchases.invalidateCustomerInfoCache()` — drops the
+  ///      cached entitlement snapshot so the next `getCustomerInfo`
+  ///      hits the network. Without this, a user who came online
+  ///      after a stale offline session keeps seeing the cached
+  ///      "anonymous, no entitlement" view even after a successful
+  ///      Restore on the server side.
+  ///   2. `subscriptionProvider.notifier.refresh()` — re-fetches the
+  ///      offerings catalogue. This re-arms `canPurchase` once a real
+  ///      Offering lands, and re-evaluates `isPro` on the freshly
+  ///      invalidated cache. The CTA stays gated for the duration
+  ///      via `subscription.isLoading`.
+  ///
+  /// Both calls are best-effort; failures are logged but never thrown
+  /// — the user's CTA path keeps falling back to the existing
+  /// no-offerings error toast on tap.
+  Future<void> _onConnectivityRestored() async {
+    try {
+      await Purchases.invalidateCustomerInfoCache();
+    } catch (e, st) {
+      AppLogger.warning(
+        'invalidateCustomerInfoCache failed on reconnect',
+        category: 'monetization',
+        data: {'error': e.toString(), 'stack': st.toString()},
+      );
+    }
+    if (!mounted) return;
+    await ref.read(subscriptionProvider.notifier).refresh();
+    if (!mounted) return;
+    await _refreshSdkReady();
+  }
+
+  /// Phase 96 · connectivity transition handler. Only the offline →
+  /// online edge triggers the reset; the reverse is silent because
+  /// the existing `canPurchase` gate already disables the CTA when
+  /// offerings are missing, and we don't want to trash a perfectly
+  /// good cached snapshot the moment the device drops a packet.
+  void _onConnectivityChanged(
+    AsyncValue<bool>? previous,
+    AsyncValue<bool> next,
+  ) {
+    final online = next.value;
+    if (online == null) return;
+    final wasOnline = _lastOnline;
+    _lastOnline = online;
+    // First emission: just record it; nothing to react to.
+    if (wasOnline == null) return;
+    if (!wasOnline && online) {
+      unawaited(_onConnectivityRestored());
+    }
   }
 
   /// Phase 94 · auth-gate dispatcher. Called from two sites in
@@ -110,6 +214,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     ref.listen<User?>(currentUserProvider, _onAuthStateChanged);
     _onAuthStateChanged(null, ref.read(currentUserProvider));
 
+    // Phase 96 · drive the offline → online reset off the shared
+    // connectivity stream. Watching from build() means the listener's
+    // lifetime is tied to the screen's, and the handler keys off the
+    // last-observed value so duplicate "still online" emissions don't
+    // re-invalidate a perfectly good RC cache.
+    ref.listen<AsyncValue<bool>>(connectivityProvider, _onConnectivityChanged);
+
     // Phase 94 · purchase-button gating. The "first-click race"
     // happens when the user taps the CTA before
     // `Purchases.getOfferings()` has resolved — the BillingClient
@@ -125,7 +236,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     // signal that a buyable Package exists.
     final subscription = ref.watch(subscriptionProvider);
     final offerings = subscription.value?.offerings;
-    final canPurchase = offerings?.current != null;
+    // Phase 96 · the gate is now `SDK ready AND offerings present`.
+    // Splitting these out lets us keep the existing skeleton-price /
+    // fallback-price treatment on the cards while disabling the
+    // action buttons more strictly — the cards must still draw
+    // *something* when the SDK is misconfigured (dev builds), but
+    // the action buttons must NOT fire a doomed BillingClient call.
+    final canPurchase = _purchasesConfigured && offerings?.current != null;
     // Phase 95 · drives the per-card price slot. True only while the
     // RevenueCat fetch is genuinely in flight; once `_load` resolves —
     // even on the catch path that returns a no-offerings
@@ -144,24 +261,38 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: isDark
-                    ? const [Color(0xFF1A0B3D), Colors.black]
-                    : [
-                        _neon.withValues(alpha: 0.18),
-                        context.colors.surface,
-                      ],
-                stops: const [0.0, 0.55],
+          // Layer 1 · brand gradient (unchanged from Phase 53F).
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: isDark
+                      ? const [Color(0xFF1A0B3D), Colors.black]
+                      : [
+                          _neon.withValues(alpha: 0.18),
+                          context.colors.surface,
+                        ],
+                  stops: const [0.0, 0.55],
+                ),
               ),
             ),
-            child: SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
-                child: Column(
+          ),
+          // Layer 2 · Phase 115 cinematic backdrop. Dark mode only —
+          // light mode keeps its existing flat-gradient treatment so
+          // the marketing-card hierarchy stays maximally readable.
+          // Reads as "the onboarding journey is layered behind this
+          // moment" — the photos the user just walked through stay
+          // present in the room, dimmed and blurred, as Form invites
+          // them to commit.
+          if (isDark)
+            const Positioned.fill(child: _PaywallCinematicBackdrop()),
+          // Layer 3 · paywall content (unchanged structure / order).
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+              child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _HeroSection(gender: ref.watch(wizardProvider).gender),
@@ -175,7 +306,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                     const SizedBox(height: 16),
                     _buildCta(canPurchase: canPurchase),
                     const SizedBox(height: 6),
-                    _buildRestoreButton(),
+                    _buildRestoreButton(
+                      canPurchase: canPurchase,
+                      isLoading: offeringsLoading,
+                    ),
                     const SizedBox(height: 6),
                     const _LegalFooter(),
                     // Phase 40: Sandbox override button is strictly a
@@ -188,8 +322,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                       const SizedBox(height: 12),
                       _buildSandboxButton(),
                     ],
-                  ],
-                ),
+                ],
               ),
             ),
           ),
@@ -363,14 +496,36 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     );
   }
 
-  Widget _buildRestoreButton() {
+  Widget _buildRestoreButton({
+    required bool canPurchase,
+    required bool isLoading,
+  }) {
     // Phase 53G · was hardcoded `Colors.white70` — invisible on the
     // light paywall scaffold. onSurface flips legibility on both
     // palettes; spinner inherits the same colour.
     final restoreColor = context.colors.onSurface.withValues(alpha: 0.70);
+    // Phase 96 · Restore is gated on the same "SDK ready + offerings
+    // hydrated" condition as Buy. A pre-init Restore call resolves
+    // against the anonymous app-user-ID on whatever cached customer
+    // info the SDK happened to ship with — usually nothing — so the
+    // user sees "geri yüklenecek bir abonelik bulunamadı" even though
+    // the real entitlement IS waiting on the server.
+    //
+    // Visual treatment:
+    //   • spinner only while a load is genuinely in flight (initial
+    //     RC probe via `subscription.isLoading`, OR an active Restore
+    //     tap via `_restoring`).
+    //   • disabled label when the SDK has settled but offerings are
+    //     missing (e.g. dev builds without an RC key) — keeping the
+    //     label visible communicates the action without spinning the
+    //     UI forever in that branch.
+    //   • enabled when both `_purchasesConfigured` and an Offering
+    //     are present.
+    final spinning = _restoring || isLoading;
+    final disabled = spinning || _busy || !canPurchase;
     return Center(
       child: TextButton(
-        onPressed: _restoring || _busy ? null : _restore,
+        onPressed: disabled ? null : _restore,
         style: TextButton.styleFrom(
           foregroundColor: restoreColor,
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -380,7 +535,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
             letterSpacing: 0.6,
           ),
         ),
-        child: _restoring
+        child: spinning
             ? SizedBox(
                 width: 14,
                 height: 14,
@@ -486,7 +641,42 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       );
   }
 
-  void _close(BuildContext context) {
+  /// Phase 96 · gate the dashboard transition on the RC alias.
+  ///
+  /// The "login-during-paywall" flow lets a user sign in via the
+  /// AuthGate (or via the standalone /auth screen routed from the
+  /// gate's "Go to email login" link). The Google / Apple paths
+  /// already alias RC inside `AuthController.signIn{Google,Apple}`,
+  /// but the email path historically just called
+  /// `signInWithPassword` and `pushReplacement`'d back to the
+  /// paywall — RC never learned about the new Supabase UUID, and the
+  /// next purchase landed on a throwaway anonymous app-user-ID
+  /// instead.
+  ///
+  /// Re-awaiting `aliasRevenueCatWithCurrentUser` on close is the
+  /// belt-and-braces fix: the helper short-circuits when RC is
+  /// already pointing at the same user (so the Google / Apple paths
+  /// pay no extra latency), and otherwise it forces the missing
+  /// `Purchases.logIn` BEFORE the dashboard receives focus. The
+  /// helper swallows its own errors — a transient RC failure
+  /// shouldn't trap the user on the paywall — but a failed alias
+  /// surfaces as a single warning log that operators can grep for.
+  Future<void> _close(BuildContext context) async {
+    final user = ref.read(currentUserProvider);
+    if (user != null && !user.isAnonymous) {
+      // Show a one-frame busy state so a slow alias call doesn't
+      // present as a frozen close button. We piggy-back on `_busy`
+      // which already blocks the CTA + Restore.
+      if (mounted) setState(() => _busy = true);
+      try {
+        await ref
+            .read(authControllerProvider)
+            .aliasRevenueCatWithCurrentUser();
+      } finally {
+        if (mounted) setState(() => _busy = false);
+      }
+    }
+    if (!context.mounted) return;
     context.go('/');
   }
 }
@@ -1417,6 +1607,178 @@ class _CloseButton extends StatelessWidget {
           width: 36,
           height: 36,
           child: Icon(Icons.close, color: Colors.white70, size: 18),
+        ),
+      ),
+    );
+  }
+}
+
+/// Phase 115 · cinematic backdrop layered behind the dark-mode
+/// paywall content. Reverse-engineered from the reference video's
+/// ~1:11 paywall composition — adapted for FormAI by keeping the
+/// dark/neon identity and using the user's onboarding artwork as
+/// the layered visual material.
+///
+/// Five photos from `photos/` (gender / goal / activity / strength /
+/// lifestyle) drift slowly via a single 30 s repeating controller
+/// (each gets its own alignment offset slope so the parallax
+/// directions vary). Photos are rendered at 14–22 % opacity, soft-
+/// rounded, with mild rotations (±5°). A bottom-weighted dim
+/// gradient over the top keeps foreground content readable.
+///
+/// The user reads it as "the journey I just walked through is
+/// layered behind this commitment moment" — same emotional grammar
+/// as Unrot's paywall layered composition, but expressed entirely
+/// through FormAI's existing dark/neon brand vocabulary. No new
+/// asset commissions required.
+///
+/// Performance: ImageFiltered/BackdropFilter avoided. Five Image
+/// widgets at <40 % screen width each, rendered with simple Opacity
+/// + Transform.rotate. Single AnimationController. RepaintBoundary
+/// at the root so the paywall content above doesn't re-render with
+/// the parallax tick.
+class _PaywallCinematicBackdrop extends StatefulWidget {
+  const _PaywallCinematicBackdrop();
+
+  @override
+  State<_PaywallCinematicBackdrop> createState() =>
+      _PaywallCinematicBackdropState();
+}
+
+class _PaywallCinematicBackdropState extends State<_PaywallCinematicBackdrop>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _drift;
+
+  @override
+  void initState() {
+    super.initState();
+    _drift = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 30),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _drift.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RepaintBoundary(
+      child: AnimatedBuilder(
+        animation: _drift,
+        builder: (context, _) {
+          // Smoothed bell so the parallax never reverses harshly at
+          // the loop ends; each photo reads its own alignment offset
+          // off this `t`, multiplied by a per-photo direction so
+          // parallax directions vary across the layer stack.
+          final t =
+              (math.sin(_drift.value * math.pi * 2 - math.pi / 2) + 1) / 2;
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              _BackdropImage(
+                asset: 'photos/cinsiyetseçimierkek.webp',
+                alignment: Alignment(-0.78 + 0.05 * t, -0.55 + 0.04 * t),
+                widthFraction: 0.42,
+                opacity: 0.18,
+                rotationDegrees: -3,
+              ),
+              _BackdropImage(
+                asset: 'photos/hedefinneSıkılaşmak.webp',
+                alignment: Alignment(0.65 - 0.05 * t, -0.62 + 0.03 * t),
+                widthFraction: 0.36,
+                opacity: 0.16,
+                rotationDegrees: 4,
+              ),
+              _BackdropImage(
+                asset: 'photos/hedefinneHacimKazanmak.webp',
+                alignment: Alignment(-0.55 + 0.04 * t, 0.30 - 0.05 * t),
+                widthFraction: 0.40,
+                opacity: 0.14,
+                rotationDegrees: -2,
+              ),
+              _BackdropImage(
+                asset: 'photos/hedef_guclenmek.webp',
+                alignment: Alignment(0.72 + 0.04 * t, 0.55 - 0.04 * t),
+                widthFraction: 0.38,
+                opacity: 0.18,
+                rotationDegrees: 5,
+              ),
+              _BackdropImage(
+                asset: 'photos/günlükaktivitenmasabaşı.webp',
+                alignment: Alignment(0.0, 0.85 - 0.04 * t),
+                widthFraction: 0.34,
+                opacity: 0.13,
+                rotationDegrees: 0,
+              ),
+              // Bottom-weighted dim gradient — keeps the marketing
+              // cards + CTA readable against the layered photos
+              // without flattening the depth at the top of the screen
+              // where the hero artwork sits.
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color(0x00000000),
+                      Color(0x55000000),
+                      Color(0xAA000000),
+                    ],
+                    stops: [0.0, 0.45, 1.0],
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _BackdropImage extends StatelessWidget {
+  const _BackdropImage({
+    required this.asset,
+    required this.alignment,
+    required this.widthFraction,
+    required this.opacity,
+    required this.rotationDegrees,
+  });
+
+  final String asset;
+  final Alignment alignment;
+  final double widthFraction;
+  final double opacity;
+  final double rotationDegrees;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    final width = size.width * widthFraction;
+    // Portrait-leaning ratio (1.4) to match the original onboarding
+    // artwork's aspect — no awkward squishing.
+    final height = width * 1.4;
+    return Align(
+      alignment: alignment,
+      child: Transform.rotate(
+        angle: rotationDegrees * math.pi / 180,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Opacity(
+            opacity: opacity,
+            child: Image.asset(
+              asset,
+              width: width,
+              height: height,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) =>
+                  SizedBox(width: width, height: height),
+            ),
+          ),
         ),
       ),
     );
