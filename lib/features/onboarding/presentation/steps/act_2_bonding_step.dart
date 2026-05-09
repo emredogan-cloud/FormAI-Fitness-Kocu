@@ -1,14 +1,39 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/motion/breathing_box.dart';
+import '../../../../core/motion/glow_pulse.dart';
+import '../../../../core/motion/kinetic_text_reveal.dart';
+import '../../../../core/motion/motion_tokens.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_haptics.dart';
 
 /// Act 2 · AI companion bonding.
 ///
-/// The named coach (Form) introduces itself with a typewriter chat bubble
-/// over a pulsing neon halo. Tapping anywhere skips the typewriter; the
-/// CTA stays disabled until the line is fully revealed. Three audit-§2.3
-/// beats: identity, 12-week promise, 90-second effort transparency.
+/// The named coach (Form) introduces itself with a typewriter line over
+/// a layered, breathing avatar halo. Designed so the user feels they
+/// have *met* a presence in the first 4 seconds — not "watched a button
+/// fade in."
+///
+/// Cinematic atmosphere layered on top of the existing structure:
+///
+///   • 15-second background parallax (gentle vertical translate +
+///     scale, easeInOutCubic). Slightly different rhythm from Act 1's
+///     16 s pan so two consecutive screens don't feel mechanically
+///     synced.
+///   • Coach avatar: outer radial halo wrapped in [BreathingBox]
+///     (3.6 s cycle) + inner photo wrapped in [GlowPulse] (2.4 s
+///     cycle). The two cycles deliberately drift in and out of phase
+///     so the avatar feels *alive* instead of pulsing on a metronome.
+///   • Chat bubble wrapped in a barely-perceptible [BreathingBox]
+///     (0.95 → 1.0 over 5 s). Says "the coach is exhaling between
+///     sentences."
+///   • Typewriter via [KineticTextReveal] with a [RevealController] so
+///     a tap anywhere inside the gesture region short-circuits the
+///     reveal. On completion: [AppHaptics.success] confirms the line
+///     landed, then the CTA gets its own [GlowPulse] ambient.
+///
+/// Three audit-§2.3 beats stay in the line: identity, 12-week promise,
+/// 90-second effort transparency.
 
 class CoachIntroStep extends StatefulWidget {
   const CoachIntroStep({super.key, required this.onContinue});
@@ -29,36 +54,38 @@ class _CoachIntroStepState extends State<CoachIntroStep>
       'Merhaba, ben Form. '
       '12 haftada vücudunu nasıl değiştireceğini sana göstereceğim. '
       'Önce seni tanıyalım — bu 90 saniye sürüyor.';
-  // ~28ms/char keeps the line under ~4s — long enough to feel deliberate,
-  // short enough that nobody waits long for the CTA to enable.
-  static const Duration _perChar = Duration(milliseconds: 28);
 
-  late final AnimationController _typer;
+  final RevealController _reveal = RevealController();
+  late final AnimationController _bgPan;
   bool _typingDone = false;
 
   @override
   void initState() {
     super.initState();
-    _typer = AnimationController(
+    _bgPan = AnimationController(
       vsync: this,
-      duration: _perChar * _coachLine.length,
-    )..addStatusListener((status) {
-        if (status == AnimationStatus.completed && mounted) {
-          setState(() => _typingDone = true);
-        }
-      });
-    _typer.forward();
+      duration: const Duration(seconds: 15),
+    )..repeat(reverse: true);
   }
 
   @override
   void dispose() {
-    _typer.dispose();
+    _bgPan.dispose();
     super.dispose();
+  }
+
+  void _onTypingComplete() {
+    if (!mounted || _typingDone) return;
+    setState(() => _typingDone = true);
+    // Soft completion confirmation — Form has finished introducing
+    // itself. Reads as "the AI nodded at you" rather than "a button
+    // unlocked."
+    AppHaptics.success();
   }
 
   void _skipTyping() {
     if (_typingDone) return;
-    _typer.value = 1.0;
+    _reveal.skip();
   }
 
   @override
@@ -66,11 +93,31 @@ class _CoachIntroStepState extends State<CoachIntroStep>
     return Stack(
       fit: StackFit.expand,
       children: [
-        Image.asset(
-          'photos/merhababenseninkişiselyapayzekakoçunumyeniarkaplan.webp',
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) =>
-              const ColoredBox(color: Color(0xFF0E0729)),
+        // Background hero with slow ambient parallax. Translates up to
+        // 8 px and scales 1.04 → 1.06 over the 15 s loop. The
+        // RepaintBoundary keeps the rest of the screen out of the
+        // composite-region whenever only the bg transforms.
+        RepaintBoundary(
+          child: AnimatedBuilder(
+            animation: _bgPan,
+            builder: (context, child) {
+              final t = MotionTokens.reassuranceEase.transform(_bgPan.value);
+              return Transform.translate(
+                offset: Offset(0, -8.0 * t),
+                child: Transform.scale(
+                  scale: 1.04 + (0.02 * t),
+                  alignment: Alignment.center,
+                  child: child,
+                ),
+              );
+            },
+            child: Image.asset(
+              'photos/merhababenseninkişiselyapayzekakoçunumyeniarkaplan.webp',
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) =>
+                  const ColoredBox(color: Color(0xFF0E0729)),
+            ),
+          ),
         ),
         DecoratedBox(
           decoration: BoxDecoration(
@@ -92,18 +139,26 @@ class _CoachIntroStepState extends State<CoachIntroStep>
             child: Column(
               children: [
                 Expanded(
+                  // GestureDetector wraps only the avatar + bubble area
+                  // so taps here skip the typewriter; the CTA owns its
+                  // own onPressed.
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: _skipTyping,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const _PulsingCoachAvatar(),
+                        const _LivingCoachAvatar(),
                         const SizedBox(height: 28),
-                        _TerminalBubble(
-                          typer: _typer,
-                          fullText: _coachLine,
-                          isTypingDone: _typingDone,
+                        BreathingBox(
+                          minAlpha: 0.95,
+                          maxAlpha: 1.0,
+                          duration: const Duration(milliseconds: 5000),
+                          child: _CoachBubble(
+                            controller: _reveal,
+                            text: _coachLine,
+                            onComplete: _onTypingComplete,
+                          ),
                         ),
                         const SizedBox(height: 10),
                         AnimatedOpacity(
@@ -125,31 +180,43 @@ class _CoachIntroStepState extends State<CoachIntroStep>
                 AnimatedOpacity(
                   duration: const Duration(milliseconds: 280),
                   opacity: _typingDone ? 1.0 : 0.45,
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: FilledButton.icon(
-                      onPressed: _typingDone
-                          ? () {
-                              AppHaptics.secondaryTap();
-                              widget.onContinue();
-                            }
-                          : null,
-                      icon: const Icon(Icons.arrow_forward_rounded),
-                      label: const Text('DEVAM ET'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.neon,
-                        foregroundColor: Colors.white,
-                        disabledBackgroundColor:
-                            AppColors.neon.withValues(alpha: 0.45),
-                        disabledForegroundColor: Colors.white70,
-                        padding: const EdgeInsets.symmetric(vertical: 18),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        textStyle: const TextStyle(
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 3,
-                          fontSize: 14,
+                  child: GlowPulse(
+                    enabled: _typingDone,
+                    color: AppColors.neon,
+                    minAlpha: 0.40,
+                    maxAlpha: 0.65,
+                    minBlur: 22,
+                    maxBlur: 32,
+                    spread: 1,
+                    shape: BoxShape.rectangle,
+                    borderRadius: BorderRadius.circular(18),
+                    duration: const Duration(milliseconds: 2800),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: _typingDone
+                            ? () {
+                                AppHaptics.secondaryTap();
+                                widget.onContinue();
+                              }
+                            : null,
+                        icon: const Icon(Icons.arrow_forward_rounded),
+                        label: const Text('DEVAM ET'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.neon,
+                          foregroundColor: Colors.white,
+                          disabledBackgroundColor:
+                              AppColors.neon.withValues(alpha: 0.45),
+                          disabledForegroundColor: Colors.white70,
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          textStyle: const TextStyle(
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 3,
+                            fontSize: 14,
+                          ),
                         ),
                       ),
                     ),
@@ -164,18 +231,22 @@ class _CoachIntroStepState extends State<CoachIntroStep>
   }
 }
 
-/// Chat-bubble container that progressively reveals the coach's line as
-/// [typer] advances 0→1. Blinking neon caret trails the cursor while
-/// typing is in flight; disappears the moment the line completes.
-class _TerminalBubble extends StatelessWidget {
-  const _TerminalBubble({
-    required this.typer,
-    required this.fullText,
-    required this.isTypingDone,
+/// Chat-bubble container that hosts the typewriter reveal.
+///
+/// Visually identical to the previous _TerminalBubble (same neon outline,
+/// blurred glow, asymmetric corner radii) but the reveal itself is now
+/// powered by [KineticTextReveal] from the motion library, so a single
+/// API governs every character-by-character moment in the wizard.
+class _CoachBubble extends StatelessWidget {
+  const _CoachBubble({
+    required this.controller,
+    required this.text,
+    required this.onComplete,
   });
-  final Animation<double> typer;
-  final String fullText;
-  final bool isTypingDone;
+
+  final RevealController controller;
+  final String text;
+  final VoidCallback onComplete;
 
   @override
   Widget build(BuildContext context) {
@@ -201,133 +272,111 @@ class _TerminalBubble extends StatelessWidget {
           ),
         ],
       ),
-      child: AnimatedBuilder(
-        animation: typer,
-        builder: (context, _) {
-          final int chars =
-              (typer.value * fullText.length).round().clamp(0, fullText.length);
-          final String visible = fullText.substring(0, chars);
-          return Text.rich(
-            TextSpan(
-              children: [
-                TextSpan(text: visible),
-                if (!isTypingDone)
-                  const TextSpan(
-                    text: '▍',
-                    style: TextStyle(color: AppColors.neon),
-                  ),
-              ],
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 15,
-                height: 1.55,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          );
-        },
+      child: KineticTextReveal(
+        text: text,
+        controller: controller,
+        onComplete: onComplete,
+        caret: true,
+        caretColor: AppColors.neon,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 15,
+          height: 1.55,
+          fontWeight: FontWeight.w500,
+        ),
       ),
     );
   }
 }
 
-/// The coach avatar — circular face inside a pulsing neon halo. Static
-/// asset (`kişiselyapayzekakoçfoto.webp`) for now; the cinematic pass
-/// will swap this for a Rive-driven multi-state avatar once the artist
-/// delivers the .riv file.
-class _PulsingCoachAvatar extends StatefulWidget {
-  const _PulsingCoachAvatar();
-
-  @override
-  State<_PulsingCoachAvatar> createState() => _PulsingCoachAvatarState();
-}
-
-class _PulsingCoachAvatarState extends State<_PulsingCoachAvatar>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _pulse;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulse = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1800),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _pulse.dispose();
-    super.dispose();
-  }
+/// The coach avatar — outer radial halo + inner circular photo.
+///
+/// Two breathing layers, intentionally out of phase:
+///   • Outer halo: 3.6-second cycle via [BreathingBox] (radial gradient
+///     fades 0.55 → 1.0 alpha).
+///   • Inner photo: 2.4-second cycle via [GlowPulse] (boxshadow alpha
+///     0.30 → 0.55, blur 22 → 30).
+///
+/// The differing periods drift the layers in and out of phase, so the
+/// avatar reads as *alive* rather than *blinking on a metronome*. Each
+/// primitive is `RepaintBoundary`-isolated internally so the parent
+/// rebuild on `_typingDone` doesn't trigger a full repaint of the
+/// avatar.
+///
+/// Stays a static webp until the artist delivers the Rive-driven
+/// living-coach .riv asset; the cinematic primitives carry the
+/// "presence" feel in the meantime.
+class _LivingCoachAvatar extends StatelessWidget {
+  const _LivingCoachAvatar();
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _pulse,
-      builder: (context, _) {
-        final t = _pulse.value;
-        final glowAlpha = 0.35 + (0.40 * t);
-        return SizedBox(
-          width: 220,
-          height: 220,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      AppColors.neon.withValues(alpha: glowAlpha),
-                      AppColors.neonAccent.withValues(alpha: glowAlpha * 0.5),
-                      Colors.transparent,
-                    ],
-                    stops: const [0.0, 0.55, 1.0],
-                  ),
-                ),
-              ),
-              Container(
-                width: 140,
-                height: 140,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: AppColors.neon.withValues(alpha: 0.7),
-                    width: 1.5,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.neon.withValues(alpha: 0.45),
-                      blurRadius: 26,
-                      spreadRadius: -2,
-                    ),
+    return SizedBox(
+      width: 220,
+      height: 220,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          BreathingBox(
+            minAlpha: 0.55,
+            maxAlpha: 1.0,
+            duration: const Duration(milliseconds: 3600),
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppColors.neon.withValues(alpha: 0.55),
+                    AppColors.neonAccent.withValues(alpha: 0.28),
+                    Colors.transparent,
                   ],
+                  stops: const [0.0, 0.55, 1.0],
                 ),
-                clipBehavior: Clip.antiAlias,
-                child: Image.asset(
-                  'photos/kişiselyapayzekakoçfoto.webp',
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: RadialGradient(
-                        colors: [AppColors.neon, AppColors.neonAccent],
-                      ),
+              ),
+            ),
+          ),
+          GlowPulse(
+            color: AppColors.neon,
+            minAlpha: 0.30,
+            maxAlpha: 0.55,
+            minBlur: 22,
+            maxBlur: 30,
+            spread: -2,
+            duration: const Duration(milliseconds: 2400),
+            child: Container(
+              width: 140,
+              height: 140,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppColors.neon.withValues(alpha: 0.7),
+                  width: 1.5,
+                ),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Image.asset(
+                'photos/kişiselyapayzekakoçfoto.webp',
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const DecoratedBox(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [AppColors.neon, AppColors.neonAccent],
                     ),
-                    child: Center(
-                      child: Icon(
-                        Icons.smart_toy_rounded,
-                        color: Colors.white,
-                        size: 56,
-                      ),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.smart_toy_rounded,
+                      color: Colors.white,
+                      size: 56,
                     ),
                   ),
                 ),
               ),
-            ],
+            ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }
