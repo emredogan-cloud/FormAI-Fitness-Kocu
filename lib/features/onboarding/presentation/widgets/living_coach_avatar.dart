@@ -85,33 +85,56 @@ class LivingCoachAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final config = kCoachMoodConfigs[mood] ?? kCoachMoodConfigs[CoachMood.idle]!;
-    return AnimatedScale(
-      scale: config.scale,
-      duration: const Duration(milliseconds: 700),
-      curve: Curves.easeOutCubic,
-      child: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 500),
-        switchInCurve: Curves.easeOutCubic,
-        switchOutCurve: Curves.easeOutCubic,
-        layoutBuilder: (currentChild, previousChildren) {
-          // Stack outgoing + incoming so the cross-fade reads as a
-          // smooth transformation rather than a flicker.
-          return Stack(
-            alignment: Alignment.center,
-            fit: StackFit.expand,
-            children: [
-              ...previousChildren,
-              if (currentChild != null) currentChild,
-            ],
-          );
-        },
-        child: KeyedSubtree(
-          key: ValueKey<CoachMood>(mood),
-          child: _AvatarLayers(
-            config: config,
-            size: size,
-            innerSize: innerSize,
-            assetPath: assetPath,
+    // Phase 116 stabilization · the chain
+    // `AnimatedScale → AnimatedSwitcher → Stack(StackFit.expand)`
+    // does NOT impose a bounded intrinsic size of its own; the inner
+    // Stack relies on its parent's incoming constraints. When this
+    // widget renders inside an unbounded-height context (the
+    // `CoachChatHeader > Row > avatar` path introduced in Phase 109),
+    // the Row's intrinsic-height query passes `h: Infinity` to the
+    // Stack and crashes the render tree at line 101 of the previous
+    // build (`BoxConstraints(w=344.7, h=Infinity)`).
+    //
+    // Bounding the entire chain in an outer `SizedBox(size, size)`
+    // makes the avatar always report a bounded intrinsic size to its
+    // parent, regardless of how the parent queries. The mood-driven
+    // [AnimatedScale] still produces the visual scale effect (mood
+    // configs use 0.97–1.07 scale values) — `clipBehavior: Clip.none`
+    // is the AnimatedScale default, so a 1.05 scaled photo overflows
+    // the SizedBox visually without affecting layout.
+    return SizedBox(
+      width: size,
+      height: size,
+      child: AnimatedScale(
+        scale: config.scale,
+        duration: const Duration(milliseconds: 700),
+        curve: Curves.easeOutCubic,
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 500),
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeOutCubic,
+          layoutBuilder: (currentChild, previousChildren) {
+            // Stack outgoing + incoming so the cross-fade reads as a
+            // smooth transformation rather than a flicker. Now safe:
+            // the parent SizedBox bounds the Stack's incoming
+            // constraints to the avatar's [size].
+            return Stack(
+              alignment: Alignment.center,
+              fit: StackFit.expand,
+              children: [
+                ...previousChildren,
+                if (currentChild != null) currentChild,
+              ],
+            );
+          },
+          child: KeyedSubtree(
+            key: ValueKey<CoachMood>(mood),
+            child: _AvatarLayers(
+              config: config,
+              size: size,
+              innerSize: innerSize,
+              assetPath: assetPath,
+            ),
           ),
         ),
       ),
