@@ -3,42 +3,42 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/motion/ambient_particles.dart';
 import '../../../../core/motion/glow_pulse.dart';
-import '../../../../core/motion/kinetic_text_reveal.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_haptics.dart';
 import '../../providers/wizard_provider.dart';
+import '../widgets/coach_chat_bubble.dart';
 import '../widgets/coach_mood.dart';
 import '../widgets/living_coach_avatar.dart';
 
-/// Act 2.5 · Name capture (relationship moment).
+/// Act 2.5 · Name capture (chat-format relationship moment, Phase 109).
 ///
-/// Lives between coach intro and gender. The screen is *not* a form
-/// field — it's Form asking the user a personal question and then
-/// acknowledging the answer. Two visual states:
+/// Reference video timestamp: ~0:06–0:15. The Unrot reference treats
+/// the early bonding as a literal chat thread — Brain in the header,
+/// messages cascading, user replies as right-aligned bubbles. We
+/// adapt that mechanic to FormAI without the cartoon aesthetic: same
+/// chat-thread structure, dark/neon palette, premium bubble surfaces.
 ///
-///   1. asking — Form's avatar pulses, the prompt types in via
-///      [KineticTextReveal] ("Bu yolculukta sana nasıl sesleneyim?"),
-///      a soft subtitle fades in once typing settles, the input
-///      autofocuses, and the CTA enables the moment a non-empty
-///      answer is typed.
-///   2. acknowledging — the input + CTA fade out, the avatar
-///      brightens, and Form's acknowledgment types in
-///      ("Tamam, [Name]. Şimdi seni biraz daha tanıyayım."). On
-///      typing-complete, a soft success haptic fires, then the wizard
-///      auto-advances after a 1.4 s dwell so the user can read the
-///      acknowledgment without having to tap.
+/// Sequence (4 messages):
 ///
-/// Re-entry from back-navigation: if `wizardProvider.name` is already
-/// set, we pre-fill the field, skip the asking-prompt typewriter, and
-/// focus immediately. The user can edit and re-submit; we don't
-/// auto-advance into a loop because the back-nav user lands in the
-/// asking state.
+///   1. **Form (typewriter):** "Bu yolculukta sana nasıl sesleneyim?"
+///   2. **Form (typewriter, after 1):** "Bu plan boyunca seninle bu
+///      isimle konuşacağım."
+///   3. (Input pill enables, autofocus.)
+///   4. **User (instant):** the entered name, right-aligned, neon-fill.
+///   5. **Form (typewriter, after 400 ms beat):** "Tamam, [Name].
+///      Şimdi seni biraz daha tanıyayım."
+///   6. Soft success haptic on Form's acknowledgment landing, 1.4 s
+///      dwell, auto-advance.
 ///
-/// Stays inside the wizard's `_hookSteps` window so the chrome header
-/// stays hidden — the bonding zone (welcome → coach intro → name
-/// capture) reads as one continuous conversation, not "form + chrome."
-
-enum _NameCaptureState { asking, acknowledging }
+/// Bonding-zone screen (`_hookSteps = 3`), so the chrome wizard
+/// header stays hidden — replaced by a [CoachChatHeader] showing a
+/// small mood-aware Form avatar + "Form · Online" status. The whole
+/// scene reads as a conversation, not a form.
+///
+/// Re-entry: when `wizardProvider.name` is already set (back-nav),
+/// the typewriters are skipped — both Form messages render instantly,
+/// the input pre-fills, focus moves to it. User can edit and
+/// re-submit; the flow then proceeds normally.
 
 class NameCaptureStep extends ConsumerStatefulWidget {
   const NameCaptureStep({super.key, required this.onContinue});
@@ -48,24 +48,25 @@ class NameCaptureStep extends ConsumerStatefulWidget {
   ConsumerState<NameCaptureStep> createState() => _NameCaptureStepState();
 }
 
-class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
-    with SingleTickerProviderStateMixin {
-  static const String _prompt = 'Bu yolculukta sana nasıl sesleneyim?';
-  static const String _subtitle =
+class _NameCaptureStepState extends ConsumerState<NameCaptureStep> {
+  static const String _prompt1 = 'Bu yolculukta sana nasıl sesleneyim?';
+  static const String _prompt2 =
       'Bu plan boyunca seninle bu isimle konuşacağım.';
 
   late final TextEditingController _textCtrl;
   late final FocusNode _focusNode;
+  late final ScrollController _scrollCtrl;
 
   /// True when the user has visited this step before — pre-filled
-  /// field, skipped typewriter, immediate focus.
+  /// field, typewriters skipped, immediate focus.
   late final bool _isReturning;
 
-  /// True after the asking-state typewriter completes; gates the
-  /// subtitle fade-in and the input's auto-focus.
-  bool _promptDone = false;
+  /// Sequential reveal flags. Each Form bubble's typewriter
+  /// completion advances the chat to the next message.
+  bool _msg1Done = false;
+  bool _msg2Done = false;
+  bool _userMsgPosted = false;
 
-  _NameCaptureState _state = _NameCaptureState.asking;
   String _capturedName = '';
 
   @override
@@ -75,12 +76,16 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
     _isReturning = existingName.isNotEmpty;
     _textCtrl = TextEditingController(text: existingName);
     _focusNode = FocusNode();
+    _scrollCtrl = ScrollController();
     _textCtrl.addListener(() {
-      // Triggers rebuild so the CTA's enabled state tracks the input.
       if (mounted) setState(() {});
     });
     if (_isReturning) {
-      _promptDone = true;
+      // Returning user — collapse the typewriter cascade so the chat
+      // is ready immediately. Keep the same bubble structure so the
+      // visual continuity holds across navigations.
+      _msg1Done = true;
+      _msg2Done = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _focusNode.requestFocus();
       });
@@ -91,13 +96,31 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
   void dispose() {
     _textCtrl.dispose();
     _focusNode.dispose();
+    _scrollCtrl.dispose();
     super.dispose();
   }
 
-  void _onPromptTypingComplete() {
-    if (!mounted || _promptDone) return;
-    setState(() => _promptDone = true);
+  void _onMsg1Done() {
+    if (!mounted || _msg1Done) return;
+    setState(() => _msg1Done = true);
+    _scrollToEnd();
+  }
+
+  void _onMsg2Done() {
+    if (!mounted || _msg2Done) return;
+    setState(() => _msg2Done = true);
     _focusNode.requestFocus();
+    _scrollToEnd();
+  }
+
+  void _onMsg3Done() {
+    if (!mounted) return;
+    // Soft confirmation — Form acknowledged. Auto-advance after a
+    // dwell so the user reads the line without having to tap.
+    AppHaptics.success();
+    Future<void>.delayed(const Duration(milliseconds: 1400), () {
+      if (mounted) widget.onContinue();
+    });
   }
 
   void _submit() {
@@ -108,17 +131,22 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
     ref.read(wizardProvider.notifier).setName(name);
     setState(() {
       _capturedName = name;
-      _state = _NameCaptureState.acknowledging;
+      _userMsgPosted = true;
     });
+    _scrollToEnd();
   }
 
-  void _onAcknowledgmentTypingComplete() {
-    if (!mounted) return;
-    // Soft completion haptic — Form has acknowledged the user.
-    AppHaptics.success();
-    // Dwell so the user reads the acknowledgment, then auto-advance.
-    Future<void>.delayed(const Duration(milliseconds: 1400), () {
-      if (mounted) widget.onContinue();
+  /// Smooth-scroll the chat to the bottom whenever a new message
+  /// lands. Lets the cascade feel like a real chat — newest message
+  /// always visible.
+  void _scrollToEnd() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollCtrl.hasClients) return;
+      _scrollCtrl.animateTo(
+        _scrollCtrl.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutCubic,
+      );
     });
   }
 
@@ -147,245 +175,209 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
           seed: 17,
         ),
         SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(28, 32, 28, 28),
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 380),
-              switchInCurve: Curves.easeOutCubic,
-              child: _state == _NameCaptureState.asking
-                  ? _buildAsking(ctaEnabled)
-                  : _buildAcknowledging(),
-            ),
+          child: Column(
+            children: [
+              CoachChatHeader(
+                avatar: LivingCoachAvatar(
+                  size: 44,
+                  innerSize: 32,
+                  // Listening throughout the asking phase, proud the
+                  // moment we acknowledge the name. Same character
+                  // language Form uses on every other Form-speaking
+                  // surface — cross-scene presence continuity.
+                  mood: _userMsgPosted
+                      ? CoachMood.proud
+                      : CoachMood.listening,
+                ),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: _scrollCtrl,
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      CoachChatBubble(
+                        text: _prompt1,
+                        side: ChatBubbleSide.form,
+                        typewriter: !_isReturning,
+                        startDelay: const Duration(milliseconds: 250),
+                        onTypingComplete: _onMsg1Done,
+                      ),
+                      if (_msg1Done) ...[
+                        const SizedBox(height: 8),
+                        CoachChatBubble(
+                          text: _prompt2,
+                          side: ChatBubbleSide.form,
+                          typewriter: !_isReturning,
+                          startDelay:
+                              const Duration(milliseconds: 250),
+                          onTypingComplete: _onMsg2Done,
+                        ),
+                      ],
+                      if (_userMsgPosted) ...[
+                        const SizedBox(height: 8),
+                        CoachChatBubble(
+                          text: _capturedName,
+                          side: ChatBubbleSide.user,
+                        ),
+                        const SizedBox(height: 8),
+                        CoachChatBubble(
+                          text:
+                              'Tamam, ${_normalizeForGreeting(_capturedName)}. '
+                              'Şimdi seni biraz daha tanıyayım.',
+                          side: ChatBubbleSide.form,
+                          typewriter: true,
+                          // 400 ms beat after the user posts — reads
+                          // as Form taking a moment before replying.
+                          startDelay:
+                              const Duration(milliseconds: 400),
+                          onTypingComplete: _onMsg3Done,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              // Input pill only renders during the "asking" phase;
+              // hidden once the user submits so the screen reads as
+              // pure chat during the acknowledgment beat.
+              if (!_userMsgPosted)
+                AnimatedOpacity(
+                  opacity: _msg2Done ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 320),
+                  curve: Curves.easeOutCubic,
+                  child: _ChatInputPill(
+                    controller: _textCtrl,
+                    focusNode: _focusNode,
+                    enabled: _msg2Done && !_userMsgPosted,
+                    canSubmit: ctaEnabled,
+                    onSubmit: _submit,
+                  ),
+                ),
+            ],
           ),
         ),
       ],
     );
   }
+}
 
-  Widget _buildAsking(bool ctaEnabled) {
-    return SingleChildScrollView(
-      key: const ValueKey('asking'),
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.viewInsetsOf(context).bottom,
-      ),
-      child: Column(
+/// Bottom-anchored chat input pill. Rounded TextField on the left,
+/// a [GlowPulse] send button on the right that lights up when the
+/// input is non-empty. Sticky to SafeArea bottom; rises with the
+/// keyboard via Scaffold's default behaviour (NameCaptureStep is
+/// hosted inside the wizard's Scaffold which has
+/// `resizeToAvoidBottomInset: true` by default).
+class _ChatInputPill extends StatelessWidget {
+  const _ChatInputPill({
+    required this.controller,
+    required this.focusNode,
+    required this.enabled,
+    required this.canSubmit,
+    required this.onSubmit,
+  });
+
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final bool enabled;
+  final bool canSubmit;
+  final VoidCallback onSubmit;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          const SizedBox(height: 8),
-          // Smaller avatar than coach intro — shares vertical space
-          // with the prompt + input + CTA. Mood is `listening`: faster
-          // pulse, slight forward lean — Form is attentively waiting
-          // for the user's name.
-          const LivingCoachAvatar(
-            size: 156,
-            innerSize: 100,
-            mood: CoachMood.listening,
-          ),
-          const SizedBox(height: 28),
-          // Prompt: typewriter on first visit, static on re-entry.
-          if (_isReturning)
-            const Text(
-              _prompt,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-                height: 1.25,
-                letterSpacing: 0.2,
+          Expanded(
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(
+                  color: AppColors.neon.withValues(alpha: 0.4),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.neon.withValues(alpha: 0.10),
+                    blurRadius: 18,
+                    spreadRadius: -4,
+                  ),
+                ],
               ),
-            )
-          else
-            KineticTextReveal(
-              text: _prompt,
-              onComplete: _onPromptTypingComplete,
-              caret: false,
-              charDuration: const Duration(milliseconds: 32),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-                height: 1.25,
-                letterSpacing: 0.2,
+              child: TextField(
+                controller: controller,
+                focusNode: focusNode,
+                enabled: enabled,
+                autofocus: false,
+                maxLength: 32,
+                textCapitalization: TextCapitalization.words,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => canSubmit ? onSubmit() : null,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  height: 1.3,
+                  fontWeight: FontWeight.w700,
+                ),
+                cursorColor: AppColors.neon,
+                decoration: InputDecoration(
+                  isDense: true,
+                  hintText: 'Adın',
+                  hintStyle: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.35),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  counterText: '',
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  disabledBorder: InputBorder.none,
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 14),
+                ),
               ),
-              textAlign: TextAlign.center,
-            ),
-          const SizedBox(height: 12),
-          AnimatedOpacity(
-            opacity: _promptDone ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 360),
-            curve: Curves.easeOutCubic,
-            child: const Text(
-              _subtitle,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white60,
-                fontSize: 13.5,
-                height: 1.5,
-              ),
-            ),
-          ),
-          const SizedBox(height: 28),
-          AnimatedOpacity(
-            opacity: _promptDone ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 420),
-            curve: Curves.easeOutCubic,
-            child: _NameInputField(
-              controller: _textCtrl,
-              focusNode: _focusNode,
-              onSubmitted: (_) => ctaEnabled ? _submit() : null,
-              enabled: _state == _NameCaptureState.asking,
             ),
           ),
-          const SizedBox(height: 16),
-          AnimatedOpacity(
-            opacity: _promptDone ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 480),
-            curve: Curves.easeOutCubic,
-            child: GlowPulse(
-              enabled: ctaEnabled,
-              color: AppColors.neon,
-              minAlpha: 0.40,
-              maxAlpha: 0.65,
-              minBlur: 22,
-              maxBlur: 32,
-              spread: 1,
-              shape: BoxShape.rectangle,
-              borderRadius: BorderRadius.circular(18),
-              duration: const Duration(milliseconds: 2800),
-              child: SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: ctaEnabled ? _submit : null,
-                  icon: const Icon(Icons.arrow_forward_rounded),
-                  label: const Text('DEVAM ET'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.neon,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor:
-                        AppColors.neon.withValues(alpha: 0.35),
-                    disabledForegroundColor: Colors.white60,
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    textStyle: const TextStyle(
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 3,
-                      fontSize: 14,
-                    ),
+          const SizedBox(width: 10),
+          GlowPulse(
+            enabled: canSubmit,
+            color: AppColors.neon,
+            minAlpha: 0.40,
+            maxAlpha: 0.65,
+            minBlur: 18,
+            maxBlur: 26,
+            spread: 0,
+            duration: const Duration(milliseconds: 2400),
+            child: Material(
+              color: canSubmit
+                  ? AppColors.neon
+                  : AppColors.neon.withValues(alpha: 0.30),
+              shape: const CircleBorder(),
+              child: InkWell(
+                onTap: canSubmit ? onSubmit : null,
+                customBorder: const CircleBorder(),
+                child: SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: Icon(
+                    Icons.arrow_upward_rounded,
+                    color: canSubmit
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.5),
+                    size: 22,
                   ),
                 ),
               ),
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildAcknowledging() {
-    final greetingName = _normalizeForGreeting(_capturedName);
-    return Column(
-      key: const ValueKey('acknowledging'),
-      children: [
-        const Spacer(flex: 1),
-        // Mood shifts to `proud` for the acknowledgment beat — chest
-        // forward (scale 1.05), brighter halo, faster glow. Reads as
-        // "Form is satisfied with what it just heard." The 500ms
-        // cross-fade inside LivingCoachAvatar handles the transition
-        // from `listening` to `proud` smoothly.
-        const LivingCoachAvatar(
-          size: 196,
-          innerSize: 132,
-          mood: CoachMood.proud,
-        ),
-        const SizedBox(height: 32),
-        KineticTextReveal(
-          text: 'Tamam, $greetingName. Şimdi seni biraz daha tanıyayım.',
-          onComplete: _onAcknowledgmentTypingComplete,
-          caret: false,
-          charDuration: const Duration(milliseconds: 30),
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            height: 1.4,
-            letterSpacing: 0.2,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const Spacer(flex: 2),
-      ],
-    );
-  }
-}
-
-/// The name input — single line, neon focus border, autofocused once
-/// the asking-state prompt finishes typing. Submission on keyboard
-/// done / tap maps to the parent's `_submit`.
-class _NameInputField extends StatelessWidget {
-  const _NameInputField({
-    required this.controller,
-    required this.focusNode,
-    required this.onSubmitted,
-    required this.enabled,
-  });
-
-  final TextEditingController controller;
-  final FocusNode focusNode;
-  final ValueChanged<String> onSubmitted;
-  final bool enabled;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      focusNode: focusNode,
-      enabled: enabled,
-      autofocus: false,
-      maxLength: 32,
-      textCapitalization: TextCapitalization.words,
-      textInputAction: TextInputAction.done,
-      onSubmitted: onSubmitted,
-      style: const TextStyle(
-        color: Colors.white,
-        fontSize: 17,
-        height: 1.3,
-        fontWeight: FontWeight.w800,
-        letterSpacing: 0.2,
-      ),
-      cursorColor: AppColors.neon,
-      textAlign: TextAlign.center,
-      decoration: InputDecoration(
-        hintText: 'Adın',
-        hintStyle: TextStyle(
-          color: Colors.white.withValues(alpha: 0.35),
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-        ),
-        counterText: '',
-        filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.04),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(
-            color: Colors.white.withValues(alpha: 0.14),
-            width: 1,
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.neon, width: 1.5),
-        ),
-        disabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(
-            color: Colors.white.withValues(alpha: 0.06),
-            width: 1,
-          ),
-        ),
       ),
     );
   }
