@@ -86,6 +86,20 @@ class AiPersonalizationEngine {
       'Profilini analiz ettim ve sana özel bir yol haritası çıkardım.',
     ];
 
+    // Quote-back. Pain-point > experience > activity (pain-point is the most
+    // emotionally loaded answer). Without this, the user types 60 seconds of
+    // free text and never sees it reflected — the "AI is really listening"
+    // contract breaks.
+    final quoted = _quoteFirstSentence(s.painPointDescription) ??
+        _quoteFirstSentence(s.experienceDescription) ??
+        _quoteFirstSentence(s.activityDescription);
+    if (quoted != null) {
+      parts.add(
+        'Yazdıklarına dikkat ettim — özellikle "$quoted" kısmı planını '
+        'şekillendirdi.',
+      );
+    }
+
     final isFatLossSedentary =
         s.goal == 'belly_burn' && s.activityLevel == ActivityLevel.sedentary;
 
@@ -168,6 +182,21 @@ class AiPersonalizationEngine {
     }
 
     return parts.join(' ');
+  }
+
+  /// Pulls the first usable sentence out of a free-text answer. Returns null
+  /// for empty / one-word inputs so we never quote nonsense back. Splits on
+  /// `.`/`!`/`?`/newline and falls back to a length cap so an unterminated
+  /// rant still gets surfaced. Length window 4–140 chars keeps the quote
+  /// readable inside the assessment paragraph.
+  static String? _quoteFirstSentence(String? raw) {
+    if (raw == null) return null;
+    final trimmed = raw.trim();
+    if (trimmed.length < 4) return null;
+    final match = RegExp(r'^([^.!?\n]{4,140})').firstMatch(trimmed);
+    final first = match?.group(1)?.trim();
+    if (first == null || first.isEmpty) return null;
+    return first;
   }
 
   // ───────────────────────────── numbers ───────────────────────────────────
