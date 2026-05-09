@@ -21,6 +21,7 @@ class KineticTextReveal extends StatefulWidget {
     this.caretColor,
     this.onComplete,
     this.controller,
+    this.startDelay = Duration.zero,
   });
 
   final String text;
@@ -31,6 +32,13 @@ class KineticTextReveal extends StatefulWidget {
   final Color? caretColor;
   final VoidCallback? onComplete;
   final RevealController? controller;
+
+  /// Optional delay before the typewriter starts. Used by
+  /// CoachIntroStep (Phase 108) to wait for Form's arrival
+  /// choreography (avatar fade + scale-up + ArrivalPulse ring) to
+  /// settle before the line begins typing — so the user reads
+  /// "Form arrived → Form started speaking", not both at once.
+  final Duration startDelay;
 
   @override
   State<KineticTextReveal> createState() => _KineticTextRevealState();
@@ -54,7 +62,13 @@ class _KineticTextRevealState extends State<KineticTextReveal>
         }
       });
     widget.controller?._attach(this);
-    _typer.forward();
+    if (widget.startDelay == Duration.zero) {
+      _typer.forward();
+    } else {
+      Future<void>.delayed(widget.startDelay, () {
+        if (mounted) _typer.forward();
+      });
+    }
   }
 
   @override
