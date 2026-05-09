@@ -811,14 +811,23 @@ class _ReportMetricCard extends StatelessWidget {
   }
 }
 
-/// "12 haftalık yolculuk" — a draw-in timeline visual: BUGÜN dot on
-/// the left, neon line drawing in 0 → 1 over 1.4 s, 12 HAFTA glow dot
-/// on the right, with the engine's [AiReport.estimatedResults] string
-/// rendered below as the right-hand outcome label.
+/// Phase 112 · transformation graph (replaces the old horizontal
+/// timeline). A diagonal trajectory line drawn over a faint grid,
+/// with a dim BUGÜN dot at the bottom-left, a glowing 12 HAFTA dot
+/// at the upper-right, and a soft gradient area-fill under the
+/// curve. Reads as "future-self projection" — premium, serious,
+/// emotionally grounded — not as "startup analytics chart."
 ///
-/// Deliberately avoids invented kg numbers — the engine's
-/// estimatedResults strings are the only outcome data we can claim,
-/// so the timeline visualises a *journey*, not a *measurement*.
+/// Reference timestamp: ~0:57 (Unrot's "Day 1 → Day 30" two-point
+/// comparison line). Mechanic adapted; aesthetic kept FormAI-dark
+/// premium. The line draws in over 1.6 s (slightly longer than the
+/// previous 1.4 s — gives the trajectory a more deliberate cinematic
+/// dwell) and lands the endpoint glow as the line completes.
+///
+/// Still avoids invented kg numbers — the engine's `estimatedResults`
+/// strings are the only outcome data we can claim. The graph shows
+/// *direction*; the outcome text below carries the goal-specific
+/// promise.
 class _TransformationProjection extends StatefulWidget {
   const _TransformationProjection({required this.outcome});
   final String outcome;
@@ -837,7 +846,7 @@ class _TransformationProjectionState extends State<_TransformationProjection>
     super.initState();
     _draw = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1400),
+      duration: const Duration(milliseconds: 1600),
     );
     // Lands a beat after the metric cards' MorphingNumbers settle so
     // the eye reads the row as a sequence (numbers → projection)
@@ -885,13 +894,13 @@ class _TransformationProjectionState extends State<_TransformationProjection>
           Row(
             children: const [
               Icon(
-                Icons.timeline_rounded,
+                Icons.show_chart_rounded,
                 color: AppColors.neonAccent,
                 size: 14,
               ),
               SizedBox(width: 6),
               Text(
-                '12 HAFTALIK YOLCULUK',
+                '12 HAFTALIK PROJEKSİYON',
                 style: TextStyle(
                   color: AppColors.neonAccent,
                   fontSize: 10,
@@ -901,21 +910,15 @@ class _TransformationProjectionState extends State<_TransformationProjection>
               ),
             ],
           ),
-          const SizedBox(height: 14),
-          SizedBox(
-            height: 28,
-            child: Row(
-              children: [
-                const _TimelineDot(label: 'BUGÜN', highlighted: false),
-                Expanded(
-                  child: AnimatedBuilder(
-                    animation: _draw,
-                    builder: (context, _) =>
-                        _TimelineLine(progress: _draw.value),
-                  ),
-                ),
-                const _TimelineDot(label: '12 HAFTA', highlighted: true),
-              ],
+          const SizedBox(height: 12),
+          AnimatedBuilder(
+            animation: _draw,
+            builder: (context, _) => SizedBox(
+              height: 110,
+              child: CustomPaint(
+                painter: _TrajectoryPainter(progress: _draw.value),
+                size: const Size(double.infinity, 110),
+              ),
             ),
           ),
           const SizedBox(height: 10),
@@ -938,102 +941,149 @@ class _TransformationProjectionState extends State<_TransformationProjection>
   }
 }
 
-class _TimelineDot extends StatelessWidget {
-  const _TimelineDot({required this.label, required this.highlighted});
-  final String label;
-  final bool highlighted;
+/// The trajectory canvas — bottom-left BUGÜN dot, upper-right 12
+/// HAFTA dot, diagonal neon line drawn from start to current
+/// progress, faint horizontal gridlines, and a gradient area-fill
+/// under the line. Endpoint glow + label appear in the last 15 % of
+/// the draw so the user reads the line *landing* on its destination.
+class _TrajectoryPainter extends CustomPainter {
+  _TrajectoryPainter({required this.progress});
 
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 64,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 14,
-            height: 14,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: highlighted
-                  ? AppColors.neon
-                  : AppColors.neon.withValues(alpha: 0.4),
-              boxShadow: highlighted
-                  ? [
-                      BoxShadow(
-                        color: AppColors.neon.withValues(alpha: 0.6),
-                        blurRadius: 12,
-                        spreadRadius: 1,
-                      ),
-                    ]
-                  : null,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: highlighted ? Colors.white : Colors.white60,
-              fontSize: 9,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.2,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TimelineLine extends StatelessWidget {
-  const _TimelineLine({required this.progress});
   final double progress;
 
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 14,
-      child: CustomPaint(
-        painter: _TimelinePainter(progress: progress),
-        size: const Size(double.infinity, 14),
-      ),
-    );
-  }
-}
-
-class _TimelinePainter extends CustomPainter {
-  _TimelinePainter({required this.progress});
-  final double progress;
+  static const double _padX = 28;
+  static const double _padTop = 16;
+  static const double _padBottom = 26;
+  static const int _gridLines = 4;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final cy = size.height / 2;
-    // Dotted background line — full width, dim.
-    final dim = Paint()..color = AppColors.neon.withValues(alpha: 0.25);
-    const dotSpacing = 6.0;
-    var x = 0.0;
-    while (x < size.width) {
-      canvas.drawCircle(Offset(x, cy), 0.9, dim);
-      x += dotSpacing;
+    final start = Offset(_padX, size.height - _padBottom);
+    final end = Offset(size.width - _padX, _padTop);
+
+    _drawGrid(canvas, size);
+
+    // Current end of the in-progress line.
+    final currentEnd = Offset(
+      start.dx + (end.dx - start.dx) * progress,
+      start.dy + (end.dy - start.dy) * progress,
+    );
+
+    if (progress > 0) {
+      _drawAreaFill(canvas, size, start, currentEnd);
+      _drawLineWithGlow(canvas, start, currentEnd);
     }
-    // Solid neon line up to current progress.
-    final lit = Paint()
-      ..color = AppColors.neon
-      ..strokeWidth = 1.8
-      ..strokeCap = StrokeCap.round;
-    final endX = size.width * progress;
-    if (endX > 0) {
-      canvas.drawLine(Offset(0, cy), Offset(endX, cy), lit);
+
+    _drawStartDot(canvas, start);
+    if (progress > 0.85) {
+      final reveal = ((progress - 0.85) / 0.15).clamp(0.0, 1.0);
+      _drawEndDot(canvas, end, reveal);
     }
-    // Glow at the leading edge while drawing.
-    if (progress > 0 && progress < 1) {
-      final glow = Paint()
-        ..color = AppColors.neon.withValues(alpha: 0.55)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
-      canvas.drawCircle(Offset(endX, cy), 3, glow);
+
+    _drawLabel(canvas, 'BUGÜN', Offset(start.dx - 2, start.dy + 8),
+        AppColors.neon.withValues(alpha: 0.70), align: _LabelAlign.left);
+    if (progress > 0.92) {
+      _drawLabel(canvas, '12 HAFTA',
+          Offset(end.dx + 2, end.dy - 16), AppColors.neon,
+          align: _LabelAlign.right);
     }
   }
 
+  void _drawGrid(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AppColors.neon.withValues(alpha: 0.06)
+      ..strokeWidth = 1;
+    final innerHeight = size.height - _padTop - _padBottom;
+    for (var i = 0; i <= _gridLines; i++) {
+      final y = _padTop + innerHeight * (i / _gridLines);
+      canvas.drawLine(
+        Offset(_padX, y),
+        Offset(size.width - _padX, y),
+        paint,
+      );
+    }
+  }
+
+  void _drawAreaFill(Canvas canvas, Size size, Offset start, Offset end) {
+    final path = Path()
+      ..moveTo(start.dx, start.dy)
+      ..lineTo(end.dx, end.dy)
+      ..lineTo(end.dx, size.height - _padBottom)
+      ..lineTo(start.dx, size.height - _padBottom)
+      ..close();
+    final paint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          AppColors.neon.withValues(alpha: 0.30),
+          AppColors.neon.withValues(alpha: 0.0),
+        ],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+    canvas.drawPath(path, paint);
+  }
+
+  void _drawLineWithGlow(Canvas canvas, Offset start, Offset end) {
+    final glow = Paint()
+      ..color = AppColors.neon.withValues(alpha: 0.55)
+      ..strokeWidth = 5
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
+    canvas.drawLine(start, end, glow);
+
+    final stroke = Paint()
+      ..color = AppColors.neon
+      ..strokeWidth = 2.2
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(start, end, stroke);
+  }
+
+  void _drawStartDot(Canvas canvas, Offset start) {
+    final fill = Paint()..color = AppColors.neon.withValues(alpha: 0.55);
+    canvas.drawCircle(start, 4.5, fill);
+    final ring = Paint()
+      ..color = AppColors.neon
+      ..strokeWidth = 1.4
+      ..style = PaintingStyle.stroke;
+    canvas.drawCircle(start, 4.5, ring);
+  }
+
+  void _drawEndDot(Canvas canvas, Offset end, double reveal) {
+    final glow = Paint()
+      ..color = AppColors.neon.withValues(alpha: reveal * 0.65)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 9);
+    canvas.drawCircle(end, 14, glow);
+    final fill = Paint()..color = AppColors.neon.withValues(alpha: reveal);
+    canvas.drawCircle(end, 6.5, fill);
+  }
+
+  void _drawLabel(
+    Canvas canvas,
+    String text,
+    Offset anchor,
+    Color color, {
+    required _LabelAlign align,
+  }) {
+    final tp = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: TextStyle(
+          color: color,
+          fontSize: 9,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 1.4,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    final dx = align == _LabelAlign.right ? anchor.dx - tp.width : anchor.dx;
+    tp.paint(canvas, Offset(dx, anchor.dy));
+  }
+
   @override
-  bool shouldRepaint(_TimelinePainter old) => old.progress != progress;
+  bool shouldRepaint(_TrajectoryPainter old) => old.progress != progress;
 }
+
+enum _LabelAlign { left, right }
