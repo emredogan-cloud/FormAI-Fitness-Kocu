@@ -13,6 +13,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_haptics.dart';
 import '../../domain/ai_personalization_engine.dart';
 import '../../providers/wizard_provider.dart';
+import '../widgets/coach_mood.dart';
+import '../widgets/living_coach_avatar.dart';
 
 /// Act 4 · Revelation.
 ///
@@ -160,6 +162,19 @@ class _AnalysisIllusionStepState extends State<AnalysisIllusionStep>
             child: Column(
               children: [
                 const Spacer(flex: 2),
+                // Phase 106 · Form is visibly present during the
+                // labor illusion — not just an abstract atmosphere.
+                // `thinking` mood cools the halo to neonAccent and
+                // speeds up the pulse to 2.0 s, so the user reads
+                // "Form is computing." Smaller than the bonding-zone
+                // avatar (90 / 60) so it sits above the rotating
+                // core without competing for focus.
+                const LivingCoachAvatar(
+                  size: 90,
+                  innerSize: 60,
+                  mood: CoachMood.thinking,
+                ),
+                const SizedBox(height: 24),
                 _AnalysisCore(progress: _coreCtrl),
                 const SizedBox(height: 36),
                 AnimatedSwitcher(
@@ -320,6 +335,15 @@ class _AnalysisCore extends StatelessWidget {
 
 // ─────────────────────────── dynamic-report ─────────────────────────────────
 
+/// Per-element reveal record. Holds a [fade] (opacity 0 → 1 across a
+/// sub-interval of the parent controller) plus a matching [slide]
+/// (offset y +0.18 → 0). Constructed via [_DynamicReportStepState._makeReveal].
+class _RevealAnim {
+  const _RevealAnim({required this.fade, required this.slide});
+  final Animation<double> fade;
+  final Animation<Offset> slide;
+}
+
 class DynamicReportStep extends ConsumerStatefulWidget {
   const DynamicReportStep({super.key, required this.onComplete});
   final VoidCallback onComplete;
@@ -334,48 +358,97 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
 
   late final AnimationController _intro;
   late final Animation<double> _confidence;
-  late final Animation<double> _contentFade;
-  late final Animation<Offset> _contentSlide;
+
+  // Phase 106 · staggered scene composition. The single content
+  // FadeTransition + SlideTransition wrapping the whole Column has
+  // been replaced with seven per-element reveals so the eye is
+  // guided sequentially through the report — Form first, then
+  // title, then subtitle cascading down to the CTA. Reads as a
+  // *directed* reveal rather than one synchronous block.
+  late final _RevealAnim _avatarReveal;
+  late final _RevealAnim _titleReveal;
+  late final _RevealAnim _subtitleReveal;
+  late final _RevealAnim _metricsReveal;
+  late final _RevealAnim _projectionReveal;
+  late final _RevealAnim _assessmentReveal;
+  late final _RevealAnim _ctaReveal;
 
   /// Set when the confidence bar finishes its land. Gates the CTA's
   /// ambient [GlowPulse] so it doesn't compete with the bar's filling.
   bool _confidenceLanded = false;
 
+  /// Form's mood on this scene. Mounts in `excited` (peak energy at
+  /// the moment of reveal — "I've finished computing!"), settles to
+  /// `proud` once the entrance choreography completes. The 500 ms
+  /// cross-fade inside [LivingCoachAvatar] handles the transition.
+  CoachMood _avatarMood = CoachMood.excited;
+
   @override
   void initState() {
     super.initState();
+    // Phase 106 · scene span bumped 1600 → 1800 ms so the staggered
+    // entrances breathe a little. Each element claims a window
+    // inside this single controller; later elements peak after the
+    // earlier ones have settled, so the eye is led from Form down
+    // to the CTA in one continuous arc.
     _intro = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1600),
+      duration: const Duration(milliseconds: 1800),
     )..forward();
-    _contentFade = CurvedAnimation(
-      parent: _intro,
-      curve: const Interval(0.0, 0.55, curve: Curves.easeOutCubic),
-    );
-    _contentSlide = Tween<Offset>(
-      begin: const Offset(0, 0.18),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _intro,
-      curve: const Interval(0.0, 0.55, curve: Curves.easeOutCubic),
-    ));
-    // Confidence lands with easeOutBack — overshoots ~3 % past target
-    // then settles. Reads as a number arriving at its place rather
-    // than smoothly filling.
+
+    _avatarReveal = _makeReveal(0.00, 0.30);
+    _titleReveal = _makeReveal(0.10, 0.40);
+    _subtitleReveal = _makeReveal(0.20, 0.45);
+    _metricsReveal = _makeReveal(0.25, 0.55);
+    _projectionReveal = _makeReveal(0.30, 0.60);
+    _assessmentReveal = _makeReveal(0.40, 0.70);
+    _ctaReveal = _makeReveal(0.55, 1.00);
+
+    // Confidence lands with easeOutBack — overshoots ~3 % past
+    // target then settles. Reads as a number arriving at its place
+    // rather than smoothly filling.
     _confidence = Tween<double>(begin: 0.0, end: _confidenceTarget).animate(
       CurvedAnimation(
         parent: _intro,
         curve: const Interval(0.45, 1.0, curve: Curves.easeOutBack),
       ),
     );
+
     _intro.addStatusListener((s) {
       if (s == AnimationStatus.completed && mounted && !_confidenceLanded) {
-        setState(() => _confidenceLanded = true);
-        // Soft success haptic when the % lands — the AI has finished
-        // *delivering* the report.
+        setState(() {
+          _confidenceLanded = true;
+          // Form has finished *delivering* the report — settles from
+          // excited (peak reveal energy) into proud (sustained
+          // satisfaction). Visible posture shift: scale 1.04 → 1.05,
+          // halo cycle 1.8 s → 3.0 s, glow alpha 0.45-0.75 → 0.40-0.70.
+          _avatarMood = CoachMood.proud;
+        });
         AppHaptics.success();
       }
     });
+  }
+
+  /// Build a per-element fade + rise pair from a sub-interval of
+  /// [_intro]. Both share the same easeOutCubic curve so adjacent
+  /// reveals read as one motion language.
+  _RevealAnim _makeReveal(double start, double end) {
+    final fade = CurvedAnimation(
+      parent: _intro,
+      curve: Interval(start, end, curve: Curves.easeOutCubic),
+    );
+    final slide = Tween<Offset>(
+      begin: const Offset(0, 0.18),
+      end: Offset.zero,
+    ).animate(fade);
+    return _RevealAnim(fade: fade, slide: slide);
+  }
+
+  Widget _staggered({required _RevealAnim reveal, required Widget child}) {
+    return FadeTransition(
+      opacity: reveal.fade,
+      child: SlideTransition(position: reveal.slide, child: child),
+    );
   }
 
   @override
@@ -411,208 +484,238 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-            child: FadeTransition(
-              opacity: _contentFade,
-              child: SlideTransition(
-                position: _contentSlide,
-                child: Column(
-                  children: [
-                    ShaderMask(
-                      shaderCallback: (rect) => const LinearGradient(
-                        colors: [AppColors.neon, AppColors.neonAccent],
-                      ).createShader(rect),
-                      child: const Text(
-                        'Kişisel AI Raporun',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.4,
-                        ),
+            child: Column(
+              children: [
+                _staggered(
+                  reveal: _avatarReveal,
+                  // Form personally delivers the report. Mounts in
+                  // `excited` (peak energy moment of reveal), settles
+                  // to `proud` once the entrance choreography
+                  // completes. The 500 ms cross-fade inside
+                  // LivingCoachAvatar handles the transition.
+                  child: LivingCoachAvatar(
+                    size: 80,
+                    innerSize: 56,
+                    mood: _avatarMood,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _staggered(
+                  reveal: _titleReveal,
+                  child: ShaderMask(
+                    shaderCallback: (rect) => const LinearGradient(
+                      colors: [AppColors.neon, AppColors.neonAccent],
+                    ).createShader(rect),
+                    child: const Text(
+                      'Kişisel AI Raporun',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.4,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'AI değerlendirmen hazır',
-                      style: TextStyle(color: Colors.white54, fontSize: 13),
-                    ),
-                    const SizedBox(height: 18),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _ReportMetricCard(
-                            label: 'BMI',
-                            morphingValue: bmi,
-                            formatter: (v) => v.toStringAsFixed(1),
-                            startDelay: const Duration(milliseconds: 200),
-                            icon: Icons.monitor_weight_outlined,
-                          ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                _staggered(
+                  reveal: _subtitleReveal,
+                  child: const Text(
+                    'AI değerlendirmen hazır',
+                    style: TextStyle(color: Colors.white54, fontSize: 13),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _staggered(
+                  reveal: _metricsReveal,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _ReportMetricCard(
+                          label: 'BMI',
+                          morphingValue: bmi,
+                          formatter: (v) => v.toStringAsFixed(1),
+                          startDelay: const Duration(milliseconds: 200),
+                          icon: Icons.monitor_weight_outlined,
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _ReportMetricCard(
-                            label: 'GÜNLÜK KAL.',
-                            morphingValue: calories.toDouble(),
-                            formatter: (v) => v.round().toString(),
-                            startDelay: const Duration(milliseconds: 350),
-                            icon: Icons.local_fire_department_rounded,
-                          ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _ReportMetricCard(
+                          label: 'GÜNLÜK KAL.',
+                          morphingValue: calories.toDouble(),
+                          formatter: (v) => v.round().toString(),
+                          startDelay: const Duration(milliseconds: 350),
+                          icon: Icons.local_fire_department_rounded,
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    _TransformationProjection(outcome: report.estimatedResults),
-                    const SizedBox(height: 14),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: BreathingBox(
-                          minAlpha: 0.96,
-                          maxAlpha: 1.0,
-                          duration: const Duration(milliseconds: 5200),
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.04),
-                              borderRadius: BorderRadius.circular(18),
-                              border: Border.all(
-                                color: AppColors.neon.withValues(alpha: 0.35),
-                                width: 1,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                _staggered(
+                  reveal: _projectionReveal,
+                  child: _TransformationProjection(
+                    outcome: report.estimatedResults,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Expanded(
+                  child: _staggered(
+                    reveal: _assessmentReveal,
+                    child: SingleChildScrollView(
+                      child: BreathingBox(
+                        minAlpha: 0.96,
+                        maxAlpha: 1.0,
+                        duration: const Duration(milliseconds: 5200),
+                        child: Container(
+                          width: double.infinity,
+                          padding:
+                              const EdgeInsets.fromLTRB(18, 16, 18, 18),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.04),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                              color: AppColors.neon.withValues(alpha: 0.35),
+                              width: 1,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.neon.withValues(alpha: 0.15),
+                                blurRadius: 24,
+                                spreadRadius: -4,
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.neon.withValues(alpha: 0.15),
-                                  blurRadius: 24,
-                                  spreadRadius: -4,
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: const [
-                                    Icon(
-                                      Icons.psychology_outlined,
-                                      color: AppColors.neonAccent,
-                                      size: 18,
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'AI DEĞERLENDİRMESİ',
-                                      style: TextStyle(
-                                        color: AppColors.neonAccent,
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w900,
-                                        letterSpacing: 1.6,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  assessment,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    height: 1.55,
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: const [
+                                  Icon(
+                                    Icons.psychology_outlined,
+                                    color: AppColors.neonAccent,
+                                    size: 18,
                                   ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'AI DEĞERLENDİRMESİ',
+                                    style: TextStyle(
+                                      color: AppColors.neonAccent,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 1.6,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                assessment,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  height: 1.55,
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 14),
-                    AnimatedBuilder(
-                      animation: _confidence,
-                      builder: (context, _) {
-                        // Clamp display: easeOutBack overshoots, but we
-                        // don't want to show 95 % en route to 92 %.
-                        final shown = _confidence.value.clamp(0.0, 1.0);
-                        final pct = (shown * 100).round();
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                AnimatedBuilder(
+                  animation: _confidence,
+                  builder: (context, _) {
+                    // Clamp display: easeOutBack overshoots, but we
+                    // don't want to show 95 % en route to 92 %.
+                    final shown = _confidence.value.clamp(0.0, 1.0);
+                    final pct = (shown * 100).round();
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          mainAxisAlignment:
+                              MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text(
-                                  'Başarı olasılığı',
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                Text(
-                                  '%$pct',
-                                  style: const TextStyle(
-                                    color: AppColors.neon,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                              ],
+                            const Text(
+                              'Başarı olasılığı',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
-                            const SizedBox(height: 6),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: LinearProgressIndicator(
-                                value: shown,
-                                minHeight: 6,
-                                backgroundColor: Colors.white12,
-                                valueColor: const AlwaysStoppedAnimation(
-                                  AppColors.neon,
-                                ),
+                            Text(
+                              '%$pct',
+                              style: const TextStyle(
+                                color: AppColors.neon,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w900,
                               ),
                             ),
                           ],
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    GlowPulse(
-                      enabled: _confidenceLanded,
-                      color: AppColors.neon,
-                      minAlpha: 0.40,
-                      maxAlpha: 0.65,
-                      minBlur: 24,
-                      maxBlur: 34,
-                      spread: 1,
-                      shape: BoxShape.rectangle,
-                      borderRadius: BorderRadius.circular(18),
-                      duration: const Duration(milliseconds: 2900),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: FilledButton(
-                          onPressed: () {
-                            AppHaptics.secondaryTap();
-                            widget.onComplete();
-                          },
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.neon,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 18),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(18),
-                            ),
-                            textStyle: const TextStyle(
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 2.5,
-                              fontSize: 15,
+                        ),
+                        const SizedBox(height: 6),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: shown,
+                            minHeight: 6,
+                            backgroundColor: Colors.white12,
+                            valueColor: const AlwaysStoppedAnimation(
+                              AppColors.neon,
                             ),
                           ),
-                          child: const Text('KİŞİSEL PLANIMI AL'),
                         ),
+                      ],
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+                _staggered(
+                  reveal: _ctaReveal,
+                  child: GlowPulse(
+                    enabled: _confidenceLanded,
+                    color: AppColors.neon,
+                    minAlpha: 0.40,
+                    maxAlpha: 0.65,
+                    minBlur: 24,
+                    maxBlur: 34,
+                    spread: 1,
+                    shape: BoxShape.rectangle,
+                    borderRadius: BorderRadius.circular(18),
+                    duration: const Duration(milliseconds: 2900),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () {
+                          AppHaptics.secondaryTap();
+                          widget.onComplete();
+                        },
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.neon,
+                          foregroundColor: Colors.white,
+                          padding:
+                              const EdgeInsets.symmetric(vertical: 18),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          textStyle: const TextStyle(
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 2.5,
+                            fontSize: 15,
+                          ),
+                        ),
+                        child: const Text('KİŞİSEL PLANIMI AL'),
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ],
