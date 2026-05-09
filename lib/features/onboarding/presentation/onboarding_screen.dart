@@ -20,6 +20,8 @@ import 'steps/act_2_bonding_step.dart';
 import 'steps/act_3_buildup_steps.dart';
 import 'steps/act_4_revelation_steps.dart';
 import 'steps/act_5_commitment_step.dart';
+import 'steps/interlude_after_goal_step.dart';
+import 'steps/interlude_before_pain_point_step.dart';
 import 'steps/name_capture_step.dart';
 
 /// Cinematic rebuild · the wizard orchestrator. Owns the step index,
@@ -30,29 +32,33 @@ import 'steps/name_capture_step.dart';
 /// and fade while incoming scenes rise and settle in the same 480 ms
 /// window. The wizard reads as scene progression, not page snapping.
 ///
-/// The 13-step act mapping:
+/// The 15-step act mapping:
 ///   • Act 1 (welcome) — emotional hook, immersive hero.
-///   • Act 2 (coach_intro → name_capture) — the named coach Form
-///     introduces itself, then asks the user "Bu yolculukta sana
-///     nasıl sesleneyim?" The bonding zone is three contiguous
-///     header-less screens so it reads as one conversation.
-///   • Act 3 (gender → goal → experience → daily_minutes → activity →
-///     physical_data → pain_point) — transformation buildup, data
-///     collection wrapped in coach voice.
+///   • Act 2 (coach_intro → name_capture) — Form introduces itself
+///     and asks "Bu yolculukta sana nasıl sesleneyim?" The bonding
+///     zone is three contiguous header-less screens so it reads as
+///     one conversation.
+///   • Act 3 (gender → goal → INTERLUDE → experience → daily_minutes
+///     → activity → physical_data → INTERLUDE → pain_point) —
+///     transformation buildup. The two interludes (post-goal +
+///     pre-pain-point) are Form-speaking moments that turn the
+///     middle from a questionnaire tunnel into a relationship arc:
+///     predictive empathy after the goal declaration, vulnerability
+///     setup before the hardest answer.
 ///   • Act 4 (analysis_illusion → dynamic_report) — labor-illusion +
 ///     personalised AI report reveal.
-///   • Act 5 (pre_paywall_summary) — commitment moment, plan card +
-///     trust booster + paywall handoff.
+///   • Act 5 (pre_paywall_summary) — commitment moment.
 ///
-/// `_hookSteps = 3` keeps the chrome header hidden through the bonding
-/// zone (welcome + coach_intro + name_capture) so the wizard's chrome
-/// only appears when data collection actually begins.
+/// `_hookSteps = 3` keeps the chrome header hidden through the
+/// bonding zone. Interludes (any step name with the `interlude_`
+/// prefix) also hide the header — the data-step counter skips them
+/// so progress reads cleanly when chrome reappears.
 ///
 /// New screens (habit anchor, push opt-in, identity declaration,
 /// microcommitment, first-workout prompt) get added inside the
-/// appropriate act file as they ship — the orchestrator only extends
-/// [_stepNames] and the [_buildStep] switch.
-const int _totalSteps = 13;
+/// appropriate act file as they ship — the orchestrator only
+/// extends [_stepNames] and the [_buildStep] switch.
+const int _totalSteps = 15;
 const int _hookSteps = 3;
 
 const List<String> _stepNames = [
@@ -61,15 +67,24 @@ const List<String> _stepNames = [
   'name_capture',
   'gender',
   'goal',
+  'interlude_after_goal',
   'experience_level',
   'daily_minutes',
   'activity',
   'physical_data',
+  'interlude_before_pain_point',
   'pain_point',
   'analysis_illusion',
   'dynamic_report',
   'pre_paywall_summary',
 ];
+
+/// Number of non-hook, non-interlude steps. Hardcoded to 10 (gender,
+/// goal, experience, daily_minutes, activity, physical_data,
+/// pain_point, analysis_illusion, dynamic_report, pre_paywall_summary)
+/// so the header's "x / 10" math doesn't drift when interludes get
+/// added or moved. Verified against [_stepNames] in [initState].
+const int _totalDataSteps = 10;
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -207,42 +222,65 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       case 4:
         return GoalStep(onCommitted: _next);
       case 5:
-        return ExperienceStep(onCommitted: _next);
+        return InterludeAfterGoalStep(onContinue: _next);
       case 6:
-        return DailyMinutesStep(onCommitted: _next);
+        return ExperienceStep(onCommitted: _next);
       case 7:
-        return ActivityStep(onCommitted: _next);
+        return DailyMinutesStep(onCommitted: _next);
       case 8:
-        return PhysicalDataStep(onContinue: _next);
+        return ActivityStep(onCommitted: _next);
       case 9:
-        return PainPointStep(onCommitted: _next);
+        return PhysicalDataStep(onContinue: _next);
       case 10:
-        return AnalysisIllusionStep(onComplete: _next);
+        return InterludeBeforePainPointStep(onContinue: _next);
       case 11:
-        return DynamicReportStep(onComplete: _next);
+        return PainPointStep(onCommitted: _next);
       case 12:
+        return AnalysisIllusionStep(onComplete: _next);
+      case 13:
+        return DynamicReportStep(onComplete: _next);
+      case 14:
         return PrePaywallSummaryStep(onComplete: _finish);
       default:
         return const SizedBox.shrink();
     }
   }
 
+  /// Position of [i] in the data-step counter. Returns null for hook
+  /// or interlude steps — the header is hidden in those cases. For
+  /// data steps, returns 1-indexed position skipping interludes so
+  /// the user sees a monotonic "n / 10" progression even as
+  /// interludes interrupt the flow.
+  int? _dataStepNumber(int i) {
+    if (i < _hookSteps) return null;
+    if (_stepNames[i].startsWith('interlude_')) return null;
+    var count = 0;
+    for (var j = _hookSteps; j <= i; j++) {
+      if (!_stepNames[j].startsWith('interlude_')) count++;
+    }
+    return count;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final showHeader = _index >= _hookSteps;
+    final dataStepNum = _dataStepNumber(_index);
+    final showHeader = dataStepNum != null;
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
         child: Column(
           children: [
             // Header cross-fades + sizes in/out at the same cadence as
-            // the scene transition so the boundary between Act 2
-            // (full-bleed) and Act 3 (chrome visible) reads as a single
-            // coordinated moment instead of a snap.
+            // the scene transition so the boundary between full-bleed
+            // moments (hook + interludes) and chrome moments (data
+            // collection + reveal + commitment) reads as one
+            // coordinated transition instead of a snap. Counter math
+            // skips interludes so the user sees a monotonic "x / 10"
+            // progression even when Form interrupts the flow.
             AnimatedCrossFade(
               firstChild: WizardHeader(
-                step: _index - _hookSteps + 1,
-                total: _totalSteps - _hookSteps,
+                step: dataStepNum ?? 1,
+                total: _totalDataSteps,
                 onBack: _index == 0 ? null : _back,
               ),
               secondChild: const SizedBox(width: double.infinity),

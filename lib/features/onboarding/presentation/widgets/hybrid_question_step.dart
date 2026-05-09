@@ -24,12 +24,25 @@ class HybridQuestionStep extends StatefulWidget {
     required this.onTextCommitted,
     required this.inputLabel,
     required this.inputHint,
+    this.feedbackTextBuilder,
   });
 
   final String title;
   final String? subtitle;
   final List<InteractiveOption> options;
+
+  /// Static fallback line shown in the feedback banner when the user
+  /// taps a card. Used when [feedbackTextBuilder] is null OR returns
+  /// null for the picked value.
   final String feedbackText;
+
+  /// Optional per-answer feedback line. Receives the picked value and
+  /// returns the line to render — see InteractiveQuestionStep for the
+  /// rationale. Phase 104 wires this into the Act 3 hybrid steps so
+  /// experience and pain-point answers each get a goal-aware empathic
+  /// observation.
+  final String? Function(String pickedValue)? feedbackTextBuilder;
+
   final String? initialCardValue;
   final String? initialDescription;
 
@@ -127,6 +140,17 @@ class _HybridQuestionStepState extends State<HybridQuestionStep>
     }
   }
 
+  /// Same fallback discipline as InteractiveQuestionStep — builder
+  /// wins, null result falls through to the static line.
+  String _resolveFeedbackText() {
+    final picked = _selectedCardValue;
+    if (picked != null) {
+      final dynamic = widget.feedbackTextBuilder?.call(picked);
+      if (dynamic != null) return dynamic;
+    }
+    return widget.feedbackText;
+  }
+
   Future<void> _pickCard(String value) async {
     if (_committingCard) return;
     AppHaptics.secondaryTap();
@@ -176,7 +200,7 @@ class _HybridQuestionStepState extends State<HybridQuestionStep>
                 FeedbackBanner(
                   fade: _feedbackFade,
                   slide: _feedbackSlide,
-                  text: widget.feedbackText,
+                  text: _resolveFeedbackText(),
                 ),
                 const SizedBox(height: 14),
                 _HybridDescriptionInput(
