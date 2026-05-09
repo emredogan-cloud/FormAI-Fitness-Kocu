@@ -102,10 +102,22 @@ class LivingCoachAvatar extends StatelessWidget {
     // configs use 0.97–1.07 scale values) — `clipBehavior: Clip.none`
     // is the AnimatedScale default, so a 1.05 scaled photo overflows
     // the SizedBox visually without affecting layout.
-    return SizedBox(
-      width: size,
-      height: size,
-      child: AnimatedScale(
+    //
+    // Phase 122 perf hygiene · added [RepaintBoundary] at the outer
+    // level. Without it, parent rebuilds (e.g., NameCaptureStep's
+    // keystroke listener that calls setState on every char typed)
+    // would bubble repaint requests through the entire avatar
+    // subtree. The inner BreathingBox + GlowPulse already have their
+    // own RepaintBoundary, but the outer chain (Stack +
+    // AnimatedSwitcher + AnimatedScale) was unprotected. With this
+    // boundary, the avatar's repaint cost is isolated from
+    // unrelated parent state changes — critical because the avatar
+    // appears inside re-rendering chat / report / interlude scenes.
+    return RepaintBoundary(
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: AnimatedScale(
         scale: config.scale,
         duration: const Duration(milliseconds: 700),
         curve: Curves.easeOutCubic,
@@ -137,6 +149,7 @@ class LivingCoachAvatar extends StatelessWidget {
             ),
           ),
         ),
+      ),
       ),
     );
   }
