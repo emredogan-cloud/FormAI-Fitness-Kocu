@@ -86,6 +86,20 @@ class GoalStep extends ConsumerWidget {
       feedbackText:
           '🔥 Harika seçim! Bu hedefle başlayanların çoğu 30 gün içinde '
           'fark görüyor.',
+      // Phase 104 · predictive empathy. Form observes the choice
+      // rather than just confirming it — each answer reads as Form
+      // already understanding what kind of plan suits this user.
+      feedbackTextBuilder: (value) => switch (value) {
+        'belly_burn' => 'Yağ kaybı çoğu zaman süreklilik meselesidir. '
+            'Sana ağır başlayan bir plan kurmayacağım.',
+        'muscle_gain' => 'Kas büyütmek sabır işi. Acelesi olmayan '
+            'ama kararlı bir program kuracağım.',
+        'fitness_look' => "'Fit görünmek' aslında 'kendinde rahat "
+            "hissetmek' demek. Plana onu yansıtacağım.",
+        'strength' => 'Güç temeli yavaş atılır. Aceleye getirmeyen, '
+            'sağlam bir program kuracağız.',
+        _ => null,
+      },
       options: const [
         InteractiveOption(
           value: 'belly_burn',
@@ -133,6 +147,14 @@ class ExperienceStep extends ConsumerWidget {
       title: 'Daha önce spor yaptın mı?',
       subtitle: 'Programın zorluğunu seviyene göre kalibre edeceğim.',
       feedbackText: 'Tamam, programını buna göre ayarlıyorum.',
+      feedbackTextBuilder: (value) => switch (value) {
+        'none' => 'Sıfırdan başlamak aslında bir avantaj — kötü '
+            'alışkanlık birikmemiş.',
+        'occasional' => 'Temelin var; devamını getirmek kolay olacak.',
+        'regular' => 'Geçmişin sayesinde planı bir basamak yukarı '
+            'çıkarabilirim.',
+        _ => null,
+      },
       initialCardValue: wizard.experienceLevel,
       initialDescription: wizard.experienceDescription,
       options: const [
@@ -185,6 +207,15 @@ class DailyMinutesStep extends ConsumerWidget {
       subtitle: 'Antrenman uzunluğunu buna göre planlayacağım.',
       initialValue: current,
       feedbackText: 'Bu süreyle bile ciddi sonuç alabilirsin.',
+      feedbackTextBuilder: (value) => switch (value) {
+        '10_15' => 'Yoğun günler için 15 dakika idealdir. Süreklilik '
+            'benim için süreden önemli.',
+        '20_30' => 'İdeal aralıkta. Hem sürdürülebilir hem etkili '
+            'bir program kurabiliriz.',
+        '45_plus' => 'Bu kadar zaman ayırabilenler azınlıktadır. '
+            'Temeli sağlam atan bir program inşa ediyorum.',
+        _ => null,
+      },
       options: const [
         InteractiveOption(
           value: '10_15',
@@ -250,8 +281,25 @@ class _ActivityStepState extends ConsumerState<ActivityStep>
       imageAsset: 'photos/günlükaktivitenneÇokAktif.webp',
     ),
   ];
+  /// Default fallback when no card is picked yet (banner is invisible
+  /// at that point, but the slot is built). Per-answer empathy lives
+  /// in [_resolveFeedbackText].
   static const String _feedbackText =
       'Kişisel kalori ve program yoğunluğunu buna göre ayarlıyorum.';
+
+  /// Phase 104 · activity-step empathy. Each lifestyle answer gets a
+  /// reading-back observation from Form rather than a generic
+  /// confirmation.
+  String _resolveFeedbackText() {
+    return switch (_selectedCardValue) {
+      'sedentary' => 'Masa başı çok yaygın. Hareket alışkanlığını '
+          'yumuşak başlangıçlarla oturtacağım.',
+      'light' => 'Hafif aktif bir başlangıç için iyi durum. '
+          'Buradan yukarı çıkmak kolay.',
+      'active' => 'Aktif yaşam tarzı temeli sağlamlaştırıyor.',
+      _ => _feedbackText,
+    };
+  }
 
   String? _selectedCardValue;
   bool _committingCard = false;
@@ -385,7 +433,7 @@ class _ActivityStepState extends ConsumerState<ActivityStep>
                 FeedbackBanner(
                   fade: _feedbackFade,
                   slide: _feedbackSlide,
-                  text: _feedbackText,
+                  text: _resolveFeedbackText(),
                 ),
                 const SizedBox(height: 14),
                 _ActivityFreeTextInput(
@@ -789,6 +837,17 @@ class PainPointStep extends ConsumerWidget {
       title: 'Seni en çok zorlayan ne?',
       subtitle: 'Programın bu noktayı çözecek şekilde kurulacak.',
       feedbackText: 'Bunu çözmek için planını optimize edeceğim.',
+      feedbackTextBuilder: (value) => switch (value) {
+        'motivation' => 'Motivasyon dalgalanır — sistem dalgalanmaz. '
+            'Plan onun yerini alacak.',
+        'consistency' => 'Süreklilik herkesin zorlandığı yerdir. '
+            'Plan, zorlanma anlarını hesaba katacak.',
+        'no_idea' => 'Net bir yol haritası olmadan hareket etmek '
+            'yorucu. Adım adım yürüyeceğiz.',
+        'diet' => 'Diyet en sık takılan yer. Esnek bir yaklaşımla '
+            'planı kuracağım.',
+        _ => null,
+      },
       initialCardValue: wizard.painPoint,
       initialDescription: wizard.painPointDescription,
       options: const [

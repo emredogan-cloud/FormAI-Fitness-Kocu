@@ -55,12 +55,25 @@ class InteractiveQuestionStep extends StatefulWidget {
     this.initialValue,
     this.commitDelay = const Duration(milliseconds: 1500),
     this.bottomSlot,
+    this.feedbackTextBuilder,
   });
 
   final String title;
   final String? subtitle;
   final List<InteractiveOption> options;
+
+  /// Static fallback line shown in the feedback banner. Used when
+  /// [feedbackTextBuilder] is null OR returns null for the picked
+  /// value.
   final String feedbackText;
+
+  /// Optional per-answer feedback line. Receives the value the user
+  /// just picked and returns the line to render — the Act 3 emotional
+  /// reconstruction (Phase 104) uses this to deliver predictive
+  /// empathy that observes the user's choice rather than just
+  /// confirming it. Return null to fall back to [feedbackText].
+  final String? Function(String pickedValue)? feedbackTextBuilder;
+
   final ValueChanged<String> onCommitted;
   final String? initialValue;
   final Duration commitDelay;
@@ -108,6 +121,18 @@ class _InteractiveQuestionStepState extends State<InteractiveQuestionStep>
   void dispose() {
     _feedback.dispose();
     super.dispose();
+  }
+
+  /// Resolve which feedback line to render in the banner. Builder wins
+  /// over static; null builder result falls back to the static line so
+  /// callers can selectively customise only the values they care about.
+  String _resolveFeedbackText() {
+    final picked = _selected;
+    if (picked != null) {
+      final dynamic = widget.feedbackTextBuilder?.call(picked);
+      if (dynamic != null) return dynamic;
+    }
+    return widget.feedbackText;
   }
 
   Future<void> _pick(String value) async {
@@ -190,7 +215,7 @@ class _InteractiveQuestionStepState extends State<InteractiveQuestionStep>
                 FeedbackBanner(
                   fade: _feedbackFade,
                   slide: _feedbackSlide,
-                  text: widget.feedbackText,
+                  text: _resolveFeedbackText(),
                 ),
                 if (widget.bottomSlot != null) ...[
                   const SizedBox(height: 18),
