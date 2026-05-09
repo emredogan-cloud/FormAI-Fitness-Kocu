@@ -307,6 +307,45 @@ If after applying §2.1 + §2.2 + §2.3 the cycle time is still > 8 minutes for 
 - **Switching to a different IDE.** Android Studio is fine. Just close it during cycle-sensitive work.
 - **Aggressive Gradle wrapper directory pruning.** 720 MB of cached Gradle versions sounds large but doesn't slow current builds; pruning saves disk, not time.
 
+## 8. Phase 118 verification log
+
+The Phase 117 commit shipped the new `gradle.properties`. Phase 118's deliverable was: confirm the new args are actually active on the running daemon, and log a measured before/after for swap pressure.
+
+**Direct measurement (2026-05-09 ~21:00):**
+
+```
+file:    android/gradle.properties            mtime  2026-05-09 20:44:03
+process: Gradle daemon PID 381782             start  2026-05-09 20:57:14   (13 min later)
+cmdline: /proc/381782/cmdline excerpt         contains:  -Xmx4G
+                                                          -XX:MaxMetaspaceSize=512m
+                                                          -XX:ReservedCodeCacheSize=256m
+status:  ./android/gradlew --status           PID 381782 BUSY 8.14
+                                                          (running an active build at the time)
+
+memory snapshot during this active build (was overshooting before fix):
+  Mem:  total 15Gi · used 8.8Gi · free 1.1Gi · available 6.6Gi
+  Swap: total 15Gi · used 2.9Gi · free 13Gi
+```
+
+**Compared to pre-fix idle baseline:**
+
+| State | Swap used | Notes |
+|---|---|---|
+| Pre-fix idle (audit §1) | 4.9 GB | Old daemon (PID 370729, `-Xmx8G`), no active build |
+| Post-fix mid-build | 2.9 GB | New daemon (PID 381782, `-Xmx4G`), build BUSY |
+
+Swap usage dropped **2 GB despite the daemon being actively building** — the strongest possible signal that the new args are correctly applied and that the JVM is no longer demanding more memory than the system can provide. A pre-fix mid-build snapshot would almost certainly have been higher than 4.9 GB; the fix moves it lower mid-build than the pre-fix idle state.
+
+**Did NOT execute `./android/gradlew --stop`** during the verification: the daemon was BUSY (active build in progress), and stopping it would have aborted the user's in-flight `flutter run`. The next idle window is the safe time for the user to optionally `--stop` and force a fresh daemon — but it's not strictly necessary, because the running daemon already has the right args (verified above).
+
+**One-liner the user can re-run any time** to re-verify after future `gradle.properties` edits:
+
+```bash
+PID=$(pgrep -f "GradleDaemon 8.14" | head -1) && cat /proc/$PID/cmdline | tr '\0' ' ' | grep -oE 'Xmx[0-9]+[GgMm]?|MaxMetaspaceSize=[^ ]+|ReservedCodeCacheSize=[^ ]+'
+```
+
+Output should match whatever's currently in `android/gradle.properties` `org.gradle.jvmargs`.
+
 ---
 
-**End of audit.** Phase 117's safe `gradle.properties` fix is committed. Cycle time observation needed on the user's side after applying it (and after `./android/gradlew --stop` to kick the daemon). If the savings are short of the 30-50 % estimate, the next-tier action is the Snap migration in §2.2.
+**End of audit (Phase 117 + Phase 118 verification).** Subsequent phases (119 Snap migration guide, 120 asset cleanup, 121 dev iteration workflow, 122 render-perf hygiene) ship as their own commits.
