@@ -115,16 +115,22 @@ dependencies:
   # so the offline detection happens before we even attempt a
   # Supabase round-trip that would otherwise hang for 30 s.
   connectivity_plus: ^6.0.5
-  # Onboarding cinematic rebuild · the AI coach "Form" runs on a Rive
-  # state machine driven by Riverpod. Eight facial states (idle,
-  # listening, thinking, surprised, encouraging, celebrating,
-  # reflecting, concerned) are picked based on the user's wizard
-  # answers. Rive was chosen over Lottie because it supports
-  # interactive state machines — Lottie can only play canned linear
-  # sequences, which can't react to the user. The .riv asset itself
-  # ships under assets/rive/ once the artist delivers it; until then
-  # the coach falls back to the existing static webp + GlowPulse halo.
-  rive: ^0.13.20
+  # Phase 103 · `rive: ^0.13.20` was added in Phase 97 for the
+  # eventual living-coach state machine, then removed here because:
+  #   1. The .riv asset hasn't been delivered by the artist yet — no
+  #      Dart code imports `package:rive` anywhere in lib/.
+  #   2. Rive's native Android build (rive_common) fails under the
+  #      Snap-installed Flutter toolchain (`/snap/flutter/current/
+  #      usr/include/c++/9/...` headers conflict with Rive's modern
+  #      C++). The blocker is the Snap confinement, not Rive itself.
+  # The cinematic onboarding runs entirely on hand-coded primitives
+  # (lib/core/motion/) and `LivingCoachAvatar` is structured as an
+  # adapter so a Rive-backed implementation can drop in without
+  # changing call sites. Re-add `rive` when both:
+  #   • the artist delivers an .riv with the 8 facial states, AND
+  #   • the dev environment migrates off Snap Flutter (or pins
+  #     NDK 25 explicitly + tests Rive 0.14.x against it).
+  # See LivingCoachAvatar's docstring for the swap-in protocol.
 
 dev_dependencies:
   flutter_test:

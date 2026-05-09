@@ -16,6 +16,42 @@ import '../../../../core/theme/app_colors.dart';
 /// coach-intro screen (220 outer / 140 inner, 3.6 s halo / 2.4 s
 /// inner). Pass smaller sizes for the name capture screen where the
 /// avatar shares vertical space with the prompt + input field.
+///
+/// ## Rive swap-in protocol (Phase 103 deferral)
+///
+/// This widget is intentionally an *adapter*. The Phase 97 plan was
+/// to back the avatar with a Rive state machine driving 8 facial
+/// states (idle, listening, thinking, surprised, encouraging,
+/// celebrating, reflecting, concerned) keyed off Riverpod. That work
+/// is deferred for two reasons:
+///
+///   1. The artist hasn't delivered a `.riv` asset yet.
+///   2. The `rive` package's native Android build (rive_common)
+///      conflicts with the Snap-installed Flutter toolchain
+///      (`/snap/flutter/current/usr/include/c++/9/...`). Compile
+///      fails until either Flutter is reinstalled outside Snap or
+///      Rive 0.14.x is verified against pinned NDK 25.
+///
+/// When both blockers clear, this widget can grow a Rive backend
+/// without changing call sites:
+///
+///   ```dart
+///   // 1. Add `rive: ^0.14.x` back to pubspec, drop the .riv under
+///   //    assets/rive/form_coach.riv.
+///   // 2. Add an enum facial state input here:
+///   //      enum CoachState { idle, listening, thinking, ... }
+///   // 3. Branch the build:
+///   //      if (kCoachUsesRive) RiveAnimation(...)
+///   //      else                /* current BreathingBox + GlowPulse */
+///   //    behind a top-of-file `kCoachUsesRive` const.
+///   // 4. Wire callers (CoachIntroStep, NameCaptureStep) to pass
+///   //    the appropriate state — defaults to .idle until then.
+///   ```
+///
+/// Until then, this widget remains the canonical Form-presence
+/// renderer. The cinematic onboarding ships fully on hand-coded
+/// motion primitives — no native Rive dependency needed for the
+/// current experience to feel alive.
 class LivingCoachAvatar extends StatelessWidget {
   const LivingCoachAvatar({
     super.key,
