@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/wizard_provider.dart';
+import '../widgets/coach_mood.dart';
 import '../widgets/interlude_scene.dart';
 
 /// Act 3 · Strategic interlude #1 (post-goal predictive empathy).
@@ -24,6 +25,9 @@ class InterludeAfterGoalStep extends ConsumerWidget {
     return InterludeScene(
       text: _composeText(wizard),
       onContinue: onContinue,
+      // Form is reassuring the user about their goal — warmer halo,
+      // slower breath, slight inward settle. Reads as "I hear you."
+      mood: CoachMood.reassuring,
     );
   }
 

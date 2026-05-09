@@ -3,78 +3,136 @@ import 'package:flutter/material.dart';
 import '../../../../core/motion/breathing_box.dart';
 import '../../../../core/motion/glow_pulse.dart';
 import '../../../../core/theme/app_colors.dart';
+import 'coach_mood.dart';
 
 /// Form's avatar — outer radial halo on [BreathingBox] + inner photo
-/// on [GlowPulse]. Two breathing layers, intentionally out of phase so
-/// the avatar reads as alive rather than pulsing on a metronome.
+/// on [GlowPulse]. Two breathing layers, intentionally out of phase
+/// so the avatar reads as alive rather than pulsing on a metronome.
 ///
-/// Shared between every screen where Form is "speaking" (coach intro,
-/// name capture, future name-callback moments) so the user sees the
-/// same identity across scenes — cross-scene presence continuity.
+/// Phase 105 · the avatar now reads a [CoachMood] and behaves
+/// differently per mood: halo color, breathing speed, glow
+/// intensity, and perceived posture (scale) all shift. The
+/// transition between moods is a 500 ms `AnimatedSwitcher`
+/// cross-fade so users see Form *change* — not a hard re-render.
+/// `AnimatedScale` outside the switcher tweens scale smoothly
+/// across mood changes (700 ms easeOutCubic).
 ///
-/// Defaults match the original `_PulsingCoachAvatar` from the
-/// coach-intro screen (220 outer / 140 inner, 3.6 s halo / 2.4 s
-/// inner). Pass smaller sizes for the name capture screen where the
-/// avatar shares vertical space with the prompt + input field.
+/// Used wherever Form is "speaking" or "present":
+///   • Coach intro (idle → listening when typewriter completes)
+///   • Name capture (listening when asking → proud when
+///     acknowledging)
+///   • Interlude after goal (reassuring)
+///   • Interlude before pain-point (reflective)
+///
+/// Defaults (220 outer / 140 inner) match the original Phase 60H
+/// `_PulsingCoachAvatar`. Pass smaller sizes for the name capture
+/// screen where the avatar shares vertical space with the prompt +
+/// input field.
 ///
 /// ## Rive swap-in protocol (Phase 103 deferral)
 ///
 /// This widget is intentionally an *adapter*. The Phase 97 plan was
-/// to back the avatar with a Rive state machine driving 8 facial
-/// states (idle, listening, thinking, surprised, encouraging,
-/// celebrating, reflecting, concerned) keyed off Riverpod. That work
-/// is deferred for two reasons:
-///
-///   1. The artist hasn't delivered a `.riv` asset yet.
-///   2. The `rive` package's native Android build (rive_common)
-///      conflicts with the Snap-installed Flutter toolchain
-///      (`/snap/flutter/current/usr/include/c++/9/...`). Compile
-///      fails until either Flutter is reinstalled outside Snap or
-///      Rive 0.14.x is verified against pinned NDK 25.
-///
-/// When both blockers clear, this widget can grow a Rive backend
-/// without changing call sites:
+/// to back the avatar with a Rive state machine driving the same 8
+/// facial states this enum already names — so the swap-in is a
+/// 4-step in-place edit:
 ///
 ///   ```dart
 ///   // 1. Add `rive: ^0.14.x` back to pubspec, drop the .riv under
-///   //    assets/rive/form_coach.riv.
-///   // 2. Add an enum facial state input here:
-///   //      enum CoachState { idle, listening, thinking, ... }
-///   // 3. Branch the build:
-///   //      if (kCoachUsesRive) RiveAnimation(...)
-///   //      else                /* current BreathingBox + GlowPulse */
+///   //    assets/rive/form_coach.riv with one trigger / state
+///   //    input per CoachMood.
+///   // 2. Branch the build:
+///   //      if (kCoachUsesRive) RiveAnimation.asset(
+///   //          'assets/rive/form_coach.riv',
+///   //          stateMachines: ['Form'],
+///   //          onInit: (artboard) {
+///   //            _machine = StateMachineController.fromArtboard(
+///   //                artboard, 'Form');
+///   //            _machine?.findInput<bool>(mood.name)?.value = true;
+///   //          },
+///   //      )
+///   //      else /* current BreathingBox + GlowPulse */
 ///   //    behind a top-of-file `kCoachUsesRive` const.
-///   // 4. Wire callers (CoachIntroStep, NameCaptureStep) to pass
-///   //    the appropriate state — defaults to .idle until then.
+///   // 3. Watch `mood` in didUpdateWidget and toggle the Rive input.
+///   // 4. Verify the call sites (CoachIntroStep, NameCaptureStep,
+///   //    InterludeScene) still pass moods — no API change needed.
 ///   ```
 ///
-/// Until then, this widget remains the canonical Form-presence
-/// renderer. The cinematic onboarding ships fully on hand-coded
-/// motion primitives — no native Rive dependency needed for the
-/// current experience to feel alive.
+/// Until Rive arrives, the parameter-driven mood system here is the
+/// canonical Form-presence renderer. Visible character performance
+/// without native dependencies.
 class LivingCoachAvatar extends StatelessWidget {
   const LivingCoachAvatar({
     super.key,
     this.size = 220,
     this.innerSize = 140,
-    this.outerHaloDuration = const Duration(milliseconds: 3600),
-    this.innerGlowDuration = const Duration(milliseconds: 2400),
     this.assetPath = 'photos/kişiselyapayzekakoçfoto.webp',
+    this.mood = CoachMood.idle,
   });
 
-  /// Total side length of the avatar (outer halo extends to this size).
+  /// Total side length (outer halo extends to this size).
   final double size;
 
   /// Side length of the inner photo circle.
   final double innerSize;
 
-  /// Period of the outer halo's breathing cycle.
-  final Duration outerHaloDuration;
-
-  /// Period of the inner photo's glow pulse.
-  final Duration innerGlowDuration;
-
   /// Asset path for Form's portrait. Defaults to the Phase-60H webp.
+  final String assetPath;
+
+  /// Form's current emotional state. Drives every visual parameter
+  /// via [kCoachMoodConfigs].
+  final CoachMood mood;
+
+  @override
+  Widget build(BuildContext context) {
+    final config = kCoachMoodConfigs[mood] ?? kCoachMoodConfigs[CoachMood.idle]!;
+    return AnimatedScale(
+      scale: config.scale,
+      duration: const Duration(milliseconds: 700),
+      curve: Curves.easeOutCubic,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 500),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeOutCubic,
+        layoutBuilder: (currentChild, previousChildren) {
+          // Stack outgoing + incoming so the cross-fade reads as a
+          // smooth transformation rather than a flicker.
+          return Stack(
+            alignment: Alignment.center,
+            fit: StackFit.expand,
+            children: [
+              ...previousChildren,
+              if (currentChild != null) currentChild,
+            ],
+          );
+        },
+        child: KeyedSubtree(
+          key: ValueKey<CoachMood>(mood),
+          child: _AvatarLayers(
+            config: config,
+            size: size,
+            innerSize: innerSize,
+            assetPath: assetPath,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The two-layer avatar render for one mood. Stateless so each mood
+/// transition just mounts a fresh instance — the BreathingBox /
+/// GlowPulse inside have their own controllers and start fresh.
+class _AvatarLayers extends StatelessWidget {
+  const _AvatarLayers({
+    required this.config,
+    required this.size,
+    required this.innerSize,
+    required this.assetPath,
+  });
+
+  final CoachMoodConfig config;
+  final double size;
+  final double innerSize;
   final String assetPath;
 
   @override
@@ -86,16 +144,16 @@ class LivingCoachAvatar extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           BreathingBox(
-            minAlpha: 0.55,
-            maxAlpha: 1.0,
-            duration: outerHaloDuration,
+            minAlpha: config.haloMinAlpha,
+            maxAlpha: config.haloMaxAlpha,
+            duration: config.haloDuration,
             child: Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppColors.neon.withValues(alpha: 0.55),
-                    AppColors.neonAccent.withValues(alpha: 0.28),
+                    config.haloPrimary.withValues(alpha: 0.55),
+                    config.haloAccent.withValues(alpha: 0.28),
                     Colors.transparent,
                   ],
                   stops: const [0.0, 0.55, 1.0],
@@ -104,20 +162,20 @@ class LivingCoachAvatar extends StatelessWidget {
             ),
           ),
           GlowPulse(
-            color: AppColors.neon,
-            minAlpha: 0.30,
-            maxAlpha: 0.55,
-            minBlur: 22,
-            maxBlur: 30,
+            color: config.glowColor,
+            minAlpha: config.glowMinAlpha,
+            maxAlpha: config.glowMaxAlpha,
+            minBlur: config.glowMinBlur,
+            maxBlur: config.glowMaxBlur,
             spread: -2,
-            duration: innerGlowDuration,
+            duration: config.glowDuration,
             child: Container(
               width: innerSize,
               height: innerSize,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: AppColors.neon.withValues(alpha: 0.7),
+                  color: config.glowColor.withValues(alpha: 0.7),
                   width: 1.5,
                 ),
               ),

@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/wizard_provider.dart';
+import '../widgets/coach_mood.dart';
 import '../widgets/interlude_scene.dart';
 
 /// Act 3 · Strategic interlude #2 (vulnerability setup before
@@ -26,6 +27,10 @@ class InterludeBeforePainPointStep extends ConsumerWidget {
     return InterludeScene(
       text: '$opener\nYargılamak için değil — birlikte çözmek için.',
       onContinue: onContinue,
+      // Form is preparing the user for the most vulnerable answer —
+      // dimmer, slower, deepest tone in the palette. Reads as
+      // "this matters and I'm holding space for it."
+      mood: CoachMood.reflective,
     );
   }
 

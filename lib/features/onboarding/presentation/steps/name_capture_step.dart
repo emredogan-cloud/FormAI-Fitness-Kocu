@@ -7,6 +7,7 @@ import '../../../../core/motion/kinetic_text_reveal.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_haptics.dart';
 import '../../providers/wizard_provider.dart';
+import '../widgets/coach_mood.dart';
 import '../widgets/living_coach_avatar.dart';
 
 /// Act 2.5 · Name capture (relationship moment).
@@ -171,8 +172,14 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
         children: [
           const SizedBox(height: 8),
           // Smaller avatar than coach intro — shares vertical space
-          // with the prompt + input + CTA.
-          const LivingCoachAvatar(size: 156, innerSize: 100),
+          // with the prompt + input + CTA. Mood is `listening`: faster
+          // pulse, slight forward lean — Form is attentively waiting
+          // for the user's name.
+          const LivingCoachAvatar(
+            size: 156,
+            innerSize: 100,
+            mood: CoachMood.listening,
+          ),
           const SizedBox(height: 28),
           // Prompt: typewriter on first visit, static on re-entry.
           if (_isReturning)
@@ -282,13 +289,15 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
       key: const ValueKey('acknowledging'),
       children: [
         const Spacer(flex: 1),
-        // Boost the inner glow + slightly larger avatar so the user
-        // reads "Form just brightened up" between states. Same
-        // breathing primitives, slightly more luminous.
+        // Mood shifts to `proud` for the acknowledgment beat — chest
+        // forward (scale 1.05), brighter halo, faster glow. Reads as
+        // "Form is satisfied with what it just heard." The 500ms
+        // cross-fade inside LivingCoachAvatar handles the transition
+        // from `listening` to `proud` smoothly.
         const LivingCoachAvatar(
           size: 196,
           innerSize: 132,
-          innerGlowDuration: Duration(milliseconds: 2000),
+          mood: CoachMood.proud,
         ),
         const SizedBox(height: 32),
         KineticTextReveal(
