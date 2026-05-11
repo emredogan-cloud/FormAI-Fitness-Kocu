@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/services/app_preferences.dart';
+import '../../../core/services/first_time_ai_scenes.dart';
 import '../../../core/theme/theme_extension.dart';
 import '../../nutrition/presentation/nutrition_tab.dart';
 import '../../nutrition/presentation/widgets/nutrition_onboarding_sheet.dart';
+import '../../progress/data/level_titles.dart';
 import '../../progress/presentation/widgets/badge_unlock_dialog.dart';
+import '../../progress/presentation/widgets/level_up_screen.dart';
 import '../../progress/providers/badge_unlocks_provider.dart';
+import '../../progress/providers/xp_award_listener.dart';
+import '../../progress/providers/xp_provider.dart';
 import 'widgets/antrenman_tab.dart';
 import 'widgets/gelisim_tab.dart';
 import 'widgets/profile_tab.dart';
@@ -47,6 +53,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   // two on top of each other if the unlock set churns mid-celebration.
   bool _celebrating = false;
 
+  // Progress Phase 3.E · the last level we've already shown a level-up
+  // celebration for. Null until the first emission of
+  // `currentLevelProvider` seeds it (the same pattern badges use to
+  // avoid a celebration storm on cold start with backfilled XP).
+  int? _celebratedLevel;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -71,6 +83,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     // is already unlocked so we don't replay yesterday's wins on cold
     // start. The seed is null-checked inside `_maybeCelebrate`.
     _maybeCelebrate();
+    // Phase 126 · first-time post-paywall welcome AI scene. The gate
+    // inside [FirstTimeAiScenes] makes this a no-op on subsequent
+    // dashboard pushes; on the first push it pushes a cinematic
+    // welcome over the dashboard, then auto-pops back here.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      FirstTimeAiScenes.showIfNeeded(
+        context,
+        ref,
+        FirstTimeAiScene.dashboardWelcome,
+      );
+    });
   }
 
   @override
@@ -106,7 +130,52 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       _maybeCelebrate();
     });
 
-    return Scaffold(
+    // Progress Phase 3.C · mount the XP awarding listener. It owns its
+    // own `ref.listen` chain over badges / sessionLogs / preferences,
+    // so we just touch it once here to ensure it's instantiated for
+    // the lifetime of the dashboard. Idempotent — re-watching is a
+    // no-op after the first attach.
+    ref.watch(xpAwardListenerProvider);
+
+    // Progress Phase 3.E · level-up detection. Mirrors the badge
+    // pattern: first emission seeds `_celebratedLevel` so backfilled
+    // XP on Phase-3 boot doesn't replay every level the user already
+    // has. Subsequent emissions trigger the queue.
+    ref.listen<int>(currentLevelProvider, (previous, next) {
+      if (_celebratedLevel == null) {
+        _celebratedLevel = next;
+        return;
+      }
+      if (next > _celebratedLevel!) {
+        _maybeCelebrate();
+      }
+    });
+
+    // Phase 4.F · status bar styling. Tints the system bars to match
+    // the active theme — masterplan §9.7 calls this out as one of the
+    // "subtle but persistent" Apple touches that compound to make the
+    // app feel premium. AnnotatedRegion is theme-reactive: a mid-
+    // session OS dark/light flip repaints the system chrome on the
+    // next frame.
+    final isDark = context.isDarkMode;
+    final overlayStyle = isDark
+        ? const SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: Brightness.light,
+            statusBarBrightness: Brightness.dark,
+            systemNavigationBarColor: Colors.black,
+            systemNavigationBarIconBrightness: Brightness.light,
+          )
+        : const SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: Brightness.dark,
+            statusBarBrightness: Brightness.light,
+            systemNavigationBarColor: Colors.white,
+            systemNavigationBarIconBrightness: Brightness.dark,
+          );
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: overlayStyle,
+      child: Scaffold(
       // Phase 53B · drop the explicit override and let the active
       // `ThemeData.scaffoldBackgroundColor` drive the canvas. In light
       // mode that's `AppColors.lightBg` (#F7F8FA, an off-white), which
@@ -129,6 +198,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       bottomNavigationBar: _BottomNav(
         index: _index,
         onChanged: _onTabChanged,
+      ),
       ),
     );
   }
@@ -156,6 +226,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     }
     _celebrating = true;
     try {
+      // ─── 1. Badge celebrations ─────────────────────────────────
       for (final id in pending) {
         if (!mounted || !_routeIsCurrent) break;
         final badge = badgeById(id);
@@ -167,6 +238,26 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         await showBadgeUnlockedDialog(context, badge);
         if (!mounted) break;
         ref.read(celebratedBadgesProvider.notifier).add(id);
+      }
+
+      // ─── 2. Level-up celebrations (Progress Phase 3.E) ────────
+      // Run *after* badges because levels are typically a consequence
+      // of unlocking the badges that just fired. Walk every level the
+      // user crossed since the last celebration so a multi-level jump
+      // (rare, but possible on Phase-3-boot backfill) plays each one.
+      if (mounted && _routeIsCurrent && _celebratedLevel != null) {
+        final currentLevel = ref.read(currentLevelProvider);
+        var lastSeen = _celebratedLevel!;
+        while (lastSeen < currentLevel && mounted && _routeIsCurrent) {
+          final next = lastSeen + 1;
+          await LevelUpScreen.push(
+            context,
+            level: next,
+            tier: tierForLevel(next),
+          );
+          lastSeen = next;
+          _celebratedLevel = lastSeen;
+        }
       }
     } finally {
       _celebrating = false;
@@ -194,10 +285,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   }
 
   void _maybePromptNutritionSheet() {
-    final prefs = ref.read(appPreferencesProvider);
-    if (prefs.hasCompletedNutritionPrefs) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    // Phase 126 · the deferred nutrition wizard now chains through the
+    // first-time AI intro scene. Both have their own seen-flags, so:
+    //   • first ever nutrition-tab tap: AI scene → then the wizard
+    //   • nutrition wizard already done, AI scene not yet: just AI
+    //   • AI scene done, wizard not yet: just the wizard
+    //   • both done: nothing
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
+      await FirstTimeAiScenes.showIfNeeded(
+        context,
+        ref,
+        FirstTimeAiScene.nutritionIntro,
+      );
+      if (!mounted) return;
+      final prefs = ref.read(appPreferencesProvider);
+      if (prefs.hasCompletedNutritionPrefs) return;
       showNutritionOnboardingSheet(context);
     });
   }
