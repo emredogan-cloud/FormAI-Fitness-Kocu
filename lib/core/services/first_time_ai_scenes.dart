@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/onboarding/presentation/widgets/coach_mood.dart';
+import '../utils/app_haptics.dart';
 import '../widgets/cinematic_ai_presence.dart';
 import 'app_preferences.dart';
 
@@ -64,6 +65,11 @@ class FirstTimeAiScenes {
     // Mark seen first so we never replay even if the route push
     // fails or the user backgrounds the app mid-scene.
     await _markSeen(prefs, scene);
+
+    // Soft arrival haptic — "Form is here." Same intensity as other
+    // secondary CTAs so it reads as a presence ping, not a button
+    // press. Closing haptic is handled by CinematicAiPresence itself.
+    AppHaptics.lightImpact();
 
     if (!context.mounted) return;
 
