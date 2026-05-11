@@ -57,6 +57,49 @@ class AppPreferences {
   // as ISO-8601 so the date check is timezone-aware.
   static const String _lastWorkoutAtKey = 'sixpack.last_workout_at';
 
+  // Phase 133 · whether the user has any training equipment. First
+  // onboarding field that directly changes the generated 30-day plan
+  // — the workout generator reads this via [hasEquipment] and filters
+  // its exercise pool when false. Dedicated key (separate from the
+  // wizard.toJson() blob) so the repository can read it synchronously
+  // at startup without parsing the full metrics map.
+  static const String _hasEquipmentKey = 'sixpack.has_equipment';
+
+  // Progress Phase 1.A · streak freeze tokens. The user accumulates up
+  // to `_freezeMaxTokens` shields; each one bridges a single missed
+  // program-day so the streak doesn't break on the first slip.
+  // Refilled to max every Monday 00:00 local. First install seeds 1
+  // token immediately so the UX shows "1 kalkanın var" instead of "0".
+  static const String _freezeTokensKey = 'sixpack.freeze_tokens_available';
+  static const String _freezeRefillIsoKey = 'sixpack.freeze_last_refill_iso';
+  static const int _freezeMaxTokens = 2;
+  static const int _freezeInitialSeed = 1;
+
+  // Progress Phase 1.F · no-repeat memory of the last N coach lines
+  // shown on the AI Coach card, stored as `String.hashCode` ints joined
+  // by commas. Cap at 7 entries so the same line can't fire twice in a
+  // single week of daily opens.
+  static const String _recentCoachHashesKey = 'sixpack.coach_recent_hashes';
+  static const int _recentCoachWindow = 7;
+
+  // Progress Phase 3.B · lifetime XP + idempotent ledgers. The ledgers
+  // record which signals have already been credited so the awarding
+  // listener at `xp_award_listener.dart` can run as often as it likes
+  // without double-paying the user. Ledger keys default to empty so
+  // existing users naturally backfill their XP on first Phase-3 launch.
+  static const String _lifetimeXpKey = 'sixpack.lifetime_xp';
+  static const String _xpDaysKey = 'sixpack.xp_awarded_session_days';
+  static const String _xpBadgesKey = 'sixpack.xp_awarded_badge_ids';
+  static const String _xpStreakKey = 'sixpack.xp_awarded_streak_milestones';
+
+  // Progress Phase 5.D · one-shot flag that tracks whether the user
+  // has seen the Day-30 Year-in-Review modal. Stamped to true the
+  // first time the modal auto-shows; cleared by `resetProgress` so a
+  // user who restarts the program gets the celebration again.
+  // Re-entry via the "Yolculuğunu Gör" hero pill does NOT touch this
+  // flag — it's a manual recall surface, not a first-impression gate.
+  static const String _seenYearInReviewKey = 'sixpack.seen_year_in_review';
+
   // Phase 126 · first-time AI-presence scene flags. Each of the three
   // cinematic AI scenes (dashboard welcome / nutrition intro / first-
   // workout celebration) fires exactly once per install. The mark-seen
@@ -71,9 +114,22 @@ class AppPreferences {
 
   bool get isFirstTime => _prefs.getBool(_firstTimeKey) ?? true;
 
-  Future<void> completeOnboarding({String? goal}) async {
+  Future<void> completeOnboarding({String? goal, bool? hasEquipment}) async {
     if (goal != null) await _prefs.setString(_goalKey, goal);
+    if (hasEquipment != null) {
+      await _prefs.setBool(_hasEquipmentKey, hasEquipment);
+    }
     await _prefs.setBool(_firstTimeKey, false);
+  }
+
+  /// Phase 133 · whether the user said they have equipment. Returns
+  /// `null` on legacy installs that finished onboarding before this
+  /// key existed — callers should treat null as "assume yes, preserve
+  /// current behaviour" so legacy users aren't suddenly forced into
+  /// the bodyweight-only filter. Set by [completeOnboarding].
+  bool? get hasEquipment {
+    if (!_prefs.containsKey(_hasEquipmentKey)) return null;
+    return _prefs.getBool(_hasEquipmentKey);
   }
 
   String? get goal => _prefs.getString(_goalKey);
@@ -162,6 +218,90 @@ class AppPreferences {
     await _prefs.setString(_lastWorkoutAtKey, when.toIso8601String());
   }
 
+  /// Progress Phase 1.A · how many streak-freeze shields the user has.
+  /// First read on a fresh install seeds the token count to
+  /// [_freezeInitialSeed] so the hero block has something to surface
+  /// immediately — without the seed the user would see "0 kalkan" on
+  /// day 0, which inverts the loss-aversion reassurance the shields
+  /// are meant to provide.
+  ///
+  /// Tokens act as a passive shield: the streak calculator applies up
+  /// to this many to bridge inactivity / sequence gaps on every read.
+  /// They are NOT permanently consumed on read — they refill to
+  /// [_freezeMaxTokens] every Monday via [refillFreezeTokensIfDue].
+  /// Future phases may introduce per-event consumption (e.g. when the
+  /// user passes a refill cycle still inactive); this read-only ceiling
+  /// is the Phase-1 contract.
+  int get freezeTokensAvailable {
+    if (_prefs.containsKey(_freezeTokensKey)) {
+      return _prefs.getInt(_freezeTokensKey) ?? 0;
+    }
+    return _freezeInitialSeed;
+  }
+
+  /// Maximum number of freeze tokens the system will ever award.
+  /// Exposed so callers can render an "X / max" pip strip if needed.
+  int get freezeTokensMax => _freezeMaxTokens;
+
+  /// Progress Phase 1.A · Monday 00:00 local refill. Returns `true`
+  /// when it actually wrote a new token count, so the caller can trip a
+  /// log line / analytics event if it cares. Idempotent — calling it
+  /// multiple times the same day is a no-op after the first call.
+  Future<bool> refillFreezeTokensIfDue() async {
+    final now = DateTime.now();
+    final lastRefillRaw = _prefs.getString(_freezeRefillIsoKey);
+    final lastRefill = lastRefillRaw == null
+        ? null
+        : DateTime.tryParse(lastRefillRaw);
+    if (lastRefill != null) {
+      // Skip when we already topped up this Monday or later. Compare on
+      // the start-of-Monday of each week; any moment after that is the
+      // "refilled" state.
+      final lastMonday = _mostRecentMondayLocal(now);
+      if (!lastRefill.isBefore(lastMonday)) return false;
+    }
+    await _prefs.setInt(_freezeTokensKey, _freezeMaxTokens);
+    await _prefs.setString(_freezeRefillIsoKey, now.toIso8601String());
+    return true;
+  }
+
+  /// Returns the [DateTime] for Monday 00:00 of [now]'s local week. If
+  /// `now` is a Monday morning before midnight has rolled, returns that
+  /// Monday's 00:00; otherwise the most recent past Monday.
+  DateTime _mostRecentMondayLocal(DateTime now) {
+    // DateTime.weekday: Monday = 1, Sunday = 7. Subtract that many
+    // days minus 1 to land on Monday.
+    final daysSinceMonday = now.weekday - DateTime.monday;
+    final monday = DateTime(now.year, now.month, now.day)
+        .subtract(Duration(days: daysSinceMonday));
+    return monday;
+  }
+
+  /// Progress Phase 1.F · last N coach-line hashes the AI Coach card
+  /// has surfaced. Stored as a comma-joined list of hashCode ints. Read
+  /// to filter the candidate set so the same phrasing doesn't repeat
+  /// inside the rolling window.
+  List<int> get recentCoachLineHashes {
+    final raw = _prefs.getString(_recentCoachHashesKey);
+    if (raw == null || raw.isEmpty) return const [];
+    return raw
+        .split(',')
+        .map((s) => int.tryParse(s))
+        .whereType<int>()
+        .toList(growable: false);
+  }
+
+  /// Pushes [hash] onto the recent-hashes window, evicting the oldest
+  /// entry once the window is full.
+  Future<void> pushRecentCoachHash(int hash) async {
+    final current = recentCoachLineHashes.toList();
+    current.add(hash);
+    while (current.length > _recentCoachWindow) {
+      current.removeAt(0);
+    }
+    await _prefs.setString(_recentCoachHashesKey, current.join(','));
+  }
+
   /// Phase 58 · derived: did the user already finish a workout today?
   /// "Today" is the device's local calendar day, which matches what
   /// the rest of the app displays. Uses date-only comparison (not
@@ -175,6 +315,59 @@ class AppPreferences {
     return last.year == now.year &&
         last.month == now.month &&
         last.day == now.day;
+  }
+
+  // ─── Progress Phase 3.B · XP persistence ──────────────────────────
+
+  /// Single source of truth for the user's lifetime XP. Defaults to 0
+  /// — fresh installs OR existing users on first Phase-3 launch start
+  /// at 0 and the awarding listener backfills retroactively from the
+  /// idempotent ledgers below.
+  int get lifetimeXp => _prefs.getInt(_lifetimeXpKey) ?? 0;
+
+  /// Adds [delta] to [lifetimeXp]. Negative deltas are silently ignored
+  /// so a buggy caller can't subtract from the user's progress.
+  Future<void> addLifetimeXp(int delta) async {
+    if (delta <= 0) return;
+    await _prefs.setInt(_lifetimeXpKey, lifetimeXp + delta);
+  }
+
+  /// Program day numbers we've credited workout XP for. Read by the
+  /// awarding listener as a contains-check before crediting.
+  Set<int> get awardedSessionDays {
+    final raw = _prefs.getStringList(_xpDaysKey) ?? const <String>[];
+    return raw.map(int.tryParse).whereType<int>().toSet();
+  }
+
+  Future<void> markSessionDayAwarded(int dayNumber) async {
+    final current = awardedSessionDays..add(dayNumber);
+    await _prefs.setStringList(
+      _xpDaysKey,
+      current.map((n) => n.toString()).toList(),
+    );
+  }
+
+  /// Badge ids we've credited unlock XP for.
+  Set<String> get awardedBadgeIds =>
+      (_prefs.getStringList(_xpBadgesKey) ?? const <String>[]).toSet();
+
+  Future<void> markBadgeAwarded(String badgeId) async {
+    final current = awardedBadgeIds..add(badgeId);
+    await _prefs.setStringList(_xpBadgesKey, current.toList());
+  }
+
+  /// Streak milestones (3, 7, 14, …) we've credited.
+  Set<int> get awardedStreakMilestones {
+    final raw = _prefs.getStringList(_xpStreakKey) ?? const <String>[];
+    return raw.map(int.tryParse).whereType<int>().toSet();
+  }
+
+  Future<void> markStreakMilestoneAwarded(int milestone) async {
+    final current = awardedStreakMilestones..add(milestone);
+    await _prefs.setStringList(
+      _xpStreakKey,
+      current.map((n) => n.toString()).toList(),
+    );
   }
 
   // ─── Phase 126 · first-time AI-presence scene gates ───────────────
@@ -198,5 +391,20 @@ class AppPreferences {
 
   Future<void> markSeenFirstWorkoutCompleteAi() async {
     await _prefs.setBool(_seenFirstWorkoutCompleteAiKey, true);
+  }
+
+  // ─── Progress Phase 5.D · Year-in-Review one-shot flag ────────────
+
+  bool get seenYearInReview => _prefs.getBool(_seenYearInReviewKey) ?? false;
+
+  Future<void> markSeenYearInReview() async {
+    await _prefs.setBool(_seenYearInReviewKey, true);
+  }
+
+  /// Used by `WorkoutRepository.resetProgress` so a user who restarts
+  /// the 30-day arc gets the Year-in-Review celebration again on the
+  /// next Day-30 completion.
+  Future<void> clearSeenYearInReview() async {
+    await _prefs.remove(_seenYearInReviewKey);
   }
 }

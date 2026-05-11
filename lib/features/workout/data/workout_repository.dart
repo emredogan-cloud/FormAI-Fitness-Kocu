@@ -648,12 +648,20 @@ class WorkoutRepository {
     required WorkoutGeneratorService generator,
     String? userGoal,
     String? fitnessLevel,
+    bool? hasEquipment,
   }) async {
     final completed = await _completedDays();
-    // Phase 86 · the cache is now keyed by an input fingerprint so a
+    // Phase 86 · the cache is keyed by an input fingerprint so a
     // profile-edit that changes goal or activity level invalidates the
     // stored plan instead of silently serving the old one.
-    final fingerprint = _fingerprint(userGoal, fitnessLevel);
+    //
+    // Phase 133 · [hasEquipment] joined the fingerprint so a user who
+    // flips the equipment answer (back through onboarding or via
+    // future profile-edit) gets a fresh plan generated against the
+    // new filter rather than reading a stale cache. Legacy installs
+    // with `hasEquipment == null` collapse to `"true"` in the
+    // fingerprint string so they hold their old fingerprint stable.
+    final fingerprint = _fingerprint(userGoal, fitnessLevel, hasEquipment);
     final cached = _decodeCachedPlan(fingerprint);
     final List<WorkoutDay> plan;
     if (cached != null) {
@@ -668,6 +676,11 @@ class WorkoutRepository {
         userGoal: userGoal ?? 'sixpack',
         fitnessLevel: fitnessLevel ?? 'beginner',
         pool: pool,
+        // Legacy installs predate the equipment question — default to
+        // `true` (= preserve existing mixed-exercise behaviour) so
+        // they don't suddenly start filtering. Fresh installs always
+        // pass an explicit bool through the wizard.
+        hasEquipment: hasEquipment ?? true,
       );
       // Fire-and-forget — cache is advisory; if the write fails we'll
       // simply regenerate the same plan next launch (deterministic).
@@ -688,9 +701,20 @@ class WorkoutRepository {
   /// Stable identity for the inputs that produced a cached plan. Null
   /// raw values collapse to empty strings so a transition from
   /// `null → "sixpack"` (i.e. user finishes onboarding for the first
-  /// time) is detectable as a fingerprint change.
-  String _fingerprint(String? userGoal, String? fitnessLevel) =>
-      '${userGoal ?? ''}|${fitnessLevel ?? ''}';
+  /// time) is detectable as a fingerprint change. [hasEquipment] joins
+  /// the fingerprint (Phase 133) — `null` collapses to `"true"`
+  /// because legacy installs that finished onboarding before the
+  /// equipment question existed should keep their existing plan, and
+  /// the generator treats null-equipment as "preserve current
+  /// behaviour" (≡ has-equipment).
+  String _fingerprint(
+    String? userGoal,
+    String? fitnessLevel,
+    bool? hasEquipment,
+  ) {
+    final eqStr = (hasEquipment ?? true) ? 'true' : 'false';
+    return '${userGoal ?? ''}|${fitnessLevel ?? ''}|$eqStr';
+  }
 
   /// Reads + decodes the cached plan. Returns null for any failure mode:
   /// missing key, malformed JSON, wrong root type, enum drift, length

@@ -28,6 +28,7 @@ class WizardState {
     this.name,
     this.coachingTone,
     this.motivationStyle,
+    this.hasEquipment,
     this.bodyFeelings = const <String>{},
     this.gender,
     this.age,
@@ -73,6 +74,15 @@ class WizardState {
   /// assessment engine to colour the "why this plan suits you" pitch
   /// in the dynamic report, and by post-workout congrats copy.
   final String? motivationStyle;
+
+  /// Phase 133 · whether the user has any training equipment at home
+  /// or gym access. The first onboarding question that *directly*
+  /// affects the generated 30-day workout plan. When `false`, the
+  /// generator filters out equipment-only exercises (barbells,
+  /// machines, cables, etc.) so the plan contains only bodyweight
+  /// movements. When `true` (or null — legacy installs), the
+  /// generator keeps its existing mixed-exercise behaviour.
+  final bool? hasEquipment;
 
   /// Phase 111 · multi-select emotional self-recognition captured on
   /// the body-feelings step (between gender and goal). Tokens are
@@ -165,6 +175,7 @@ class WizardState {
     String? name,
     String? coachingTone,
     String? motivationStyle,
+    bool? hasEquipment,
     Set<String>? bodyFeelings,
     Gender? gender,
     int? age,
@@ -192,6 +203,7 @@ class WizardState {
       name: name ?? this.name,
       coachingTone: coachingTone ?? this.coachingTone,
       motivationStyle: motivationStyle ?? this.motivationStyle,
+      hasEquipment: hasEquipment ?? this.hasEquipment,
       bodyFeelings: bodyFeelings ?? this.bodyFeelings,
       gender: gender ?? this.gender,
       age: age ?? this.age,
@@ -222,6 +234,7 @@ class WizardState {
         'name': name,
         'coachingTone': coachingTone,
         'motivationStyle': motivationStyle,
+        'hasEquipment': hasEquipment,
         'bodyFeelings': bodyFeelings.toList(),
         'gender': gender?.name,
         'age': age,
@@ -255,6 +268,7 @@ class WizardController extends Notifier<WizardState> {
   void setCoachingTone(String v) => state = state.copyWith(coachingTone: v);
   void setMotivationStyle(String v) =>
       state = state.copyWith(motivationStyle: v);
+  void setHasEquipment(bool v) => state = state.copyWith(hasEquipment: v);
   void setBodyFeelings(Set<String> v) =>
       state = state.copyWith(bodyFeelings: v);
   void setGender(Gender v) => state = state.copyWith(gender: v);

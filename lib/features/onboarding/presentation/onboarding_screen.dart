@@ -21,6 +21,7 @@ import 'steps/act_3_buildup_steps.dart';
 import 'steps/act_4_revelation_steps.dart';
 import 'steps/act_5_commitment_step.dart';
 import 'steps/body_feelings_step.dart';
+import 'steps/equipment_capture_step.dart';
 import 'steps/interlude_after_goal_step.dart';
 import 'steps/interlude_before_pain_point_step.dart';
 import 'steps/name_capture_step.dart';
@@ -62,7 +63,7 @@ import 'steps/social_proof_step.dart';
 /// microcommitment, first-workout prompt) get added inside the
 /// appropriate act file as they ship — the orchestrator only
 /// extends [_stepNames] and the [_buildStep] switch.
-const int _totalSteps = 18;
+const int _totalSteps = 19;
 const int _hookSteps = 3;
 
 const List<String> _stepNames = [
@@ -95,6 +96,11 @@ const List<String> _stepNames = [
   // mood. Header-less (`interlude_` prefix) — trust-building beat,
   // not a data-collection screen.
   'interlude_social_proof',
+  // Phase 133 · the first onboarding question that directly changes
+  // the generated 30-day plan. Cinematic AI scene; header-less via
+  // the `interlude_` prefix so it sits with the other cinematic
+  // beats rather than appearing as a chromed data step.
+  'interlude_equipment',
   'pre_paywall_summary',
 ];
 
@@ -192,7 +198,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     // onboarding with an empty `user_metrics` and the generator silently
     // falls back to sixpack + beginner.
     await prefs.saveUserMetrics(wizard.toJson());
-    await prefs.completeOnboarding(goal: wizard.targetPhysique?.name);
+    await prefs.completeOnboarding(
+      goal: wizard.targetPhysique?.name,
+      hasEquipment: wizard.hasEquipment,
+    );
     // The user just committed to the program; the paywall is the next
     // major surface they may see. Kick off RevenueCat configuration now
     // so the platform-channel handshake overlaps the prediction render
@@ -263,6 +272,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       case 16:
         return SocialProofStep(onContinue: _next);
       case 17:
+        return EquipmentCaptureStep(onContinue: _next);
+      case 18:
         return PrePaywallSummaryStep(onComplete: _finish);
       default:
         return const SizedBox.shrink();
