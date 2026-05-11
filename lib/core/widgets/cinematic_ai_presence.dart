@@ -71,6 +71,7 @@ class CinematicAiPresence extends StatefulWidget {
     required this.autoCloseAfter,
     this.subtitleTypewriter = false,
     this.onComplete,
+    this.bottomActions,
   });
 
   /// Dominant headline — typically the AI's status ("Düşünüyorum...",
@@ -92,6 +93,9 @@ class CinematicAiPresence extends StatefulWidget {
   /// cursor-blink composing state for the full scene. This is the
   /// "Form is writing" illusion; the message-writing isn't *the*
   /// content, it's the *presence signal*.
+  ///
+  /// Ignored when [bottomActions] is provided — the actions widget
+  /// owns the bottom area instead.
   final String composingPlaceholder;
 
   /// Avatar mood for this scene. `thinking` for AI-processing,
@@ -100,12 +104,23 @@ class CinematicAiPresence extends StatefulWidget {
   final CoachMood mood;
 
   /// Total scene duration. After this, `onComplete` fires (once).
-  final Duration autoCloseAfter;
+  /// Pass `null` for scenes that wait on explicit user input (the
+  /// equipment question, future yes/no decisions) — the scene then
+  /// stays mounted indefinitely and the caller dismisses by calling
+  /// `onComplete` itself from a [bottomActions] callback.
+  final Duration? autoCloseAfter;
 
-  /// Called once when `autoCloseAfter` elapses. Null = scene stays
-  /// mounted indefinitely (useful for callers who manage their own
-  /// dismiss flow).
+  /// Called once when [autoCloseAfter] elapses, or invoked manually
+  /// by a [bottomActions] callback. Null = scene stays mounted
+  /// indefinitely (caller manages its own dismiss flow).
   final VoidCallback? onComplete;
+
+  /// Phase 133 · optional decision affordance rendered in place of the
+  /// chat-input pill. When non-null, the scene reads as "Form just
+  /// asked you something" and waits for the user's tap. The widget
+  /// is responsible for invoking [onComplete] (or otherwise advancing
+  /// flow) when the user makes a choice.
+  final Widget? bottomActions;
 
   @override
   State<CinematicAiPresence> createState() => _CinematicAiPresenceState();
@@ -133,16 +148,19 @@ class _CinematicAiPresenceState extends State<CinematicAiPresence>
       duration: const Duration(milliseconds: 450),
     )..repeat(reverse: true);
 
-    Future<void>.delayed(widget.autoCloseAfter, () {
-      if (!mounted || _completed) return;
-      _completed = true;
-      // Closing haptic — soft "Form done speaking" signal. Same call
-      // setup_thinking_step's _onAutoClose used to fire inline before
-      // the Phase 125 refactor moved this responsibility into the
-      // shared widget.
-      AppHaptics.success();
-      widget.onComplete?.call();
-    });
+    final closeAfter = widget.autoCloseAfter;
+    if (closeAfter != null) {
+      Future<void>.delayed(closeAfter, () {
+        if (!mounted || _completed) return;
+        _completed = true;
+        // Closing haptic — soft "Form done speaking" signal. Same call
+        // setup_thinking_step's _onAutoClose used to fire inline before
+        // the Phase 125 refactor moved this responsibility into the
+        // shared widget.
+        AppHaptics.success();
+        widget.onComplete?.call();
+      });
+    }
   }
 
   @override
@@ -274,10 +292,11 @@ class _CinematicAiPresenceState extends State<CinematicAiPresence>
                         ),
                       ),
                 const Spacer(flex: 1),
-                _ChatInputBar(
-                  placeholder: widget.composingPlaceholder,
-                  cursorCtrl: _cursor,
-                ),
+                widget.bottomActions ??
+                    _ChatInputBar(
+                      placeholder: widget.composingPlaceholder,
+                      cursorCtrl: _cursor,
+                    ),
                 const Spacer(flex: 2),
               ],
             ),

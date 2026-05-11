@@ -178,10 +178,16 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
     final metrics = appPrefs.userMetrics ?? const <String, dynamic>{};
     final userGoal = (metrics['targetPhysique'] as String?) ?? appPrefs.goal;
     final fitnessLevel = metrics['activityLevel'] as String?;
+    // Phase 133 · equipment filter signal. Reads through the dedicated
+    // AppPreferences key (set at `completeOnboarding`). Null on legacy
+    // installs — the repository treats that as "preserve current
+    // behaviour" (≡ has-equipment).
+    final hasEquipment = appPrefs.hasEquipment;
     return _repository.loadOrGenerateProgram(
       generator: ref.read(workoutGeneratorProvider),
       userGoal: userGoal,
       fitnessLevel: fitnessLevel,
+      hasEquipment: hasEquipment,
     );
   }
 

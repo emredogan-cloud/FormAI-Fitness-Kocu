@@ -46,6 +46,12 @@ class WorkoutGeneratorService {
     required String userGoal,
     required String fitnessLevel,
     required List<Exercise> pool,
+    // Phase 133 · when false, filters the daily pool to equipment-
+    // free exercises only. Default `true` preserves the existing
+    // mixed-exercise behaviour for legacy callers (notably the
+    // repository falls back to true when AppPreferences.hasEquipment
+    // is null on legacy installs).
+    bool hasEquipment = true,
   }) {
     if (pool.isEmpty) {
       // Phase 50A · the Supabase catalogue fetch failed (offline first
@@ -108,13 +114,27 @@ class WorkoutGeneratorService {
       final weekIndex = (dayNumber - 1) ~/ 7;
       final levelFiltered = _filterByLevel(goalFiltered, level, weekIndex);
 
-      // If a filter combination collapses the pool to empty (shouldn't
-      // happen with the current catalogue, but could if the catalogue
-      // shrinks), fall back to the widest working set so the day is
-      // never empty/malformed.
-      final dailyPool = levelFiltered.isNotEmpty
-          ? levelFiltered
-          : (goalFiltered.isNotEmpty ? goalFiltered : pool);
+      // Phase 133 · equipment filter. When the user said they have no
+      // equipment we strip equipment-only slugs from the day's
+      // candidate pool. Has-equipment users (or legacy installs that
+      // default to true) skip this filter entirely so their generation
+      // matches the pre-Phase-133 behaviour exactly.
+      List<Exercise> applyEquipment(List<Exercise> p) =>
+          hasEquipment ? p : _filterByEquipment(p);
+
+      // Fallback chain that respects the equipment filter at every
+      // level — if level+equipment is empty, try goal+equipment; if
+      // that's empty too, try full-pool+equipment. The unfiltered
+      // pool is the last resort and is only reachable in pathological
+      // catalogue states (empty equipment-free set), which the empty-
+      // pool guard at the top of this method already protects against
+      // in practice.
+      final dailyPool = _coalesce([
+        applyEquipment(levelFiltered),
+        applyEquipment(goalFiltered),
+        applyEquipment(pool),
+        pool,
+      ]);
 
       final exerciseCount = _dailyExerciseCount(dayNumber);
       final multiplier =
@@ -295,6 +315,30 @@ class WorkoutGeneratorService {
     }
   }
 
+  /// Phase 133 · removes equipment-only exercises from the pool.
+  /// Classification lives in [_equipmentSlugs] — a hardcoded manifest
+  /// of slugs that require dumbbells / barbells / machines / cables /
+  /// a pull-up bar / kettlebells. The Exercise model has no runtime
+  /// `requiresEquipment` field yet (admin-panel work for the data
+  /// layer is a separate phase), so slug-set classification is the
+  /// lowest-friction shipping path. Adding new equipment exercises
+  /// to the catalogue requires updating this set.
+  List<Exercise> _filterByEquipment(List<Exercise> pool) {
+    return pool.where((e) => !_equipmentSlugs.contains(e.id)).toList();
+  }
+
+  /// Returns the first non-empty list, or the last list (which may
+  /// itself be empty). Used by [generate30DayPlan] to thread the
+  /// equipment filter through a fallback chain that always produces
+  /// the widest working pool while still respecting the filter at
+  /// every level it can.
+  List<Exercise> _coalesce(List<List<Exercise>> options) {
+    for (final opt in options) {
+      if (opt.isNotEmpty) return opt;
+    }
+    return options.isEmpty ? const [] : options.last;
+  }
+
   /// Returns 5, 6, or 7 depending on the day number. Deterministic
   /// modulo rotation keeps consecutive days from feeling identical.
   int _dailyExerciseCount(int dayNumber) {
@@ -320,6 +364,76 @@ class WorkoutGeneratorService {
 enum _Goal { sixpack, bulk, tone }
 
 enum _Level { beginner, intermediate, advanced }
+
+/// Phase 133 · slugs requiring equipment (dumbbells, barbells,
+/// machines, cables, kettlebells, or a pull-up bar). Sourced from the
+/// Phase 85 / 86 equipment-only template manifests in
+/// `workout_repository.dart` — anything that appears there as a
+/// curated equipment-card slug lives here too. Bodyweight-only
+/// exercises (push-ups, squats, planks, hanging-leg-raise variants
+/// without the "weighted_" prefix, etc.) are NOT in this set so the
+/// no-equipment filter keeps them.
+///
+/// Maintenance note: when a new equipment exercise is added to the
+/// Supabase catalogue (and consumed by a new template card), append
+/// its slug here. A future schema migration that promotes
+/// `requires_equipment` to a real Exercise field will obsolete this
+/// manifest — until then, this is the single source of truth for
+/// equipment classification.
+const Set<String> _equipmentSlugs = {
+  // Chest equipment
+  'bench_press',
+  'incline_bench_press',
+  'decline_bench_press',
+  'chest_fly',
+  'incline_chest_fly',
+  'chest_dip',
+  'cable_crossover',
+  'machine_chest_press',
+  'dumbbell_pullover',
+  // Back equipment
+  'lat_pulldown',
+  'chin_up',
+  'barbell_row',
+  'dumbbell_row',
+  't_bar_row',
+  'seated_cable_row',
+  'deadlift',
+  'dumbbell_clean',
+  // Shoulder equipment
+  'shoulder_press',
+  'arnold_press',
+  'machine_shoulder_press',
+  'lateral_raise',
+  'front_raise',
+  'rear_delt_fly',
+  'upright_row',
+  'cuban_press',
+  'landmine_press',
+  // Arms equipment
+  'biceps_curl',
+  'hammer_curl',
+  'concentration_curl',
+  'preacher_curl',
+  'incline_dumbbell_curl',
+  'cable_curl',
+  'triceps_dip',
+  'dumbbell_kickback',
+  // Legs equipment
+  'barbell_squat',
+  'front_squat',
+  'goblet_squat',
+  'leg_press',
+  'leg_curl',
+  'romanian_deadlift',
+  'walking_lunge_dumbbell',
+  'kettlebell_swing',
+  'bulgarian_split_squat',
+  // Core equipment (weighted or apparatus-required)
+  'cable_crunch',
+  'weighted_leg_raise',
+  'hanging_leg_raise',
+};
 
 /// Thin Riverpod wrapper so UI layers can resolve the generator without
 /// reaching into `const WorkoutGeneratorService()` directly. Stateless,
