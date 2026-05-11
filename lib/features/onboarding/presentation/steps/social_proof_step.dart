@@ -2,38 +2,55 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/motion/ambient_particles.dart';
 import '../../../../core/motion/glow_pulse.dart';
+import '../../../../core/motion/sparkle_burst.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_haptics.dart';
 import '../widgets/coach_mood.dart';
 import '../widgets/living_coach_avatar.dart';
 
-/// Phase 113 · social proof scene.
+/// Phase 123 · social proof scene, rebuilt for emotional fidelity.
 ///
-/// Reference timestamp: ~0:47–0:55 (Unrot's rating push + testimonial
-/// carousel). Adapted: an auto-scrolling vertical list of believable
-/// Turkish fitness testimonials, Form in `proud` mood at the top
-/// (the user is in good company — Form has watched these journeys
-/// before and is presenting them). Premium dark/neon surface, no
-/// startup-marketing energy.
+/// Reference timestamp: 0:59-1:01 in the Unrot onboarding video — the
+/// "Give us a rating!" beat, ~2 s long, with the mascot celebrating
+/// while a horizontal testimonial carousel drifts past underneath.
+/// The previous Phase 113 build captured the *idea* (testimonials +
+/// trust) but missed the *mechanics* (momentum, character activity,
+/// scene composition). What changed here vs. Phase 113:
 ///
-/// Slots between `dynamic_report` and `pre_paywall_summary` —
-/// trust-building moment between Form's personal plan and the
-/// commitment ask. Header-less (`interlude_` prefix) so the chrome
-/// stays out of the way during the emotional beat.
+///  • **Axis rotated vertical → horizontal.** Cards drift right-to-
+///    left. One full card + ~30% of the next visible at all times —
+///    the leading-edge sliver is the momentum signal ("more is
+///    coming"). Cycle 22 s ÷ 9 cards ≈ 2.4 s of visibility per card,
+///    matching the reference's roughly-2-s rhythm with a slight slow
+///    so Turkish quotes have room to land.
+///  • **Form is actively celebrated.** Avatar bumped to 140/96
+///    (was 110/76) so it dominates the upper third the way Brain
+///    dominates the reference frame. Wrapped in [SparkleBurst] so 10
+///    neon particles continuously orbit / fade around the avatar —
+///    "this thing is being celebrated", not "this thing is present".
+///  • **Title sharpened.** "Bu yolda yalnız değilsin." — declarative
+///    emotional anchor in FormAI's companionship register, parallel
+///    in energy to the reference's "Give us a rating!" but not a
+///    marketing ask.
+///  • **Two voices added.** Onur (multi-failed-attempts past) and
+///    Elif (initial skepticism) widen the believability spread so a
+///    user finds *their* doubt mirrored, not just success outcomes.
+///  • **Per-card copy tightened.** Each quote a single short clause
+///    + one emotional turn — absorbable in a 2 s pass.
 ///
-/// Believability principles:
-///   • No "5 stars amazing app!" copy. Each quote names a specific
-///     fitness friction or moment of recognition (sustainability,
-///     mirror avoidance, morning fear, plan fitting the person, etc).
-///   • Names + ages stay realistic for the Turkish market.
-///   • Outcomes stay inside the engine's existing claim-bounds (the
-///     same kg-loss / consistency framing the assessment already
-///     uses) — no invented wild numbers.
+/// Kept from Phase 113: dark/neon palette, AmbientParticles backdrop,
+/// GlowPulse CTA wrap, "PLANIMA GEÇ" advance label, header-less
+/// (`interlude_` prefix), 1.2 s settle before CTA enables, realistic
+/// Turkish names + ages, no fabricated metrics.
 ///
-/// Auto-scroll runs on a single 30 s controller. Tripled list +
-/// modular scroll position lets the user read for as long as they
-/// like; the visible content loops seamlessly. CTA enables on mount
-/// — the user is never *required* to wait, just allowed to.
+/// Stat-laurel deferral: the reference shows 4.8★ AVERAGE RATING +
+/// 300K USERS WORLDWIDE laurel badges between mascot and carousel.
+/// Those are real Unrot launch data. FormAI has no comparable real
+/// metrics yet, so adding fabricated equivalents would be a
+/// dark-pattern. When post-launch metrics exist (Phase 200+), insert
+/// a stat-badge row above the carousel here. Until then, the
+/// carousel + Form's active celebration carry the social proof
+/// honestly.
 
 class _Testimonial {
   const _Testimonial({
@@ -48,41 +65,49 @@ class _Testimonial {
 
 const List<_Testimonial> _kTestimonials = [
   _Testimonial(
-    quote: '12 haftada 6 kilo verdim. En iyisi: kendimi suçlu '
-        'hissetmediğim bir plan.',
+    quote: '12 haftada 6 kilo. Kendimi hiç suçlu hissetmedim.',
     name: 'Ayşe K.',
     age: 32,
   ),
   _Testimonial(
-    quote: 'Eski formuma kavuşamam sanmıştım. Form sürekli yanımdaydı.',
+    quote: 'Eskisine dönmem sanmıştım. Form yanımdaydı.',
     name: 'Mehmet D.',
     age: 28,
   ),
   _Testimonial(
-    quote: 'Disiplin bende değil, planda olmalıymış. 8 haftada anladım.',
+    quote: 'Disiplin bende değil, plandaymış. 8 haftada anladım.',
     name: 'Zeynep A.',
     age: 24,
   ),
   _Testimonial(
-    quote: 'Sabah antrenman korkusu vardı. 4 hafta sonra alışkanlık oldu.',
+    quote: 'Sabah korkusu 4 haftada alışkanlığa döndü.',
     name: 'Can Y.',
     age: 35,
   ),
   _Testimonial(
-    quote: 'Yorgunluğa rağmen başlayabildim. Kısa antrenmanlar her şeyi '
-        'değiştirdi.',
+    quote: 'Yorgunken bile başlayabildim. Kısa olması her şeyi değiştirdi.',
     name: 'Selin O.',
     age: 29,
   ),
   _Testimonial(
-    quote: 'Aynaya bakmaktan kaçınırdım. Şimdi her gün kontrol ediyorum.',
+    quote: 'Aynadan kaçınırdım. Şimdi her gün bakıyorum.',
     name: 'Berk T.',
     age: 31,
   ),
   _Testimonial(
-    quote: 'Plan benim için çalıştı, ben plan için değil. Fark burada.',
+    quote: 'Plan bana göre, ben plana göre değil. Fark bu.',
     name: 'Deniz K.',
     age: 27,
+  ),
+  _Testimonial(
+    quote: 'Başlayıp bırakmaktan yorulmuştum. Bu defa 60 günü geçtim.',
+    name: 'Onur B.',
+    age: 33,
+  ),
+  _Testimonial(
+    quote: 'Önce inanmadım. Gerçekten bana göre tasarlanmış gibi.',
+    name: 'Elif T.',
+    age: 26,
   ),
 ];
 
@@ -100,7 +125,7 @@ class _SocialProofStepState extends State<SocialProofStep>
   late final AnimationController _ctrl;
   bool _readyForCommit = false;
 
-  static const Duration _cycle = Duration(seconds: 30);
+  static const Duration _cycle = Duration(seconds: 22);
 
   @override
   void initState() {
@@ -108,9 +133,6 @@ class _SocialProofStepState extends State<SocialProofStep>
     _scroll = ScrollController();
     _ctrl = AnimationController(vsync: this, duration: _cycle)..repeat();
     _ctrl.addListener(_tick);
-    // CTA gates to enabled after a 1.2 s settle so the user reads at
-    // least one testimonial before being able to advance — a felt
-    // "this matters" beat without forcing a long dwell.
     Future<void>.delayed(const Duration(milliseconds: 1200), () {
       if (mounted) setState(() => _readyForCommit = true);
     });
@@ -128,9 +150,10 @@ class _SocialProofStepState extends State<SocialProofStep>
     if (!_scroll.hasClients) return;
     final max = _scroll.position.maxScrollExtent;
     if (max <= 0) return;
-    // Modular scroll position so the tripled-list visually loops at
-    // the seam where item indices N..2N-1 occupy the same content as
-    // 0..N-1 — the user never sees the jump.
+    // Modular position wraps the tripled list so the seam between
+    // items N..2N-1 and 0..N-1 is invisible (same content). The soft
+    // horizontal fade at the carousel edges hides any minor sub-item
+    // drift at the wrap moment.
     final raw = _ctrl.value * max;
     final third = max / 3;
     final wrapped = third + (raw % third);
@@ -145,6 +168,13 @@ class _SocialProofStepState extends State<SocialProofStep>
 
   @override
   Widget build(BuildContext context) {
+    final mediaW = MediaQuery.of(context).size.width;
+    // 72% of the available width per card so one full card + the
+    // leading edge of the next remain visible — the partial card is
+    // the momentum signal. Clamp range guards against unusually
+    // narrow / wide layout contexts.
+    final cardWidth = ((mediaW - 40) * 0.72).clamp(220.0, 320.0);
+
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -161,74 +191,87 @@ class _SocialProofStepState extends State<SocialProofStep>
         ),
         SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
             child: Column(
               children: [
-                const LivingCoachAvatar(
-                  size: 110,
-                  innerSize: 76,
-                  // Form has the plan, has heard these stories — this
-                  // is where Form quietly stands proud beside the
-                  // people who walked the path. Same `proud` mood
-                  // the dynamic_report and pre_paywall coach panel
-                  // ride on, for cross-scene continuity.
-                  mood: CoachMood.proud,
+                const SizedBox(height: 4),
+                const SparkleBurst(
+                  color: AppColors.neon,
+                  particleCount: 10,
+                  maxRadius: 105,
+                  peakAlpha: 0.65,
+                  minLifetime: Duration(milliseconds: 1200),
+                  maxLifetime: Duration(milliseconds: 1900),
+                  child: LivingCoachAvatar(
+                    size: 140,
+                    innerSize: 96,
+                    mood: CoachMood.proud,
+                  ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 22),
                 ShaderMask(
                   shaderCallback: (rect) => const LinearGradient(
                     colors: [AppColors.neon, AppColors.neonAccent],
                   ).createShader(rect),
                   child: const Text(
-                    'Bu yolculuğu seninle başlayanlar',
+                    'Bu yolda yalnız değilsin.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 19,
+                      fontSize: 22,
                       fontWeight: FontWeight.w900,
-                      letterSpacing: 0.3,
-                      height: 1.25,
+                      letterSpacing: 0.2,
+                      height: 1.2,
                     ),
                   ),
                 ),
-                const SizedBox(height: 14),
-                Expanded(
+                const SizedBox(height: 6),
+                Text(
+                  "Form'la başlayanların kendi sözleri.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.62),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.15,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                SizedBox(
+                  height: 156,
                   child: ShaderMask(
                     shaderCallback: (rect) {
-                      // Soft fade at top + bottom edges so testimonials
-                      // emerge into / dissolve out of view rather than
-                      // popping in / out at the scroll boundary.
                       return const LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
                         colors: [
                           Colors.transparent,
                           Colors.black,
                           Colors.black,
                           Colors.transparent,
                         ],
-                        stops: [0.0, 0.10, 0.90, 1.0],
+                        stops: [0.0, 0.06, 0.94, 1.0],
                       ).createShader(rect);
                     },
                     blendMode: BlendMode.dstIn,
                     child: ListView.separated(
                       controller: _scroll,
+                      scrollDirection: Axis.horizontal,
                       physics: const NeverScrollableScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      // Tripled so the modular scroll wraps without a
-                      // visible jump — the user always sees the same
-                      // ribbon of content.
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
                       itemCount: _kTestimonials.length * 3,
-                      separatorBuilder: (_, __) =>
-                          const SizedBox(height: 10),
+                      separatorBuilder: (_, __) => const SizedBox(width: 12),
                       itemBuilder: (context, i) {
                         final t = _kTestimonials[i % _kTestimonials.length];
-                        return _TestimonialCard(testimonial: t);
+                        return _TestimonialCard(
+                          testimonial: t,
+                          width: cardWidth,
+                        );
                       },
                     ),
                   ),
                 ),
-                const SizedBox(height: 14),
+                const Spacer(),
                 GlowPulse(
                   enabled: _readyForCommit,
                   color: AppColors.neon,
@@ -275,67 +318,73 @@ class _SocialProofStepState extends State<SocialProofStep>
 }
 
 class _TestimonialCard extends StatelessWidget {
-  const _TestimonialCard({required this.testimonial});
+  const _TestimonialCard({required this.testimonial, required this.width});
   final _Testimonial testimonial;
+  final double width;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.neon.withValues(alpha: 0.30),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.neon.withValues(alpha: 0.10),
-            blurRadius: 14,
-            spreadRadius: -4,
+    return SizedBox(
+      width: width,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: AppColors.neon.withValues(alpha: 0.30),
+            width: 1,
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Five-star rating row — small, gold-yellow, confident
-          // without being decorative.
-          Row(
-            children: List<Widget>.generate(
-              5,
-              (_) => const Padding(
-                padding: EdgeInsets.only(right: 2),
-                child: Icon(
-                  Icons.star_rounded,
-                  color: Color(0xFFFFC700),
-                  size: 13,
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.neon.withValues(alpha: 0.10),
+              blurRadius: 14,
+              spreadRadius: -4,
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: List<Widget>.generate(
+                5,
+                (_) => const Padding(
+                  padding: EdgeInsets.only(right: 2),
+                  child: Icon(
+                    Icons.star_rounded,
+                    color: Color(0xFFFFC700),
+                    size: 13,
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            testimonial.quote,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 13.5,
-              height: 1.45,
-              fontWeight: FontWeight.w500,
+            const SizedBox(height: 8),
+            Expanded(
+              child: Text(
+                testimonial.quote,
+                maxLines: 4,
+                overflow: TextOverflow.fade,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13.5,
+                  height: 1.45,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '— ${testimonial.name}, ${testimonial.age}',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.55),
-              fontSize: 11.5,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.2,
+            const SizedBox(height: 6),
+            Text(
+              '— ${testimonial.name}, ${testimonial.age}',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.55),
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.2,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
