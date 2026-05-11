@@ -26,6 +26,7 @@ const String kDefaultTastePreference = 'karisik';
 class WizardState {
   const WizardState({
     this.name,
+    this.coachingTone,
     this.bodyFeelings = const <String>{},
     this.gender,
     this.age,
@@ -55,6 +56,14 @@ class WizardState {
   /// coach intro and gender, used by the assessment engine's greeting
   /// line and (eventually) by push-notification copy.
   final String? name;
+
+  /// Phase 131 · how the user wants Form to speak to them. Captured
+  /// in the second beat of the chat-format name-capture step, right
+  /// after the name. Three tokens: `cesaretlendirici` (encouraging),
+  /// `direkt` (clear + direct), `sakin` (calm + reminder-style).
+  /// Read by the assessment engine to colour coach copy across the
+  /// rest of the wizard, and (eventually) by push-notification copy.
+  final String? coachingTone;
 
   /// Phase 111 · multi-select emotional self-recognition captured on
   /// the body-feelings step (between gender and goal). Tokens are
@@ -145,6 +154,7 @@ class WizardState {
 
   WizardState copyWith({
     String? name,
+    String? coachingTone,
     Set<String>? bodyFeelings,
     Gender? gender,
     int? age,
@@ -170,6 +180,7 @@ class WizardState {
   }) {
     return WizardState(
       name: name ?? this.name,
+      coachingTone: coachingTone ?? this.coachingTone,
       bodyFeelings: bodyFeelings ?? this.bodyFeelings,
       gender: gender ?? this.gender,
       age: age ?? this.age,
@@ -198,6 +209,7 @@ class WizardState {
 
   Map<String, dynamic> toJson() => {
         'name': name,
+        'coachingTone': coachingTone,
         'bodyFeelings': bodyFeelings.toList(),
         'gender': gender?.name,
         'age': age,
@@ -228,6 +240,7 @@ class WizardController extends Notifier<WizardState> {
   WizardState build() => const WizardState();
 
   void setName(String v) => state = state.copyWith(name: v);
+  void setCoachingTone(String v) => state = state.copyWith(coachingTone: v);
   void setBodyFeelings(Set<String> v) =>
       state = state.copyWith(bodyFeelings: v);
   void setGender(Gender v) => state = state.copyWith(gender: v);
