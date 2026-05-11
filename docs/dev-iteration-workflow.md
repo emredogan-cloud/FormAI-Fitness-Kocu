@@ -30,7 +30,7 @@
 
 **Most important rule:** every avoided full `flutter run` saves 2–8 minutes. Your default action for a code change should be hot reload.
 
-**Use `scripts/dev-run.sh` instead of bare `flutter run`.** Phase 127 found that bare `flutter run` builds for all three ABIs (arm64-v8a, armeabi-v7a, x86_64), but the connected dev device only needs arm64-v8a. The wrapper passes `--target-platform=android-arm64`, which (a) skips the 2 unused-ABI Dart AOT passes in profile/release builds and (b) ships a ~70 MB APK to the device instead of 149 MB — turning the 9-min adb install on the Xiaomi entry-level device into ~2-3 min. `scripts/dev-run.sh` defaults to debug mode; pass `profile` or `release` to switch.
+**Use `scripts/dev-run.sh` instead of bare `flutter run`.** The wrapper enforces "debug is the default" structurally — `flutter run --release` (the trap Phase 127 caught) is now a deliberate opt-in (`scripts/dev-run.sh release`) rather than a reflex. Pass `profile` or `release` to switch modes. Flutter 3.41.x auto-detects the connected device's ABI (no flag needed) and builds/installs only that slice on-device; for a TRULY ABI-stripped APK file (e.g. direct distribution), use `flutter build apk --release --split-per-abi` — that produces a 119 MB arm64-v8a APK vs the 144 MB universal.
 
 ---
 
