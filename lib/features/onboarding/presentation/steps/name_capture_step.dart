@@ -8,27 +8,38 @@ import '../../../../core/utils/app_haptics.dart';
 import '../../providers/wizard_provider.dart';
 import '../widgets/coach_chat_bubble.dart';
 import '../widgets/coach_mood.dart';
+import '../widgets/composing_dots.dart';
 import '../widgets/living_coach_avatar.dart';
 
-/// Act 2.5 · Name capture + coaching-tone bonding (chat-format).
+/// Act 2.5 · Name capture + 2-beat bonding micro-conversation
+/// (chat-format).
 ///
 /// Phase 109 first version: chat-thread asking the user's name, Form
 /// acknowledged it, auto-advanced.
 ///
-/// Phase 131 evolution: the chat continues one beat further so Form
-/// actually *gets to know* the user before the data-collection arc.
-/// After Form acknowledges the name, it asks one short bonding
-/// question — "Yanında nasıl olmamı istersin?" — with three single-tap
-/// tone chips ("Cesaret veren" / "Net ve direkt" / "Sakin, hatırlatan").
-/// The chip choice persists to `wizardProvider.coachingTone` so the
-/// rest of the wizard can speak in that register, and Form
-/// acknowledges the choice with a tone-specific closing line before
-/// auto-advancing.
+/// Phase 131 evolution: the chat continued one beat further with a
+/// coaching-tone question + chip ack.
 ///
-/// Why one extra question and not two: the user explicitly framed
-/// this as "emotional bonding, NOT survey fatigue." One question that
-/// shapes how Form speaks afterward earns its place in the flow; a
-/// second would start tipping into questionnaire territory.
+/// Phase 132 evolution: the chat continues ONE MORE beat — a
+/// motivation-style question after the tone ack. Three chips,
+/// persisted via `wizardProvider.motivationStyle`. Per the user's
+/// explicit cap ("only add 2 additional questions"), this is the
+/// final beat — name + tone + motivation = exactly 2 questions after
+/// the name, which is the bonding-without-fatigue target.
+///
+/// Phase 132 also adds:
+///
+///  • **AI-thinking cadence beat** — after every user chip tap, a
+///    short composing-dots bubble appears for ~750 ms before Form's
+///    typewriter ack starts. Reads as "Form is composing a reply",
+///    matches the cinematic-AI-presence chat-bar illusion across
+///    the rest of the product.
+///
+///  • **Deeper chat atmosphere** — a second radial gradient layer
+///    pulses bottom-right with `neonDeep`, out of phase from the
+///    primary breath. Bumped particle count + slightly raised alpha
+///    range. Still well below the cinematic-presence scenes' depth
+///    so the chat surface remains the focal point.
 ///
 /// Atmosphere upgrade: the scene now layers a slow breathing radial
 /// gradient + a soft edge vignette on top of the existing ambient-
@@ -64,23 +75,50 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
       'Bu plan boyunca seninle bu isimle konuşacağım.';
   static const String _tonePrompt =
       'Bir şey daha. Yanında nasıl olmamı istersin?';
+  static const String _motivationPrompt =
+      'Son bir şey. Seni en çok ne motive eder?';
+
+  /// 750 ms composing-dots beat between every user chip tap and
+  /// Form's reply — the "Form is thinking" cadence Phase 132 added.
+  static const Duration _composingBeat = Duration(milliseconds: 750);
 
   /// The three coaching-tone tokens persisted to `wizardProvider`.
-  static const List<_ToneChoice> _tones = [
-    _ToneChoice(
+  static const List<_ChipChoice> _tones = [
+    _ChipChoice(
       token: 'cesaretlendirici',
       label: 'Cesaret veren',
       userBubble: 'Cesaret veren',
     ),
-    _ToneChoice(
+    _ChipChoice(
       token: 'direkt',
       label: 'Net ve direkt',
       userBubble: 'Net ve direkt',
     ),
-    _ToneChoice(
+    _ChipChoice(
       token: 'sakin',
       label: 'Sakin, hatırlatan',
       userBubble: 'Sakin, hatırlatan',
+    ),
+  ];
+
+  /// The three motivation-style tokens persisted to `wizardProvider`.
+  /// Captures *why* the user is here so Form's downstream copy can
+  /// echo their internal driver — outcome / process / identity.
+  static const List<_ChipChoice> _motivations = [
+    _ChipChoice(
+      token: 'sonuc',
+      label: 'Sonuçları görmek',
+      userBubble: 'Sonuçları görmek',
+    ),
+    _ChipChoice(
+      token: 'disiplin',
+      label: 'Disiplin kurmak',
+      userBubble: 'Disiplin kurmak',
+    ),
+    _ChipChoice(
+      token: 'guc',
+      label: 'Daha güçlü hissetmek',
+      userBubble: 'Daha güçlü hissetmek',
     ),
   ];
 
@@ -103,11 +141,22 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
   bool _ackNameDone = false;
   bool _toneAskDone = false;
   bool _toneChosen = false;
+  /// Gates the composing-dots beat between user tone-tap and Form's
+  /// reply. Flips true after `_composingBeat` elapses; the tone-ack
+  /// bubble doesn't render until then.
+  bool _toneAckReady = false;
   bool _ackToneDone = false;
+  bool _motivationAskDone = false;
+  bool _motivationChosen = false;
+  /// Same composing gate as `_toneAckReady`, for the motivation beat.
+  bool _motivationAckReady = false;
+  bool _ackMotivationDone = false;
 
   String _capturedName = '';
   String? _capturedToneToken;
   String _capturedToneBubble = '';
+  String? _capturedMotivationToken;
+  String _capturedMotivationBubble = '';
 
   @override
   void initState() {
@@ -115,7 +164,10 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
     final wizard = ref.read(wizardProvider);
     final existingName = wizard.name ?? '';
     final existingTone = wizard.coachingTone;
-    _isReturning = existingName.isNotEmpty && existingTone != null;
+    final existingMotivation = wizard.motivationStyle;
+    _isReturning = existingName.isNotEmpty &&
+        existingTone != null &&
+        existingMotivation != null;
 
     _textCtrl = TextEditingController(text: existingName);
     _focusNode = FocusNode();
@@ -130,15 +182,63 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
     });
 
     if (_isReturning) {
-      // Returning user — collapse to "all done" so we're ready to
-      // auto-advance. Pre-fill the captured fields too in case the
-      // user backs out and re-enters.
+      // Returning user with everything captured — collapse to "all
+      // done" so we're ready to auto-advance. Pre-fill captured
+      // fields in case the user backs out and re-enters.
       _msg1Done = true;
       _msg2Done = true;
       _userNamePosted = true;
       _ackNameDone = true;
       _toneAskDone = true;
       _toneChosen = true;
+      _toneAckReady = true;
+      _ackToneDone = true;
+      _motivationAskDone = true;
+      _motivationChosen = true;
+      _motivationAckReady = true;
+      _ackMotivationDone = true;
+      _capturedName = existingName;
+      _capturedToneToken = existingTone;
+      _capturedToneBubble = _tones
+          .firstWhere(
+            (t) => t.token == existingTone,
+            orElse: () => _tones.first,
+          )
+          .userBubble;
+      _capturedMotivationToken = existingMotivation;
+      _capturedMotivationBubble = _motivations
+          .firstWhere(
+            (m) => m.token == existingMotivation,
+            orElse: () => _motivations.first,
+          )
+          .userBubble;
+      // Returning users with the full cascade already captured see
+      // their pre-filled answers briefly, then auto-advance —
+      // typewriters are skipped (`!_isReturning`), so no
+      // `onTypingComplete` callback fires to trigger the normal exit.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Future<void>.delayed(const Duration(milliseconds: 1500), () {
+          if (mounted && !_ackMotivationDone) {
+            // _ackMotivationDone is already true here from the
+            // collapse above; flip it once via setState so the auto-
+            // advance bookkeeping stays explicit and trace-able.
+            setState(() => _ackMotivationDone = true);
+            widget.onContinue();
+          } else if (mounted) {
+            widget.onContinue();
+          }
+        });
+      });
+    } else if (existingName.isNotEmpty && existingTone != null) {
+      // Partial returning state: name + tone set, motivation not.
+      // Jump to motivation-asking.
+      _msg1Done = true;
+      _msg2Done = true;
+      _userNamePosted = true;
+      _ackNameDone = true;
+      _toneAskDone = true;
+      _toneChosen = true;
+      _toneAckReady = true;
       _ackToneDone = true;
       _capturedName = existingName;
       _capturedToneToken = existingTone;
@@ -149,8 +249,7 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
           )
           .userBubble;
     } else if (existingName.isNotEmpty) {
-      // Partial returning state: name set, tone not. Skip the name
-      // capture beat and jump to tone-asking.
+      // Earliest partial state: only name set. Jump to tone-asking.
       _msg1Done = true;
       _msg2Done = true;
       _userNamePosted = true;
@@ -206,7 +305,7 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
     _scrollToEnd();
   }
 
-  void _onToneTap(_ToneChoice choice) {
+  void _onToneTap(_ChipChoice choice) {
     if (!mounted || _toneChosen) return;
     AppHaptics.success();
     ref.read(wizardProvider.notifier).setCoachingTone(choice.token);
@@ -216,15 +315,59 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
       _toneChosen = true;
     });
     _scrollToEnd();
+    // Composing-dots beat — Form "thinks" briefly before replying.
+    // Skipped on returning users (they already saw the cascade).
+    if (_isReturning) {
+      setState(() => _toneAckReady = true);
+      return;
+    }
+    Future<void>.delayed(_composingBeat, () {
+      if (!mounted || _toneAckReady) return;
+      setState(() => _toneAckReady = true);
+      _scrollToEnd();
+    });
   }
 
   void _onAckToneDone() {
     if (!mounted || _ackToneDone) return;
     setState(() => _ackToneDone = true);
+    _scrollToEnd();
+  }
+
+  void _onMotivationAskDone() {
+    if (!mounted || _motivationAskDone) return;
+    setState(() => _motivationAskDone = true);
+    _scrollToEnd();
+  }
+
+  void _onMotivationTap(_ChipChoice choice) {
+    if (!mounted || _motivationChosen) return;
+    AppHaptics.success();
+    ref.read(wizardProvider.notifier).setMotivationStyle(choice.token);
+    setState(() {
+      _capturedMotivationToken = choice.token;
+      _capturedMotivationBubble = choice.userBubble;
+      _motivationChosen = true;
+    });
+    _scrollToEnd();
+    if (_isReturning) {
+      setState(() => _motivationAckReady = true);
+      return;
+    }
+    Future<void>.delayed(_composingBeat, () {
+      if (!mounted || _motivationAckReady) return;
+      setState(() => _motivationAckReady = true);
+      _scrollToEnd();
+    });
+  }
+
+  void _onAckMotivationDone() {
+    if (!mounted || _ackMotivationDone) return;
+    setState(() => _ackMotivationDone = true);
     AppHaptics.success();
     // Closing dwell — let the user read the personalized line, then
     // advance.
-    Future<void>.delayed(const Duration(milliseconds: 1500), () {
+    Future<void>.delayed(const Duration(milliseconds: 1600), () {
       if (mounted) widget.onContinue();
     });
   }
@@ -259,10 +402,23 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
     };
   }
 
+  String _motivationAckText(String token, String name) {
+    final n = _normalizeForGreeting(name);
+    final prefix = n.isEmpty ? '' : '$n, ';
+    return switch (token) {
+      'sonuc' => '${prefix}o zaman sonuçlar seninle olsun.',
+      'disiplin' => '${prefix}birlikte güzel bir ritim kuracağız.',
+      'guc' => '${prefix}her gün biraz daha güçlü hissedeceksin.',
+      _ => '${prefix}anladım, seni bu yolda taşıyacağım.',
+    };
+  }
+
   CoachMood _currentMood() {
     if (!_userNamePosted) return CoachMood.listening;
     if (!_ackNameDone) return CoachMood.proud;
     if (!_toneChosen) return CoachMood.listening;
+    if (!_ackToneDone) return CoachMood.proud;
+    if (!_motivationChosen) return CoachMood.listening;
     return CoachMood.proud;
   }
 
@@ -273,10 +429,9 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
       fit: StackFit.expand,
       children: [
         const ColoredBox(color: Color(0xFF050410)),
-        // Phase 131 atmosphere · slow radial breath behind the chat.
-        // Same language as CinematicAiPresence but lighter (smaller
-        // alpha range, no second-color stop) so the chat surface
-        // never starts competing with the bubbles for focus.
+        // Phase 131 atmosphere · slow radial breath behind the chat,
+        // anchored top-center. Same language as CinematicAiPresence
+        // but lighter so the chat bubbles remain the focal point.
         RepaintBoundary(
           child: AnimatedBuilder(
             animation: _atmosphereCtrl,
@@ -288,8 +443,8 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
                     center: const Alignment(0, -0.4),
                     radius: 1.15,
                     colors: [
-                      AppColors.neon.withValues(alpha: 0.14 + 0.06 * t),
-                      AppColors.neonAccent.withValues(alpha: 0.04 + 0.03 * t),
+                      AppColors.neon.withValues(alpha: 0.16 + 0.07 * t),
+                      AppColors.neonAccent.withValues(alpha: 0.05 + 0.03 * t),
                       const Color(0xFF050410),
                     ],
                     stops: const [0.0, 0.45, 1.0],
@@ -299,13 +454,41 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
             },
           ),
         ),
+        // Phase 132 atmosphere depth · second radial bloom anchored
+        // bottom-right with `neonDeep`, breathing out of phase with
+        // the primary. Adds layered depth + subtle asymmetry; tuned
+        // very low (alpha ≤ 0.13) so it reads as ambient depth, not
+        // as a competing light source.
+        RepaintBoundary(
+          child: AnimatedBuilder(
+            animation: _atmosphereCtrl,
+            builder: (context, _) {
+              final t = Curves.easeInOutSine.transform(
+                1.0 - _atmosphereCtrl.value,
+              );
+              return DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: const Alignment(0.35, 0.6),
+                    radius: 0.85,
+                    colors: [
+                      AppColors.neonDeep.withValues(alpha: 0.07 + 0.06 * t),
+                      Colors.transparent,
+                    ],
+                    stops: const [0.0, 1.0],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
         const AmbientParticles(
-          count: 8,
+          count: 12,
           color: AppColors.neon,
           minAlpha: 0.06,
-          maxAlpha: 0.20,
+          maxAlpha: 0.22,
           minRadius: 1.0,
-          maxRadius: 2.0,
+          maxRadius: 2.2,
           driftDuration: Duration(seconds: 26),
           seed: 17,
         ),
@@ -394,16 +577,53 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
                           side: ChatBubbleSide.user,
                         ),
                         const SizedBox(height: 8),
-                        CoachChatBubble(
-                          text: _toneAckText(
-                            _capturedToneToken ?? '',
-                            _capturedName,
+                        if (!_toneAckReady)
+                          const _ComposingBubble()
+                        else
+                          CoachChatBubble(
+                            text: _toneAckText(
+                              _capturedToneToken ?? '',
+                              _capturedName,
+                            ),
+                            side: ChatBubbleSide.form,
+                            typewriter: !_isReturning,
+                            startDelay: const Duration(milliseconds: 200),
+                            onTypingComplete: _onAckToneDone,
                           ),
+                      ],
+                      if (_ackToneDone) ...[
+                        const SizedBox(height: 8),
+                        CoachChatBubble(
+                          text: _motivationPrompt,
                           side: ChatBubbleSide.form,
                           typewriter: !_isReturning,
-                          startDelay: const Duration(milliseconds: 400),
-                          onTypingComplete: _onAckToneDone,
+                          // Slightly longer beat than the tone shift —
+                          // the user is being asked to share something
+                          // a touch more personal.
+                          startDelay: const Duration(milliseconds: 700),
+                          onTypingComplete: _onMotivationAskDone,
                         ),
+                      ],
+                      if (_motivationChosen) ...[
+                        const SizedBox(height: 8),
+                        CoachChatBubble(
+                          text: _capturedMotivationBubble,
+                          side: ChatBubbleSide.user,
+                        ),
+                        const SizedBox(height: 8),
+                        if (!_motivationAckReady)
+                          const _ComposingBubble()
+                        else
+                          CoachChatBubble(
+                            text: _motivationAckText(
+                              _capturedMotivationToken ?? '',
+                              _capturedName,
+                            ),
+                            side: ChatBubbleSide.form,
+                            typewriter: !_isReturning,
+                            startDelay: const Duration(milliseconds: 200),
+                            onTypingComplete: _onAckMotivationDone,
+                          ),
                       ],
                     ],
                   ),
@@ -411,14 +631,19 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
               ),
               _BottomComposer(
                 showInput: !_userNamePosted,
-                showChips: _toneAskDone && !_toneChosen,
+                showChips: (_toneAskDone && !_toneChosen) ||
+                    (_motivationAskDone && !_motivationChosen),
                 textCtrl: _textCtrl,
                 focusNode: _focusNode,
                 inputEnabled: _msg2Done && !_userNamePosted,
                 canSubmit: ctaEnabled,
                 onSubmit: _submitName,
-                tones: _tones,
-                onToneTap: _onToneTap,
+                chips: _motivationAskDone && !_motivationChosen
+                    ? _motivations
+                    : _tones,
+                onChipTap: _motivationAskDone && !_motivationChosen
+                    ? _onMotivationTap
+                    : _onToneTap,
               ),
             ],
           ),
@@ -441,8 +666,8 @@ class _BottomComposer extends StatelessWidget {
     required this.inputEnabled,
     required this.canSubmit,
     required this.onSubmit,
-    required this.tones,
-    required this.onToneTap,
+    required this.chips,
+    required this.onChipTap,
   });
 
   final bool showInput;
@@ -452,8 +677,8 @@ class _BottomComposer extends StatelessWidget {
   final bool inputEnabled;
   final bool canSubmit;
   final VoidCallback onSubmit;
-  final List<_ToneChoice> tones;
-  final void Function(_ToneChoice) onToneTap;
+  final List<_ChipChoice> chips;
+  final void Function(_ChipChoice) onChipTap;
 
   @override
   Widget build(BuildContext context) {
@@ -468,10 +693,10 @@ class _BottomComposer extends StatelessWidget {
         onSubmit: onSubmit,
       );
     } else if (showChips) {
-      child = _ToneChips(
-        key: const ValueKey('chips'),
-        tones: tones,
-        onTap: onToneTap,
+      child = _ChipSelector(
+        key: ValueKey('chips-${chips.first.token}'),
+        chips: chips,
+        onTap: onChipTap,
       );
     } else {
       child = const SizedBox(key: ValueKey('empty'), height: 0);
@@ -485,8 +710,8 @@ class _BottomComposer extends StatelessWidget {
   }
 }
 
-class _ToneChoice {
-  const _ToneChoice({
+class _ChipChoice {
+  const _ChipChoice({
     required this.token,
     required this.label,
     required this.userBubble,
@@ -496,19 +721,61 @@ class _ToneChoice {
   final String userBubble;
 }
 
-/// Three-row coaching-tone chip selector. Each chip is a soft neon-
-/// bordered pill with a subtle glow — same visual language as the
-/// input pill so the bottom of the chat reads as one consistent
-/// surface that just changes contents.
-class _ToneChips extends StatelessWidget {
-  const _ToneChips({
+/// Small left-aligned chat bubble holding three pulsing dots — the
+/// "Form is composing a reply" beat between a user chip tap and
+/// Form's typewritten ack. Same shape language as a Form-side
+/// [CoachChatBubble] so the bubble silhouette doesn't pop when the
+/// real ack bubble swaps in.
+class _ComposingBubble extends StatelessWidget {
+  const _ComposingBubble();
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.06),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(18),
+            topRight: Radius.circular(18),
+            bottomLeft: Radius.circular(6),
+            bottomRight: Radius.circular(18),
+          ),
+          border: Border.all(
+            color: AppColors.neon.withValues(alpha: 0.42),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.neon.withValues(alpha: 0.15),
+              blurRadius: 16,
+              spreadRadius: -4,
+            ),
+          ],
+        ),
+        child: const ComposingDots(),
+      ),
+    );
+  }
+}
+
+/// Three-row chip selector. Each chip is a soft neon-bordered pill
+/// with a subtle glow — same visual language as the input pill so
+/// the bottom of the chat reads as one consistent surface that just
+/// changes contents. Used for both the coaching-tone beat and the
+/// motivation-style beat; behaviour identical, parent decides which
+/// chip set to pass in.
+class _ChipSelector extends StatelessWidget {
+  const _ChipSelector({
     super.key,
-    required this.tones,
+    required this.chips,
     required this.onTap,
   });
 
-  final List<_ToneChoice> tones;
-  final void Function(_ToneChoice) onTap;
+  final List<_ChipChoice> chips;
+  final void Function(_ChipChoice) onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -517,9 +784,9 @@ class _ToneChips extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          for (var i = 0; i < tones.length; i++) ...[
+          for (var i = 0; i < chips.length; i++) ...[
             if (i > 0) const SizedBox(height: 8),
-            _ToneChipButton(choice: tones[i], onTap: () => onTap(tones[i])),
+            _ToneChipButton(choice: chips[i], onTap: () => onTap(chips[i])),
           ],
         ],
       ),
@@ -529,7 +796,7 @@ class _ToneChips extends StatelessWidget {
 
 class _ToneChipButton extends StatelessWidget {
   const _ToneChipButton({required this.choice, required this.onTap});
-  final _ToneChoice choice;
+  final _ChipChoice choice;
   final VoidCallback onTap;
 
   @override

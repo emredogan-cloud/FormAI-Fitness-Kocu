@@ -27,6 +27,7 @@ class WizardState {
   const WizardState({
     this.name,
     this.coachingTone,
+    this.motivationStyle,
     this.bodyFeelings = const <String>{},
     this.gender,
     this.age,
@@ -64,6 +65,14 @@ class WizardState {
   /// Read by the assessment engine to colour coach copy across the
   /// rest of the wizard, and (eventually) by push-notification copy.
   final String? coachingTone;
+
+  /// Phase 132 · what drives the user. Captured in the third beat of
+  /// the chat-format name-capture step, after the coaching tone.
+  /// Three tokens: `sonuc` (outcome-driven), `disiplin` (process-
+  /// driven), `guc` (identity / strength-driven). Read by the
+  /// assessment engine to colour the "why this plan suits you" pitch
+  /// in the dynamic report, and by post-workout congrats copy.
+  final String? motivationStyle;
 
   /// Phase 111 · multi-select emotional self-recognition captured on
   /// the body-feelings step (between gender and goal). Tokens are
@@ -155,6 +164,7 @@ class WizardState {
   WizardState copyWith({
     String? name,
     String? coachingTone,
+    String? motivationStyle,
     Set<String>? bodyFeelings,
     Gender? gender,
     int? age,
@@ -181,6 +191,7 @@ class WizardState {
     return WizardState(
       name: name ?? this.name,
       coachingTone: coachingTone ?? this.coachingTone,
+      motivationStyle: motivationStyle ?? this.motivationStyle,
       bodyFeelings: bodyFeelings ?? this.bodyFeelings,
       gender: gender ?? this.gender,
       age: age ?? this.age,
@@ -210,6 +221,7 @@ class WizardState {
   Map<String, dynamic> toJson() => {
         'name': name,
         'coachingTone': coachingTone,
+        'motivationStyle': motivationStyle,
         'bodyFeelings': bodyFeelings.toList(),
         'gender': gender?.name,
         'age': age,
@@ -241,6 +253,8 @@ class WizardController extends Notifier<WizardState> {
 
   void setName(String v) => state = state.copyWith(name: v);
   void setCoachingTone(String v) => state = state.copyWith(coachingTone: v);
+  void setMotivationStyle(String v) =>
+      state = state.copyWith(motivationStyle: v);
   void setBodyFeelings(Set<String> v) =>
       state = state.copyWith(bodyFeelings: v);
   void setGender(Gender v) => state = state.copyWith(gender: v);
