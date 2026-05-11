@@ -154,6 +154,18 @@ flutter:
     # Phase 40 removed the `docs/<region>/` jpegs that the Bölgeler strip
     # used pre-Phase-35; the strip now points at Unsplash URLs and the
     # binary weight (~2 MB across 7 folders) was dead bundle space.
+    #
+    # Phase 127 · ASSET HYGIENE RULE. This `- "photos/"` declaration is
+    # non-recursive (Flutter's asset semantics — every subdirectory needs
+    # its own line below) but it DOES bundle every file at the root of
+    # `photos/` into the APK. Art-direction *reference imagery* (Claude
+    # conversation visual targets, design comp screenshots, cinematic
+    # mood boards) belongs at `docs/reference-imagery/` — NOT at the
+    # root of `photos/`. The Phase 127 audit caught 3 large reference
+    # PNGs (4.6 MB combined) that had drifted into `photos/` between
+    # Phases 124 and 126 and were silently shipping in every APK; they
+    # have since been relocated. Future visual references go to
+    # `docs/reference-imagery/`, not here.
     - "photos/"
     # Phase 69 · per-recipe meal cover photos (real VP8 WebP, ~280 KB
     # each). Flutter asset declarations are not recursive, so the

@@ -10,7 +10,7 @@ import '../utils/app_haptics.dart';
 
 /// Phase 125 · the cinematic AI-presence system.
 ///
-/// Visual target: `photos/AI_messagesing.png`. Full-screen surface that
+/// Visual target: `docs/reference-imagery/AI_messagesing.png`. Full-screen surface that
 /// reads as "Form is actively present + working on something for you."
 /// Replaces the Phase-110 single-bubble approach with a directed
 /// hierarchy:

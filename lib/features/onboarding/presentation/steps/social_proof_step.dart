@@ -12,7 +12,7 @@ import '../widgets/living_coach_avatar.dart';
 
 /// Phase 124 · social-proof scene, cinematic rebuild.
 ///
-/// Visual target: `photos/Give_us_rate_example.png` — art-directed
+/// Visual target: `docs/reference-imagery/Give_us_rate_example.png` — art-directed
 /// hero composition with a layered hierarchy of hero / headline /
 /// stat anchors / 3-card-emphasis carousel / social momentum strip /
 /// star seal / CTA / footer. Reference cadence: ~2 s per card,
