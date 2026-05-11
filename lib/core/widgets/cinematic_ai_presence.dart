@@ -154,7 +154,15 @@ class _CinematicAiPresenceState extends State<CinematicAiPresence>
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
+    // Phase 130 · wrap in Material(transparency) so the scene has a
+    // Material ancestor wherever it's mounted. Without one, Flutter's
+    // debug fallback renders every Text in the subtree with a yellow
+    // double-underline (visible in the route-pushed first-time scenes
+    // that don't traverse through a Scaffold). MaterialType.transparency
+    // means no background fill + no elevation — purely a context fix.
+    return Material(
+      type: MaterialType.transparency,
+      child: Stack(
       fit: StackFit.expand,
       children: [
         const ColoredBox(color: Color(0xFF050410)),
@@ -276,6 +284,7 @@ class _CinematicAiPresenceState extends State<CinematicAiPresence>
           ),
         ),
       ],
+    ),
     );
   }
 }
