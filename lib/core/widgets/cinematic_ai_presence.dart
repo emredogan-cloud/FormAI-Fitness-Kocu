@@ -6,6 +6,7 @@ import '../motion/ambient_particles.dart';
 import '../motion/kinetic_text_reveal.dart';
 import '../motion/neon_ring_stack.dart';
 import '../theme/app_colors.dart';
+import '../utils/app_haptics.dart';
 
 /// Phase 125 · the cinematic AI-presence system.
 ///
@@ -135,6 +136,11 @@ class _CinematicAiPresenceState extends State<CinematicAiPresence>
     Future<void>.delayed(widget.autoCloseAfter, () {
       if (!mounted || _completed) return;
       _completed = true;
+      // Closing haptic — soft "Form done speaking" signal. Same call
+      // setup_thinking_step's _onAutoClose used to fire inline before
+      // the Phase 125 refactor moved this responsibility into the
+      // shared widget.
+      AppHaptics.success();
       widget.onComplete?.call();
     });
   }

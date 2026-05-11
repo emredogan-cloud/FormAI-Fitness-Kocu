@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/utils/app_haptics.dart';
 import '../../../../core/widgets/cinematic_ai_presence.dart';
 import '../../providers/wizard_provider.dart';
 import '../widgets/coach_mood.dart';
@@ -42,7 +41,8 @@ class _SetupThinkingStepState extends ConsumerState<SetupThinkingStep> {
   void _onAutoClose() {
     if (!mounted || _advanced) return;
     _advanced = true;
-    AppHaptics.success();
+    // Closing haptic is fired by CinematicAiPresence's own autoClose
+    // — no need to duplicate here.
     widget.onContinue();
   }
 
