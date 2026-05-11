@@ -32,6 +32,8 @@
 
 **Use `scripts/dev-run.sh` instead of bare `flutter run`.** The wrapper enforces "debug is the default" structurally — `flutter run --release` (the trap Phase 127 caught) is now a deliberate opt-in (`scripts/dev-run.sh release`) rather than a reflex. Pass `profile` or `release` to switch modes. Flutter 3.41.x auto-detects the connected device's ABI (no flag needed) and builds/installs only that slice on-device; for a TRULY ABI-stripped APK file (e.g. direct distribution), use `flutter build apk --release --split-per-abi` — that produces a 119 MB arm64-v8a APK vs the 144 MB universal.
 
+**After the first install of the day, use `scripts/dev-attach.sh` instead of re-running `scripts/dev-run.sh`.** `flutter run` always re-installs the APK, which on the Xiaomi 22095RA98C (MIUI 14) triggers a confirmation prompt that times out if you're not at the phone. `scripts/dev-attach.sh` skips the install entirely: it launches the already-installed app on device and uses `flutter attach` to connect to its Dart VM Service — same hot reload, no install. Measured Phase 128.1: 33 s cold attach, then 1.0 s (no-op) – 2.7 s (single library) per hot reload. For first install of the day when MIUI's streamed install gate misbehaves, see the four-line workflow in `reports/phase-127-build-iteration-forensic.md` §12.5 (`adb install --no-streaming` bypasses the gate).
+
 ---
 
 ## 2. Session start — once per day
@@ -288,6 +290,8 @@ Optional — these don't affect iteration speed but improve the experience:
 | Asset bundle | 3 reference PNGs (4.6 MB) → docs/reference-imagery/ | Phase 127 |
 | ABI strategy (dev) | scripts/dev-run.sh forces arm64-v8a only | Phase 127 |
 | Snap Flutter migration | `~/dev/flutter` (Flutter 3.41.9), Snap kept alive until validated | Phase 128 |
+| Wrapper CLI compat fix | `flutter run --target-platform` removed in 3.41.x; wrapper now plain `flutter run` | Phase 128.1 |
+| `scripts/dev-attach.sh` | Skip install on subsequent cycles — 33 s attach + 1–3 s reload | Phase 128.1 |
 | (Pending) Meal photos architecture | 64 MB → remote-loaded | Founder decision |
 
 When iteration speed feels off, walk these in order — JVM args first (already shipped), then check workflow (this doc), then consider the pending items.
