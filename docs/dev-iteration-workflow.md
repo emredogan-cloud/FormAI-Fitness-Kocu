@@ -287,7 +287,7 @@ Optional — these don't affect iteration speed but improve the experience:
 | Render layout | LivingCoachAvatar wrapped in SizedBox (no infinite-h crash) | Phase 116 |
 | Asset bundle | 3 reference PNGs (4.6 MB) → docs/reference-imagery/ | Phase 127 |
 | ABI strategy (dev) | scripts/dev-run.sh forces arm64-v8a only | Phase 127 |
-| (Pending) Snap Flutter migration | manual install → 20-40 % cycle time | Phase 119 (guide only) |
+| Snap Flutter migration | `~/dev/flutter` (Flutter 3.41.9), Snap kept alive until validated | Phase 128 |
 | (Pending) Meal photos architecture | 64 MB → remote-loaded | Founder decision |
 
 When iteration speed feels off, walk these in order — JVM args first (already shipped), then check workflow (this doc), then consider the pending items.

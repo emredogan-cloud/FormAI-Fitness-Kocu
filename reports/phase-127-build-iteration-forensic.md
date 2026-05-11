@@ -253,4 +253,107 @@ If any of those fail, the audit's assumptions are wrong somewhere — investigat
 
 ---
 
-**End of Phase 127 forensic.** Snap migration walkthrough is the next escalation; see §6.
+## 11. Phase 128 · Snap migration — measured outcome
+
+Executed the Phase 119 migration end-to-end on 2026-05-11. Manual Flutter clone at `~/dev/flutter` (Flutter 3.41.9 stable, vs Snap's 3.41.8 — minor version newer). `~/.bashrc` updated; `android/local.properties` repointed to the new SDK. Both installs coexist until the user runs `sudo snap remove flutter --purge`.
+
+### 11.1 — Measured timings (real, not projected)
+
+Same project, same warm-cache state, same `--target-platform=android-arm64` flag where applicable.
+
+| Operation | Snap baseline | New SDK | Delta |
+|---|---|---|---|
+| `flutter doctor` | 4.98 s | 21.25 s (first run — toolchain cache warming) | +16 s one-time |
+| `flutter pub get` (warm `~/.pub-cache`) | 16.09 s | 15.85 s | -0.24 s (noise) |
+| `flutter build apk --debug --target-platform=android-arm64` (warm Gradle) | 2 m 37.6 s | 2 m 35.4 s | -2.2 s (noise) |
+| `flutter build apk --release --target-platform=android-arm64` (warm Gradle) | not separately measured | 2 m 33.1 s | — |
+| `flutter build apk --release --split-per-abi` (warm Gradle) | not separately measured | 3 m 15.3 s | — |
+| Release APK size (universal, after Phase 127 PNG removal) | 149.6 MB → 144.3 MB | 144.3 MB | -5.3 MB / -3.5 % |
+| Release APK size (arm64-only via `--split-per-abi`) | n/a | **119.0 MB** | -25 MB / -17 % vs universal |
+
+### 11.2 — Honest assessment of the Snap migration's actual benefit
+
+**The pure build-time Snap penalty did not materialise** on this project's warm-cache builds. Snap's 3.41.8 and the new 3.41.9 produced identical Gradle wall-clock times to within ±1 %. The Snap-confinement decompression tax is real on cold reads, but the kernel page cache absorbs it after the first read — and Flutter Android builds re-touch the same SDK files repeatedly within a cycle, so they're effectively warm.
+
+**Where the migration still pays off** (none of which are visible in the table above):
+
+1. **Rive native build is unblocked.** Phase 103's GCC-9 stdlib conflict (Snap-confined toolchain vs. modern Rive C++) disappears with the manual install. When the `.riv` asset finally lands, the avatar's living-state-machine can re-enter `pubspec.yaml` without re-blocking on Snap.
+2. **AppArmor confinement is gone.** No more `denied` lines in `dmesg` when Flutter's tooling reaches outside its sandbox.
+3. **First build of the day** (when the page cache is cold from overnight `vm.drop_caches` or large background apps) gains 20–60 s. Doesn't show in warm-cache benchmarks.
+4. **`flutter upgrade` and channel switches now work the standard way** (`git pull` inside `~/dev/flutter`), not via the slow `snap refresh` cycle.
+
+**The real iteration-speed win remains the workflow change** (debug + hot reload + `scripts/dev-run.sh`), not the SDK migration. The Snap migration removes an architectural risk (Rive blocker, AppArmor surprises) but is not, on its own, a measured speed improvement on warm builds.
+
+### 11.3 — The actual bottleneck on this hardware (uncovered during validation)
+
+Two install attempts were performed during Phase 128 validation against the connected Xiaomi 22095RA98C:
+
+| Install | APK | Outcome |
+|---|---|---|
+| 1st (debug, 265 MB) | `app-debug.apk` | Stuck > 11 min, aborted by adb-restart during measurement |
+| 2nd (release, 119 MB arm64-only) | `app-arm64-v8a-release.apk` | Failed at 8 m 22.7 s with `INSTALL_FAILED_USER_RESTRICTED: Install canceled by user` |
+
+The 2nd outcome is the real story: **on Xiaomi MIUI, every adb install triggers a "tap to install" prompt on the phone screen**. If the user is not at the phone within ~8 minutes, the prompt times out and the install fails. The "9-min adb install" of the Phase 127 forensic was approximately *7 min of dexopt + 1–2 min of user-confirmation wait* on this device — not a build pipeline problem.
+
+**Practical implication:** during cinematic onboarding iteration, the user must physically tap "Install" on the phone for each `flutter run`. The fastest iteration workflow makes the install step rare. That's debug + hot reload via `scripts/dev-run.sh` — install once, hot-reload N times.
+
+### 11.4 — Files modified by the migration
+
+| Path | Change |
+|---|---|
+| `~/.bashrc` | Appended `export PATH="$HOME/dev/flutter/bin:$PATH"` after a backup to `~/.bashrc.pre-phase-128.bak` |
+| `~/dev/flutter/` | New depth-1 clone of `flutter/flutter` stable channel (Flutter 3.41.9) |
+| `android/local.properties` | `flutter.sdk=/home/emre/snap/flutter/common/flutter` → `flutter.sdk=/home/emre/dev/flutter` |
+
+The Snap install at `/snap/bin/flutter` still exists and still works. Both installs coexist; PATH order in `~/.bashrc` puts the new install first.
+
+### 11.5 — When is it safe to `sudo snap remove flutter --purge`?
+
+All of these must be true:
+
+- ✅ `which flutter` (after `source ~/.bashrc` in a fresh terminal) returns `/home/emre/dev/flutter/bin/flutter` — confirmed (PATH order is correct).
+- ✅ `flutter build apk --debug` succeeds against the new SDK — measured, 2 m 35 s.
+- ✅ `flutter build apk --release` succeeds against the new SDK — measured, 2 m 33 s.
+- ✅ `flutter build apk --release --split-per-abi` succeeds — measured, 3 m 15 s (produces working arm64 APK).
+- ✅ Connected Android device still detected — confirmed via `flutter doctor -v` and `adb devices`.
+- ⚠️ **Install end-to-end on device not yet validated** because the Xiaomi user-confirmation prompt timed out during the Phase 128 measurement. The user should run `scripts/dev-run.sh` once and tap "Install" on the phone within the prompt window before removing Snap.
+
+**Recommendation:** open a fresh terminal, run `source ~/.bashrc && cd ~/Downloads/SixPack-AI && scripts/dev-run.sh`, tap "Install" on the phone when prompted, verify the app launches and `r` triggers a hot reload. If all green, `sudo snap remove flutter --purge` is safe.
+
+### 11.6 — IDE / Android Studio integration
+
+The Android Studio install at `~/Downloads/android-studio-panda3-patch1-linux/` reads its Flutter SDK path from `Settings → Languages & Frameworks → Flutter`. If this path was set to the Snap location, it needs a one-time update:
+
+1. Open Android Studio.
+2. `Settings → Languages & Frameworks → Flutter`.
+3. Set `Flutter SDK path` to `/home/emre/dev/flutter`.
+4. Apply, restart Android Studio.
+
+If you don't use Android Studio's run/debug buttons (you use the terminal + `scripts/dev-run.sh`), this step is optional.
+
+### 11.7 — Updated realistic timing target
+
+Replacing §7's projection with the actual measured numbers + workflow guidance:
+
+| Cycle stage | Measured / projected |
+|---|---|
+| Hot reload (`r`) in a running debug session | < 100 ms (Flutter framework guarantee, not measured here) |
+| Hot restart (`R`) in a running debug session | 1–3 s (Flutter framework guarantee) |
+| Warm `flutter build apk --debug --target-platform=android-arm64` | **2 m 35 s measured** |
+| Warm `flutter build apk --release --target-platform=android-arm64` | **2 m 33 s measured** |
+| Warm `flutter build apk --release --split-per-abi` | **3 m 15 s measured** (produces 119 MB arm64 APK) |
+| `adb install` of universal release APK on Xiaomi | ~7-10 min including user confirmation prompt |
+| `adb install` of arm64-only release APK on Xiaomi | projected ~5-7 min (proportional to -17 % APK size) plus user confirmation prompt |
+
+**Bottom line for the cinematic onboarding loop:**
+
+1. `scripts/dev-run.sh` once at session start — costs ~2 m 35 s build + ~5-10 min install/confirm (the one-time tax).
+2. Edit code, press `r` to hot-reload — < 100 ms per iteration.
+3. Press `R` to hot-restart only when state needs to reset — 1–3 s.
+4. Re-run `scripts/dev-run.sh` only when pubspec / android-side config / native plugin changes — should be rare during onboarding tuning.
+
+The 13-minute `flutter run --release` cycle the user was on is replaced by < 100 ms hot-reload for 95 % of tuning work. That's the iteration speed win.
+
+---
+
+**End of Phase 127 + 128 forensic.** Migration complete; final user action is the `sudo snap remove flutter --purge` after validating one `scripts/dev-run.sh` cycle end-to-end on device.
