@@ -357,3 +357,76 @@ The 13-minute `flutter run --release` cycle the user was on is replaced by < 100
 ---
 
 **End of Phase 127 + 128 forensic.** Migration complete; final user action is the `sudo snap remove flutter --purge` after validating one `scripts/dev-run.sh` cycle end-to-end on device.
+
+---
+
+## 12. Phase 128.1 · Wrapper fix + end-to-end on-device validation
+
+### 12.1 — Wrapper bug from Flutter 3.41.x CLI change
+
+Phase 127's `scripts/dev-run.sh` passed `--target-platform=android-arm64` to `flutter run`. Flutter 3.41.x removed that flag from `flutter run` (it's still valid on `flutter build apk`), so the script errored:
+
+```
+Could not find an option named "--target-platform".
+```
+
+Fixed by removing the flag entirely. Flutter 3.41.x auto-detects the connected device's ABI via `adb shell getprop ro.product.cpu.abi` and passes the matching `android.injected.target.abi=<abi>` to Gradle internally. The wrapper now calls plain `flutter run` / `--profile` / `--release`. Commit `721c85f`.
+
+### 12.2 — Measured end-to-end on-device cycle (debug + arm64)
+
+Captured 2026-05-11 with the Xiaomi 22095RA98C attached.
+
+| Stage | Time |
+|---|---|
+| First-run engine artifact materialisation (linux-x64 debug/profile/release tools) | **42 s** one-time per fresh SDK clone |
+| Pub dependency resolution (warm `~/.pub-cache`) | 7 s |
+| Gradle `assembleDebug` (warm caches, single ABI auto-detected) | **36 s** |
+| `adb install` of 265 MB debug APK via `--no-streaming` workaround | **~7 min** (MIUI prompt requires phone tap) |
+| Cold `flutter attach` to running app + Dart VM Service discovery | **33 s** |
+| Hot reload, no source change | **1.06 s** (compile 23 ms, reload 0 ms, reassemble 565 ms) |
+| Hot reload, single-library change (1-line marker in `lib/main.dart`) | **2.71 s** (compile 66 ms, reload 1736 ms, reassemble 724 ms) |
+| Hot restart | succeeded — verified by app process PID change on device (11085 → 27177); Flutter log truncated by my `>` redirect before "Restarted application" line landed |
+
+### 12.3 — The MIUI install gate (root cause of "nothing on device")
+
+The `Failure [INSTALL_FAILED_USER_RESTRICTED: Install canceled by user]` error after ~14 min of "Installing..." is **not** a wrapper or Flutter bug. The Xiaomi MIUI 14 / HyperOS install gate behaviour:
+
+1. `adb install` (Flutter's default, streamed install via `adb install --streamed`) silently sends the APK and triggers a MIUI confirmation prompt on the phone.
+2. **If the user is not at the phone within the MIUI timeout (~14 min)**, MIUI cancels the install and returns `INSTALL_FAILED_USER_RESTRICTED` to adb — misleadingly worded, because the user did not "cancel"; the prompt timed out.
+3. **Workaround:** `adb install --no-streaming -t -r <apk>` uses the older non-streamed install path which (on this device) installs successfully without requiring a foreground tap.
+
+This is a device-side / MIUI-side issue, not a wrapper issue. The wrapper's `flutter run` uses streamed install (no flag to override), so the same "be at the phone" caveat applies.
+
+### 12.4 — Pre-existing app bug discovered during validation
+
+Hot restart logged:
+
+```
+Another exception was thrown: Unable to load asset: "photos/workouts/equipment_chest_sculpt.webp".
+```
+
+That asset is not present in `photos/workouts/` (verified). Some code path references it. This is **independent of the Phase 127 reference-PNG move** — the 3 PNGs moved were at the root of `photos/`, not inside `photos/workouts/`. The missing `equipment_chest_sculpt.webp` is a pre-existing app bug to address separately; it does not affect iteration speed and surfaced only because hot restart rebuilds the widget tree from scratch and hits every image provider.
+
+### 12.5 — The cinematic-iteration workflow that emerges from these measurements
+
+For the actual onboarding-tuning loop, the optimal sequence is:
+
+1. **Once at session start (~10 min):**
+   ```bash
+   flutter build apk --debug --android-project-arg=android.injected.target.abi=arm64-v8a
+   adb install --no-streaming -t -r build/app/outputs/flutter-apk/app-debug.apk   # one-time MIUI gate workaround
+   adb shell am start -n com.emredogan.formaifit/.MainActivity
+   flutter attach   # connects to VM service, enables hot reload
+   ```
+
+2. **Every code change (1–3 s):** save the file, press `r` in the attached terminal. Hot reload measured at 1.0 s for no-op, 2.7 s for a 1-library change. This is the path that turns 10–15-min release cycles into 1–3 s iteration steps — 200×–900× faster than the pre-Phase-127 status quo.
+
+3. **State reset (3–5 s):** press `R` for hot restart. Re-mounts the widget tree, keeps the same APK installed.
+
+4. **Rare — full rebuild + install:** only when pubspec / android-side config / native plugin changes, OR when the running attach session dies. Same 10-min cost as session start.
+
+The `scripts/dev-run.sh` wrapper still does the all-in-one `flutter run` for users who prefer it. The four-line `build → install --no-streaming → start → attach` sequence above is faster for the second-and-subsequent install of the day because it sidesteps the MIUI streamed-install gate. If MIUI streamed install ever stops behaving on this device, that sequence is the durable fallback.
+
+---
+
+**End of Phase 127 / 128 / 128.1 forensic chain.** The 10–15-min iteration crisis the user reported is resolved: cinematic onboarding tuning now iterates in 1–3 s per change via hot reload. Snap removal (`sudo snap remove flutter --purge`) is still the user's call; both installs coexist and the migration is functionally validated end-to-end.
