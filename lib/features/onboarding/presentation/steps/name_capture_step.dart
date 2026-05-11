@@ -10,35 +10,44 @@ import '../widgets/coach_chat_bubble.dart';
 import '../widgets/coach_mood.dart';
 import '../widgets/living_coach_avatar.dart';
 
-/// Act 2.5 · Name capture (chat-format relationship moment, Phase 109).
+/// Act 2.5 · Name capture + coaching-tone bonding (chat-format).
 ///
-/// Reference video timestamp: ~0:06–0:15. The Unrot reference treats
-/// the early bonding as a literal chat thread — Brain in the header,
-/// messages cascading, user replies as right-aligned bubbles. We
-/// adapt that mechanic to FormAI without the cartoon aesthetic: same
-/// chat-thread structure, dark/neon palette, premium bubble surfaces.
+/// Phase 109 first version: chat-thread asking the user's name, Form
+/// acknowledged it, auto-advanced.
 ///
-/// Sequence (4 messages):
+/// Phase 131 evolution: the chat continues one beat further so Form
+/// actually *gets to know* the user before the data-collection arc.
+/// After Form acknowledges the name, it asks one short bonding
+/// question — "Yanında nasıl olmamı istersin?" — with three single-tap
+/// tone chips ("Cesaret veren" / "Net ve direkt" / "Sakin, hatırlatan").
+/// The chip choice persists to `wizardProvider.coachingTone` so the
+/// rest of the wizard can speak in that register, and Form
+/// acknowledges the choice with a tone-specific closing line before
+/// auto-advancing.
 ///
-///   1. **Form (typewriter):** "Bu yolculukta sana nasıl sesleneyim?"
-///   2. **Form (typewriter, after 1):** "Bu plan boyunca seninle bu
-///      isimle konuşacağım."
-///   3. (Input pill enables, autofocus.)
-///   4. **User (instant):** the entered name, right-aligned, neon-fill.
-///   5. **Form (typewriter, after 400 ms beat):** "Tamam, [Name].
-///      Şimdi seni biraz daha tanıyayım."
-///   6. Soft success haptic on Form's acknowledgment landing, 1.4 s
-///      dwell, auto-advance.
+/// Why one extra question and not two: the user explicitly framed
+/// this as "emotional bonding, NOT survey fatigue." One question that
+/// shapes how Form speaks afterward earns its place in the flow; a
+/// second would start tipping into questionnaire territory.
 ///
-/// Bonding-zone screen (`_hookSteps = 3`), so the chrome wizard
-/// header stays hidden — replaced by a [CoachChatHeader] showing a
-/// small mood-aware Form avatar + "Form · Online" status. The whole
-/// scene reads as a conversation, not a form.
+/// Atmosphere upgrade: the scene now layers a slow breathing radial
+/// gradient + a soft edge vignette on top of the existing ambient-
+/// particle field. Pulls the chat closer to the cinematic depth of
+/// the CinematicAiPresence scenes while staying readable — the chat
+/// surface itself is unchanged so the bubble copy remains the focal
+/// point.
 ///
-/// Re-entry: when `wizardProvider.name` is already set (back-nav),
-/// the typewriters are skipped — both Form messages render instantly,
-/// the input pre-fills, focus moves to it. User can edit and
-/// re-submit; the flow then proceeds normally.
+/// Mood progression:
+///
+///   • Phase A (asking name)        → CoachMood.listening
+///   • Phase B (name acknowledged)  → CoachMood.proud (briefly)
+///   • Phase C (asking tone)        → CoachMood.listening again
+///   • Phase D (tone chosen, ack)   → CoachMood.proud
+///
+/// Re-entry: when both `name` and `coachingTone` already exist
+/// (back-nav), the cascade collapses to its final state — both
+/// Form bubbles + both user responses pre-rendered, input/chips
+/// hidden, ready for `onContinue`.
 
 class NameCaptureStep extends ConsumerStatefulWidget {
   const NameCaptureStep({super.key, required this.onContinue});
@@ -48,47 +57,105 @@ class NameCaptureStep extends ConsumerStatefulWidget {
   ConsumerState<NameCaptureStep> createState() => _NameCaptureStepState();
 }
 
-class _NameCaptureStepState extends ConsumerState<NameCaptureStep> {
+class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
+    with SingleTickerProviderStateMixin {
   static const String _prompt1 = 'Bu yolculukta sana nasıl sesleneyim?';
   static const String _prompt2 =
       'Bu plan boyunca seninle bu isimle konuşacağım.';
+  static const String _tonePrompt =
+      'Bir şey daha. Yanında nasıl olmamı istersin?';
+
+  /// The three coaching-tone tokens persisted to `wizardProvider`.
+  static const List<_ToneChoice> _tones = [
+    _ToneChoice(
+      token: 'cesaretlendirici',
+      label: 'Cesaret veren',
+      userBubble: 'Cesaret veren',
+    ),
+    _ToneChoice(
+      token: 'direkt',
+      label: 'Net ve direkt',
+      userBubble: 'Net ve direkt',
+    ),
+    _ToneChoice(
+      token: 'sakin',
+      label: 'Sakin, hatırlatan',
+      userBubble: 'Sakin, hatırlatan',
+    ),
+  ];
 
   late final TextEditingController _textCtrl;
   late final FocusNode _focusNode;
   late final ScrollController _scrollCtrl;
 
-  /// True when the user has visited this step before — pre-filled
-  /// field, typewriters skipped, immediate focus.
+  /// Breathing radial atmosphere behind the chat. Slow (6.4 s)
+  /// reverse-loop so the scene feels alive without ever competing
+  /// with the bubbles for attention.
+  late final AnimationController _atmosphereCtrl;
+
+  /// True when name + tone were already captured on a prior visit.
+  /// Collapses the whole cascade to its final state.
   late final bool _isReturning;
 
-  /// Sequential reveal flags. Each Form bubble's typewriter
-  /// completion advances the chat to the next message.
   bool _msg1Done = false;
   bool _msg2Done = false;
-  bool _userMsgPosted = false;
+  bool _userNamePosted = false;
+  bool _ackNameDone = false;
+  bool _toneAskDone = false;
+  bool _toneChosen = false;
+  bool _ackToneDone = false;
 
   String _capturedName = '';
+  String? _capturedToneToken;
+  String _capturedToneBubble = '';
 
   @override
   void initState() {
     super.initState();
-    final existingName = ref.read(wizardProvider).name ?? '';
-    _isReturning = existingName.isNotEmpty;
+    final wizard = ref.read(wizardProvider);
+    final existingName = wizard.name ?? '';
+    final existingTone = wizard.coachingTone;
+    _isReturning = existingName.isNotEmpty && existingTone != null;
+
     _textCtrl = TextEditingController(text: existingName);
     _focusNode = FocusNode();
     _scrollCtrl = ScrollController();
+    _atmosphereCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 6400),
+    )..repeat(reverse: true);
+
     _textCtrl.addListener(() {
       if (mounted) setState(() {});
     });
+
     if (_isReturning) {
-      // Returning user — collapse the typewriter cascade so the chat
-      // is ready immediately. Keep the same bubble structure so the
-      // visual continuity holds across navigations.
+      // Returning user — collapse to "all done" so we're ready to
+      // auto-advance. Pre-fill the captured fields too in case the
+      // user backs out and re-enters.
       _msg1Done = true;
       _msg2Done = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _focusNode.requestFocus();
-      });
+      _userNamePosted = true;
+      _ackNameDone = true;
+      _toneAskDone = true;
+      _toneChosen = true;
+      _ackToneDone = true;
+      _capturedName = existingName;
+      _capturedToneToken = existingTone;
+      _capturedToneBubble = _tones
+          .firstWhere(
+            (t) => t.token == existingTone,
+            orElse: () => _tones.first,
+          )
+          .userBubble;
+    } else if (existingName.isNotEmpty) {
+      // Partial returning state: name set, tone not. Skip the name
+      // capture beat and jump to tone-asking.
+      _msg1Done = true;
+      _msg2Done = true;
+      _userNamePosted = true;
+      _ackNameDone = true;
+      _capturedName = existingName;
     }
   }
 
@@ -97,6 +164,7 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep> {
     _textCtrl.dispose();
     _focusNode.dispose();
     _scrollCtrl.dispose();
+    _atmosphereCtrl.dispose();
     super.dispose();
   }
 
@@ -113,17 +181,7 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep> {
     _scrollToEnd();
   }
 
-  void _onMsg3Done() {
-    if (!mounted) return;
-    // Soft confirmation — Form acknowledged. Auto-advance after a
-    // dwell so the user reads the line without having to tap.
-    AppHaptics.success();
-    Future<void>.delayed(const Duration(milliseconds: 1400), () {
-      if (mounted) widget.onContinue();
-    });
-  }
-
-  void _submit() {
+  void _submitName() {
     final name = _textCtrl.text.trim();
     if (name.isEmpty) return;
     AppHaptics.success();
@@ -131,14 +189,46 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep> {
     ref.read(wizardProvider.notifier).setName(name);
     setState(() {
       _capturedName = name;
-      _userMsgPosted = true;
+      _userNamePosted = true;
     });
     _scrollToEnd();
   }
 
-  /// Smooth-scroll the chat to the bottom whenever a new message
-  /// lands. Lets the cascade feel like a real chat — newest message
-  /// always visible.
+  void _onAckNameDone() {
+    if (!mounted || _ackNameDone) return;
+    setState(() => _ackNameDone = true);
+    _scrollToEnd();
+  }
+
+  void _onToneAskDone() {
+    if (!mounted || _toneAskDone) return;
+    setState(() => _toneAskDone = true);
+    _scrollToEnd();
+  }
+
+  void _onToneTap(_ToneChoice choice) {
+    if (!mounted || _toneChosen) return;
+    AppHaptics.success();
+    ref.read(wizardProvider.notifier).setCoachingTone(choice.token);
+    setState(() {
+      _capturedToneToken = choice.token;
+      _capturedToneBubble = choice.userBubble;
+      _toneChosen = true;
+    });
+    _scrollToEnd();
+  }
+
+  void _onAckToneDone() {
+    if (!mounted || _ackToneDone) return;
+    setState(() => _ackToneDone = true);
+    AppHaptics.success();
+    // Closing dwell — let the user read the personalized line, then
+    // advance.
+    Future<void>.delayed(const Duration(milliseconds: 1500), () {
+      if (mounted) widget.onContinue();
+    });
+  }
+
   void _scrollToEnd() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_scrollCtrl.hasClients) return;
@@ -157,15 +247,60 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep> {
     return trimmed[0].toUpperCase() + trimmed.substring(1);
   }
 
+  String _toneAckText(String token, String name) {
+    final n = _normalizeForGreeting(name);
+    final prefix = n.isEmpty ? '' : '$n, ';
+    return switch (token) {
+      'cesaretlendirici' =>
+        '${prefix}o zaman cesaret vererek yanında olacağım.',
+      'direkt' => '${prefix}sana net ve direkt konuşacağım.',
+      'sakin' => '${prefix}sakin sakin hatırlatacağım.',
+      _ => '$prefix' 'öyle olsun.',
+    };
+  }
+
+  CoachMood _currentMood() {
+    if (!_userNamePosted) return CoachMood.listening;
+    if (!_ackNameDone) return CoachMood.proud;
+    if (!_toneChosen) return CoachMood.listening;
+    return CoachMood.proud;
+  }
+
   @override
   Widget build(BuildContext context) {
     final ctaEnabled = _textCtrl.text.trim().isNotEmpty;
     return Stack(
       fit: StackFit.expand,
       children: [
-        const ColoredBox(color: Color(0xFF0A0814)),
+        const ColoredBox(color: Color(0xFF050410)),
+        // Phase 131 atmosphere · slow radial breath behind the chat.
+        // Same language as CinematicAiPresence but lighter (smaller
+        // alpha range, no second-color stop) so the chat surface
+        // never starts competing with the bubbles for focus.
+        RepaintBoundary(
+          child: AnimatedBuilder(
+            animation: _atmosphereCtrl,
+            builder: (context, _) {
+              final t = Curves.easeInOutSine.transform(_atmosphereCtrl.value);
+              return DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: const Alignment(0, -0.4),
+                    radius: 1.15,
+                    colors: [
+                      AppColors.neon.withValues(alpha: 0.14 + 0.06 * t),
+                      AppColors.neonAccent.withValues(alpha: 0.04 + 0.03 * t),
+                      const Color(0xFF050410),
+                    ],
+                    stops: const [0.0, 0.45, 1.0],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
         const AmbientParticles(
-          count: 6,
+          count: 8,
           color: AppColors.neon,
           minAlpha: 0.06,
           maxAlpha: 0.20,
@@ -174,6 +309,23 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep> {
           driftDuration: Duration(seconds: 26),
           seed: 17,
         ),
+        // Soft edge vignette — pulls the eye toward the centered
+        // chat thread without darkening the chat surface itself.
+        IgnorePointer(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                center: Alignment.center,
+                radius: 1.35,
+                colors: [
+                  Colors.transparent,
+                  const Color(0xFF050410).withValues(alpha: 0.55),
+                ],
+                stops: const [0.60, 1.0],
+              ),
+            ),
+          ),
+        ),
         SafeArea(
           child: Column(
             children: [
@@ -181,13 +333,7 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep> {
                 avatar: LivingCoachAvatar(
                   size: 44,
                   innerSize: 32,
-                  // Listening throughout the asking phase, proud the
-                  // moment we acknowledge the name. Same character
-                  // language Form uses on every other Form-speaking
-                  // surface — cross-scene presence continuity.
-                  mood: _userMsgPosted
-                      ? CoachMood.proud
-                      : CoachMood.listening,
+                  mood: _currentMood(),
                 ),
               ),
               Expanded(
@@ -210,12 +356,11 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep> {
                           text: _prompt2,
                           side: ChatBubbleSide.form,
                           typewriter: !_isReturning,
-                          startDelay:
-                              const Duration(milliseconds: 250),
+                          startDelay: const Duration(milliseconds: 250),
                           onTypingComplete: _onMsg2Done,
                         ),
                       ],
-                      if (_userMsgPosted) ...[
+                      if (_userNamePosted) ...[
                         const SizedBox(height: 8),
                         CoachChatBubble(
                           text: _capturedName,
@@ -223,42 +368,211 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep> {
                         ),
                         const SizedBox(height: 8),
                         CoachChatBubble(
-                          text:
-                              'Tamam, ${_normalizeForGreeting(_capturedName)}. '
-                              'Şimdi seni biraz daha tanıyayım.',
+                          text: 'Tamam, '
+                              '${_normalizeForGreeting(_capturedName)}.',
                           side: ChatBubbleSide.form,
-                          typewriter: true,
-                          // 400 ms beat after the user posts — reads
-                          // as Form taking a moment before replying.
-                          startDelay:
-                              const Duration(milliseconds: 400),
-                          onTypingComplete: _onMsg3Done,
+                          typewriter: !_isReturning,
+                          startDelay: const Duration(milliseconds: 400),
+                          onTypingComplete: _onAckNameDone,
+                        ),
+                      ],
+                      if (_ackNameDone) ...[
+                        const SizedBox(height: 8),
+                        CoachChatBubble(
+                          text: _tonePrompt,
+                          side: ChatBubbleSide.form,
+                          typewriter: !_isReturning,
+                          // Longer beat — Form is shifting topics.
+                          startDelay: const Duration(milliseconds: 650),
+                          onTypingComplete: _onToneAskDone,
+                        ),
+                      ],
+                      if (_toneChosen) ...[
+                        const SizedBox(height: 8),
+                        CoachChatBubble(
+                          text: _capturedToneBubble,
+                          side: ChatBubbleSide.user,
+                        ),
+                        const SizedBox(height: 8),
+                        CoachChatBubble(
+                          text: _toneAckText(
+                            _capturedToneToken ?? '',
+                            _capturedName,
+                          ),
+                          side: ChatBubbleSide.form,
+                          typewriter: !_isReturning,
+                          startDelay: const Duration(milliseconds: 400),
+                          onTypingComplete: _onAckToneDone,
                         ),
                       ],
                     ],
                   ),
                 ),
               ),
-              // Input pill only renders during the "asking" phase;
-              // hidden once the user submits so the screen reads as
-              // pure chat during the acknowledgment beat.
-              if (!_userMsgPosted)
-                AnimatedOpacity(
-                  opacity: _msg2Done ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 320),
-                  curve: Curves.easeOutCubic,
-                  child: _ChatInputPill(
-                    controller: _textCtrl,
-                    focusNode: _focusNode,
-                    enabled: _msg2Done && !_userMsgPosted,
-                    canSubmit: ctaEnabled,
-                    onSubmit: _submit,
-                  ),
-                ),
+              _BottomComposer(
+                showInput: !_userNamePosted,
+                showChips: _toneAskDone && !_toneChosen,
+                textCtrl: _textCtrl,
+                focusNode: _focusNode,
+                inputEnabled: _msg2Done && !_userNamePosted,
+                canSubmit: ctaEnabled,
+                onSubmit: _submitName,
+                tones: _tones,
+                onToneTap: _onToneTap,
+              ),
             ],
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Bottom anchor for the chat — either the name-input pill, or the
+/// coaching-tone chip selector, or nothing (during the final ack
+/// dwell before auto-advance). AnimatedSwitcher cross-fades between
+/// them so the bottom never visually pops.
+class _BottomComposer extends StatelessWidget {
+  const _BottomComposer({
+    required this.showInput,
+    required this.showChips,
+    required this.textCtrl,
+    required this.focusNode,
+    required this.inputEnabled,
+    required this.canSubmit,
+    required this.onSubmit,
+    required this.tones,
+    required this.onToneTap,
+  });
+
+  final bool showInput;
+  final bool showChips;
+  final TextEditingController textCtrl;
+  final FocusNode focusNode;
+  final bool inputEnabled;
+  final bool canSubmit;
+  final VoidCallback onSubmit;
+  final List<_ToneChoice> tones;
+  final void Function(_ToneChoice) onToneTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final Widget child;
+    if (showInput) {
+      child = _ChatInputPill(
+        key: const ValueKey('input'),
+        controller: textCtrl,
+        focusNode: focusNode,
+        enabled: inputEnabled,
+        canSubmit: canSubmit,
+        onSubmit: onSubmit,
+      );
+    } else if (showChips) {
+      child = _ToneChips(
+        key: const ValueKey('chips'),
+        tones: tones,
+        onTap: onToneTap,
+      );
+    } else {
+      child = const SizedBox(key: ValueKey('empty'), height: 0);
+    }
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 320),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeOutCubic,
+      child: child,
+    );
+  }
+}
+
+class _ToneChoice {
+  const _ToneChoice({
+    required this.token,
+    required this.label,
+    required this.userBubble,
+  });
+  final String token;
+  final String label;
+  final String userBubble;
+}
+
+/// Three-row coaching-tone chip selector. Each chip is a soft neon-
+/// bordered pill with a subtle glow — same visual language as the
+/// input pill so the bottom of the chat reads as one consistent
+/// surface that just changes contents.
+class _ToneChips extends StatelessWidget {
+  const _ToneChips({
+    super.key,
+    required this.tones,
+    required this.onTap,
+  });
+
+  final List<_ToneChoice> tones;
+  final void Function(_ToneChoice) onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 18),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (var i = 0; i < tones.length; i++) ...[
+            if (i > 0) const SizedBox(height: 8),
+            _ToneChipButton(choice: tones[i], onTap: () => onTap(tones[i])),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ToneChipButton extends StatelessWidget {
+  const _ToneChipButton({required this.choice, required this.onTap});
+  final _ToneChoice choice;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(28),
+        splashColor: AppColors.neon.withValues(alpha: 0.20),
+        highlightColor: AppColors.neon.withValues(alpha: 0.08),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(
+              color: AppColors.neon.withValues(alpha: 0.42),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.neon.withValues(alpha: 0.14),
+                blurRadius: 16,
+                spreadRadius: -4,
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+            child: Center(
+              child: Text(
+                choice.label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -271,6 +585,7 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep> {
 /// `resizeToAvoidBottomInset: true` by default).
 class _ChatInputPill extends StatelessWidget {
   const _ChatInputPill({
+    super.key,
     required this.controller,
     required this.focusNode,
     required this.enabled,
