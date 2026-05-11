@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/services/app_preferences.dart';
+import '../../../../core/services/first_time_ai_scenes.dart';
 import '../../../../core/services/share_service.dart';
 import '../../../../core/utils/app_haptics.dart';
 import '../../../../core/widgets/cached_image.dart';
@@ -20,10 +21,14 @@ const Color _neonPurple = Color(0xFF8E5BFF);
 /// block and — when the recipe catalogue is loaded — a "Toparlanma
 /// Önerisi" card with a high-protein recipe the user can tap to open.
 ///
-/// Converted to a `ConsumerWidget` in phase 22 so it can read both the
-/// recipe catalogue and the user's nutrition preferences (to honour a
-/// `hizli` prep choice with a fast-to-make suggestion).
-class SessionCompleteOverlay extends ConsumerWidget {
+/// Phase 22: was a [ConsumerWidget] so it could read the recipe catalogue
+/// + user nutrition preferences (to honour a `hizli` prep choice).
+///
+/// Phase 126: upgraded to [ConsumerStatefulWidget] so it can fire the
+/// first-time cinematic workout-complete AI scene on mount (after the
+/// first frame, so the trophy renders before the scene cross-fades on
+/// top). The scene self-pops; gating lives inside [FirstTimeAiScenes].
+class SessionCompleteOverlay extends ConsumerStatefulWidget {
   const SessionCompleteOverlay({
     super.key,
     required this.day,
@@ -34,7 +39,27 @@ class SessionCompleteOverlay extends ConsumerWidget {
   final VoidCallback onAcknowledge;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SessionCompleteOverlay> createState() =>
+      _SessionCompleteOverlayState();
+}
+
+class _SessionCompleteOverlayState
+    extends ConsumerState<SessionCompleteOverlay> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      FirstTimeAiScenes.showIfNeeded(
+        context,
+        ref,
+        FirstTimeAiScene.workoutCompleteCelebration,
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final recipesAsync = ref.watch(recipesProvider);
     final prefs = ref.watch(appPreferencesProvider).userMetrics ??
         const <String, dynamic>{};
@@ -69,9 +94,9 @@ class SessionCompleteOverlay extends ConsumerWidget {
                 const Icon(Icons.military_tech, size: 96, color: _neon),
                 const SizedBox(height: 16),
                 Text(
-                  day == null
+                  widget.day == null
                       ? 'Program Tamam!'
-                      : 'Gün ${day!.dayNumber} Tamam!',
+                      : 'Gün ${widget.day!.dayNumber} Tamam!',
                   style: const TextStyle(
                     color: _neon,
                     fontSize: 32,
@@ -130,7 +155,7 @@ class SessionCompleteOverlay extends ConsumerWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: FilledButton(
-                        onPressed: onAcknowledge,
+                        onPressed: widget.onAcknowledge,
                         style: FilledButton.styleFrom(
                           backgroundColor: _neon,
                           foregroundColor: Colors.black,

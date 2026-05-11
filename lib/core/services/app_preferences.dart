@@ -57,6 +57,18 @@ class AppPreferences {
   // as ISO-8601 so the date check is timezone-aware.
   static const String _lastWorkoutAtKey = 'sixpack.last_workout_at';
 
+  // Phase 126 · first-time AI-presence scene flags. Each of the three
+  // cinematic AI scenes (dashboard welcome / nutrition intro / first-
+  // workout celebration) fires exactly once per install. The mark-seen
+  // happens *before* the route push so a backgrounded scene doesn't
+  // replay on app resume — see [FirstTimeAiScenes.showIfNeeded].
+  static const String _seenFirstDashboardAiKey =
+      'sixpack.seen_first_dashboard_ai';
+  static const String _seenFirstNutritionAiKey =
+      'sixpack.seen_first_nutrition_ai';
+  static const String _seenFirstWorkoutCompleteAiKey =
+      'sixpack.seen_first_workout_complete_ai';
+
   bool get isFirstTime => _prefs.getBool(_firstTimeKey) ?? true;
 
   Future<void> completeOnboarding({String? goal}) async {
@@ -163,5 +175,28 @@ class AppPreferences {
     return last.year == now.year &&
         last.month == now.month &&
         last.day == now.day;
+  }
+
+  // ─── Phase 126 · first-time AI-presence scene gates ───────────────
+
+  bool get seenFirstDashboardAi =>
+      _prefs.getBool(_seenFirstDashboardAiKey) ?? false;
+
+  Future<void> markSeenFirstDashboardAi() async {
+    await _prefs.setBool(_seenFirstDashboardAiKey, true);
+  }
+
+  bool get seenFirstNutritionAi =>
+      _prefs.getBool(_seenFirstNutritionAiKey) ?? false;
+
+  Future<void> markSeenFirstNutritionAi() async {
+    await _prefs.setBool(_seenFirstNutritionAiKey, true);
+  }
+
+  bool get seenFirstWorkoutCompleteAi =>
+      _prefs.getBool(_seenFirstWorkoutCompleteAiKey) ?? false;
+
+  Future<void> markSeenFirstWorkoutCompleteAi() async {
+    await _prefs.setBool(_seenFirstWorkoutCompleteAiKey, true);
   }
 }
