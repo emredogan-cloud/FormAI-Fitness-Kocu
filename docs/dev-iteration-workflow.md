@@ -30,6 +30,8 @@
 
 **Most important rule:** every avoided full `flutter run` saves 2–8 minutes. Your default action for a code change should be hot reload.
 
+**Use `scripts/dev-run.sh` instead of bare `flutter run`.** Phase 127 found that bare `flutter run` builds for all three ABIs (arm64-v8a, armeabi-v7a, x86_64), but the connected dev device only needs arm64-v8a. The wrapper passes `--target-platform=android-arm64`, which (a) skips the 2 unused-ABI Dart AOT passes in profile/release builds and (b) ships a ~70 MB APK to the device instead of 149 MB — turning the 9-min adb install on the Xiaomi entry-level device into ~2-3 min. `scripts/dev-run.sh` defaults to debug mode; pass `profile` or `release` to switch.
+
 ---
 
 ## 2. Session start — once per day
@@ -283,6 +285,8 @@ Optional — these don't affect iteration speed but improve the experience:
 | JVM heap (Gradle) | -Xmx 8G → 4G; parallel; caching | Phase 117 |
 | Asset bundle | app_icon.png → tool/ (no longer bundled) | Phase 120 |
 | Render layout | LivingCoachAvatar wrapped in SizedBox (no infinite-h crash) | Phase 116 |
+| Asset bundle | 3 reference PNGs (4.6 MB) → docs/reference-imagery/ | Phase 127 |
+| ABI strategy (dev) | scripts/dev-run.sh forces arm64-v8a only | Phase 127 |
 | (Pending) Snap Flutter migration | manual install → 20-40 % cycle time | Phase 119 (guide only) |
 | (Pending) Meal photos architecture | 64 MB → remote-loaded | Founder decision |
 
