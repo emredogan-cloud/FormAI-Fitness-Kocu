@@ -1,9 +1,9 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/widgets/cinematic_ai_presence.dart';
 import '../../providers/wizard_provider.dart';
 import '../widgets/coach_mood.dart';
-import '../widgets/interlude_scene.dart';
 
 /// Act 3 · Strategic interlude #1 (post-goal predictive empathy).
 ///
@@ -13,8 +13,12 @@ import '../widgets/interlude_scene.dart';
 /// audit calls this *predictive empathy*: not "great choice!", but
 /// "people who pick this struggle with X — I won't do that to you."
 ///
-/// Copy is goal-aware, name-aware. Soft fallback when either is null
-/// (returning user, edge cases) so the screen never reads as broken.
+/// Phase 129 · migrated from the legacy [InterludeScene] widget onto
+/// the shared [CinematicAiPresence] system so every AI-presence beat
+/// in the product reads as one continuous cinematic register. The
+/// per-goal body text is preserved verbatim in the subtitle slot;
+/// the title carries a presence header ("Anlıyorum...") and the chat
+/// bar carries the "Form is writing" illusion.
 class InterludeAfterGoalStep extends ConsumerWidget {
   const InterludeAfterGoalStep({super.key, required this.onContinue});
   final VoidCallback onContinue;
@@ -22,16 +26,20 @@ class InterludeAfterGoalStep extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final wizard = ref.watch(wizardProvider);
-    return InterludeScene(
-      text: _composeText(wizard),
-      onContinue: onContinue,
+    return CinematicAiPresence(
+      title: 'Anlıyorum...',
+      subtitle: _composeSubtitle(wizard),
+      subtitleTypewriter: true,
+      composingPlaceholder: 'Düşüncelerimi topluyorum...',
       // Form is reassuring the user about their goal — warmer halo,
       // slower breath, slight inward settle. Reads as "I hear you."
       mood: CoachMood.reassuring,
+      autoCloseAfter: const Duration(milliseconds: 6500),
+      onComplete: onContinue,
     );
   }
 
-  String _composeText(WizardState s) {
+  String _composeSubtitle(WizardState s) {
     final name = _capitaliseFirst(s.name);
     final prefix = name != null ? '$name, ' : '';
     final body = switch (s.goal) {

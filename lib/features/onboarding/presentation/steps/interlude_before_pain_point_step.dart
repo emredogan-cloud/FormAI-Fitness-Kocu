@@ -1,9 +1,9 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/widgets/cinematic_ai_presence.dart';
 import '../../providers/wizard_provider.dart';
 import '../widgets/coach_mood.dart';
-import '../widgets/interlude_scene.dart';
 
 /// Act 3 · Strategic interlude #2 (vulnerability setup before
 /// pain-point).
@@ -13,6 +13,11 @@ import '../widgets/interlude_scene.dart';
 /// vulnerability before asking. Frames the question as collaborative
 /// ("birlikte çözmek için"), not interrogative ("yargılamak için
 /// değil"). Removes the shame layer the audit (§3.6) flagged.
+///
+/// Phase 129 · migrated from the legacy [InterludeScene] widget onto
+/// the shared [CinematicAiPresence] system. The title carries a
+/// pause word ("Bir an...") that sets the emotional gravity before
+/// the subtitle's collaborative-framing message types in.
 class InterludeBeforePainPointStep extends ConsumerWidget {
   const InterludeBeforePainPointStep({super.key, required this.onContinue});
   final VoidCallback onContinue;
@@ -24,13 +29,17 @@ class InterludeBeforePainPointStep extends ConsumerWidget {
     final opener = name != null
         ? '$name, şimdi en zorlandığın şeyi bilmem gerekiyor.'
         : 'Şimdi en zorlandığın şeyi bilmem gerekiyor.';
-    return InterludeScene(
-      text: '$opener\nYargılamak için değil — birlikte çözmek için.',
-      onContinue: onContinue,
+    return CinematicAiPresence(
+      title: 'Bir an...',
+      subtitle: '$opener\nYargılamak için değil — birlikte çözmek için.',
+      subtitleTypewriter: true,
+      composingPlaceholder: 'Doğru kelimeleri arıyorum...',
       // Form is preparing the user for the most vulnerable answer —
       // dimmer, slower, deepest tone in the palette. Reads as
       // "this matters and I'm holding space for it."
       mood: CoachMood.reflective,
+      autoCloseAfter: const Duration(milliseconds: 6800),
+      onComplete: onContinue,
     );
   }
 
