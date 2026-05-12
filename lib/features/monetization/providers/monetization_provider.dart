@@ -24,7 +24,13 @@ const String _kDevProOverrideKey = 'sixpack.monetization.dev_pro_override';
 /// Outcome of a `purchase()` attempt. UI consumers use this to decide
 /// whether to show a success SnackBar, silently return (user cancelled),
 /// or surface an error toast.
-enum PurchaseOutcome { success, cancelled, notEntitled, error }
+/// Phase 138 · M-10. `pending` was added so the paywall can distinguish
+/// the Play / App Store "deferred payment" state (parental approval
+/// pending, family-share approval pending, slow card review) from a
+/// hard `error`. A pending purchase resolves later — the user shouldn't
+/// be told "Satın alma başarısız oldu" in the same breath as a real
+/// network failure.
+enum PurchaseOutcome { success, pending, cancelled, notEntitled, error }
 
 enum RestoreOutcome { restored, nothingToRestore, error }
 
@@ -114,6 +120,16 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
       final code = PurchasesErrorHelper.getErrorCode(e);
       if (code == PurchasesErrorCode.purchaseCancelledError) {
         return PurchaseOutcome.cancelled;
+      }
+      // Phase 138 · M-10. `paymentPendingError` means Play / App Store
+      // accepted the purchase but the charge hasn't resolved yet
+      // (parental approval, family-share approval, slow card review).
+      // The webhook will fire INITIAL_PURCHASE once it clears — the
+      // user just needs to wait. Returning `pending` lets the paywall
+      // show a soft "Satın alman onay bekliyor" toast instead of the
+      // generic error.
+      if (code == PurchasesErrorCode.paymentPendingError) {
+        return PurchaseOutcome.pending;
       }
       AppLogger.error(
         'purchasePackage PlatformException: $code',
