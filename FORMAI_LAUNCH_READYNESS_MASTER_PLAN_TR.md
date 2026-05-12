@@ -459,7 +459,27 @@ if (saved != null) {
 
 ---
 
-### H-2 · KVKK / Analytics Consent Banner Yok
+### H-2 · KVKK / Analytics Consent Banner Yok — ✅ ÇÖZÜLDÜ (Phase 138, commit `a74d26c`)
+
+**Uygulanan mimari:**
+- `lib/core/services/consent_state.dart` — Riverpod scope dışında çalışan Sentry `beforeSend` ve PostHog bootstrap için static mirror. Default: tüm flag'ler `false`.
+- `AppPreferences.setConsent / consentDecisionMade / analyticsConsentGranted / crashReportingConsentGranted` — `sixpack.consent.*` anahtarları altında persist. Default KVKK opt-in: `false`.
+- `AnalyticsService.init`: `setup()` sonrası consent yoksa `Posthog().disable()`. `setEnabled()` runtime'da SDK'yı toggle eder. `_capture` `ConsentState.analyticsGranted` kontrolü ile defence-in-depth.
+- `main.dart::_BootGate._init`: PostHog init'ten ÖNCE persisted consent → ConsentState mirror. `Sentry.beforeSend` `crashReportingGranted == false` ise event drop.
+- Router: yeni `/consent` route. Redirect zinciri: `firstTime && !ageVerified → /age-gate`; `+ageVerified && !decided → /consent`; `+decided → /onboarding`.
+- `ConsentScreen`: dark cinematic UI, 2 switch (default off), 2 CTA ("Tercihlerimi Kaydet" / "Hepsini Kabul Et"), inline privacy link. PopScope back gesture'ı lock eder.
+
+**Validation:**
+- `flutter analyze` (lib/features/onboarding, lib/core, lib/main.dart) → No issues found.
+- Sentry test: `crashReportingGranted=false` → beforeSend null döner, event device'tan çıkmaz.
+- PostHog test: `analyticsGranted=false` → `_capture` no-op + `Posthog().disable()` boot'ta çağrılmış → buffer boş.
+
+**Risks:**
+- Legacy install'ler (`isFirstTime=false`) consent screen'i görmez. Telemetry önceki durumda kalır. Account settings'e gelecekte consent toggle eklenebilir — bu Phase'in scope'unda değil.
+- Reddeden kullanıcı kalıcı off kalır. Beklenen davranış.
+
+**Commit:** `a74d26c` — feat(privacy): phase 138 H-2 - KVKK/GDPR consent gate
+**Rollback:** `git revert a74d26c`. Telemetry "always-on"a döner — KVKK regression. Sadece kritik consent-flow bug'ı first-launch'ı block ederse revert et.
 
 **Sorun:** PostHog `main.dart:324-339`'da onboarding'den önce başlatılıyor. KVKK (6698) `açık rıza` gerektirir.
 
@@ -1252,7 +1272,7 @@ Sorun çıkarsa: **Halt rollout** (rollout dondurulur, yeni indirici alamaz, mev
 
 ```
 [x] H-1  ✅ Wizard checkpoint autosave + restore (commit dfec2ca)
-[ ] H-2  KVKK consent banner (Posthog/Sentry'den önce gösterilir)
+[x] H-2  ✅ /consent screen + ConsentState + Sentry/PostHog gating (commit a74d26c)
 [ ] H-3  AndroidManifest'e enableOnBackInvokedCallback="true"
 [ ] H-4  ML Kit availability check + timed mode fallback (eski cihaz)
 [ ] H-5  Egzersiz safety disclaimer + basic injury filter
