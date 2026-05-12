@@ -85,7 +85,7 @@ class GoalStep extends ConsumerWidget {
       initialValue: current,
       feedbackText:
           '🔥 Harika seçim! Bu hedefle başlayanların çoğu 30 gün içinde '
-          'fark görüyor.',
+          'fark görüyor. Sonuçlar bireysel çabaya ve tutarlılığa bağlıdır.',
       // Phase 104 · predictive empathy. Form observes the choice
       // rather than just confirming it — each answer reads as Form
       // already understanding what kind of plan suits this user.
