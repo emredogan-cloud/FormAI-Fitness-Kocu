@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -119,6 +120,10 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   int _index = 0;
   bool _didPrecacheAssets = false;
+  // Phase 138 · H-1. Manual subscription to the wizard so we can
+  // autosave on every mutation without polluting Riverpod with
+  // imperative side-effects. Disposed in dispose().
+  ProviderSubscription<WizardState>? _wizardListener;
 
   /// Photos rendered by gender / goal / activity tiles + the pre-paywall
   /// plan card. Pushed through [precacheImage] once at mount so the user
@@ -140,12 +145,65 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   void initState() {
     super.initState();
+    // Phase 138 · H-1. Restore wizard state + step index from
+    // SharedPreferences if a checkpoint exists from a prior mounted
+    // session. Runs synchronously so the very first build sees the
+    // restored _index and the wizard provider already carries the
+    // user's previously-typed answers — they don't see step 0 flash
+    // before snapping to where they were.
+    final prefs = ref.read(appPreferencesProvider);
+    final checkpoint = prefs.loadWizardCheckpoint();
+    if (checkpoint != null) {
+      try {
+        final json =
+            jsonDecode(checkpoint.stateJson) as Map<String, dynamic>;
+        ref.read(wizardProvider.notifier).restoreFromJson(json);
+        // Clamp the step index to the live step list so a checkpoint
+        // written by a release with a different _totalSteps can't
+        // strand the user past the end of the wizard.
+        _index = checkpoint.stepIndex.clamp(0, _totalSteps - 1);
+      } catch (e, st) {
+        AppLogger.warning(
+          'Wizard checkpoint decode failed — starting from step 0',
+          category: 'onboarding',
+          data: {'error': e.toString(), 'stack': st.toString()},
+        );
+        // Drop the broken checkpoint so the next mutation can
+        // overwrite it cleanly instead of failing again.
+        unawaited(prefs.clearWizardCheckpoint());
+      }
+    }
+    // Subscribe to wizard mutations and autosave. listenManual fires
+    // immediately with the current state and then on every change —
+    // so the restored state is also re-persisted on first build,
+    // which is harmless and keeps the checkpoint forward-compatible
+    // (any field WizardState gains tomorrow gets serialised today).
+    _wizardListener = ref.listenManual<WizardState>(
+      wizardProvider,
+      (_, next) {
+        unawaited(
+          prefs.saveWizardCheckpoint(
+            stateJson: jsonEncode(next.toJson()),
+            stepIndex: _index,
+          ),
+        );
+      },
+      fireImmediately: true,
+    );
     // Capture step_index=0 so the funnel has an "entered onboarding"
     // event. The wizard's _next() / _back() emit subsequent steps.
     AnalyticsService.instance.onboardingStepCompleted(
-      stepIndex: 0,
-      stepName: _stepNames.first,
+      stepIndex: _index,
+      stepName: _index < _stepNames.length
+          ? _stepNames[_index]
+          : _stepNames.first,
     );
+  }
+
+  @override
+  void dispose() {
+    _wizardListener?.close();
+    super.dispose();
   }
 
   @override
@@ -167,6 +225,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     // that initiated the transition is fired by the calling widget.
     AppHaptics.primaryCta();
     setState(() => _index += 1);
+    _persistStepIndex();
     AnalyticsService.instance.onboardingStepCompleted(
       stepIndex: _index,
       stepName: _index < _stepNames.length
@@ -179,11 +238,29 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     if (_index == 0) return;
     AppHaptics.secondaryTap();
     setState(() => _index -= 1);
+    _persistStepIndex();
     AnalyticsService.instance.onboardingStepCompleted(
       stepIndex: _index,
       stepName: _index < _stepNames.length
           ? _stepNames[_index]
           : 'unknown_$_index',
+    );
+  }
+
+  /// Phase 138 · H-1. The wizard-state listener writes whenever a
+  /// SET-fn fires inside a step, but step transitions are pure UI
+  /// state (no provider mutation) — so the listener never runs on
+  /// _next() / _back() alone. This helper pairs the index update
+  /// with a same-instant checkpoint write so a kill between two
+  /// steps resumes on the right step.
+  void _persistStepIndex() {
+    final prefs = ref.read(appPreferencesProvider);
+    final wizard = ref.read(wizardProvider);
+    unawaited(
+      prefs.saveWizardCheckpoint(
+        stateJson: jsonEncode(wizard.toJson()),
+        stepIndex: _index,
+      ),
     );
   }
 
@@ -202,6 +279,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       goal: wizard.targetPhysique?.name,
       hasEquipment: wizard.hasEquipment,
     );
+    // Phase 138 · H-1. The checkpoint did its job — the user reached
+    // the paywall. Wipe it so a future re-onboarding (after
+    // resetProgress, or a re-install) starts cleanly instead of
+    // rehydrating answers from the prior session.
+    await prefs.clearWizardCheckpoint();
     // The user just committed to the program; the paywall is the next
     // major surface they may see. Kick off RevenueCat configuration now
     // so the platform-channel handshake overlaps the prediction render
