@@ -696,7 +696,7 @@ class WorkoutRepository {
         'bird_dog',
         'dead_bug',
       ],
-      image: 'photos/workouts/core_static_resistance.webp',
+      image: 'photos/workouts/core_athletic.webp',
     ),
     _PlanTemplate(
       id: 'core_lower_abs',
@@ -710,7 +710,7 @@ class WorkoutRepository {
         'hanging_leg_raise',
         'toe_touch',
       ],
-      image: 'photos/workouts/core_lower_abs.webp',
+      image: 'photos/workouts/core_steel_abs.webp',
     ),
     _PlanTemplate(
       id: 'core_oblique_burner',
@@ -724,7 +724,7 @@ class WorkoutRepository {
         'side_plank',
         'mountain_climber',
       ],
-      image: 'photos/workouts/core_oblique_burner.webp',
+      image: 'photos/workouts/core_athletic.webp',
     ),
     _PlanTemplate(
       id: 'core_mobility_flow',
@@ -739,7 +739,7 @@ class WorkoutRepository {
         'side_plank',
         'plank',
       ],
-      image: 'photos/workouts/core_mobility_flow.webp',
+      image: 'photos/workouts/core_steel_abs.webp',
     ),
     // ---- Phase 97 · Göğüs ----
     _PlanTemplate(
@@ -754,7 +754,7 @@ class WorkoutRepository {
         'archer_push_up',
         'decline_push_up',
       ],
-      image: 'photos/workouts/chest_bodyweight_burst.webp',
+      image: 'photos/workouts/chest_full_growth_burst.webp',
     ),
     _PlanTemplate(
       id: 'chest_plyo_explosive',
@@ -768,7 +768,7 @@ class WorkoutRepository {
         'archer_push_up',
         'push_up',
       ],
-      image: 'photos/workouts/chest_plyo_explosive.webp',
+      image: 'photos/workouts/chest_activation_growth.webp',
     ),
     _PlanTemplate(
       id: 'chest_beginner_flow',
@@ -777,7 +777,7 @@ class WorkoutRepository {
       level: 'Başlangıç',
       durationMinutes: 8,
       exerciseSlugs: ['knee_push_up', 'incline_push_up', 'push_up'],
-      image: 'photos/workouts/chest_beginner_flow.webp',
+      image: 'photos/workouts/chest_fat_burn_basic.webp',
     ),
     // ---- Phase 97 · Sırt ----
     _PlanTemplate(
@@ -793,7 +793,7 @@ class WorkoutRepository {
         'prone_t_raise',
         'scapular_pull_up',
       ],
-      image: 'photos/workouts/back_bodyweight_activation.webp',
+      image: 'photos/workouts/back_v_taper.webp',
     ),
     _PlanTemplate(
       id: 'back_postural_corrective',
@@ -808,7 +808,7 @@ class WorkoutRepository {
         'prone_t_raise',
         'scapular_wall_slide',
       ],
-      image: 'photos/workouts/back_postural_corrective.webp',
+      image: 'photos/workouts/back_posture_basic.webp',
     ),
     _PlanTemplate(
       id: 'back_hanging_workout',
@@ -817,7 +817,7 @@ class WorkoutRepository {
       level: 'İleri',
       durationMinutes: 18,
       exerciseSlugs: ['scapular_pull_up', 'dead_hang', 'pull_up', 'chin_up'],
-      image: 'photos/workouts/back_hanging_workout.webp',
+      image: 'photos/workouts/back_v_taper.webp',
     ),
     // ---- Phase 97 · Omuz ----
     _PlanTemplate(
@@ -832,7 +832,7 @@ class WorkoutRepository {
         'handstand_push_up',
         'pike_push_up',
       ],
-      image: 'photos/workouts/shoulders_advanced_bodyweight.webp',
+      image: 'photos/workouts/shoulders_giant.webp',
     ),
     _PlanTemplate(
       id: 'shoulders_mobility_opening',
@@ -841,7 +841,7 @@ class WorkoutRepository {
       level: 'Başlangıç',
       durationMinutes: 10,
       exerciseSlugs: ['scapular_wall_slide', 'pike_walk', 'downward_dog'],
-      image: 'photos/workouts/shoulders_mobility_opening.webp',
+      image: 'photos/workouts/shoulders_v_taper.webp',
     ),
     _PlanTemplate(
       id: 'shoulders_scapular_stability',
@@ -855,7 +855,7 @@ class WorkoutRepository {
         'prone_y_raise',
         'prone_t_raise',
       ],
-      image: 'photos/workouts/shoulders_scapular_stability.webp',
+      image: 'photos/workouts/shoulders_power_burst.webp',
     ),
     // ---- Phase 97 · Kol ----
     _PlanTemplate(
@@ -870,7 +870,7 @@ class WorkoutRepository {
         'bench_dip',
         'tricep_extension_floor',
       ],
-      image: 'photos/workouts/arms_bodyweight_burst.webp',
+      image: 'photos/workouts/arms_quick_tone.webp',
     ),
     _PlanTemplate(
       id: 'arms_triceps_bodyweight',
@@ -884,7 +884,7 @@ class WorkoutRepository {
         'tricep_extension_floor',
         'pike_push_up_close',
       ],
-      image: 'photos/workouts/arms_triceps_bodyweight.webp',
+      image: 'photos/workouts/arms_steel.webp',
     ),
     _PlanTemplate(
       id: 'arms_hanging_grip',
@@ -893,7 +893,7 @@ class WorkoutRepository {
       level: 'İleri',
       durationMinutes: 12,
       exerciseSlugs: ['chin_up_negative', 'dead_hang', 'scapular_pull_up'],
-      image: 'photos/workouts/arms_hanging_grip.webp',
+      image: 'photos/workouts/arms_explosive_super.webp',
     ),
     // ---- Phase 97 · Bacak ----
     _PlanTemplate(
@@ -908,7 +908,7 @@ class WorkoutRepository {
         'single_leg_glute_bridge',
         'sumo_squat',
       ],
-      image: 'photos/workouts/legs_glute_activation.webp',
+      image: 'photos/workouts/legs_quad_strength.webp',
     ),
     _PlanTemplate(
       id: 'legs_single_leg_bodyweight',
@@ -922,7 +922,7 @@ class WorkoutRepository {
         'single_leg_rdl',
         'calf_raise',
       ],
-      image: 'photos/workouts/legs_single_leg_bodyweight.webp',
+      image: 'photos/workouts/legs_cardio_strength.webp',
     ),
     _PlanTemplate(
       id: 'legs_plyometric_burst',
@@ -936,7 +936,7 @@ class WorkoutRepository {
         'jump_squat',
         'squat_jump_pulse',
       ],
-      image: 'photos/workouts/legs_plyometric_burst.webp',
+      image: 'photos/workouts/legs_elite_sculpt.webp',
     ),
     _PlanTemplate(
       id: 'legs_sumo_adductor',
@@ -950,7 +950,7 @@ class WorkoutRepository {
         'frog_pump',
         'lunge',
       ],
-      image: 'photos/workouts/legs_sumo_adductor.webp',
+      image: 'photos/workouts/legs_power_day.webp',
     ),
     // ---- Phase 97 · Kardiyo & Full Body ----
     _PlanTemplate(
@@ -966,7 +966,7 @@ class WorkoutRepository {
         'jump_squat',
         'mountain_climber',
       ],
-      image: 'photos/workouts/cardio_hiit_burst.webp',
+      image: 'photos/workouts/cardio_full_body_burst.webp',
     ),
     _PlanTemplate(
       id: 'cardio_mobility_stretch',
@@ -996,7 +996,7 @@ class WorkoutRepository {
         'high_knees',
         'jumping_jack',
       ],
-      image: 'photos/workouts/cardio_shadow_box.webp',
+      image: 'photos/workouts/cardio_morning_quick.webp',
     ),
     _PlanTemplate(
       id: 'cardio_full_body_flow',
