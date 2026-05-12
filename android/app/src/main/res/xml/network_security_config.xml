@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Phase 138 · M-4 — application-wide network security baseline.
+
+  Denies cleartext HTTP for all production traffic. Every endpoint
+  the app talks to (Supabase, RevenueCat, Sentry, PostHog, the
+  CloudFront-hosted legal pages, ML Kit's pose-detection model
+  download) is HTTPS, so denying cleartext is a free hardening
+  step — closes the door on accidental http:// links bundled
+  inside Markdown content, embedded WebViews, or future SDK
+  additions that try to bootstrap over insecure transport.
+
+  Debug builds still get cleartext to localhost (for
+  Flutter dev tools + `flutter run`) via a separate
+  network_security_config-debug variant if needed; the release
+  manifest references this file.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
