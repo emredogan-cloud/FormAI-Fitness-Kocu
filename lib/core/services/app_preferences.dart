@@ -127,7 +127,37 @@ class AppPreferences {
   static const String _seenPro3rdWorkoutRatingKey =
       'sixpack.seen_pro_3rd_workout_rating';
 
+  // Phase 138 · B-4 age gate. Persistent flag set the first time the
+  // user passes the 18+ verification screen. Read by the router so a
+  // fresh install can't reach the PII-collecting onboarding before
+  // confirming they meet the Play Console 18+ target audience. Once
+  // set the gate is never re-shown — re-installs / cache wipes will
+  // re-prompt. The companion `_birthYearKey` is purely diagnostic;
+  // we don't ship birthdates server-side, but having it locally lets
+  // the user inspect their answer in the account settings later.
+  static const String _ageVerifiedKey = 'sixpack.age_verified';
+  static const String _birthYearKey = 'sixpack.birth_year';
+
   bool get isFirstTime => _prefs.getBool(_firstTimeKey) ?? true;
+
+  /// Phase 138 · B-4. Returns `true` once the user has confirmed they
+  /// are 18+ via the age-gate screen. The router routes first-time
+  /// installs to `/age-gate` until this flips. Legacy users who already
+  /// finished onboarding (isFirstTime=false) are grandfathered — the
+  /// gate is only enforced before PII collection.
+  bool get ageVerified => _prefs.getBool(_ageVerifiedKey) ?? false;
+
+  /// Phase 138 · B-4. Stamps both the verification flag and the
+  /// reported birth year so support can investigate spoofing
+  /// complaints later. Birth year is stored on-device only; nothing
+  /// in the cloud sync writes it back to Supabase.
+  Future<void> setAgeVerified({required int birthYear}) async {
+    await _prefs.setInt(_birthYearKey, birthYear);
+    await _prefs.setBool(_ageVerifiedKey, true);
+  }
+
+  int? get birthYear =>
+      _prefs.containsKey(_birthYearKey) ? _prefs.getInt(_birthYearKey) : null;
 
   Future<void> completeOnboarding({String? goal, bool? hasEquipment}) async {
     if (goal != null) await _prefs.setString(_goalKey, goal);
