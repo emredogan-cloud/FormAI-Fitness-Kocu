@@ -14,6 +14,7 @@ import '../../features/nutrition/presentation/category_recipes_screen.dart';
 import '../../features/nutrition/presentation/discover_recipes_screen.dart';
 import '../../features/nutrition/presentation/favorites_screen.dart';
 import '../../features/nutrition/presentation/recipe_detail_screen.dart';
+import '../../features/onboarding/presentation/age_gate_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/onboarding/presentation/prediction_screen.dart';
 import '../../features/progress/presentation/badges_screen.dart';
@@ -31,6 +32,16 @@ class AppRoutes {
   static const String dashboard = '/';
   static const String onboarding = '/onboarding';
   static const String auth = '/auth';
+
+  /// Phase 138 · B-4. 18+ verification gate. The router routes a fresh
+  /// install here BEFORE `/onboarding` whenever
+  /// [AppPreferences.ageVerified] is false; once the user picks a
+  /// birth year that yields age ≥ 18 the flag flips and subsequent
+  /// loads bypass the gate. Sub-18 entries see a non-dismissable
+  /// block screen and `SystemNavigator.pop()` returns them to the
+  /// launcher. Legacy installs that already completed onboarding
+  /// (`isFirstTime=false`) skip the gate entirely.
+  static const String ageGate = '/age-gate';
   static const String workout = '/workout';
   static const String paywall = '/paywall';
   static const String prediction = '/prediction';
@@ -85,6 +96,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     // signing in for.
     if (path == AppRoutes.referralLanding) return null;
     if (prefs.isFirstTime) {
+      // Phase 138 · B-4. Block PII-collecting onboarding until the user
+      // has confirmed 18+. The age gate is its own route so the
+      // wizard's step-counter math stays untouched and so a tester
+      // can deep-link past it via `prefs.setAgeVerified` from devtools.
+      if (!prefs.ageVerified) {
+        return path == AppRoutes.ageGate ? null : AppRoutes.ageGate;
+      }
       return path == AppRoutes.onboarding ? null : AppRoutes.onboarding;
     }
     // Phase 88 · gate on `currentSession`, not `currentUser`. Both are
@@ -148,6 +166,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.onboarding,
         name: 'onboarding',
         builder: (context, state) => const OnboardingScreen(),
+      ),
+      // Phase 138 · B-4 18+ verification gate. Routed to by the
+      // redirect above whenever a first-time install hasn't yet
+      // confirmed age. The screen owns its own block-and-exit copy
+      // for under-18 entries; the redirect never bounces a user off
+      // this path until the flag flips.
+      GoRoute(
+        path: AppRoutes.ageGate,
+        name: 'ageGate',
+        builder: (context, state) => const AgeGateScreen(),
       ),
       GoRoute(
         path: AppRoutes.auth,
