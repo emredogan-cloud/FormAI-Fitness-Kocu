@@ -533,7 +533,11 @@ Eğer kullanıcı reddederse `Posthog.disable()` ve Sentry `enabled: false` ile 
 
 ---
 
-### H-3 · OnBackInvokedCallback Android 12+ Hatası
+### H-3 · OnBackInvokedCallback Android 12+ Hatası — ✅ ÇÖZÜLDÜ (Phase 138, commit `848232a`)
+
+`android:enableOnBackInvokedCallback="true"` `<application>` tag'ine eklendi. Risk: zero — flag opt-in, mevcut PopScope davranışını değiştirmez, sadece Android 13+'da OS-level predictive back animasyonunu un-suppress eder.
+
+
 
 **Dosya:** `android/app/src/main/AndroidManifest.xml`
 **Sorun:** Logcat'te tekrarlayan uyarı: `OnBackInvokedCallback is not enabled for the application`.
@@ -554,7 +558,13 @@ Eğer kullanıcı reddederse `Posthog.disable()` ve Sentry `enabled: false` ile 
 
 ---
 
-### H-4 · ML Kit Eski Cihazda Crash Riski
+### H-4 · ML Kit Eski Cihazda Crash Riski — ✅ ÇÖZÜLDÜ (Phase 138, commit `c835a6d`)
+
+**Uygulanan:** `PoseDetectorService.isAvailable()` static probe (construct + close cycle, native bridge round-trip). `_bootstrap()` permission isteğinden ÖNCE çağırır; başarısızlık → mevcut `_error` ErrorCard yolu ile polite Turkish mesaj. Master plan'in önerdiği "timed mode UI" yerine graceful-exit yaklaşımı seçildi: 1400 satırlık ekranın paralel fork'u launch-readiness scope dışı, ~30 satır probe yeterli crash sınıfını kapatıyor.
+
+**Risks:** Probe ilk camera entry'sine ~50-150 ms ekler (single platform-channel round-trip). Worth it — alternatif: kullanıcı 20 dk ekrana bakar, hiçbir rep sayılmaz.
+
+
 
 **Dosya:** `lib/features/workout/presentation/workout_camera_screen.dart`
 **Sorun:** `google_mlkit_pose_detection: ^0.14.1` `minSdk=24` cihazlarda çalışır, ama ML Kit Play Services bulunmayan eski cihazlarda (örn. eski Huawei, ROM modifiyeli) init throw eder.
@@ -586,7 +596,20 @@ if (!await _checkMlKitAvailable()) {
 
 ---
 
-### H-5 · Egzersiz Safety / Kontrendikasyon Filtresi Yok
+### H-5 · Egzersiz Safety / Kontrendikasyon Filtresi Yok — 🟡 KISMEN ÇÖZÜLDÜ (Phase 138, commit `ccc524a`)
+
+**Uygulanan (launch minimum):** ConsentScreen üzerinde Turkish health disclaimer card. Play Console "Health declarations" attestation ("Disclaimer shown in onboarding") artık dürüst doldurulabilir. Aynı copy Play Store listing footer'ına da geçecek (master plan §8.5).
+
+**Defer edilen (Phase 139 follow-up):**
+- `Exercise.contraindications: List<String>` schema field + 138 egzersizin tag'lenmesi.
+- Wizard'a injury-collection step (`_totalSteps` 19 → 20, cinematic pacing re-shoot).
+- Generator'da injury filter (currently no input → no-op).
+
+Bunlar launch-readiness değil; gerçek product work. Disclaimer launch için Play declaration'ı karşılıyor.
+
+**Risks:** Disclaimer tap-through riski mevcut. Play Console "shown" şartını gerektiriyor, "interactively confirmed" değil.
+
+
 
 **Dosya:** `lib/features/workout/models/workout_plan_model.dart`, generator
 **Sorun:** Onboarding'de sağlık durumu (kalp problemi, sırt fıtığı, hamilelik) sorulmuyor. Generator herkese aynı pool'dan seçim yapıyor.
@@ -608,7 +631,11 @@ if (!await _checkMlKitAvailable()) {
 
 ---
 
-### H-6 · ProGuard'a Supabase Keep Rule Eksik
+### H-6 · ProGuard'a Supabase Keep Rule Eksik — ✅ ÇÖZÜLDÜ (Phase 138, commit `93ee07d`)
+
+`-keep class io.github.jan.supabase.**`, `com.supabase.**`, `io.supabase.**`, `kotlinx.serialization.**` ve `@Serializable` field annotation keep'i `proguard-rules.pro`'ya eklendi. Phase 138 B-5 ile gelen `pro_entitlements` read path'inin obfuscated payload decode hatasına maruz kalmaması için defensive insurance.
+
+
 
 **Dosya:** `android/app/proguard-rules.pro`
 **Sorun:** Supabase Java SDK obfuscation altında reflection kullanan dataclass'lar kırılabilir.
@@ -1273,10 +1300,10 @@ Sorun çıkarsa: **Halt rollout** (rollout dondurulur, yeni indirici alamaz, mev
 ```
 [x] H-1  ✅ Wizard checkpoint autosave + restore (commit dfec2ca)
 [x] H-2  ✅ /consent screen + ConsentState + Sentry/PostHog gating (commit a74d26c)
-[ ] H-3  AndroidManifest'e enableOnBackInvokedCallback="true"
-[ ] H-4  ML Kit availability check + timed mode fallback (eski cihaz)
-[ ] H-5  Egzersiz safety disclaimer + basic injury filter
-[ ] H-6  ProGuard rules: Supabase keep + dontwarn
+[x] H-3  ✅ enableOnBackInvokedCallback eklendi (commit 848232a)
+[x] H-4  ✅ Availability probe + graceful exit (commit c835a6d) — timed mode UI scope dışı tutuldu
+[~] H-5  ✅ Disclaimer ConsentScreen'de (commit ccc524a) — injury filter Phase 139'a defer edildi
+[x] H-6  ✅ Supabase + kotlinx-serialization keep rules eklendi (commit 93ee07d)
 [x] H-7  ✅ H-1 autosave channel mid-flow loss'u kapatıyor (commit dfec2ca)
 ```
 
