@@ -4,7 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sixpack_ai/core/constants/app_constants.dart';
 import 'package:sixpack_ai/features/home/presentation/widgets/today_task_card.dart';
+import 'package:sixpack_ai/features/monetization/models/locked_feature_type.dart';
 import 'package:sixpack_ai/features/monetization/providers/monetization_provider.dart';
+import 'package:sixpack_ai/features/monetization/services/premium_gate_service.dart';
 import 'package:sixpack_ai/features/workout/models/exercise_model.dart';
 import 'package:sixpack_ai/features/workout/models/workout_day_model.dart';
 
@@ -16,6 +18,26 @@ import 'package:sixpack_ai/features/workout/models/workout_day_model.dart';
 class _StubSubscriptionNotifier extends SubscriptionNotifier {
   @override
   Future<SubscriptionState> build() async => const SubscriptionState();
+}
+
+/// Phase 135 · the live gate routes locked taps through the cinematic
+/// conversion scene (`ConversionMomentService.show`) before the paywall
+/// — which needs SharedPreferences + animation controllers + the full
+/// CinematicAiPresence widget tree. Far too much wiring for a tile-
+/// level widget test. The stub preserves the original test contract
+/// ("locked tap reaches /paywall") by pushing the route directly.
+class _StubPremiumGate extends PremiumGateService {
+  _StubPremiumGate(super.ref);
+
+  @override
+  Future<void> handleLockedTap(
+    BuildContext context,
+    LockedFeatureType type, {
+    String? source,
+  }) async {
+    if (!context.mounted) return;
+    GoRouter.of(context).push('/paywall');
+  }
 }
 
 Exercise _coreExercise({
@@ -60,6 +82,7 @@ Widget _host(Widget child) {
       subscriptionProvider.overrideWith(
         () => _StubSubscriptionNotifier(),
       ),
+      premiumGateProvider.overrideWith(_StubPremiumGate.new),
     ],
     child: MaterialApp.router(
       routerConfig: router,

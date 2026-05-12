@@ -1,12 +1,11 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../core/routing/app_router.dart';
 import '../../../core/services/analytics_service.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../models/locked_feature_type.dart';
 import '../providers/monetization_provider.dart';
+import 'conversion_moment_service.dart';
 
 /// Phase 134 · single entry point for every premium-gated callsite.
 ///
@@ -19,11 +18,11 @@ import '../providers/monetization_provider.dart';
 ///   • [handleLockedTap] is the canonical "user tapped a locked thing,
 ///     decide what cinematic / paywall flow to fire" routine.
 ///
-/// Phase 134 keeps [handleLockedTap] as a direct paywall route so the
-/// behaviour is unchanged. Phase 135 will swap the body for a
-/// `ConversionMomentService.show(...)` call that fires a contextual
-/// cinematic scene first, then routes to paywall via the scene's CTA.
-/// Callsites do not change — the contract is stable from C1 onward.
+/// Phase 135 · [handleLockedTap] now delegates to
+/// [ConversionMomentService.show] so every locked surface fires its
+/// own contextual cinematic scene before the paywall. Pro users still
+/// short-circuit to [AppRoutes.paywall] for the rare case where Pro
+/// state is stale and the gate is consulted directly.
 class PremiumGateService {
   PremiumGateService(this._ref);
 
@@ -39,14 +38,12 @@ class PremiumGateService {
   /// disturbing callsites.
   bool isUnlocked(LockedFeatureType _) => isPro;
 
-  /// Single tap-handler for every locked surface. Emits a typed
-  /// `paywall_viewed` event with [type]'s analytics source, fires a
-  /// soft secondary-tap haptic, then routes to `/paywall`.
-  ///
-  /// Phase 135 will intercept this method to fire a contextual
-  /// cinematic AI scene before the paywall navigation. The contract
-  /// (`type` + optional `source` override) stays stable so callsites
-  /// don't churn between phases.
+  /// Single tap-handler for every locked surface. Fires a soft
+  /// secondary-tap haptic, emits a typed `paywall_viewed` event with
+  /// [type]'s analytics source for funnel-stitching with the eventual
+  /// purchase, then hands off to [ConversionMomentService.show] to
+  /// present the cinematic scene. The scene's PremiumCtaButton owns
+  /// the paywall navigation.
   Future<void> handleLockedTap(
     BuildContext context,
     LockedFeatureType type, {
@@ -56,7 +53,7 @@ class PremiumGateService {
     AnalyticsService.instance
         .paywallViewed(source: source ?? type.analyticsSource);
     if (!context.mounted) return;
-    context.push(AppRoutes.paywall);
+    await _ref.read(conversionMomentProvider).show(context, type);
   }
 }
 

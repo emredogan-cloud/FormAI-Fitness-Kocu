@@ -310,9 +310,13 @@ class _PlanDetailScreenState extends ConsumerState<PlanDetailScreen> {
     // Premium gate short-circuits BEFORE we touch the session — don't want
     // to "start" a day the user can't actually run, or the 30-day ledger
     // would record a bogus in-progress day the next time they open the
-    // plan detail screen.
+    // plan detail screen. Phase 135 routes through PremiumGateService so
+    // the cinematic futureDay conversion scene fires before the paywall.
     if (isLocked) {
-      context.push(AppRoutes.paywall);
+      await ref.read(premiumGateProvider).handleLockedTap(
+            context,
+            LockedFeatureType.futureDay,
+          );
       return;
     }
     if (realDay == null || realDay.exercises.isEmpty) return;

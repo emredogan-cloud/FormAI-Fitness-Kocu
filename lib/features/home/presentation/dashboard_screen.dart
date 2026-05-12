@@ -7,6 +7,7 @@ import '../../../core/services/first_time_ai_scenes.dart';
 import '../../../core/theme/theme_extension.dart';
 import '../../monetization/models/locked_feature_type.dart';
 import '../../monetization/providers/monetization_provider.dart';
+import '../../monetization/services/conversion_moment_service.dart';
 import '../../monetization/services/premium_gate_service.dart';
 import '../../nutrition/presentation/nutrition_tab.dart';
 import '../../nutrition/presentation/widgets/nutrition_onboarding_sheet.dart';
@@ -16,6 +17,7 @@ import '../../progress/presentation/widgets/level_up_screen.dart';
 import '../../progress/providers/badge_unlocks_provider.dart';
 import '../../progress/providers/xp_award_listener.dart';
 import '../../progress/providers/xp_provider.dart';
+import '../../workout/providers/workout_provider.dart';
 import 'widgets/antrenman_tab.dart';
 import 'widgets/gelisim_tab.dart';
 import 'widgets/profile_tab.dart';
@@ -106,7 +108,31 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     // Now is the moment any badges that unlocked while we were
     // off-screen become safe to celebrate.
     _routeIsCurrent = true;
-    _maybeCelebrate();
+    _runDashboardReturnFlow();
+  }
+
+  /// Phase 135 · sequenced post-return flow. Badge / level-up
+  /// celebrations play first so the "I unlocked something" beat lands
+  /// cleanly before the "ready for Pro?" frame; conversion moment
+  /// fires after only when the user has at least one completed
+  /// workout and the one-shot flag is still unset.
+  Future<void> _runDashboardReturnFlow() async {
+    await _maybeCelebrate();
+    if (!mounted) return;
+    await _maybeShowFirstWorkoutPro();
+  }
+
+  Future<void> _maybeShowFirstWorkoutPro() async {
+    final session = ref.read(workoutSessionProvider).value;
+    if (session == null) return;
+    final completed = session.days.where((d) => d.isCompleted).length;
+    await ref
+        .read(conversionMomentProvider)
+        .maybeShowFirstWorkoutProInvitation(
+          context,
+          completedDays: completed,
+          isPro: ref.read(isProProvider),
+        );
   }
 
   @override

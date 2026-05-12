@@ -112,6 +112,14 @@ class AppPreferences {
   static const String _seenFirstWorkoutCompleteAiKey =
       'sixpack.seen_first_workout_complete_ai';
 
+  // Phase 135 · one-shot gate for the post-first-workout Pro invitation
+  // scene. Fires on the user's first return-to-dashboard after the
+  // session-complete overlay has cleared, NOT inline with the
+  // celebration scene above — emotional pacing wants a beat of
+  // "I did it" before the "ready for more?" frame.
+  static const String _seenFirstWorkoutProInvitationKey =
+      'sixpack.seen_first_workout_pro_invitation';
+
   bool get isFirstTime => _prefs.getBool(_firstTimeKey) ?? true;
 
   Future<void> completeOnboarding({String? goal, bool? hasEquipment}) async {
@@ -391,6 +399,16 @@ class AppPreferences {
 
   Future<void> markSeenFirstWorkoutCompleteAi() async {
     await _prefs.setBool(_seenFirstWorkoutCompleteAiKey, true);
+  }
+
+  /// Phase 135 · post-first-workout Pro invitation scene. Fires once,
+  /// the first time the user returns to the dashboard after completing
+  /// at least one workout. See [ConversionMomentService].
+  bool get seenFirstWorkoutProInvitation =>
+      _prefs.getBool(_seenFirstWorkoutProInvitationKey) ?? false;
+
+  Future<void> markSeenFirstWorkoutProInvitation() async {
+    await _prefs.setBool(_seenFirstWorkoutProInvitationKey, true);
   }
 
   // ─── Progress Phase 5.D · Year-in-Review one-shot flag ────────────

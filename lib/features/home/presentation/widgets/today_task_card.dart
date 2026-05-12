@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/routing/app_router.dart';
 import '../../../../core/utils/app_haptics.dart';
+import '../../../monetization/models/locked_feature_type.dart';
 import '../../../monetization/providers/monetization_provider.dart';
+import '../../../monetization/services/premium_gate_service.dart';
 import '../../../workout/models/workout_day_model.dart';
 
 const Color _neon = Color(0xFF8B5CF6);
@@ -99,8 +101,12 @@ class TodayTaskCard extends ConsumerWidget {
     if (activeDay.exercises.isEmpty) return;
     final isPro = ref.read(isProProvider);
     if (!isPro && activeDay.dayNumber > AppConstants.freeDayLimit) {
-      AppHaptics.secondaryTap();
-      context.push(AppRoutes.paywall);
+      // Phase 135 · fire the cinematic futureDay conversion scene via
+      // the gate. Soft haptic + analytics live inside handleLockedTap.
+      await ref.read(premiumGateProvider).handleLockedTap(
+            context,
+            LockedFeatureType.futureDay,
+          );
       return;
     }
     // "Antrenmana Başla" — the single most important CTA in the app,
