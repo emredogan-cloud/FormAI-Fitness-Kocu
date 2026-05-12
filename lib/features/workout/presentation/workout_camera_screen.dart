@@ -193,6 +193,32 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         orElse: () => cameras.first,
       );
       await _startController(front);
+    } on CameraException catch (e, st) {
+      // Phase 138 · M-8. The camera plugin throws CameraException
+      // with a string `code` derived from the native error. We map
+      // the "another app holds the camera" / "max cameras in use"
+      // codes to a more actionable Turkish message; everything else
+      // falls through to the generic "Kamera başlatılamadı" copy.
+      AppLogger.warning(
+        'Camera startup failed (code=${e.code})',
+        category: 'workout',
+        data: {'description': e.description ?? '', 'stack': st.toString()},
+      );
+      if (!mounted) return;
+      final code = e.code.toLowerCase();
+      final description = (e.description ?? '').toLowerCase();
+      final inUse = code.contains('in_use') ||
+          code.contains('inuse') ||
+          code.contains('cameraaccess') ||
+          code.contains('max_cameras') ||
+          description.contains('already in use') ||
+          description.contains('in use by another');
+      setState(() {
+        _error = inUse
+            ? 'Kamera şu an başka bir uygulama tarafından kullanılıyor. '
+                'O uygulamayı kapatıp tekrar dene.'
+            : 'Kamera başlatılamadı: ${e.code}';
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() => _error = 'Kamera başlatılamadı: $e');
