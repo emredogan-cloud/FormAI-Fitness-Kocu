@@ -263,7 +263,27 @@ if (selectedAge < 13) {
 
 ---
 
-### B-5 · RevenueCat Receipt Validation Server-Side Yok
+### B-5 · RevenueCat Receipt Validation Server-Side Yok — 🟡 CODE HAZIR, PM/Founder DEPLOY GEREKİYOR (Phase 138)
+
+**Uygulanan mimari:**
+- **Yeni tablo:** `public.pro_entitlements` (`supabase/migrations/003_create_pro_entitlements.sql`). Bir kullanıcı = bir satır; PK `user_id` → `auth.users(id)`. RLS: kullanıcı kendi satırını okuyabilir; yazma yalnızca `service_role` bypass ile (webhook fonksiyonu üzerinden).
+- **Yeni edge function:** `supabase/functions/revenuecat-webhook/index.ts` (Deno). RC `Authorization: Bearer <shared-secret>` header'ını doğrular, event type → `is_active` mapping yapar, `last_event_id` ile idempotency-check, sonra upsert.
+- **Founder runbook:** `supabase/functions/revenuecat-webhook/README.md` — deploy adımları, RC dashboard config, validation checklist.
+
+**Client değişmedi (intentional):**
+- `monetization_provider.dart`'taki `Purchases.getCustomerInfo()` okuması korundu — bu commit pure additive. Premium flow, paywall, restore akışları aynen çalışıyor.
+- `pro_entitlements` tablosu future RLS-protected Pro endpoint'ler için bekliyor; client cross-check sonraki phase.
+
+**Founder'ın yapması gereken (Claude bunları auto-execute ETMEZ):**
+1. `openssl rand -base64 48` → güçlü shared secret üret, 1Password'a kaydet.
+2. `supabase secrets set REVENUECAT_WEBHOOK_SECRET=<secret>` ile Supabase'e yükle.
+3. Migration: `supabase db push --linked` (eğer remote bağlıysa) veya Supabase Studio SQL Editor üzerinden `003_create_pro_entitlements.sql` content'ini çalıştır.
+4. Function deploy: `supabase functions deploy revenuecat-webhook --no-verify-jwt`. (JWT verify kapalı çünkü RC kullanıcı JWT'si göndermez — kendi Bearer header'ı ile auth eder.)
+5. RC dashboard → Integrations → Webhooks → + Add:
+   - URL: `https://<project-ref>.supabase.co/functions/v1/revenuecat-webhook`
+   - Authorization header: aynı secret (RC otomatik `Bearer ` prefix ekler).
+   - Event types: tüm subscription event'lerini enable et.
+6. Sandbox validation (README'deki 5-step checklist).
 
 **Sorun:** `supabase/functions/` dizini **yok**. RevenueCat entitlement'ı sadece client tarafında okunuyor (`monetization_provider.dart:96-99`).
 
@@ -320,6 +340,18 @@ Sonra RLS politikalarını `profiles.pro_active = true` üzerine kur, client'tak
 
 **Zorluk:** Orta (4–6 saat: edge function + RevenueCat webhook setup + RLS policy + client provider güncellemesi).
 **Aciliyet:** Production rollout öncesi.
+
+**Validation (Phase 138 code-side):**
+- Edge function balance check (braces / parens / signature) → temiz.
+- Migration SQL idempotent (`create table if not exists`, `drop trigger if exists` pattern).
+- RLS test contract: anonymous + non-owner authenticated → 0 satır görür; service_role bypass yazabilir.
+- Idempotency: `last_event_id` match'inde response `{ok:true, idempotent:true}`, satır mutate edilmez.
+
+**Commit:** `e43859a` — feat(monetization): phase 138 B-5 - RevenueCat server-side validation
+**Push:** ✅ `6da0f65..e43859a main -> main`
+**Rollback:** `supabase functions delete revenuecat-webhook` + `DROP TABLE public.pro_entitlements CASCADE`. Flutter client değişmedi, pre-B-5 davranışına otomatik düşer.
+
+**Open item (founder action required):** Deploy + RC dashboard config + sandbox validation. Bu adımlar yapılana kadar B-5 fiilen aktif değil — tablo + function repository'de bekliyor.
 
 ---
 
@@ -1166,7 +1198,7 @@ Sorun çıkarsa: **Halt rollout** (rollout dondurulur, yeni indirici alamaz, mev
 [x] B-2  ✅ 22 eksik webp referansı (regional + equipment templates) substitüsyonla çözüldü — commit 54a6cb2
 [ ] B-3  flutter build appbundle --release ile imzalı .aab üret
 [x] B-4  ✅ 18+ age gate (founder onayı) — /age-gate route + year picker + block screen — commit 3e7b0b8
-[ ] B-5  Supabase Edge Function yaz: RevenueCat webhook → profiles.pro_active sync
+[~] B-5  🟡 Code hazır (commit e43859a) — founder deploy + RC dashboard config bekliyor (README'de runbook)
 [ ] B-6  Supabase RLS policies admin tabloları için, app_metadata.role kontrolü
 ```
 
