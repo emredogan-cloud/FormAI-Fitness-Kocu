@@ -670,23 +670,23 @@ H-1'in autosave mimarisi her wizard mutation'ında state'i SharedPreferences'a y
 
 ---
 
-## 5. 🟡 Medium-Severity Sorunlar
+## 5. 🟡 Medium-Severity Sorunlar — ✅ Phase 138 sweep
 
-Launch'ı engellemez, soft-launch + iterasyonla çözülebilir.
+10 / 11 MEDIUM item Phase 138 launch hardening sweep'inde kapatıldı. M-11 (Notifications Android 13+ runtime permission test) sadece manuel cihaz testi gerektirir — kod tarafında müdahale alanı yok, founder Closed Test track'te test ediyor.
 
-| ID | Konu | Çözüm | Tahmini Süre |
+| ID | Konu | Çözüm | Commit |
 |---|---|---|---|
-| M-1 | `PopScope(canPop: false)` onboarding'de eksik | Android back'i geçişli yapma | 30 dk |
-| M-2 | Workout camera mid-session back-press confirm yok | "Antrenmanı bırak?" dialog | 1 saat |
-| M-3 | `_restTimer` / `_prepTimer` lifecycle audit | dispose'da cancel'ı kontrol et | 1 saat |
-| M-4 | `network_security_config.xml` yok | XML ekle, cleartext denied | 30 dk |
-| M-5 | "30 günde karın kası" sağlık iddiası | Disclaimer ekle: "Sonuçlar diet + tutarlılığa bağlı" | 30 dk |
-| M-6 | Notification icon explicit declare yok | `<meta-data android:name="com.dexterous...default_notification_icon" .../>` | 30 dk |
-| M-7 | SharedPreferences write fail catch yok (`_finish()`) | try/catch + toast | 30 dk |
-| M-8 | Camera "in use by another app" exception | try/catch + retry dialog | 1 saat |
-| M-9 | Year-in-review yıl sonu dışında manual entry | "Yolculuğunu Gör" pill ekle | 1 saat |
-| M-10 | "Pending/Deferred" purchase state explicit handle yok | `PurchaseOutcome.pending` ekle | 1 saat |
-| M-11 | Notifications icon test Android 13+ | Emulator test | 1 saat |
+| M-1 | `PopScope(canPop: false)` onboarding'de eksik | Android back'i geçişli yapma | ✅ `c77f867` |
+| M-2 | Workout camera mid-session back-press confirm yok | "Antrenmanı bırak?" dialog | ✅ `def5d05` |
+| M-3 | `_restTimer` / `_prepTimer` lifecycle audit | dispose'da cancel'ı kontrol et | ✅ Audit clean — false positive |
+| M-4 | `network_security_config.xml` yok | XML ekle, cleartext denied | ✅ `df55fde` |
+| M-5 | "30 günde karın kası" sağlık iddiası | Disclaimer ekle: "Sonuçlar diet + tutarlılığa bağlı" | ✅ `53efa78` |
+| M-6 | Notification icon explicit declare yok | `<meta-data android:name="com.dexterous...default_notification_icon" .../>` | ✅ `df55fde` |
+| M-7 | SharedPreferences write fail catch yok (`_finish()`) | try/catch + toast | ✅ `b5a8b85` |
+| M-8 | Camera "in use by another app" exception | try/catch + retry dialog | ✅ `e606df5` |
+| M-9 | Year-in-review yıl sonu dışında manual entry | "Yolculuğunu Gör" pill ekle | ✅ Already wired on `ProgramCompleteCard` (gelisim_tab.dart:265) |
+| M-10 | "Pending/Deferred" purchase state explicit handle yok | `PurchaseOutcome.pending` ekle | ✅ `d1e7423` |
+| M-11 | Notifications icon test Android 13+ | Emulator test | 🟡 Founder action: Closed Test cihazda smoke test |
 
 ---
 
@@ -1310,17 +1310,17 @@ Sorun çıkarsa: **Halt rollout** (rollout dondurulur, yeni indirici alamaz, mev
 ### 🟡 MEDIUM — Soft Launch Sırasında / Sonrasında
 
 ```
-[ ] M-1   PopScope(canPop: false) onboarding screen'e
-[ ] M-2   Workout camera mid-session Android back confirm dialog
-[ ] M-3   _restTimer / _prepTimer dispose audit
-[ ] M-4   network_security_config.xml ekle (cleartext denied)
-[ ] M-5   Health claims disclaimer (Play Store listing + in-app)
-[ ] M-6   Notification icon explicit declare in AndroidManifest
-[ ] M-7   onboarding _finish() SharedPreferences write try/catch
-[ ] M-8   Camera "in use by another app" exception handle
-[ ] M-9   Year-in-review manual entry pill
-[ ] M-10  Pending/Deferred purchase outcome explicit handle
-[ ] M-11  Notifications Android 13+ runtime permission test
+[x] M-1   ✅ PopScope wrapping w/ onPopInvokedWithResult → _back() (commit c77f867)
+[x] M-2   ✅ _confirmAndExit dialog gates back-button + system-back (commit def5d05)
+[x] M-3   ✅ Timer dispose audit — all timers correctly disposed (false-positive flag)
+[x] M-4   ✅ network_security_config.xml + usesCleartextTraffic="false" (commit df55fde)
+[x] M-5   ✅ "Sonuçlar bireysel çabaya ve tutarlılığa bağlıdır" disclaimer on paywall + goal-step feedback (commit 53efa78)
+[x] M-6   ✅ default_notification_icon meta-data referencing launcher_icon (commit df55fde)
+[x] M-7   ✅ try/catch in _finish() with SnackBar + abort-forward (commit b5a8b85)
+[x] M-8   ✅ CameraException code/description mapped to "Kamera başka uygulamada" copy (commit e606df5)
+[x] M-9   ✅ Already wired — ProgramCompleteCard surfaces "Yolculuğunu Gör" pill at gelisim_tab.dart:265
+[x] M-10  ✅ PurchaseOutcome.pending + paywall soft toast (commit d1e7423)
+[~] M-11  🟡 Founder action: smoke test notification icon rendering on Android 13+ Closed Test devices
 ```
 
 ### 📦 PLAY CONSOLE OPERASYON
