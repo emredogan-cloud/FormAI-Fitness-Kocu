@@ -5,11 +5,14 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/services/app_preferences.dart';
 import '../../../core/services/notification_service.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/media_url.dart';
 import '../../../core/utils/string_case.dart';
 import '../domain/services/workout_generator_service.dart';
+import 'premium_exercise_tags.dart';
+import 'session_log_repository.dart';
 import '../models/exercise_model.dart';
 import '../models/workout_day_model.dart';
 import '../models/workout_plan_model.dart';
@@ -23,6 +26,13 @@ class WorkoutRepository {
 
   static const String _completedKey = 'sixpack.completed_days';
   static const String _pendingSyncKey = 'sixpack.pending_sync_days';
+  // Bumped v5 → v6 in phase 134: `Exercise` gained `isPremium` and
+  // `isNew` flags so the emotional-monetization phase can render
+  // locked previews inside otherwise free plans. Existing v5 caches
+  // hydrate through `Exercise.fromJson`, which defaults the new
+  // flags to `false` — bumping the key forces a regen so the
+  // [PremiumExerciseTags] applied in [_exerciseFromRow] actually
+  // surface on next launch.
   // Bumped v4 → v5 in phase 86: the goal/level normaliser now defaults
   // to `tone` instead of `sixpack` when onboarding is empty, and the
   // bucket interleave was rewritten to spread shorter buckets evenly
@@ -31,7 +41,7 @@ class WorkoutRepository {
   // fix; bumping the key forces that on next launch without users
   // having to "Reset progress" by hand. (Prior bump v3 → v4 in phase 75
   // was a similar one-shot for video URL casing.)
-  static const String _planKey = 'sixpack.user_custom_plan_v5';
+  static const String _planKey = 'sixpack.user_custom_plan_v6';
 
   /// Companion key holding a `goal:level` fingerprint of the inputs
   /// that produced the cached plan. Read at decode time; if the
@@ -40,7 +50,7 @@ class WorkoutRepository {
   /// changes their goal in profile-edit but keeps seeing the original
   /// plan because the cache had no concept of input identity.
   static const String _planFingerprintKey =
-      'sixpack.user_custom_plan_fingerprint_v5';
+      'sixpack.user_custom_plan_fingerprint_v6';
   static const String _progressTable = 'user_progress';
   static const String _exercisesTable = 'exercises';
 
@@ -190,6 +200,12 @@ class WorkoutRepository {
       targetMuscle: _firstTargetMuscle(row['target_muscles']),
       isCardio: (row['is_cardio'] as bool?) ?? false,
       videoUrl: _composeVideoUrl(slug),
+      // Phase 134 · premium / new flags layered in at hydration time.
+      // Source of truth is [PremiumExerciseTags] (client-side); the
+      // Supabase row has no equivalent columns. Flags drive the
+      // `LockedOverlay` + "Yeni" chip render decisions downstream.
+      isPremium: PremiumExerciseTags.isPremium(slug),
+      isNew: PremiumExerciseTags.isNew(slug),
     );
   }
 
@@ -246,6 +262,15 @@ class WorkoutRepository {
   // one of the lists below. Re-curate carefully.
   // ==========================================================================
 
+  // Phase 98 · The original 7 equipment programs are preserved as the only
+  // entries on the dashboard's horizontal strip. Each carries a Lite Seviye
+  // (`exerciseSlugs`) AND an İleri Seviye (`premiumExerciseSlugs`) pulled
+  // from the Phase 96 advanced catalogue. The plan-detail screen reads
+  // `WorkoutPlan.premiumExercises` to render a half-width "Premium Seviye"
+  // launcher beside the existing "Lite Seviye" button, plus an İleri Seviye
+  // section below the standard exercise list. Phase 97's mistake — adding
+  // 8 new equipment cards alongside the 7 — has been reverted; the new
+  // exercises now live INSIDE these 7 cards as the premium tier.
   static const List<_PlanTemplate> _equipmentTemplates = [
     _PlanTemplate(
       id: 'equipment_chest_strength',
@@ -258,6 +283,13 @@ class WorkoutRepository {
         'incline_bench_press',
         'chest_fly',
         'chest_dip',
+      ],
+      premiumExerciseSlugs: [
+        'decline_bench_press',
+        'cable_crossover',
+        'incline_chest_fly',
+        'machine_chest_press',
+        'dumbbell_pullover',
       ],
       image: 'photos/workouts/equipment_chest_strength.webp',
     ),
@@ -273,6 +305,14 @@ class WorkoutRepository {
         'barbell_row',
         'chin_up',
       ],
+      premiumExerciseSlugs: [
+        't_bar_row',
+        'dumbbell_row',
+        'seated_cable_row',
+        'face_pull',
+        'deadlift',
+        'dumbbell_clean',
+      ],
       image: 'photos/workouts/equipment_back_width.webp',
     ),
     _PlanTemplate(
@@ -287,6 +327,14 @@ class WorkoutRepository {
         'lateral_raise',
         'front_raise',
       ],
+      premiumExerciseSlugs: [
+        'machine_shoulder_press',
+        'upright_row',
+        'rear_delt_fly',
+        'cuban_press',
+        'landmine_press',
+        'thruster',
+      ],
       image: 'photos/workouts/equipment_shoulders_round.webp',
     ),
     _PlanTemplate(
@@ -300,6 +348,12 @@ class WorkoutRepository {
         'hammer_curl',
         'concentration_curl',
       ],
+      premiumExerciseSlugs: [
+        'preacher_curl',
+        'incline_dumbbell_curl',
+        'cable_curl',
+        'chin_up_negative',
+      ],
       image: 'photos/workouts/equipment_arms_biceps.webp',
     ),
     _PlanTemplate(
@@ -312,6 +366,12 @@ class WorkoutRepository {
         'triceps_pushdown',
         'skull_crusher',
         'triceps_dip',
+      ],
+      premiumExerciseSlugs: [
+        'overhead_triceps_extension',
+        'rope_triceps_pushdown',
+        'dumbbell_kickback',
+        'tricep_extension_floor',
       ],
       image: 'photos/workouts/equipment_arms_triceps.webp',
     ),
@@ -328,6 +388,14 @@ class WorkoutRepository {
         'leg_extension',
         'leg_curl',
       ],
+      premiumExerciseSlugs: [
+        'front_squat',
+        'goblet_squat',
+        'hip_thrust',
+        'walking_lunge_dumbbell',
+        'kettlebell_swing',
+        'box_jump',
+      ],
       image: 'photos/workouts/equipment_legs_power.webp',
     ),
     _PlanTemplate(
@@ -341,6 +409,12 @@ class WorkoutRepository {
         'hanging_leg_raise',
         'weighted_russian_twist',
         'ab_wheel_rollout',
+      ],
+      premiumExerciseSlugs: [
+        'weighted_sit_up',
+        'weighted_leg_raise',
+        'dragon_flag',
+        'medicine_ball_russian_twist',
       ],
       image: 'photos/workouts/equipment_core_loaded.webp',
     ),
@@ -600,6 +674,344 @@ class WorkoutRepository {
       exerciseSlugs: ['jumping_jack', 'high_knees', 'skipping_rope'],
       image: 'photos/workouts/cardio_morning_quick.webp',
     ),
+    // ========================================================================
+    // Phase 97 expansion · 24 new regional bodyweight programs
+    // ========================================================================
+    // Surfaces every Phase 96 bodyweight slug (mobility/stretching included)
+    // under the chip that matches its primary target. Sub-tags determine
+    // secondary placement; the chip filter in antrenman_tab.dart keys off
+    // `category` only. See /reports/workout-category-distribution.md for the
+    // full per-chip manifest.
+    // ---- Phase 97 · Core ----
+    _PlanTemplate(
+      id: 'core_static_resistance',
+      title: 'Statik Çekirdek Direnci',
+      category: ExerciseCategory.core,
+      level: 'Orta düzey',
+      durationMinutes: 14,
+      exerciseSlugs: [
+        'plank',
+        'hollow_hold',
+        'side_plank',
+        'bird_dog',
+        'dead_bug',
+      ],
+      image: 'photos/workouts/core_static_resistance.webp',
+    ),
+    _PlanTemplate(
+      id: 'core_lower_abs',
+      title: 'Alt Karın Şekillendirme',
+      category: ExerciseCategory.core,
+      level: 'Orta düzey',
+      durationMinutes: 12,
+      exerciseSlugs: [
+        'reverse_crunch',
+        'leg_raise',
+        'hanging_leg_raise',
+        'toe_touch',
+      ],
+      image: 'photos/workouts/core_lower_abs.webp',
+    ),
+    _PlanTemplate(
+      id: 'core_oblique_burner',
+      title: 'Yan Kas Yakıcı',
+      category: ExerciseCategory.core,
+      level: 'Başlangıç',
+      durationMinutes: 12,
+      exerciseSlugs: [
+        'russian_twist',
+        'bicycle_crunch',
+        'side_plank',
+        'mountain_climber',
+      ],
+      image: 'photos/workouts/core_oblique_burner.webp',
+    ),
+    _PlanTemplate(
+      id: 'core_mobility_flow',
+      title: 'Mobiliteli Karın Akışı',
+      category: ExerciseCategory.core,
+      level: 'Başlangıç',
+      durationMinutes: 14,
+      exerciseSlugs: [
+        'cat_cow',
+        'bird_dog',
+        'dead_bug',
+        'side_plank',
+        'plank',
+      ],
+      image: 'photos/workouts/core_mobility_flow.webp',
+    ),
+    // ---- Phase 97 · Göğüs ----
+    _PlanTemplate(
+      id: 'chest_bodyweight_burst',
+      title: 'Bodyweight Göğüs Patlaması',
+      category: ExerciseCategory.chest,
+      level: 'İleri',
+      durationMinutes: 16,
+      exerciseSlugs: [
+        'wide_push_up',
+        'diamond_push_up',
+        'archer_push_up',
+        'decline_push_up',
+      ],
+      image: 'photos/workouts/chest_bodyweight_burst.webp',
+    ),
+    _PlanTemplate(
+      id: 'chest_plyo_explosive',
+      title: 'Patlayıcı Plyo Göğüs',
+      category: ExerciseCategory.chest,
+      level: 'İleri',
+      durationMinutes: 18,
+      exerciseSlugs: [
+        'clap_push_up',
+        'decline_push_up',
+        'archer_push_up',
+        'push_up',
+      ],
+      image: 'photos/workouts/chest_plyo_explosive.webp',
+    ),
+    _PlanTemplate(
+      id: 'chest_beginner_flow',
+      title: 'Yeni Başlayan Göğüs Akışı',
+      category: ExerciseCategory.chest,
+      level: 'Başlangıç',
+      durationMinutes: 8,
+      exerciseSlugs: ['knee_push_up', 'incline_push_up', 'push_up'],
+      image: 'photos/workouts/chest_beginner_flow.webp',
+    ),
+    // ---- Phase 97 · Sırt ----
+    _PlanTemplate(
+      id: 'back_bodyweight_activation',
+      title: 'Bodyweight Sırt Aktivasyonu',
+      category: ExerciseCategory.back,
+      level: 'Orta düzey',
+      durationMinutes: 18,
+      exerciseSlugs: [
+        'inverted_row',
+        'swimmer',
+        'prone_y_raise',
+        'prone_t_raise',
+        'scapular_pull_up',
+      ],
+      image: 'photos/workouts/back_bodyweight_activation.webp',
+    ),
+    _PlanTemplate(
+      id: 'back_postural_corrective',
+      title: 'Postüral Sırt Düzeltme',
+      category: ExerciseCategory.back,
+      level: 'Başlangıç',
+      durationMinutes: 14,
+      exerciseSlugs: [
+        'swimmer',
+        'bird_dog',
+        'prone_y_raise',
+        'prone_t_raise',
+        'scapular_wall_slide',
+      ],
+      image: 'photos/workouts/back_postural_corrective.webp',
+    ),
+    _PlanTemplate(
+      id: 'back_hanging_workout',
+      title: 'Asılı Sırt Antrenmanı',
+      category: ExerciseCategory.back,
+      level: 'İleri',
+      durationMinutes: 18,
+      exerciseSlugs: ['scapular_pull_up', 'dead_hang', 'pull_up', 'chin_up'],
+      image: 'photos/workouts/back_hanging_workout.webp',
+    ),
+    // ---- Phase 97 · Omuz ----
+    _PlanTemplate(
+      id: 'shoulders_advanced_bodyweight',
+      title: 'İleri Bodyweight Omuz',
+      category: ExerciseCategory.shoulders,
+      level: 'İleri',
+      durationMinutes: 18,
+      exerciseSlugs: [
+        'handstand_hold',
+        'wall_walk',
+        'handstand_push_up',
+        'pike_push_up',
+      ],
+      image: 'photos/workouts/shoulders_advanced_bodyweight.webp',
+    ),
+    _PlanTemplate(
+      id: 'shoulders_mobility_opening',
+      title: 'Omuz Mobilite ve Açılış',
+      category: ExerciseCategory.shoulders,
+      level: 'Başlangıç',
+      durationMinutes: 10,
+      exerciseSlugs: ['scapular_wall_slide', 'pike_walk', 'downward_dog'],
+      image: 'photos/workouts/shoulders_mobility_opening.webp',
+    ),
+    _PlanTemplate(
+      id: 'shoulders_scapular_stability',
+      title: 'Skapular Stabilite',
+      category: ExerciseCategory.shoulders,
+      level: 'Başlangıç',
+      durationMinutes: 12,
+      exerciseSlugs: [
+        'scapular_wall_slide',
+        'scapular_pull_up',
+        'prone_y_raise',
+        'prone_t_raise',
+      ],
+      image: 'photos/workouts/shoulders_scapular_stability.webp',
+    ),
+    // ---- Phase 97 · Kol ----
+    _PlanTemplate(
+      id: 'arms_bodyweight_burst',
+      title: 'Bodyweight Kol Patlaması',
+      category: ExerciseCategory.arms,
+      level: 'Orta düzey',
+      durationMinutes: 14,
+      exerciseSlugs: [
+        'close_grip_push_up',
+        'diamond_push_up',
+        'bench_dip',
+        'tricep_extension_floor',
+      ],
+      image: 'photos/workouts/arms_bodyweight_burst.webp',
+    ),
+    _PlanTemplate(
+      id: 'arms_triceps_bodyweight',
+      title: 'Triceps Yoğun Bodyweight',
+      category: ExerciseCategory.arms,
+      level: 'Orta düzey',
+      durationMinutes: 14,
+      exerciseSlugs: [
+        'bench_dip',
+        'close_grip_push_up',
+        'tricep_extension_floor',
+        'pike_push_up_close',
+      ],
+      image: 'photos/workouts/arms_triceps_bodyweight.webp',
+    ),
+    _PlanTemplate(
+      id: 'arms_hanging_grip',
+      title: 'Asılı Kol & Grip Antrenmanı',
+      category: ExerciseCategory.arms,
+      level: 'İleri',
+      durationMinutes: 12,
+      exerciseSlugs: ['chin_up_negative', 'dead_hang', 'scapular_pull_up'],
+      image: 'photos/workouts/arms_hanging_grip.webp',
+    ),
+    // ---- Phase 97 · Bacak ----
+    _PlanTemplate(
+      id: 'legs_glute_activation',
+      title: 'Glute Aktivasyonu',
+      category: ExerciseCategory.legs,
+      level: 'Başlangıç',
+      durationMinutes: 12,
+      exerciseSlugs: [
+        'glute_bridge',
+        'frog_pump',
+        'single_leg_glute_bridge',
+        'sumo_squat',
+      ],
+      image: 'photos/workouts/legs_glute_activation.webp',
+    ),
+    _PlanTemplate(
+      id: 'legs_single_leg_bodyweight',
+      title: 'Tek Bacak Bodyweight',
+      category: ExerciseCategory.legs,
+      level: 'İleri',
+      durationMinutes: 18,
+      exerciseSlugs: [
+        'pistol_squat',
+        'bulgarian_split_squat',
+        'single_leg_rdl',
+        'calf_raise',
+      ],
+      image: 'photos/workouts/legs_single_leg_bodyweight.webp',
+    ),
+    _PlanTemplate(
+      id: 'legs_plyometric_burst',
+      title: 'Plyometrik Bacak Patlaması',
+      category: ExerciseCategory.legs,
+      level: 'İleri',
+      durationMinutes: 16,
+      exerciseSlugs: [
+        'box_jump',
+        'tuck_jump',
+        'jump_squat',
+        'squat_jump_pulse',
+      ],
+      image: 'photos/workouts/legs_plyometric_burst.webp',
+    ),
+    _PlanTemplate(
+      id: 'legs_sumo_adductor',
+      title: 'Sumo & İç Uyluk',
+      category: ExerciseCategory.legs,
+      level: 'Başlangıç',
+      durationMinutes: 14,
+      exerciseSlugs: [
+        'sumo_squat',
+        'single_leg_glute_bridge',
+        'frog_pump',
+        'lunge',
+      ],
+      image: 'photos/workouts/legs_sumo_adductor.webp',
+    ),
+    // ---- Phase 97 · Kardiyo & Full Body ----
+    _PlanTemplate(
+      id: 'cardio_hiit_burst',
+      title: 'HIIT Patlaması',
+      category: ExerciseCategory.fullBody,
+      level: 'İleri',
+      durationMinutes: 18,
+      exerciseSlugs: [
+        'burpee',
+        'squat_thrust',
+        'half_burpee',
+        'jump_squat',
+        'mountain_climber',
+      ],
+      image: 'photos/workouts/cardio_hiit_burst.webp',
+    ),
+    _PlanTemplate(
+      id: 'cardio_mobility_stretch',
+      title: 'Mobilite ve Esneklik Akışı',
+      category: ExerciseCategory.fullBody,
+      level: 'Başlangıç',
+      durationMinutes: 12,
+      exerciseSlugs: [
+        'cat_cow',
+        'child_pose',
+        'downward_dog',
+        'cobra_stretch',
+        'hip_flexor_stretch',
+        'standing_hamstring_stretch',
+      ],
+      image: 'photos/workouts/cardio_mobility_stretch.webp',
+    ),
+    _PlanTemplate(
+      id: 'cardio_shadow_box',
+      title: 'Shadow Box Cardio',
+      category: ExerciseCategory.fullBody,
+      level: 'Başlangıç',
+      durationMinutes: 14,
+      exerciseSlugs: [
+        'shadow_boxing',
+        'lateral_shuffle',
+        'high_knees',
+        'jumping_jack',
+      ],
+      image: 'photos/workouts/cardio_shadow_box.webp',
+    ),
+    _PlanTemplate(
+      id: 'cardio_full_body_flow',
+      title: 'Tüm Vücut Hareket Akışı',
+      category: ExerciseCategory.fullBody,
+      level: 'Orta düzey',
+      durationMinutes: 14,
+      exerciseSlugs: [
+        'bear_crawl',
+        'mountain_climber',
+        'plank_jack',
+        'lateral_shuffle',
+      ],
+      image: 'photos/workouts/cardio_full_body_flow.webp',
+    ),
   ];
 
   /// Materialised Ekipmanlı Egzersizler cards. Resolves the seven
@@ -644,7 +1056,16 @@ class WorkoutRepository {
   /// local + remote progress. On a cold cache (or when a previous cache
   /// entry is unparseable), fetches the exercise catalogue and falls back
   /// to [generator] before persisting the result.
-  Future<List<WorkoutDay>> loadOrGenerateProgram({
+  ///
+  /// `isStub == true` signals "no real plan available" — the cache was
+  /// empty AND the live pool fetch returned nothing (offline first launch
+  /// / catalogue fetch failure). The 30 rest-day fallback the generator
+  /// returns in that case is renderable but is NOT a real plan; the UI
+  /// must treat it as "data not yet loaded" rather than "all days
+  /// complete", because [_firstIncomplete] would otherwise resolve to
+  /// null on a list of empty rest days and the dashboard would mistake
+  /// the placeholder for a finished program.
+  Future<({List<WorkoutDay> days, bool isStub})> loadOrGenerateProgram({
     required WorkoutGeneratorService generator,
     String? userGoal,
     String? fitnessLevel,
@@ -656,7 +1077,7 @@ class WorkoutRepository {
     // stored plan instead of silently serving the old one.
     //
     // Phase 133 · [hasEquipment] joined the fingerprint so a user who
-    // flips the equipment answer (back through onboarding or via
+    // flips the equipment answer (back through onboarding, or via
     // future profile-edit) gets a fresh plan generated against the
     // new filter rather than reading a stale cache. Legacy installs
     // with `hasEquipment == null` collapse to `"true"` in the
@@ -664,6 +1085,7 @@ class WorkoutRepository {
     final fingerprint = _fingerprint(userGoal, fitnessLevel, hasEquipment);
     final cached = _decodeCachedPlan(fingerprint);
     final List<WorkoutDay> plan;
+    var isStub = false;
     if (cached != null) {
       plan = cached;
     } else {
@@ -672,6 +1094,11 @@ class WorkoutRepository {
       // persisted, we never re-touch the catalogue for plan generation
       // (only for ad-hoc regional / push-limits resolutions).
       final pool = await getAllExercises();
+      // Empty pool ⇒ no cached plan + no fresh catalogue. The generator
+      // returns a 30-rest-day list to keep the UI renderable, but flag
+      // it so the dashboard can show "Senkronize ediliyor" instead of
+      // "Tebrikler, tamamlandı".
+      isStub = pool.isEmpty;
       plan = generator.generate30DayPlan(
         userGoal: userGoal ?? 'sixpack',
         fitnessLevel: fitnessLevel ?? 'beginner',
@@ -688,14 +1115,15 @@ class WorkoutRepository {
       // 30-rest-day stub from the generator; persisting that would mean
       // the next launch never retries the catalogue fetch, so skip the
       // write whenever the pool was empty.
-      if (pool.isNotEmpty) {
+      if (!isStub) {
         unawaited(_cachePlan(plan, fingerprint));
       }
     }
-    return plan
+    final days = plan
         .map((day) =>
             day.copyWith(isCompleted: completed.contains(day.dayNumber)))
         .toList(growable: false);
+    return (days: days, isStub: isStub);
   }
 
   /// Stable identity for the inputs that produced a cached plan. Null
@@ -816,6 +1244,16 @@ class WorkoutRepository {
     // regeneration against whatever the user's current goal/level is.
     await _prefs.remove(_planKey);
     await _prefs.remove(_planFingerprintKey);
+    // Progress Phase 2.A · session logs reference dayNumbers from the
+    // completion ledger we're about to wipe. Drop them in lockstep so
+    // the calendar drilldown can't surface "Gün 5 — 32 reps" against a
+    // ledger that no longer thinks day 5 was done.
+    await SessionLogRepository(_prefs).clearAll();
+    // Progress Phase 5.D · clear the Year-in-Review seen flag so a
+    // user who restarts the 30-day arc gets the Day-30 celebration
+    // again on their next completion (otherwise the modal would feel
+    // like it's "already been seen" forever).
+    await AppPreferences(_prefs).clearSeenYearInReview();
     // Phase 52 · the user just wiped their streak, so the pending
     // 48 h "you'll lose your streak" warning would fire about a
     // streak that no longer exists. Cancel it.
@@ -940,6 +1378,7 @@ class _PlanTemplate {
     required this.durationMinutes,
     required this.exerciseSlugs,
     this.image,
+    this.premiumExerciseSlugs = const [],
   });
 
   final String id;
@@ -950,6 +1389,12 @@ class _PlanTemplate {
   final List<String> exerciseSlugs;
   final String? image;
 
+  /// Phase 98 · second tier of slugs surfaced by the plan-detail screen
+  /// as the "Premium Seviye" launcher. Empty for plans without a premium
+  /// upgrade (every regional bodyweight card stays single-button); the 7
+  /// equipment programs populate this with Phase 96 advanced movements.
+  final List<String> premiumExerciseSlugs;
+
   WorkoutPlan resolve(Map<String, Exercise> bySlug) {
     return WorkoutPlan(
       id: id,
@@ -959,6 +1404,10 @@ class _PlanTemplate {
       durationMinutes: durationMinutes,
       image: image,
       exercises: exerciseSlugs
+          .map((s) => bySlug[s])
+          .whereType<Exercise>()
+          .toList(growable: false),
+      premiumExercises: premiumExerciseSlugs
           .map((s) => bySlug[s])
           .whereType<Exercise>()
           .toList(growable: false),

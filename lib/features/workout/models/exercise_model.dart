@@ -18,6 +18,8 @@ class Exercise {
     this.category = ExerciseCategory.core,
     this.description = '',
     this.shortTip = '',
+    this.isPremium = false,
+    this.isNew = false,
   });
 
   final String id;
@@ -55,6 +57,21 @@ class Exercise {
   /// seed HIIT blocks and to cap cardio density inside strength plans.
   final bool isCardio;
 
+  /// Phase 134 · gates the exercise behind a Pro entitlement. Non-pro
+  /// users still see the exercise inside the plan, but it's rendered
+  /// through `LockedOverlay` (blur + lock badge) and the tile routes
+  /// to the cinematic conversion scene instead of executing the
+  /// workout. Tagging table lives in [PremiumExerciseTags] — see that
+  /// file for the canonical list. Field defaults to `false` so legacy
+  /// fromJson rows + non-tagged Supabase rows hydrate as accessible.
+  final bool isPremium;
+
+  /// Phase 134 · marks the exercise as part of the Phase 96 expansion
+  /// (87 net-new movements). Surfaces a "Yeni" chip in the regions
+  /// menu and, for non-pro users, layers a lock overlay so the entry
+  /// reads as a premium teaser. Same defaulting story as [isPremium].
+  final bool isNew;
+
   bool get isRepBased => type == ExerciseType.repBased;
   bool get isTimeBased => type == ExerciseType.timeBased;
 
@@ -73,6 +90,8 @@ class Exercise {
         'difficulty': difficulty,
         'targetMuscle': targetMuscle,
         'isCardio': isCardio,
+        'isPremium': isPremium,
+        'isNew': isNew,
       };
 
   /// Throws [FormatException] if a required primitive is missing or the
@@ -102,6 +121,8 @@ class Exercise {
       difficulty: json['difficulty'] as String,
       targetMuscle: json['targetMuscle'] as String,
       isCardio: json['isCardio'] as bool,
+      isPremium: (json['isPremium'] as bool?) ?? false,
+      isNew: (json['isNew'] as bool?) ?? false,
     );
   }
 
@@ -120,6 +141,8 @@ class Exercise {
     String? difficulty,
     String? targetMuscle,
     bool? isCardio,
+    bool? isPremium,
+    bool? isNew,
   }) {
     return Exercise(
       id: id ?? this.id,
@@ -138,6 +161,8 @@ class Exercise {
       difficulty: difficulty ?? this.difficulty,
       targetMuscle: targetMuscle ?? this.targetMuscle,
       isCardio: isCardio ?? this.isCardio,
+      isPremium: isPremium ?? this.isPremium,
+      isNew: isNew ?? this.isNew,
     );
   }
 
@@ -157,7 +182,9 @@ class Exercise {
       other.shortTip == shortTip &&
       other.difficulty == difficulty &&
       other.targetMuscle == targetMuscle &&
-      other.isCardio == isCardio;
+      other.isCardio == isCardio &&
+      other.isPremium == isPremium &&
+      other.isNew == isNew;
 
   @override
   int get hashCode => Object.hash(
@@ -175,5 +202,7 @@ class Exercise {
         difficulty,
         targetMuscle,
         isCardio,
+        isPremium,
+        isNew,
       );
 }
