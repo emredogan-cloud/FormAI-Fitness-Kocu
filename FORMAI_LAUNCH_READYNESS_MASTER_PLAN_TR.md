@@ -355,7 +355,20 @@ Sonra RLS politikalarını `profiles.pro_active = true` üzerine kur, client'tak
 
 ---
 
-### B-6 · Admin Paneli Güvenlik Sınırı Değil
+### B-6 · Admin Paneli Güvenlik Sınırı Değil — ✅ ÇÖZÜLDÜ (Phase 138)
+
+**Bulgu (deep inspection):**
+- Table-level RLS `public.recipes` ve `public.exercises` üzerinde Phase 50A'da zaten doğru kurulu (`supabase/sql/rls_policies.sql`). INSERT/UPDATE/DELETE `app_metadata.role = 'admin'` gerektiriyor.
+- **Storage gap:** Admin form'lar `recipes_images`, `exercises_media`, `exercises` bucket'larına `uploadBinary` çağırıyor (admin_recipe_form.dart:413, admin_exercise_form.dart:628). Phase 74'ün `fix_video_storage_rls.sql` dosyası SELECT'i public açıyor ama **WRITE policy yok** → herhangi bir authenticated kullanıcı (Supabase anonymous auth dahil) admin bucket'larına arbitrary media yükleyebilir.
+
+**Uygulanan mimari:** `supabase/migrations/004_admin_storage_rls.sql`:
+- Table-level admin RLS defensive olarak yeniden assert ediliyor (idempotent).
+- `storage.objects` üzerinde 3 yeni policy: `admin_buckets_insert / update / delete`. Predicate: `bucket_id in (...) AND app_metadata.role = 'admin'`.
+- Public SELECT policy'leri (video + image okuma) korunuyor.
+
+**RPC ve diğer admin yüzeyler:**
+- `delete_user` ve `redeem_referral` RPC'leri — per-user, `auth.uid()` ile internal scope; admin gate'i gerekmiyor.
+- Admin-only ek RPC tespit edilmedi.
 
 **Dosya:** `lib/core/routing/app_router.dart:120-124`, `lib/features/admin/`
 **Sorun:** Admin paneline erişim router'da JWT `app_metadata['role']=='admin'` kontrolü ile gateleniyor. Bu sadece **UI gate'i** — kriptografik bir güvenlik sınırı değil.
@@ -376,6 +389,18 @@ Sonra RLS politikalarını `profiles.pro_active = true` üzerine kur, client'tak
 
 **Zorluk:** Orta (2 saat: tüm admin tablolarını listele, her birine policy yaz, test et).
 **Aciliyet:** Production öncesi.
+
+**Validation steps (founder run-book — migration uygulanınca):**
+1. Supabase Studio → Auth → Users → bir test kullanıcısı seç → app_metadata'dan `role` sil. JWT yenilensin.
+2. Bu kullanıcıyla `storage.objects` üzerine `INSERT (bucket_id='recipes_images', name='test.jpg', owner=auth.uid())` → RLS reject olmalı.
+3. Aynı kullanıcıya `{"role":"admin"}` ata, JWT yenilensin → aynı INSERT geçmeli.
+4. `curl` ile anon endpoint'ten `/storage/v1/object/public/exercises/<filename>` → 200 OK (read path bozulmadı).
+
+**Commit:** `9a99a18` — feat(security): phase 138 B-6 - admin storage RLS hardening
+**Push:** ✅ `b93b802..9a99a18 main -> main`
+**Rollback:** Migration'daki 3 write policy'yi drop et; public SELECT'ler kalır. Pre-B-6 davranış: "yazma herhangi bir authenticated user için açık", bu zaten kapatmak istediğimiz regression.
+
+**Open item (founder action required):** Migration'ı uygula. `supabase db push --linked` veya Supabase Studio SQL Editor üzerinden `004_admin_storage_rls.sql` content'ini çalıştır.
 
 ---
 
@@ -1199,7 +1224,7 @@ Sorun çıkarsa: **Halt rollout** (rollout dondurulur, yeni indirici alamaz, mev
 [ ] B-3  flutter build appbundle --release ile imzalı .aab üret
 [x] B-4  ✅ 18+ age gate (founder onayı) — /age-gate route + year picker + block screen — commit 3e7b0b8
 [~] B-5  🟡 Code hazır (commit e43859a) — founder deploy + RC dashboard config bekliyor (README'de runbook)
-[ ] B-6  Supabase RLS policies admin tabloları için, app_metadata.role kontrolü
+[~] B-6  ✅ Code hazır (commit 9a99a18) — admin storage RLS migration uygulanması bekliyor
 ```
 
 ### 🟠 HIGH — Closed Testing'e Geçmeden Önce
