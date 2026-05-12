@@ -133,3 +133,30 @@
 # resolves it via ClassLoader.forName. R8 must not rename it.
 -keep class com.emredogan.formaifit.widget.** { *; }
 -keep class es.antonborri.home_widget.** { *; }
+
+# =============================================================================
+# Phase 138 · H-6 · Supabase Java SDK keep rules.
+# =============================================================================
+# The Supabase Kotlin SDK (`supabase_flutter` transitive dep) and the
+# upstream `io.github.jan-tennert.supabase` artefacts use kotlinx-
+# serialization for JSON ↔ data-class conversion. Serialization
+# resolves `@Serializable` companions by reflection, so any class
+# stripped or renamed by R8 will throw
+# `kotlinx.serialization.SerializationException: Serializer for ...
+# was not found` the first time the affected payload is decoded
+# (auth refresh, RPC return, RLS query response).
+#
+# Belt-and-braces because: (a) the existing release rounds did not
+# hit this — they decoded the payloads we already exercise — but
+# (b) the launch path now adds `pro_entitlements` reads and could
+# hit code paths the Phase 137 audit never exercised.
+-keep class io.github.jan.supabase.** { *; }
+-keep class com.supabase.** { *; }
+-keep class io.supabase.** { *; }
+-keep class kotlinx.serialization.** { *; }
+-keepclassmembers class * {
+    @kotlinx.serialization.Serializable <fields>;
+}
+-dontwarn io.github.jan.supabase.**
+-dontwarn com.supabase.**
+-dontwarn io.supabase.**
