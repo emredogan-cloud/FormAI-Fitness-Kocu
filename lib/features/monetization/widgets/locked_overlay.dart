@@ -2,39 +2,43 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_colors.dart';
-
-/// Phase 134 · the reusable visual treatment for premium-locked content.
+/// Phase 134 / 137-polish · the reusable visual treatment for premium-
+/// locked content.
 ///
 /// Wraps any child widget with:
 ///   • a soft Gaussian blur over the child (the "tantalising preview"
 ///     beat — content is *visible* but unreachable, NOT removed),
-///   • a faint neon wash so the locked state reads as premium /
-///     aspirational rather than disabled / errored,
-///   • an optional top-right lock badge,
-///   • an optional bottom hint banner ("Premium ile aç" or similar),
-///   • a full-area tap intercept that routes the call to [onTap]
-///     (typically `PremiumGateService.handleLockedTap`).
+///   • a dark-glass premium gradient (purple-10% top → black-28% bottom)
+///     so the locked state reads as elegant / mysterious rather than
+///     errored,
+///   • an optional top-right [_LockIndicator] (outline lock glyph +
+///     tiny outlined "PRO" pill),
+///   • an optional bottom hint banner with the same soft-purple voice,
+///   • a full-area tap intercept that routes to [onTap] (typically
+///     `PremiumGateService.handleLockedTap`).
 ///
-/// When [locked] is false the overlay renders nothing — pass-through.
-/// This lets callers do `LockedOverlay(locked: !isPro, ...)` without an
+/// When [locked] is false the overlay short-circuits to the bare child
+/// so callers can do `LockedOverlay(locked: !isPro, ...)` without an
 /// extra `if`.
 ///
-/// Visual reference: matches `_StandardDayCard`'s locked-day styling
-/// (`plan_detail_screen.dart` line 770-845) — same neon-35% border, same
-/// `Icons.lock` glyph at 90% alpha, same "Premium ile aç" w700 hint —
-/// so locked equipment exercises and locked days read as one system.
+/// 137-polish revision: lock badge dropped from 32 → 28 px, fill switched
+/// from the brand neon (`AppColors.neon` 0xFF8E5BFF) to the softer
+/// `0xFFB58CFF` at 50 % opacity, glyph swapped to the outline
+/// (`Icons.lock_outline`), and the loud neon-35% border + 35%-alpha
+/// box-shadow were dropped for a low-opacity outline. The wash is now a
+/// vertical gradient instead of a solid neon tint. Combined effect:
+/// elegant "premium category" cue instead of "blocked content" alarm.
 class LockedOverlay extends StatelessWidget {
   const LockedOverlay({
     super.key,
     required this.child,
     required this.locked,
     this.onTap,
-    this.blurSigma = 5,
+    this.blurSigma = 4.5,
     this.showLockBadge = true,
+    this.showProBadge = true,
     this.hint,
     this.cornerRadius = 16,
-    this.neonAlpha = 0.10,
   });
 
   /// The preview content — fully rendered underneath, then blurred.
@@ -43,23 +47,27 @@ class LockedOverlay extends StatelessWidget {
   final Widget child;
 
   /// When false, the overlay short-circuits to a plain `child`. When
-  /// true, blur + badge + tap intercept all engage.
+  /// true, blur + indicator + tap intercept all engage.
   final bool locked;
 
   /// Tapped only when [locked] is true. Conventionally a wrapper around
   /// `ref.read(premiumGateProvider).handleLockedTap(context, type)`.
   final VoidCallback? onTap;
 
-  /// Gaussian blur sigma. 5 is the default — strong enough that text
-  /// is unreadable but composition stays legible. Bump to ~8 for
-  /// dense surfaces (recipe cards), drop to ~3 for already-minimal
-  /// surfaces (plain exercise tiles).
+  /// Gaussian blur sigma. 4.5 is the default — strong enough that text
+  /// loses precision but composition stays legible. Pre-polish default
+  /// was 5; the new lighter wash lets us drop a notch and the overall
+  /// surface still reads as locked.
   final double blurSigma;
 
-  /// Top-right lock chip with the brand neon glyph. Drop to false on
-  /// surfaces that already carry their own lock affordance (the
-  /// "Yeni" chip used in the regions menu).
+  /// Top-right outline lock glyph. Drop to false on surfaces that
+  /// already carry their own lock affordance.
   final bool showLockBadge;
+
+  /// Tiny outlined "PRO" pill rendered next to the lock glyph. Drop
+  /// to false in extremely tight surfaces (mini-thumbnail grids); the
+  /// lock alone still reads correctly.
+  final bool showProBadge;
 
   /// Optional bottom-banner text. Pass `'Premium ile aç'` for plan-detail
   /// equipment exercises; pass null for grid tiles where space is
@@ -71,10 +79,11 @@ class LockedOverlay extends StatelessWidget {
   /// container.
   final double cornerRadius;
 
-  /// Tint strength of the neon wash on top of the blur. Default 0.10
-  /// matches the locked-day card; bump to ~0.15 for tighter "this
-  /// IS premium" cues, drop to ~0.06 for already-saturated surfaces.
-  final double neonAlpha;
+  /// Soft-purple accent used by every locked surface. Sits 30 luminance
+  /// steps lighter than `AppColors.neon` (0xFF8E5BFF) so the lock glyph
+  /// reads as elegant rather than alarming. Internal: callers do not
+  /// pick the colour, the overlay does.
+  static const Color _softPurple = Color(0xFFB58CFF);
 
   @override
   Widget build(BuildContext context) {
@@ -93,28 +102,41 @@ class LockedOverlay extends StatelessWidget {
           ExcludeFocus(
             child: AbsorbPointer(child: child),
           ),
-          // Blur + neon tint layer. BackdropFilter samples whatever's
-          // beneath, so it picks up the child's pixels rendered above.
+          // Blur + dark-glass gradient wash. The vertical gradient gives
+          // the surface depth — slightly purple-tinted at the top, fading
+          // toward a darker bottom so the lock indicator + hint pill in
+          // the lower half land on a calm anchor instead of fighting a
+          // bright wash.
           Positioned.fill(
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   borderRadius: radius,
-                  color: AppColors.neon.withValues(alpha: neonAlpha),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      _softPurple.withValues(alpha: 0.10),
+                      Colors.black.withValues(alpha: 0.28),
+                    ],
+                  ),
                   border: Border.all(
-                    color: AppColors.neon.withValues(alpha: 0.35),
+                    color: _softPurple.withValues(alpha: 0.20),
                     width: 1,
                   ),
                 ),
               ),
             ),
           ),
-          if (showLockBadge)
+          if (showLockBadge || showProBadge)
             Positioned(
-              top: 10,
-              right: 10,
-              child: _LockBadge(),
+              top: 9,
+              right: 9,
+              child: _LockIndicator(
+                showLock: showLockBadge,
+                showPro: showProBadge,
+              ),
             ),
           if (hint != null)
             Positioned(
@@ -132,6 +154,8 @@ class LockedOverlay extends StatelessWidget {
               child: InkWell(
                 borderRadius: radius,
                 onTap: onTap,
+                splashColor: _softPurple.withValues(alpha: 0.10),
+                highlightColor: _softPurple.withValues(alpha: 0.06),
               ),
             ),
           ),
@@ -141,28 +165,83 @@ class LockedOverlay extends StatelessWidget {
   }
 }
 
-class _LockBadge extends StatelessWidget {
+/// Outline lock glyph + optional "PRO" pill, rendered side by side in
+/// the overlay's top-right corner. The composition reads as
+/// "premium category" rather than "blocked" — the outline (vs filled)
+/// lock + the typographic PRO tag both lean on premium UI conventions
+/// (Apple, WHOOP, Strava) instead of casino / mobile-game alarm cues.
+class _LockIndicator extends StatelessWidget {
+  const _LockIndicator({required this.showLock, required this.showPro});
+
+  final bool showLock;
+  final bool showPro;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (showLock) _LockGlyph(),
+        if (showLock && showPro) const SizedBox(width: 6),
+        if (showPro) const _ProPill(),
+      ],
+    );
+  }
+}
+
+class _LockGlyph extends StatelessWidget {
+  static const Color _softPurple = LockedOverlay._softPurple;
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 32,
-      height: 32,
+      width: 28,
+      height: 28,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: AppColors.darkBg.withValues(alpha: 0.65),
-        border: Border.all(color: AppColors.neon.withValues(alpha: 0.55)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.neon.withValues(alpha: 0.35),
-            blurRadius: 10,
-            spreadRadius: 0.4,
-          ),
-        ],
+        color: Colors.black.withValues(alpha: 0.38),
+        border: Border.all(
+          color: _softPurple.withValues(alpha: 0.45),
+          width: 1,
+        ),
       ),
-      child: const Icon(
-        Icons.lock_rounded,
-        color: AppColors.neon,
+      alignment: Alignment.center,
+      child: Icon(
+        Icons.lock_outline,
+        // 0.55 alpha matches the spec's "40-55%" elegance band.
+        color: _softPurple.withValues(alpha: 0.85),
         size: 16,
+      ),
+    );
+  }
+}
+
+class _ProPill extends StatelessWidget {
+  const _ProPill();
+
+  static const Color _softPurple = LockedOverlay._softPurple;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        color: Colors.black.withValues(alpha: 0.38),
+        border: Border.all(
+          color: _softPurple.withValues(alpha: 0.55),
+          width: 1,
+        ),
+      ),
+      child: Text(
+        'PRO',
+        style: TextStyle(
+          color: _softPurple.withValues(alpha: 0.90),
+          fontSize: 9,
+          height: 1.0,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 1.2,
+        ),
       ),
     );
   }
@@ -173,20 +252,29 @@ class _HintBanner extends StatelessWidget {
 
   final String text;
 
+  static const Color _softPurple = LockedOverlay._softPurple;
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(999),
-        color: AppColors.darkBg.withValues(alpha: 0.78),
-        border: Border.all(color: AppColors.neon.withValues(alpha: 0.45)),
+        color: Colors.black.withValues(alpha: 0.55),
+        border: Border.all(
+          color: _softPurple.withValues(alpha: 0.35),
+          width: 1,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.auto_awesome, color: AppColors.neon, size: 13),
+          Icon(
+            Icons.lock_outline,
+            color: _softPurple.withValues(alpha: 0.85),
+            size: 11,
+          ),
           const SizedBox(width: 6),
           Flexible(
             child: Text(
@@ -194,10 +282,10 @@ class _HintBanner extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: AppColors.neon,
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
+              style: TextStyle(
+                color: _softPurple.withValues(alpha: 0.95),
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
                 letterSpacing: 0.4,
               ),
             ),

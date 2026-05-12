@@ -410,7 +410,26 @@ Launch'ı durdurmaz ama günler içinde ilk 100 kullanıcı sorun yaşatabilir. 
 
 ---
 
-### H-1 · Onboarding Mid-State Persistence Yok
+### H-1 · Onboarding Mid-State Persistence Yok — ✅ ÇÖZÜLDÜ (Phase 138)
+
+**Uygulanan mimari (commit `dfec2ca`):**
+- `WizardState.fromJson` + `WizardController.restoreFromJson` — checkpoint blob'undan tam state geri kurma. Eski versiyon checkpoint'ler için forward-compatible (missing field → default).
+- `AppPreferences.saveWizardCheckpoint / loadWizardCheckpoint / clearWizardCheckpoint` — anahtarlar: `sixpack.wizard_state_json` + `sixpack.wizard_step_index`.
+- `OnboardingScreen.initState`: checkpoint senkron olarak restore ediliyor (flash of step 0 yok). Bozuk blob → log + clear.
+- `ref.listenManual<WizardState>`: 25+ setter'ı tek tek dekore etmeden her mutation'da autosave.
+- `_next()` / `_back()`: provider mutation olmayan step transition'lar için de explicit checkpoint write.
+- `_finish()`: `completeOnboarding()` sonrası checkpoint temizleniyor (re-onboarding fresh başlasın).
+
+**Validation:**
+- `flutter analyze lib/features/onboarding lib/core` → No issues.
+- Decode tolerance: enum token / nullable int / missing key / malformed list — hepsi safe.
+- Step index clamp: bir release değişiminde `_totalSteps` farklı olsa bile kullanıcı sınır dışına stranded olmuyor.
+
+**Risks:**
+- Provider mutation başına disk write. SharedPreferences in-memory + async flush → düşük cost. Per-character typing ÇAĞRILMIYOR çünkü TextField setX() commit'te fire ediyor. Profiling baskı gösterirse Timer ile debounce.
+
+**Commit:** `dfec2ca` — feat(onboarding): phase 138 H-1 + H-7 - wizard checkpoint persistence
+**Rollback:** `git revert dfec2ca`. saveUserMetrics intact, sadece checkpoint key kaybolur, in-memory wizard'a dönülür.
 
 **Dosya:** `lib/features/onboarding/providers/wizard_provider.dart`, `lib/features/onboarding/presentation/onboarding_screen.dart:200`
 **Sorun:** Wizard state in-memory (Riverpod). 8. adımda app crash'lerse veya kullanıcı backgrounddan döndüğünde OS app'ı öldürmüşse, 0'dan başlıyor.
@@ -590,7 +609,9 @@ if (!await _checkMlKitAvailable()) {
 
 ---
 
-### H-7 · Anonymous → Email Geçişinde Wizard State Kaybı
+### H-7 · Anonymous → Email Geçişinde Wizard State Kaybı — ✅ ÇÖZÜLDÜ (H-1 ile birlikte, commit `dfec2ca`)
+
+H-1'in autosave mimarisi her wizard mutation'ında state'i SharedPreferences'a yazıyor. Auth ekranına ulaşmadan ÖNCE state zaten persist edilmiş olduğu için `_persistWizardMetrics`'in early-return koşulu (gender + age null) artık problem değil — checkpoint kanalı bağımsız olarak çalışıyor ve OnboardingScreen relaunch'da state'i geri yüklüyor.
 
 **Dosya:** `lib/features/auth/presentation/auth_screen.dart:45-49`
 **Sorun:** Auth flow `gender + age` doluysa metrics kaydediyor, değilse yutuyor.
@@ -1230,13 +1251,13 @@ Sorun çıkarsa: **Halt rollout** (rollout dondurulur, yeni indirici alamaz, mev
 ### 🟠 HIGH — Closed Testing'e Geçmeden Önce
 
 ```
-[ ] H-1  Onboarding wizard state SharedPreferences'a per-step persist
+[x] H-1  ✅ Wizard checkpoint autosave + restore (commit dfec2ca)
 [ ] H-2  KVKK consent banner (Posthog/Sentry'den önce gösterilir)
 [ ] H-3  AndroidManifest'e enableOnBackInvokedCallback="true"
 [ ] H-4  ML Kit availability check + timed mode fallback (eski cihaz)
 [ ] H-5  Egzersiz safety disclaimer + basic injury filter
 [ ] H-6  ProGuard rules: Supabase keep + dontwarn
-[ ] H-7  Anonymous→Email mid-onboarding wizard state preserved (H-1 ile beraber)
+[x] H-7  ✅ H-1 autosave channel mid-flow loss'u kapatıyor (commit dfec2ca)
 ```
 
 ### 🟡 MEDIUM — Soft Launch Sırasında / Sonrasında

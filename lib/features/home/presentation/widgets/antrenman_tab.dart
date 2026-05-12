@@ -730,12 +730,15 @@ class _YeniExercisesStrip extends ConsumerWidget {
         const _SectionTitle(title: 'Yeni Egzersizler'),
         const SizedBox(height: 12),
         SizedBox(
-          height: 168,
+          // 137-polish · denser Netflix-style rail (was 168 px). The card
+          // itself shrank from 152×168 to 138×152, so dropping the strip
+          // height saves a vertical band of whitespace under each tile.
+          height: 152,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 20),
             itemCount: yeniForRegion.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
             itemBuilder: (context, index) {
               final exercise = yeniForRegion[index];
               final card = _YeniExerciseCard(exercise: exercise);
@@ -743,6 +746,7 @@ class _YeniExercisesStrip extends ConsumerWidget {
                 locked: !isPro,
                 cornerRadius: 18,
                 showLockBadge: true,
+                showProBadge: true,
                 onTap: () => gate.handleLockedTap(
                   context,
                   LockedFeatureType.regionNewExercise,
@@ -757,90 +761,139 @@ class _YeniExercisesStrip extends ConsumerWidget {
   }
 }
 
-/// Compact preview tile for [_YeniExercisesStrip]. Fixed-width card with
-/// a neon-violet gradient, exercise name, and a "Yeni" chip in the
-/// top-left. No tap behaviour of its own — it's always wrapped by a
-/// [LockedOverlay] in the strip, which owns the tap intercept.
+/// Compact preview tile for [_YeniExercisesStrip].
+///
+/// 137-polish revision: dropped from 152 → 138 wide so a 5-card rail
+/// fits within a single horizontal sweep on mid-range Androids
+/// (denser feels Netflix-style instead of decorative). Gradient
+/// dropped 10 luminance steps so it reads as a *backdrop* rather than
+/// the whole card — the cinematic feel comes from the LockedOverlay
+/// glass treatment that lands on top for non-pro users, not from
+/// brute saturation here. The "YENİ" chip becomes an outline-style
+/// "NEW" pill (soft-purple, tiny) consistent with the new LockedOverlay
+/// indicator language.
 class _YeniExerciseCard extends StatelessWidget {
   const _YeniExerciseCard({required this.exercise});
 
+  /// 137-polish · matches the new LockedOverlay's soft-purple accent
+  /// so the "NEW" pill and the lock indicator share one colour family.
+  static const Color _softPurple = Color(0xFFB58CFF);
+
   final Exercise exercise;
+
+  /// Rough minute estimate used in the metadata footer. Mirrors
+  /// `TodayTaskCard._estimateMinutes` shape but coarser — we only need
+  /// a single-card hint, not an accurate plan duration.
+  int _estimateMinutes() {
+    if (exercise.isTimeBased) {
+      final duration = (exercise.targetDurationInSeconds ?? 30) * exercise.sets;
+      return (duration / 60).clamp(1, 30).round();
+    }
+    final repsTime = (exercise.targetReps ?? 10) * 3 * exercise.sets;
+    return (repsTime / 60).clamp(1, 30).round();
+  }
+
+  String get _difficultyLabel {
+    switch (exercise.difficulty) {
+      case 'advanced':
+        return 'İleri';
+      case 'intermediate':
+        return 'Orta';
+      default:
+        return 'Başlangıç';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 152,
+      width: 138,
       child: DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(18),
           gradient: LinearGradient(
             colors: [
-              _neon.withValues(alpha: 0.45),
-              _neonAccent.withValues(alpha: 0.25),
+              _neon.withValues(alpha: 0.32),
+              _neonAccent.withValues(alpha: 0.16),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           boxShadow: [
             BoxShadow(
-              color: _neon.withValues(alpha: 0.30),
-              blurRadius: 14,
-              spreadRadius: 0.4,
+              color: _neon.withValues(alpha: 0.18),
+              blurRadius: 12,
+              spreadRadius: 0.2,
             ),
           ],
         ),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+          padding: const EdgeInsets.fromLTRB(12, 11, 12, 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 3,
-                ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(999),
-                  color: Colors.black.withValues(alpha: 0.45),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
-                ),
-                child: const Text(
-                  'YENİ',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.4,
-                  ),
-                ),
-              ),
+              _NewPill(softPurple: _softPurple),
               const Spacer(),
               Text(
                 exercise.name,
-                maxLines: 3,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 14.5,
+                  fontSize: 14,
                   fontWeight: FontWeight.w900,
                   height: 1.2,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 5),
               Text(
-                exercise.difficulty == 'advanced'
-                    ? 'İleri'
-                    : (exercise.difficulty == 'intermediate'
-                        ? 'Orta seviye'
-                        : 'Başlangıç'),
+                '${_estimateMinutes()} dk · $_difficultyLabel',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.75),
-                  fontSize: 11.5,
+                  color: Colors.white.withValues(alpha: 0.70),
+                  fontSize: 11,
                   fontWeight: FontWeight.w600,
+                  letterSpacing: 0.2,
                 ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 137-polish · tiny outlined "NEW" pill rendered in the top-left
+/// corner of [_YeniExerciseCard]. Outline-only style (no solid fill)
+/// matches the LockedOverlay's premium-pill language so the locked +
+/// unlocked states feel consistent.
+class _NewPill extends StatelessWidget {
+  const _NewPill({required this.softPurple});
+
+  final Color softPurple;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        color: Colors.black.withValues(alpha: 0.30),
+        border: Border.all(
+          color: softPurple.withValues(alpha: 0.55),
+          width: 1,
+        ),
+      ),
+      child: Text(
+        'NEW',
+        style: TextStyle(
+          color: softPurple.withValues(alpha: 0.95),
+          fontSize: 8.5,
+          height: 1.0,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 1.2,
         ),
       ),
     );
