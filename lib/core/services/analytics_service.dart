@@ -142,6 +142,28 @@ class AnalyticsService {
     return _capture('purchase_succeeded', {'product_id': productId});
   }
 
+  /// Phase 135 · paired with the cinematic conversion-moment scenes.
+  /// Fires when a contextual conversion scene is presented (locked-tap
+  /// or one-shot first-workout invitation). [source] mirrors the
+  /// `paywall_viewed.source` taxonomy so funnels stitch together.
+  Future<void> conversionMomentShown({required String source}) {
+    return _capture('conversion_moment_shown', {'source': source});
+  }
+
+  /// Phase 135 · fires when the user taps the PremiumCtaButton inside a
+  /// conversion moment. Paired with [conversionMomentShown] so the
+  /// tap-through ratio is derivable per scene.
+  Future<void> conversionMomentCtaTapped({required String source}) {
+    return _capture('conversion_moment_cta_tapped', {'source': source});
+  }
+
+  /// Phase 135 · fires when the user dismisses a conversion scene
+  /// without tapping the CTA (back gesture / "Daha sonra" affordance).
+  /// Captures the silent-bounce rate.
+  Future<void> conversionMomentDismissed({required String source}) {
+    return _capture('conversion_moment_dismissed', {'source': source});
+  }
+
   /// Fires from `DailyMenuNotifier.addRecipeToPlan`.
   Future<void> recipeAddedToPlan({
     required String recipeId,
