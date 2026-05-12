@@ -9,6 +9,7 @@ import '../../monetization/models/locked_feature_type.dart';
 import '../../monetization/providers/monetization_provider.dart';
 import '../../monetization/services/conversion_moment_service.dart';
 import '../../monetization/services/premium_gate_service.dart';
+import '../../monetization/services/rating_moment_service.dart';
 import '../../nutrition/presentation/nutrition_tab.dart';
 import '../../nutrition/presentation/widgets/nutrition_onboarding_sheet.dart';
 import '../../progress/data/level_titles.dart';
@@ -111,27 +112,35 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     _runDashboardReturnFlow();
   }
 
-  /// Phase 135 · sequenced post-return flow. Badge / level-up
-  /// celebrations play first so the "I unlocked something" beat lands
-  /// cleanly before the "ready for Pro?" frame; conversion moment
-  /// fires after only when the user has at least one completed
-  /// workout and the one-shot flag is still unset.
+  /// Phase 135 + 136 · sequenced post-return flow. Order matters for
+  /// emotional beat sequencing:
+  ///
+  ///   1. Badge / level-up celebrations — "I unlocked something"
+  ///   2. First-workout Pro invitation (non-pro only, 1+ workouts)
+  ///   3. 3rd-workout rating cinematic (pro only, 3+ workouts)
+  ///
+  /// Each step is gated by its own SharedPreferences flag so the
+  /// sequence is idempotent and re-running the flow on a subsequent
+  /// dashboard return doesn't replay anything the user already saw.
   Future<void> _runDashboardReturnFlow() async {
     await _maybeCelebrate();
     if (!mounted) return;
-    await _maybeShowFirstWorkoutPro();
-  }
-
-  Future<void> _maybeShowFirstWorkoutPro() async {
     final session = ref.read(workoutSessionProvider).value;
     if (session == null) return;
     final completed = session.days.where((d) => d.isCompleted).length;
+    final isPro = ref.read(isProProvider);
     await ref
         .read(conversionMomentProvider)
         .maybeShowFirstWorkoutProInvitation(
           context,
           completedDays: completed,
-          isPro: ref.read(isProProvider),
+          isPro: isPro,
+        );
+    if (!mounted) return;
+    await ref.read(ratingMomentProvider).maybeShow(
+          context,
+          completedDays: completed,
+          isPro: isPro,
         );
   }
 

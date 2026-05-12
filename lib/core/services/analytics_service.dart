@@ -164,6 +164,29 @@ class AnalyticsService {
     return _capture('conversion_moment_dismissed', {'source': source});
   }
 
+  /// Phase 136 · fires when the cinematic 3rd-workout rating scene is
+  /// presented to a Pro user. Paired with [ratingPromptLaunched] and
+  /// [ratingPromptDismissed] so the rate / skip ratio is derivable.
+  Future<void> ratingPromptShown() {
+    return _capture('rating_prompt_shown', const {});
+  }
+
+  /// Phase 136 · the user tapped a star, which fires
+  /// `InAppReview.requestReview()`. The OS handles the actual rating
+  /// flow from here — the response is intentionally opaque to us
+  /// (Apple/Google policy), so this is the most-downstream signal
+  /// the app gets.
+  Future<void> ratingPromptLaunched() {
+    return _capture('rating_prompt_launched', const {});
+  }
+
+  /// Phase 136 · the user dismissed the rating scene with "Daha sonra"
+  /// instead of tapping a star. Captures the rate-on-prompt skip
+  /// pattern so we can later tune trigger timing.
+  Future<void> ratingPromptDismissed() {
+    return _capture('rating_prompt_dismissed', const {});
+  }
+
   /// Fires from `DailyMenuNotifier.addRecipeToPlan`.
   Future<void> recipeAddedToPlan({
     required String recipeId,
