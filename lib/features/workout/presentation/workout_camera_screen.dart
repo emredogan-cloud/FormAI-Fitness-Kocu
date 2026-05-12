@@ -718,9 +718,23 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       }
     });
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(child: _buildBody()),
+    // Phase 138 · M-2 — system-back gesture goes through the same
+    // confirmation dialog as the in-UI back button. canPop:false
+    // forces the navigator to consult onPopInvoked, which delegates
+    // to _confirmAndExit. The dialog itself short-circuits when the
+    // session is complete or absent, so a back gesture during a
+    // permission card or error card still exits cleanly.
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) {
+          _confirmAndExit(context);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(child: _buildBody()),
+      ),
     );
   }
 
@@ -788,7 +802,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         upcomingSet: session.currentSet,
         totalSets: session.upcomingExercise?.sets ?? 0,
         onSkip: () => ref.read(workoutSessionProvider.notifier).skipRest(),
-        onExit: () => _exit(context),
+        onExit: () => _confirmAndExit(context),
       );
     }
 
@@ -796,7 +810,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       return PreparationOverlay(
         exercise: session.activeExercise!,
         secondsRemaining: session.prepSecondsRemaining,
-        onExit: () => _exit(context),
+        onExit: () => _confirmAndExit(context),
       );
     }
 
@@ -881,7 +895,9 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
           Positioned(
             top: 18,
             left: 16,
-            child: WorkoutBackButton(onPressed: () => _exit(context)),
+            child: WorkoutBackButton(
+              onPressed: () => _confirmAndExit(context),
+            ),
           ),
           if (exercise != null)
             Positioned(
@@ -993,6 +1009,67 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       context.pop();
     } else {
       context.go('/');
+    }
+  }
+
+  /// Phase 138 · M-2 · gatekeeper for mid-session exits. Shows a
+  /// confirmation dialog so a stray back-tap doesn't void the user's
+  /// in-progress workout. The natural completion path (session-
+  /// complete overlay → `_exit`) skips this gate because by then
+  /// the session is already done.
+  Future<void> _confirmAndExit(BuildContext context) async {
+    final session = ref.read(workoutSessionProvider).value;
+    // If there's no session, or the session has already completed,
+    // bail straight out — there's nothing left to lose.
+    if (session == null || session.isSessionComplete) {
+      _exit(context);
+      return;
+    }
+    AppHaptics.secondaryTap();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF111118),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: BorderSide(color: _neon.withValues(alpha: 0.45)),
+        ),
+        title: const Text(
+          'Antrenmanı bırakmak istiyor musun?',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 17,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        content: const Text(
+          'İlerlemen kaydedildi. Ana ekrana dönersen aynı seanstan '
+          'devam edemezsin.',
+          style:
+              TextStyle(color: Colors.white70, fontSize: 14, height: 1.45),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.white70,
+            ),
+            child: const Text('Devam et'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Bırak'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && context.mounted) {
+      _exit(context);
     }
   }
 }
