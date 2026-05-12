@@ -133,6 +133,50 @@ class _ConsentScreenState extends ConsumerState<ConsentScreen> {
                   value: _crashChecked,
                   onChanged: (v) => setState(() => _crashChecked = v),
                 ),
+                const SizedBox(height: 20),
+                // Phase 138 · H-5 health disclaimer. Surfaced once before
+                // any data collection so the Play Console "Health
+                // declaration" attestation ("Disclaimer shown in
+                // onboarding") is honestly answerable. Same copy is
+                // mirrored in the Play Store listing footer per the
+                // master plan §8.5.
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: Colors.orange.withValues(alpha: 0.35),
+                    ),
+                  ),
+                  child: const Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: Colors.orange,
+                        size: 18,
+                      ),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'FormAI genel fitness rehberliği sunar; tıbbi '
+                          'tavsiye değildir. Kalp, sırt, omurga ya da '
+                          'gebelik gibi bir sağlık durumun varsa '
+                          'antrenmana başlamadan önce doktoruna danış.',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            height: 1.45,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 const Spacer(),
                 TextButton(
                   onPressed: _openPrivacyPolicy,
