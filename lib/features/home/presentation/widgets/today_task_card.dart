@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/routing/app_router.dart';
 import '../../../../core/utils/app_haptics.dart';
 import '../../../monetization/providers/monetization_provider.dart';
@@ -12,11 +13,6 @@ const Color _neonDeep = Color(0xFF6A3DFF);
 const Color _success = Color(0xFF22C55E);
 const Color _surface = Color(0xFF0F0F14);
 const Color _surfaceBorder = Color(0xFF1E1E26);
-
-/// First N days the user can run without a Pro entitlement. Tapping the
-/// CTA for a day beyond this threshold routes the user to the paywall
-/// instead of the plan-detail screen.
-const int kFreeDayLimit = 3;
 
 /// Headline card on the "Gelişim" tab that surfaces the user's next
 /// active workout day: dumbbell icon + day label + duration / level
@@ -102,7 +98,7 @@ class TodayTaskCard extends ConsumerWidget {
   Future<void> _launch(BuildContext context, WidgetRef ref) async {
     if (activeDay.exercises.isEmpty) return;
     final isPro = ref.read(isProProvider);
-    if (!isPro && activeDay.dayNumber > kFreeDayLimit) {
+    if (!isPro && activeDay.dayNumber > AppConstants.freeDayLimit) {
       AppHaptics.secondaryTap();
       context.push(AppRoutes.paywall);
       return;
@@ -173,42 +169,103 @@ class TodayTaskCard extends ConsumerWidget {
 
 /// Terminal-state companion to [TodayTaskCard]: replaces the card once
 /// the user has completed every active day in the 30-day program.
+///
+/// Progress Phase 5.D · adds the optional `onReplayJourney` callback —
+/// when non-null, a gold "Yolculuğunu Gör" pill surfaces under the
+/// congratulation copy as the manual entry point into the Year-in-
+/// Review modal. Re-tappable any number of times; the persisted
+/// `seenYearInReview` flag is independent.
 class ProgramCompleteCard extends StatelessWidget {
-  const ProgramCompleteCard({super.key});
+  const ProgramCompleteCard({super.key, this.onReplayJourney});
+
+  final VoidCallback? onReplayJourney;
+
+  static const Color _gold = Color(0xFFE0B547);
 
   @override
   Widget build(BuildContext context) {
     return _SoftCard(
       accent: _success,
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('🏆', style: TextStyle(fontSize: 30)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Tebrikler!',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                  ),
+          Row(
+            children: [
+              const Text('🏆', style: TextStyle(fontSize: 30)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Tebrikler!',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '30 günlük programı tamamladın.',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.8),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '30 günlük programı tamamladın.',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.8),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
+          if (onReplayJourney != null) ...[
+            const SizedBox(height: 14),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(999),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(999),
+                  onTap: onReplayJourney,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(999),
+                      color: _gold.withValues(alpha: 0.14),
+                      border: Border.all(color: _gold.withValues(alpha: 0.55)),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Yolculuğunu Gör',
+                          style: TextStyle(
+                            color: _gold,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.6,
+                          ),
+                        ),
+                        SizedBox(width: 5),
+                        Icon(
+                          Icons.arrow_forward_rounded,
+                          color: _gold,
+                          size: 14,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
