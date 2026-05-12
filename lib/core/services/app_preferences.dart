@@ -127,6 +127,16 @@ class AppPreferences {
   static const String _seenPro3rdWorkoutRatingKey =
       'sixpack.seen_pro_3rd_workout_rating';
 
+  // Phase 138 · H-2 KVKK / GDPR consent. Three keys: `decided` flag
+  // tracks whether the user has interacted with the consent dialog;
+  // `analytics` + `crash` are the per-channel grants. Defaults are
+  // off — KVKK Article 5 (Law 6698) requires explicit opt-in, so any
+  // code path that reads these before the consent screen has run
+  // must treat absence as denial.
+  static const String _consentDecidedKey = 'sixpack.consent.decided';
+  static const String _consentAnalyticsKey = 'sixpack.consent.analytics';
+  static const String _consentCrashKey = 'sixpack.consent.crash';
+
   // Phase 138 · H-1 + H-7 onboarding wizard checkpoint. The wizard
   // payload (`WizardState.toJson()`) and the current step index are
   // snapshotted on every mutation so an OS-kill in the middle of the
@@ -197,6 +207,31 @@ class AppPreferences {
   Future<void> clearWizardCheckpoint() async {
     await _prefs.remove(_wizardStateKey);
     await _prefs.remove(_wizardStepIndexKey);
+  }
+
+  /// Phase 138 · H-2. True iff the user has interacted with the
+  /// consent dialog at least once. The router uses this to decide
+  /// whether to route to `/consent` or skip past it.
+  bool get consentDecisionMade => _prefs.getBool(_consentDecidedKey) ?? false;
+
+  /// Phase 138 · H-2. Per-channel consent grants. Both default to
+  /// `false` — KVKK requires explicit opt-in, so a missing key is
+  /// equivalent to denial.
+  bool get analyticsConsentGranted =>
+      _prefs.getBool(_consentAnalyticsKey) ?? false;
+  bool get crashReportingConsentGranted =>
+      _prefs.getBool(_consentCrashKey) ?? false;
+
+  /// Phase 138 · H-2. Persists the consent decision atomically.
+  /// Always call this with the user's actual answers — do NOT default
+  /// a channel to `true` to soften the prompt.
+  Future<void> setConsent({
+    required bool analytics,
+    required bool crash,
+  }) async {
+    await _prefs.setBool(_consentAnalyticsKey, analytics);
+    await _prefs.setBool(_consentCrashKey, crash);
+    await _prefs.setBool(_consentDecidedKey, true);
   }
 
   Future<void> completeOnboarding({String? goal, bool? hasEquipment}) async {
