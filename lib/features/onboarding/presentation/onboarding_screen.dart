@@ -381,9 +381,24 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Widget build(BuildContext context) {
     final dataStepNum = _dataStepNumber(_index);
     final showHeader = dataStepNum != null;
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(
+    // Phase 138 · M-1. The Android system-back gesture used to pop
+    // the entire OnboardingScreen off the navigator, evicting the
+    // user back to /age-gate (or worse, /dashboard if they raced
+    // a deep-link). Trapping `canPop: false` keeps them inside the
+    // wizard; the `onPopInvoked` callback then either walks the
+    // step index back via `_back()` (for any step past 0) or no-ops
+    // (step 0 — the welcome hero, which is also the dismissable
+    // entry point, so a system-back exit is acceptable there).
+    return PopScope(
+      canPop: _index == 0,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && _index > 0) {
+          _back();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
         child: Column(
           children: [
             // Header cross-fades + sizes in/out at the same cadence as
@@ -415,6 +430,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               ),
             ),
           ],
+        ),
         ),
       ),
     );
