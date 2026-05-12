@@ -127,6 +127,14 @@ class AppPreferences {
   static const String _seenPro3rdWorkoutRatingKey =
       'sixpack.seen_pro_3rd_workout_rating';
 
+  // Phase 138 · H-1 + H-7 onboarding wizard checkpoint. The wizard
+  // payload (`WizardState.toJson()`) and the current step index are
+  // snapshotted on every mutation so an OS-kill in the middle of the
+  // 19-step flow doesn't reset the user back to step 0. Cleared by
+  // `completeOnboarding()` once the wizard reaches /paywall.
+  static const String _wizardStateKey = 'sixpack.wizard_state_json';
+  static const String _wizardStepIndexKey = 'sixpack.wizard_step_index';
+
   // Phase 138 · B-4 age gate. Persistent flag set the first time the
   // user passes the 18+ verification screen. Read by the router so a
   // fresh install can't reach the PII-collecting onboarding before
@@ -158,6 +166,38 @@ class AppPreferences {
 
   int? get birthYear =>
       _prefs.containsKey(_birthYearKey) ? _prefs.getInt(_birthYearKey) : null;
+
+  /// Phase 138 · H-1. Persists the wizard's full JSON payload + the
+  /// current step index so an app kill (OS reclaim, crash, user
+  /// force-quit) mid-onboarding can resume from where they left off
+  /// instead of dropping them back to step 0. Called from the
+  /// OnboardingScreen's `ref.listen(wizardProvider)` watcher and from
+  /// `_next()` / `_back()`.
+  Future<void> saveWizardCheckpoint({
+    required String stateJson,
+    required int stepIndex,
+  }) async {
+    await _prefs.setString(_wizardStateKey, stateJson);
+    await _prefs.setInt(_wizardStepIndexKey, stepIndex);
+  }
+
+  /// Phase 138 · H-1. Returns the persisted checkpoint, or `null` if
+  /// no checkpoint exists. Tuple-shaped via a record so callers don't
+  /// have to make two SharedPreferences round-trips.
+  ({String stateJson, int stepIndex})? loadWizardCheckpoint() {
+    final json = _prefs.getString(_wizardStateKey);
+    if (json == null) return null;
+    final step = _prefs.getInt(_wizardStepIndexKey) ?? 0;
+    return (stateJson: json, stepIndex: step);
+  }
+
+  /// Phase 138 · H-1. Removes the checkpoint after `completeOnboarding`
+  /// so a future re-onboarding (e.g. after `resetProgress`) doesn't
+  /// rehydrate stale answers.
+  Future<void> clearWizardCheckpoint() async {
+    await _prefs.remove(_wizardStateKey);
+    await _prefs.remove(_wizardStepIndexKey);
+  }
 
   Future<void> completeOnboarding({String? goal, bool? hasEquipment}) async {
     if (goal != null) await _prefs.setString(_goalKey, goal);

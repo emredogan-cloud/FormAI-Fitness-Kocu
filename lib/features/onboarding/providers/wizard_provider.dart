@@ -258,6 +258,75 @@ class WizardState {
         'waterIntake': waterIntake,
         'tastePreference': tastePreference,
       };
+
+  /// Phase 138 · H-1 + H-7 · rebuild state from the SharedPreferences
+  /// checkpoint blob written on every wizard mutation. Tolerates
+  /// missing or malformed fields by falling back to the default
+  /// constructor values — a checkpoint written by an older app
+  /// version with fewer fields must keep working.
+  factory WizardState.fromJson(Map<String, dynamic> json) {
+    T? readEnum<T extends Enum>(String key, List<T> values) {
+      final raw = json[key];
+      if (raw is! String) return null;
+      for (final v in values) {
+        if (v.name == raw) return v;
+      }
+      return null;
+    }
+
+    Set<String> readStringSet(String key) {
+      final raw = json[key];
+      if (raw is! List) return const <String>{};
+      return raw.whereType<String>().toSet();
+    }
+
+    String readNonNullString(String key, String fallback) {
+      final raw = json[key];
+      return raw is String && raw.isNotEmpty ? raw : fallback;
+    }
+
+    int? readNullableInt(String key) {
+      final raw = json[key];
+      if (raw is int) return raw;
+      if (raw is num) return raw.toInt();
+      return null;
+    }
+
+    return WizardState(
+      name: json['name'] as String?,
+      coachingTone: json['coachingTone'] as String?,
+      motivationStyle: json['motivationStyle'] as String?,
+      hasEquipment: json['hasEquipment'] as bool?,
+      bodyFeelings: readStringSet('bodyFeelings'),
+      gender: readEnum<Gender>('gender', Gender.values),
+      age: readNullableInt('age'),
+      heightCm: readNullableInt('heightCm'),
+      weightKg: readNullableInt('weightKg'),
+      currentPhysique: readEnum<Physique>('currentPhysique', Physique.values),
+      targetPhysique:
+          readEnum<GoalPhysique>('targetPhysique', GoalPhysique.values),
+      activityLevel:
+          readEnum<ActivityLevel>('activityLevel', ActivityLevel.values),
+      goal: json['goal'] as String?,
+      experienceLevel: json['experienceLevel'] as String?,
+      dailyMinutes: json['dailyMinutes'] as String?,
+      painPoint: json['painPoint'] as String?,
+      activityDescription: json['activityDescription'] as String?,
+      experienceDescription: json['experienceDescription'] as String?,
+      painPointDescription: json['painPointDescription'] as String?,
+      dietPreference:
+          readNonNullString('dietPreference', kDefaultDietPreference),
+      allergies: readNonNullString('allergies', kDefaultAllergies),
+      mealFrequency:
+          readNonNullString('mealFrequency', kDefaultMealFrequency),
+      prepTime: readNonNullString('prepTime', kDefaultPrepTime),
+      nutritionGoal:
+          readNonNullString('nutritionGoal', kDefaultNutritionGoal),
+      waterIntake: readNonNullString('waterIntake', kDefaultWaterIntake),
+      tastePreference:
+          readNonNullString('tastePreference', kDefaultTastePreference),
+    );
+  }
 }
 
 class WizardController extends Notifier<WizardState> {
@@ -300,6 +369,14 @@ class WizardController extends Notifier<WizardState> {
   void setWaterIntake(String v) => state = state.copyWith(waterIntake: v);
   void setTastePreference(String v) =>
       state = state.copyWith(tastePreference: v);
+
+  /// Phase 138 · H-1 + H-7. Used by `OnboardingScreen.initState` to
+  /// rehydrate from the SharedPreferences checkpoint. Replaces the
+  /// entire state in one go — callers should pass the JSON they
+  /// previously stored, NOT a partial map.
+  void restoreFromJson(Map<String, dynamic> json) {
+    state = WizardState.fromJson(json);
+  }
 }
 
 final wizardProvider =
