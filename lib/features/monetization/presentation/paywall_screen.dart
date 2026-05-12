@@ -747,8 +747,9 @@ class _HeroSection extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         const Text(
-          'Yapay zeka her tekrarını izlesin, formunu düzeltsin '
-          've seni 30 günde hedefe taşısın.',
+          'Yapay zeka her tekrarını izlesin, formunu düzeltsin ve '
+          '30 günlük programla hedefine her gün biraz daha yaklaşsın. '
+          'Sonuçlar bireysel çabaya ve tutarlılığa bağlıdır.',
           textAlign: TextAlign.center,
           style: TextStyle(color: Colors.white60, fontSize: 13, height: 1.45),
         ),
