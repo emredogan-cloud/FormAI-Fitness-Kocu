@@ -24,8 +24,11 @@ class AppConstants {
   static const int kcalPerCompletedDay = 250;
 
   /// Number of program days a free user can run before the paywall
-  /// gate engages on day 4+. Plan-detail screen reads this directly;
-  /// no other surface should hard-code "3" — bump here to widen the
-  /// free trial without grepping the codebase.
-  static const int freeDayLimit = 3;
+  /// gate engages on day N+1. Phase 134 widened this from 3 → 5 so
+  /// the free preview reaches the first habit-formation milestone
+  /// (Day 5 is where momentum starts feeling self-sustaining) before
+  /// the locked-future-day cinematic kicks in. Plan-detail screen and
+  /// today_task_card both consume this — no surface should hard-code
+  /// the number.
+  static const int freeDayLimit = 5;
 }

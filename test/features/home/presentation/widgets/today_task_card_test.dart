@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sixpack_ai/core/constants/app_constants.dart';
 import 'package:sixpack_ai/features/home/presentation/widgets/today_task_card.dart';
 import 'package:sixpack_ai/features/monetization/providers/monetization_provider.dart';
 import 'package:sixpack_ai/features/workout/models/exercise_model.dart';
@@ -93,7 +94,8 @@ void main() {
       expect(find.textContaining('dk · Başlangıç'), findsOneWidget);
     });
 
-    testWidgets('CTA routes to /plan-detail for a free day (dayNumber <= 3)',
+    testWidgets(
+        'CTA routes to /plan-detail for a free day (dayNumber <= freeDayLimit)',
         (tester) async {
       final day = WorkoutDay(
         dayNumber: 1,
@@ -116,27 +118,23 @@ void main() {
     testWidgets(
       'CTA redirects non-Pro users to /paywall for days past the free limit',
       (tester) async {
-        final day = WorkoutDay(
-          dayNumber: kFreeDayLimit + 1, // 4 (but rest day), shift to 5
-          exercises: [_coreExercise()],
-        );
-        // Day 4 is a rest day; use day 5 to exercise the gating path on
-        // an active day specifically.
-        final day5 = WorkoutDay(
-          dayNumber: 5,
+        // The test constructs `WorkoutDay` directly with `exercises: [...]`,
+        // so the day is always active regardless of where rest days fall
+        // in a real generated plan. Pick the first day clearly past the
+        // free limit (`freeDayLimit + 1`) to exercise the gate.
+        final lockedDay = WorkoutDay(
+          dayNumber: AppConstants.freeDayLimit + 1,
           exercises: [_coreExercise()],
         );
 
-        await tester.pumpWidget(_host(TodayTaskCard(activeDay: day5)));
+        await tester.pumpWidget(_host(TodayTaskCard(activeDay: lockedDay)));
         await tester.pump();
 
         await tester.tap(find.text('ANTRENMANA BAŞLA'));
         await tester.pumpAndSettle();
 
         expect(find.text('PAYWALL_ROUTE'), findsOneWidget);
-        // Silence the unused-var lint for `day` — the comment above it
-        // documents why kFreeDayLimit + 1 alone isn't the usable input.
-        expect(day.dayNumber, greaterThan(kFreeDayLimit));
+        expect(lockedDay.dayNumber, greaterThan(AppConstants.freeDayLimit));
       },
     );
   });
