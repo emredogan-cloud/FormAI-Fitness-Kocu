@@ -120,35 +120,53 @@ Launch için **kesinlikle** kapatılması gereken sorunlar. Tahmini toplam: **3�
 
 ---
 
-### B-2 · Eksik Asset Dosyaları (Runtime Crash Riski)
+### B-2 · Eksik Asset Dosyaları (Runtime Crash Riski) — ✅ ÇÖZÜLDÜ (Phase 138)
 
-**Dosya:** `lib/features/workout/data/workout_repository.dart:971, 999`
-**Sorun:** Kod şu asset'leri yüklüyor ama dosyalar yok:
-- `photos/workouts/cardio_mobility_stretch.webp` ❌ DOSYA YOK
-- `photos/workouts/cardio_full_body_flow.webp` ❌ DOSYA YOK
+**Dosya:** `lib/features/workout/data/workout_repository.dart`
+**Orijinal audit (Phase 137):** 2 cardio webp eksik (cardio_mobility_stretch, cardio_full_body_flow).
 
-Mevcut benzerler: `cardio_fat_burn.webp`, `cardio_full_body_burst.webp`, `cardio_morning_quick.webp`.
+**Phase 138 derin inceleme keşfi:** Orijinal audit'ten sonra 2 cardio dosyası filesystem'e eklendi (PNG içerikli `.webp` uzantısı, 1.86 MB + 1.98 MB; Flutter magic-byte ile decode eder, sorun yok). Ancak `_regionalTemplates` ve `_equipmentTemplates` listesindeki **22 farklı `_PlanTemplate.image` referansı** dosya yok — Bölgeler tab ve Equipment strip her açıldığında 22 ayrı "Unable to load asset" event fırlatıyordu.
 
-**Risk:** `logs.txt` log dosyasında zaten 2 kez `Unable to load asset` hatası loglanıyor. `precacheImage()` çağrısı home/antrenman ekranında bu dosyalara dokunursa runtime'da exception fırlatır. Tek kullanıcının ekranında çökme olmasa bile Sentry telemetrisi crash raporlarıyla dolu olur ve gerçek crashleri görmezsin.
+Eksik 22 referans (substitüsyon uygulandı):
 
-**Neden önemli:** Play Store yorumlarında "uygulama açılmıyor" diyen 1 kişi 20 indirmeyi öldürür.
+| Eksik referans | Yeni atanan dosya |
+|---|---|
+| core_static_resistance | core_athletic |
+| core_lower_abs | core_steel_abs |
+| core_oblique_burner | core_athletic |
+| core_mobility_flow | core_steel_abs |
+| chest_bodyweight_burst | chest_full_growth_burst |
+| chest_plyo_explosive | chest_activation_growth |
+| chest_beginner_flow | chest_fat_burn_basic |
+| back_bodyweight_activation | back_v_taper |
+| back_postural_corrective | back_posture_basic |
+| back_hanging_workout | back_v_taper |
+| shoulders_advanced_bodyweight | shoulders_giant |
+| shoulders_mobility_opening | shoulders_v_taper |
+| shoulders_scapular_stability | shoulders_power_burst |
+| arms_bodyweight_burst | arms_quick_tone |
+| arms_triceps_bodyweight | arms_steel |
+| arms_hanging_grip | arms_explosive_super |
+| legs_glute_activation | legs_quad_strength |
+| legs_single_leg_bodyweight | legs_cardio_strength |
+| legs_plyometric_burst | legs_elite_sculpt |
+| legs_sumo_adductor | legs_power_day |
+| cardio_hiit_burst | cardio_full_body_burst |
+| cardio_shadow_box | cardio_morning_quick |
 
-**Çözüm:**
-**Seçenek A (Hızlı):** Asset referanslarını mevcut dosyalara değiştir:
-```dart
-// workout_repository.dart:971
-// 'photos/workouts/cardio_mobility_stretch.webp' →
-'photos/workouts/cardio_morning_quick.webp'
+**Validation:**
+- `comm -23 <dart-refs> <filesystem-files>` → 0 eksik referans.
+- `flutter analyze lib/features/workout/data/workout_repository.dart` → No issues found.
+- Runtime: `Image.asset` her `_PlanTemplate.image` için artık bundled bir webp resolve ediyor; precache zinciri Sentry'ye event göndermiyor.
 
-// workout_repository.dart:999
-// 'photos/workouts/cardio_full_body_flow.webp' →
-'photos/workouts/cardio_full_body_burst.webp'
-```
+**Risk / takip:**
+- Cards şimdi muscle-group bazlı paylaşımlı hero imagery kullanıyor (örn. core_athletic 3 template'e servis ediyor). Launch-blocker değil — bespoke art post-launch polish.
+- Filesystem'deki 2 büyük PNG-as-webp dosyası (1.86 + 1.98 MB) decode oluyor ama APK'ya +3.7 MB ekliyor. Post-launch optimize edilebilir.
+- 4 orphan dosya tespit edildi (push_limits_*.webp) — referanssız ama bundled. Toplam ~400 KB; ihmal edilebilir.
 
-**Seçenek B (Doğru):** Eksik 2 webp'yi `photos/workouts/` dizinine ekle (mevcut Unsplash / üretim pipeline'ından).
-
-**Zorluk:** Kolay (10 dakika).
-**Aciliyet:** YÜKSEK — her cold start denemesinde tetiklenir.
+**Commit:** `54a6cb2` — fix(workout): phase 138 B-2 - map 22 missing webp refs to existing assets
+**Push:** ✅ `0b6a8b0..54a6cb2 main -> main`
+**Rollback:** `git revert 54a6cb2` (dönüş visual-fallback gradient'lerine ve event spam'a).
 
 ---
 
@@ -1119,7 +1137,7 @@ Sorun çıkarsa: **Halt rollout** (rollout dondurulur, yeni indirici alamaz, mev
 
 ```
 [ ] B-1  Yeni upload keystore üret, parolayı kasaya at, key.properties yenile
-[ ] B-2  Eksik 2 cardio.webp asset referansını düzelt (workout_repository.dart:971, 999)
+[x] B-2  ✅ 22 eksik webp referansı (regional + equipment templates) substitüsyonla çözüldü — commit 54a6cb2
 [ ] B-3  flutter build appbundle --release ile imzalı .aab üret
 [ ] B-4  Yaş kapısı ekle (<13 redirected, 13-17 ebeveyn rıza)
 [ ] B-5  Supabase Edge Function yaz: RevenueCat webhook → profiles.pro_active sync
