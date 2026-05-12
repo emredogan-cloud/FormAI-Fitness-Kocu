@@ -15,7 +15,10 @@ import '../../../core/utils/placeholder_images.dart';
 import '../../../core/widgets/cached_image.dart';
 import '../../../core/widgets/error_card.dart';
 import '../../../core/widgets/skeleton_loader.dart';
+import '../../monetization/models/locked_feature_type.dart';
 import '../../monetization/providers/monetization_provider.dart';
+import '../../monetization/services/premium_gate_service.dart';
+import '../../monetization/widgets/locked_overlay.dart';
 import '../models/exercise_model.dart';
 import '../models/workout_day_model.dart';
 import '../models/workout_plan_model.dart';
@@ -904,11 +907,23 @@ class _PlanView extends ConsumerWidget {
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
               sliver: SliverToBoxAdapter(
-                child: _PlanStartCta(plan: plan, locked: locked),
+                // Phase 98 · plans that ship an advanced tier (the 7
+                // equipment programs after the consolidation) render a
+                // half-width Standard / half-width Premium pair. Plans
+                // without a premium tier (every regional bodyweight
+                // card) keep the legacy single-CTA layout untouched.
+                child: plan.hasPremiumTier
+                    ? _PlanStartCtaPair(plan: plan, locked: locked)
+                    : _PlanStartCta(plan: plan, locked: locked),
               ),
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+              padding: EdgeInsets.fromLTRB(
+                20,
+                4,
+                20,
+                plan.hasPremiumTier ? 12 : 24,
+              ),
               sliver: SliverList.builder(
                 itemCount: exercises.length,
                 itemBuilder: (context, index) {
@@ -920,6 +935,16 @@ class _PlanView extends ConsumerWidget {
                 },
               ),
             ),
+            if (plan.hasPremiumTier)
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+                sliver: SliverToBoxAdapter(
+                  child: _PremiumExercisesSection(
+                    plan: plan,
+                    locked: locked,
+                  ),
+                ),
+              ),
           ],
         ],
       ),
@@ -1368,6 +1393,345 @@ class _ComingSoonNote extends StatelessWidget {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// Phase 98 · Premium tier UI
+// ============================================================================
+// Renders a half-width Standard ("Lite Seviye") + half-width Premium
+// ("Premium Seviye") launcher pair when the resolved plan ships a non-empty
+// `premiumExercises` list. The Standard button preserves the original
+// purple→blue brand gradient and routes to `plan.exercises`; the Premium
+// button uses a gold gradient + subtle neon glow and routes to
+// `plan.premiumExercises`. Both respect the existing `locked` flag (non-PRO
+// users → paywall) and the Phase 89 offline gate. Plans without a premium
+// tier (regional bodyweight cards) still render the legacy single-CTA
+// `_PlanStartCta` above and never reach these widgets.
+
+const Color _premiumGold = Color(0xFFFFC75A);
+const Color _premiumGoldDeep = Color(0xFFE9A22A);
+
+enum _PlanTier { standard, premium }
+
+class _PlanStartCtaPair extends ConsumerWidget {
+  const _PlanStartCtaPair({required this.plan, required this.locked});
+
+  final WorkoutPlan plan;
+  final bool locked;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Phase 98.1 · IntrinsicHeight is load-bearing here.
+    //
+    // The parent slot is a `SliverToBoxAdapter`, which gives its child an
+    // unbounded vertical constraint. A bare `Row` with
+    // `CrossAxisAlignment.stretch` propagates that infinite height down to
+    // each `Expanded` child, which asserts at layout with:
+    //   "BoxConstraints forces an infinite height.
+    //    The offending constraints were: BoxConstraints(0.0<=w<=Infinity, h=Infinity)"
+    // The assertion blows up the entire CustomScrollView's layout pass, so
+    // the body renders as the bare scaffold background — a "black screen".
+    //
+    // `IntrinsicHeight` measures the tallest child's intrinsic height, sets
+    // the Row's height to that, and only THEN does the cross-axis stretch
+    // see a finite constraint to propagate. Equal-height buttons survive
+    // and the Row lays out cleanly.
+    //
+    // Removing `CrossAxisAlignment.stretch` would also make the assertion
+    // go away, but the buttons would be different heights (the standard
+    // button has no crown icon when unlocked; the premium one always
+    // does), which is the visual the wrap was solving in the first place.
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: _TierLaunchButton(
+              tier: _PlanTier.standard,
+              plan: plan,
+              locked: locked,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _TierLaunchButton(
+              tier: _PlanTier.premium,
+              plan: plan,
+              locked: locked,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Single half-width launcher. The two visual variants (standard vs
+/// premium) share the offline check + paywall gate + initializeWorkout
+/// hand-off so the only thing that diverges is the gradient, glow tint,
+/// optional crown icon, and which exercise list is launched.
+class _TierLaunchButton extends ConsumerWidget {
+  const _TierLaunchButton({
+    required this.tier,
+    required this.plan,
+    required this.locked,
+  });
+
+  final _PlanTier tier;
+  final WorkoutPlan plan;
+  final bool locked;
+
+  bool get _isPremium => tier == _PlanTier.premium;
+
+  List<Color> get _gradient => _isPremium
+      ? const [_premiumGold, _premiumGoldDeep]
+      : const [Color(0xFF6A3DFF), Color(0xFF4DA6FF)];
+
+  String get _subtitle => _isPremium ? 'Premium Seviye' : 'Lite Seviye';
+
+  IconData? get _icon => locked
+      ? Icons.lock
+      : (_isPremium ? Icons.workspace_premium_rounded : null);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final exercises =
+        _isPremium ? plan.premiumExercises : plan.exercises;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: _neon.withValues(alpha: _isPremium ? 0.55 : 0.45),
+            blurRadius: _isPremium ? 28 : 24,
+            spreadRadius: _isPremium ? 1.2 : 1,
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(20),
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              colors: _gradient,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            border: _isPremium
+                ? Border.all(
+                    color: Colors.white.withValues(alpha: 0.55),
+                    width: 1,
+                  )
+                : null,
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(20),
+            onTap: () => _launch(context, ref, exercises),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: 14,
+                horizontal: 8,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (_icon != null) ...[
+                    Icon(_icon, color: Colors.white, size: 18),
+                    const SizedBox(height: 6),
+                  ],
+                  const Text(
+                    'PLANI BAŞLAT',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    locked ? 'PRO Gerekli' : _subtitle,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.82),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _launch(
+    BuildContext context,
+    WidgetRef ref,
+    List<Exercise> exercises,
+  ) async {
+    if (locked) {
+      context.push(AppRoutes.paywall);
+      return;
+    }
+    // Phase 89 · same offline gate as the legacy single button. Duplicating
+    // it here (rather than threading a callback through the parent) keeps
+    // both tier buttons self-sufficient.
+    final online = await ref.read(connectivityServiceProvider).isOnline();
+    if (!online) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Bu içeriğe erişmek için internet bağlantısı gereklidir.',
+          ),
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+    if (!context.mounted) return;
+    ref
+        .read(workoutSessionProvider.notifier)
+        .initializeWorkout(exercises);
+    context.push(AppRoutes.workout);
+  }
+}
+
+/// Premium exercises section rendered below the standard exercise list when
+/// `plan.hasPremiumTier` is true. Carries the gold-titled "İleri Seviye X
+/// Antrenmanları" header and the premium tile list. Tiles reuse the
+/// standard `_ExerciseTile` shape so spacing/tonality stays consistent;
+/// the section's gold + neon glow framing is what signals "this is the
+/// upgrade" without forking a whole second tile widget.
+///
+/// Phase 134 · locked users now see the stronger [LockedOverlay] treatment
+/// (blur + neon wash + lock badge) per-exercise instead of the
+/// Opacity(0.35) dim that pre-dated the cinematic monetization phase.
+/// Tap routes through [PremiumGateService] so the conversion-moment
+/// scene wiring (Phase 135) lights up automatically once C4 ships.
+class _PremiumExercisesSection extends ConsumerWidget {
+  const _PremiumExercisesSection({required this.plan, required this.locked});
+
+  final WorkoutPlan plan;
+  final bool locked;
+
+  String get _categoryLabel {
+    switch (plan.category) {
+      case ExerciseCategory.core:
+        return 'Core';
+      case ExerciseCategory.chest:
+        return 'Göğüs';
+      case ExerciseCategory.back:
+        return 'Sırt';
+      case ExerciseCategory.shoulders:
+        return 'Omuz';
+      case ExerciseCategory.arms:
+        return 'Kol';
+      case ExerciseCategory.legs:
+        return 'Bacak';
+      case ExerciseCategory.fullBody:
+        return 'Tüm Vücut';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final gate = ref.read(premiumGateProvider);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          colors: [
+            _neon.withValues(alpha: 0.10),
+            _premiumGold.withValues(alpha: 0.06),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(color: _neon.withValues(alpha: 0.45)),
+        boxShadow: [
+          BoxShadow(
+            color: _neon.withValues(alpha: 0.30),
+            blurRadius: 22,
+            spreadRadius: 0.5,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    colors: [_premiumGold, _premiumGoldDeep],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _premiumGold.withValues(alpha: 0.55),
+                      blurRadius: 14,
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.workspace_premium_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'İleri Seviye $_categoryLabel Antrenmanları',
+                  style: const TextStyle(
+                    color: _premiumGold,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.3,
+                    shadows: [
+                      Shadow(
+                        blurRadius: 12,
+                        color: Color(0x66FFC75A),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ...plan.premiumExercises.map((exercise) {
+            final tile = _ExerciseTile(exercise: exercise);
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: LockedOverlay(
+                locked: locked,
+                hint: 'Premium ile aç',
+                onTap: () => gate.handleLockedTap(
+                  context,
+                  LockedFeatureType.equipmentExercise,
+                ),
+                child: tile,
+              ),
+            );
+          }),
         ],
       ),
     );

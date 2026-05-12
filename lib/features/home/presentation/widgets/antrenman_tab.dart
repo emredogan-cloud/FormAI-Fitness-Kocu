@@ -11,6 +11,10 @@ import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/placeholder_images.dart';
 import '../../../../core/widgets/cached_image.dart';
 import '../../../../core/widgets/error_card.dart';
+import '../../../monetization/models/locked_feature_type.dart';
+import '../../../monetization/providers/monetization_provider.dart';
+import '../../../monetization/services/premium_gate_service.dart';
+import '../../../monetization/widgets/locked_overlay.dart';
 import '../../../workout/models/exercise_model.dart';
 import '../../../workout/models/workout_day_model.dart';
 import '../../../workout/models/workout_plan_model.dart';
@@ -193,6 +197,13 @@ class _AntrenmanTabState extends ConsumerState<AntrenmanTab> {
         ),
         const SizedBox(height: 14),
         _RegionalPlansList(plans: filteredPlans),
+        // Phase 134 · "Yeni Egzersizler" teaser strip per region. For
+        // non-pro users this surfaces the Phase 96 expansion set as
+        // visible-but-locked previews — the curiosity / aspiration
+        // beat the emotional-monetization spec asks for. Pro users
+        // see the same strip without lock chrome so the "yeni"
+        // tagging still reads as a freshness signal.
+        _YeniExercisesStrip(category: _selectedCategory),
       ],
     );
   }
@@ -664,6 +675,173 @@ class _SectionTitle extends StatelessWidget {
           if (trailingIcon != null)
             Icon(trailingIcon, color: Colors.white54, size: 22),
         ],
+      ),
+    );
+  }
+}
+
+/// Phase 134 · "Yeni Egzersizler" strip rendered below the regional plan
+/// list, filtered to the currently-selected region.
+///
+/// Visual model: horizontal scrollable strip of compact exercise cards
+/// (gradient swatch + exercise name + "Yeni" chip). Non-pro users see
+/// the same cards through [LockedOverlay], so the chip + lock badge
+/// stack to read as "premium-tier movement freshly added". Tapping a
+/// locked tile routes through [PremiumGateService] so the cinematic
+/// conversion scene (Phase 135) lights up once C4 ships — Phase 134's
+/// gate-service stub for now routes straight to /paywall, keeping the
+/// behaviour identical to other locked surfaces in this commit.
+///
+/// Source data: [exercisesProvider] (Supabase-backed via Phase 50A).
+/// Tagging lives in [PremiumExerciseTags.newSlugs] and is applied at
+/// hydration time in `WorkoutRepository._exerciseFromRow`.
+class _YeniExercisesStrip extends ConsumerWidget {
+  const _YeniExercisesStrip({required this.category});
+
+  final ExerciseCategory category;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final exercisesAsync = ref.watch(exercisesProvider);
+    return exercisesAsync.maybeWhen(
+      data: (all) => _buildStrip(context, ref, all),
+      orElse: () => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildStrip(
+    BuildContext context,
+    WidgetRef ref,
+    List<Exercise> all,
+  ) {
+    final yeniForRegion = all
+        .where((e) => e.isNew && e.category == category)
+        .take(8)
+        .toList(growable: false);
+    if (yeniForRegion.isEmpty) return const SizedBox.shrink();
+
+    final isPro = ref.watch(isProProvider);
+    final gate = ref.read(premiumGateProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 28),
+        const _SectionTitle(title: 'Yeni Egzersizler'),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 168,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: yeniForRegion.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              final exercise = yeniForRegion[index];
+              final card = _YeniExerciseCard(exercise: exercise);
+              return LockedOverlay(
+                locked: !isPro,
+                cornerRadius: 18,
+                showLockBadge: true,
+                onTap: () => gate.handleLockedTap(
+                  context,
+                  LockedFeatureType.regionNewExercise,
+                ),
+                child: card,
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Compact preview tile for [_YeniExercisesStrip]. Fixed-width card with
+/// a neon-violet gradient, exercise name, and a "Yeni" chip in the
+/// top-left. No tap behaviour of its own — it's always wrapped by a
+/// [LockedOverlay] in the strip, which owns the tap intercept.
+class _YeniExerciseCard extends StatelessWidget {
+  const _YeniExerciseCard({required this.exercise});
+
+  final Exercise exercise;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 152,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          gradient: LinearGradient(
+            colors: [
+              _neon.withValues(alpha: 0.45),
+              _neonAccent.withValues(alpha: 0.25),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: _neon.withValues(alpha: 0.30),
+              blurRadius: 14,
+              spreadRadius: 0.4,
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 3,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(999),
+                  color: Colors.black.withValues(alpha: 0.45),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
+                ),
+                child: const Text(
+                  'YENİ',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.4,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              Text(
+                exercise.name,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w900,
+                  height: 1.2,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                exercise.difficulty == 'advanced'
+                    ? 'İleri'
+                    : (exercise.difficulty == 'intermediate'
+                        ? 'Orta seviye'
+                        : 'Başlangıç'),
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.75),
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

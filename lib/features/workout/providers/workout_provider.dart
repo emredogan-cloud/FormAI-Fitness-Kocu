@@ -5,9 +5,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/services/analytics_service.dart';
 import '../../../core/services/app_preferences.dart';
+import '../../../core/utils/app_logger.dart';
+import '../data/session_log_repository.dart';
 import '../data/workout_repository.dart';
 import '../domain/services/workout_generator_service.dart';
 import '../models/exercise_model.dart';
+import '../models/session_log_model.dart';
 import '../models/workout_day_model.dart';
 import '../models/workout_plan_model.dart';
 
@@ -35,6 +38,28 @@ final equipmentPlansProvider = FutureProvider<List<WorkoutPlan>>((ref) {
   return ref.watch(workoutRepositoryProvider).getEquipmentPlans();
 });
 
+/// Phase 134 · raw exercise catalogue exposed for the "Yeni Egzersizler"
+/// regions-menu strip and any future surface that needs per-exercise
+/// data (e.g. an exercise-detail browse view). Backed by the same
+/// in-flight memoisation [WorkoutRepository._exercisesFuture] uses for
+/// plan resolution, so concurrent consumers coalesce on a single fetch.
+final exercisesProvider = FutureProvider<List<Exercise>>((ref) {
+  return ref.watch(workoutRepositoryProvider).getAllExercises();
+});
+
+/// Progress Phase 2.B · in-flight per-exercise totals accumulated
+/// across the day's sets. Materialised into [ExerciseLog] entries by
+/// `_buildSessionLog` on day-completion. Mutable on purpose — it lives
+/// for the duration of one workout session and is wiped between
+/// sessions.
+class _PendingExerciseLog {
+  _PendingExerciseLog({required this.exercise});
+  final Exercise exercise;
+  int actualSets = 0;
+  int actualReps = 0;
+  int durationSeconds = 0;
+}
+
 class WorkoutSessionState {
   const WorkoutSessionState({
     this.days = const [],
@@ -47,6 +72,7 @@ class WorkoutSessionState {
     this.isSessionComplete = false,
     this.isPreparing = false,
     this.prepSecondsRemaining = 0,
+    this.isStub = false,
   });
 
   final List<WorkoutDay> days;
@@ -64,6 +90,15 @@ class WorkoutSessionState {
   /// while this is true.
   final bool isPreparing;
   final int prepSecondsRemaining;
+
+  /// `true` when [days] is the repository's offline-fallback (30 rest
+  /// days returned because no plan cache existed AND the live exercise
+  /// pool came back empty). The UI must NOT render success states like
+  /// "Tebrikler, tamamlandı" off a stub — `_firstIncomplete` returns
+  /// null on an all-rest-day list and the dashboard would mistake the
+  /// placeholder for a finished program. Surface a "Senkronize
+  /// ediliyor / Bağlantı yok" tile instead.
+  final bool isStub;
 
   Exercise? get activeExercise {
     final day = activeDay;
@@ -110,6 +145,7 @@ class WorkoutSessionState {
     bool? isSessionComplete,
     bool? isPreparing,
     int? prepSecondsRemaining,
+    bool? isStub,
   }) {
     return WorkoutSessionState(
       days: days ?? this.days,
@@ -122,6 +158,7 @@ class WorkoutSessionState {
       isSessionComplete: isSessionComplete ?? this.isSessionComplete,
       isPreparing: isPreparing ?? this.isPreparing,
       prepSecondsRemaining: prepSecondsRemaining ?? this.prepSecondsRemaining,
+      isStub: isStub ?? this.isStub,
     );
   }
 }
@@ -135,6 +172,21 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
   /// inter-SET rest within the same exercise). Read by the rest timer
   /// completion to decide whether to launch a HAZIRLAN! prep countdown.
   bool _restPrecedesExerciseChange = false;
+
+  /// Progress Phase 2.B · wall-clock moment the active set transitioned
+  /// from prep/rest into "user is repping." Used to compute per-set
+  /// duration captured into [_pendingExerciseLogs] when the set finishes.
+  /// Null during prep / rest / between sessions.
+  DateTime? _setStartedAt;
+
+  /// Progress Phase 2.B · in-flight per-exercise accumulator, keyed by
+  /// `Exercise.id`. Each entry sums actualSets + actualReps + duration
+  /// across the day's sets so that, on the day-completion branch, we
+  /// can build a single [SessionLog] without walking the day's exercise
+  /// list a second time. Cleared on `startDay` / `initializeWorkout` /
+  /// `previousExercise` / `resetProgress` so a stale partial run can't
+  /// leak into the next session.
+  final Map<String, _PendingExerciseLog> _pendingExerciseLogs = {};
 
   static const Duration _prepDuration = Duration(seconds: 3);
 
@@ -150,11 +202,15 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
       final prefs = await SharedPreferences.getInstance();
       _repository = WorkoutRepository(prefs);
     }
-    final days = await _loadProgram();
-    final activeDay = _firstIncomplete(days);
+    final result = await _loadProgram();
+    final activeDay = _firstIncomplete(result.days);
     ref.onDispose(_cancelRestTimer);
     ref.onDispose(_cancelPrepTimer);
-    return WorkoutSessionState(days: days, activeDay: activeDay);
+    return WorkoutSessionState(
+      days: result.days,
+      activeDay: activeDay,
+      isStub: result.isStub,
+    );
   }
 
   /// Resolves the user's stored goal + activity level (set during the
@@ -173,7 +229,7 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
   ///
   /// If both are absent, the repository/generator's own defaults
   /// (sixpack + beginner) kick in — never an empty 30-day list.
-  Future<List<WorkoutDay>> _loadProgram() async {
+  Future<({List<WorkoutDay> days, bool isStub})> _loadProgram() async {
     final appPrefs = ref.read(appPreferencesProvider);
     final metrics = appPrefs.userMetrics ?? const <String, dynamic>{};
     final userGoal = (metrics['targetPhysique'] as String?) ?? appPrefs.goal;
@@ -208,6 +264,10 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
     if (current == null) return;
     _cancelRestTimer();
     _cancelPrepTimer();
+    // Progress Phase 2.B · drop any leftover accumulator state from a
+    // previous abandoned session before starting a fresh day.
+    _pendingExerciseLogs.clear();
+    _setStartedAt = null;
     final day = current.days.firstWhere(
       (d) => d.dayNumber == dayNumber,
       orElse: () => current.days.first,
@@ -236,6 +296,8 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
     if (current == null || exercises.isEmpty) return;
     _cancelRestTimer();
     _cancelPrepTimer();
+    _pendingExerciseLogs.clear();
+    _setStartedAt = null;
     final adHocDay = WorkoutDay(dayNumber: 0, exercises: exercises);
     state = AsyncData(current.copyWith(
       activeDay: adHocDay,
@@ -265,6 +327,14 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
     final exercise = current?.activeExercise;
     if (current == null || day == null || exercise == null) return;
     if (current.isResting) return;
+
+    // Progress Phase 2.B · capture the just-finished set into the
+    // per-day accumulator. Runs BEFORE the state mutation that resets
+    // `currentReps` so the accumulator reads the last-known rep count
+    // for this set. Ad-hoc runs (`dayNumber <= 0`) accumulate too, but
+    // the day-completion branch below skips persisting them — Phase 2
+    // logs are scoped to the 30-day program.
+    _captureCompletedSet(current, exercise);
 
     final isLastSet = current.currentSet >= exercise.sets;
     if (!isLastSet) {
@@ -300,8 +370,31 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
     final isAdHoc = day.dayNumber <= 0;
     if (!isAdHoc) {
       await _repository.markDayCompleted(day.dayNumber);
+      // Progress Phase 2.B · persist the day's session log alongside
+      // the completion flag. Wrapped in try/catch so a corrupt
+      // SharedPreferences write can't break completion — the
+      // `isCompleted` flag is still the authoritative signal; logs are
+      // additive UX. Invalidate the read provider so the gelisim_tab
+      // stats cards see the fresh data on the next render.
+      try {
+        final log = _buildSessionLog(day);
+        await ref.read(sessionLogRepositoryProvider).saveLog(log);
+        ref.invalidate(sessionLogsProvider);
+      } catch (e, st) {
+        AppLogger.error(
+          'SessionLog save failed — completion succeeded, log dropped',
+          e,
+          stackTrace: st,
+          category: 'progress',
+        );
+      }
     }
-    final refreshed = isAdHoc ? current.days : await _loadProgram();
+    _pendingExerciseLogs.clear();
+    _setStartedAt = null;
+    final refreshedResult = isAdHoc
+        ? (days: current.days, isStub: current.isStub)
+        : await _loadProgram();
+    final refreshed = refreshedResult.days;
     // Phase 52 · maintain the all-time-high streak watermark so the
     // AI Coach card can detect the "comeback" state (live streak == 0
     // but a past best exists). The bump runs after `_loadProgram`
@@ -334,6 +427,7 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
       isResting: false,
       restSecondsRemaining: 0,
       isSessionComplete: true,
+      isStub: refreshedResult.isStub,
     ));
     // Phase 42 analytics — end-of-session marker. dayNumber 0 for ad-hoc
     // runs so the funnel can count "completed a workout" without mixing
@@ -351,6 +445,11 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
     ));
     if (_restPrecedesExerciseChange) {
       _startPrep();
+    } else {
+      // Progress Phase 2.B · same logic as the rest-end branch — when
+      // the user skips an inter-set rest, the next set begins
+      // immediately so the start-stamp lands here.
+      _markSetStarted();
     }
     _restPrecedesExerciseChange = false;
   }
@@ -376,6 +475,14 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
     _cancelRestTimer();
     _cancelPrepTimer();
     _restPrecedesExerciseChange = false;
+    // Progress Phase 2.B · the user is rewinding to redo a prior
+    // exercise. Drop the accumulator entry for the *new* active
+    // exercise (after the index decrement) so a re-run starts clean.
+    final rewoundIndex = current.activeExerciseIndex - 1;
+    if (rewoundIndex >= 0 && rewoundIndex < day.exercises.length) {
+      _pendingExerciseLogs.remove(day.exercises[rewoundIndex].id);
+    }
+    _setStartedAt = null;
 
     final nextIndex = current.activeExerciseIndex - 1;
     state = AsyncData(current.copyWith(
@@ -391,11 +498,19 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
 
   Future<void> resetProgress() async {
     await _repository.resetProgress();
-    final days = await _loadProgram();
+    final result = await _loadProgram();
     _cancelRestTimer();
+    // Progress Phase 2.B · `WorkoutRepository.resetProgress` already
+    // clears the persisted session-log file; drop the in-flight
+    // accumulator + start-stamp here too so a reset triggered mid-
+    // session can't leak prior reps into the next day's log.
+    _pendingExerciseLogs.clear();
+    _setStartedAt = null;
+    ref.invalidate(sessionLogsProvider);
     state = AsyncData(WorkoutSessionState(
-      days: days,
-      activeDay: _firstIncomplete(days),
+      days: result.days,
+      activeDay: _firstIncomplete(result.days),
+      isStub: result.isStub,
     ));
   }
 
@@ -436,7 +551,15 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
           restSecondsRemaining: 0,
         ));
         if (_restPrecedesExerciseChange) {
+          // Inter-exercise rest → fire prep countdown; the prep-end
+          // branch will mark the set started once the user is actually
+          // ready to rep.
           _startPrep();
+        } else {
+          // Inter-set rest within the same exercise — no prep
+          // countdown. The next set begins immediately, so the
+          // start-stamp lands here.
+          _markSetStarted();
         }
         _restPrecedesExerciseChange = false;
       } else {
@@ -471,6 +594,10 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
           isPreparing: false,
           prepSecondsRemaining: 0,
         ));
+        // Progress Phase 2.B · prep just ended → user is now repping.
+        // This is the canonical "set started" moment for inter-exercise
+        // and start-of-day transitions.
+        _markSetStarted();
       } else {
         state = AsyncData(cur.copyWith(prepSecondsRemaining: remaining));
       }
@@ -496,6 +623,68 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
       if (!day.isCompleted) return day;
     }
     return null;
+  }
+
+  /// Progress Phase 2.B · stamps the wall-clock at the moment the
+  /// active set transitions from prep/rest into "user is repping". The
+  /// difference between this stamp and the [completeCurrentExercise]
+  /// call is captured as the set's duration in [_captureCompletedSet].
+  void _markSetStarted() {
+    _setStartedAt = DateTime.now();
+  }
+
+  /// Progress Phase 2.B · folds the just-finished set into the
+  /// per-day accumulator. `currentReps == 0` falls back to the
+  /// exercise's `targetReps` so a user who skipped pose detection
+  /// (or completed manually without entering reps) still gets a
+  /// defensible record rather than a zero-rep ghost.
+  void _captureCompletedSet(WorkoutSessionState current, Exercise exercise) {
+    final actualReps = current.currentReps > 0
+        ? current.currentReps
+        : (exercise.targetReps ?? 0);
+    final setDuration = _setStartedAt == null
+        ? 0
+        : DateTime.now().difference(_setStartedAt!).inSeconds;
+    final pending = _pendingExerciseLogs.putIfAbsent(
+      exercise.id,
+      () => _PendingExerciseLog(exercise: exercise),
+    );
+    pending.actualSets += 1;
+    pending.actualReps += actualReps;
+    pending.durationSeconds += setDuration < 0 ? 0 : setDuration;
+    _setStartedAt = null;
+  }
+
+  /// Progress Phase 2.B · materialises a [SessionLog] from the
+  /// in-flight accumulator. Iterates the day's exercises in their
+  /// canonical order so the log preserves the program's intended
+  /// sequence even if the user backed out of an exercise mid-flow.
+  /// Exercises the user never reached collapse to a zero-actual log
+  /// — never omitted — so the calendar drilldown can still show them
+  /// as "planned but skipped" if a future Phase wants that.
+  SessionLog _buildSessionLog(WorkoutDay day) {
+    final exerciseLogs = day.exercises.map((ex) {
+      final pending = _pendingExerciseLogs[ex.id];
+      return ExerciseLog(
+        exerciseId: ex.id,
+        exerciseName: ex.name,
+        targetMuscle: ex.targetMuscle,
+        isCardio: ex.isCardio,
+        plannedSets: ex.sets,
+        plannedReps: ex.targetReps ?? 0,
+        actualSets: pending?.actualSets ?? 0,
+        actualReps: pending?.actualReps ?? 0,
+        durationSeconds: pending?.durationSeconds ?? 0,
+      );
+    }).toList(growable: false);
+    final totalDuration =
+        exerciseLogs.fold<int>(0, (sum, e) => sum + e.durationSeconds);
+    return SessionLog(
+      dayNumber: day.dayNumber,
+      completedAtIso: DateTime.now().toIso8601String(),
+      durationSeconds: totalDuration,
+      exerciseLogs: exerciseLogs,
+    );
   }
 
   /// Counts the leading run of completed days. Mirrors the helper in

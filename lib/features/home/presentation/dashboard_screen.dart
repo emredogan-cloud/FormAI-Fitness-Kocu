@@ -5,6 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/services/app_preferences.dart';
 import '../../../core/services/first_time_ai_scenes.dart';
 import '../../../core/theme/theme_extension.dart';
+import '../../monetization/models/locked_feature_type.dart';
+import '../../monetization/providers/monetization_provider.dart';
+import '../../monetization/services/premium_gate_service.dart';
 import '../../nutrition/presentation/nutrition_tab.dart';
 import '../../nutrition/presentation/widgets/nutrition_onboarding_sheet.dart';
 import '../../progress/data/level_titles.dart';
@@ -266,6 +269,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
   void _onTabChanged(int newIndex) {
     final previous = _index;
+    // Phase 134 · nutrition is now a premium-gated section. When a
+    // non-pro user taps Beslenme, intercept the tab switch and route
+    // through PremiumGateService so the cinematic conversion scene
+    // (Phase 135) — or, until C4 lands, the paywall — fires instead
+    // of revealing nutrition content. Pro users fall through to the
+    // normal tab-switch path including the deferred-onboarding hook.
+    if (newIndex == _nutritionTabIndex &&
+        previous != _nutritionTabIndex &&
+        !ref.read(isProProvider)) {
+      ref.read(premiumGateProvider).handleLockedTap(
+            context,
+            LockedFeatureType.nutritionTab,
+          );
+      return;
+    }
     setState(() => _index = newIndex);
     // Phase 46 · deferred nutrition onboarding. First time the user
     // lands on the Beslenme tab, present the four nutrition
