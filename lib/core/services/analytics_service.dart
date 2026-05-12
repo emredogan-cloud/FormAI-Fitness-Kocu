@@ -4,6 +4,7 @@ import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
 
 import '../utils/app_logger.dart';
+import 'consent_state.dart';
 
 /// Phase 42: centralised event dictionary for SixPack AI.
 ///
@@ -40,7 +41,18 @@ class AnalyticsService {
       final config = PostHogConfig(apiKey)..host = host;
       await Posthog().setup(config);
       _enabled = true;
-      AppLogger.info('PostHog initialised', category: 'analytics');
+      // Phase 138 · H-2. If the consent screen has already run and
+      // the user declined analytics, the SDK is configured but
+      // immediately disabled. `setEnabled` is also exposed so the
+      // consent screen can flip the switch at decision time without
+      // requiring an app restart.
+      if (!ConsentState.analyticsGranted) {
+        await Posthog().disable();
+      }
+      AppLogger.info(
+        'PostHog initialised (consent=${ConsentState.analyticsGranted})',
+        category: 'analytics',
+      );
     } catch (e, st) {
       AppLogger.error(
         'PostHog init failed',
@@ -51,8 +63,34 @@ class AnalyticsService {
     }
   }
 
+  /// Phase 138 · H-2. Called from the consent screen after the user
+  /// makes a decision. Toggles the runtime gate so subsequent
+  /// `_capture` calls are dropped (or resume) without an app
+  /// restart. `enable=true` also flushes any queued events that
+  /// PostHog buffered while disabled.
+  Future<void> setEnabled(bool enabled) async {
+    if (!_enabled) return;
+    try {
+      if (enabled) {
+        await Posthog().enable();
+      } else {
+        await Posthog().disable();
+      }
+    } catch (e, st) {
+      AppLogger.warning(
+        'PostHog setEnabled($enabled) failed',
+        category: 'analytics',
+        data: {'error': e.toString(), 'stack': st.toString()},
+      );
+    }
+  }
+
   Future<void> _capture(String event, [Map<String, Object>? props]) async {
     if (!_enabled) return;
+    // Phase 138 · H-2. Defence in depth — PostHog's own opt-out
+    // gate is the primary lever, but a misfiring `disable()` call
+    // shouldn't leak events. Short-circuit at the facade too.
+    if (!ConsentState.analyticsGranted) return;
     try {
       await Posthog().capture(eventName: event, properties: props);
     } catch (e, st) {

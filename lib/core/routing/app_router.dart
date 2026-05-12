@@ -15,6 +15,7 @@ import '../../features/nutrition/presentation/discover_recipes_screen.dart';
 import '../../features/nutrition/presentation/favorites_screen.dart';
 import '../../features/nutrition/presentation/recipe_detail_screen.dart';
 import '../../features/onboarding/presentation/age_gate_screen.dart';
+import '../../features/onboarding/presentation/consent_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/onboarding/presentation/prediction_screen.dart';
 import '../../features/progress/presentation/badges_screen.dart';
@@ -42,6 +43,12 @@ class AppRoutes {
   /// launcher. Legacy installs that already completed onboarding
   /// (`isFirstTime=false`) skip the gate entirely.
   static const String ageGate = '/age-gate';
+
+  /// Phase 138 · H-2. KVKK / GDPR consent screen. Sits between
+  /// `/age-gate` and `/onboarding` so the user explicitly opts into
+  /// (or out of) anonymous analytics and crash reporting BEFORE any
+  /// PostHog event fires or Sentry forwards a crash.
+  static const String consent = '/consent';
   static const String workout = '/workout';
   static const String paywall = '/paywall';
   static const String prediction = '/prediction';
@@ -102,6 +109,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // can deep-link past it via `prefs.setAgeVerified` from devtools.
       if (!prefs.ageVerified) {
         return path == AppRoutes.ageGate ? null : AppRoutes.ageGate;
+      }
+      // Phase 138 · H-2. Once age is verified but consent has not
+      // yet been decided, route to /consent. PostHog has been
+      // disabled at boot when consent was missing, and Sentry's
+      // beforeSend is dropping events — onboarding analytics can
+      // resume cleanly the moment the user opts in.
+      if (!prefs.consentDecisionMade) {
+        return path == AppRoutes.consent ? null : AppRoutes.consent;
       }
       return path == AppRoutes.onboarding ? null : AppRoutes.onboarding;
     }
@@ -176,6 +191,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.ageGate,
         name: 'ageGate',
         builder: (context, state) => const AgeGateScreen(),
+      ),
+      // Phase 138 · H-2 consent screen.
+      GoRoute(
+        path: AppRoutes.consent,
+        name: 'consent',
+        builder: (context, state) => const ConsentScreen(),
       ),
       GoRoute(
         path: AppRoutes.auth,

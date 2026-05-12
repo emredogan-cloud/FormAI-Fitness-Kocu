@@ -12,6 +12,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/routing/app_router.dart';
 import 'core/services/analytics_service.dart';
 import 'core/services/app_preferences.dart';
+import 'core/services/consent_state.dart';
 import 'core/services/deep_link_service.dart';
 import 'core/services/live_activity_service.dart';
 import 'core/services/smart_reminder_scheduler.dart';
@@ -115,6 +116,13 @@ Future<void> main() async {
           // slot by default; we clear the email / ipAddress / data
           // fields before the event leaves the device.
           options.beforeSend = (event, hint) {
+            // Phase 138 · H-2 KVKK consent gate. Until the user
+            // explicitly opts into crash reporting on the consent
+            // screen, every event is dropped on the device side —
+            // nothing leaves the handset. The SDK still initialises
+            // so the moment the user opts in, subsequent events
+            // start flowing without needing a restart.
+            if (!ConsentState.crashReportingGranted) return null;
             final user = event.user;
             if (user != null) {
               user.ipAddress = null;
@@ -239,6 +247,30 @@ class _BootGateState extends State<_BootGate> {
       // dotenv already loaded in `main()` before Sentry.init, so we only
       // cross the SharedPreferences platform channel here.
       final prefs = await SharedPreferences.getInstance();
+
+      // Phase 138 · H-2. Mirror persisted consent grants into the
+      // top-level `ConsentState` singleton so the Sentry beforeSend
+      // hook (which runs outside the Riverpod scope) and the
+      // PostHog init below pick up the user's prior decision before
+      // any event has a chance to fire. First-launch installs land
+      // here with all three flags false — exactly what KVKK demands.
+      final appPrefs = AppPreferences(prefs);
+      ConsentState.apply(
+        decided: appPrefs.consentDecisionMade,
+        analytics: appPrefs.analyticsConsentGranted,
+        crash: appPrefs.crashReportingConsentGranted,
+      );
+
+      // Progress Phase 1.A · weekly Monday refill of streak-freeze
+      // shields. Fire-and-forget + try/catch so a bad clock or a wedged
+      // disk write can't take down the bootstrap (Phase 94 contract).
+      // The check is idempotent — calling it on a non-Monday or
+      // multiple times the same Monday is a no-op after the first run.
+      try {
+        await AppPreferences(prefs).refillFreezeTokensIfDue();
+      } catch (_) {
+        // Refill is purely additive UX polish; failure is acceptable.
+      }
 
       if (!_supabaseInitialized) {
         // Phase 94 · 8-second timeout. Supabase's auth refresh
