@@ -274,16 +274,45 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     // very first /prediction render — without this save, guests complete
     // onboarding with an empty `user_metrics` and the generator silently
     // falls back to sixpack + beginner.
-    await prefs.saveUserMetrics(wizard.toJson());
-    await prefs.completeOnboarding(
-      goal: wizard.targetPhysique?.name,
-      hasEquipment: wizard.hasEquipment,
-    );
-    // Phase 138 · H-1. The checkpoint did its job — the user reached
-    // the paywall. Wipe it so a future re-onboarding (after
-    // resetProgress, or a re-install) starts cleanly instead of
-    // rehydrating answers from the prior session.
-    await prefs.clearWizardCheckpoint();
+    //
+    // Phase 138 · M-7. Wrap the three SharedPreferences writes in
+    // try/catch. A full-disk or wedged Hive box would previously have
+    // thrown out of `_finish()`, leaving the user stranded on the
+    // pre-paywall summary step with no haptic feedback and no way
+    // forward. Surfacing the failure as a toast lets them retry the
+    // commit rather than guessing what went wrong.
+    try {
+      await prefs.saveUserMetrics(wizard.toJson());
+      await prefs.completeOnboarding(
+        goal: wizard.targetPhysique?.name,
+        hasEquipment: wizard.hasEquipment,
+      );
+      // Phase 138 · H-1. The checkpoint did its job — the user reached
+      // the paywall. Wipe it so a future re-onboarding (after
+      // resetProgress, or a re-install) starts cleanly instead of
+      // rehydrating answers from the prior session.
+      await prefs.clearWizardCheckpoint();
+    } catch (e, st) {
+      AppLogger.error(
+        'Onboarding _finish: prefs write failed',
+        e,
+        stackTrace: st,
+        category: 'onboarding',
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Tercihlerin kaydedilemedi. Lütfen biraz sonra tekrar dene.',
+          ),
+          duration: Duration(seconds: 4),
+        ),
+      );
+      // Don't navigate forward — the next surface (paywall, prediction)
+      // depends on `userMetrics` being on disk. The user can tap
+      // "Devam Et" again and we'll re-attempt the writes.
+      return;
+    }
     // The user just committed to the program; the paywall is the next
     // major surface they may see. Kick off RevenueCat configuration now
     // so the platform-channel handshake overlaps the prediction render
