@@ -145,6 +145,30 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     final accepted = await _showMlKitDisclosure();
     if (!accepted || !mounted) return;
 
+    // Phase 138 · H-4. Probe ML Kit pose-detection availability BEFORE
+    // requesting camera permission. On forked ROMs / older Huawei
+    // devices / installs missing Google Play Services, the native
+    // pose-detection layer can fail to initialise — the camera would
+    // open fine but every frame would silently fail in
+    // `_processImage`, leaving the user staring at a preview that
+    // never counts a rep. Catching the unavailable case here surfaces
+    // a clean error card instead of a confused user.
+    final mlKitReady = await PoseDetectorService.isAvailable();
+    if (!mounted) return;
+    if (!mlKitReady) {
+      AppLogger.warning(
+        'ML Kit pose detection unavailable — graceful degradation',
+        category: 'workout',
+      );
+      setState(() {
+        _error =
+            'Bu cihaz form analizi için gereken yapay zeka katmanını '
+            'çalıştıramıyor. Antrenmana camera-free modda devam etmek için '
+            'ana ekrandaki manuel egzersizleri kullanabilirsin.';
+      });
+      return;
+    }
+
     final status = await Permission.camera.request();
     if (!mounted) return;
     if (status.isPermanentlyDenied) {
