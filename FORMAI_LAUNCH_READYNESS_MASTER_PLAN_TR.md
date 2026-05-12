@@ -197,7 +197,16 @@ jarsigner -verify -verbose -certs build/app/outputs/bundle/release/app-release.a
 
 ---
 
-### B-4 · Yaş Kapısı Yok (COPPA / Play Politikası)
+### B-4 · Yaş Kapısı Yok (COPPA / Play Politikası) — ✅ ÇÖZÜLDÜ (Phase 138)
+
+**Karar (founder onayı):** 18+ hard threshold — PhysicalDataStep wheel'inin alt sınırı (18) ve Play Console "Target audience: 18+" önerisi (Adım O) ile aligned.
+
+**Uygulanan mimari:**
+- Yeni route: `AppRoutes.ageGate` (`/age-gate`).
+- Yeni dosya: `lib/features/onboarding/presentation/age_gate_screen.dart`. Year-of-birth Cupertino wheel (1940–güncel yıl, default 2000) + "Devam Et" CTA. < 18 sonucu non-dismissible block ekranıyla `SystemNavigator.pop()`.
+- Yeni AppPreferences alanları: `ageVerified`, `setAgeVerified({required int birthYear})`, `birthYear`. Persist anahtarları: `sixpack.age_verified`, `sixpack.birth_year`.
+- Router redirect: `isFirstTime && !ageVerified` → `/age-gate`; `isFirstTime && ageVerified` → `/onboarding`. Legacy install'ler (`isFirstTime=false`) grandfathered.
+- `PopScope(canPop: false)` Android back gesture'ı bloklar — gate'ten çıkışın tek yolu birth year submit veya `SystemNavigator.pop()`.
 
 **Sorun:** Onboarding'de yaş alanı var (`wizard_provider.dart` içinde `age: int?`) ama **13 yaşından küçükler için engelleyici kontrol yok**.
 
@@ -234,6 +243,23 @@ if (selectedAge < 13) {
 
 **Zorluk:** Kolay (1 saat: kod + Play Console Data Safety formu).
 **Aciliyet:** Production rollout öncesi MUTLAKA.
+
+**Validation:**
+- `flutter analyze lib/core lib/features/onboarding` → No issues found.
+- Router redirect testleri (manuel akış):
+  - Fresh install → `/age-gate` (onboarding'e ulaşmıyor).
+  - Birth year 2010 → block screen, "Uygulamayı Kapat" → SystemNavigator.pop().
+  - Birth year 2000 → `setAgeVerified` → `/onboarding`.
+  - Sonraki açılışlarda gate atlanıyor (verified flag).
+- Analytics consent compatibility: gate ekranı PostHog event göndermiyor; onboarding step_0 event'i sadece gate geçildikten sonra ateşleniyor.
+
+**Risks:**
+- Self-attestation seviyesinde rigor (kullanıcı yalan söyleyebilir). Play Console Data Safety formundaki "age gate var mı?" sorusu için yeterli.
+- Under-18 mode için forward path: `_minAge` düşür + parental consent branch ekle; gate'i silme.
+
+**Commit:** `3e7b0b8` — feat(onboarding): phase 138 B-4 - 18+ age verification gate
+**Push:** ✅ `3ae8302..3e7b0b8 main -> main`
+**Rollback:** `git revert 3e7b0b8` (legacy users impact: bir kez `/onboarding`'a re-route, harmless).
 
 ---
 
@@ -1139,7 +1165,7 @@ Sorun çıkarsa: **Halt rollout** (rollout dondurulur, yeni indirici alamaz, mev
 [ ] B-1  Yeni upload keystore üret, parolayı kasaya at, key.properties yenile
 [x] B-2  ✅ 22 eksik webp referansı (regional + equipment templates) substitüsyonla çözüldü — commit 54a6cb2
 [ ] B-3  flutter build appbundle --release ile imzalı .aab üret
-[ ] B-4  Yaş kapısı ekle (<13 redirected, 13-17 ebeveyn rıza)
+[x] B-4  ✅ 18+ age gate (founder onayı) — /age-gate route + year picker + block screen — commit 3e7b0b8
 [ ] B-5  Supabase Edge Function yaz: RevenueCat webhook → profiles.pro_active sync
 [ ] B-6  Supabase RLS policies admin tabloları için, app_metadata.role kontrolü
 ```
