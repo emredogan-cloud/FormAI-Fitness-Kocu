@@ -588,6 +588,17 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       case PurchaseOutcome.cancelled:
         // User tapped cancel — stay on paywall, no noisy toast.
         break;
+      case PurchaseOutcome.pending:
+        // Phase 138 · M-10. Store accepted the purchase but the
+        // charge hasn't resolved yet (parental approval, family
+        // share approval, slow card review). The webhook will
+        // upgrade the entitlement once it clears; in the meantime
+        // we tell the user the purchase is in flight rather than
+        // showing the generic error toast.
+        _toast(
+          'Satın alman onay bekliyor. Onaylanınca Premium otomatik '
+          'açılacak.',
+        );
       case PurchaseOutcome.notEntitled:
         _toast(
           'Ödeme tamamlandı ama Premium henüz aktifleşmedi. '
