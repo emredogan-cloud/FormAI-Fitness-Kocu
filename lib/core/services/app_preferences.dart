@@ -120,6 +120,13 @@ class AppPreferences {
   static const String _seenFirstWorkoutProInvitationKey =
       'sixpack.seen_first_workout_pro_invitation';
 
+  // Phase 136 · one-shot gate for the Pro-user 3rd-workout rating
+  // scene. Captures the habit-formation momentum at the moment it
+  // becomes self-sustaining (third session done). Pro-only; non-pro
+  // users skip the trigger entirely.
+  static const String _seenPro3rdWorkoutRatingKey =
+      'sixpack.seen_pro_3rd_workout_rating';
+
   bool get isFirstTime => _prefs.getBool(_firstTimeKey) ?? true;
 
   Future<void> completeOnboarding({String? goal, bool? hasEquipment}) async {
@@ -409,6 +416,16 @@ class AppPreferences {
 
   Future<void> markSeenFirstWorkoutProInvitation() async {
     await _prefs.setBool(_seenFirstWorkoutProInvitationKey, true);
+  }
+
+  /// Phase 136 · Pro-only 3rd-workout cinematic rating moment. Fires
+  /// once per install when a Pro user returns to the dashboard after
+  /// their third completed workout. See [RatingMomentService].
+  bool get seenPro3rdWorkoutRating =>
+      _prefs.getBool(_seenPro3rdWorkoutRatingKey) ?? false;
+
+  Future<void> markSeenPro3rdWorkoutRating() async {
+    await _prefs.setBool(_seenPro3rdWorkoutRatingKey, true);
   }
 
   // ─── Progress Phase 5.D · Year-in-Review one-shot flag ────────────

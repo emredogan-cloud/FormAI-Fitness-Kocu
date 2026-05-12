@@ -115,6 +115,7 @@ dependencies:
   # so the offline detection happens before we even attempt a
   # Supabase round-trip that would otherwise hang for 30 s.
   connectivity_plus: ^6.0.5
+  in_app_review: ^2.0.11
   # Phase 103 · `rive: ^0.13.20` was added in Phase 97 for the
   # eventual living-coach state machine, then removed here because:
   #   1. The .riv asset hasn't been delivered by the artist yet — no
