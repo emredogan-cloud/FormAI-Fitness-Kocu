@@ -176,6 +176,12 @@ flutter:
     # Phase 70 · per-plan workout dashboard thumbnails (real VP8 WebP,
     # ~95 KB each). Same recursion caveat as photos/meals/ above.
     - "photos/workouts/"
+    # Phase 99 · instructional fallback images for Phase 96 exercises
+    # that don't yet have Supabase-hosted videos (87 WEBP files,
+    # ~2.8 MB total after lossy compression from the original 132 MB
+    # PNG source). ExerciseGuidePlayer routes these via Image.asset
+    # when the exercise slug is in ExerciseMediaRegistry._localImageSlugs.
+    - "photos/exercises/"
 
 # Launcher icon source. Uses a square PNG (derived from the onboarding
 # webp by ImageMagick convert) because flutter_launcher_icons needs PNG

@@ -11,6 +11,7 @@ import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/media_url.dart';
 import '../../../core/utils/string_case.dart';
 import '../domain/services/workout_generator_service.dart';
+import 'exercise_media_registry.dart';
 import 'premium_exercise_tags.dart';
 import 'session_log_repository.dart';
 import '../models/exercise_model.dart';
@@ -199,7 +200,11 @@ class WorkoutRepository {
       difficulty: (row['difficulty'] as String?) ?? 'beginner',
       targetMuscle: _firstTargetMuscle(row['target_muscles']),
       isCardio: (row['is_cardio'] as bool?) ?? false,
-      videoUrl: _composeVideoUrl(slug),
+      // Phase 99 · prefer bundled local image for Phase 96 exercises that
+      // don't yet have Supabase-hosted videos; fall back to the composed
+      // Supabase URL for all original exercises (unchanged path).
+      videoUrl: ExerciseMediaRegistry.localImagePath(slug) ??
+          _composeVideoUrl(slug),
       // Phase 134 · premium / new flags layered in at hydration time.
       // Source of truth is [PremiumExerciseTags] (client-side); the
       // Supabase row has no equivalent columns. Flags drive the

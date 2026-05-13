@@ -17,7 +17,8 @@ import '../../../../core/utils/app_logger.dart';
 ///     the next set / launch. Result: each unique URL hits the network
 ///     at most once per device.
 ///   • Image extensions (`.jpg`/`.jpeg`/`.png`/`.webp`/`.gif`) render as
-///     a static [Image.asset] inside the same rounded container.
+///     a static [Image.asset] with a subtle Ken Burns pan-zoom animation
+///     so the PIP slot feels alive even without video. Phase 99.
 ///   • Phase 76 · video playback is network-only. A non-http path (e.g.
 ///     a bundled `assets/...` reference) falls through to
 ///     `_FallbackTile` rather than being passed to
@@ -48,12 +49,19 @@ class ExerciseGuidePlayer extends StatefulWidget {
   State<ExerciseGuidePlayer> createState() => _ExerciseGuidePlayerState();
 }
 
-class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
+class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer>
+    with TickerProviderStateMixin {
   VideoPlayerController? _controller;
   bool _hasError = false;
   bool _ready = false;
   bool _isImage = false;
   VoidCallback? _errorListener;
+
+  // Phase 99 · Ken Burns micro-animation for the static image branch.
+  // A gentle 1.0→1.06 scale looped forward/backward over 8 s keeps the
+  // PIP slot feeling alive without distracting from the live camera feed.
+  AnimationController? _kenBurns;
+  Animation<double>? _kenBurnsAnim;
 
   static const _imageExtensions = <String>{
     '.jpg',
@@ -83,6 +91,7 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
   }
 
   Future<void> _initialize() async {
+    _stopKenBurns();
     await _disposeController();
     if (!mounted) return;
 
@@ -122,7 +131,10 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
         category: 'workout',
         data: {'path': path},
       );
-      if (mounted) setState(() => _ready = true);
+      if (mounted) {
+        setState(() => _ready = true);
+        _startKenBurns();
+      }
       return;
     }
 
@@ -200,6 +212,24 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
       if (!mounted) return;
       setState(() => _hasError = true);
     }
+  }
+
+  void _startKenBurns() {
+    _kenBurns?.dispose();
+    _kenBurns = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 8),
+    );
+    _kenBurnsAnim = Tween<double>(begin: 1.0, end: 1.06).animate(
+      CurvedAnimation(parent: _kenBurns!, curve: Curves.easeInOut),
+    );
+    _kenBurns!.repeat(reverse: true);
+  }
+
+  void _stopKenBurns() {
+    _kenBurns?.dispose();
+    _kenBurns = null;
+    _kenBurnsAnim = null;
   }
 
   /// Phase 51 · cache-aware controller factory for remote URLs. Cache
@@ -312,6 +342,7 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
 
   @override
   void dispose() {
+    _stopKenBurns();
     _disposeController();
     super.dispose();
   }
@@ -347,18 +378,37 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer> {
     }
 
     if (_isImage) {
-      // Same rounded container as the video branch so the PIP slot looks
-      // identical regardless of asset format.
+      final anim = _kenBurnsAnim;
       return ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child: Image.asset(
-          widget.assetPath!,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _FallbackTile(
-            exerciseName: widget.exerciseName,
-            errorMode: true,
-          ),
-        ),
+        child: anim != null
+            ? AnimatedBuilder(
+                animation: anim,
+                builder: (_, child) => Transform.scale(
+                  scale: anim.value,
+                  child: child,
+                ),
+                child: Image.asset(
+                  widget.assetPath!,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                  errorBuilder: (_, __, ___) => _FallbackTile(
+                    exerciseName: widget.exerciseName,
+                    errorMode: true,
+                  ),
+                ),
+              )
+            : Image.asset(
+                widget.assetPath!,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
+                errorBuilder: (_, __, ___) => _FallbackTile(
+                  exerciseName: widget.exerciseName,
+                  errorMode: true,
+                ),
+              ),
       );
     }
 
