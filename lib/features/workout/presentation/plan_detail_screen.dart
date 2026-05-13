@@ -877,6 +877,7 @@ class _PlanView extends ConsumerWidget {
     // framing carries visually even when a user scrolls past the button.
     final isPro = ref.watch(isProProvider);
     final locked = !isPro;
+    final gate = ref.read(premiumGateProvider);
     // Phase 53C · same scaffold migration as the legacy plan branch
     // above. The hero header keeps its dark purple gradient because
     // it's an intentional brand element regardless of theme.
@@ -932,9 +933,30 @@ class _PlanView extends ConsumerWidget {
                 itemCount: exercises.length,
                 itemBuilder: (context, index) {
                   final tile = _ExerciseTile(exercise: exercises[index]);
+                  if (!locked) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: tile,
+                    );
+                  }
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: locked ? Opacity(opacity: 0.35, child: tile) : tile,
+                    child: GestureDetector(
+                      onTap: () => gate.handleLockedTap(
+                        context,
+                        LockedFeatureType.equipmentExercise,
+                      ),
+                      child: Stack(
+                        children: [
+                          Opacity(opacity: 0.62, child: tile),
+                          const Positioned(
+                            top: 6,
+                            right: 6,
+                            child: PremiumProPill(),
+                          ),
+                        ],
+                      ),
+                    ),
                   );
                 },
               ),
