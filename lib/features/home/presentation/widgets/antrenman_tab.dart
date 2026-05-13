@@ -728,11 +728,21 @@ class _YeniExercisesStrip extends ConsumerWidget {
       children: [
         const SizedBox(height: 28),
         const _SectionTitle(title: 'Yeni Egzersizler'),
-        const SizedBox(height: 12),
+        const SizedBox(height: 4),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'FormAI tarafından seçildi',
+            style: TextStyle(
+              color: Color(0xFFB58CFF),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
         SizedBox(
-          // 137-polish · denser Netflix-style rail (was 168 px). The card
-          // itself shrank from 152×168 to 138×152, so dropping the strip
-          // height saves a vertical band of whitespace under each tile.
           height: 152,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
@@ -741,7 +751,12 @@ class _YeniExercisesStrip extends ConsumerWidget {
             separatorBuilder: (_, __) => const SizedBox(width: 10),
             itemBuilder: (context, index) {
               final exercise = yeniForRegion[index];
-              final card = _YeniExerciseCard(exercise: exercise);
+              final card = _YeniExerciseCard(
+                exercise: exercise,
+                onTap: isPro
+                    ? () => _showYeniExerciseDetail(context, exercise)
+                    : null,
+              );
               return LockedOverlay(
                 locked: !isPro,
                 cornerRadius: 18,
@@ -773,13 +788,12 @@ class _YeniExercisesStrip extends ConsumerWidget {
 /// "NEW" pill (soft-purple, tiny) consistent with the new LockedOverlay
 /// indicator language.
 class _YeniExerciseCard extends StatelessWidget {
-  const _YeniExerciseCard({required this.exercise});
+  const _YeniExerciseCard({required this.exercise, this.onTap});
 
-  /// 137-polish · matches the new LockedOverlay's soft-purple accent
-  /// so the "NEW" pill and the lock indicator share one colour family.
   static const Color _softPurple = Color(0xFFB58CFF);
 
   final Exercise exercise;
+  final VoidCallback? onTap;
 
   /// Rough minute estimate used in the metadata footer. Mirrors
   /// `TodayTaskCard._estimateMinutes` shape but coarser — we only need
@@ -806,58 +820,61 @@ class _YeniExerciseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 138,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
-          gradient: LinearGradient(
-            colors: [
-              _neon.withValues(alpha: 0.32),
-              _neonAccent.withValues(alpha: 0.16),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: _neon.withValues(alpha: 0.18),
-              blurRadius: 12,
-              spreadRadius: 0.2,
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        width: 138,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            gradient: LinearGradient(
+              colors: [
+                _neon.withValues(alpha: 0.32),
+                _neonAccent.withValues(alpha: 0.16),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 11, 12, 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _NewPill(softPurple: _softPurple),
-              const Spacer(),
-              Text(
-                exercise.name,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w900,
-                  height: 1.2,
-                ),
-              ),
-              const SizedBox(height: 5),
-              Text(
-                '${_estimateMinutes()} dk · $_difficultyLabel',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.70),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.2,
-                ),
+            boxShadow: [
+              BoxShadow(
+                color: _neon.withValues(alpha: 0.18),
+                blurRadius: 12,
+                spreadRadius: 0.2,
               ),
             ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 11, 12, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _NewPill(softPurple: _softPurple),
+                const Spacer(),
+                Text(
+                  exercise.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  '${_estimateMinutes()} dk · $_difficultyLabel',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.70),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -895,6 +912,219 @@ class _NewPill extends StatelessWidget {
           fontWeight: FontWeight.w900,
           letterSpacing: 1.2,
         ),
+      ),
+    );
+  }
+}
+
+void _showYeniExerciseDetail(BuildContext context, Exercise exercise) {
+  showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: Colors.transparent,
+    builder: (_) => _YeniExerciseDetailSheet(exercise: exercise),
+  );
+}
+
+class _YeniExerciseDetailSheet extends StatelessWidget {
+  const _YeniExerciseDetailSheet({required this.exercise});
+
+  final Exercise exercise;
+
+  static const Color _softPurple = Color(0xFFB58CFF);
+
+  int _estimateMinutes() {
+    if (exercise.isTimeBased) {
+      final duration = (exercise.targetDurationInSeconds ?? 30) * exercise.sets;
+      return (duration / 60).clamp(1, 30).round();
+    }
+    final repsTime = (exercise.targetReps ?? 10) * 3 * exercise.sets;
+    return (repsTime / 60).clamp(1, 30).round();
+  }
+
+  String get _difficultyLabel {
+    switch (exercise.difficulty) {
+      case 'advanced':
+        return 'İleri';
+      case 'intermediate':
+        return 'Orta';
+      default:
+        return 'Başlangıç';
+    }
+  }
+
+  String get _setsRepsLabel {
+    return exercise.isTimeBased
+        ? '${exercise.sets} × ${exercise.targetDurationInSeconds ?? 0} sn'
+        : '${exercise.sets} set · ${exercise.targetReps ?? 0} tekrar';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasDescription = exercise.description.isNotEmpty;
+    final hasTip = exercise.shortTip.isNotEmpty;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(28),
+        color: const Color(0xFF100920),
+        border: Border.all(
+          color: _softPurple.withValues(alpha: 0.20),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(2),
+                color: Colors.white.withValues(alpha: 0.18),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(999),
+              color: Colors.black.withValues(alpha: 0.30),
+              border: Border.all(
+                color: _softPurple.withValues(alpha: 0.55),
+                width: 1,
+              ),
+            ),
+            child: Text(
+              'YENİ',
+              style: TextStyle(
+                color: _softPurple.withValues(alpha: 0.95),
+                fontSize: 9,
+                height: 1.0,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            exercise.name,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
+              height: 1.1,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _ExerciseMetaChip(
+                icon: Icons.timer_outlined,
+                label: '${_estimateMinutes()} dk',
+              ),
+              _ExerciseMetaChip(
+                icon: Icons.fitness_center,
+                label: _difficultyLabel,
+              ),
+              _ExerciseMetaChip(
+                icon: exercise.isTimeBased
+                    ? Icons.timer_rounded
+                    : Icons.repeat_rounded,
+                label: _setsRepsLabel,
+              ),
+            ],
+          ),
+          if (hasDescription) ...[
+            const SizedBox(height: 16),
+            Text(
+              exercise.description,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.68),
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+          ],
+          if (hasTip) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: _softPurple.withValues(alpha: 0.10),
+                border: Border.all(
+                  color: _softPurple.withValues(alpha: 0.22),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.tips_and_updates_outlined,
+                    color: _softPurple.withValues(alpha: 0.80),
+                    size: 14,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      exercise.shortTip,
+                      style: TextStyle(
+                        color: _softPurple.withValues(alpha: 0.90),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        height: 1.3,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ExerciseMetaChip extends StatelessWidget {
+  const _ExerciseMetaChip({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: Colors.white.withValues(alpha: 0.07),
+        border: Border.all(color: Colors.white12, width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white54, size: 13),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }

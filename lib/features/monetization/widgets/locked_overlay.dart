@@ -183,7 +183,7 @@ class _LockIndicator extends StatelessWidget {
       children: [
         if (showLock) _LockGlyph(),
         if (showLock && showPro) const SizedBox(width: 6),
-        if (showPro) const _ProPill(),
+        if (showPro) const PremiumProPill(),
       ],
     );
   }
@@ -195,8 +195,8 @@ class _LockGlyph extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 28,
-      height: 28,
+      width: 22,
+      height: 22,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: Colors.black.withValues(alpha: 0.38),
@@ -208,16 +208,17 @@ class _LockGlyph extends StatelessWidget {
       alignment: Alignment.center,
       child: Icon(
         Icons.lock_outline,
-        // 0.55 alpha matches the spec's "40-55%" elegance band.
-        color: _softPurple.withValues(alpha: 0.85),
-        size: 16,
+        color: _softPurple.withValues(alpha: 0.80),
+        size: 12,
       ),
     );
   }
 }
 
-class _ProPill extends StatelessWidget {
-  const _ProPill();
+/// Tiny outlined "PRO" capsule badge. Used inside [LockedOverlay] and as a
+/// secondary premium indicator on dimmed exercise tiles.
+class PremiumProPill extends StatelessWidget {
+  const PremiumProPill({super.key});
 
   static const Color _softPurple = LockedOverlay._softPurple;
 
