@@ -182,7 +182,22 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   /// check, so only one post-frame callback ever runs.
   void _onAuthStateChanged(User? previous, User? next) {
     if (_authGateShown) return;
-    final needsAuth = next == null || next.isAnonymous;
+    // Phase 139 · email-signup bug fix. The gate's purpose is to block
+    // "anonymous → buy → lose purchase on first real sign-in". A user
+    // who has linked an email via `auth.updateUser` (the email-signup
+    // path on AuthScreen) keeps `isAnonymous == true` until they click
+    // the verification link, but the Supabase UUID is already stable
+    // — a purchase made now is correctly attributed and survives the
+    // verification step. Treating those users as "needs auth" makes
+    // the post-signup paywall re-trigger this gate on its fresh mount
+    // (after `_goToPaywall`'s `pushReplacement`), trapping the user
+    // in a loop. Detect the linked-email case via `email` (server
+    // populates this when confirmations are disabled) OR `newEmail`
+    // (populated while a confirmation is pending) so the check is
+    // robust to either Supabase project configuration.
+    final hasLinkedEmail =
+        (next?.email ?? '').isNotEmpty || (next?.newEmail ?? '').isNotEmpty;
+    final needsAuth = next == null || (next.isAnonymous && !hasLinkedEmail);
     if (!needsAuth) return;
     _authGateShown = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -674,7 +689,12 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   /// surfaces as a single warning log that operators can grep for.
   Future<void> _close(BuildContext context) async {
     final user = ref.read(currentUserProvider);
-    if (user != null && !user.isAnonymous) {
+    // Phase 139 · mirror the auth-gate's "linked email" rule so the
+    // belt-and-braces alias call also fires for an anonymous-with-
+    // linked-email user (the email-signup mid-conversion case). The
+    // alias helper has its own internal guard that bails for pure-
+    // anonymous users, so the worst case here is a harmless no-op.
+    if (user != null) {
       // Show a one-frame busy state so a slow alias call doesn't
       // present as a frozen close button. We piggy-back on `_busy`
       // which already blocks the CTA + Restore.

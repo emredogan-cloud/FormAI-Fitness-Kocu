@@ -52,6 +52,27 @@ final isAdminProvider = Provider<bool>((ref) {
   return role is String && role == 'admin';
 });
 
+/// Phase 139 · Google Play / App Store reviewer override. Mirror of
+/// [isAdminProvider] — reads `app_metadata.role == 'reviewer'` minted
+/// from a trusted server context (Supabase Studio or an admin RPC)
+/// onto the reviewer test account (`emre30283@gmail.com`).
+///
+/// Like the admin claim, `app_metadata` is service-role writable only,
+/// so a regular user cannot self-promote into reviewer-Pro by tampering
+/// with their client — the JWT signature would fail Supabase's
+/// verification step before this provider ever sees the claim.
+///
+/// Wired into [isProProvider] so the reviewer experiences the full Pro
+/// app without a real RevenueCat purchase. Revocation is a single
+/// `UPDATE auth.users SET raw_app_meta_data = raw_app_meta_data - 'role'`
+/// — see `docs/OPERATOR_REVIEWER_ACCESS.md` for the runbook.
+final isReviewerProvider = Provider<bool>((ref) {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) return false;
+  final role = user.appMetadata['role'];
+  return role is String && role == 'reviewer';
+});
+
 /// `Listenable` that notifies on every auth state change. Wired into
 /// `GoRouter.refreshListenable` so navigation re-evaluates on login/logout
 /// without tearing down the router.
@@ -170,7 +191,7 @@ class AuthController {
       // commissioned to fix. configureRevenueCat is idempotent and
       // costs ~250-600 ms once per cold start; the user is already
       // in a "signing in" progress state, so the latency is invisible.
-      await _aliasRevenueCatToSupabaseUser();
+      await aliasRevenueCatWithCurrentUser();
       return (outcome: SocialAuthOutcome.success, errorMessage: null);
     } on AuthException catch (e, st) {
       // Phase 88 · Supabase rejected the id token. Most common cause:
@@ -241,7 +262,7 @@ class AuthController {
         nonce: rawNonce,
       );
       // Phase 94 · same RC-aliasing pattern as the Google path.
-      await _aliasRevenueCatToSupabaseUser();
+      await aliasRevenueCatWithCurrentUser();
       return (outcome: SocialAuthOutcome.success, errorMessage: null);
     } on AuthException catch (e, st) {
       AppLogger.error(
@@ -366,28 +387,63 @@ class AuthController {
   /// account-link flow — without each call site needing to know the
   /// SDK lifecycle.
   ///
+  /// Returns `true` when the alias was completed (or already aligned —
+  /// `Purchases.appUserID` already matches the Supabase UUID, so the
+  /// `logIn` call is skipped); returns `false` when there was nothing
+  /// to align (no current user / anonymous user) or when the call
+  /// failed. Public so the paywall close handler can re-await this
+  /// before navigating to the dashboard, closing the gap that opened
+  /// when an email-auth login left RC unaliased.
+  ///
   /// Failures are logged + swallowed: a missed alias is recoverable
   /// (the next purchase still succeeds against the RC anonymous ID,
   /// it just wouldn't be linkable to the Supabase user without a
   /// follow-up logIn). Throwing here would leak into the social-auth
   /// outcome and tell the user "Google sign-in failed" when in fact
   /// only the RC alias did.
-  Future<void> _aliasRevenueCatToSupabaseUser() async {
+  Future<bool> aliasRevenueCatWithCurrentUser() async {
     try {
       await configureRevenueCat();
       final user = Supabase.instance.client.auth.currentUser;
       // Skip if the auth-state stream hasn't published yet (rare —
-      // signInWithIdToken resolves with the new user attached) or
-      // if the resulting user is anonymous, which would defeat the
-      // whole purpose of the alias.
-      if (user == null || user.isAnonymous) return;
+      // signInWithIdToken resolves with the new user attached).
+      if (user == null) return false;
+      // Phase 139 · refined anonymous-skip rule. The original guard
+      // bailed on any `isAnonymous` user because aliasing a pure-
+      // `signInAnonymously` UUID would lock the RC id to a throwaway
+      // identity that could later be replaced when the user signs in
+      // with Google/Apple (which creates a different Supabase row).
+      // BUT: an anonymous user who has linked an email via
+      // `auth.updateUser` is mid-conversion — the Supabase UUID is
+      // stable across email verification, and the email-signup flow
+      // on the paywall fires this alias EXPECTING it to land RC
+      // before the user can purchase. Check both `email` and
+      // `newEmail` so the rule works regardless of whether the
+      // Supabase project requires email confirmation.
+      final hasLinkedEmail =
+          (user.email ?? '').isNotEmpty || (user.newEmail ?? '').isNotEmpty;
+      if (user.isAnonymous && !hasLinkedEmail) return false;
+      // Short-circuit if the SDK is already pointing at this user —
+      // saves the platform-channel round-trip on repeat invocations
+      // (paywall close handler may re-call after the social path has
+      // already aliased).
+      try {
+        final currentRcId = await Purchases.appUserID;
+        if (currentRcId == user.id) return true;
+      } catch (_) {
+        // appUserID throws when the SDK isn't configured; fall through
+        // to the logIn attempt, which itself will surface the same
+        // condition through the outer catch.
+      }
       await Purchases.logIn(user.id);
+      return true;
     } catch (e, st) {
       AppLogger.warning(
         'RevenueCat alias failed; purchase will fall back to anon RC id',
         category: 'monetization',
         data: {'error': e.toString(), 'stack': st.toString()},
       );
+      return false;
     }
   }
 
