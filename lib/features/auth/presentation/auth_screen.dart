@@ -65,6 +65,13 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       if (_mode == _Mode.signIn) {
         await _client.auth.signInWithPassword(email: email, password: password);
         await _persistWizardMetrics();
+        // Mirror the social path's RC alias step. Without this, an email
+        // login lands the user on the paywall with the RC SDK still
+        // pointing at the anonymous app-user-ID — a subsequent purchase
+        // would be lost on the next sign-in.
+        await ref
+            .read(authControllerProvider)
+            .aliasRevenueCatWithCurrentUser();
         _goToPaywall();
       } else {
         // If the user came in as a guest (signInAnonymously from the
@@ -79,6 +86,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             UserAttributes(email: email, password: password),
           );
           await _persistWizardMetrics();
+          await ref
+              .read(authControllerProvider)
+              .aliasRevenueCatWithCurrentUser();
           if (mounted) {
             _toast(
               'E-posta adresine doğrulama bağlantısı gönderildi. '
@@ -93,6 +103,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           if (res.session == null && mounted) {
             _toast('E-posta adresine doğrulama bağlantısı gönderildi.');
           } else {
+            await ref
+                .read(authControllerProvider)
+                .aliasRevenueCatWithCurrentUser();
             _goToPaywall();
           }
         }

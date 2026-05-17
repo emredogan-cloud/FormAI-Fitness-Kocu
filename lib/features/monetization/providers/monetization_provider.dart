@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/services/analytics_service.dart';
 import '../../../core/utils/app_logger.dart';
+import '../../auth/providers/auth_provider.dart';
 
 /// Entitlement id configured on the RevenueCat dashboard. Products mapped
 /// to this id (monthly/quarterly/yearly) all unlock the same premium gate.
@@ -184,12 +185,16 @@ final subscriptionProvider =
 );
 
 /// Single source of truth for premium gating across the app. Resolves to
-/// `isProLocalOverride || isRevenueCatPro` so the debug Sandbox button can
-/// unlock features without a real purchase.
+/// `isProLocalOverride || isRevenueCatPro || isReviewer` so the debug
+/// Sandbox button can unlock features without a real purchase, and a
+/// Google Play / App Store reviewer account flagged with
+/// `app_metadata.role == 'reviewer'` (see [isReviewerProvider])
+/// experiences the full Pro app during store review.
 final isProProvider = Provider<bool>((ref) {
   final snapshot = ref.watch(subscriptionProvider).value;
-  if (snapshot == null) return false;
-  return snapshot.isDeveloperOverride || snapshot.isPro;
+  final isReviewer = ref.watch(isReviewerProvider);
+  if (snapshot == null) return isReviewer;
+  return snapshot.isDeveloperOverride || snapshot.isPro || isReviewer;
 });
 
 /// Reads the platform-appropriate RevenueCat API key from the .env file.
