@@ -53,7 +53,7 @@ Pre-launch. Code-complete through Phase 58 (commits `b265553`, `bb98f24`, `1dea4
 
 ### 1.3 Who is the audience
 
-* **End user:** Turkish-speaking fitness beginner / intermediate, age 22–35 (per `PROJECT_DOCUMENTATION1.md` Section 7.3).
+* **End user:** Turkish-speaking fitness beginner / intermediate, age 22–35 (per `archive/old-doc-snapshots/PROJECT_DOCUMENTATION_TR_phase39.md` Section 7.3).
 * **Internal admin:** Web-only "/admin" route gated by a Supabase JWT `app_metadata.role = 'admin'` claim, used for live recipe + exercise CRUD without redeploying the mobile binary.
 * **Freelance dietitian / trainer:** Drafts content through a Notion → Admin Review → Supabase pipeline documented in `docs/CONTENT_OPS.md`.
 
@@ -201,7 +201,7 @@ SixPack-AI/
 ├── pubspec.lock                         # Resolved dep tree (committed)
 ├── README.md                            # Single-line placeholder
 ├── CLAUDE.md                            # Behavioural guideline for LLM-assisted edits
-├── PROJECT_DOCUMENTATION1.md            # Phase 39 (2026-04-24) PM post-mortem (Turkish)
+├── docs/archive/old-doc-snapshots/PROJECT_DOCUMENTATION_TR_phase39.md   # Phase 39 (2026-04-24) PM post-mortem (Turkish), archived 2026-05-19
 ├── PROJECT_FULL_REPORT.md               # Earlier full audit
 ├── ROADMAP.md                           # Pre-launch checklist (2026-04-27, Turkish)
 ├── .env.example                         # Template (REDACTED)
@@ -1094,7 +1094,7 @@ The dashboard subscribes to `unlockedBadgesProvider` and diffs against `celebrat
 
 ### 7.7 Why no LLM?
 
-Per `PROJECT_DOCUMENTATION1.md` Section 1 and `pubspec.yaml`, the project does not include `langchain`, `anthropic`, `openai`, or any LLM SDK. The "AI" experience is delivered through:
+Per `archive/old-doc-snapshots/PROJECT_DOCUMENTATION_TR_phase39.md` Section 1 and `pubspec.yaml`, the project does not include `langchain`, `anthropic`, `openai`, or any LLM SDK. The "AI" experience is delivered through:
 
 * **Branding** ("FormAI", "AI Koç").
 * **On-device computer vision** (ML Kit BlazePose, fully local, no PII leaves the device).
@@ -1332,8 +1332,8 @@ REVENUECAT_ANDROID_KEY=""
 * Create the entitlement `FormAI Pro` (case-sensitive).
 * Create the subscription products (Play Console first, App Store Connect second):
   * `formai_pro_monthly` (₺149/month)
-  * `formai_pro_quarterly` (₺299/3 months)
-  * `formai_pro_yearly` (₺799/year)
+  * `formai_pro_3month` (₺299/3 months)
+  * `formai_pro_annual` (₺799/year)
 * Map each product to the `FormAI Pro` entitlement.
 * Place the three products inside the `default` offering with package identifiers `monthly`, `quarterly`, `annual`.
 * Add the public API keys to `.env` as `REVENUECAT_ANDROID_KEY` / `REVENUECAT_IOS_KEY`.
@@ -1567,7 +1567,7 @@ The **launch blockers** (per `ROADMAP.md` Section 1) are **all in dashboards and
 
 | Service | Used for | Free tier sufficient? |
 | --- | --- | --- |
-| Supabase | Auth + Postgres + Storage | Free tier OK pre-launch; Pro plan required at ~10k+ MAU (per `PROJECT_DOCUMENTATION1.md` §10.1). |
+| Supabase | Auth + Postgres + Storage | Free tier OK pre-launch; Pro plan required at ~10k+ MAU (per `archive/old-doc-snapshots/PROJECT_DOCUMENTATION_TR_phase39.md` §10.1). |
 | RevenueCat | Subscription management | Free up to $10k MTR. |
 | Sentry | Crash reporting | Free up to 5k events/mo. |
 | PostHog | Product analytics | Free up to 1M events/mo. |
@@ -1577,7 +1577,7 @@ The **launch blockers** (per `ROADMAP.md` Section 1) are **all in dashboards and
 
 ### 14.4 Why Flutter + Riverpod (and not React Native, native, etc.)
 
-`PROJECT_DOCUMENTATION1.md` §1.1 motivates the stack:
+`archive/old-doc-snapshots/PROJECT_DOCUMENTATION_TR_phase39.md` §1.1 motivates the stack:
 
 * **Single codebase** for iOS + Android.
 * **Riverpod 3 over Bloc/Provider** — typed AsyncNotifiers for the workout session state machine, easy invalidation chains for sign-out cleanup.
@@ -1677,7 +1677,7 @@ iOS (Info.plist):
 
 ## 16. Current Limitations & Technical Debt
 
-Sourced from `PROJECT_DOCUMENTATION1.md` §3, `ROADMAP.md` §6, and direct code observation.
+Sourced from `archive/old-doc-snapshots/PROJECT_DOCUMENTATION_TR_phase39.md` §3, `ROADMAP.md` §6, and direct code observation.
 
 ### 16.1 Architectural
 
@@ -1708,7 +1708,7 @@ Sourced from `PROJECT_DOCUMENTATION1.md` §3, `ROADMAP.md` §6, and direct code 
 
 ### 16.5 UX
 
-* **9-step onboarding** is still long. `PROJECT_DOCUMENTATION1.md` §5.3 estimates 30%+ funnel improvement from the 13→9 trim (Phase 46), but a further A/B to 6 steps is pending.
+* **9-step onboarding** is still long. `archive/old-doc-snapshots/PROJECT_DOCUMENTATION_TR_phase39.md` §5.3 estimates 30%+ funnel improvement from the 13→9 trim (Phase 46), but a further A/B to 6 steps is pending.
 * **Single locale (Turkish)**. International launch needs `arb` files and a metric/imperial unit toggle (`ROADMAP.md` §3.5).
 * **No offline mode** — Beslenme tab effectively empties when Supabase is unreachable (the recipe catalogue cannot be read).
 
@@ -1719,13 +1719,13 @@ Sourced from `PROJECT_DOCUMENTATION1.md` §3, `ROADMAP.md` §6, and direct code 
 
 ### 16.7 Documentation
 
-* This file (`PROJECT_DOCUMENTATION.md`) and `ROADMAP.md` are the only English / pre-launch-ready references. `PROJECT_DOCUMENTATION1.md` and `PROJECT_FULL_REPORT.md` are Turkish PM post-mortems frozen at Phase 39 (April 24, 2026) and an earlier checkpoint respectively.
+* This file (`PROJECT_DOCUMENTATION.md`) and `ROADMAP.md` are the only English / pre-launch-ready references. `archive/old-doc-snapshots/PROJECT_DOCUMENTATION_TR_phase39.md` and `PROJECT_FULL_REPORT.md` are Turkish PM post-mortems frozen at Phase 39 (April 24, 2026) and an earlier checkpoint respectively.
 
 ---
 
 ## 17. Future Improvements & Roadmap
 
-Sourced from `ROADMAP.md` Sections 2–3 and `PROJECT_DOCUMENTATION1.md` §4 / §9 / §10.
+Sourced from `ROADMAP.md` Sections 2–3 and `archive/old-doc-snapshots/PROJECT_DOCUMENTATION_TR_phase39.md` §4 / §9 / §10.
 
 ### 17.1 Launch sprint (1–2 weeks after launch)
 
