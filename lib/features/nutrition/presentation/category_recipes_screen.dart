@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/theme_extension.dart';
 import '../../../core/utils/app_logger.dart';
-import '../../../core/widgets/cached_image.dart';
 import '../../../core/widgets/error_card.dart';
+import 'widgets/recipe_image.dart';
 import '../domain/models/recipe.dart';
 import '../providers/nutrition_provider.dart';
 import 'widgets/recipe_tags.dart';
@@ -310,7 +310,7 @@ class _Thumb extends StatelessWidget {
     );
     final src = imageUrl;
     if (src == null || src.isEmpty) return fallback;
-    return CachedImage(
+    return RecipeImage(
       url: src,
       fit: BoxFit.cover,
       memCacheHeight: 300,

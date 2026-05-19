@@ -1,7 +1,7 @@
 name: sixpack_ai
 description: "SixPack AI - 30 Günde Karın Kası. AI-powered fitness coaching."
 publish_to: 'none'
-version: 0.1.0+5
+version: 0.1.0+6
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -10,7 +10,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.8
+  # Phase 139 · `cupertino_icons` removed — 0 import sites in lib/ and
+  # already tree-shaken to 848 B in release APKs. Removing the direct
+  # dep reduces transitive resolution churn during `flutter pub get`
+  # without changing any shipped bytes.
 
   # State management
   flutter_riverpod: ^3.3.1
@@ -106,7 +109,6 @@ dependencies:
   # for compactLeading / compactTrailing / minimal / expanded ships as
   # a native Widget Extension under ios/FormAILiveActivity/.
   live_activities: ^2.4.1
-  change_app_package_name: ^1.5.0
   # Phase 89 · offline detection. Powers `connectivityProvider`
   # (lib/core/services/connectivity_service.dart) which gates the
   # workout-camera entry, the Google/Apple sign-in buttons, and the
@@ -145,6 +147,12 @@ dev_dependencies:
   # Native app-icon generator. Pinned to ^0.14.x so the config block
   # below (flutter_launcher_icons:) keeps parsing on future upgrades.
   flutter_launcher_icons: ^0.14.1
+  # Phase 139 · moved from `dependencies:` — `change_app_package_name`
+  # is a one-shot CLI helper for renaming the Android applicationId
+  # (run via `flutter pub run change_app_package_name:main ...`). It
+  # is never imported from runtime code in lib/, so it does not belong
+  # in the shipped dependency graph.
+  change_app_package_name: ^1.5.0
 
 flutter:
   uses-material-design: true
@@ -168,10 +176,13 @@ flutter:
     # have since been relocated. Future visual references go to
     # `docs/reference-imagery/`, not here.
     - "photos/"
-    # Phase 69 · per-recipe meal cover photos (real VP8 WebP, ~280 KB
-    # each). Flutter asset declarations are not recursive, so the
-    # subdirectory has to be listed explicitly even though `photos/`
-    # is already declared above.
+    # Tier 2-A · after the recipe-image migration this directory only
+    # contains the 5 `budget_cover_*.webp` category tiles hardcoded
+    # in nutrition_tab.dart (the 293 recipe photos moved to the
+    # Supabase Storage `recipes_images` bucket and ship via
+    # CachedNetworkImage). Entry stays so the covers still bundle;
+    # remove only after the budget-cover paths are themselves migrated
+    # (no slug → no DB row → currently still asset-backed).
     - "photos/meals/"
     # Phase 70 · per-plan workout dashboard thumbnails (real VP8 WebP,
     # ~95 KB each). Same recursion caveat as photos/meals/ above.
@@ -182,6 +193,14 @@ flutter:
     # PNG source). ExerciseGuidePlayer routes these via Image.asset
     # when the exercise slug is in ExerciseMediaRegistry._localImageSlugs.
     - "photos/exercises/"
+    # Tier 2-A · bundled 64-px WebP placeholders for the 298 meal photos.
+    # ~700 B each, ~200 KB total. Used by `RecipeImage` as the bottom
+    # layer behind `CachedImage`/`CachedNetworkImage` so the recipe-card
+    # grid never paints a grey hole on first frame and stays visible
+    # offline. The full photos move to Supabase Storage's recipes_images
+    # bucket in this same migration; the LQIPs stay bundled because
+    # network-loading a placeholder would defeat its purpose.
+    - "assets/lqip/meals/"
 
 # Launcher icon source. Uses a square PNG (derived from the onboarding
 # webp by ImageMagick convert) because flutter_launcher_icons needs PNG
