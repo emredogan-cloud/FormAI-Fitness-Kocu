@@ -112,6 +112,48 @@ android {
             )
         }
     }
+
+}
+
+// Tier 3 · strip the unused ML Kit "accurate" pose-landmark model.
+//
+// `google_mlkit_pose_detection` 0.14.1's android/build.gradle declares:
+//   implementation("com.google.mlkit:pose-detection:18.0.0-beta5")          // lite
+//   implementation("com.google.mlkit:pose-detection-accurate:18.0.0-beta5") // full (UNUSED)
+//
+// The app only constructs `PoseDetector(options: PoseDetectorOptions(mode: ...))`
+// with NO `model:` argument — package default is `PoseDetectionModel.base`
+// (lite). Verified by `grep -rni PoseDetectionModel\.accurate lib/` → zero
+// hits. The full / accurate variant is dead weight.
+//
+// `packaging.resources.excludes` doesn't filter Android asset paths from
+// transitive AARs (it's scoped to Java resources). The correct mechanism
+// is a configuration-level Maven exclude of the accurate artifact, which
+// drops:
+//   - assets/mlkit_pose/pose_landmark_detector_full_f16_inf.tflite (6.13 MB)
+//   - any accurate-only Java classes (typically a few KB; R8 would prune
+//     them anyway, but we save its work)
+//
+// Risk: the wrapper plugin's Java code might reference accurate-specific
+// classes. Phase 81 (commented above) documented that mis-pinning the
+// 'pose-detection' artifact to 17.0.1-beta7 caused NoClassDefFoundError
+// because the wrapper's compiled code expected 18.x signatures. Here we
+// keep `pose-detection` (18.0.0-beta5) intact and only drop the SEPARATE
+// `pose-detection-accurate` artifact. The wrapper's Java layer
+// (`com.google_mlkit_pose_detection.*`) does not import accurate-specific
+// classes — it constructs `PoseDetector` via the shared API, then ML
+// Kit's internal SDK selects the model class at runtime based on the
+// `PoseDetectorOptions.model` enum. With that enum never set to
+// `accurate`, the accurate classes are never resolved.
+//
+// Rollback: delete this `configurations.all { exclude(...) }` block and
+// rebuild. The plugin re-pulls the accurate artifact via its transitive
+// declaration with no other change required.
+//
+// Verification + rationale: MLKIT_POSE_MODEL_AUDIT.md +
+// MLKIT_PRE_EXECUTION_VERIFY.md.
+configurations.all {
+    exclude(group = "com.google.mlkit", module = "pose-detection-accurate")
 }
 
 flutter {
