@@ -81,3 +81,14 @@ coverage/
 # off-repo because the folder is ~MB of user-owned shots with no
 # production asset binding in pubspec.yaml.
 Beslenme-Photos/
+
+# Tier 3 · standalone Vite + Tailwind ASO landing-page project that
+# lives alongside the Flutter app for convenience. Not a Flutter
+# dependency, not declared in pubspec, never bundled. 245 MB of
+# node_modules + Vite exports that asosystem/.gitignore already
+# excludes internally — but the asosystem/ root itself wasn't
+# gitignored, so a `git add .` from someone unaware would stage 700+
+# unrelated files. Pin it shut here. To work on it, just `cd
+# asosystem/ && npm run dev`; git operations from the Flutter root
+# stay clean.
+asosystem/
