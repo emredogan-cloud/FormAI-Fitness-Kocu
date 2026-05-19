@@ -132,16 +132,35 @@ Each layer is independently revertible:
 
 ## 7. APK delta measurement (release build)
 
-**Pre-migration baseline:** (from `main`, prior to Tier 2-A) — to be filled
-in from a `flutter build apk --release` on `main` if a comparison is
-needed.
+**Post-migration build (this session, on `feature/cdn-meal-migration`):**
 
-**Post-migration build:** see "Build artefact" subsection at the bottom of this report.
+```
+APK path  : build/app/outputs/flutter-apk/app-release.apk
+APK size  : 126.6 MB (126,553,848 bytes)
+Build cmd : flutter build apk --release
+Gradle    : assembleRelease, 153.7s
+LQIPs in APK     : 298  ✓ (every recipe slug + zero failures)
+photos/meals/ webps in APK : 5  ✓ (exactly the budget covers)
+```
 
-The expected delta on a stripped release APK is ≈ −62.3 MB. Compressed
-APK delta may be slightly smaller because the WebPs in `photos/meals/`
-were already near-incompressible, so removing them takes off ~62 MB of
-near-uncompressible payload + the asset-manifest overhead (~5 KB).
+**Pre-migration baseline:** not measured in this session (would require
+checking out `main`, running another `flutter build apk --release`).
+Expected delta is ≈ −62.3 MB based on the static asset accounting:
+removing 62.54 MB of recipe WebPs + adding 200 KB of LQIPs. The
+release APK was already mostly incompressible (the WebPs sit
+uncompressed inside the AAB), so the delivered delta should be very
+close to the static accounting.
+
+To compute the actual delta yourself:
+
+```bash
+git stash                              # set aside the report changes
+git checkout main
+flutter build apk --release            # ~3 min
+du -m build/app/outputs/flutter-apk/app-release.apk
+git checkout feature/cdn-meal-migration
+git stash pop
+```
 
 ---
 
@@ -169,27 +188,19 @@ image (~200 ms fade). No layout shift between LQIP and full.
 
 ---
 
-## 9. Build artefact (post-build numbers fill in here)
+## 9. Commit
 
 ```text
-flutter build apk --release
-─────────────────────────────
-APK path  :  build/app/outputs/flutter-apk/app-release.apk
-APK size  :  <to be filled in once build completes>
-LQIPs in APK     :  <expected 298>
-Recipe webps in APK : <expected 5, the budget covers>
-```
-
----
-
-## 10. Commit
-
-```text
-Tier 2-A commit hash: <to be filled in after commit>
-Branch              : feature/cdn-meal-migration
-Files in commit     : 9 modified + 11 new (top-level) + 298 LQIPs + 293 photo deletions
-Excluded from commit: ~30 unrelated dirty files from main (release docs,
-                      gelisim_tab.dart, calendar_screen.dart, etc.)
+Tier 2-A commit hash : 5e52d3ee49d36ad418046923d16e81bc704953e3
+Short hash           : 5e52d3e
+Branch               : feature/cdn-meal-migration
+Subject              : feat(media): Tier 2-A — recipe images → Supabase Storage CDN
+Files in commit      : 615 total (9 source modifications + 16 new top-level files
+                       + 298 new LQIPs + 293 photo deletions)
+Excluded from commit : ~30 unrelated dirty files from main
+                       (release docs, gelisim_tab.dart, calendar_screen.dart, etc.)
+                       — these stay parked on this branch for the operator
+                       to triage separately.
 ```
 
 ---
