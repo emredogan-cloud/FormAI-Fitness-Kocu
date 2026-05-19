@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/services/app_preferences.dart';
@@ -10,8 +13,10 @@ import '../../monetization/providers/monetization_provider.dart';
 import '../../monetization/services/conversion_moment_service.dart';
 import '../../monetization/services/premium_gate_service.dart';
 import '../../monetization/services/rating_moment_service.dart';
+import '../../nutrition/domain/models/planned_meal.dart';
 import '../../nutrition/presentation/nutrition_tab.dart';
 import '../../nutrition/presentation/widgets/nutrition_onboarding_sheet.dart';
+import '../../nutrition/providers/daily_menu_provider.dart';
 import '../../progress/data/level_titles.dart';
 import '../../progress/presentation/widgets/badge_unlock_dialog.dart';
 import '../../progress/presentation/widgets/level_up_screen.dart';
@@ -65,6 +70,53 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   // avoid a celebration storm on cold start with backfilled XP).
   int? _celebratedLevel;
 
+  // Tier 2-A · meal-image cache warming. One-shot flag prevents the
+  // post-frame callback and the dailyMenuProvider listener from both
+  // firing the prefetch on cold start.
+  bool _didPrefetchMeals = false;
+  ProviderSubscription<AsyncValue<List<PlannedMeal>>>? _menuSub;
+
+  @override
+  void initState() {
+    super.initState();
+    // Warm today's meal images so the nutrition tab doesn't paint
+    // LQIP-only on first navigation. Disk-only warm (no in-memory
+    // bitmap decode — same `flutter_cache_manager` pattern as
+    // antrenman_tab.dart's Phase 51 `_warmDefaults`). The post-frame
+    // callback covers the common case where the provider has already
+    // resolved; the listener covers the cold-start race where the
+    // first frame paints before the recipe catalogue is fetched.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _maybePrefetchTodaysMeals();
+    });
+    _menuSub = ref.listenManual<AsyncValue<List<PlannedMeal>>>(
+      dailyMenuProvider,
+      (_, next) {
+        if (next.value != null) _maybePrefetchTodaysMeals();
+      },
+    );
+  }
+
+  void _maybePrefetchTodaysMeals() {
+    if (_didPrefetchMeals) return;
+    final plan = ref.read(dailyMenuProvider).value;
+    if (plan == null) return;
+    _didPrefetchMeals = true;
+    final cacheManager = DefaultCacheManager();
+    for (final pm in plan.take(6)) {
+      final url = pm.recipe.imageUrl;
+      if (url == null || !url.startsWith('http')) continue;
+      unawaited(() async {
+        try {
+          await cacheManager.downloadFile(url);
+        } catch (_) {
+          // Best-effort. CachedNetworkImage will retry on first render.
+        }
+      }());
+    }
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -78,6 +130,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
   @override
   void dispose() {
+    _menuSub?.close();
     _routeObserver?.unsubscribe(this);
     super.dispose();
   }
