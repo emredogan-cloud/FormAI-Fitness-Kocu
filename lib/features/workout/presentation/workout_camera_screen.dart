@@ -18,6 +18,7 @@ import '../../../core/widgets/error_card.dart';
 import '../models/exercise_model.dart';
 import '../providers/workout_provider.dart';
 import '../services/analyzer_factory.dart';
+import '../services/coach_voice.dart';
 import '../services/crunch_analyzer.dart';
 import '../services/pose_analyzer.dart';
 import '../services/pose_detector_service.dart';
@@ -42,6 +43,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
   final PoseDetectorService _poseService = PoseDetectorService();
   PoseAnalyzer _analyzer = CrunchAnalyzer();
   final AudioFeedback _audio = AudioFeedback();
+  late final CoachVoice _coach = CoachVoice(_audio);
 
   static const Map<DeviceOrientation, int> _orientations = {
     DeviceOrientation.portraitUp: 0,
@@ -361,8 +363,10 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     if (_isPaused) {
       _workoutTimer?.cancel();
       _workoutTimer = null;
+      _coach.onPause();
       return;
     }
+    _coach.onResume();
     final exercise = ref.read(workoutSessionProvider).value?.activeExercise;
     if (exercise?.type == ExerciseType.timeBased && _secondsRemaining > 0) {
       _resumeWorkoutTimer();
@@ -383,6 +387,11 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         _onTimerComplete();
       } else {
         setState(() => _secondsRemaining -= 1);
+        // Tier-A · feed the coach the post-decrement value so it can
+        // emit halfway / final-10s / final-5s pacing beats. The coach
+        // tracks its own fired-once gates so a re-entry through pause/
+        // resume doesn't double-fire.
+        _coach.onTimerTick(_secondsRemaining);
       }
     });
   }
@@ -596,6 +605,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     }
     controller?.dispose();
     _poseService.dispose();
+    _coach.dispose();
     _audio.dispose();
     // Fire-and-forget — we don't want dispose() to await, and the plugin's
     // native call is near-instant. Failing to disable here would leave the
@@ -762,6 +772,12 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         if (resting && _secondsRemaining != 0) {
           setState(() => _secondsRemaining = 0);
         }
+        // Tier-A · the active set just paused (rest started) or never
+        // started (prep). Either way the mid-set heartbeat should
+        // stop — the rest coach (commit 3) takes over during rest.
+        if (justStartedRest || justStartedPrep) {
+          _coach.endSet();
+        }
         return;
       }
 
@@ -772,6 +788,16 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
           setChanged) {
         _analyzer.reset();
         _syncExerciseTimer(exercise);
+        // Tier-A · the user is now actively repping (or holding a
+        // timed set). Start the mid-set heartbeat with category-aware
+        // copy. Same trigger as `_syncExerciseTimer` so the coach and
+        // the visible countdown engage in lockstep.
+        _coach.startSet(exercise);
+      }
+
+      // Tier-A · session completion stops every coaching surface.
+      if (sessionJustCompleted) {
+        _coach.endSet();
       }
     });
 
