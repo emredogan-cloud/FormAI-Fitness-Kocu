@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
+
 import '../../../core/utils/audio_feedback.dart';
 import '../models/exercise_model.dart';
 
@@ -55,6 +57,25 @@ class CoachVoice {
   /// Cleared on startRest/endRest.
   final Set<String> _firedRestCheckpoints = <String>{};
 
+  // Tracking-guidance state ─────────────────────────────────────────
+  /// Number of consecutive low-confidence frames seen since the last
+  /// clean frame. Resets whenever a clean frame arrives, increments on
+  /// every low frame; once it crosses
+  /// [_lowConfidenceFramesThreshold] we surface a single coaching cue
+  /// and continue gating via [_lastTrackingCue].
+  int _lowConfidenceStreak = 0;
+
+  /// Last wall-clock at which a tracking-guidance cue fired. Seeded 5
+  /// minutes in the past so the very first sustained low-confidence
+  /// window can warn immediately on session start.
+  DateTime _lastTrackingCue =
+      DateTime.now().subtract(const Duration(minutes: 5));
+
+  /// Rotation index for the tracking-guidance pool. Different lines
+  /// rotate so a user who keeps stepping out of frame doesn't hear the
+  /// same exact phrase every 30 s.
+  int _trackingCueIndex = 0;
+
   /// How often to fire the rotating mid-set coaching line while the
   /// user is actively repping. 18 s is dense enough to feel present
   /// without becoming chatty — the analyzer's own warnings and the
@@ -68,6 +89,24 @@ class CoachVoice {
   /// `_firedRestCheckpoints` gate. Cheap: no allocations in the
   /// no-emit branch.
   static const Duration _restTickCadence = Duration(seconds: 1);
+
+  /// Tracking-guidance — landmark mean likelihood below this on a
+  /// given frame counts the frame as "low confidence." Above this the
+  /// streak resets. 0.35 is just below the analyzer's per-landmark
+  /// reject threshold (0.40), so a frame the analyzers won't act on
+  /// is the same frame this coach calls "low confidence."
+  static const double _lowConfidenceThreshold = 0.35;
+
+  /// How many consecutive low-confidence frames are needed before we
+  /// surface a cue. At the camera screen's ~15 FPS effective rate, 30
+  /// frames is ~2 s of sustained poor tracking — enough that a brief
+  /// occlusion (the user reaching off-screen for a dumbbell, the
+  /// hand passing in front of the chest) doesn't trip the warning.
+  static const int _lowConfidenceFramesThreshold = 30;
+
+  /// Minimum gap between two tracking-guidance cues. The user knows
+  /// after one announcement; nagging at 5 s intervals is harassment.
+  static const Duration _trackingCueCooldown = Duration(seconds: 45);
 
   // Timed-exercise pacing state ──────────────────────────────────────
   /// Total duration of the active timed exercise's set, captured on
@@ -109,6 +148,78 @@ class CoachVoice {
     _activeIsCardio = false;
     _timedInitialSeconds = null;
     _firedTimedCheckpoints.clear();
+  }
+
+  /// Called for every pose frame the analyzer processes. Pure
+  /// observation — no rep/set side-effects. Used to detect sustained
+  /// low-confidence tracking and emit a single Turkish positioning
+  /// cue with a strict 45 s cooldown.
+  ///
+  /// [pose] may be null if pose detection returned no result for this
+  /// frame; that counts as a low-confidence frame.
+  void onPoseFrame(Pose? pose) {
+    final double meanLikelihood;
+    if (pose == null || pose.landmarks.isEmpty) {
+      meanLikelihood = 0.0;
+    } else {
+      // Subset of landmarks that matter for rep counting across all
+      // analyzers — shoulders/hips/knees/ankles/wrists/elbows. Tracking
+      // the full 33-point ML Kit set would dilute the signal with
+      // face/foot points that the analyzers don't read anyway.
+      const tracked = <PoseLandmarkType>[
+        PoseLandmarkType.leftShoulder,
+        PoseLandmarkType.rightShoulder,
+        PoseLandmarkType.leftHip,
+        PoseLandmarkType.rightHip,
+        PoseLandmarkType.leftKnee,
+        PoseLandmarkType.rightKnee,
+        PoseLandmarkType.leftAnkle,
+        PoseLandmarkType.rightAnkle,
+        PoseLandmarkType.leftWrist,
+        PoseLandmarkType.rightWrist,
+        PoseLandmarkType.leftElbow,
+        PoseLandmarkType.rightElbow,
+      ];
+      var total = 0.0;
+      var count = 0;
+      for (final t in tracked) {
+        final lm = pose.landmarks[t];
+        if (lm != null) {
+          total += lm.likelihood;
+          count++;
+        }
+      }
+      // Missing landmarks count as zero — a partially-out-of-frame body
+      // is exactly the case we want to warn about.
+      meanLikelihood = count == 0 ? 0.0 : total / tracked.length;
+    }
+
+    if (meanLikelihood < _lowConfidenceThreshold) {
+      _lowConfidenceStreak += 1;
+      if (_lowConfidenceStreak >= _lowConfidenceFramesThreshold) {
+        final now = DateTime.now();
+        if (now.difference(_lastTrackingCue) >= _trackingCueCooldown) {
+          _lastTrackingCue = now;
+          final pool = _trackingCueRotation;
+          final phrase = pool[_trackingCueIndex % pool.length];
+          _trackingCueIndex += 1;
+          // High enough priority to pre-empt ambient/encouragement
+          // heartbeats (the user can't follow coaching if the camera
+          // can't see them) but below form warnings (a form warning
+          // landed means the pose IS being read — different problem).
+          _audio.speak(
+            phrase,
+            priority: SpeechPriority.cue,
+            cooldown: const Duration(seconds: 30),
+          );
+        }
+        // Reset the streak after emitting so the next sustained window
+        // has to re-cross the threshold before another cue fires.
+        _lowConfidenceStreak = 0;
+      }
+    } else {
+      _lowConfidenceStreak = 0;
+    }
   }
 
   /// Called once per second by the camera screen's workout countdown
@@ -362,6 +473,16 @@ class CoachVoice {
     'Omuzlarını indir, posturanı topla.',
     'Su iç, vücudunu hazırla.',
     'Toparlan, sıradaki set yaklaşıyor.',
+  ];
+
+  /// Tracking-guidance lines. Rotated so a user with persistent camera
+  /// issues hears actionable variety rather than the same nag. Strict
+  /// 45 s cooldown enforced by `_lastTrackingCue` keeps these from
+  /// stacking up.
+  static const List<String> _trackingCueRotation = [
+    'Kameraya biraz daha yaklaş, tüm vücudun görünmeli.',
+    'Pozisyonunu ayarla, kamera vücudunu net görsün.',
+    'Bir adım geri çekil, vücudun çerçeveye sığsın.',
   ];
 
   // ─── Fired-once helper ─────────────────────────────────────────────
