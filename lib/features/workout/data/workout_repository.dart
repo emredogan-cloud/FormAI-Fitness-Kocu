@@ -27,31 +27,28 @@ class WorkoutRepository {
 
   static const String _completedKey = 'sixpack.completed_days';
   static const String _pendingSyncKey = 'sixpack.pending_sync_days';
+  // Bumped v7 → v8 in Tier-S audit follow-up: ~14 repBased Phase-96 slugs
+  // routed to SilentHoldAnalyzer (no rep counting AND no timer), leaving
+  // the user permanently stuck on `x 0 / N`. They are now hydrated as
+  // timeBased via [_stuckRepBasedDurationSeconds]; existing v7 caches
+  // still hold the stale repBased copies, so the key bump forces a
+  // one-shot regen on next launch.
+  // Bumped v6 → v7 in Phase 100: the personalised generator now ALWAYS
+  // applies a strict home-workout filter (bodyweight + dumbbell only),
+  // regardless of the hasEquipment flag. The Phase 133 filter wrongly
+  // excluded dumbbell exercises and only ran when hasEquipment=false.
+  // All existing cached plans must regenerate so no gym-infrastructure
+  // exercises (barbell, cable, fixed machines) remain in any user's plan.
   // Bumped v5 → v6 in phase 134: `Exercise` gained `isPremium` and
-  // `isNew` flags so the emotional-monetization phase can render
-  // locked previews inside otherwise free plans. Existing v5 caches
-  // hydrate through `Exercise.fromJson`, which defaults the new
-  // flags to `false` — bumping the key forces a regen so the
-  // [PremiumExerciseTags] applied in [_exerciseFromRow] actually
-  // surface on next launch.
-  // Bumped v4 → v5 in phase 86: the goal/level normaliser now defaults
-  // to `tone` instead of `sixpack` when onboarding is empty, and the
-  // bucket interleave was rewritten to spread shorter buckets evenly
-  // through the merged list. Existing v4 caches were generated under
-  // the old core-biased path and must be regenerated to pick up the
-  // fix; bumping the key forces that on next launch without users
-  // having to "Reset progress" by hand. (Prior bump v3 → v4 in phase 75
-  // was a similar one-shot for video URL casing.)
-  static const String _planKey = 'sixpack.user_custom_plan_v6';
+  // `isNew` flags. Bumped v4 → v5 in phase 86: goal normaliser default.
+  static const String _planKey = 'sixpack.user_custom_plan_v8';
 
-  /// Companion key holding a `goal:level` fingerprint of the inputs
-  /// that produced the cached plan. Read at decode time; if the
+  /// Companion key holding a `goal:level:hasEquipment` fingerprint of the
+  /// inputs that produced the cached plan. Read at decode time; if the
   /// current onboarding inputs no longer match, the cached plan is
-  /// treated as stale and regenerated. Closes the gap where a user
-  /// changes their goal in profile-edit but keeps seeing the original
-  /// plan because the cache had no concept of input identity.
+  /// treated as stale and regenerated.
   static const String _planFingerprintKey =
-      'sixpack.user_custom_plan_fingerprint_v6';
+      'sixpack.user_custom_plan_fingerprint_v8';
   static const String _progressTable = 'user_progress';
   static const String _exercisesTable = 'exercises';
 
@@ -163,6 +160,55 @@ class WorkoutRepository {
     }
   }
 
+  /// Tier-S audit follow-up · slugs that ship as `repBased` in the
+  /// Supabase catalogue but route to [SilentHoldAnalyzer] in
+  /// `analyzer_factory.dart`. SilentHoldAnalyzer never increments reps
+  /// and never sets `repJustCompleted: true`, so the rep counter stays
+  /// at `x 0 / N` forever — the camera screen never calls
+  /// `completeCurrentExercise()` and the user is forced to tap "Next"
+  /// to escape every set.
+  ///
+  /// Hydrating these rows as `timeBased` with a sensible duration is
+  /// the safest fix: the camera-screen timer drives completion, the
+  /// rep counter is hidden, and `SilentHoldAnalyzer`'s 18 s
+  /// encouragement line is now appropriate (timed exercise, not a
+  /// stuck rep counter). The Supabase row stays as-is — this override
+  /// lives in the client so a future SQL canonicalisation can drop the
+  /// map without coordinating with deployed installs.
+  ///
+  /// Cross-referenced with `reports/archive/ml-detection-strategy.md`
+  /// §3 (slugs explicitly routed to `SilentHoldAnalyzer`) and the
+  /// stuck-exercise table in `WORKOUT_INTELLIGENCE_AUDIT.md` §6.
+  ///
+  /// Duration buckets:
+  ///   • mobility / postural / scapular activation: 30 s
+  ///   • hip-hinge / glute bridge family: 40 s
+  ///   • dynamic conditioning (kettlebell, clean, walk): 30–35 s
+  static const Map<String, int> _stuckRepBasedDurationSeconds = {
+    // ── postural / scapular activation ────────────────────────────────
+    'bird_dog': 30,
+    'prone_y_raise': 30,
+    'prone_t_raise': 30,
+    'scapular_wall_slide': 30,
+    // ── hip-hinge / glute family ──────────────────────────────────────
+    'glute_bridge': 40,
+    'hip_thrust': 40,
+    'frog_pump': 35,
+    'single_leg_glute_bridge': 40,
+    'single_leg_rdl': 35,
+    // ── dynamic / locomotor conditioning ──────────────────────────────
+    'pike_walk': 30,
+    'wall_walk': 35,
+    'kettlebell_swing': 30,
+    'dumbbell_clean': 30,
+    // ── mobility flow ─────────────────────────────────────────────────
+    'cat_cow': 30,
+    // ── specialised eccentric / overhead arc (gym-only but defensive) ─
+    'nordic_curl': 30,
+    'hyperextension': 30,
+    'dumbbell_pullover': 35,
+  };
+
   /// Maps a `public.exercises` row to the in-memory [Exercise] model. The
   /// row → Dart contract:
   ///   • `slug` becomes `Exercise.id` (kept for plan-cache compatibility
@@ -178,17 +224,36 @@ class WorkoutRepository {
   ///     slug derivative there while Supabase Storage holds PascalCase
   ///     filenames. Sourcing the URL from `slug` guarantees the right
   ///     casing every time.
+  ///   • For slugs in [_stuckRepBasedDurationSeconds], type is forced to
+  ///     `timeBased`, `targetReps` is cleared, and `targetDurationInSeconds`
+  ///     is overridden with the bucket-appropriate duration. See the map
+  ///     docstring for rationale.
   static Exercise _exerciseFromRow(Map<String, dynamic> row) {
     final slug = row['slug'] as String;
+    final stuckDuration = _stuckRepBasedDurationSeconds[slug];
+    final ExerciseType type;
+    final int? targetReps;
+    final int? targetDuration;
+    if (stuckDuration != null) {
+      // Tier-S override: force this stuck slug into a timer-driven
+      // execution path so the user is never trapped on `x 0 / N`.
+      type = ExerciseType.timeBased;
+      targetReps = null;
+      targetDuration = stuckDuration;
+    } else {
+      type = ExerciseType.values.firstWhere(
+        (v) => v.name == row['type'],
+        orElse: () => ExerciseType.repBased,
+      );
+      targetReps = row['target_reps'] as int?;
+      targetDuration = row['target_duration_in_seconds'] as int?;
+    }
     return Exercise(
       id: slug,
       name: row['name'] as String,
-      type: ExerciseType.values.firstWhere(
-        (v) => v.name == row['type'],
-        orElse: () => ExerciseType.repBased,
-      ),
-      targetReps: row['target_reps'] as int?,
-      targetDurationInSeconds: row['target_duration_in_seconds'] as int?,
+      type: type,
+      targetReps: targetReps,
+      targetDurationInSeconds: targetDuration,
       sets: (row['sets'] as int?) ?? 1,
       restDurationInSeconds: (row['rest_duration_in_seconds'] as int?) ?? 30,
       category: ExerciseCategory.values.firstWhere(
