@@ -34,12 +34,40 @@ class CoachVoice {
   bool _activeIsCardio = false;
   int _midSetIndex = 0;
 
+  // Rest coaching state ─────────────────────────────────────────────
+  Timer? _restTimer;
+
+  /// Tracks the wall-clock at which the current rest window started so
+  /// the rest scheduler can derive "halfway" + "final 10 s" beats
+  /// independently from the camera screen's countdown widget. Null
+  /// outside of an active rest.
+  DateTime? _restStartedAt;
+
+  /// Total seconds the rest window was scheduled for, captured on
+  /// `startRest`. Null outside rest.
+  int? _restInitialSeconds;
+
+  /// Rotation index for the generic rest-window coaching lines, so a
+  /// long inter-exercise rest (e.g. 90 s) doesn't repeat the same line.
+  int _restGenericIndex = 0;
+
+  /// Single-shot gates for the halfway / 10 s / 5 s rest beats.
+  /// Cleared on startRest/endRest.
+  final Set<String> _firedRestCheckpoints = <String>{};
+
   /// How often to fire the rotating mid-set coaching line while the
   /// user is actively repping. 18 s is dense enough to feel present
   /// without becoming chatty — the analyzer's own warnings and the
   /// rep-milestone announcements layer on top through the priority
   /// queue.
   static const Duration _midSetCadence = Duration(seconds: 18);
+
+  /// Rest-tick cadence — the rest coach runs at 1 Hz so it can act on
+  /// per-second remaining checkpoints. Each tick decides whether to
+  /// emit anything based on elapsed-vs-total and the
+  /// `_firedRestCheckpoints` gate. Cheap: no allocations in the
+  /// no-emit branch.
+  static const Duration _restTickCadence = Duration(seconds: 1);
 
   // Timed-exercise pacing state ──────────────────────────────────────
   /// Total duration of the active timed exercise's set, captured on
@@ -118,6 +146,91 @@ class CoachVoice {
   void cancelAll() {
     _midSetTimer?.cancel();
     _midSetTimer = null;
+    _restTimer?.cancel();
+    _restTimer = null;
+  }
+
+  /// Called when the user transitions into a rest window. The
+  /// camera-screen "Harika! Şimdi N saniye dinlenme" line plays
+  /// through the milestone path immediately before this — the rest
+  /// coach picks up after.
+  ///
+  /// Three things happen across the rest:
+  ///   1. Halfway beat (rest >= 30 s, at elapsed ≈ total/2):
+  ///      "Nefesini topla, yarısı geçti."
+  ///   2. Final 10 s (rest >= 20 s, at remaining == 10):
+  ///      "On saniye sonra başlıyoruz, hazırlan."
+  ///   3. Generic rotating cue every 18 s while rest is in progress
+  ///      and at least 12 s of rest remains (so we don't talk over
+  ///      the user transitioning into the next set).
+  void startRest(int restSeconds) {
+    _restTimer?.cancel();
+    if (restSeconds <= 0) return;
+    _restStartedAt = DateTime.now();
+    _restInitialSeconds = restSeconds;
+    _firedRestCheckpoints.clear();
+    // First generic line lands at the 18 s mark — the milestone
+    // "Harika! ... dinlenme" speech (which fires synchronously with
+    // startRest) is still finishing in its own queue slot at t=0–3 s.
+    _restTimer = Timer.periodic(_restTickCadence, (_) => _restTick());
+  }
+
+  /// Called when the rest window ends — naturally (countdown hit 0),
+  /// via the skip button, or because the user popped the screen.
+  /// Idempotent.
+  void endRest() {
+    _restTimer?.cancel();
+    _restTimer = null;
+    _restStartedAt = null;
+    _restInitialSeconds = null;
+    _firedRestCheckpoints.clear();
+  }
+
+  void _restTick() {
+    final startedAt = _restStartedAt;
+    final total = _restInitialSeconds;
+    if (startedAt == null || total == null || total <= 0) return;
+
+    final elapsed = DateTime.now().difference(startedAt).inSeconds;
+    final remaining = total - elapsed;
+    if (remaining <= 0) {
+      _restTimer?.cancel();
+      _restTimer = null;
+      return;
+    }
+
+    // Halfway beat — only meaningful on rests long enough that
+    // "halfway" reads as a real waypoint. 30 s rests get one;
+    // shorter rests skip straight to the rotating cue + final 10s.
+    if (total >= 30 && elapsed == (total / 2).floor()) {
+      _fireOnce('rest-halfway', 'Nefesini topla, yarısı geçti.',
+          priority: SpeechPriority.ambient,
+          firedSet: _firedRestCheckpoints);
+    }
+
+    // Final 10 s — only fires for rests long enough that 10 s left
+    // isn't the first half (avoids talking over the rest-start
+    // announcement on short windows).
+    if (total >= 20 && remaining == 10) {
+      _fireOnce('rest-final-10',
+          'On saniye sonra başlıyoruz, hazırlan.',
+          priority: SpeechPriority.encouragement,
+          firedSet: _firedRestCheckpoints);
+    }
+
+    // Generic rotation — every 18 s past start, but only while we
+    // still have ≥ 12 s of rest left. This prevents a generic line
+    // from landing 2 s before the next set's HAZIRLAN! countdown.
+    if (remaining >= 12 && elapsed > 0 && elapsed % 18 == 0) {
+      final pool = _restRotation;
+      final line = pool[_restGenericIndex % pool.length];
+      _restGenericIndex += 1;
+      _audio.speak(
+        line,
+        priority: SpeechPriority.ambient,
+        cooldown: const Duration(seconds: 20),
+      );
+    }
   }
 
   /// Lifecycle: pause the heartbeat (user tapped pause). Timed pacing
@@ -238,15 +351,30 @@ class CoachVoice {
     }
   }
 
+  // ─── Rest-rotation pool ────────────────────────────────────────────
+
+  /// Generic rest-window coaching lines. Light, recovery-flavoured,
+  /// non-strenuous — the user should breathe and reset, not be pushed.
+  /// Four entries so a 90 s inter-exercise rest can land three of them
+  /// (at 18 s, 36 s, 54 s) without repeating.
+  static const List<String> _restRotation = [
+    'Derin nefes al, kasları gevşet.',
+    'Omuzlarını indir, posturanı topla.',
+    'Su iç, vücudunu hazırla.',
+    'Toparlan, sıradaki set yaklaşıyor.',
+  ];
+
   // ─── Fired-once helper ─────────────────────────────────────────────
 
   void _fireOnce(
     String key,
     String phrase, {
     required SpeechPriority priority,
+    Set<String>? firedSet,
   }) {
-    if (_firedTimedCheckpoints.contains(key)) return;
-    _firedTimedCheckpoints.add(key);
+    final ledger = firedSet ?? _firedTimedCheckpoints;
+    if (ledger.contains(key)) return;
+    ledger.add(key);
     _audio.speak(phrase,
         priority: priority, cooldown: const Duration(seconds: 4));
   }
