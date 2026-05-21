@@ -43,44 +43,82 @@ class PosePainter extends CustomPainter {
     [PoseLandmarkType.rightHeel, PoseLandmarkType.rightFootIndex],
   ];
 
+  // Tier-S audit fix · confidence-aware rendering. The previous painter
+  // drew every joint + bone at full opacity regardless of likelihood,
+  // so a 0.05-confidence skeleton looked as solid as a 0.95-confidence
+  // one — the visual root of the "tracks but doesn't analyse"
+  // perception (see WORKOUT_INTELLIGENCE_AUDIT.md §1, §5 U1). Joints
+  // and bones now fade with confidence; below [_lowConfidenceThreshold]
+  // we render a hollow joint and a desaturated bone so the user can
+  // see that landmark is uncertain.
+  static const double _lowConfidenceThreshold = 0.3;
+  static const double _mediumConfidenceThreshold = 0.6;
+
+  /// Maps a likelihood in [0, 1] to an alpha in [0.15, 1.0]. Floors at
+  /// 0.15 so a single low-confidence joint doesn't disappear entirely
+  /// — the user still sees "something is there but uncertain."
+  double _alphaFor(double likelihood) {
+    if (likelihood >= _mediumConfidenceThreshold) return 1.0;
+    if (likelihood <= 0.0) return 0.15;
+    // Linear ramp from 0 → 0.6 likelihood mapped to 0.15 → 1.0 alpha.
+    final t = (likelihood / _mediumConfidenceThreshold).clamp(0.0, 1.0);
+    return 0.15 + t * 0.85;
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
-    final jointPaint = Paint()
-      ..color = _neonGreen
-      ..style = PaintingStyle.fill;
-
-    final jointRing = Paint()
-      ..color = Colors.white.withValues(alpha: 0.85)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
-
-    final bonePaint = Paint()
-      ..color = _neonCyan
-      ..strokeWidth = 4
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final boneGlow = Paint()
-      ..color = _neonCyan.withValues(alpha: 0.35)
-      ..strokeWidth = 12
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
-
     for (final connection in _connections) {
       final a = pose.landmarks[connection[0]];
       final b = pose.landmarks[connection[1]];
       if (a == null || b == null) continue;
+      // Bone confidence is gated by the weaker of its two joints — a
+      // bone is no more trustworthy than its less-certain endpoint.
+      final boneLikelihood =
+          a.likelihood < b.likelihood ? a.likelihood : b.likelihood;
+      final boneAlpha = _alphaFor(boneLikelihood);
       final p1 = _project(a, size);
       final p2 = _project(b, size);
+
+      final boneGlow = Paint()
+        ..color = _neonCyan.withValues(alpha: 0.35 * boneAlpha)
+        ..strokeWidth = 12
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+      final bonePaint = Paint()
+        ..color = _neonCyan.withValues(alpha: boneAlpha)
+        ..strokeWidth =
+            boneLikelihood < _lowConfidenceThreshold ? 2.5 : 4.0
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round;
+
       canvas.drawLine(p1, p2, boneGlow);
       canvas.drawLine(p1, p2, bonePaint);
     }
 
     for (final landmark in pose.landmarks.values) {
       final center = _project(landmark, size);
-      canvas.drawCircle(center, 5, jointPaint);
-      canvas.drawCircle(center, 5, jointRing);
+      final alpha = _alphaFor(landmark.likelihood);
+      final ringPaint = Paint()
+        ..color = Colors.white.withValues(alpha: 0.85 * alpha)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2;
+
+      if (landmark.likelihood < _lowConfidenceThreshold) {
+        // Hollow joint — visually communicates "we see something here
+        // but it's uncertain." No fill, narrower ring.
+        final hollowRing = Paint()
+          ..color = _neonGreen.withValues(alpha: alpha)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5;
+        canvas.drawCircle(center, 5, hollowRing);
+      } else {
+        final fillPaint = Paint()
+          ..color = _neonGreen.withValues(alpha: alpha)
+          ..style = PaintingStyle.fill;
+        canvas.drawCircle(center, 5, fillPaint);
+        canvas.drawCircle(center, 5, ringPaint);
+      }
     }
   }
 
