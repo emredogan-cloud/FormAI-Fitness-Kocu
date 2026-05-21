@@ -378,6 +378,127 @@ class LateralRaiseAnalyzer implements PoseAnalyzer {
 }
 
 // ============================================================================
+// Scapular / postural family — Tier B.2
+// ============================================================================
+
+/// Targets: `prone_y_raise`, `prone_t_raise`, `scapular_wall_slide`.
+///
+/// All three are small-ROM arm-raise patterns:
+///   • prone Y raise — lying face-down, arms overhead in Y shape; lift
+///     wrists off the floor.
+///   • prone T raise — lying face-down, arms out to sides; lift wrists
+///     off the floor.
+///   • scapular wall slide — standing against a wall, arms in W or Y;
+///     slide them up the wall and back down.
+///
+/// The common signal is the **wrist position relative to the shoulder
+/// line**, normalised by shoulder width so the analyzer self-calibrates
+/// to camera distance. We average the two wrists and the two shoulders
+/// to be tolerant of one-side occlusion; the ratio is then:
+///
+///   ratio = (shoulderMidY - wristMidY) / shoulderWidth
+///
+/// Positive ratio = wrists above shoulder line (lifted / slid up).
+/// Negative or near-zero ratio = arms resting / at sides.
+///
+/// State machine:
+///   • ratio > upRatio (default 0.45)   → UP, count a rep on UP-from-DOWN
+///   • ratio < downRatio (default 0.05) → DOWN
+///
+/// Both thresholds are intentionally loose because these are small-ROM
+/// movements with noisy wrist landmarks; a tight gate would miss most
+/// reps. Form warning is deliberately omitted — scapular reps are too
+/// subtle for any geometric form check that wouldn't false-positive.
+class ScapularAnalyzer implements PoseAnalyzer {
+  ScapularAnalyzer({
+    this.upRatio = 0.45,
+    this.downRatio = 0.05,
+    this.minRepInterval = const Duration(milliseconds: 900),
+  });
+
+  /// `(shoulderMidY - wristMidY) / shoulderWidth` above this commits UP.
+  final double upRatio;
+
+  /// `(shoulderMidY - wristMidY) / shoulderWidth` below this commits DOWN.
+  final double downRatio;
+
+  final Duration minRepInterval;
+
+  int _reps = 0;
+  CrunchState _state = CrunchState.unknown;
+  DateTime? _lastRepTime;
+
+  @override
+  void reset() {
+    _reps = 0;
+    _state = CrunchState.unknown;
+    _lastRepTime = null;
+  }
+
+  @override
+  CrunchResult analyze(Pose pose) {
+    final ls = pose.landmarks[PoseLandmarkType.leftShoulder];
+    final rs = pose.landmarks[PoseLandmarkType.rightShoulder];
+    final lw = pose.landmarks[PoseLandmarkType.leftWrist];
+    final rw = pose.landmarks[PoseLandmarkType.rightWrist];
+    if (ls == null || rs == null || lw == null || rw == null) {
+      return _empty();
+    }
+    // Skip the frame if either shoulder is unreliable — without a
+    // baseline shoulder line the ratio is meaningless. We tolerate one
+    // weak wrist (it gets averaged into the mid-point with the other).
+    final minShoulder =
+        ls.likelihood < rs.likelihood ? ls.likelihood : rs.likelihood;
+    if (minShoulder < 0.4) return _empty();
+
+    final shoulderWidth = (ls.x - rs.x).abs();
+    if (shoulderWidth < 1) return _empty();
+
+    final shoulderMidY = (ls.y + rs.y) / 2;
+    final wristMidY = (lw.y + rw.y) / 2;
+    final ratio = (shoulderMidY - wristMidY) / shoulderWidth;
+
+    final previous = _state;
+    var repJustCompleted = false;
+
+    if (ratio > upRatio) {
+      if (previous == CrunchState.down) {
+        final now = DateTime.now();
+        final last = _lastRepTime;
+        if (last == null || now.difference(last) >= minRepInterval) {
+          _reps += 1;
+          repJustCompleted = true;
+          _lastRepTime = now;
+        }
+      }
+      _state = CrunchState.up;
+    } else if (ratio < downRatio) {
+      _state = CrunchState.down;
+    }
+    // Between the two thresholds we hold the previous state — natural
+    // hysteresis that prevents borderline frames from re-counting.
+
+    return CrunchResult(
+      reps: _reps,
+      state: _state,
+      torsoAngle: ratio,
+      neckAngle: null,
+      formWarning: null,
+      repJustCompleted: repJustCompleted,
+    );
+  }
+
+  CrunchResult _empty() => CrunchResult(
+        reps: _reps,
+        state: _state,
+        torsoAngle: null,
+        neckAngle: null,
+        formWarning: null,
+        repJustCompleted: false,
+      );
+}
+
+// ============================================================================
 // Cardio — jumping jack
 // ============================================================================
 
