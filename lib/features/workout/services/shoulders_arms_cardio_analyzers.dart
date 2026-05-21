@@ -4,6 +4,7 @@ import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 
 import '../../../core/utils/angle_calculator.dart';
 import 'crunch_analyzer.dart' show CrunchResult, CrunchState;
+import 'pacing_tracker.dart';
 import 'pose_analyzer.dart';
 
 // ============================================================================
@@ -47,6 +48,7 @@ class BicepsCurlAnalyzer implements PoseAnalyzer {
   DateTime? _lastRepTime;
   DateTime _lastFormWarning =
       DateTime.now().subtract(const Duration(seconds: 30));
+  final PacingTracker _pacing = PacingPresets.strength();
 
   @override
   void reset() {
@@ -54,6 +56,7 @@ class BicepsCurlAnalyzer implements PoseAnalyzer {
     _state = CrunchState.unknown;
     _lastRepTime = null;
     _lastFormWarning = DateTime.now().subtract(const Duration(seconds: 30));
+    _pacing.reset();
   }
 
   @override
@@ -84,6 +87,7 @@ class BicepsCurlAnalyzer implements PoseAnalyzer {
 
     final previous = _state;
     var repJustCompleted = false;
+    String? pacingFeedback;
 
     if (elbow > downThreshold) {
       _state = CrunchState.down;
@@ -92,9 +96,13 @@ class BicepsCurlAnalyzer implements PoseAnalyzer {
         final now = DateTime.now();
         final last = _lastRepTime;
         if (last == null || now.difference(last) >= minRepInterval) {
+          final repDuration = last == null ? null : now.difference(last);
           _reps += 1;
           repJustCompleted = true;
           _lastRepTime = now;
+          if (repDuration != null) {
+            pacingFeedback = _pacing.evaluate(repDuration, now);
+          }
         }
       }
       _state = CrunchState.up;
@@ -136,6 +144,7 @@ class BicepsCurlAnalyzer implements PoseAnalyzer {
       neckAngle: null,
       formWarning: formWarning,
       repJustCompleted: repJustCompleted,
+      pacingFeedback: pacingFeedback,
     );
   }
 }
@@ -172,6 +181,7 @@ class ShoulderPressAnalyzer implements PoseAnalyzer {
   CrunchState _state = CrunchState.unknown;
   DateTime? _lastRepTime;
   double _maxDelta = 0; // largest wrist-above-shoulder delta this rep
+  final PacingTracker _pacing = PacingPresets.strength();
 
   @override
   void reset() {
@@ -179,6 +189,7 @@ class ShoulderPressAnalyzer implements PoseAnalyzer {
     _state = CrunchState.unknown;
     _lastRepTime = null;
     _maxDelta = 0;
+    _pacing.reset();
   }
 
   @override
@@ -205,6 +216,7 @@ class ShoulderPressAnalyzer implements PoseAnalyzer {
     final previous = _state;
     var repJustCompleted = false;
     String? formWarning;
+    String? pacingFeedback;
 
     if (delta > upThreshold) {
       _state = CrunchState.up;
@@ -213,12 +225,18 @@ class ShoulderPressAnalyzer implements PoseAnalyzer {
         final now = DateTime.now();
         final last = _lastRepTime;
         if (last == null || now.difference(last) >= minRepInterval) {
+          final repDuration = last == null ? null : now.difference(last);
           _reps += 1;
           repJustCompleted = true;
           _lastRepTime = now;
           // Partial-rep nudge: rep counted but never reached full lockout.
           if (_maxDelta < upThreshold * partialRatio) {
             formWarning = 'Kolları tam yukarı uzat!';
+          }
+          // Pacing only emitted when no form warning to avoid same-frame
+          // queue contention. Form warning is the higher-value signal.
+          if (formWarning == null && repDuration != null) {
+            pacingFeedback = _pacing.evaluate(repDuration, now);
           }
           _maxDelta = 0;
         }
@@ -233,6 +251,7 @@ class ShoulderPressAnalyzer implements PoseAnalyzer {
       neckAngle: null,
       formWarning: formWarning,
       repJustCompleted: repJustCompleted,
+      pacingFeedback: pacingFeedback,
     );
   }
 
@@ -286,6 +305,7 @@ class LateralRaiseAnalyzer implements PoseAnalyzer {
   DateTime? _lastRepTime;
   DateTime _lastFormWarning =
       DateTime.now().subtract(const Duration(seconds: 30));
+  final PacingTracker _pacing = PacingPresets.strength();
 
   @override
   void reset() {
@@ -293,6 +313,7 @@ class LateralRaiseAnalyzer implements PoseAnalyzer {
     _state = CrunchState.unknown;
     _lastRepTime = null;
     _lastFormWarning = DateTime.now().subtract(const Duration(seconds: 30));
+    _pacing.reset();
   }
 
   @override
@@ -323,15 +344,20 @@ class LateralRaiseAnalyzer implements PoseAnalyzer {
 
     final previous = _state;
     var repJustCompleted = false;
+    String? pacingFeedback;
 
     if (angle > upThreshold) {
       if (previous == CrunchState.down) {
         final now = DateTime.now();
         final last = _lastRepTime;
         if (last == null || now.difference(last) >= minRepInterval) {
+          final repDuration = last == null ? null : now.difference(last);
           _reps += 1;
           repJustCompleted = true;
           _lastRepTime = now;
+          if (repDuration != null) {
+            pacingFeedback = _pacing.evaluate(repDuration, now);
+          }
         }
       }
       _state = CrunchState.up;
@@ -373,6 +399,7 @@ class LateralRaiseAnalyzer implements PoseAnalyzer {
       neckAngle: null,
       formWarning: formWarning,
       repJustCompleted: repJustCompleted,
+      pacingFeedback: pacingFeedback,
     );
   }
 }
@@ -427,12 +454,14 @@ class ScapularAnalyzer implements PoseAnalyzer {
   int _reps = 0;
   CrunchState _state = CrunchState.unknown;
   DateTime? _lastRepTime;
+  final PacingTracker _pacing = PacingPresets.strength();
 
   @override
   void reset() {
     _reps = 0;
     _state = CrunchState.unknown;
     _lastRepTime = null;
+    _pacing.reset();
   }
 
   @override
@@ -460,15 +489,20 @@ class ScapularAnalyzer implements PoseAnalyzer {
 
     final previous = _state;
     var repJustCompleted = false;
+    String? pacingFeedback;
 
     if (ratio > upRatio) {
       if (previous == CrunchState.down) {
         final now = DateTime.now();
         final last = _lastRepTime;
         if (last == null || now.difference(last) >= minRepInterval) {
+          final repDuration = last == null ? null : now.difference(last);
           _reps += 1;
           repJustCompleted = true;
           _lastRepTime = now;
+          if (repDuration != null) {
+            pacingFeedback = _pacing.evaluate(repDuration, now);
+          }
         }
       }
       _state = CrunchState.up;
@@ -485,6 +519,7 @@ class ScapularAnalyzer implements PoseAnalyzer {
       neckAngle: null,
       formWarning: null,
       repJustCompleted: repJustCompleted,
+      pacingFeedback: pacingFeedback,
     );
   }
 
@@ -550,12 +585,14 @@ class JumpingJackAnalyzer implements PoseAnalyzer {
   int _reps = 0;
   CrunchState _state = CrunchState.unknown;
   DateTime? _lastRepTime;
+  final PacingTracker _pacing = PacingPresets.cardio();
 
   @override
   void reset() {
     _reps = 0;
     _state = CrunchState.unknown;
     _lastRepTime = null;
+    _pacing.reset();
   }
 
   @override
@@ -611,15 +648,20 @@ class JumpingJackAnalyzer implements PoseAnalyzer {
 
     final previous = _state;
     var repJustCompleted = false;
+    String? pacingFeedback;
 
     if (commitOpen) {
       if (previous == CrunchState.down) {
         final now = DateTime.now();
         final last = _lastRepTime;
         if (last == null || now.difference(last) >= minRepInterval) {
+          final repDuration = last == null ? null : now.difference(last);
           _reps += 1;
           repJustCompleted = true;
           _lastRepTime = now;
+          if (repDuration != null) {
+            pacingFeedback = _pacing.evaluate(repDuration, now);
+          }
         }
       }
       _state = CrunchState.up;
@@ -635,6 +677,7 @@ class JumpingJackAnalyzer implements PoseAnalyzer {
       neckAngle: null,
       formWarning: null,
       repJustCompleted: repJustCompleted,
+      pacingFeedback: pacingFeedback,
     );
   }
 
@@ -703,6 +746,8 @@ class BurpeeAnalyzer implements PoseAnalyzer {
   /// per-frame are pure functions of this list.
   final List<_YSample> _ySamples = <_YSample>[];
 
+  final PacingTracker _pacing = PacingPresets.compound();
+
   @override
   void reset() {
     _reps = 0;
@@ -710,6 +755,7 @@ class BurpeeAnalyzer implements PoseAnalyzer {
     _lastRepTime = null;
     _lastCueTime = null;
     _ySamples.clear();
+    _pacing.reset();
   }
 
   @override
@@ -760,15 +806,20 @@ class BurpeeAnalyzer implements PoseAnalyzer {
 
     var repJustCompleted = false;
     String? contextualCue;
+    String? pacingFeedback;
 
     if (current != previous && previous != _BurpeePhase.unknown) {
       if (current == _BurpeePhase.standing && previous == _BurpeePhase.down) {
         // Full STANDING→DOWN→STANDING cycle complete.
         final last = _lastRepTime;
         if (last == null || now.difference(last) >= minRepInterval) {
+          final repDuration = last == null ? null : now.difference(last);
           _reps += 1;
           repJustCompleted = true;
           _lastRepTime = now;
+          if (repDuration != null) {
+            pacingFeedback = _pacing.evaluate(repDuration, now);
+          }
         }
       } else if (current == _BurpeePhase.down &&
           previous == _BurpeePhase.standing) {
@@ -795,6 +846,7 @@ class BurpeeAnalyzer implements PoseAnalyzer {
       formWarning: null,
       repJustCompleted: repJustCompleted,
       contextualCue: contextualCue,
+      pacingFeedback: pacingFeedback,
     );
   }
 

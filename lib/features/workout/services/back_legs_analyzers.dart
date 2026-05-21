@@ -4,6 +4,7 @@ import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 
 import '../../../core/utils/angle_calculator.dart';
 import 'crunch_analyzer.dart' show CrunchResult, CrunchState;
+import 'pacing_tracker.dart';
 import 'pose_analyzer.dart';
 
 /// Squats / lunges / Bulgarian split squats / leg press all reduce to a
@@ -45,6 +46,7 @@ class SquatAnalyzer implements PoseAnalyzer {
   DateTime? _lastRepTime;
   DateTime _lastFormWarning =
       DateTime.now().subtract(const Duration(seconds: 30));
+  final PacingTracker _pacing = PacingPresets.strength();
 
   @override
   void reset() {
@@ -52,6 +54,7 @@ class SquatAnalyzer implements PoseAnalyzer {
     _state = CrunchState.unknown;
     _lastRepTime = null;
     _lastFormWarning = DateTime.now().subtract(const Duration(seconds: 30));
+    _pacing.reset();
   }
 
   @override
@@ -82,6 +85,7 @@ class SquatAnalyzer implements PoseAnalyzer {
 
     final previous = _state;
     var repJustCompleted = false;
+    String? pacingFeedback;
 
     if (knee < downThreshold) {
       _state = CrunchState.down;
@@ -90,9 +94,13 @@ class SquatAnalyzer implements PoseAnalyzer {
         final now = DateTime.now();
         final last = _lastRepTime;
         if (last == null || now.difference(last) >= minRepInterval) {
+          final repDuration = last == null ? null : now.difference(last);
           _reps += 1;
           repJustCompleted = true;
           _lastRepTime = now;
+          if (repDuration != null) {
+            pacingFeedback = _pacing.evaluate(repDuration, now);
+          }
         }
       }
       _state = CrunchState.up;
@@ -128,6 +136,7 @@ class SquatAnalyzer implements PoseAnalyzer {
       neckAngle: null,
       formWarning: formWarning,
       repJustCompleted: repJustCompleted,
+      pacingFeedback: pacingFeedback,
     );
   }
 }
@@ -184,6 +193,7 @@ class HipHingeAnalyzer implements PoseAnalyzer {
   double _peakAngle = 0;
   DateTime _lastFormWarning =
       DateTime.now().subtract(const Duration(seconds: 30));
+  final PacingTracker _pacing = PacingPresets.strength();
 
   @override
   void reset() {
@@ -192,6 +202,7 @@ class HipHingeAnalyzer implements PoseAnalyzer {
     _lastRepTime = null;
     _peakAngle = 0;
     _lastFormWarning = DateTime.now().subtract(const Duration(seconds: 30));
+    _pacing.reset();
   }
 
   @override
@@ -228,6 +239,7 @@ class HipHingeAnalyzer implements PoseAnalyzer {
     final previous = _state;
     var repJustCompleted = false;
     String? formWarning;
+    String? pacingFeedback;
 
     if (angle < downThreshold) {
       _state = CrunchState.down;
@@ -237,14 +249,23 @@ class HipHingeAnalyzer implements PoseAnalyzer {
         final now = DateTime.now();
         final last = _lastRepTime;
         if (last == null || now.difference(last) >= minRepInterval) {
+          final repDuration = last == null ? null : now.difference(last);
           _reps += 1;
           repJustCompleted = true;
           _lastRepTime = now;
+          if (repDuration != null) {
+            pacingFeedback = _pacing.evaluate(repDuration, now);
+          }
           // Partial-ROM check: a clean hip-hinge rep should approach
           // full lockout (≥ 175°). Counting the rep at the lower
           // gate (165°) lets fatigued users still hit their target,
           // but we surface a coaching cue if the lockout is shallow.
-          if (_peakAngle < 175.0 &&
+          // If pacing already fired, defer the form warning so the
+          // queue doesn't get two encouragement/cue lines in the
+          // same frame — pacing is a one-shot per cooldown so the
+          // next rep with bad ROM will still surface the warning.
+          if (pacingFeedback == null &&
+              _peakAngle < 175.0 &&
               now.difference(_lastFormWarning) >= formWarningCooldown) {
             formWarning = 'Kalçanı sonuna kadar yukarı sık!';
             _lastFormWarning = now;
@@ -261,6 +282,7 @@ class HipHingeAnalyzer implements PoseAnalyzer {
       neckAngle: null,
       formWarning: formWarning,
       repJustCompleted: repJustCompleted,
+      pacingFeedback: pacingFeedback,
     );
   }
 }
@@ -288,12 +310,14 @@ class PullUpAnalyzer implements PoseAnalyzer {
   int _reps = 0;
   CrunchState _state = CrunchState.unknown;
   DateTime? _lastRepTime;
+  final PacingTracker _pacing = PacingPresets.strength();
 
   @override
   void reset() {
     _reps = 0;
     _state = CrunchState.unknown;
     _lastRepTime = null;
+    _pacing.reset();
   }
 
   @override
@@ -324,6 +348,7 @@ class PullUpAnalyzer implements PoseAnalyzer {
 
     final previous = _state;
     var repJustCompleted = false;
+    String? pacingFeedback;
 
     if (elbow > downThreshold) {
       _state = CrunchState.down;
@@ -332,9 +357,13 @@ class PullUpAnalyzer implements PoseAnalyzer {
         final now = DateTime.now();
         final last = _lastRepTime;
         if (last == null || now.difference(last) >= minRepInterval) {
+          final repDuration = last == null ? null : now.difference(last);
           _reps += 1;
           repJustCompleted = true;
           _lastRepTime = now;
+          if (repDuration != null) {
+            pacingFeedback = _pacing.evaluate(repDuration, now);
+          }
         }
       }
       _state = CrunchState.up;
@@ -347,6 +376,7 @@ class PullUpAnalyzer implements PoseAnalyzer {
       neckAngle: null,
       formWarning: null,
       repJustCompleted: repJustCompleted,
+      pacingFeedback: pacingFeedback,
     );
   }
 }
