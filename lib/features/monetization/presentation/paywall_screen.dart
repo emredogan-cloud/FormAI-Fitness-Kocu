@@ -439,6 +439,37 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
             right: 12,
             child: _CloseButton(onTap: () => _close(context)),
           ),
+          // Phase 142 · transitional hydration veil.
+          //
+          // Visible while `subscriptionProvider` is in flight (cold-
+          // start RC load, post-auth alias re-fetch) OR while a Pro
+          // self-redirect is scheduled but hasn't yet happened. Both
+          // cases would otherwise expose the paywall's offer cards
+          // briefly during what should be a clean transition — a
+          // free user mid-cold-start sees skeleton cards flicker
+          // into real prices; a freshly-signed-in Pro user sees the
+          // paywall flash for ~500-900ms before the dashboard
+          // navigation completes. The veil masks both without
+          // adding spinner-hell semantics: a single small brand-
+          // purple progress indicator on the paywall's own dark
+          // backdrop reads as "preparing" rather than "stuck".
+          //
+          // The veil is the topmost Stack layer so it covers the
+          // close button — intentional, since tapping close during
+          // hydration would otherwise race the in-flight alias call.
+          // Fade is 320 ms ease-out, matched to the route's 280 ms
+          // CustomTransitionPage so the two animations feel of a
+          // piece.
+          IgnorePointer(
+            ignoring: !(subscription.isLoading || _proRouteScheduled),
+            child: AnimatedOpacity(
+              opacity:
+                  (subscription.isLoading || _proRouteScheduled) ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 320),
+              curve: Curves.easeOutCubic,
+              child: const _PaywallHydrationVeil(),
+            ),
+          ),
         ],
       ),
     );
@@ -1738,6 +1769,37 @@ class _CloseButton extends StatelessWidget {
   }
 }
 
+/// Phase 142 · transitional hydration veil drawn on top of the paywall
+/// content while [subscriptionProvider] is in flight or while a Pro
+/// self-redirect is queued. Renders as a full-screen dark scrim
+/// matching the paywall's hero backdrop, with a single small brand-
+/// purple progress indicator centered. No copy ("Loading…",
+/// "Hazırlanıyor", etc.) — the dark scrim + brand-tint indicator reads
+/// as a deliberate "preparing" beat without sliding into spinner-hell
+/// territory. The parent [AnimatedOpacity] supplies the 320 ms fade.
+class _PaywallHydrationVeil extends StatelessWidget {
+  const _PaywallHydrationVeil();
+
+  static const Color _neon = Color(0xFF8E5BFF);
+
+  @override
+  Widget build(BuildContext context) {
+    return const ColoredBox(
+      color: Color(0xFF050410),
+      child: Center(
+        child: SizedBox(
+          width: 28,
+          height: 28,
+          child: CircularProgressIndicator(
+            strokeWidth: 2.2,
+            valueColor: AlwaysStoppedAnimation<Color>(_neon),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Phase 115 · cinematic backdrop layered behind the dark-mode
 /// paywall content. Reverse-engineered from the reference video's
 /// ~1:11 paywall composition — adapted for FormAI by keeping the
@@ -1771,8 +1833,21 @@ class _PaywallCinematicBackdrop extends StatefulWidget {
 }
 
 class _PaywallCinematicBackdropState extends State<_PaywallCinematicBackdrop>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _drift;
+
+  /// Phase 142 · entrance fade. The cinematic backdrop is the most
+  /// paint-heavy layer on the paywall (5 image widgets + filters +
+  /// per-frame transform updates), so it pays the largest first-
+  /// frame cost during a route transition. Starting at opacity 0
+  /// and fading to 1 over 520 ms lets Flutter skip painting it
+  /// entirely on the first frame (the `Opacity` widget short-
+  /// circuits at exactly 0) — the paywall's hero, plan cards, and
+  /// CTA get the first frame to themselves, then the ambient
+  /// backdrop fades in as a secondary "depth arriving" beat. The
+  /// drift controller still starts immediately so the parallax is
+  /// already in motion the moment the backdrop becomes visible.
+  late final AnimationController _entranceFade;
 
   @override
   void initState() {
@@ -1781,20 +1856,34 @@ class _PaywallCinematicBackdropState extends State<_PaywallCinematicBackdrop>
       vsync: this,
       duration: const Duration(seconds: 30),
     )..repeat(reverse: true);
+    _entranceFade = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 520),
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _entranceFade.forward();
+    });
   }
 
   @override
   void dispose() {
     _drift.dispose();
+    _entranceFade.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return RepaintBoundary(
-      child: AnimatedBuilder(
-        animation: _drift,
-        builder: (context, _) {
+      child: FadeTransition(
+        opacity: CurvedAnimation(
+          parent: _entranceFade,
+          curve: Curves.easeOutCubic,
+        ),
+        child: AnimatedBuilder(
+          animation: _drift,
+          builder: (context, _) {
           // Smoothed bell so the parallax never reverses harshly at
           // the loop ends; each photo reads its own alignment offset
           // off this `t`, multiplied by a per-photo direction so
@@ -1860,6 +1949,7 @@ class _PaywallCinematicBackdropState extends State<_PaywallCinematicBackdrop>
             ],
           );
         },
+        ),
       ),
     );
   }
