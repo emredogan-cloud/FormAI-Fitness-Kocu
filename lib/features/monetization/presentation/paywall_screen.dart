@@ -45,6 +45,17 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   /// `ref.listen` callback fires once per state delivery).
   bool _authGateShown = false;
 
+  /// Phase 141 · single-fire latch for "Pro detected; navigate to
+  /// dashboard". A Pro user who lands on the paywall — whether
+  /// because the router auto-redirected them from `/auth` after
+  /// login, because a locked-feature tap pushed them here, or
+  /// because they navigated manually — should never be made to
+  /// look at the offer cards. We watch `isProProvider` and self-
+  /// redirect to the dashboard the moment it reports true. The
+  /// latch prevents repeated post-frame schedules if multiple
+  /// listener fires land in the same frame.
+  bool _proRouteScheduled = false;
+
   /// Phase 96 · mirrors `Purchases.isConfigured`. We can't call the
   /// async getter inline from `build()`, so the value is read once on
   /// mount and re-read after each connectivity transition (and after a
@@ -87,6 +98,48 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     // getter is fire-and-forget; the build method handles the not-yet
     // case by keeping the spinner up.
     _refreshSdkReady();
+    // Phase 141 · post-auth refresh safety net.
+    //
+    // When the router auto-redirects /auth → /paywall on auth state
+    // change, AuthScreen unmounts mid-`_submit`. Whichever follow-up
+    // calls happened to be in flight (alias, subscription refresh,
+    // manual navigation) may have died on the WidgetRef the moment
+    // AuthScreen's State was disposed. That left `subscriptionProvider`
+    // holding the pre-auth anonymous entitlement snapshot, so
+    // `isProProvider` stayed false even for an existing-Pro user, and
+    // the self-redirect below couldn't fire.
+    //
+    // Calling alias here is idempotent — short-circuits if RC is
+    // already aliased to the current Supabase user — but for the
+    // post-/auth landing case it forces `Purchases.logIn` against the
+    // freshly signed-in user, which invalidates `subscriptionProvider`
+    // (see `AuthController.aliasRevenueCatWithCurrentUser`), which
+    // triggers a fresh `getCustomerInfo`, which flips `isProProvider`
+    // to true for an active entitlement. The `isProProvider` listener
+    // below then schedules the dashboard navigation on the next frame.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _hydrateSubscriptionForCurrentUser();
+    });
+  }
+
+  /// Phase 141 · ensures RC is aliased to the current Supabase user
+  /// and subscriptionProvider reflects the post-`logIn` entitlement set.
+  /// Idempotent and safe to call repeatedly — the alias helper has its
+  /// own "already aligned" short-circuit.
+  Future<void> _hydrateSubscriptionForCurrentUser() async {
+    if (!mounted) return;
+    try {
+      await ref
+          .read(authControllerProvider)
+          .aliasRevenueCatWithCurrentUser();
+    } catch (e, st) {
+      AppLogger.warning(
+        'paywall mount alias hydration failed; falling back to existing '
+        'subscription state',
+        category: 'monetization',
+        data: {'error': e.toString(), 'stack': st.toString()},
+      );
+    }
   }
 
   /// Phase 96 · refresh the cached `Purchases.isConfigured` value.
@@ -161,6 +214,19 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     if (!wasOnline && online) {
       unawaited(_onConnectivityRestored());
     }
+  }
+
+  /// Phase 141 · listener for [isProProvider] transitions. Fires the
+  /// dashboard navigation the first time Pro becomes true. Latched
+  /// so duplicate signals (e.g. RC re-emitting customerInfo after a
+  /// successful purchase) don't schedule overlapping navigations.
+  void _onProDetected(bool? previous, bool next) {
+    if (!next || _proRouteScheduled) return;
+    _proRouteScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.go('/');
+    });
   }
 
   /// Phase 94 · auth-gate dispatcher. Called from two sites in
@@ -238,6 +304,23 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     // a synchronous getter against the in-memory session row, which
     // every auth operation updates before resolving its future.
     _onAuthStateChanged(null, Supabase.instance.client.auth.currentUser);
+
+    // Phase 141 · self-redirect for Pro users. The router auto-
+    // bounces non-anonymous users from `/auth` → `/paywall` the
+    // moment Supabase emits `signedIn`, which unmounts AuthScreen
+    // before its own `_routePostAuth` can navigate Pro users to
+    // the dashboard. Watching `isProProvider` here closes that
+    // race: regardless of how a Pro user landed on the paywall,
+    // we get them off it on the next frame.
+    ref.listen<bool>(isProProvider, _onProDetected);
+    final currentIsPro = ref.read(isProProvider);
+    if (currentIsPro && !_proRouteScheduled) {
+      _proRouteScheduled = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        context.go('/');
+      });
+    }
 
     // Phase 96 · drive the offline → online reset off the shared
     // connectivity stream. Watching from build() means the listener's
