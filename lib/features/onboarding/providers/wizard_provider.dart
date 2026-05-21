@@ -27,7 +27,6 @@ class WizardState {
   const WizardState({
     this.name,
     this.coachingTone,
-    this.motivationStyle,
     this.hasEquipment,
     this.bodyFeelings = const <String>{},
     this.gender,
@@ -59,21 +58,12 @@ class WizardState {
   /// line and (eventually) by push-notification copy.
   final String? name;
 
-  /// Phase 131 · how the user wants Form to speak to them. Captured
-  /// in the second beat of the chat-format name-capture step, right
-  /// after the name. Three tokens: `cesaretlendirici` (encouraging),
-  /// `direkt` (clear + direct), `sakin` (calm + reminder-style).
-  /// Read by the assessment engine to colour coach copy across the
-  /// rest of the wizard, and (eventually) by push-notification copy.
+  /// Emotional reframe captured in the second beat of the chat-format
+  /// name-capture step, right after the name. Three tokens:
+  /// `dongu` (stuck in the same start-stop loop), `gormek` (can't see
+  /// results), `yalniz` (training feels lonely). Form acknowledges,
+  /// reframes, and offers companionship in the cascade that follows.
   final String? coachingTone;
-
-  /// Phase 132 · what drives the user. Captured in the third beat of
-  /// the chat-format name-capture step, after the coaching tone.
-  /// Three tokens: `sonuc` (outcome-driven), `disiplin` (process-
-  /// driven), `guc` (identity / strength-driven). Read by the
-  /// assessment engine to colour the "why this plan suits you" pitch
-  /// in the dynamic report, and by post-workout congrats copy.
-  final String? motivationStyle;
 
   /// Phase 133 · whether the user has any training equipment at home
   /// or gym access. The first onboarding question that *directly*
@@ -174,7 +164,6 @@ class WizardState {
   WizardState copyWith({
     String? name,
     String? coachingTone,
-    String? motivationStyle,
     bool? hasEquipment,
     Set<String>? bodyFeelings,
     Gender? gender,
@@ -202,7 +191,6 @@ class WizardState {
     return WizardState(
       name: name ?? this.name,
       coachingTone: coachingTone ?? this.coachingTone,
-      motivationStyle: motivationStyle ?? this.motivationStyle,
       hasEquipment: hasEquipment ?? this.hasEquipment,
       bodyFeelings: bodyFeelings ?? this.bodyFeelings,
       gender: gender ?? this.gender,
@@ -233,7 +221,6 @@ class WizardState {
   Map<String, dynamic> toJson() => {
         'name': name,
         'coachingTone': coachingTone,
-        'motivationStyle': motivationStyle,
         'hasEquipment': hasEquipment,
         'bodyFeelings': bodyFeelings.toList(),
         'gender': gender?.name,
@@ -295,7 +282,6 @@ class WizardState {
     return WizardState(
       name: json['name'] as String?,
       coachingTone: json['coachingTone'] as String?,
-      motivationStyle: json['motivationStyle'] as String?,
       hasEquipment: json['hasEquipment'] as bool?,
       bodyFeelings: readStringSet('bodyFeelings'),
       gender: readEnum<Gender>('gender', Gender.values),
@@ -335,8 +321,6 @@ class WizardController extends Notifier<WizardState> {
 
   void setName(String v) => state = state.copyWith(name: v);
   void setCoachingTone(String v) => state = state.copyWith(coachingTone: v);
-  void setMotivationStyle(String v) =>
-      state = state.copyWith(motivationStyle: v);
   void setHasEquipment(bool v) => state = state.copyWith(hasEquipment: v);
   void setBodyFeelings(Set<String> v) =>
       state = state.copyWith(bodyFeelings: v);

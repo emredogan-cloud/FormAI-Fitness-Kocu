@@ -27,6 +27,49 @@ final authStateProvider = StreamProvider<AuthState>((ref) {
   return Supabase.instance.client.auth.onAuthStateChange;
 });
 
+/// Phase 140 · single source of truth for "the paywall's auth gate
+/// has already been cleared in this session".
+///
+/// **Why this exists** — the paywall's [_authGateShown] latch was
+/// local to a single PaywallScreen instance. The email-login path
+/// (`/auth` → `signInWithPassword`/`updateUser` → `pushReplacement`
+/// back to `/paywall`) destroyed the old PaywallScreen and created a
+/// fresh one, so the latch reset to `false` and the gate re-fired —
+/// even though the user had just authenticated. Compounded by a
+/// Riverpod cache race: between Supabase's `updateUser` returning
+/// and its auth-state stream emitting, [currentUserProvider]'s
+/// cached value could still be the pre-auth anonymous user, so the
+/// `hasLinkedEmail` heuristic failed even when the user object was
+/// actually correct in the in-memory Supabase session.
+///
+/// This provider survives `pushReplacement` (Riverpod scope is the
+/// whole app, not the widget tree). It's flipped to `true` from
+/// every auth-success path:
+///
+///   • `AuthController.signInWithGoogle` (modal + standalone)
+///   • `AuthController.signInWithApple` (modal + standalone)
+///   • `AuthScreen._submit` (signIn, anon-upgrade-via-updateUser,
+///     and signUp-with-session branches)
+///
+/// And reset to `false` from `_invalidateUserScopedProviders`
+/// (sign-out + delete-account) so the next anonymous session sees
+/// the gate again.
+///
+/// Read by `PaywallScreen._onAuthStateChanged` as the first
+/// short-circuit: if the flag is true, skip the gate unconditionally,
+/// regardless of what `isAnonymous` / `email` / `newEmail` say.
+class AuthGateClearedNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+  @override
+  set state(bool value) => super.state = value;
+}
+
+final authGateClearedProvider =
+    NotifierProvider<AuthGateClearedNotifier, bool>(
+  AuthGateClearedNotifier.new,
+);
+
 /// Currently signed-in user, or `null` if no session. Rebuilds whenever the
 /// auth state stream emits.
 final currentUserProvider = Provider<User?>((ref) {
@@ -192,6 +235,9 @@ class AuthController {
       // costs ~250-600 ms once per cold start; the user is already
       // in a "signing in" progress state, so the latency is invisible.
       await aliasRevenueCatWithCurrentUser();
+      // Phase 140 · single-source latch — auth complete, paywall
+      // gate stays down for the rest of this session.
+      _ref.read(authGateClearedProvider.notifier).state = true;
       return (outcome: SocialAuthOutcome.success, errorMessage: null);
     } on AuthException catch (e, st) {
       // Phase 88 · Supabase rejected the id token. Most common cause:
@@ -263,6 +309,8 @@ class AuthController {
       );
       // Phase 94 · same RC-aliasing pattern as the Google path.
       await aliasRevenueCatWithCurrentUser();
+      // Phase 140 · single-source latch (see authGateClearedProvider).
+      _ref.read(authGateClearedProvider.notifier).state = true;
       return (outcome: SocialAuthOutcome.success, errorMessage: null);
     } on AuthException catch (e, st) {
       AppLogger.error(
@@ -378,6 +426,10 @@ class AuthController {
     _ref.invalidate(recipesProvider);
     _ref.invalidate(dailyMenuProvider);
     _ref.invalidate(celebratedBadgesProvider);
+    // Phase 140 · re-arm the paywall auth gate so a fresh anonymous
+    // session (e.g. sign-out then continue-as-guest) sees the gate
+    // again before any purchase action.
+    _ref.read(authGateClearedProvider.notifier).state = false;
   }
 
   /// Phase 94 · alias the RevenueCat anonymous app-user-ID to the
