@@ -407,15 +407,25 @@ class BicycleCrunchAnalyzer implements PoseAnalyzer {
 /// Lying flutter kicks. Counts a rep each time the lifted leg switches.
 /// Uses the relative ankle-y vs hip-y delta: a "lifted" leg has its ankle
 /// closer (smaller y in image space) to the hip line than the resting one.
+///
+/// Tier-B.6 · the previous `minDelta = 12.0` was an absolute pixel
+/// threshold. At close camera distance 12 px is a tiny leg motion and
+/// noise triggers reps; at far camera distance 12 px is a huge leg
+/// motion that the user struggles to reach. The threshold is now
+/// expressed as [minDeltaFraction] of the shoulder-to-ankle vertical
+/// distance — a scale that's stable across camera setups.
 class FlutterKickAnalyzer implements PoseAnalyzer {
   FlutterKickAnalyzer({
-    this.minDelta = 12.0,
+    this.minDeltaFraction = 0.04,
     this.minRepInterval = const Duration(milliseconds: 350),
   });
 
-  /// Minimum y-difference between the two ankles (in pixels) before we
-  /// commit to a side. Filters out the stand-still resting frame.
-  final double minDelta;
+  /// Minimum ankle-y separation as a fraction of the user's
+  /// shoulder-to-ankle 2D distance. 0.04 ≈ 4 % of body length
+  /// vertically — empirically the smallest visible leg flutter that
+  /// reads as a deliberate kick rather than a resting frame jitter.
+  final double minDeltaFraction;
+
   final Duration minRepInterval;
 
   int _reps = 0;
@@ -434,6 +444,20 @@ class FlutterKickAnalyzer implements PoseAnalyzer {
     final la = pose.landmarks[PoseLandmarkType.leftAnkle];
     final ra = pose.landmarks[PoseLandmarkType.rightAnkle];
     if (la == null || ra == null) return _empty();
+
+    // Scale reference: shoulder-to-ankle vertical distance. We pick
+    // the higher-likelihood shoulder so a partially-occluded body
+    // (one arm tucked under the head) still calibrates cleanly. The
+    // anchor ankle for the scale is the average of left+right ankle
+    // y-coordinates; that way a moving leg doesn't shift the
+    // reference between frames.
+    final shoulder = _pickHigher(
+        pose, PoseLandmarkType.leftShoulder, PoseLandmarkType.rightShoulder);
+    if (shoulder == null) return _empty();
+    final ankleMidY = (la.y + ra.y) / 2;
+    final scale = (ankleMidY - shoulder.y).abs();
+    if (scale < 1) return _empty();
+    final minDelta = scale * minDeltaFraction;
 
     final delta = la.y - ra.y;
     _Side current = _state;
