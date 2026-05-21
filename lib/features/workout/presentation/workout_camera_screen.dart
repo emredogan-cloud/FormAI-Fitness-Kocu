@@ -774,14 +774,28 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         }
         // Tier-A · the active set just paused (rest started) or never
         // started (prep). Either way the mid-set heartbeat should
-        // stop — the rest coach (commit 3) takes over during rest.
+        // stop — the rest coach takes over during rest.
         if (justStartedRest || justStartedPrep) {
           _coach.endSet();
+        }
+        // Tier-A · drive the rest coach. Engage when rest starts,
+        // disengage when prep starts (rest already ended by then).
+        if (justStartedRest && exercise != null) {
+          _coach.startRest(exercise.restDurationInSeconds);
+        }
+        if (justStartedPrep) {
+          _coach.endRest();
         }
         return;
       }
 
-      // Active workout ground state.
+      // Active workout ground state — we are clearly not in rest or
+      // prep here. Tear down any straggling rest scheduler (e.g. when
+      // the user taps "skipRest" the listener fires with resting=false
+      // immediately, no prep intermediary).
+      if (justFinishedRest) {
+        _coach.endRest();
+      }
       if (exerciseChanged ||
           justFinishedPrep ||
           justFinishedRest ||
@@ -798,6 +812,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       // Tier-A · session completion stops every coaching surface.
       if (sessionJustCompleted) {
         _coach.endSet();
+        _coach.endRest();
       }
     });
 
