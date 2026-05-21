@@ -196,6 +196,11 @@ class WorkoutRepository {
     // doesn't map onto any analyzer cleanly. prone_y_raise / prone_t_raise
     // / scapular_wall_slide are covered by Tier-B.2's ScapularAnalyzer.
     'bird_dog': 30,
+    // Coverage-pass closure (audit §4 D-fix-2): dead_bug is now routed
+    // to SilentHoldAnalyzer instead of FlutterKickAnalyzer. Apply the
+    // timeBased override so the camera screen drives completion via
+    // timer rather than a rep counter the analyzer can't increment.
+    'dead_bug': 30,
     // ── hip-hinge / glute family (Tier B.1 → HipHingeAnalyzer) ────────
     // The following were here in Tier-S but now have a real analyzer:
     //   glute_bridge, hip_thrust, frog_pump, single_leg_glute_bridge,

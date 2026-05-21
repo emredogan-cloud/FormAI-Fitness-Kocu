@@ -52,8 +52,16 @@ PoseAnalyzer analyzerFor(Exercise exercise) {
     case 'bicycle_crunch':
       return BicycleCrunchAnalyzer();
     case 'flutter_kick':
-    case 'dead_bug':
       return FlutterKickAnalyzer();
+    // Coverage-pass closure (audit §4 D-fix-2): `dead_bug` was routed
+    // to FlutterKickAnalyzer in Phase 96 but the geometry doesn't fit
+    // — dead bug is a quasi-static lying limb-extension, not a rapid
+    // ankle alternation. The flutter-style detection misfires on the
+    // slower, controlled motion. Route to SilentHold and apply the
+    // Tier-S timeBased override so the user gets a timer-driven
+    // session with category-aware ambient coaching.
+    case 'dead_bug':
+      return SilentHoldAnalyzer();
     // ---- Chest ----
     case 'push_up':
     case 'incline_push_up':
