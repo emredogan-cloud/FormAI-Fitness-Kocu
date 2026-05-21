@@ -427,44 +427,63 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         }
 
         if (result.repJustCompleted) {
-          // Phase 49 · upgraded from a per-rep light tap to a heavy
-          // impact. A counted rep is the unambiguous "you did the
-          // thing" signal — the user's whole reason for being on this
-          // screen — so it earns the strongest haptic in the app.
-          AppHaptics.heavyImpact();
-          if (!mounted) return;
-          final notifier = ref.read(workoutSessionProvider.notifier);
-          notifier.setCurrentReps(result.reps);
-          final target = ref
+          // Tier-S audit fix · gate ALL rep-derived feedback on the
+          // exercise being repBased. Time-based exercises (plank,
+          // flutter kick, wall sit, side plank, jumping jack…) are
+          // driven by the camera-screen countdown timer; firing
+          // per-rep heavy haptics and milestone speech against them
+          // creates the "30s plank counted as ~10 reps" sensation
+          // (see WORKOUT_INTELLIGENCE_AUDIT.md §4 Issue D). The
+          // analyzer may still emit `repJustCompleted: true` because
+          // some classes — FlutterKickAnalyzer, MountainClimber, etc.
+          // — keep their internal state machines running regardless
+          // of how the exercise is presented; we just decline to
+          // surface that signal as user-visible feedback.
+          final activeExercise = ref
               .read(workoutSessionProvider)
               .value
-              ?.activeExercise
-              ?.targetReps;
-
-          // Milestone + pacing voice coach. Priority: 2-left > halfway >
-          // analyzer pacing. AudioFeedback's own 3s per-phrase dedupe and
-          // the analyzer's 7s pacing throttle prevent overlap.
-          final reps = result.reps;
-          if (target != null && target > 1 && reps == target - 2) {
-            _audio.speak('Son iki tekrar, sık dişini!');
-          } else if (target != null &&
-              target >= 4 &&
-              reps == (target / 2).floor()) {
-            _audio.speak('Yarıladın! Aynen böyle devam et.');
-          } else if (result.pacingFeedback != null) {
-            _audio.speak(result.pacingFeedback!);
-          }
-
-          if (target != null && reps >= target) {
-            // Phase 49 · set/exercise completion uses the milestone
-            // helper (heavy impact). Distinct from the per-rep heavy
-            // tap above only by timing — but in context the user
-            // perceives "rep" vs "set done" because the set-done
-            // thump is followed by the rest overlay's UI swap.
-            AppHaptics.milestone();
-            await notifier.completeCurrentExercise();
+              ?.activeExercise;
+          final isRepBased =
+              activeExercise?.type == ExerciseType.repBased;
+          if (!isRepBased) {
+            // Time-based: skip haptic + rep counter + milestone speech.
+            // Timer drives completion via `_onTimerComplete()`.
+          } else {
+            // Phase 49 · upgraded from a per-rep light tap to a heavy
+            // impact. A counted rep is the unambiguous "you did the
+            // thing" signal — the user's whole reason for being on this
+            // screen — so it earns the strongest haptic in the app.
+            AppHaptics.heavyImpact();
             if (!mounted) return;
-            _analyzer.reset();
+            final notifier = ref.read(workoutSessionProvider.notifier);
+            notifier.setCurrentReps(result.reps);
+            final target = activeExercise?.targetReps;
+
+            // Milestone + pacing voice coach. Priority: 2-left > halfway >
+            // analyzer pacing. AudioFeedback's own 3s per-phrase dedupe and
+            // the analyzer's 7s pacing throttle prevent overlap.
+            final reps = result.reps;
+            if (target != null && target > 1 && reps == target - 2) {
+              _audio.speak('Son iki tekrar, sık dişini!');
+            } else if (target != null &&
+                target >= 4 &&
+                reps == (target / 2).floor()) {
+              _audio.speak('Yarıladın! Aynen böyle devam et.');
+            } else if (result.pacingFeedback != null) {
+              _audio.speak(result.pacingFeedback!);
+            }
+
+            if (target != null && reps >= target) {
+              // Phase 49 · set/exercise completion uses the milestone
+              // helper (heavy impact). Distinct from the per-rep heavy
+              // tap above only by timing — but in context the user
+              // perceives "rep" vs "set done" because the set-done
+              // thump is followed by the rest overlay's UI swap.
+              AppHaptics.milestone();
+              await notifier.completeCurrentExercise();
+              if (!mounted) return;
+              _analyzer.reset();
+            }
           }
         }
       }
