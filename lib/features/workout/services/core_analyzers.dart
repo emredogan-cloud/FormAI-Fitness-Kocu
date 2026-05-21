@@ -178,18 +178,38 @@ class RussianTwistAnalyzer implements PoseAnalyzer {
 }
 
 /// Plank-position alternating knee drives. Each cycle (knee-in then back)
-/// is one rep — implemented by tracking which knee is "active" (closer to
-/// its same-side shoulder than the resting threshold) and counting on
-/// L↔R hand-offs.
+/// is one rep — implemented by tracking which knee is "active" (driven
+/// forward toward the chest) and counting on L↔R hand-offs.
+///
+/// Tier-B.3 · the previous 2D-distance check (knee-to-same-side-shoulder
+/// distance under a torso-length fraction) systematically undercounted
+/// in the typical front-facing camera setup because the knee comes IN
+/// toward the chest along the **z** axis. From the camera's POV the
+/// knee's 2D coordinates barely move; only its z (depth) decreases.
+///
+/// New signal: per-side `knee.z - hip.z`. BlazePose's z component is
+/// approximately on the same scale as x/y, so we normalise the
+/// active-threshold by the 2D torso length and gate at -0.25 × torso
+/// length (knee closer to camera than hip by a quarter of torso
+/// height). A 2D-distance fallback is preserved for the case where
+/// the front camera is replaced with a side-angle setup (z signal
+/// nearly zero, 2D knee-to-shoulder distance is the dominant signal).
 class MountainClimberAnalyzer implements PoseAnalyzer {
   MountainClimberAnalyzer({
+    this.zFraction = 0.25,
     this.activeFraction = 0.55,
     this.minRepInterval = const Duration(milliseconds: 350),
   });
 
-  /// A knee is "active" when its distance to the same-side shoulder drops
-  /// below this fraction of the resting torso length (shoulder→hip).
+  /// A knee is "active in z" when `hip.z - knee.z > torsoLength × zFraction`
+  /// — i.e. the knee is forward of the hip plane by 25 % of torso length.
+  final double zFraction;
+
+  /// 2D fallback: a knee is "active in xy" when its 2D distance to the
+  /// same-side shoulder drops below `torsoLength × activeFraction`.
+  /// Preserved for side-camera setups where z is unreliable.
   final double activeFraction;
+
   final Duration minRepInterval;
 
   int _reps = 0;
@@ -226,8 +246,29 @@ class MountainClimberAnalyzer implements PoseAnalyzer {
     );
     if (torsoLength < 1) return _empty();
 
-    final leftActive = _distance(lk, ls) < torsoLength * activeFraction;
-    final rightActive = _distance(rk, rs) < torsoLength * activeFraction;
+    // Primary signal: knee.z relative to hip.z, normalised by 2D torso
+    // length. Front-camera mountain climbers move the knee toward the
+    // camera (decreasing z), which the previous 2D-distance check
+    // missed.
+    final leftZDelta = lh.z - lk.z; // positive when knee is closer to camera
+    final rightZDelta = rh.z - rk.z;
+    final zThreshold = torsoLength * zFraction;
+    final leftActiveZ = leftZDelta > zThreshold;
+    final rightActiveZ = rightZDelta > zThreshold;
+
+    // Fallback signal: 2D distance from knee to same-side shoulder.
+    // Catches the side-camera setup where the depth axis is parallel
+    // to the camera plane and z barely changes.
+    final leftActive2D =
+        _distance(lk, ls) < torsoLength * activeFraction;
+    final rightActive2D =
+        _distance(rk, rs) < torsoLength * activeFraction;
+
+    // A knee is "active" if EITHER signal fires. Combining them is the
+    // safest way to handle mixed camera orientations without a runtime
+    // calibration step.
+    final leftActive = leftActiveZ || leftActive2D;
+    final rightActive = rightActiveZ || rightActive2D;
 
     _Side current = _state;
     if (leftActive && !rightActive) current = _Side.left;
