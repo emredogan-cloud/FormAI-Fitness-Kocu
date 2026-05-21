@@ -14,26 +14,46 @@ import 'pose_analyzer.dart';
 /// reduce to elbow flexion — same maths as a pull-up, but tuned tighter
 /// so quick partial-range curls don't squeak through. UP < 50°, DOWN >
 /// 150°; a rep is the small-angle commit after a large-angle commit.
+///
+/// Tier-S form check · the analyzer also tracks whether the elbow drifts
+/// away from the rib cage — the most common biceps-curl cheat
+/// ("swinging"). If `|elbow.x - hip.x|` exceeds [maxElbowDriftRatio] of
+/// shoulder width while the arm is in the UP commit, warn
+/// "Dirseğini gövdene yapışık tut!".
 class BicepsCurlAnalyzer implements PoseAnalyzer {
   BicepsCurlAnalyzer({
     this.downThreshold = 150.0,
     this.upThreshold = 50.0,
     this.minRepInterval = const Duration(milliseconds: 900),
+    this.maxElbowDriftRatio = 0.85,
+    this.formWarningCooldown = const Duration(seconds: 12),
   });
 
   final double downThreshold;
   final double upThreshold;
   final Duration minRepInterval;
 
+  /// Elbow drift `(|elbow.x - hip.x|) / shoulderWidth` above this is
+  /// "elbow leaving the rib cage". 0.85 leaves enough headroom for
+  /// users with naturally wider stances; tighter values produce false
+  /// warnings on hammer curls performed off the hip.
+  final double maxElbowDriftRatio;
+
+  /// Minimum gap between two spoken elbow-drift warnings.
+  final Duration formWarningCooldown;
+
   int _reps = 0;
   CrunchState _state = CrunchState.unknown;
   DateTime? _lastRepTime;
+  DateTime _lastFormWarning =
+      DateTime.now().subtract(const Duration(seconds: 30));
 
   @override
   void reset() {
     _reps = 0;
     _state = CrunchState.unknown;
     _lastRepTime = null;
+    _lastFormWarning = DateTime.now().subtract(const Duration(seconds: 30));
   }
 
   @override
@@ -80,12 +100,41 @@ class BicepsCurlAnalyzer implements PoseAnalyzer {
       _state = CrunchState.up;
     }
 
+    // Tier-S form check: elbow drift away from the torso during the UP
+    // phase. We measure the dominant side (the one we already used for
+    // the rep angle) and compare elbow.x to hip.x on the same side.
+    // Normalised by shoulder-to-shoulder width so the check holds at
+    // any camera distance.
+    String? formWarning;
+    if (_state == CrunchState.up) {
+      final dominantIsLeft = left != null;
+      final elbowLm = pose.landmarks[
+          dominantIsLeft ? PoseLandmarkType.leftElbow : PoseLandmarkType.rightElbow];
+      final hipLm = pose.landmarks[
+          dominantIsLeft ? PoseLandmarkType.leftHip : PoseLandmarkType.rightHip];
+      final ls = pose.landmarks[PoseLandmarkType.leftShoulder];
+      final rs = pose.landmarks[PoseLandmarkType.rightShoulder];
+      if (elbowLm != null && hipLm != null && ls != null && rs != null) {
+        final shoulderWidth = (ls.x - rs.x).abs();
+        if (shoulderWidth > 1) {
+          final drift = (elbowLm.x - hipLm.x).abs() / shoulderWidth;
+          if (drift > maxElbowDriftRatio) {
+            final now = DateTime.now();
+            if (now.difference(_lastFormWarning) >= formWarningCooldown) {
+              formWarning = 'Dirseğini gövdene yapışık tut!';
+              _lastFormWarning = now;
+            }
+          }
+        }
+      }
+    }
+
     return CrunchResult(
       reps: _reps,
       state: _state,
       torsoAngle: elbow,
       neckAngle: null,
-      formWarning: null,
+      formWarning: formWarning,
       repJustCompleted: repJustCompleted,
     );
   }
@@ -205,26 +254,45 @@ class ShoulderPressAnalyzer implements PoseAnalyzer {
 /// at the shoulder vertex, then returns to the side (< 25°). Works for
 /// both lateral raises (arms out to the side) and front raises (arms
 /// forward) because the angle math at the shoulder vertex is identical.
+///
+/// Tier-S form check · the analyzer also catches the over-extension
+/// fault — pulling the wrist visibly above the shoulder line shifts
+/// load from the deltoids onto the upper trapezius. If the wrist rises
+/// above the shoulder by more than [maxArmAboveShoulderRatio] of
+/// shoulder width while the arm is in the UP commit, warn
+/// "Kolları omuz hizasına kadar kaldır."
 class LateralRaiseAnalyzer implements PoseAnalyzer {
   LateralRaiseAnalyzer({
     this.upThreshold = 75.0,
     this.downThreshold = 25.0,
     this.minRepInterval = const Duration(milliseconds: 900),
+    this.maxArmAboveShoulderRatio = 0.35,
+    this.formWarningCooldown = const Duration(seconds: 12),
   });
 
   final double upThreshold;
   final double downThreshold;
   final Duration minRepInterval;
 
+  /// `(shoulder.y - wrist.y) / shoulderWidth` above this means the
+  /// wrist is sitting clearly above the shoulder line — over-extension.
+  final double maxArmAboveShoulderRatio;
+
+  /// Minimum gap between two spoken arm-too-high warnings.
+  final Duration formWarningCooldown;
+
   int _reps = 0;
   CrunchState _state = CrunchState.unknown;
   DateTime? _lastRepTime;
+  DateTime _lastFormWarning =
+      DateTime.now().subtract(const Duration(seconds: 30));
 
   @override
   void reset() {
     _reps = 0;
     _state = CrunchState.unknown;
     _lastRepTime = null;
+    _lastFormWarning = DateTime.now().subtract(const Duration(seconds: 30));
   }
 
   @override
@@ -271,12 +339,39 @@ class LateralRaiseAnalyzer implements PoseAnalyzer {
       _state = CrunchState.down;
     }
 
+    // Tier-S form check: wrist-above-shoulder during the UP phase.
+    // Same dominant-side pattern as the rep angle.
+    String? formWarning;
+    if (_state == CrunchState.up) {
+      final dominantIsLeft = left != null;
+      final wrist = pose.landmarks[
+          dominantIsLeft ? PoseLandmarkType.leftWrist : PoseLandmarkType.rightWrist];
+      final shoulder = pose.landmarks[dominantIsLeft
+          ? PoseLandmarkType.leftShoulder
+          : PoseLandmarkType.rightShoulder];
+      final ls = pose.landmarks[PoseLandmarkType.leftShoulder];
+      final rs = pose.landmarks[PoseLandmarkType.rightShoulder];
+      if (wrist != null && shoulder != null && ls != null && rs != null) {
+        final shoulderWidth = (ls.x - rs.x).abs();
+        if (shoulderWidth > 1) {
+          final aboveBy = shoulder.y - wrist.y; // positive when wrist is higher
+          if (aboveBy / shoulderWidth > maxArmAboveShoulderRatio) {
+            final now = DateTime.now();
+            if (now.difference(_lastFormWarning) >= formWarningCooldown) {
+              formWarning = 'Kolları omuz hizasında tut, daha yukarı kaldırma.';
+              _lastFormWarning = now;
+            }
+          }
+        }
+      }
+    }
+
     return CrunchResult(
       reps: _reps,
       state: _state,
       torsoAngle: angle,
       neckAngle: null,
-      formWarning: null,
+      formWarning: formWarning,
       repJustCompleted: repJustCompleted,
     );
   }
