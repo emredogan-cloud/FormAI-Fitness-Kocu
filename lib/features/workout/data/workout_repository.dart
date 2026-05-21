@@ -27,6 +27,12 @@ class WorkoutRepository {
 
   static const String _completedKey = 'sixpack.completed_days';
   static const String _pendingSyncKey = 'sixpack.pending_sync_days';
+  // Bumped v8 → v9 in Tier-B: HipHingeAnalyzer + ScapularAnalyzer ship,
+  // so the corresponding stuck slugs (glute_bridge, hip_thrust, single
+  // leg variants, frog pump, kettlebell swing; prone Y/T, scapular wall
+  // slide) are no longer in [_stuckRepBasedDurationSeconds] and hydrate
+  // as repBased again. Existing v8 caches still hold the timeBased
+  // versions, so the bump forces a one-shot regen on next launch.
   // Bumped v7 → v8 in Tier-S audit follow-up: ~14 repBased Phase-96 slugs
   // routed to SilentHoldAnalyzer (no rep counting AND no timer), leaving
   // the user permanently stuck on `x 0 / N`. They are now hydrated as
@@ -41,14 +47,14 @@ class WorkoutRepository {
   // exercises (barbell, cable, fixed machines) remain in any user's plan.
   // Bumped v5 → v6 in phase 134: `Exercise` gained `isPremium` and
   // `isNew` flags. Bumped v4 → v5 in phase 86: goal normaliser default.
-  static const String _planKey = 'sixpack.user_custom_plan_v8';
+  static const String _planKey = 'sixpack.user_custom_plan_v9';
 
   /// Companion key holding a `goal:level:hasEquipment` fingerprint of the
   /// inputs that produced the cached plan. Read at decode time; if the
   /// current onboarding inputs no longer match, the cached plan is
   /// treated as stale and regenerated.
   static const String _planFingerprintKey =
-      'sixpack.user_custom_plan_fingerprint_v8';
+      'sixpack.user_custom_plan_fingerprint_v9';
   static const String _progressTable = 'user_progress';
   static const String _exercisesTable = 'exercises';
 
@@ -185,21 +191,20 @@ class WorkoutRepository {
   ///   • hip-hinge / glute bridge family: 40 s
   ///   • dynamic conditioning (kettlebell, clean, walk): 30–35 s
   static const Map<String, int> _stuckRepBasedDurationSeconds = {
-    // ── postural / scapular activation ────────────────────────────────
+    // ── postural / scapular activation (still timed — no analyzer fit) ─
+    // bird_dog stays timed: single-side balance + extension geometry
+    // doesn't map onto any analyzer cleanly.
     'bird_dog': 30,
-    'prone_y_raise': 30,
-    'prone_t_raise': 30,
-    'scapular_wall_slide': 30,
-    // ── hip-hinge / glute family ──────────────────────────────────────
-    'glute_bridge': 40,
-    'hip_thrust': 40,
-    'frog_pump': 35,
-    'single_leg_glute_bridge': 40,
-    'single_leg_rdl': 35,
-    // ── dynamic / locomotor conditioning ──────────────────────────────
+    // Tier-B.2: prone_y_raise, prone_t_raise, scapular_wall_slide are
+    // now covered by ScapularAnalyzer — removed from this map and
+    // routed in analyzer_factory.dart.
+    // ── hip-hinge / glute family (Tier B.1 → HipHingeAnalyzer) ────────
+    // The following were here in Tier-S but now have a real analyzer:
+    //   glute_bridge, hip_thrust, frog_pump, single_leg_glute_bridge,
+    //   single_leg_rdl, kettlebell_swing → see analyzer_factory.dart.
+    // ── dynamic / locomotor conditioning (still timed) ────────────────
     'pike_walk': 30,
     'wall_walk': 35,
-    'kettlebell_swing': 30,
     'dumbbell_clean': 30,
     // ── mobility flow ─────────────────────────────────────────────────
     'cat_cow': 30,
