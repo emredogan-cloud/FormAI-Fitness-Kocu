@@ -82,18 +82,32 @@ class LegRaiseAnalyzer implements PoseAnalyzer {
   }
 }
 
-/// Detects torso rotation by tracking the horizontal displacement of the
-/// shoulder midpoint relative to the hip midpoint. A "rep" is a complete
-/// left↔right swing. Works for the seated front-facing-camera setup —
-/// a side-camera deployment would benefit from explicit z-axis input.
+/// Detects torso rotation by tracking the displacement of the
+/// shoulder midpoint relative to the hip midpoint. A "rep" is a
+/// complete left↔right swing.
+///
+/// Tier-B.10 · the previous implementation only read the x-offset,
+/// which assumes the user faces the camera. For the natural side-
+/// camera Russian twist setup (camera placed perpendicular to the
+/// user's sitting plane), the rotation happens along z — the user's
+/// torso swings TOWARD and AWAY from the camera — and the x-offset
+/// barely moves.
+///
+/// The fix: compute BOTH x and z offsets per frame and use the
+/// dominant axis (whichever has the larger absolute displacement
+/// over the rep cycle). The dominant axis is re-elected on every
+/// frame, so a user changing camera setup mid-set (rare but real)
+/// is handled transparently.
 class RussianTwistAnalyzer implements PoseAnalyzer {
   RussianTwistAnalyzer({
     this.twistFraction = 0.18,
     this.minRepInterval = const Duration(milliseconds: 600),
   });
 
-  /// How far (as a fraction of shoulder width) the shoulder-mid must drift
-  /// from the hip-mid before we register a side commit.
+  /// How far (as a fraction of shoulder width) the shoulder-mid must
+  /// drift from the hip-mid along the dominant axis before we
+  /// register a side commit. Applied to whichever of x or z is
+  /// dominant on the current frame.
   final double twistFraction;
   final Duration minRepInterval;
 
@@ -121,9 +135,25 @@ class RussianTwistAnalyzer implements PoseAnalyzer {
     final shoulderWidth = (ls.x - rs.x).abs();
     if (shoulderWidth < 1) return _empty();
 
+    // Front-camera (or close-to-front) signal: x-offset between
+    // shoulder midpoint and hip midpoint.
     final shoulderMidX = (ls.x + rs.x) / 2;
     final hipMidX = (lh.x + rh.x) / 2;
-    final offset = shoulderMidX - hipMidX;
+    final xOffset = shoulderMidX - hipMidX;
+
+    // Side-camera signal: z-offset on the same axis. BlazePose's z
+    // is on roughly the same scale as x/y, so the same shoulder-
+    // width normalisation works for both axes.
+    final shoulderMidZ = (ls.z + rs.z) / 2;
+    final hipMidZ = (lh.z + rh.z) / 2;
+    final zOffset = shoulderMidZ - hipMidZ;
+
+    // Pick the dominant axis on this frame. Whichever signal is
+    // currently larger in magnitude is the one driving the rotation
+    // — usually camera-orientation-stable across a set, but elected
+    // per-frame to handle setup shifts.
+    final useZ = zOffset.abs() > xOffset.abs();
+    final offset = useZ ? zOffset : xOffset;
     final threshold = shoulderWidth * twistFraction;
 
     final previous = _state;
