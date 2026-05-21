@@ -76,6 +76,19 @@ class CoachVoice {
   /// same exact phrase every 30 s.
   int _trackingCueIndex = 0;
 
+  // Camera-calibration state (Tier B.4) ─────────────────────────────
+  /// Frame count remaining in the post-set-start calibration window.
+  /// Counts down from [_calibrationWindowFrames] on every frame
+  /// observed by [onPoseFrame] until 0; while > 0 the analyzer
+  /// accumulates likelihood + shoulder-width samples for the
+  /// final probe verdict.
+  int _calibrationFramesLeft = 0;
+  double _calibrationLikelihoodSum = 0.0;
+  int _calibrationLikelihoodCount = 0;
+  double _calibrationShoulderSum = 0.0;
+  int _calibrationShoulderCount = 0;
+  double _calibrationFrameWidth = 0.0;
+
   /// How often to fire the rotating mid-set coaching line while the
   /// user is actively repping. 18 s is dense enough to feel present
   /// without becoming chatty — the analyzer's own warnings and the
@@ -108,6 +121,24 @@ class CoachVoice {
   /// after one announcement; nagging at 5 s intervals is harassment.
   static const Duration _trackingCueCooldown = Duration(seconds: 45);
 
+  /// Length of the post-set-start calibration probe, in frames.
+  /// 20 frames at the camera screen's ~15 FPS effective rate ≈ 1.3 s
+  /// — long enough to average out a noisy frame, short enough to
+  /// surface the verdict before the user's first rep.
+  static const int _calibrationWindowFrames = 20;
+
+  /// Minimum mean likelihood (over the tracked subset) during the
+  /// calibration window. Below this, the user is too poorly tracked
+  /// for the analyzers to work; we emit a positioning cue.
+  static const double _calibrationMinLikelihood = 0.55;
+
+  /// Minimum mean shoulder span as a fraction of the input frame's
+  /// width. Below this the user is too far from the camera (or too
+  /// off-center to see both shoulders cleanly) — emit a "closer"
+  /// cue. 0.10 = shoulder span less than 10 % of frame width ≈ user
+  /// is comfortably more than 3 m away from a typical phone camera.
+  static const double _calibrationMinShoulderRatio = 0.10;
+
   // Timed-exercise pacing state ──────────────────────────────────────
   /// Total duration of the active timed exercise's set, captured on
   /// `onTimedExerciseStart`. Drives the halfway / 10s / 5s gates.
@@ -137,6 +168,16 @@ class CoachVoice {
     } else {
       _timedInitialSeconds = null;
     }
+    // Tier-B.4 · launch the calibration probe. Resets the running
+    // sums and counts; the next 20 frames feed [onPoseFrame] which
+    // accumulates likelihood + shoulder-span samples and emits a
+    // verdict when the window closes.
+    _calibrationFramesLeft = _calibrationWindowFrames;
+    _calibrationLikelihoodSum = 0;
+    _calibrationLikelihoodCount = 0;
+    _calibrationShoulderSum = 0;
+    _calibrationShoulderCount = 0;
+    _calibrationFrameWidth = 0;
     _scheduleMidSetTimer();
   }
 
@@ -151,35 +192,51 @@ class CoachVoice {
   }
 
   /// Called for every pose frame the analyzer processes. Pure
-  /// observation — no rep/set side-effects. Used to detect sustained
-  /// low-confidence tracking and emit a single Turkish positioning
-  /// cue with a strict 45 s cooldown.
+  /// observation — no rep/set side-effects. Drives two coaching
+  /// surfaces:
+  ///   1. Tier-A.6 sustained-low-confidence tracking cue
+  ///      (45 s wall-clock cooldown).
+  ///   2. Tier-B.4 post-set-start calibration probe — the first
+  ///      [_calibrationWindowFrames] frames after [startSet]
+  ///      accumulate likelihood + shoulder-span samples; when the
+  ///      window closes we emit one positioning cue if the
+  ///      averages fall below the thresholds.
   ///
-  /// [pose] may be null if pose detection returned no result for this
-  /// frame; that counts as a low-confidence frame.
-  void onPoseFrame(Pose? pose) {
+  /// [pose] may be null if pose detection returned no result for
+  /// this frame; that counts as a low-confidence frame for tracking
+  /// and a missing-shoulder sample for calibration.
+  ///
+  /// [frameWidth] is the input image's pixel width — used by the
+  /// calibration probe to express shoulder span as a ratio of frame
+  /// width. Pass 0 when unknown; the calibration probe will skip
+  /// the shoulder-ratio check on those frames but still accumulate
+  /// likelihood.
+  void onPoseFrame(Pose? pose, {double frameWidth = 0}) {
+    // Subset of landmarks that matter for rep counting across all
+    // analyzers — shoulders/hips/knees/ankles/wrists/elbows. Tracking
+    // the full 33-point ML Kit set would dilute the signal with
+    // face/foot points that the analyzers don't read anyway.
+    const tracked = <PoseLandmarkType>[
+      PoseLandmarkType.leftShoulder,
+      PoseLandmarkType.rightShoulder,
+      PoseLandmarkType.leftHip,
+      PoseLandmarkType.rightHip,
+      PoseLandmarkType.leftKnee,
+      PoseLandmarkType.rightKnee,
+      PoseLandmarkType.leftAnkle,
+      PoseLandmarkType.rightAnkle,
+      PoseLandmarkType.leftWrist,
+      PoseLandmarkType.rightWrist,
+      PoseLandmarkType.leftElbow,
+      PoseLandmarkType.rightElbow,
+    ];
+
     final double meanLikelihood;
+    final double? shoulderSpan;
     if (pose == null || pose.landmarks.isEmpty) {
       meanLikelihood = 0.0;
+      shoulderSpan = null;
     } else {
-      // Subset of landmarks that matter for rep counting across all
-      // analyzers — shoulders/hips/knees/ankles/wrists/elbows. Tracking
-      // the full 33-point ML Kit set would dilute the signal with
-      // face/foot points that the analyzers don't read anyway.
-      const tracked = <PoseLandmarkType>[
-        PoseLandmarkType.leftShoulder,
-        PoseLandmarkType.rightShoulder,
-        PoseLandmarkType.leftHip,
-        PoseLandmarkType.rightHip,
-        PoseLandmarkType.leftKnee,
-        PoseLandmarkType.rightKnee,
-        PoseLandmarkType.leftAnkle,
-        PoseLandmarkType.rightAnkle,
-        PoseLandmarkType.leftWrist,
-        PoseLandmarkType.rightWrist,
-        PoseLandmarkType.leftElbow,
-        PoseLandmarkType.rightElbow,
-      ];
       var total = 0.0;
       var count = 0;
       for (final t in tracked) {
@@ -189,9 +246,32 @@ class CoachVoice {
           count++;
         }
       }
-      // Missing landmarks count as zero — a partially-out-of-frame body
-      // is exactly the case we want to warn about.
+      // Missing landmarks count as zero — a partially-out-of-frame
+      // body is exactly the case we want to warn about.
       meanLikelihood = count == 0 ? 0.0 : total / tracked.length;
+
+      final ls = pose.landmarks[PoseLandmarkType.leftShoulder];
+      final rs = pose.landmarks[PoseLandmarkType.rightShoulder];
+      shoulderSpan = (ls != null && rs != null)
+          ? (ls.x - rs.x).abs()
+          : null;
+    }
+
+    // Tier-B.4 calibration sampling. Runs only while the probe window
+    // is open. Accumulates raw sums + counts; the verdict fires when
+    // the window closes (counter decrements to zero).
+    if (_calibrationFramesLeft > 0) {
+      _calibrationLikelihoodSum += meanLikelihood;
+      _calibrationLikelihoodCount += 1;
+      if (shoulderSpan != null && frameWidth > 0) {
+        _calibrationShoulderSum += shoulderSpan / frameWidth;
+        _calibrationShoulderCount += 1;
+        _calibrationFrameWidth = frameWidth;
+      }
+      _calibrationFramesLeft -= 1;
+      if (_calibrationFramesLeft == 0) {
+        _emitCalibrationVerdict();
+      }
     }
 
     if (meanLikelihood < _lowConfidenceThreshold) {
@@ -219,6 +299,45 @@ class CoachVoice {
       }
     } else {
       _lowConfidenceStreak = 0;
+    }
+  }
+
+  /// Fires at the end of the calibration window with the verdict.
+  /// Emits at most ONE cue — picks the most relevant message based
+  /// on which threshold failed first; nothing if both pass.
+  void _emitCalibrationVerdict() {
+    if (_calibrationLikelihoodCount == 0) return;
+    final meanLikelihood =
+        _calibrationLikelihoodSum / _calibrationLikelihoodCount;
+    final meanShoulderRatio = _calibrationShoulderCount == 0
+        ? null
+        : _calibrationShoulderSum / _calibrationShoulderCount;
+
+    // Priority: confidence verdict first — if the analyzer can't see
+    // the body, no amount of camera-distance adjustment will help.
+    if (meanLikelihood < _calibrationMinLikelihood) {
+      _audio.speak(
+        'Pozisyonunu ayarla, tüm vücudun görünmeli.',
+        priority: SpeechPriority.cue,
+        cooldown: const Duration(seconds: 25),
+      );
+      // Mark the tracking cue stamp so we don't fire another
+      // tracking-guidance cue 2 seconds later.
+      _lastTrackingCue = DateTime.now();
+      return;
+    }
+
+    // Shoulder ratio: the user is in frame and confident, but very far
+    // away. Tighter for close-up tracking.
+    if (meanShoulderRatio != null &&
+        meanShoulderRatio < _calibrationMinShoulderRatio &&
+        _calibrationFrameWidth > 0) {
+      _audio.speak(
+        'Kameraya biraz daha yaklaş, vücudun daha net görünsün.',
+        priority: SpeechPriority.cue,
+        cooldown: const Duration(seconds: 25),
+      );
+      _lastTrackingCue = DateTime.now();
     }
   }
 

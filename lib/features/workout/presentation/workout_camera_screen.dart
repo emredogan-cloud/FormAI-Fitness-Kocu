@@ -406,12 +406,16 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       // any of those gaps and `ref.read` would throw.
       if (!mounted) return;
 
-      // Tier-A · feed every frame's pose (or null) into the coach so
-      // it can detect sustained low-confidence tracking and emit a
-      // single Turkish positioning cue. Strict cooldown is enforced
-      // inside CoachVoice; this is a cheap notify, no work happens
-      // unless the threshold is crossed.
-      _coach.onPoseFrame(poses.isNotEmpty ? poses.first : null);
+      // Tier-A.6 + Tier-B.4 · feed every frame's pose (or null) into
+      // the coach. Drives both the sustained-low-confidence tracking
+      // cue (Tier A) and the post-set-start calibration probe
+      // (Tier B). `image.width` is the input frame's pixel width;
+      // the calibration probe uses it to express shoulder span as a
+      // ratio of frame width.
+      _coach.onPoseFrame(
+        poses.isNotEmpty ? poses.first : null,
+        frameWidth: image.width.toDouble(),
+      );
 
       CrunchResult? result;
       if (poses.isNotEmpty) {
