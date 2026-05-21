@@ -193,11 +193,9 @@ class WorkoutRepository {
   static const Map<String, int> _stuckRepBasedDurationSeconds = {
     // ── postural / scapular activation (still timed — no analyzer fit) ─
     // bird_dog stays timed: single-side balance + extension geometry
-    // doesn't map onto any analyzer cleanly.
+    // doesn't map onto any analyzer cleanly. prone_y_raise / prone_t_raise
+    // / scapular_wall_slide are covered by Tier-B.2's ScapularAnalyzer.
     'bird_dog': 30,
-    // Tier-B.2: prone_y_raise, prone_t_raise, scapular_wall_slide are
-    // now covered by ScapularAnalyzer — removed from this map and
-    // routed in analyzer_factory.dart.
     // ── hip-hinge / glute family (Tier B.1 → HipHingeAnalyzer) ────────
     // The following were here in Tier-S but now have a real analyzer:
     //   glute_bridge, hip_thrust, frog_pump, single_leg_glute_bridge,

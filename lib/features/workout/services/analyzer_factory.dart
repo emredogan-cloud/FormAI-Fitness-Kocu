@@ -129,6 +129,11 @@ PoseAnalyzer analyzerFor(Exercise exercise) {
     case 'front_raise':
     case 'rear_delt_fly':
       return LateralRaiseAnalyzer();
+    // ---- Scapular / postural (Tier B.2) ----
+    case 'prone_y_raise':
+    case 'prone_t_raise':
+    case 'scapular_wall_slide':
+      return ScapularAnalyzer();
     case 'pike_push_up':
     case 'pike_push_up_close':
     case 'handstand_push_up':
