@@ -4,6 +4,7 @@ import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 
 import '../../../core/utils/angle_calculator.dart';
 import 'crunch_analyzer.dart' show CrunchResult, CrunchState;
+import 'pacing_tracker.dart';
 import 'pose_analyzer.dart';
 
 /// Reps counted when the user lifts both legs from horizontal (~180°
@@ -24,12 +25,14 @@ class LegRaiseAnalyzer implements PoseAnalyzer {
   int _reps = 0;
   CrunchState _state = CrunchState.unknown;
   DateTime? _lastRepTime;
+  final PacingTracker _pacing = PacingPresets.strength();
 
   @override
   void reset() {
     _reps = 0;
     _state = CrunchState.unknown;
     _lastRepTime = null;
+    _pacing.reset();
   }
 
   @override
@@ -55,6 +58,7 @@ class LegRaiseAnalyzer implements PoseAnalyzer {
     final hipAngle = AngleCalculator.between(shoulder, hip, ankle);
     final previousState = _state;
     var repJustCompleted = false;
+    String? pacingFeedback;
 
     if (hipAngle > downThreshold) {
       _state = CrunchState.down;
@@ -63,9 +67,13 @@ class LegRaiseAnalyzer implements PoseAnalyzer {
         final now = DateTime.now();
         final last = _lastRepTime;
         if (last == null || now.difference(last) >= minRepInterval) {
+          final repDuration = last == null ? null : now.difference(last);
           _reps += 1;
           repJustCompleted = true;
           _lastRepTime = now;
+          if (repDuration != null) {
+            pacingFeedback = _pacing.evaluate(repDuration, now);
+          }
         }
       }
       _state = CrunchState.up;
@@ -78,6 +86,7 @@ class LegRaiseAnalyzer implements PoseAnalyzer {
       neckAngle: null,
       formWarning: null,
       repJustCompleted: repJustCompleted,
+      pacingFeedback: pacingFeedback,
     );
   }
 }
@@ -114,12 +123,14 @@ class RussianTwistAnalyzer implements PoseAnalyzer {
   int _reps = 0;
   _Side _state = _Side.unknown;
   DateTime? _lastRepTime;
+  final PacingTracker _pacing = PacingPresets.compound();
 
   @override
   void reset() {
     _reps = 0;
     _state = _Side.unknown;
     _lastRepTime = null;
+    _pacing.reset();
   }
 
   @override
@@ -165,15 +176,20 @@ class RussianTwistAnalyzer implements PoseAnalyzer {
     }
 
     var repJustCompleted = false;
+    String? pacingFeedback;
     if (current != previous &&
         previous != _Side.unknown &&
         current != _Side.unknown) {
       final now = DateTime.now();
       final last = _lastRepTime;
       if (last == null || now.difference(last) >= minRepInterval) {
+        final repDuration = last == null ? null : now.difference(last);
         _reps += 1;
         repJustCompleted = true;
         _lastRepTime = now;
+        if (repDuration != null) {
+          pacingFeedback = _pacing.evaluate(repDuration, now);
+        }
       }
     }
     _state = current;
@@ -192,6 +208,7 @@ class RussianTwistAnalyzer implements PoseAnalyzer {
       neckAngle: null,
       formWarning: null,
       repJustCompleted: repJustCompleted,
+      pacingFeedback: pacingFeedback,
     );
   }
 
@@ -245,12 +262,14 @@ class MountainClimberAnalyzer implements PoseAnalyzer {
   int _reps = 0;
   _Side _state = _Side.unknown;
   DateTime? _lastRepTime;
+  final PacingTracker _pacing = PacingPresets.cardio();
 
   @override
   void reset() {
     _reps = 0;
     _state = _Side.unknown;
     _lastRepTime = null;
+    _pacing.reset();
   }
 
   @override
@@ -305,15 +324,20 @@ class MountainClimberAnalyzer implements PoseAnalyzer {
     if (rightActive && !leftActive) current = _Side.right;
 
     var repJustCompleted = false;
+    String? pacingFeedback;
     if (current != _state &&
         _state != _Side.unknown &&
         current != _Side.unknown) {
       final now = DateTime.now();
       final last = _lastRepTime;
       if (last == null || now.difference(last) >= minRepInterval) {
+        final repDuration = last == null ? null : now.difference(last);
         _reps += 1;
         repJustCompleted = true;
         _lastRepTime = now;
+        if (repDuration != null) {
+          pacingFeedback = _pacing.evaluate(repDuration, now);
+        }
       }
     }
     _state = current;
@@ -329,6 +353,7 @@ class MountainClimberAnalyzer implements PoseAnalyzer {
       neckAngle: null,
       formWarning: null,
       repJustCompleted: repJustCompleted,
+      pacingFeedback: pacingFeedback,
     );
   }
 
@@ -357,12 +382,14 @@ class BicycleCrunchAnalyzer implements PoseAnalyzer {
   int _reps = 0;
   _Side _state = _Side.unknown;
   DateTime? _lastRepTime;
+  final PacingTracker _pacing = PacingPresets.cardio();
 
   @override
   void reset() {
     _reps = 0;
     _state = _Side.unknown;
     _lastRepTime = null;
+    _pacing.reset();
   }
 
   @override
@@ -397,15 +424,20 @@ class BicycleCrunchAnalyzer implements PoseAnalyzer {
     }
 
     var repJustCompleted = false;
+    String? pacingFeedback;
     if (current != _state &&
         _state != _Side.unknown &&
         current != _Side.unknown) {
       final now = DateTime.now();
       final last = _lastRepTime;
       if (last == null || now.difference(last) >= minRepInterval) {
+        final repDuration = last == null ? null : now.difference(last);
         _reps += 1;
         repJustCompleted = true;
         _lastRepTime = now;
+        if (repDuration != null) {
+          pacingFeedback = _pacing.evaluate(repDuration, now);
+        }
       }
     }
     _state = current;
@@ -421,6 +453,7 @@ class BicycleCrunchAnalyzer implements PoseAnalyzer {
       neckAngle: null,
       formWarning: null,
       repJustCompleted: repJustCompleted,
+      pacingFeedback: pacingFeedback,
     );
   }
 
@@ -461,12 +494,14 @@ class FlutterKickAnalyzer implements PoseAnalyzer {
   int _reps = 0;
   _Side _state = _Side.unknown;
   DateTime? _lastRepTime;
+  final PacingTracker _pacing = PacingPresets.cardio();
 
   @override
   void reset() {
     _reps = 0;
     _state = _Side.unknown;
     _lastRepTime = null;
+    _pacing.reset();
   }
 
   @override
@@ -499,15 +534,20 @@ class FlutterKickAnalyzer implements PoseAnalyzer {
     }
 
     var repJustCompleted = false;
+    String? pacingFeedback;
     if (current != _state &&
         _state != _Side.unknown &&
         current != _Side.unknown) {
       final now = DateTime.now();
       final last = _lastRepTime;
       if (last == null || now.difference(last) >= minRepInterval) {
+        final repDuration = last == null ? null : now.difference(last);
         _reps += 1;
         repJustCompleted = true;
         _lastRepTime = now;
+        if (repDuration != null) {
+          pacingFeedback = _pacing.evaluate(repDuration, now);
+        }
       }
     }
     _state = current;
@@ -523,6 +563,7 @@ class FlutterKickAnalyzer implements PoseAnalyzer {
       neckAngle: null,
       formWarning: null,
       repJustCompleted: repJustCompleted,
+      pacingFeedback: pacingFeedback,
     );
   }
 
