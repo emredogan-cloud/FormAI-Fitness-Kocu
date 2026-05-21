@@ -905,8 +905,13 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
   Widget _buildSession(
       CameraController controller, WorkoutSessionState session) {
     if (session.isResting) {
+      // Tier-B.8 · the per-second countdown lives in
+      // `restCountdownProvider`. The rest overlay watches it
+      // directly so only the rest overlay re-renders per tick — the
+      // rest of `_buildSession` stays put.
+      final countdown = ref.watch(restCountdownProvider);
       return RestOverlay(
-        secondsRemaining: session.restSecondsRemaining,
+        secondsRemaining: countdown,
         upcomingExercise: session.upcomingExercise,
         upcomingSet: session.currentSet,
         totalSets: session.upcomingExercise?.sets ?? 0,
