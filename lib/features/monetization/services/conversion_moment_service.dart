@@ -159,13 +159,6 @@ const Map<LockedFeatureType, _ConversionConfig> _lockedConfigs = {
     ctaLabel: 'Dönüşümünü Tam Aç',
     mood: CoachMood.proud,
   ),
-  LockedFeatureType.regionNewExercise: _ConversionConfig(
-    title: 'Yeni egzersizler, derin şekillendirme.',
-    subtitle: 'Her bölgenin yeni varyasyonları\n'
-        'kaslarını farklı açılardan çalıştırır.',
-    ctaLabel: 'Dönüşümünü Tam Aç',
-    mood: CoachMood.thinking,
-  ),
   LockedFeatureType.futureDay: _ConversionConfig(
     title: 'Yolculuğunun devamı hazır.',
     subtitle: '30 günlük plan boyunca\n'

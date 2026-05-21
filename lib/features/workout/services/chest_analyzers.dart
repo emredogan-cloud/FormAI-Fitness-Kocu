@@ -10,11 +10,20 @@ import 'pose_analyzer.dart';
 /// flexion: the shoulder-elbow-wrist angle drops as the user lowers and
 /// extends back up. UP-from-DOWN crossings are reps. Same machine as
 /// [CrunchAnalyzer], but pivoted around the elbow joint.
+///
+/// Tier-S form check · the analyzer also evaluates the shoulder-hip-
+/// ankle line and warns "Kalçanı yukarı tut, vücudunu düz tut!" when
+/// the angle drops below [minBodyLineAngle] — i.e. hips are sagging
+/// (the most common push-up form fault). Throttled internally so a
+/// fatigued user with chronic sag only hears the cue every
+/// [formWarningCooldown].
 class PushUpAnalyzer implements PoseAnalyzer {
   PushUpAnalyzer({
     this.upThreshold = 160.0,
     this.downThreshold = 95.0,
     this.minRepInterval = const Duration(milliseconds: 900),
+    this.minBodyLineAngle = 155.0,
+    this.formWarningCooldown = const Duration(seconds: 10),
   });
 
   /// Elbow angle threshold above which we consider the arm "extended".
@@ -24,15 +33,27 @@ class PushUpAnalyzer implements PoseAnalyzer {
   final double downThreshold;
   final Duration minRepInterval;
 
+  /// Shoulder-hip-ankle interior angle below this is "hips sagging".
+  /// In a clean push-up the spine is nearly straight (≈ 180°); 155°
+  /// corresponds to a ~25° break at the hip — visible sag but not
+  /// catastrophic, so we warn before the user injures themselves.
+  final double minBodyLineAngle;
+
+  /// Minimum gap between two spoken hip-sag warnings.
+  final Duration formWarningCooldown;
+
   int _reps = 0;
   CrunchState _state = CrunchState.unknown;
   DateTime? _lastRepTime;
+  DateTime _lastFormWarning =
+      DateTime.now().subtract(const Duration(seconds: 30));
 
   @override
   void reset() {
     _reps = 0;
     _state = CrunchState.unknown;
     _lastRepTime = null;
+    _lastFormWarning = DateTime.now().subtract(const Duration(seconds: 30));
   }
 
   @override
@@ -81,12 +102,47 @@ class PushUpAnalyzer implements PoseAnalyzer {
       _state = CrunchState.up;
     }
 
+    // Tier-S form check: hip sag detection. Reads the better-tracked
+    // shoulder/hip/ankle on either side. Three-landmark angle: a
+    // straight body holds ≈ 180°; sagging hips push the apex down so
+    // the interior angle at hip shrinks.
+    String? formWarning;
+    final shoulder = _pickHigher(
+        pose, PoseLandmarkType.leftShoulder, PoseLandmarkType.rightShoulder);
+    final hip = _pickHigher(
+        pose, PoseLandmarkType.leftHip, PoseLandmarkType.rightHip);
+    final ankle = _pickHigher(
+        pose, PoseLandmarkType.leftAnkle, PoseLandmarkType.rightAnkle);
+    if (shoulder != null && hip != null && ankle != null) {
+      // All three must be reasonably reliable — the ankle is the most
+      // commonly noisy of the trio, so guard explicitly. The 0.35
+      // floor is slightly looser than the 0.4 the rep-angle uses
+      // because a marginal ankle is still informative for the line
+      // check.
+      final minLikelihood = [
+        shoulder.likelihood,
+        hip.likelihood,
+        ankle.likelihood
+      ].reduce((a, b) => a < b ? a : b);
+      if (minLikelihood >= 0.35) {
+        final lineAngle =
+            AngleCalculator.between(shoulder, hip, ankle);
+        if (lineAngle < minBodyLineAngle) {
+          final now = DateTime.now();
+          if (now.difference(_lastFormWarning) >= formWarningCooldown) {
+            formWarning = 'Kalçanı yukarı tut, vücudunu düz tut!';
+            _lastFormWarning = now;
+          }
+        }
+      }
+    }
+
     return CrunchResult(
       reps: _reps,
       state: _state,
       torsoAngle: elbowAngle,
       neckAngle: null,
-      formWarning: null,
+      formWarning: formWarning,
       repJustCompleted: repJustCompleted,
     );
   }
@@ -211,4 +267,19 @@ double _distance(PoseLandmark a, PoseLandmark b) {
   final dx = a.x - b.x;
   final dy = a.y - b.y;
   return math.sqrt(dx * dx + dy * dy);
+}
+
+/// Returns the higher-likelihood of the two paired landmarks, or null
+/// if both are missing. File-private; mirrors the helper in
+/// `back_legs_analyzers.dart` and `core_analyzers.dart`.
+PoseLandmark? _pickHigher(
+  Pose pose,
+  PoseLandmarkType left,
+  PoseLandmarkType right,
+) {
+  final l = pose.landmarks[left];
+  final r = pose.landmarks[right];
+  if (l == null) return r;
+  if (r == null) return l;
+  return l.likelihood >= r.likelihood ? l : r;
 }

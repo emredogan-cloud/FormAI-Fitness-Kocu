@@ -8,7 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
-import 'package:supabase_flutter/supabase_flutter.dart' show User;
+import 'package:supabase_flutter/supabase_flutter.dart' show Supabase, User;
 
 import '../../../core/services/analytics_service.dart';
 import '../../../core/services/connectivity_service.dart';
@@ -166,11 +166,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   /// Phase 94 · auth-gate dispatcher. Called from two sites in
   /// `build()`: (1) `ref.listen` on every real transition of
   /// [currentUserProvider]; (2) a synchronous first-pass call with
-  /// `ref.read`'s current value, synthesising the
-  /// `fireImmediately: true` semantics that Riverpod 3.x dropped
-  /// from `ref.listen`. The [_authGateShown] latch ensures the gate
-  /// route is pushed at most once per paywall mount even though the
-  /// handler is invoked many times.
+  /// the live Supabase currentUser (NOT the Riverpod-cached value —
+  /// see Phase 140 note below). The [_authGateShown] latch ensures
+  /// the gate route is pushed at most once per paywall mount even
+  /// though the handler is invoked many times.
   ///
   /// Side-effect navigation is deferred to a post-frame callback
   /// because the synchronous first-pass call happens DURING the
@@ -182,7 +181,24 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   /// check, so only one post-frame callback ever runs.
   void _onAuthStateChanged(User? previous, User? next) {
     if (_authGateShown) return;
-    final needsAuth = next == null || next.isAnonymous;
+    // Phase 140 · session-wide latch. Once any auth flow has
+    // succeeded in this app session, the paywall NEVER re-shows the
+    // gate. This survives `pushReplacement` (the email-login return
+    // path that destroys+remounts PaywallScreen) because the
+    // provider's storage is app-scoped, not widget-scoped. Reset on
+    // sign-out via `_invalidateUserScopedProviders`.
+    if (ref.read(authGateClearedProvider)) {
+      _authGateShown = true;
+      return;
+    }
+    // Phase 139 · email-signup detection (defence in depth). A user
+    // who linked an email via `auth.updateUser` keeps
+    // `isAnonymous == true` until verification, but their purchase
+    // is correctly attributable. `email` is populated when
+    // confirmations are off; `newEmail` while one is pending.
+    final hasLinkedEmail =
+        (next?.email ?? '').isNotEmpty || (next?.newEmail ?? '').isNotEmpty;
+    final needsAuth = next == null || (next.isAnonymous && !hasLinkedEmail);
     if (!needsAuth) return;
     _authGateShown = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -212,7 +228,16 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     // `_authGateShown` latch dedupes between this synthetic initial
     // fire and any real transition that lands in the same frame.
     ref.listen<User?>(currentUserProvider, _onAuthStateChanged);
-    _onAuthStateChanged(null, ref.read(currentUserProvider));
+    // Phase 140 · the synchronous first-pass reads directly from
+    // Supabase's in-memory session instead of `currentUserProvider`.
+    // The provider's cached value can lag behind the live Supabase
+    // state when a fresh PaywallScreen mounts in the same frame as
+    // an `auth.updateUser` resolution — the auth-state stream hasn't
+    // emitted yet, so the cached value is the pre-auth anonymous
+    // user, which would falsely trigger the gate. `currentUser` is
+    // a synchronous getter against the in-memory session row, which
+    // every auth operation updates before resolving its future.
+    _onAuthStateChanged(null, Supabase.instance.client.auth.currentUser);
 
     // Phase 96 · drive the offline → online reset off the shared
     // connectivity stream. Watching from build() means the listener's
@@ -674,7 +699,12 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   /// surfaces as a single warning log that operators can grep for.
   Future<void> _close(BuildContext context) async {
     final user = ref.read(currentUserProvider);
-    if (user != null && !user.isAnonymous) {
+    // Phase 139 · mirror the auth-gate's "linked email" rule so the
+    // belt-and-braces alias call also fires for an anonymous-with-
+    // linked-email user (the email-signup mid-conversion case). The
+    // alias helper has its own internal guard that bails for pure-
+    // anonymous users, so the worst case here is a harmless no-op.
+    if (user != null) {
       // Show a one-frame busy state so a slow alias call doesn't
       // present as a frozen close button. We piggy-back on `_busy`
       // which already blocks the CTA + Restore.

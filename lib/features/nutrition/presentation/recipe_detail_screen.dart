@@ -7,8 +7,8 @@ import '../../../core/services/share_service.dart';
 import '../../../core/theme/theme_extension.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/branded_media_fallback.dart';
-import '../../../core/widgets/cached_image.dart';
 import '../../../core/widgets/top_toast.dart';
+import 'widgets/recipe_image.dart';
 import '../../referral/providers/referral_provider.dart';
 import '../domain/models/daily_meal_slot.dart';
 import '../domain/models/recipe.dart';
@@ -137,7 +137,7 @@ class _HeroImage extends StatelessWidget {
   Widget build(BuildContext context) {
     final url = imageUrl;
     final image = (url != null && url.isNotEmpty)
-        ? CachedImage(
+        ? RecipeImage(
             url: url,
             fit: BoxFit.cover,
             memCacheHeight: 800,
