@@ -485,6 +485,15 @@ class FlutterKickAnalyzer implements PoseAnalyzer {
 /// Plank is time-based — there is no rep to count. The analyzer only
 /// surfaces a posture warning when the body sags (shoulder-hip-ankle
 /// breaks below ~155°). Throttled internally so TTS isn't spammed.
+///
+/// Tier-B.5 · the sag detector now requires
+/// [_violationStreakThreshold] consecutive low-angle frames before
+/// emitting a warning. ML Kit's ankle landmark is the noisiest of the
+/// three vertices on the line check, and a single transient bad frame
+/// (user shifting weight, sock occluding the ankle) was previously
+/// enough to fire "Kalçanı düz tut!" even though the actual posture
+/// was fine. Consecutive-frame gating absorbs the noise and only
+/// fires on real sustained sag.
 class PlankAnalyzer implements PoseAnalyzer {
   PlankAnalyzer({
     this.minStraightAngle = 155.0,
@@ -494,10 +503,19 @@ class PlankAnalyzer implements PoseAnalyzer {
   final double minStraightAngle;
   final Duration warningCooldown;
 
+  /// Consecutive frames below [minStraightAngle] required before we
+  /// commit to "real sag." 5 frames at the camera screen's ~15 FPS
+  /// effective rate = ~0.33 s of sustained violation. Short enough
+  /// that the user gets timely feedback on actual sag; long enough
+  /// to filter single-frame ankle jitter.
+  static const int _violationStreakThreshold = 5;
+
+  int _violationStreak = 0;
   DateTime _lastWarning = DateTime.now().subtract(const Duration(seconds: 10));
 
   @override
   void reset() {
+    _violationStreak = 0;
     _lastWarning = DateTime.now().subtract(const Duration(seconds: 10));
   }
 
@@ -511,6 +529,9 @@ class PlankAnalyzer implements PoseAnalyzer {
         pose, PoseLandmarkType.leftAnkle, PoseLandmarkType.rightAnkle);
 
     if (shoulder == null || hip == null || ankle == null) {
+      // Insufficient tracking — neither warn nor reset the streak
+      // (we don't want a single dropped frame to wash out a real
+      // violation that's been accumulating).
       return const CrunchResult(
         reps: 0,
         state: CrunchState.unknown,
@@ -524,11 +545,22 @@ class PlankAnalyzer implements PoseAnalyzer {
     final lineAngle = AngleCalculator.between(shoulder, hip, ankle);
     String? warning;
     if (lineAngle < minStraightAngle) {
-      final now = DateTime.now();
-      if (now.difference(_lastWarning) >= warningCooldown) {
-        warning = 'Kalçanı düz tut, plank pozisyonunu koru!';
-        _lastWarning = now;
+      _violationStreak += 1;
+      if (_violationStreak >= _violationStreakThreshold) {
+        final now = DateTime.now();
+        if (now.difference(_lastWarning) >= warningCooldown) {
+          warning = 'Kalçanı düz tut, plank pozisyonunu koru!';
+          _lastWarning = now;
+        }
+        // Reset the streak after a warning fires so the next sustained
+        // sag has to re-cross the threshold before re-warning. Combined
+        // with the 8 s cooldown, this prevents alarm-spam.
+        _violationStreak = 0;
       }
+    } else {
+      // Clean frame — wipe the streak so a transient bad frame never
+      // accumulates toward the threshold.
+      _violationStreak = 0;
     }
 
     return CrunchResult(
