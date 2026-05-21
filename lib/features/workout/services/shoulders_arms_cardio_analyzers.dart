@@ -607,10 +607,18 @@ class JumpingJackAnalyzer implements PoseAnalyzer {
 /// STANDING→DOWN edge fires a throttled `contextualCue` so the voice
 /// coach can guide the user as they drop.
 ///
-/// Uses the shoulder Y coordinate self-calibrated against the running
+/// Uses the shoulder Y coordinate self-calibrated against the recent
 /// min/max so the analyzer adapts to whatever camera distance the user
 /// happens to set up. We need ≥ 60 px of vertical movement before any
 /// state commits — keeps a stationary frame from triggering false reps.
+///
+/// Tier-B.7 · the previous implementation kept a monotonic running
+/// min/max over the entire set. Late in a long burpee set, a single
+/// outlier yMin from a stretch-out frame would pollute the thresholds
+/// indefinitely, causing false reps to register from breathing or
+/// subtle weight-shifts. Switched to a sliding-window sample list
+/// pruned at [_decayWindow] — only the last 8 s of shoulder-Y data
+/// influences the thresholds, so old extrema fade out cleanly.
 class BurpeeAnalyzer implements PoseAnalyzer {
   BurpeeAnalyzer({
     this.minRange = 60.0,
@@ -622,12 +630,28 @@ class BurpeeAnalyzer implements PoseAnalyzer {
   final Duration minRepInterval;
   final Duration cueCooldown;
 
+  /// Sliding-window length for the shoulder-Y samples that drive the
+  /// running min/max thresholds. 8 s is long enough to span a slow
+  /// burpee (~5 s/rep) and short enough that stale extrema from
+  /// outlier frames decay out before they break a subsequent rep.
+  static const Duration _decayWindow = Duration(seconds: 8);
+
+  /// Hard upper bound on the sample list size so a degenerate slow-fps
+  /// device doesn't grow it unbounded. 256 entries ≈ 17 s of frames at
+  /// the effective 15 FPS rate — far above _decayWindow, so this never
+  /// triggers in normal operation; it's purely a safety cap.
+  static const int _maxSamples = 256;
+
   int _reps = 0;
   _BurpeePhase _phase = _BurpeePhase.unknown;
   DateTime? _lastRepTime;
   DateTime? _lastCueTime;
-  double? _yMin;
-  double? _yMax;
+
+  /// Sliding window of (timestamp, shoulderY) samples. New samples
+  /// append to the tail on every frame; old samples are pruned from
+  /// the head when they age past [_decayWindow]. yMin/yMax derived
+  /// per-frame are pure functions of this list.
+  final List<_YSample> _ySamples = <_YSample>[];
 
   @override
   void reset() {
@@ -635,8 +659,7 @@ class BurpeeAnalyzer implements PoseAnalyzer {
     _phase = _BurpeePhase.unknown;
     _lastRepTime = null;
     _lastCueTime = null;
-    _yMin = null;
-    _yMax = null;
+    _ySamples.clear();
   }
 
   @override
@@ -645,12 +668,32 @@ class BurpeeAnalyzer implements PoseAnalyzer {
         pose.landmarks[PoseLandmarkType.rightShoulder];
     if (shoulder == null) return _empty();
 
+    final now = DateTime.now();
     final y = shoulder.y;
-    _yMin = (_yMin == null || y < _yMin!) ? y : _yMin;
-    _yMax = (_yMax == null || y > _yMax!) ? y : _yMax;
+    _ySamples.add(_YSample(now, y));
 
-    final yMin = _yMin!;
-    final yMax = _yMax!;
+    // Prune the head of the window. The list is timestamp-ascending
+    // (we always append), so the head is the oldest sample.
+    while (_ySamples.isNotEmpty &&
+        now.difference(_ySamples.first.timestamp) > _decayWindow) {
+      _ySamples.removeAt(0);
+    }
+    // Safety cap.
+    while (_ySamples.length > _maxSamples) {
+      _ySamples.removeAt(0);
+    }
+
+    // Need a handful of samples before deriving thresholds; one
+    // outlier from a single frame shouldn't drive the state machine.
+    if (_ySamples.length < 5) return _empty();
+
+    var yMin = _ySamples.first.y;
+    var yMax = _ySamples.first.y;
+    for (var i = 1; i < _ySamples.length; i++) {
+      final v = _ySamples[i].y;
+      if (v < yMin) yMin = v;
+      if (v > yMax) yMax = v;
+    }
     final range = yMax - yMin;
     if (range < minRange) return _empty();
 
@@ -671,7 +714,6 @@ class BurpeeAnalyzer implements PoseAnalyzer {
     if (current != previous && previous != _BurpeePhase.unknown) {
       if (current == _BurpeePhase.standing && previous == _BurpeePhase.down) {
         // Full STANDING→DOWN→STANDING cycle complete.
-        final now = DateTime.now();
         final last = _lastRepTime;
         if (last == null || now.difference(last) >= minRepInterval) {
           _reps += 1;
@@ -682,7 +724,6 @@ class BurpeeAnalyzer implements PoseAnalyzer {
           previous == _BurpeePhase.standing) {
         // User just started descending → coach the next phase. Throttled
         // so consecutive burpees don't say it on every rep.
-        final now = DateTime.now();
         final last = _lastCueTime;
         if (last == null || now.difference(last) >= cueCooldown) {
           contextualCue = 'Şimdi aşağı in ve plank pozisyonu al.';
@@ -719,6 +760,12 @@ class BurpeeAnalyzer implements PoseAnalyzer {
         formWarning: null,
         repJustCompleted: false,
       );
+}
+
+class _YSample {
+  const _YSample(this.timestamp, this.y);
+  final DateTime timestamp;
+  final double y;
 }
 
 enum _BurpeePhase { unknown, standing, down }
