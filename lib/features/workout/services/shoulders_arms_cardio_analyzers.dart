@@ -504,21 +504,47 @@ class ScapularAnalyzer implements PoseAnalyzer {
 
 /// Jumping jacks: legs spread + wrists overhead = OPEN. Legs together +
 /// wrists at sides = CLOSED. One OPEN→CLOSED→OPEN cycle is a rep.
-/// Uses shoulder width as the unit so it self-calibrates to camera distance.
+/// Uses shoulder width as the unit so it self-calibrates to camera
+/// distance.
+///
+/// Tier-B.9 · the previous thresholds were a single open/close
+/// boundary (`spreadRatio = 1.4`, `armRatio = 0.6`). A fatigued user
+/// who barely cleared 1.39× shoulder-width spread + 0.59× arm rise
+/// would oscillate between OPEN and CLOSED on every frame, double-
+/// counting or missing reps depending on which side of the threshold
+/// the noise landed.
+///
+/// Replaced with proper hysteresis — separate `open*Ratio` (to commit
+/// to OPEN) and `close*Ratio` (to commit to CLOSED) thresholds, with
+/// a gap that absorbs frame-to-frame jitter. Both gates also loosen
+/// the requirements (open at 1.25×, arms at 0.5×) so a lazy/fatigued
+/// jumping jack still counts.
 class JumpingJackAnalyzer implements PoseAnalyzer {
   JumpingJackAnalyzer({
-    this.spreadRatio = 1.4,
-    this.armRatio = 0.6,
+    this.spreadOpenRatio = 1.25,
+    this.spreadCloseRatio = 0.95,
+    this.armOpenRatio = 0.50,
+    this.armCloseRatio = 0.20,
     this.minRepInterval = const Duration(milliseconds: 500),
   });
 
-  /// Ankle distance must exceed `spreadRatio × shoulderWidth` to count
-  /// as legs-open.
-  final double spreadRatio;
+  /// Ankle distance must exceed `spreadOpenRatio × shoulderWidth`
+  /// (and arms must be above by `armOpenRatio`) to commit to OPEN.
+  final double spreadOpenRatio;
 
-  /// Wrist must be above shoulder by `armRatio × shoulderWidth` to count
-  /// as arms-overhead.
-  final double armRatio;
+  /// Ankle distance must fall below `spreadCloseRatio × shoulderWidth`
+  /// (and arms must drop below `armCloseRatio`) to commit to CLOSED.
+  /// Between the two thresholds the state holds — that's the hysteresis.
+  final double spreadCloseRatio;
+
+  /// Wrist must rise above the shoulder line by `armOpenRatio ×
+  /// shoulderWidth` to satisfy the OPEN gate.
+  final double armOpenRatio;
+
+  /// Wrist must drop below `armCloseRatio × shoulderWidth` to satisfy
+  /// the CLOSED gate.
+  final double armCloseRatio;
+
   final Duration minRepInterval;
 
   int _reps = 0;
@@ -549,6 +575,20 @@ class JumpingJackAnalyzer implements PoseAnalyzer {
       return _empty();
     }
 
+    // Tier-B.9 also adds a minimum landmark-likelihood gate. Without
+    // it, a low-confidence frame from a shaky camera could trip the
+    // hysteresis thresholds purely from noise. 0.4 mirrors the gate
+    // used by other analyzers.
+    final minLikelihood = [
+      ls.likelihood,
+      rs.likelihood,
+      la.likelihood,
+      ra.likelihood,
+      lw.likelihood,
+      rw.likelihood,
+    ].reduce((a, b) => a < b ? a : b);
+    if (minLikelihood < 0.4) return _empty();
+
     final shoulderWidth = (ls.x - rs.x).abs();
     if (shoulderWidth < 1) return _empty();
 
@@ -557,13 +597,22 @@ class JumpingJackAnalyzer implements PoseAnalyzer {
     final wristY = (lw.y + rw.y) / 2;
     final wristAbove = shoulderY - wristY;
 
-    final isOpen = ankleSpread > shoulderWidth * spreadRatio &&
-        wristAbove > shoulderWidth * armRatio;
+    // Independent open / close checks for each pair (legs, arms).
+    final spreadOpen = ankleSpread > shoulderWidth * spreadOpenRatio;
+    final spreadClose = ankleSpread < shoulderWidth * spreadCloseRatio;
+    final armOpen = wristAbove > shoulderWidth * armOpenRatio;
+    final armClose = wristAbove < shoulderWidth * armCloseRatio;
+
+    // Commit to OPEN only when BOTH pairs cleared their open gates.
+    // Commit to CLOSED only when BOTH pairs cleared their close gates.
+    // Neither condition true → hold previous state (hysteresis).
+    final commitOpen = spreadOpen && armOpen;
+    final commitClose = spreadClose && armClose;
 
     final previous = _state;
     var repJustCompleted = false;
 
-    if (isOpen) {
+    if (commitOpen) {
       if (previous == CrunchState.down) {
         final now = DateTime.now();
         final last = _lastRepTime;
@@ -574,9 +623,10 @@ class JumpingJackAnalyzer implements PoseAnalyzer {
         }
       }
       _state = CrunchState.up;
-    } else {
+    } else if (commitClose) {
       _state = CrunchState.down;
     }
+    // Else: keep previous state — neither hysteresis gate cleared.
 
     return CrunchResult(
       reps: _reps,
