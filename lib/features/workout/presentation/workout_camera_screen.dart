@@ -403,7 +403,10 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
 
         final warning = result.formWarning;
         if (warning != null) {
-          _audio.speak(warning);
+          // Tier-A: form warnings ride at SpeechPriority.warning so they
+          // pre-empt any lower-priority utterance (ambient heartbeat,
+          // milestone celebrations) and never get cut off themselves.
+          _audio.speak(warning, priority: SpeechPriority.warning);
           // Phase 49 · double light-tap when the analyzer flags broken
           // form. Distinct from the per-rep tap so the user can tell
           // "good rep" and "fix something" apart without looking at
@@ -423,7 +426,10 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         // a cue doesn't also emit a warning on the same frame.
         final cue = result.contextualCue;
         if (cue != null) {
-          _audio.speak(cue);
+          // Tier-A: cues are below warning but above milestones — a phase
+          // transition needs to land, but it shouldn't pre-empt a safety
+          // correction.
+          _audio.speak(cue, priority: SpeechPriority.cue);
         }
 
         if (result.repJustCompleted) {
@@ -464,13 +470,16 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
             // the analyzer's 7s pacing throttle prevent overlap.
             final reps = result.reps;
             if (target != null && target > 1 && reps == target - 2) {
-              _audio.speak('Son iki tekrar, sık dişini!');
+              _audio.speak('Son iki tekrar, sık dişini!',
+                  priority: SpeechPriority.milestone);
             } else if (target != null &&
                 target >= 4 &&
                 reps == (target / 2).floor()) {
-              _audio.speak('Yarıladın! Aynen böyle devam et.');
+              _audio.speak('Yarıladın! Aynen böyle devam et.',
+                  priority: SpeechPriority.milestone);
             } else if (result.pacingFeedback != null) {
-              _audio.speak(result.pacingFeedback!);
+              _audio.speak(result.pacingFeedback!,
+                  priority: SpeechPriority.encouragement);
             }
 
             if (target != null && reps >= target) {
@@ -619,7 +628,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     // path, so this is the equivalent "set done" thump. Routed through
     // `AppHaptics.milestone()` to match the rep-based completion above.
     AppHaptics.milestone();
-    _audio.speak('Süre doldu, harika!');
+    _audio.speak('Süre doldu, harika!', priority: SpeechPriority.milestone);
     if (!mounted) return;
     await ref.read(workoutSessionProvider.notifier).completeCurrentExercise();
   }
@@ -720,10 +729,12 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         // Phase 49 · celebratory milestone thump to pair with the
         // TTS finale.
         AppHaptics.milestone();
-        _audio.speak('Antrenman tamamlandı! Harika bir iş çıkardın.');
+        _audio.speak('Antrenman tamamlandı! Harika bir iş çıkardın.',
+            priority: SpeechPriority.milestone);
       } else if (justStartedRest && exercise != null) {
         _audio.speak(
           'Harika! Şimdi ${exercise.restDurationInSeconds} saniye dinlenme.',
+          priority: SpeechPriority.milestone,
         );
       } else if (justStartedPrep && exercise != null) {
         // Every shipped exercise has a non-empty `description` (Phase 26).
@@ -732,7 +743,8 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         final desc = exercise.description.isNotEmpty
             ? exercise.description
             : 'Başlayın!';
-        _audio.speak('Sıradaki hareket: ${exercise.name}. $desc');
+        _audio.speak('Sıradaki hareket: ${exercise.name}. $desc',
+            priority: SpeechPriority.milestone);
       }
 
       // Always swap analyzer the moment the exercise id flips, even while
