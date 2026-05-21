@@ -132,6 +132,139 @@ class SquatAnalyzer implements PoseAnalyzer {
   }
 }
 
+/// Hip-hinge family analyzer · Tier B.1.
+///
+/// Targets:
+///   • glute_bridge          (lying, knees bent, hip up/down cycle)
+///   • hip_thrust            (shoulders on bench, same cycle but bigger ROM)
+///   • single_leg_glute_bridge (one leg in air, same cycle)
+///   • frog_pump             (feet butterflied, same cycle)
+///   • kettlebell_swing      (standing, hip hinge → drive; bigger ROM)
+///   • single_leg_rdl        (standing, single-leg hip hinge)
+///
+/// All six reduce to a shoulder-hip-knee angle cycle. In the flexed/
+/// loaded position the body folds at the hip (angle < [downThreshold]).
+/// At the top of the lift the body is roughly straight (angle >
+/// [upThreshold]). One UP-from-DOWN crossing = one rep.
+///
+/// The 130°/165° defaults bracket the full extension/flexion ROM of
+/// the lying-down variants (glute bridge, hip thrust, frog pump, single
+/// leg glute bridge). Kettlebell swing has a similar ROM at the bottom
+/// of the swing and an over-extension closer to 180° at the top — it
+/// fits the same gates.
+///
+/// Picks the better-tracked side so single-leg variants don't fail
+/// when one limb is in the air or occluded.
+class HipHingeAnalyzer implements PoseAnalyzer {
+  HipHingeAnalyzer({
+    this.downThreshold = 130.0,
+    this.upThreshold = 165.0,
+    this.minRepInterval = const Duration(milliseconds: 1000),
+    this.formWarningCooldown = const Duration(seconds: 12),
+  });
+
+  /// Shoulder-hip-knee angle below this = "hip flexed" (DOWN).
+  final double downThreshold;
+
+  /// Shoulder-hip-knee angle above this = "hip extended" (UP).
+  /// Counts the rep on UP-from-DOWN.
+  final double upThreshold;
+  final Duration minRepInterval;
+
+  /// Minimum gap between two spoken partial-rep warnings.
+  final Duration formWarningCooldown;
+
+  int _reps = 0;
+  CrunchState _state = CrunchState.unknown;
+  DateTime? _lastRepTime;
+
+  /// Peak shoulder-hip-knee angle observed since the last DOWN commit.
+  /// Used to fire a partial-extension warning when the user passes the
+  /// upThreshold but never gets near full lockout (≈ 180°).
+  double _peakAngle = 0;
+  DateTime _lastFormWarning =
+      DateTime.now().subtract(const Duration(seconds: 30));
+
+  @override
+  void reset() {
+    _reps = 0;
+    _state = CrunchState.unknown;
+    _lastRepTime = null;
+    _peakAngle = 0;
+    _lastFormWarning = DateTime.now().subtract(const Duration(seconds: 30));
+  }
+
+  @override
+  CrunchResult analyze(Pose pose) {
+    // Per-side hip angle. Each side computed independently; we trust
+    // whichever side returned a non-null value (likelihood >= 0.4 for
+    // all three of its landmarks).
+    final left = _hipAngle(
+      pose,
+      PoseLandmarkType.leftShoulder,
+      PoseLandmarkType.leftHip,
+      PoseLandmarkType.leftKnee,
+    );
+    final right = _hipAngle(
+      pose,
+      PoseLandmarkType.rightShoulder,
+      PoseLandmarkType.rightHip,
+      PoseLandmarkType.rightKnee,
+    );
+    final angle = left ?? right;
+    if (angle == null) {
+      return CrunchResult(
+        reps: _reps,
+        state: _state,
+        torsoAngle: null,
+        neckAngle: null,
+        formWarning: null,
+        repJustCompleted: false,
+      );
+    }
+
+    if (angle > _peakAngle) _peakAngle = angle;
+
+    final previous = _state;
+    var repJustCompleted = false;
+    String? formWarning;
+
+    if (angle < downThreshold) {
+      _state = CrunchState.down;
+      _peakAngle = angle;
+    } else if (angle > upThreshold) {
+      if (previous == CrunchState.down) {
+        final now = DateTime.now();
+        final last = _lastRepTime;
+        if (last == null || now.difference(last) >= minRepInterval) {
+          _reps += 1;
+          repJustCompleted = true;
+          _lastRepTime = now;
+          // Partial-ROM check: a clean hip-hinge rep should approach
+          // full lockout (≥ 175°). Counting the rep at the lower
+          // gate (165°) lets fatigued users still hit their target,
+          // but we surface a coaching cue if the lockout is shallow.
+          if (_peakAngle < 175.0 &&
+              now.difference(_lastFormWarning) >= formWarningCooldown) {
+            formWarning = 'Kalçanı sonuna kadar yukarı sık!';
+            _lastFormWarning = now;
+          }
+        }
+      }
+      _state = CrunchState.up;
+    }
+
+    return CrunchResult(
+      reps: _reps,
+      state: _state,
+      torsoAngle: angle,
+      neckAngle: null,
+      formWarning: formWarning,
+      repJustCompleted: repJustCompleted,
+    );
+  }
+}
+
 /// Pull-up / chin-up / lat pulldown / barbell row all hinge on elbow
 /// flexion against a load: the shoulder-elbow-wrist angle goes from
 /// extended (hanging / arms locked out, > 150°) to flexed (chin over bar,
@@ -236,6 +369,24 @@ double? _kneeAngle(
     return null;
   }
   return AngleCalculator.between(h, k, a);
+}
+
+/// Per-side shoulder-hip-knee angle for [HipHingeAnalyzer]. Returns
+/// null if any of the three landmarks is unreliable.
+double? _hipAngle(
+  Pose pose,
+  PoseLandmarkType shoulder,
+  PoseLandmarkType hip,
+  PoseLandmarkType knee,
+) {
+  final s = pose.landmarks[shoulder];
+  final h = pose.landmarks[hip];
+  final k = pose.landmarks[knee];
+  if (s == null || h == null || k == null) return null;
+  if (math.min(s.likelihood, math.min(h.likelihood, k.likelihood)) < 0.4) {
+    return null;
+  }
+  return AngleCalculator.between(s, h, k);
 }
 
 double? _armAngle(
