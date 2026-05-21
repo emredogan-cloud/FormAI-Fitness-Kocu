@@ -18,10 +18,6 @@ enum LockedFeatureType {
   /// an otherwise free plan — the "depth waiting for me" beat.
   equipmentExercise,
 
-  /// Region-menu exercise flagged `isNew=true` (the Phase 96 expansion
-  /// set). Surfaces as a locked "Yeni" preview.
-  regionNewExercise,
-
   /// Whole nutrition tab. Tap on the bottom-nav entry for non-pro users
   /// triggers a cinematic scene instead of opening the section.
   nutritionTab,
@@ -37,8 +33,6 @@ extension LockedFeatureTypeX on LockedFeatureType {
         return 'locked_future_day';
       case LockedFeatureType.equipmentExercise:
         return 'locked_equipment_exercise';
-      case LockedFeatureType.regionNewExercise:
-        return 'locked_region_new_exercise';
       case LockedFeatureType.nutritionTab:
         return 'locked_nutrition_tab';
     }

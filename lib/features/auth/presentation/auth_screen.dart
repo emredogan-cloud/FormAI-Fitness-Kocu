@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../core/services/app_preferences.dart';
 import '../../../core/services/connectivity_service.dart';
+import '../../monetization/providers/monetization_provider.dart';
 import '../../onboarding/providers/wizard_provider.dart';
 import '../providers/auth_provider.dart';
 
@@ -48,9 +49,36 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     await ref.read(appPreferencesProvider).saveUserMetrics(wizard.toJson());
   }
 
-  void _goToPaywall() {
+  /// Phase 140 · post-auth navigation hand-off.
+  ///
+  /// Existing-Pro users (CASE B: same account, new device) should
+  /// land on the dashboard with Pro features unlocked, NOT on the
+  /// paywall — re-presenting the paywall to someone who's already
+  /// paying reads as broken. Free users land on the paywall, but
+  /// the [authGateClearedProvider] latch is already flipped by every
+  /// auth-success path so the gate doesn't re-fire.
+  ///
+  /// `subscriptionProvider.refresh()` is awaited so RevenueCat's
+  /// fresh customerInfo is loaded before we read `isPro`. RC's
+  /// `Purchases.logIn` was just called (inside
+  /// `aliasRevenueCatWithCurrentUser`) so this refresh hits the
+  /// network for the real Supabase-aliased entitlement set, not the
+  /// pre-login anonymous cache.
+  Future<void> _routePostAuth() async {
     if (!mounted) return;
-    context.pushReplacement(AppRoutes.paywall);
+    try {
+      await ref.read(subscriptionProvider.notifier).refresh();
+    } catch (_) {
+      // Falls back to free routing — the paywall will re-attempt
+      // refresh on mount and the user can still see / use Restore.
+    }
+    if (!mounted) return;
+    final isPro = ref.read(isProProvider);
+    if (isPro) {
+      context.go(AppRoutes.dashboard);
+    } else {
+      context.go(AppRoutes.paywall);
+    }
   }
 
   Future<void> _submit() async {
@@ -72,7 +100,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         await ref
             .read(authControllerProvider)
             .aliasRevenueCatWithCurrentUser();
-        _goToPaywall();
+        // Phase 140 · latch the paywall gate cleared so its remount
+        // after pushReplacement / context.go doesn't re-fire.
+        ref.read(authGateClearedProvider.notifier).state = true;
+        await _routePostAuth();
       } else {
         // If the user came in as a guest (signInAnonymously from the
         // onboarding flow), upgrade that same identity via updateUser
@@ -89,13 +120,14 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           await ref
               .read(authControllerProvider)
               .aliasRevenueCatWithCurrentUser();
+          ref.read(authGateClearedProvider.notifier).state = true;
           if (mounted) {
             _toast(
               'E-posta adresine doğrulama bağlantısı gönderildi. '
               'Hesabın yükseltildi, ilerlemen korundu.',
             );
           }
-          _goToPaywall();
+          await _routePostAuth();
         } else {
           final res =
               await _client.auth.signUp(email: email, password: password);
@@ -106,7 +138,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             await ref
                 .read(authControllerProvider)
                 .aliasRevenueCatWithCurrentUser();
-            _goToPaywall();
+            ref.read(authGateClearedProvider.notifier).state = true;
+            await _routePostAuth();
           }
         }
       }
@@ -125,7 +158,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     try {
       await _client.auth.signInAnonymously();
       await _persistWizardMetrics();
-      _goToPaywall();
+      // Guests must still see the paywall's auth gate — they have not
+      // authenticated; the latch stays false on purpose so the gate
+      // can fire when they next reach /paywall.
+      if (mounted) context.pushReplacement(AppRoutes.paywall);
     } on AuthException catch (e) {
       if (mounted) _toast(e.message);
     } catch (e) {
@@ -176,7 +212,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       switch (result.outcome) {
         case SocialAuthOutcome.success:
           await _persistWizardMetrics();
-          _goToPaywall();
+          // The AuthController already flipped authGateClearedProvider
+          // on success — just route to the right destination.
+          await _routePostAuth();
         case SocialAuthOutcome.cancelled:
           // Silent — user bailed out of the native sheet.
           break;
