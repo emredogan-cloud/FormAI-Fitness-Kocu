@@ -406,6 +406,13 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       // any of those gaps and `ref.read` would throw.
       if (!mounted) return;
 
+      // Tier-A · feed every frame's pose (or null) into the coach so
+      // it can detect sustained low-confidence tracking and emit a
+      // single Turkish positioning cue. Strict cooldown is enforced
+      // inside CoachVoice; this is a cheap notify, no work happens
+      // unless the threshold is crossed.
+      _coach.onPoseFrame(poses.isNotEmpty ? poses.first : null);
+
       CrunchResult? result;
       if (poses.isNotEmpty) {
         result = _analyzer.analyze(poses.first);
