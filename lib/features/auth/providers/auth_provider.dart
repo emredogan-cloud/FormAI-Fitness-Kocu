@@ -65,8 +65,7 @@ class AuthGateClearedNotifier extends Notifier<bool> {
   set state(bool value) => super.state = value;
 }
 
-final authGateClearedProvider =
-    NotifierProvider<AuthGateClearedNotifier, bool>(
+final authGateClearedProvider = NotifierProvider<AuthGateClearedNotifier, bool>(
   AuthGateClearedNotifier.new,
 );
 
@@ -488,6 +487,14 @@ class AuthController {
         // condition through the outer catch.
       }
       await Purchases.logIn(user.id);
+      // Phase 141 · invalidate the subscription cache so the next
+      // read of `subscriptionProvider` re-fetches `Purchases.getCustomerInfo`
+      // against the now-aliased user, not against the pre-`logIn`
+      // anonymous customerInfo. Without this, the paywall's
+      // self-redirect (which keys off `isProProvider`) sees the old
+      // anonymous entitlement set and never flips to true for an
+      // existing-Pro user signing in from `/auth`.
+      _ref.invalidate(subscriptionProvider);
       return true;
     } catch (e, st) {
       AppLogger.warning(

@@ -4,6 +4,7 @@ import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 
 import '../../../core/utils/angle_calculator.dart';
 import 'crunch_analyzer.dart' show CrunchResult, CrunchState;
+import 'pacing_tracker.dart';
 import 'pose_analyzer.dart';
 
 /// Push-ups (and inclined / declined / dip variants) all reduce to elbow
@@ -47,6 +48,7 @@ class PushUpAnalyzer implements PoseAnalyzer {
   DateTime? _lastRepTime;
   DateTime _lastFormWarning =
       DateTime.now().subtract(const Duration(seconds: 30));
+  final PacingTracker _pacing = PacingPresets.strength();
 
   @override
   void reset() {
@@ -54,6 +56,7 @@ class PushUpAnalyzer implements PoseAnalyzer {
     _state = CrunchState.unknown;
     _lastRepTime = null;
     _lastFormWarning = DateTime.now().subtract(const Duration(seconds: 30));
+    _pacing.reset();
   }
 
   @override
@@ -86,6 +89,7 @@ class PushUpAnalyzer implements PoseAnalyzer {
 
     final previous = _state;
     var repJustCompleted = false;
+    String? pacingFeedback;
 
     if (elbowAngle < downThreshold) {
       _state = CrunchState.down;
@@ -94,9 +98,13 @@ class PushUpAnalyzer implements PoseAnalyzer {
         final now = DateTime.now();
         final last = _lastRepTime;
         if (last == null || now.difference(last) >= minRepInterval) {
+          final repDuration = last == null ? null : now.difference(last);
           _reps += 1;
           repJustCompleted = true;
           _lastRepTime = now;
+          if (repDuration != null) {
+            pacingFeedback = _pacing.evaluate(repDuration, now);
+          }
         }
       }
       _state = CrunchState.up;
@@ -109,8 +117,8 @@ class PushUpAnalyzer implements PoseAnalyzer {
     String? formWarning;
     final shoulder = _pickHigher(
         pose, PoseLandmarkType.leftShoulder, PoseLandmarkType.rightShoulder);
-    final hip = _pickHigher(
-        pose, PoseLandmarkType.leftHip, PoseLandmarkType.rightHip);
+    final hip =
+        _pickHigher(pose, PoseLandmarkType.leftHip, PoseLandmarkType.rightHip);
     final ankle = _pickHigher(
         pose, PoseLandmarkType.leftAnkle, PoseLandmarkType.rightAnkle);
     if (shoulder != null && hip != null && ankle != null) {
@@ -125,8 +133,7 @@ class PushUpAnalyzer implements PoseAnalyzer {
         ankle.likelihood
       ].reduce((a, b) => a < b ? a : b);
       if (minLikelihood >= 0.35) {
-        final lineAngle =
-            AngleCalculator.between(shoulder, hip, ankle);
+        final lineAngle = AngleCalculator.between(shoulder, hip, ankle);
         if (lineAngle < minBodyLineAngle) {
           final now = DateTime.now();
           if (now.difference(_lastFormWarning) >= formWarningCooldown) {
@@ -144,6 +151,7 @@ class PushUpAnalyzer implements PoseAnalyzer {
       neckAngle: null,
       formWarning: formWarning,
       repJustCompleted: repJustCompleted,
+      pacingFeedback: pacingFeedback,
     );
   }
 }
@@ -161,9 +169,16 @@ class BenchPressAnalyzer extends PushUpAnalyzer {
         );
 }
 
-/// Chest fly tracks the horizontal distance between the wrists. The arms
-/// open wide (large wrist gap) then close above the chest (small gap).
+/// Chest fly tracks the distance between the wrists. The arms open
+/// wide (large wrist gap) then close above the chest (small gap).
 /// One open→close→open cycle is a rep; we count on each close commit.
+///
+/// Coverage-pass closure · the previous implementation used 2D distance
+/// only. For a side-camera setup the arms open toward and away from
+/// the camera (z axis), so the 2D gap barely changed. Same fix pattern
+/// as `RussianTwistAnalyzer` (Tier B.10): compute both the 2D distance
+/// AND a z-component, then use whichever is dominant on the current
+/// frame. Side-camera flies now count; front-camera flies unchanged.
 class ChestFlyAnalyzer implements PoseAnalyzer {
   ChestFlyAnalyzer({
     this.openFraction = 1.4,
@@ -181,12 +196,14 @@ class ChestFlyAnalyzer implements PoseAnalyzer {
   int _reps = 0;
   CrunchState _state = CrunchState.unknown;
   DateTime? _lastRepTime;
+  final PacingTracker _pacing = PacingPresets.strength();
 
   @override
   void reset() {
     _reps = 0;
     _state = CrunchState.unknown;
     _lastRepTime = null;
+    _pacing.reset();
   }
 
   @override
@@ -201,11 +218,23 @@ class ChestFlyAnalyzer implements PoseAnalyzer {
 
     final shoulderWidth = _distance(ls, rs);
     if (shoulderWidth < 1) return _empty();
-    final wristGap = _distance(lw, rw);
+
+    // Front-camera signal: 2D wrist gap.
+    final wristGap2D = _distance(lw, rw);
+
+    // Side-camera signal: z-axis spread (|wrist.z - wrist.z|). When
+    // arms open toward/away from the camera, x stays similar but z
+    // diverges. Same normalisation against shoulder width applies
+    // because BlazePose z is on roughly the same scale as x/y.
+    final wristGapZ = (lw.z - rw.z).abs();
+
+    // Use the larger of the two — the dominant signal on this frame.
+    final wristGap = wristGap2D > wristGapZ ? wristGap2D : wristGapZ;
     final ratio = wristGap / shoulderWidth;
 
     final previous = _state;
     var repJustCompleted = false;
+    String? pacingFeedback;
 
     if (ratio > openFraction) {
       // OPEN ≈ "down" (start of the rep — arms wide).
@@ -215,9 +244,13 @@ class ChestFlyAnalyzer implements PoseAnalyzer {
         final now = DateTime.now();
         final last = _lastRepTime;
         if (last == null || now.difference(last) >= minRepInterval) {
+          final repDuration = last == null ? null : now.difference(last);
           _reps += 1;
           repJustCompleted = true;
           _lastRepTime = now;
+          if (repDuration != null) {
+            pacingFeedback = _pacing.evaluate(repDuration, now);
+          }
         }
       }
       _state = CrunchState.up;
@@ -230,6 +263,7 @@ class ChestFlyAnalyzer implements PoseAnalyzer {
       neckAngle: null,
       formWarning: null,
       repJustCompleted: repJustCompleted,
+      pacingFeedback: pacingFeedback,
     );
   }
 

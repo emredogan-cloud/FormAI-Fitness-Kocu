@@ -4,6 +4,7 @@ import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 
 import '../../../core/utils/angle_calculator.dart';
 import 'crunch_analyzer.dart' show CrunchResult, CrunchState;
+import 'pacing_tracker.dart';
 import 'pose_analyzer.dart';
 
 // ============================================================================
@@ -47,6 +48,7 @@ class BicepsCurlAnalyzer implements PoseAnalyzer {
   DateTime? _lastRepTime;
   DateTime _lastFormWarning =
       DateTime.now().subtract(const Duration(seconds: 30));
+  final PacingTracker _pacing = PacingPresets.strength();
 
   @override
   void reset() {
@@ -54,6 +56,7 @@ class BicepsCurlAnalyzer implements PoseAnalyzer {
     _state = CrunchState.unknown;
     _lastRepTime = null;
     _lastFormWarning = DateTime.now().subtract(const Duration(seconds: 30));
+    _pacing.reset();
   }
 
   @override
@@ -84,6 +87,7 @@ class BicepsCurlAnalyzer implements PoseAnalyzer {
 
     final previous = _state;
     var repJustCompleted = false;
+    String? pacingFeedback;
 
     if (elbow > downThreshold) {
       _state = CrunchState.down;
@@ -92,9 +96,13 @@ class BicepsCurlAnalyzer implements PoseAnalyzer {
         final now = DateTime.now();
         final last = _lastRepTime;
         if (last == null || now.difference(last) >= minRepInterval) {
+          final repDuration = last == null ? null : now.difference(last);
           _reps += 1;
           repJustCompleted = true;
           _lastRepTime = now;
+          if (repDuration != null) {
+            pacingFeedback = _pacing.evaluate(repDuration, now);
+          }
         }
       }
       _state = CrunchState.up;
@@ -108,10 +116,12 @@ class BicepsCurlAnalyzer implements PoseAnalyzer {
     String? formWarning;
     if (_state == CrunchState.up) {
       final dominantIsLeft = left != null;
-      final elbowLm = pose.landmarks[
-          dominantIsLeft ? PoseLandmarkType.leftElbow : PoseLandmarkType.rightElbow];
-      final hipLm = pose.landmarks[
-          dominantIsLeft ? PoseLandmarkType.leftHip : PoseLandmarkType.rightHip];
+      final elbowLm = pose.landmarks[dominantIsLeft
+          ? PoseLandmarkType.leftElbow
+          : PoseLandmarkType.rightElbow];
+      final hipLm = pose.landmarks[dominantIsLeft
+          ? PoseLandmarkType.leftHip
+          : PoseLandmarkType.rightHip];
       final ls = pose.landmarks[PoseLandmarkType.leftShoulder];
       final rs = pose.landmarks[PoseLandmarkType.rightShoulder];
       if (elbowLm != null && hipLm != null && ls != null && rs != null) {
@@ -136,6 +146,7 @@ class BicepsCurlAnalyzer implements PoseAnalyzer {
       neckAngle: null,
       formWarning: formWarning,
       repJustCompleted: repJustCompleted,
+      pacingFeedback: pacingFeedback,
     );
   }
 }
@@ -172,6 +183,7 @@ class ShoulderPressAnalyzer implements PoseAnalyzer {
   CrunchState _state = CrunchState.unknown;
   DateTime? _lastRepTime;
   double _maxDelta = 0; // largest wrist-above-shoulder delta this rep
+  final PacingTracker _pacing = PacingPresets.strength();
 
   @override
   void reset() {
@@ -179,6 +191,7 @@ class ShoulderPressAnalyzer implements PoseAnalyzer {
     _state = CrunchState.unknown;
     _lastRepTime = null;
     _maxDelta = 0;
+    _pacing.reset();
   }
 
   @override
@@ -205,6 +218,7 @@ class ShoulderPressAnalyzer implements PoseAnalyzer {
     final previous = _state;
     var repJustCompleted = false;
     String? formWarning;
+    String? pacingFeedback;
 
     if (delta > upThreshold) {
       _state = CrunchState.up;
@@ -213,12 +227,18 @@ class ShoulderPressAnalyzer implements PoseAnalyzer {
         final now = DateTime.now();
         final last = _lastRepTime;
         if (last == null || now.difference(last) >= minRepInterval) {
+          final repDuration = last == null ? null : now.difference(last);
           _reps += 1;
           repJustCompleted = true;
           _lastRepTime = now;
           // Partial-rep nudge: rep counted but never reached full lockout.
           if (_maxDelta < upThreshold * partialRatio) {
             formWarning = 'Kolları tam yukarı uzat!';
+          }
+          // Pacing only emitted when no form warning to avoid same-frame
+          // queue contention. Form warning is the higher-value signal.
+          if (formWarning == null && repDuration != null) {
+            pacingFeedback = _pacing.evaluate(repDuration, now);
           }
           _maxDelta = 0;
         }
@@ -233,6 +253,7 @@ class ShoulderPressAnalyzer implements PoseAnalyzer {
       neckAngle: null,
       formWarning: formWarning,
       repJustCompleted: repJustCompleted,
+      pacingFeedback: pacingFeedback,
     );
   }
 
@@ -286,6 +307,7 @@ class LateralRaiseAnalyzer implements PoseAnalyzer {
   DateTime? _lastRepTime;
   DateTime _lastFormWarning =
       DateTime.now().subtract(const Duration(seconds: 30));
+  final PacingTracker _pacing = PacingPresets.strength();
 
   @override
   void reset() {
@@ -293,6 +315,7 @@ class LateralRaiseAnalyzer implements PoseAnalyzer {
     _state = CrunchState.unknown;
     _lastRepTime = null;
     _lastFormWarning = DateTime.now().subtract(const Duration(seconds: 30));
+    _pacing.reset();
   }
 
   @override
@@ -323,15 +346,20 @@ class LateralRaiseAnalyzer implements PoseAnalyzer {
 
     final previous = _state;
     var repJustCompleted = false;
+    String? pacingFeedback;
 
     if (angle > upThreshold) {
       if (previous == CrunchState.down) {
         final now = DateTime.now();
         final last = _lastRepTime;
         if (last == null || now.difference(last) >= minRepInterval) {
+          final repDuration = last == null ? null : now.difference(last);
           _reps += 1;
           repJustCompleted = true;
           _lastRepTime = now;
+          if (repDuration != null) {
+            pacingFeedback = _pacing.evaluate(repDuration, now);
+          }
         }
       }
       _state = CrunchState.up;
@@ -344,8 +372,9 @@ class LateralRaiseAnalyzer implements PoseAnalyzer {
     String? formWarning;
     if (_state == CrunchState.up) {
       final dominantIsLeft = left != null;
-      final wrist = pose.landmarks[
-          dominantIsLeft ? PoseLandmarkType.leftWrist : PoseLandmarkType.rightWrist];
+      final wrist = pose.landmarks[dominantIsLeft
+          ? PoseLandmarkType.leftWrist
+          : PoseLandmarkType.rightWrist];
       final shoulder = pose.landmarks[dominantIsLeft
           ? PoseLandmarkType.leftShoulder
           : PoseLandmarkType.rightShoulder];
@@ -373,8 +402,138 @@ class LateralRaiseAnalyzer implements PoseAnalyzer {
       neckAngle: null,
       formWarning: formWarning,
       repJustCompleted: repJustCompleted,
+      pacingFeedback: pacingFeedback,
     );
   }
+}
+
+// ============================================================================
+// Scapular / postural family — Tier B.2
+// ============================================================================
+
+/// Targets: `prone_y_raise`, `prone_t_raise`, `scapular_wall_slide`.
+///
+/// All three are small-ROM arm-raise patterns:
+///   • prone Y raise — lying face-down, arms overhead in Y shape; lift
+///     wrists off the floor.
+///   • prone T raise — lying face-down, arms out to sides; lift wrists
+///     off the floor.
+///   • scapular wall slide — standing against a wall, arms in W or Y;
+///     slide them up the wall and back down.
+///
+/// The common signal is the **wrist position relative to the shoulder
+/// line**, normalised by shoulder width so the analyzer self-calibrates
+/// to camera distance. We average the two wrists and the two shoulders
+/// to be tolerant of one-side occlusion; the ratio is then:
+///
+///   ratio = (shoulderMidY - wristMidY) / shoulderWidth
+///
+/// Positive ratio = wrists above shoulder line (lifted / slid up).
+/// Negative or near-zero ratio = arms resting / at sides.
+///
+/// State machine:
+///   • ratio > upRatio (default 0.45)   → UP, count a rep on UP-from-DOWN
+///   • ratio < downRatio (default 0.05) → DOWN
+///
+/// Both thresholds are intentionally loose because these are small-ROM
+/// movements with noisy wrist landmarks; a tight gate would miss most
+/// reps. Form warning is deliberately omitted — scapular reps are too
+/// subtle for any geometric form check that wouldn't false-positive.
+class ScapularAnalyzer implements PoseAnalyzer {
+  ScapularAnalyzer({
+    this.upRatio = 0.45,
+    this.downRatio = 0.05,
+    this.minRepInterval = const Duration(milliseconds: 900),
+  });
+
+  /// `(shoulderMidY - wristMidY) / shoulderWidth` above this commits UP.
+  final double upRatio;
+
+  /// `(shoulderMidY - wristMidY) / shoulderWidth` below this commits DOWN.
+  final double downRatio;
+
+  final Duration minRepInterval;
+
+  int _reps = 0;
+  CrunchState _state = CrunchState.unknown;
+  DateTime? _lastRepTime;
+  final PacingTracker _pacing = PacingPresets.strength();
+
+  @override
+  void reset() {
+    _reps = 0;
+    _state = CrunchState.unknown;
+    _lastRepTime = null;
+    _pacing.reset();
+  }
+
+  @override
+  CrunchResult analyze(Pose pose) {
+    final ls = pose.landmarks[PoseLandmarkType.leftShoulder];
+    final rs = pose.landmarks[PoseLandmarkType.rightShoulder];
+    final lw = pose.landmarks[PoseLandmarkType.leftWrist];
+    final rw = pose.landmarks[PoseLandmarkType.rightWrist];
+    if (ls == null || rs == null || lw == null || rw == null) {
+      return _empty();
+    }
+    // Skip the frame if either shoulder is unreliable — without a
+    // baseline shoulder line the ratio is meaningless. We tolerate one
+    // weak wrist (it gets averaged into the mid-point with the other).
+    final minShoulder =
+        ls.likelihood < rs.likelihood ? ls.likelihood : rs.likelihood;
+    if (minShoulder < 0.4) return _empty();
+
+    final shoulderWidth = (ls.x - rs.x).abs();
+    if (shoulderWidth < 1) return _empty();
+
+    final shoulderMidY = (ls.y + rs.y) / 2;
+    final wristMidY = (lw.y + rw.y) / 2;
+    final ratio = (shoulderMidY - wristMidY) / shoulderWidth;
+
+    final previous = _state;
+    var repJustCompleted = false;
+    String? pacingFeedback;
+
+    if (ratio > upRatio) {
+      if (previous == CrunchState.down) {
+        final now = DateTime.now();
+        final last = _lastRepTime;
+        if (last == null || now.difference(last) >= minRepInterval) {
+          final repDuration = last == null ? null : now.difference(last);
+          _reps += 1;
+          repJustCompleted = true;
+          _lastRepTime = now;
+          if (repDuration != null) {
+            pacingFeedback = _pacing.evaluate(repDuration, now);
+          }
+        }
+      }
+      _state = CrunchState.up;
+    } else if (ratio < downRatio) {
+      _state = CrunchState.down;
+    }
+    // Between the two thresholds we hold the previous state — natural
+    // hysteresis that prevents borderline frames from re-counting.
+
+    return CrunchResult(
+      reps: _reps,
+      state: _state,
+      torsoAngle: ratio,
+      neckAngle: null,
+      formWarning: null,
+      repJustCompleted: repJustCompleted,
+      pacingFeedback: pacingFeedback,
+    );
+  }
+
+  CrunchResult _empty() => CrunchResult(
+        reps: _reps,
+        state: _state,
+        torsoAngle: null,
+        neckAngle: null,
+        formWarning: null,
+        repJustCompleted: false,
+      );
 }
 
 // ============================================================================
@@ -383,32 +542,60 @@ class LateralRaiseAnalyzer implements PoseAnalyzer {
 
 /// Jumping jacks: legs spread + wrists overhead = OPEN. Legs together +
 /// wrists at sides = CLOSED. One OPEN→CLOSED→OPEN cycle is a rep.
-/// Uses shoulder width as the unit so it self-calibrates to camera distance.
+/// Uses shoulder width as the unit so it self-calibrates to camera
+/// distance.
+///
+/// Tier-B.9 · the previous thresholds were a single open/close
+/// boundary (`spreadRatio = 1.4`, `armRatio = 0.6`). A fatigued user
+/// who barely cleared 1.39× shoulder-width spread + 0.59× arm rise
+/// would oscillate between OPEN and CLOSED on every frame, double-
+/// counting or missing reps depending on which side of the threshold
+/// the noise landed.
+///
+/// Replaced with proper hysteresis — separate `open*Ratio` (to commit
+/// to OPEN) and `close*Ratio` (to commit to CLOSED) thresholds, with
+/// a gap that absorbs frame-to-frame jitter. Both gates also loosen
+/// the requirements (open at 1.25×, arms at 0.5×) so a lazy/fatigued
+/// jumping jack still counts.
 class JumpingJackAnalyzer implements PoseAnalyzer {
   JumpingJackAnalyzer({
-    this.spreadRatio = 1.4,
-    this.armRatio = 0.6,
+    this.spreadOpenRatio = 1.25,
+    this.spreadCloseRatio = 0.95,
+    this.armOpenRatio = 0.50,
+    this.armCloseRatio = 0.20,
     this.minRepInterval = const Duration(milliseconds: 500),
   });
 
-  /// Ankle distance must exceed `spreadRatio × shoulderWidth` to count
-  /// as legs-open.
-  final double spreadRatio;
+  /// Ankle distance must exceed `spreadOpenRatio × shoulderWidth`
+  /// (and arms must be above by `armOpenRatio`) to commit to OPEN.
+  final double spreadOpenRatio;
 
-  /// Wrist must be above shoulder by `armRatio × shoulderWidth` to count
-  /// as arms-overhead.
-  final double armRatio;
+  /// Ankle distance must fall below `spreadCloseRatio × shoulderWidth`
+  /// (and arms must drop below `armCloseRatio`) to commit to CLOSED.
+  /// Between the two thresholds the state holds — that's the hysteresis.
+  final double spreadCloseRatio;
+
+  /// Wrist must rise above the shoulder line by `armOpenRatio ×
+  /// shoulderWidth` to satisfy the OPEN gate.
+  final double armOpenRatio;
+
+  /// Wrist must drop below `armCloseRatio × shoulderWidth` to satisfy
+  /// the CLOSED gate.
+  final double armCloseRatio;
+
   final Duration minRepInterval;
 
   int _reps = 0;
   CrunchState _state = CrunchState.unknown;
   DateTime? _lastRepTime;
+  final PacingTracker _pacing = PacingPresets.cardio();
 
   @override
   void reset() {
     _reps = 0;
     _state = CrunchState.unknown;
     _lastRepTime = null;
+    _pacing.reset();
   }
 
   @override
@@ -428,6 +615,20 @@ class JumpingJackAnalyzer implements PoseAnalyzer {
       return _empty();
     }
 
+    // Tier-B.9 also adds a minimum landmark-likelihood gate. Without
+    // it, a low-confidence frame from a shaky camera could trip the
+    // hysteresis thresholds purely from noise. 0.4 mirrors the gate
+    // used by other analyzers.
+    final minLikelihood = [
+      ls.likelihood,
+      rs.likelihood,
+      la.likelihood,
+      ra.likelihood,
+      lw.likelihood,
+      rw.likelihood,
+    ].reduce((a, b) => a < b ? a : b);
+    if (minLikelihood < 0.4) return _empty();
+
     final shoulderWidth = (ls.x - rs.x).abs();
     if (shoulderWidth < 1) return _empty();
 
@@ -436,26 +637,41 @@ class JumpingJackAnalyzer implements PoseAnalyzer {
     final wristY = (lw.y + rw.y) / 2;
     final wristAbove = shoulderY - wristY;
 
-    final isOpen = ankleSpread > shoulderWidth * spreadRatio &&
-        wristAbove > shoulderWidth * armRatio;
+    // Independent open / close checks for each pair (legs, arms).
+    final spreadOpen = ankleSpread > shoulderWidth * spreadOpenRatio;
+    final spreadClose = ankleSpread < shoulderWidth * spreadCloseRatio;
+    final armOpen = wristAbove > shoulderWidth * armOpenRatio;
+    final armClose = wristAbove < shoulderWidth * armCloseRatio;
+
+    // Commit to OPEN only when BOTH pairs cleared their open gates.
+    // Commit to CLOSED only when BOTH pairs cleared their close gates.
+    // Neither condition true → hold previous state (hysteresis).
+    final commitOpen = spreadOpen && armOpen;
+    final commitClose = spreadClose && armClose;
 
     final previous = _state;
     var repJustCompleted = false;
+    String? pacingFeedback;
 
-    if (isOpen) {
+    if (commitOpen) {
       if (previous == CrunchState.down) {
         final now = DateTime.now();
         final last = _lastRepTime;
         if (last == null || now.difference(last) >= minRepInterval) {
+          final repDuration = last == null ? null : now.difference(last);
           _reps += 1;
           repJustCompleted = true;
           _lastRepTime = now;
+          if (repDuration != null) {
+            pacingFeedback = _pacing.evaluate(repDuration, now);
+          }
         }
       }
       _state = CrunchState.up;
-    } else {
+    } else if (commitClose) {
       _state = CrunchState.down;
     }
+    // Else: keep previous state — neither hysteresis gate cleared.
 
     return CrunchResult(
       reps: _reps,
@@ -464,6 +680,7 @@ class JumpingJackAnalyzer implements PoseAnalyzer {
       neckAngle: null,
       formWarning: null,
       repJustCompleted: repJustCompleted,
+      pacingFeedback: pacingFeedback,
     );
   }
 
@@ -486,10 +703,18 @@ class JumpingJackAnalyzer implements PoseAnalyzer {
 /// STANDING→DOWN edge fires a throttled `contextualCue` so the voice
 /// coach can guide the user as they drop.
 ///
-/// Uses the shoulder Y coordinate self-calibrated against the running
+/// Uses the shoulder Y coordinate self-calibrated against the recent
 /// min/max so the analyzer adapts to whatever camera distance the user
 /// happens to set up. We need ≥ 60 px of vertical movement before any
 /// state commits — keeps a stationary frame from triggering false reps.
+///
+/// Tier-B.7 · the previous implementation kept a monotonic running
+/// min/max over the entire set. Late in a long burpee set, a single
+/// outlier yMin from a stretch-out frame would pollute the thresholds
+/// indefinitely, causing false reps to register from breathing or
+/// subtle weight-shifts. Switched to a sliding-window sample list
+/// pruned at [_decayWindow] — only the last 8 s of shoulder-Y data
+/// influences the thresholds, so old extrema fade out cleanly.
 class BurpeeAnalyzer implements PoseAnalyzer {
   BurpeeAnalyzer({
     this.minRange = 60.0,
@@ -501,12 +726,30 @@ class BurpeeAnalyzer implements PoseAnalyzer {
   final Duration minRepInterval;
   final Duration cueCooldown;
 
+  /// Sliding-window length for the shoulder-Y samples that drive the
+  /// running min/max thresholds. 8 s is long enough to span a slow
+  /// burpee (~5 s/rep) and short enough that stale extrema from
+  /// outlier frames decay out before they break a subsequent rep.
+  static const Duration _decayWindow = Duration(seconds: 8);
+
+  /// Hard upper bound on the sample list size so a degenerate slow-fps
+  /// device doesn't grow it unbounded. 256 entries ≈ 17 s of frames at
+  /// the effective 15 FPS rate — far above _decayWindow, so this never
+  /// triggers in normal operation; it's purely a safety cap.
+  static const int _maxSamples = 256;
+
   int _reps = 0;
   _BurpeePhase _phase = _BurpeePhase.unknown;
   DateTime? _lastRepTime;
   DateTime? _lastCueTime;
-  double? _yMin;
-  double? _yMax;
+
+  /// Sliding window of (timestamp, shoulderY) samples. New samples
+  /// append to the tail on every frame; old samples are pruned from
+  /// the head when they age past [_decayWindow]. yMin/yMax derived
+  /// per-frame are pure functions of this list.
+  final List<_YSample> _ySamples = <_YSample>[];
+
+  final PacingTracker _pacing = PacingPresets.compound();
 
   @override
   void reset() {
@@ -514,8 +757,8 @@ class BurpeeAnalyzer implements PoseAnalyzer {
     _phase = _BurpeePhase.unknown;
     _lastRepTime = null;
     _lastCueTime = null;
-    _yMin = null;
-    _yMax = null;
+    _ySamples.clear();
+    _pacing.reset();
   }
 
   @override
@@ -524,12 +767,32 @@ class BurpeeAnalyzer implements PoseAnalyzer {
         pose.landmarks[PoseLandmarkType.rightShoulder];
     if (shoulder == null) return _empty();
 
+    final now = DateTime.now();
     final y = shoulder.y;
-    _yMin = (_yMin == null || y < _yMin!) ? y : _yMin;
-    _yMax = (_yMax == null || y > _yMax!) ? y : _yMax;
+    _ySamples.add(_YSample(now, y));
 
-    final yMin = _yMin!;
-    final yMax = _yMax!;
+    // Prune the head of the window. The list is timestamp-ascending
+    // (we always append), so the head is the oldest sample.
+    while (_ySamples.isNotEmpty &&
+        now.difference(_ySamples.first.timestamp) > _decayWindow) {
+      _ySamples.removeAt(0);
+    }
+    // Safety cap.
+    while (_ySamples.length > _maxSamples) {
+      _ySamples.removeAt(0);
+    }
+
+    // Need a handful of samples before deriving thresholds; one
+    // outlier from a single frame shouldn't drive the state machine.
+    if (_ySamples.length < 5) return _empty();
+
+    var yMin = _ySamples.first.y;
+    var yMax = _ySamples.first.y;
+    for (var i = 1; i < _ySamples.length; i++) {
+      final v = _ySamples[i].y;
+      if (v < yMin) yMin = v;
+      if (v > yMax) yMax = v;
+    }
     final range = yMax - yMin;
     if (range < minRange) return _empty();
 
@@ -546,22 +809,25 @@ class BurpeeAnalyzer implements PoseAnalyzer {
 
     var repJustCompleted = false;
     String? contextualCue;
+    String? pacingFeedback;
 
     if (current != previous && previous != _BurpeePhase.unknown) {
       if (current == _BurpeePhase.standing && previous == _BurpeePhase.down) {
         // Full STANDING→DOWN→STANDING cycle complete.
-        final now = DateTime.now();
         final last = _lastRepTime;
         if (last == null || now.difference(last) >= minRepInterval) {
+          final repDuration = last == null ? null : now.difference(last);
           _reps += 1;
           repJustCompleted = true;
           _lastRepTime = now;
+          if (repDuration != null) {
+            pacingFeedback = _pacing.evaluate(repDuration, now);
+          }
         }
       } else if (current == _BurpeePhase.down &&
           previous == _BurpeePhase.standing) {
         // User just started descending → coach the next phase. Throttled
         // so consecutive burpees don't say it on every rep.
-        final now = DateTime.now();
         final last = _lastCueTime;
         if (last == null || now.difference(last) >= cueCooldown) {
           contextualCue = 'Şimdi aşağı in ve plank pozisyonu al.';
@@ -583,6 +849,7 @@ class BurpeeAnalyzer implements PoseAnalyzer {
       formWarning: null,
       repJustCompleted: repJustCompleted,
       contextualCue: contextualCue,
+      pacingFeedback: pacingFeedback,
     );
   }
 
@@ -598,6 +865,12 @@ class BurpeeAnalyzer implements PoseAnalyzer {
         formWarning: null,
         repJustCompleted: false,
       );
+}
+
+class _YSample {
+  const _YSample(this.timestamp, this.y);
+  final DateTime timestamp;
+  final double y;
 }
 
 enum _BurpeePhase { unknown, standing, down }

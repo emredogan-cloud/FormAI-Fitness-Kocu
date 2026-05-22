@@ -45,6 +45,17 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   /// `ref.listen` callback fires once per state delivery).
   bool _authGateShown = false;
 
+  /// Phase 141 · single-fire latch for "Pro detected; navigate to
+  /// dashboard". A Pro user who lands on the paywall — whether
+  /// because the router auto-redirected them from `/auth` after
+  /// login, because a locked-feature tap pushed them here, or
+  /// because they navigated manually — should never be made to
+  /// look at the offer cards. We watch `isProProvider` and self-
+  /// redirect to the dashboard the moment it reports true. The
+  /// latch prevents repeated post-frame schedules if multiple
+  /// listener fires land in the same frame.
+  bool _proRouteScheduled = false;
+
   /// Phase 96 · mirrors `Purchases.isConfigured`. We can't call the
   /// async getter inline from `build()`, so the value is read once on
   /// mount and re-read after each connectivity transition (and after a
@@ -87,6 +98,46 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     // getter is fire-and-forget; the build method handles the not-yet
     // case by keeping the spinner up.
     _refreshSdkReady();
+    // Phase 141 · post-auth refresh safety net.
+    //
+    // When the router auto-redirects /auth → /paywall on auth state
+    // change, AuthScreen unmounts mid-`_submit`. Whichever follow-up
+    // calls happened to be in flight (alias, subscription refresh,
+    // manual navigation) may have died on the WidgetRef the moment
+    // AuthScreen's State was disposed. That left `subscriptionProvider`
+    // holding the pre-auth anonymous entitlement snapshot, so
+    // `isProProvider` stayed false even for an existing-Pro user, and
+    // the self-redirect below couldn't fire.
+    //
+    // Calling alias here is idempotent — short-circuits if RC is
+    // already aliased to the current Supabase user — but for the
+    // post-/auth landing case it forces `Purchases.logIn` against the
+    // freshly signed-in user, which invalidates `subscriptionProvider`
+    // (see `AuthController.aliasRevenueCatWithCurrentUser`), which
+    // triggers a fresh `getCustomerInfo`, which flips `isProProvider`
+    // to true for an active entitlement. The `isProProvider` listener
+    // below then schedules the dashboard navigation on the next frame.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _hydrateSubscriptionForCurrentUser();
+    });
+  }
+
+  /// Phase 141 · ensures RC is aliased to the current Supabase user
+  /// and subscriptionProvider reflects the post-`logIn` entitlement set.
+  /// Idempotent and safe to call repeatedly — the alias helper has its
+  /// own "already aligned" short-circuit.
+  Future<void> _hydrateSubscriptionForCurrentUser() async {
+    if (!mounted) return;
+    try {
+      await ref.read(authControllerProvider).aliasRevenueCatWithCurrentUser();
+    } catch (e, st) {
+      AppLogger.warning(
+        'paywall mount alias hydration failed; falling back to existing '
+        'subscription state',
+        category: 'monetization',
+        data: {'error': e.toString(), 'stack': st.toString()},
+      );
+    }
   }
 
   /// Phase 96 · refresh the cached `Purchases.isConfigured` value.
@@ -161,6 +212,19 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     if (!wasOnline && online) {
       unawaited(_onConnectivityRestored());
     }
+  }
+
+  /// Phase 141 · listener for [isProProvider] transitions. Fires the
+  /// dashboard navigation the first time Pro becomes true. Latched
+  /// so duplicate signals (e.g. RC re-emitting customerInfo after a
+  /// successful purchase) don't schedule overlapping navigations.
+  void _onProDetected(bool? previous, bool next) {
+    if (!next || _proRouteScheduled) return;
+    _proRouteScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.go('/');
+    });
   }
 
   /// Phase 94 · auth-gate dispatcher. Called from two sites in
@@ -239,6 +303,23 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     // every auth operation updates before resolving its future.
     _onAuthStateChanged(null, Supabase.instance.client.auth.currentUser);
 
+    // Phase 141 · self-redirect for Pro users. The router auto-
+    // bounces non-anonymous users from `/auth` → `/paywall` the
+    // moment Supabase emits `signedIn`, which unmounts AuthScreen
+    // before its own `_routePostAuth` can navigate Pro users to
+    // the dashboard. Watching `isProProvider` here closes that
+    // race: regardless of how a Pro user landed on the paywall,
+    // we get them off it on the next frame.
+    ref.listen<bool>(isProProvider, _onProDetected);
+    final currentIsPro = ref.read(isProProvider);
+    if (currentIsPro && !_proRouteScheduled) {
+      _proRouteScheduled = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        context.go('/');
+      });
+    }
+
     // Phase 96 · drive the offline → online reset off the shared
     // connectivity stream. Watching from build() means the listener's
     // lifetime is tied to the screen's, and the handler keys off the
@@ -311,42 +392,41 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           // moment" — the photos the user just walked through stay
           // present in the room, dimmed and blurred, as Form invites
           // them to commit.
-          if (isDark)
-            const Positioned.fill(child: _PaywallCinematicBackdrop()),
+          if (isDark) const Positioned.fill(child: _PaywallCinematicBackdrop()),
           // Layer 3 · paywall content (unchanged structure / order).
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
               child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _HeroSection(gender: ref.watch(wizardProvider).gender),
-                    const SizedBox(height: 24),
-                    _buildPlansRow(
-                      offerings: offerings,
-                      isLoading: offeringsLoading,
-                    ),
-                    const SizedBox(height: 18),
-                    const _NoPaymentBadge(),
-                    const SizedBox(height: 16),
-                    _buildCta(canPurchase: canPurchase),
-                    const SizedBox(height: 6),
-                    _buildRestoreButton(
-                      canPurchase: canPurchase,
-                      isLoading: offeringsLoading,
-                    ),
-                    const SizedBox(height: 6),
-                    const _LegalFooter(),
-                    // Phase 40: Sandbox override button is strictly a
-                    // debug-only affordance now. The `_kDevProOverrideKey`
-                    // logic in `monetization_provider` still reads from
-                    // SharedPreferences regardless so local devs can keep
-                    // the flag set, but the UI tile only renders in
-                    // debug builds — App Store reviewers never see it.
-                    if (kDebugMode) ...[
-                      const SizedBox(height: 12),
-                      _buildSandboxButton(),
-                    ],
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _HeroSection(gender: ref.watch(wizardProvider).gender),
+                  const SizedBox(height: 24),
+                  _buildPlansRow(
+                    offerings: offerings,
+                    isLoading: offeringsLoading,
+                  ),
+                  const SizedBox(height: 18),
+                  const _NoPaymentBadge(),
+                  const SizedBox(height: 16),
+                  _buildCta(canPurchase: canPurchase),
+                  const SizedBox(height: 6),
+                  _buildRestoreButton(
+                    canPurchase: canPurchase,
+                    isLoading: offeringsLoading,
+                  ),
+                  const SizedBox(height: 6),
+                  const _LegalFooter(),
+                  // Phase 40: Sandbox override button is strictly a
+                  // debug-only affordance now. The `_kDevProOverrideKey`
+                  // logic in `monetization_provider` still reads from
+                  // SharedPreferences regardless so local devs can keep
+                  // the flag set, but the UI tile only renders in
+                  // debug builds — App Store reviewers never see it.
+                  if (kDebugMode) ...[
+                    const SizedBox(height: 12),
+                    _buildSandboxButton(),
+                  ],
                 ],
               ),
             ),
@@ -355,6 +435,37 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
             top: MediaQuery.of(context).padding.top + 8,
             right: 12,
             child: _CloseButton(onTap: () => _close(context)),
+          ),
+          // Phase 142 · transitional hydration veil.
+          //
+          // Visible while `subscriptionProvider` is in flight (cold-
+          // start RC load, post-auth alias re-fetch) OR while a Pro
+          // self-redirect is scheduled but hasn't yet happened. Both
+          // cases would otherwise expose the paywall's offer cards
+          // briefly during what should be a clean transition — a
+          // free user mid-cold-start sees skeleton cards flicker
+          // into real prices; a freshly-signed-in Pro user sees the
+          // paywall flash for ~500-900ms before the dashboard
+          // navigation completes. The veil masks both without
+          // adding spinner-hell semantics: a single small brand-
+          // purple progress indicator on the paywall's own dark
+          // backdrop reads as "preparing" rather than "stuck".
+          //
+          // The veil is the topmost Stack layer so it covers the
+          // close button — intentional, since tapping close during
+          // hydration would otherwise race the in-flight alias call.
+          // Fade is 320 ms ease-out, matched to the route's 280 ms
+          // CustomTransitionPage so the two animations feel of a
+          // piece.
+          IgnorePointer(
+            ignoring: !(subscription.isLoading || _proRouteScheduled),
+            child: AnimatedOpacity(
+              opacity:
+                  (subscription.isLoading || _proRouteScheduled) ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 320),
+              curve: Curves.easeOutCubic,
+              child: const _PaywallHydrationVeil(),
+            ),
           ),
         ],
       ),
@@ -710,9 +821,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       // which already blocks the CTA + Restore.
       if (mounted) setState(() => _busy = true);
       try {
-        await ref
-            .read(authControllerProvider)
-            .aliasRevenueCatWithCurrentUser();
+        await ref.read(authControllerProvider).aliasRevenueCatWithCurrentUser();
       } finally {
         if (mounted) setState(() => _busy = false);
       }
@@ -1655,6 +1764,37 @@ class _CloseButton extends StatelessWidget {
   }
 }
 
+/// Phase 142 · transitional hydration veil drawn on top of the paywall
+/// content while [subscriptionProvider] is in flight or while a Pro
+/// self-redirect is queued. Renders as a full-screen dark scrim
+/// matching the paywall's hero backdrop, with a single small brand-
+/// purple progress indicator centered. No copy ("Loading…",
+/// "Hazırlanıyor", etc.) — the dark scrim + brand-tint indicator reads
+/// as a deliberate "preparing" beat without sliding into spinner-hell
+/// territory. The parent [AnimatedOpacity] supplies the 320 ms fade.
+class _PaywallHydrationVeil extends StatelessWidget {
+  const _PaywallHydrationVeil();
+
+  static const Color _neon = Color(0xFF8E5BFF);
+
+  @override
+  Widget build(BuildContext context) {
+    return const ColoredBox(
+      color: Color(0xFF050410),
+      child: Center(
+        child: SizedBox(
+          width: 28,
+          height: 28,
+          child: CircularProgressIndicator(
+            strokeWidth: 2.2,
+            valueColor: AlwaysStoppedAnimation<Color>(_neon),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Phase 115 · cinematic backdrop layered behind the dark-mode
 /// paywall content. Reverse-engineered from the reference video's
 /// ~1:11 paywall composition — adapted for FormAI by keeping the
@@ -1688,8 +1828,21 @@ class _PaywallCinematicBackdrop extends StatefulWidget {
 }
 
 class _PaywallCinematicBackdropState extends State<_PaywallCinematicBackdrop>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _drift;
+
+  /// Phase 142 · entrance fade. The cinematic backdrop is the most
+  /// paint-heavy layer on the paywall (5 image widgets + filters +
+  /// per-frame transform updates), so it pays the largest first-
+  /// frame cost during a route transition. Starting at opacity 0
+  /// and fading to 1 over 520 ms lets Flutter skip painting it
+  /// entirely on the first frame (the `Opacity` widget short-
+  /// circuits at exactly 0) — the paywall's hero, plan cards, and
+  /// CTA get the first frame to themselves, then the ambient
+  /// backdrop fades in as a secondary "depth arriving" beat. The
+  /// drift controller still starts immediately so the parallax is
+  /// already in motion the moment the backdrop becomes visible.
+  late final AnimationController _entranceFade;
 
   @override
   void initState() {
@@ -1698,85 +1851,100 @@ class _PaywallCinematicBackdropState extends State<_PaywallCinematicBackdrop>
       vsync: this,
       duration: const Duration(seconds: 30),
     )..repeat(reverse: true);
+    _entranceFade = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 520),
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _entranceFade.forward();
+    });
   }
 
   @override
   void dispose() {
     _drift.dispose();
+    _entranceFade.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return RepaintBoundary(
-      child: AnimatedBuilder(
-        animation: _drift,
-        builder: (context, _) {
-          // Smoothed bell so the parallax never reverses harshly at
-          // the loop ends; each photo reads its own alignment offset
-          // off this `t`, multiplied by a per-photo direction so
-          // parallax directions vary across the layer stack.
-          final t =
-              (math.sin(_drift.value * math.pi * 2 - math.pi / 2) + 1) / 2;
-          return Stack(
-            fit: StackFit.expand,
-            children: [
-              _BackdropImage(
-                asset: 'photos/cinsiyetseçimierkek.webp',
-                alignment: Alignment(-0.78 + 0.05 * t, -0.55 + 0.04 * t),
-                widthFraction: 0.42,
-                opacity: 0.18,
-                rotationDegrees: -3,
-              ),
-              _BackdropImage(
-                asset: 'photos/hedefinneSıkılaşmak.webp',
-                alignment: Alignment(0.65 - 0.05 * t, -0.62 + 0.03 * t),
-                widthFraction: 0.36,
-                opacity: 0.16,
-                rotationDegrees: 4,
-              ),
-              _BackdropImage(
-                asset: 'photos/hedefinneHacimKazanmak.webp',
-                alignment: Alignment(-0.55 + 0.04 * t, 0.30 - 0.05 * t),
-                widthFraction: 0.40,
-                opacity: 0.14,
-                rotationDegrees: -2,
-              ),
-              _BackdropImage(
-                asset: 'photos/hedef_guclenmek.webp',
-                alignment: Alignment(0.72 + 0.04 * t, 0.55 - 0.04 * t),
-                widthFraction: 0.38,
-                opacity: 0.18,
-                rotationDegrees: 5,
-              ),
-              _BackdropImage(
-                asset: 'photos/günlükaktivitenmasabaşı.webp',
-                alignment: Alignment(0.0, 0.85 - 0.04 * t),
-                widthFraction: 0.34,
-                opacity: 0.13,
-                rotationDegrees: 0,
-              ),
-              // Bottom-weighted dim gradient — keeps the marketing
-              // cards + CTA readable against the layered photos
-              // without flattening the depth at the top of the screen
-              // where the hero artwork sits.
-              const DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Color(0x00000000),
-                      Color(0x55000000),
-                      Color(0xAA000000),
-                    ],
-                    stops: [0.0, 0.45, 1.0],
+      child: FadeTransition(
+        opacity: CurvedAnimation(
+          parent: _entranceFade,
+          curve: Curves.easeOutCubic,
+        ),
+        child: AnimatedBuilder(
+          animation: _drift,
+          builder: (context, _) {
+            // Smoothed bell so the parallax never reverses harshly at
+            // the loop ends; each photo reads its own alignment offset
+            // off this `t`, multiplied by a per-photo direction so
+            // parallax directions vary across the layer stack.
+            final t =
+                (math.sin(_drift.value * math.pi * 2 - math.pi / 2) + 1) / 2;
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                _BackdropImage(
+                  asset: 'photos/cinsiyetseçimierkek.webp',
+                  alignment: Alignment(-0.78 + 0.05 * t, -0.55 + 0.04 * t),
+                  widthFraction: 0.42,
+                  opacity: 0.18,
+                  rotationDegrees: -3,
+                ),
+                _BackdropImage(
+                  asset: 'photos/hedefinneSıkılaşmak.webp',
+                  alignment: Alignment(0.65 - 0.05 * t, -0.62 + 0.03 * t),
+                  widthFraction: 0.36,
+                  opacity: 0.16,
+                  rotationDegrees: 4,
+                ),
+                _BackdropImage(
+                  asset: 'photos/hedefinneHacimKazanmak.webp',
+                  alignment: Alignment(-0.55 + 0.04 * t, 0.30 - 0.05 * t),
+                  widthFraction: 0.40,
+                  opacity: 0.14,
+                  rotationDegrees: -2,
+                ),
+                _BackdropImage(
+                  asset: 'photos/hedef_guclenmek.webp',
+                  alignment: Alignment(0.72 + 0.04 * t, 0.55 - 0.04 * t),
+                  widthFraction: 0.38,
+                  opacity: 0.18,
+                  rotationDegrees: 5,
+                ),
+                _BackdropImage(
+                  asset: 'photos/günlükaktivitenmasabaşı.webp',
+                  alignment: Alignment(0.0, 0.85 - 0.04 * t),
+                  widthFraction: 0.34,
+                  opacity: 0.13,
+                  rotationDegrees: 0,
+                ),
+                // Bottom-weighted dim gradient — keeps the marketing
+                // cards + CTA readable against the layered photos
+                // without flattening the depth at the top of the screen
+                // where the hero artwork sits.
+                const DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Color(0x00000000),
+                        Color(0x55000000),
+                        Color(0xAA000000),
+                      ],
+                      stops: [0.0, 0.45, 1.0],
+                    ),
                   ),
                 ),
-              ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
     );
   }

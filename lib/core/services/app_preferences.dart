@@ -370,9 +370,8 @@ class AppPreferences {
   Future<bool> refillFreezeTokensIfDue() async {
     final now = DateTime.now();
     final lastRefillRaw = _prefs.getString(_freezeRefillIsoKey);
-    final lastRefill = lastRefillRaw == null
-        ? null
-        : DateTime.tryParse(lastRefillRaw);
+    final lastRefill =
+        lastRefillRaw == null ? null : DateTime.tryParse(lastRefillRaw);
     if (lastRefill != null) {
       // Skip when we already topped up this Monday or later. Compare on
       // the start-of-Monday of each week; any moment after that is the

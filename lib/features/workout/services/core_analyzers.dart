@@ -4,6 +4,7 @@ import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 
 import '../../../core/utils/angle_calculator.dart';
 import 'crunch_analyzer.dart' show CrunchResult, CrunchState;
+import 'pacing_tracker.dart';
 import 'pose_analyzer.dart';
 
 /// Reps counted when the user lifts both legs from horizontal (~180°
@@ -24,12 +25,14 @@ class LegRaiseAnalyzer implements PoseAnalyzer {
   int _reps = 0;
   CrunchState _state = CrunchState.unknown;
   DateTime? _lastRepTime;
+  final PacingTracker _pacing = PacingPresets.strength();
 
   @override
   void reset() {
     _reps = 0;
     _state = CrunchState.unknown;
     _lastRepTime = null;
+    _pacing.reset();
   }
 
   @override
@@ -55,6 +58,7 @@ class LegRaiseAnalyzer implements PoseAnalyzer {
     final hipAngle = AngleCalculator.between(shoulder, hip, ankle);
     final previousState = _state;
     var repJustCompleted = false;
+    String? pacingFeedback;
 
     if (hipAngle > downThreshold) {
       _state = CrunchState.down;
@@ -63,9 +67,13 @@ class LegRaiseAnalyzer implements PoseAnalyzer {
         final now = DateTime.now();
         final last = _lastRepTime;
         if (last == null || now.difference(last) >= minRepInterval) {
+          final repDuration = last == null ? null : now.difference(last);
           _reps += 1;
           repJustCompleted = true;
           _lastRepTime = now;
+          if (repDuration != null) {
+            pacingFeedback = _pacing.evaluate(repDuration, now);
+          }
         }
       }
       _state = CrunchState.up;
@@ -78,34 +86,51 @@ class LegRaiseAnalyzer implements PoseAnalyzer {
       neckAngle: null,
       formWarning: null,
       repJustCompleted: repJustCompleted,
+      pacingFeedback: pacingFeedback,
     );
   }
 }
 
-/// Detects torso rotation by tracking the horizontal displacement of the
-/// shoulder midpoint relative to the hip midpoint. A "rep" is a complete
-/// left↔right swing. Works for the seated front-facing-camera setup —
-/// a side-camera deployment would benefit from explicit z-axis input.
+/// Detects torso rotation by tracking the displacement of the
+/// shoulder midpoint relative to the hip midpoint. A "rep" is a
+/// complete left↔right swing.
+///
+/// Tier-B.10 · the previous implementation only read the x-offset,
+/// which assumes the user faces the camera. For the natural side-
+/// camera Russian twist setup (camera placed perpendicular to the
+/// user's sitting plane), the rotation happens along z — the user's
+/// torso swings TOWARD and AWAY from the camera — and the x-offset
+/// barely moves.
+///
+/// The fix: compute BOTH x and z offsets per frame and use the
+/// dominant axis (whichever has the larger absolute displacement
+/// over the rep cycle). The dominant axis is re-elected on every
+/// frame, so a user changing camera setup mid-set (rare but real)
+/// is handled transparently.
 class RussianTwistAnalyzer implements PoseAnalyzer {
   RussianTwistAnalyzer({
     this.twistFraction = 0.18,
     this.minRepInterval = const Duration(milliseconds: 600),
   });
 
-  /// How far (as a fraction of shoulder width) the shoulder-mid must drift
-  /// from the hip-mid before we register a side commit.
+  /// How far (as a fraction of shoulder width) the shoulder-mid must
+  /// drift from the hip-mid along the dominant axis before we
+  /// register a side commit. Applied to whichever of x or z is
+  /// dominant on the current frame.
   final double twistFraction;
   final Duration minRepInterval;
 
   int _reps = 0;
   _Side _state = _Side.unknown;
   DateTime? _lastRepTime;
+  final PacingTracker _pacing = PacingPresets.compound();
 
   @override
   void reset() {
     _reps = 0;
     _state = _Side.unknown;
     _lastRepTime = null;
+    _pacing.reset();
   }
 
   @override
@@ -121,9 +146,25 @@ class RussianTwistAnalyzer implements PoseAnalyzer {
     final shoulderWidth = (ls.x - rs.x).abs();
     if (shoulderWidth < 1) return _empty();
 
+    // Front-camera (or close-to-front) signal: x-offset between
+    // shoulder midpoint and hip midpoint.
     final shoulderMidX = (ls.x + rs.x) / 2;
     final hipMidX = (lh.x + rh.x) / 2;
-    final offset = shoulderMidX - hipMidX;
+    final xOffset = shoulderMidX - hipMidX;
+
+    // Side-camera signal: z-offset on the same axis. BlazePose's z
+    // is on roughly the same scale as x/y, so the same shoulder-
+    // width normalisation works for both axes.
+    final shoulderMidZ = (ls.z + rs.z) / 2;
+    final hipMidZ = (lh.z + rh.z) / 2;
+    final zOffset = shoulderMidZ - hipMidZ;
+
+    // Pick the dominant axis on this frame. Whichever signal is
+    // currently larger in magnitude is the one driving the rotation
+    // — usually camera-orientation-stable across a set, but elected
+    // per-frame to handle setup shifts.
+    final useZ = zOffset.abs() > xOffset.abs();
+    final offset = useZ ? zOffset : xOffset;
     final threshold = shoulderWidth * twistFraction;
 
     final previous = _state;
@@ -135,15 +176,20 @@ class RussianTwistAnalyzer implements PoseAnalyzer {
     }
 
     var repJustCompleted = false;
+    String? pacingFeedback;
     if (current != previous &&
         previous != _Side.unknown &&
         current != _Side.unknown) {
       final now = DateTime.now();
       final last = _lastRepTime;
       if (last == null || now.difference(last) >= minRepInterval) {
+        final repDuration = last == null ? null : now.difference(last);
         _reps += 1;
         repJustCompleted = true;
         _lastRepTime = now;
+        if (repDuration != null) {
+          pacingFeedback = _pacing.evaluate(repDuration, now);
+        }
       }
     }
     _state = current;
@@ -162,6 +208,7 @@ class RussianTwistAnalyzer implements PoseAnalyzer {
       neckAngle: null,
       formWarning: null,
       repJustCompleted: repJustCompleted,
+      pacingFeedback: pacingFeedback,
     );
   }
 
@@ -178,29 +225,51 @@ class RussianTwistAnalyzer implements PoseAnalyzer {
 }
 
 /// Plank-position alternating knee drives. Each cycle (knee-in then back)
-/// is one rep — implemented by tracking which knee is "active" (closer to
-/// its same-side shoulder than the resting threshold) and counting on
-/// L↔R hand-offs.
+/// is one rep — implemented by tracking which knee is "active" (driven
+/// forward toward the chest) and counting on L↔R hand-offs.
+///
+/// Tier-B.3 · the previous 2D-distance check (knee-to-same-side-shoulder
+/// distance under a torso-length fraction) systematically undercounted
+/// in the typical front-facing camera setup because the knee comes IN
+/// toward the chest along the **z** axis. From the camera's POV the
+/// knee's 2D coordinates barely move; only its z (depth) decreases.
+///
+/// New signal: per-side `knee.z - hip.z`. BlazePose's z component is
+/// approximately on the same scale as x/y, so we normalise the
+/// active-threshold by the 2D torso length and gate at -0.25 × torso
+/// length (knee closer to camera than hip by a quarter of torso
+/// height). A 2D-distance fallback is preserved for the case where
+/// the front camera is replaced with a side-angle setup (z signal
+/// nearly zero, 2D knee-to-shoulder distance is the dominant signal).
 class MountainClimberAnalyzer implements PoseAnalyzer {
   MountainClimberAnalyzer({
+    this.zFraction = 0.25,
     this.activeFraction = 0.55,
     this.minRepInterval = const Duration(milliseconds: 350),
   });
 
-  /// A knee is "active" when its distance to the same-side shoulder drops
-  /// below this fraction of the resting torso length (shoulder→hip).
+  /// A knee is "active in z" when `hip.z - knee.z > torsoLength × zFraction`
+  /// — i.e. the knee is forward of the hip plane by 25 % of torso length.
+  final double zFraction;
+
+  /// 2D fallback: a knee is "active in xy" when its 2D distance to the
+  /// same-side shoulder drops below `torsoLength × activeFraction`.
+  /// Preserved for side-camera setups where z is unreliable.
   final double activeFraction;
+
   final Duration minRepInterval;
 
   int _reps = 0;
   _Side _state = _Side.unknown;
   DateTime? _lastRepTime;
+  final PacingTracker _pacing = PacingPresets.cardio();
 
   @override
   void reset() {
     _reps = 0;
     _state = _Side.unknown;
     _lastRepTime = null;
+    _pacing.reset();
   }
 
   @override
@@ -226,23 +295,47 @@ class MountainClimberAnalyzer implements PoseAnalyzer {
     );
     if (torsoLength < 1) return _empty();
 
-    final leftActive = _distance(lk, ls) < torsoLength * activeFraction;
-    final rightActive = _distance(rk, rs) < torsoLength * activeFraction;
+    // Primary signal: knee.z relative to hip.z, normalised by 2D torso
+    // length. Front-camera mountain climbers move the knee toward the
+    // camera (decreasing z), which the previous 2D-distance check
+    // missed.
+    final leftZDelta = lh.z - lk.z; // positive when knee is closer to camera
+    final rightZDelta = rh.z - rk.z;
+    final zThreshold = torsoLength * zFraction;
+    final leftActiveZ = leftZDelta > zThreshold;
+    final rightActiveZ = rightZDelta > zThreshold;
+
+    // Fallback signal: 2D distance from knee to same-side shoulder.
+    // Catches the side-camera setup where the depth axis is parallel
+    // to the camera plane and z barely changes.
+    final leftActive2D = _distance(lk, ls) < torsoLength * activeFraction;
+    final rightActive2D = _distance(rk, rs) < torsoLength * activeFraction;
+
+    // A knee is "active" if EITHER signal fires. Combining them is the
+    // safest way to handle mixed camera orientations without a runtime
+    // calibration step.
+    final leftActive = leftActiveZ || leftActive2D;
+    final rightActive = rightActiveZ || rightActive2D;
 
     _Side current = _state;
     if (leftActive && !rightActive) current = _Side.left;
     if (rightActive && !leftActive) current = _Side.right;
 
     var repJustCompleted = false;
+    String? pacingFeedback;
     if (current != _state &&
         _state != _Side.unknown &&
         current != _Side.unknown) {
       final now = DateTime.now();
       final last = _lastRepTime;
       if (last == null || now.difference(last) >= minRepInterval) {
+        final repDuration = last == null ? null : now.difference(last);
         _reps += 1;
         repJustCompleted = true;
         _lastRepTime = now;
+        if (repDuration != null) {
+          pacingFeedback = _pacing.evaluate(repDuration, now);
+        }
       }
     }
     _state = current;
@@ -258,6 +351,7 @@ class MountainClimberAnalyzer implements PoseAnalyzer {
       neckAngle: null,
       formWarning: null,
       repJustCompleted: repJustCompleted,
+      pacingFeedback: pacingFeedback,
     );
   }
 
@@ -286,12 +380,14 @@ class BicycleCrunchAnalyzer implements PoseAnalyzer {
   int _reps = 0;
   _Side _state = _Side.unknown;
   DateTime? _lastRepTime;
+  final PacingTracker _pacing = PacingPresets.cardio();
 
   @override
   void reset() {
     _reps = 0;
     _state = _Side.unknown;
     _lastRepTime = null;
+    _pacing.reset();
   }
 
   @override
@@ -326,15 +422,20 @@ class BicycleCrunchAnalyzer implements PoseAnalyzer {
     }
 
     var repJustCompleted = false;
+    String? pacingFeedback;
     if (current != _state &&
         _state != _Side.unknown &&
         current != _Side.unknown) {
       final now = DateTime.now();
       final last = _lastRepTime;
       if (last == null || now.difference(last) >= minRepInterval) {
+        final repDuration = last == null ? null : now.difference(last);
         _reps += 1;
         repJustCompleted = true;
         _lastRepTime = now;
+        if (repDuration != null) {
+          pacingFeedback = _pacing.evaluate(repDuration, now);
+        }
       }
     }
     _state = current;
@@ -350,6 +451,7 @@ class BicycleCrunchAnalyzer implements PoseAnalyzer {
       neckAngle: null,
       formWarning: null,
       repJustCompleted: repJustCompleted,
+      pacingFeedback: pacingFeedback,
     );
   }
 
@@ -366,26 +468,38 @@ class BicycleCrunchAnalyzer implements PoseAnalyzer {
 /// Lying flutter kicks. Counts a rep each time the lifted leg switches.
 /// Uses the relative ankle-y vs hip-y delta: a "lifted" leg has its ankle
 /// closer (smaller y in image space) to the hip line than the resting one.
+///
+/// Tier-B.6 · the previous `minDelta = 12.0` was an absolute pixel
+/// threshold. At close camera distance 12 px is a tiny leg motion and
+/// noise triggers reps; at far camera distance 12 px is a huge leg
+/// motion that the user struggles to reach. The threshold is now
+/// expressed as [minDeltaFraction] of the shoulder-to-ankle vertical
+/// distance — a scale that's stable across camera setups.
 class FlutterKickAnalyzer implements PoseAnalyzer {
   FlutterKickAnalyzer({
-    this.minDelta = 12.0,
+    this.minDeltaFraction = 0.04,
     this.minRepInterval = const Duration(milliseconds: 350),
   });
 
-  /// Minimum y-difference between the two ankles (in pixels) before we
-  /// commit to a side. Filters out the stand-still resting frame.
-  final double minDelta;
+  /// Minimum ankle-y separation as a fraction of the user's
+  /// shoulder-to-ankle 2D distance. 0.04 ≈ 4 % of body length
+  /// vertically — empirically the smallest visible leg flutter that
+  /// reads as a deliberate kick rather than a resting frame jitter.
+  final double minDeltaFraction;
+
   final Duration minRepInterval;
 
   int _reps = 0;
   _Side _state = _Side.unknown;
   DateTime? _lastRepTime;
+  final PacingTracker _pacing = PacingPresets.cardio();
 
   @override
   void reset() {
     _reps = 0;
     _state = _Side.unknown;
     _lastRepTime = null;
+    _pacing.reset();
   }
 
   @override
@@ -393,6 +507,20 @@ class FlutterKickAnalyzer implements PoseAnalyzer {
     final la = pose.landmarks[PoseLandmarkType.leftAnkle];
     final ra = pose.landmarks[PoseLandmarkType.rightAnkle];
     if (la == null || ra == null) return _empty();
+
+    // Scale reference: shoulder-to-ankle vertical distance. We pick
+    // the higher-likelihood shoulder so a partially-occluded body
+    // (one arm tucked under the head) still calibrates cleanly. The
+    // anchor ankle for the scale is the average of left+right ankle
+    // y-coordinates; that way a moving leg doesn't shift the
+    // reference between frames.
+    final shoulder = _pickHigher(
+        pose, PoseLandmarkType.leftShoulder, PoseLandmarkType.rightShoulder);
+    if (shoulder == null) return _empty();
+    final ankleMidY = (la.y + ra.y) / 2;
+    final scale = (ankleMidY - shoulder.y).abs();
+    if (scale < 1) return _empty();
+    final minDelta = scale * minDeltaFraction;
 
     final delta = la.y - ra.y;
     _Side current = _state;
@@ -404,15 +532,20 @@ class FlutterKickAnalyzer implements PoseAnalyzer {
     }
 
     var repJustCompleted = false;
+    String? pacingFeedback;
     if (current != _state &&
         _state != _Side.unknown &&
         current != _Side.unknown) {
       final now = DateTime.now();
       final last = _lastRepTime;
       if (last == null || now.difference(last) >= minRepInterval) {
+        final repDuration = last == null ? null : now.difference(last);
         _reps += 1;
         repJustCompleted = true;
         _lastRepTime = now;
+        if (repDuration != null) {
+          pacingFeedback = _pacing.evaluate(repDuration, now);
+        }
       }
     }
     _state = current;
@@ -428,6 +561,7 @@ class FlutterKickAnalyzer implements PoseAnalyzer {
       neckAngle: null,
       formWarning: null,
       repJustCompleted: repJustCompleted,
+      pacingFeedback: pacingFeedback,
     );
   }
 
@@ -444,6 +578,15 @@ class FlutterKickAnalyzer implements PoseAnalyzer {
 /// Plank is time-based — there is no rep to count. The analyzer only
 /// surfaces a posture warning when the body sags (shoulder-hip-ankle
 /// breaks below ~155°). Throttled internally so TTS isn't spammed.
+///
+/// Tier-B.5 · the sag detector now requires
+/// [_violationStreakThreshold] consecutive low-angle frames before
+/// emitting a warning. ML Kit's ankle landmark is the noisiest of the
+/// three vertices on the line check, and a single transient bad frame
+/// (user shifting weight, sock occluding the ankle) was previously
+/// enough to fire "Kalçanı düz tut!" even though the actual posture
+/// was fine. Consecutive-frame gating absorbs the noise and only
+/// fires on real sustained sag.
 class PlankAnalyzer implements PoseAnalyzer {
   PlankAnalyzer({
     this.minStraightAngle = 155.0,
@@ -453,10 +596,19 @@ class PlankAnalyzer implements PoseAnalyzer {
   final double minStraightAngle;
   final Duration warningCooldown;
 
+  /// Consecutive frames below [minStraightAngle] required before we
+  /// commit to "real sag." 5 frames at the camera screen's ~15 FPS
+  /// effective rate = ~0.33 s of sustained violation. Short enough
+  /// that the user gets timely feedback on actual sag; long enough
+  /// to filter single-frame ankle jitter.
+  static const int _violationStreakThreshold = 5;
+
+  int _violationStreak = 0;
   DateTime _lastWarning = DateTime.now().subtract(const Duration(seconds: 10));
 
   @override
   void reset() {
+    _violationStreak = 0;
     _lastWarning = DateTime.now().subtract(const Duration(seconds: 10));
   }
 
@@ -470,6 +622,9 @@ class PlankAnalyzer implements PoseAnalyzer {
         pose, PoseLandmarkType.leftAnkle, PoseLandmarkType.rightAnkle);
 
     if (shoulder == null || hip == null || ankle == null) {
+      // Insufficient tracking — neither warn nor reset the streak
+      // (we don't want a single dropped frame to wash out a real
+      // violation that's been accumulating).
       return const CrunchResult(
         reps: 0,
         state: CrunchState.unknown,
@@ -483,11 +638,22 @@ class PlankAnalyzer implements PoseAnalyzer {
     final lineAngle = AngleCalculator.between(shoulder, hip, ankle);
     String? warning;
     if (lineAngle < minStraightAngle) {
-      final now = DateTime.now();
-      if (now.difference(_lastWarning) >= warningCooldown) {
-        warning = 'Kalçanı düz tut, plank pozisyonunu koru!';
-        _lastWarning = now;
+      _violationStreak += 1;
+      if (_violationStreak >= _violationStreakThreshold) {
+        final now = DateTime.now();
+        if (now.difference(_lastWarning) >= warningCooldown) {
+          warning = 'Kalçanı düz tut, plank pozisyonunu koru!';
+          _lastWarning = now;
+        }
+        // Reset the streak after a warning fires so the next sustained
+        // sag has to re-cross the threshold before re-warning. Combined
+        // with the 8 s cooldown, this prevents alarm-spam.
+        _violationStreak = 0;
       }
+    } else {
+      // Clean frame — wipe the streak so a transient bad frame never
+      // accumulates toward the threshold.
+      _violationStreak = 0;
     }
 
     return CrunchResult(

@@ -229,8 +229,7 @@ class _YearWheel extends StatelessWidget {
                   style: TextStyle(
                     color: selected ? _neon : Colors.white54,
                     fontSize: selected ? 40 : 26,
-                    fontWeight:
-                        selected ? FontWeight.w900 : FontWeight.w500,
+                    fontWeight: selected ? FontWeight.w900 : FontWeight.w500,
                     shadows: selected
                         ? const [Shadow(blurRadius: 14, color: _neon)]
                         : null,

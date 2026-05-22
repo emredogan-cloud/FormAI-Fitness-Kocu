@@ -14,8 +14,10 @@ import 'app_logger.dart';
 /// metadata.
 class LegalUrls {
   const LegalUrls._();
-  static const String terms = 'https://d2srybp77lgcpy.cloudfront.net/terms.html';
-  static const String privacy = 'https://d2srybp77lgcpy.cloudfront.net/privacy.html';
+  static const String terms =
+      'https://d2srybp77lgcpy.cloudfront.net/terms.html';
+  static const String privacy =
+      'https://d2srybp77lgcpy.cloudfront.net/privacy.html';
 
   /// Phase 47B · canonical destek (support) inbox. Reachable via the
   /// profile-tab's "Destek" tile (`openSupportMail`) and referenced in

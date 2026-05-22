@@ -439,6 +439,10 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
     final current = state.value;
     if (current == null || !current.isResting) return;
     _cancelRestTimer();
+    // Tier-B.8 · clear the per-tick countdown provider alongside the
+    // session-state flip so the rest overlay doesn't paint a stale
+    // remaining-seconds value on its way out.
+    ref.read(restCountdownProvider.notifier).set(0);
     state = AsyncData(current.copyWith(
       isResting: false,
       restSecondsRemaining: 0,
@@ -522,10 +526,16 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
     _cancelRestTimer();
     _restPrecedesExerciseChange = isExerciseChange;
     final clamped = seconds <= 0 ? 0 : seconds;
+    // Tier-B.8 · session state mutates ONLY here on rest entry
+    // (isResting=true + initial seconds frozen) and on the rest-end
+    // transition below. Per-second ticks land on
+    // `restCountdownProvider` instead, so listeners that only care
+    // about session transitions stop running every second.
     state = AsyncData(base.copyWith(
       isResting: clamped > 0,
       restSecondsRemaining: clamped,
     ));
+    ref.read(restCountdownProvider.notifier).set(clamped);
     if (clamped <= 0) {
       // Zero-second rest is effectively immediate transition — fire prep
       // straight away so the user still gets the HAZIRLAN! countdown.
@@ -542,10 +552,12 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
         timer.cancel();
         return;
       }
-      final remaining = current.restSecondsRemaining - 1;
+      final remaining = ref.read(restCountdownProvider) - 1;
       if (remaining <= 0) {
         timer.cancel();
         _restTimer = null;
+        ref.read(restCountdownProvider.notifier).set(0);
+        // Single session-state mutation per rest end.
         state = AsyncData(current.copyWith(
           isResting: false,
           restSecondsRemaining: 0,
@@ -563,7 +575,11 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
         }
         _restPrecedesExerciseChange = false;
       } else {
-        state = AsyncData(current.copyWith(restSecondsRemaining: remaining));
+        // Tier-B.8 · per-second decrement no longer touches the
+        // session state. The rest overlay watches
+        // `restCountdownProvider`, the camera-screen listener only
+        // fires on real session transitions.
+        ref.read(restCountdownProvider.notifier).set(remaining);
       }
     });
   }
@@ -708,3 +724,37 @@ final workoutSessionProvider =
     AsyncNotifierProvider<WorkoutSessionNotifier, WorkoutSessionState>(
   WorkoutSessionNotifier.new,
 );
+
+/// Tier-B.8 · live per-second rest countdown. Previously the rest
+/// tick was held inside `WorkoutSessionState.restSecondsRemaining`,
+/// which meant every tick emitted a new `workoutSessionProvider`
+/// state — the camera screen's `ref.listen` body, the iOS Live
+/// Activity sync, and every other workout-state consumer all ran
+/// once per second. Most of that work was no-ops.
+///
+/// The countdown now lives in its own minimal provider that only the
+/// rest overlay watches. `workoutSessionProvider` only re-emits when
+/// real session transitions happen — rest enter, rest exit, exercise
+/// change, etc. The `restSecondsRemaining` field on the session state
+/// is preserved but now holds the INITIAL rest duration (frozen at
+/// rest entry); the live decrement lives here.
+///
+/// Implemented as a `Notifier<int>` because Riverpod 3 removed the
+/// older `StateProvider`. The notifier exposes a `set` method so the
+/// session timer can write without touching `state` directly through
+/// `notifier.state =` (banned in Riverpod 3 outside the notifier
+/// class itself).
+class RestCountdownNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  /// Replaces the current countdown value. Called from the workout
+  /// session notifier's rest timer once per second, and at rest
+  /// enter/exit/skip transitions.
+  void set(int seconds) {
+    state = seconds < 0 ? 0 : seconds;
+  }
+}
+
+final restCountdownProvider =
+    NotifierProvider<RestCountdownNotifier, int>(RestCountdownNotifier.new);

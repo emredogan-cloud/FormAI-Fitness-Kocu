@@ -20,6 +20,7 @@ import 'core/services/widget_sync_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_mode_provider.dart';
 import 'core/utils/app_logger.dart';
+import 'core/utils/audio_feedback.dart';
 
 /// Phase 94 · release-build resilience.
 ///
@@ -344,20 +345,18 @@ class _BootGateState extends State<_BootGate> {
       final posthogHost = _envSafe('POSTHOG_HOST');
       await AnalyticsService.instance
           .init(
-            apiKey: _envSafe('POSTHOG_API_KEY'),
-            host: posthogHost.isEmpty
-                ? 'https://app.posthog.com'
-                : posthogHost,
-          )
+        apiKey: _envSafe('POSTHOG_API_KEY'),
+        host: posthogHost.isEmpty ? 'https://app.posthog.com' : posthogHost,
+      )
           .timeout(
-            const Duration(seconds: 5),
-            onTimeout: () {
-              AppLogger.warning(
-                'PostHog init timed out — analytics disabled',
-                category: 'analytics',
-              );
-            },
+        const Duration(seconds: 5),
+        onTimeout: () {
+          AppLogger.warning(
+            'PostHog init timed out — analytics disabled',
+            category: 'analytics',
           );
+        },
+      );
 
       // Phase 48 · RevenueCat configuration deferred. Was an `await
       // configureRevenueCat()` here on every cold start, blocking the
@@ -376,6 +375,15 @@ class _BootGateState extends State<_BootGate> {
       // refresh until the configuration is in place.
       unawaited(WidgetSyncService.instance.init());
       unawaited(WorkoutLiveActivityService.instance.init());
+
+      // Coverage-pass closure (audit §8 Tier-A item 9) · eager TTS
+      // warm-up. Constructs a throwaway AudioFeedback and fires init()
+      // fire-and-forget so the platform-side TTS engine
+      // (language enumeration, iOS audio category, etc.) is ready
+      // by the time the camera screen mounts its own instance.
+      // Without this, the first speak() on a cold launch races
+      // against language enumeration and can stutter or be silent.
+      unawaited(AudioFeedback().init());
       return prefs;
     } catch (e, st) {
       AppLogger.error(

@@ -409,8 +409,7 @@ class _AuthModalBottomSheetState extends ConsumerState<AuthModalBottomSheet>
         () => ref.read(authControllerProvider).signInWithGoogle(),
         offlineMessage:
             'Google ile giriş yapmak için internet bağlantısı gereklidir.',
-        fallbackError:
-            'Google ile giriş başarısız oldu. Lütfen tekrar dene.',
+        fallbackError: 'Google ile giriş başarısız oldu. Lütfen tekrar dene.',
       );
 
   Future<void> _onApplePressed() => _runOAuth(
@@ -418,8 +417,7 @@ class _AuthModalBottomSheetState extends ConsumerState<AuthModalBottomSheet>
         () => ref.read(authControllerProvider).signInWithApple(),
         offlineMessage:
             'Apple ile giriş yapmak için internet bağlantısı gereklidir.',
-        fallbackError:
-            'Apple ile giriş başarısız oldu. Lütfen tekrar dene.',
+        fallbackError: 'Apple ile giriş başarısız oldu. Lütfen tekrar dene.',
       );
 
   Future<void> _runOAuth(

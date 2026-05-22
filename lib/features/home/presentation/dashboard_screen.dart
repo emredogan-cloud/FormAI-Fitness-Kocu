@@ -182,9 +182,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     if (session == null) return;
     final completed = session.days.where((d) => d.isCompleted).length;
     final isPro = ref.read(isProProvider);
-    await ref
-        .read(conversionMomentProvider)
-        .maybeShowFirstWorkoutProInvitation(
+    await ref.read(conversionMomentProvider).maybeShowFirstWorkoutProInvitation(
           context,
           completedDays: completed,
           isPro: isPro,
@@ -267,29 +265,29 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: overlayStyle,
       child: Scaffold(
-      // Phase 53B · drop the explicit override and let the active
-      // `ThemeData.scaffoldBackgroundColor` drive the canvas. In light
-      // mode that's `AppColors.lightBg` (#F7F8FA, an off-white), which
-      // gives cards painted with `surface` (#FFFFFF) the natural
-      // contrast they were missing. The previous hotfix pinned the
-      // scaffold to `surface` directly, which made cards melt into the
-      // background — exactly the bug the PM screenshotted.
-      body: SafeArea(
-        bottom: false,
-        child: IndexedStack(
-          index: _index,
-          children: const [
-            AntrenmanTab(),
-            NutritionTab(),
-            GelisimTab(),
-            ProfileTab(),
-          ],
+        // Phase 53B · drop the explicit override and let the active
+        // `ThemeData.scaffoldBackgroundColor` drive the canvas. In light
+        // mode that's `AppColors.lightBg` (#F7F8FA, an off-white), which
+        // gives cards painted with `surface` (#FFFFFF) the natural
+        // contrast they were missing. The previous hotfix pinned the
+        // scaffold to `surface` directly, which made cards melt into the
+        // background — exactly the bug the PM screenshotted.
+        body: SafeArea(
+          bottom: false,
+          child: IndexedStack(
+            index: _index,
+            children: const [
+              AntrenmanTab(),
+              NutritionTab(),
+              GelisimTab(),
+              ProfileTab(),
+            ],
+          ),
         ),
-      ),
-      bottomNavigationBar: _BottomNav(
-        index: _index,
-        onChanged: _onTabChanged,
-      ),
+        bottomNavigationBar: _BottomNav(
+          index: _index,
+          onChanged: _onTabChanged,
+        ),
       ),
     );
   }

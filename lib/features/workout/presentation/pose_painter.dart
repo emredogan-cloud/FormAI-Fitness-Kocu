@@ -87,8 +87,7 @@ class PosePainter extends CustomPainter {
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
       final bonePaint = Paint()
         ..color = _neonCyan.withValues(alpha: boneAlpha)
-        ..strokeWidth =
-            boneLikelihood < _lowConfidenceThreshold ? 2.5 : 4.0
+        ..strokeWidth = boneLikelihood < _lowConfidenceThreshold ? 2.5 : 4.0
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round;
 

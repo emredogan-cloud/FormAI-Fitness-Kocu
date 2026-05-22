@@ -18,6 +18,7 @@ import '../../../core/widgets/error_card.dart';
 import '../models/exercise_model.dart';
 import '../providers/workout_provider.dart';
 import '../services/analyzer_factory.dart';
+import '../services/coach_voice.dart';
 import '../services/crunch_analyzer.dart';
 import '../services/pose_analyzer.dart';
 import '../services/pose_detector_service.dart';
@@ -42,6 +43,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
   final PoseDetectorService _poseService = PoseDetectorService();
   PoseAnalyzer _analyzer = CrunchAnalyzer();
   final AudioFeedback _audio = AudioFeedback();
+  late final CoachVoice _coach = CoachVoice(_audio);
 
   static const Map<DeviceOrientation, int> _orientations = {
     DeviceOrientation.portraitUp: 0,
@@ -161,8 +163,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         category: 'workout',
       );
       setState(() {
-        _error =
-            'Bu cihaz form analizi için gereken yapay zeka katmanını '
+        _error = 'Bu cihaz form analizi için gereken yapay zeka katmanını '
             'çalıştıramıyor. Antrenmana camera-free modda devam etmek için '
             'ana ekrandaki manuel egzersizleri kullanabilirsin.';
       });
@@ -361,8 +362,10 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     if (_isPaused) {
       _workoutTimer?.cancel();
       _workoutTimer = null;
+      _coach.onPause();
       return;
     }
+    _coach.onResume();
     final exercise = ref.read(workoutSessionProvider).value?.activeExercise;
     if (exercise?.type == ExerciseType.timeBased && _secondsRemaining > 0) {
       _resumeWorkoutTimer();
@@ -383,6 +386,11 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         _onTimerComplete();
       } else {
         setState(() => _secondsRemaining -= 1);
+        // Tier-A · feed the coach the post-decrement value so it can
+        // emit halfway / final-10s / final-5s pacing beats. The coach
+        // tracks its own fired-once gates so a re-entry through pause/
+        // resume doesn't double-fire.
+        _coach.onTimerTick(_secondsRemaining);
       }
     });
   }
@@ -397,13 +405,27 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       // any of those gaps and `ref.read` would throw.
       if (!mounted) return;
 
+      // Tier-A.6 + Tier-B.4 · feed every frame's pose (or null) into
+      // the coach. Drives both the sustained-low-confidence tracking
+      // cue (Tier A) and the post-set-start calibration probe
+      // (Tier B). `image.width` is the input frame's pixel width;
+      // the calibration probe uses it to express shoulder span as a
+      // ratio of frame width.
+      _coach.onPoseFrame(
+        poses.isNotEmpty ? poses.first : null,
+        frameWidth: image.width.toDouble(),
+      );
+
       CrunchResult? result;
       if (poses.isNotEmpty) {
         result = _analyzer.analyze(poses.first);
 
         final warning = result.formWarning;
         if (warning != null) {
-          _audio.speak(warning);
+          // Tier-A: form warnings ride at SpeechPriority.warning so they
+          // pre-empt any lower-priority utterance (ambient heartbeat,
+          // milestone celebrations) and never get cut off themselves.
+          _audio.speak(warning, priority: SpeechPriority.warning);
           // Phase 49 · double light-tap when the analyzer flags broken
           // form. Distinct from the per-rep tap so the user can tell
           // "good rep" and "fix something" apart without looking at
@@ -423,7 +445,10 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         // a cue doesn't also emit a warning on the same frame.
         final cue = result.contextualCue;
         if (cue != null) {
-          _audio.speak(cue);
+          // Tier-A: cues are below warning but above milestones — a phase
+          // transition needs to land, but it shouldn't pre-empt a safety
+          // correction.
+          _audio.speak(cue, priority: SpeechPriority.cue);
         }
 
         if (result.repJustCompleted) {
@@ -439,12 +464,9 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
           // — keep their internal state machines running regardless
           // of how the exercise is presented; we just decline to
           // surface that signal as user-visible feedback.
-          final activeExercise = ref
-              .read(workoutSessionProvider)
-              .value
-              ?.activeExercise;
-          final isRepBased =
-              activeExercise?.type == ExerciseType.repBased;
+          final activeExercise =
+              ref.read(workoutSessionProvider).value?.activeExercise;
+          final isRepBased = activeExercise?.type == ExerciseType.repBased;
           if (!isRepBased) {
             // Time-based: skip haptic + rep counter + milestone speech.
             // Timer drives completion via `_onTimerComplete()`.
@@ -464,13 +486,16 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
             // the analyzer's 7s pacing throttle prevent overlap.
             final reps = result.reps;
             if (target != null && target > 1 && reps == target - 2) {
-              _audio.speak('Son iki tekrar, sık dişini!');
+              _audio.speak('Son iki tekrar, sık dişini!',
+                  priority: SpeechPriority.milestone);
             } else if (target != null &&
                 target >= 4 &&
                 reps == (target / 2).floor()) {
-              _audio.speak('Yarıladın! Aynen böyle devam et.');
+              _audio.speak('Yarıladın! Aynen böyle devam et.',
+                  priority: SpeechPriority.milestone);
             } else if (result.pacingFeedback != null) {
-              _audio.speak(result.pacingFeedback!);
+              _audio.speak(result.pacingFeedback!,
+                  priority: SpeechPriority.encouragement);
             }
 
             if (target != null && reps >= target) {
@@ -587,6 +612,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     }
     controller?.dispose();
     _poseService.dispose();
+    _coach.dispose();
     _audio.dispose();
     // Fire-and-forget — we don't want dispose() to await, and the plugin's
     // native call is near-instant. Failing to disable here would leave the
@@ -619,7 +645,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     // path, so this is the equivalent "set done" thump. Routed through
     // `AppHaptics.milestone()` to match the rep-based completion above.
     AppHaptics.milestone();
-    _audio.speak('Süre doldu, harika!');
+    _audio.speak('Süre doldu, harika!', priority: SpeechPriority.milestone);
     if (!mounted) return;
     await ref.read(workoutSessionProvider.notifier).completeCurrentExercise();
   }
@@ -720,10 +746,12 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         // Phase 49 · celebratory milestone thump to pair with the
         // TTS finale.
         AppHaptics.milestone();
-        _audio.speak('Antrenman tamamlandı! Harika bir iş çıkardın.');
+        _audio.speak('Antrenman tamamlandı! Harika bir iş çıkardın.',
+            priority: SpeechPriority.milestone);
       } else if (justStartedRest && exercise != null) {
         _audio.speak(
           'Harika! Şimdi ${exercise.restDurationInSeconds} saniye dinlenme.',
+          priority: SpeechPriority.milestone,
         );
       } else if (justStartedPrep && exercise != null) {
         // Every shipped exercise has a non-empty `description` (Phase 26).
@@ -732,7 +760,8 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         final desc = exercise.description.isNotEmpty
             ? exercise.description
             : 'Başlayın!';
-        _audio.speak('Sıradaki hareket: ${exercise.name}. $desc');
+        _audio.speak('Sıradaki hareket: ${exercise.name}. $desc',
+            priority: SpeechPriority.milestone);
       }
 
       // Always swap analyzer the moment the exercise id flips, even while
@@ -750,16 +779,47 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         if (resting && _secondsRemaining != 0) {
           setState(() => _secondsRemaining = 0);
         }
+        // Tier-A · the active set just paused (rest started) or never
+        // started (prep). Either way the mid-set heartbeat should
+        // stop — the rest coach takes over during rest.
+        if (justStartedRest || justStartedPrep) {
+          _coach.endSet();
+        }
+        // Tier-A · drive the rest coach. Engage when rest starts,
+        // disengage when prep starts (rest already ended by then).
+        if (justStartedRest && exercise != null) {
+          _coach.startRest(exercise.restDurationInSeconds);
+        }
+        if (justStartedPrep) {
+          _coach.endRest();
+        }
         return;
       }
 
-      // Active workout ground state.
+      // Active workout ground state — we are clearly not in rest or
+      // prep here. Tear down any straggling rest scheduler (e.g. when
+      // the user taps "skipRest" the listener fires with resting=false
+      // immediately, no prep intermediary).
+      if (justFinishedRest) {
+        _coach.endRest();
+      }
       if (exerciseChanged ||
           justFinishedPrep ||
           justFinishedRest ||
           setChanged) {
         _analyzer.reset();
         _syncExerciseTimer(exercise);
+        // Tier-A · the user is now actively repping (or holding a
+        // timed set). Start the mid-set heartbeat with category-aware
+        // copy. Same trigger as `_syncExerciseTimer` so the coach and
+        // the visible countdown engage in lockstep.
+        _coach.startSet(exercise);
+      }
+
+      // Tier-A · session completion stops every coaching surface.
+      if (sessionJustCompleted) {
+        _coach.endSet();
+        _coach.endRest();
       }
     });
 
@@ -841,8 +901,13 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
   Widget _buildSession(
       CameraController controller, WorkoutSessionState session) {
     if (session.isResting) {
+      // Tier-B.8 · the per-second countdown lives in
+      // `restCountdownProvider`. The rest overlay watches it
+      // directly so only the rest overlay re-renders per tick — the
+      // rest of `_buildSession` stays put.
+      final countdown = ref.watch(restCountdownProvider);
       return RestOverlay(
-        secondsRemaining: session.restSecondsRemaining,
+        secondsRemaining: countdown,
         upcomingExercise: session.upcomingExercise,
         upcomingSet: session.currentSet,
         totalSets: session.upcomingExercise?.sets ?? 0,
@@ -1091,8 +1156,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         content: const Text(
           'İlerlemen kaydedildi. Ana ekrana dönersen aynı seanstan '
           'devam edemezsin.',
-          style:
-              TextStyle(color: Colors.white70, fontSize: 14, height: 1.45),
+          style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.45),
         ),
         actions: [
           TextButton(

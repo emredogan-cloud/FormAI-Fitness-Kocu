@@ -84,7 +84,8 @@ class LivingCoachAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final config = kCoachMoodConfigs[mood] ?? kCoachMoodConfigs[CoachMood.idle]!;
+    final config =
+        kCoachMoodConfigs[mood] ?? kCoachMoodConfigs[CoachMood.idle]!;
     // Phase 116 stabilization · the chain
     // `AnimatedScale → AnimatedSwitcher → Stack(StackFit.expand)`
     // does NOT impose a bounded intrinsic size of its own; the inner
@@ -118,38 +119,38 @@ class LivingCoachAvatar extends StatelessWidget {
         width: size,
         height: size,
         child: AnimatedScale(
-        scale: config.scale,
-        duration: const Duration(milliseconds: 700),
-        curve: Curves.easeOutCubic,
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 500),
-          switchInCurve: Curves.easeOutCubic,
-          switchOutCurve: Curves.easeOutCubic,
-          layoutBuilder: (currentChild, previousChildren) {
-            // Stack outgoing + incoming so the cross-fade reads as a
-            // smooth transformation rather than a flicker. Now safe:
-            // the parent SizedBox bounds the Stack's incoming
-            // constraints to the avatar's [size].
-            return Stack(
-              alignment: Alignment.center,
-              fit: StackFit.expand,
-              children: [
-                ...previousChildren,
-                if (currentChild != null) currentChild,
-              ],
-            );
-          },
-          child: KeyedSubtree(
-            key: ValueKey<CoachMood>(mood),
-            child: _AvatarLayers(
-              config: config,
-              size: size,
-              innerSize: innerSize,
-              assetPath: assetPath,
+          scale: config.scale,
+          duration: const Duration(milliseconds: 700),
+          curve: Curves.easeOutCubic,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 500),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeOutCubic,
+            layoutBuilder: (currentChild, previousChildren) {
+              // Stack outgoing + incoming so the cross-fade reads as a
+              // smooth transformation rather than a flicker. Now safe:
+              // the parent SizedBox bounds the Stack's incoming
+              // constraints to the avatar's [size].
+              return Stack(
+                alignment: Alignment.center,
+                fit: StackFit.expand,
+                children: [
+                  ...previousChildren,
+                  if (currentChild != null) currentChild,
+                ],
+              );
+            },
+            child: KeyedSubtree(
+              key: ValueKey<CoachMood>(mood),
+              child: _AvatarLayers(
+                config: config,
+                size: size,
+                innerSize: innerSize,
+                assetPath: assetPath,
+              ),
             ),
           ),
         ),
-      ),
       ),
     );
   }

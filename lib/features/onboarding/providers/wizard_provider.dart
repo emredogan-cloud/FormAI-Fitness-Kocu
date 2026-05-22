@@ -303,11 +303,9 @@ class WizardState {
       dietPreference:
           readNonNullString('dietPreference', kDefaultDietPreference),
       allergies: readNonNullString('allergies', kDefaultAllergies),
-      mealFrequency:
-          readNonNullString('mealFrequency', kDefaultMealFrequency),
+      mealFrequency: readNonNullString('mealFrequency', kDefaultMealFrequency),
       prepTime: readNonNullString('prepTime', kDefaultPrepTime),
-      nutritionGoal:
-          readNonNullString('nutritionGoal', kDefaultNutritionGoal),
+      nutritionGoal: readNonNullString('nutritionGoal', kDefaultNutritionGoal),
       waterIntake: readNonNullString('waterIntake', kDefaultWaterIntake),
       tastePreference:
           readNonNullString('tastePreference', kDefaultTastePreference),

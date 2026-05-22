@@ -88,8 +88,8 @@ class _SparkleBurstState extends State<SparkleBurst>
         angle: rng.nextDouble() * math.pi * 2,
         lifetimeMs: minLifetimeMs +
             (rng.nextDouble() * (maxLifetimeMs - minLifetimeMs)).round(),
-        size:
-            widget.minSize + rng.nextDouble() * (widget.maxSize - widget.minSize),
+        size: widget.minSize +
+            rng.nextDouble() * (widget.maxSize - widget.minSize),
         phaseOffset: rng.nextDouble(),
         radiusMult: 0.55 + 0.45 * rng.nextDouble(),
       );
@@ -230,6 +230,5 @@ class _SparklePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_SparklePainter old) =>
-      old.t != t || old.color != color;
+  bool shouldRepaint(_SparklePainter old) => old.t != t || old.color != color;
 }

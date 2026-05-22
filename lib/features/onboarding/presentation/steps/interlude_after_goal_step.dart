@@ -43,9 +43,8 @@ class InterludeAfterGoalStep extends ConsumerWidget {
     final name = _capitaliseFirst(s.name);
     final prefix = name != null ? '$name, ' : '';
     final body = switch (s.goal) {
-      'belly_burn' =>
-        'yağ kaybı çoğu zaman süreklilikle zorlanır.\n'
-            'Sana ağır başlayan bir plan kurmayacağım.',
+      'belly_burn' => 'yağ kaybı çoğu zaman süreklilikle zorlanır.\n'
+          'Sana ağır başlayan bir plan kurmayacağım.',
       'muscle_gain' => 'kas büyütmek sabır işidir.\n'
           'Acelesi olmayan ama kararlı bir program kuracağım.',
       'fitness_look' => "'fit görünmek' aslında "

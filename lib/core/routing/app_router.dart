@@ -222,10 +222,29 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'workoutToday',
         redirect: (_, __) => AppRoutes.workout,
       ),
+      // Phase 142 · explicit fade transition for the paywall route.
+      //
+      // The default MaterialPage transition is a slide animation that
+      // exposes whatever the new screen paints on its first frame.
+      // PaywallScreen's first frame is heavy (cinematic backdrop with
+      // 5 image layers + gradients + an animation controller), so the
+      // slide visibly stutters as it waits on that first paint. Swap
+      // to a 280 ms fade — the eye reads a fade as a deliberate
+      // "settling-in" gesture instead of a janky slide, and the fade's
+      // alpha ramp visually masks the first-frame paint cost. No
+      // routing logic touched; only the transition's visual style.
       GoRoute(
         path: AppRoutes.paywall,
         name: 'paywall',
-        builder: (context, state) => const PaywallScreen(),
+        pageBuilder: (context, state) => CustomTransitionPage<void>(
+          key: state.pageKey,
+          child: const PaywallScreen(),
+          transitionDuration: const Duration(milliseconds: 280),
+          reverseTransitionDuration: const Duration(milliseconds: 220),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        ),
       ),
       GoRoute(
         path: AppRoutes.prediction,
