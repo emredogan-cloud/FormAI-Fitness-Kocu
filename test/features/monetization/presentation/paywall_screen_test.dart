@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sixpack_ai/features/auth/providers/auth_provider.dart';
 import 'package:sixpack_ai/features/monetization/presentation/paywall_screen.dart';
 import 'package:sixpack_ai/features/monetization/providers/monetization_provider.dart';
 
@@ -40,6 +41,19 @@ Widget _wrapPaywall({required SubscriptionState seededState}) {
       subscriptionProvider.overrideWith(
         () => _StubSubscriptionNotifier(seededState),
       ),
+      // PaywallScreen.build reads two auth surfaces during mount:
+      //   1. `ref.listen<User?>(currentUserProvider, ...)` triggers
+      //      `currentUserProvider` to compute, which calls
+      //      `Supabase.instance` — asserts in tests.
+      //   2. `ref.read(supabaseAuthReader)()` performs a live in-memory
+      //      Supabase read in the same frame for the Phase-140 sync
+      //      first pass.
+      // Both pin to "signed out" so the screen mounts without
+      // initializing Supabase. The `isProProvider` chain
+      // (`isReviewerProvider` → `currentUserProvider`) is also covered
+      // by override (1).
+      currentUserProvider.overrideWith((ref) => null),
+      supabaseAuthReader.overrideWithValue(() => null),
     ],
     child: MaterialApp.router(
       routerConfig: router,
@@ -65,8 +79,13 @@ void main() {
       expect(find.text('1 Ay'), findsOneWidget);
       expect(find.text('3 Ay'), findsOneWidget);
       expect(find.text('12 Ay'), findsOneWidget);
-      // Primary CTA still reads as "try for free".
-      expect(find.text('₺0,00 karşılığında dene'), findsOneWidget);
+      // Phase 94 · with offerings null the CTA still mounts but renders
+      // its loading-state branch (spinner instead of the "₺0,00
+      // karşılığında dene" copy). Asserting on the spinner keeps the
+      // intent of the test — the CTA region didn't fail to build —
+      // without coupling to a specific copy string that only appears
+      // once a real RevenueCat Offering is hydrated.
+      expect(find.byType(CircularProgressIndicator), findsAtLeastNWidgets(1));
       // Restore button renders regardless of offerings availability.
       expect(find.text('Satın Alımları Geri Yükle'), findsOneWidget);
     },
@@ -93,7 +112,11 @@ void main() {
       // string asserted here is the line that survived in-card.
       expect(find.text('Şimdi ödeme yok!'), findsOneWidget);
       expect(find.text('7 gün ücretsiz dene'), findsOneWidget);
-      expect(find.text('₺0,00 karşılığında dene'), findsOneWidget);
+      // See the CTA-loading note above: offerings stay null in this
+      // test too (constructing a real RevenueCat `Offerings` object is
+      // too heavy for a layout smoke test), so the CTA renders as a
+      // spinner. The layout-regression guard is the assertions above.
+      expect(find.byType(CircularProgressIndicator), findsAtLeastNWidgets(1));
     },
   );
 

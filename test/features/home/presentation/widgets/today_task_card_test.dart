@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sixpack_ai/core/constants/app_constants.dart';
+import 'package:sixpack_ai/features/auth/providers/auth_provider.dart';
 import 'package:sixpack_ai/features/home/presentation/widgets/today_task_card.dart';
 import 'package:sixpack_ai/features/monetization/models/locked_feature_type.dart';
 import 'package:sixpack_ai/features/monetization/providers/monetization_provider.dart';
@@ -83,6 +84,11 @@ Widget _host(Widget child) {
         () => _StubSubscriptionNotifier(),
       ),
       premiumGateProvider.overrideWith(_StubPremiumGate.new),
+      // `isProProvider` reads `isReviewerProvider` → `currentUserProvider`,
+      // which calls `Supabase.instance` on first build. Tests never
+      // initialize Supabase, so we short-circuit the chain at the leaf
+      // by pinning the auth state to "signed out."
+      currentUserProvider.overrideWith((ref) => null),
     ],
     child: MaterialApp.router(
       routerConfig: router,
