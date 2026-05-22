@@ -308,10 +308,8 @@ class MountainClimberAnalyzer implements PoseAnalyzer {
     // Fallback signal: 2D distance from knee to same-side shoulder.
     // Catches the side-camera setup where the depth axis is parallel
     // to the camera plane and z barely changes.
-    final leftActive2D =
-        _distance(lk, ls) < torsoLength * activeFraction;
-    final rightActive2D =
-        _distance(rk, rs) < torsoLength * activeFraction;
+    final leftActive2D = _distance(lk, ls) < torsoLength * activeFraction;
+    final rightActive2D = _distance(rk, rs) < torsoLength * activeFraction;
 
     // A knee is "active" if EITHER signal fires. Combining them is the
     // safest way to handle mixed camera orientations without a runtime

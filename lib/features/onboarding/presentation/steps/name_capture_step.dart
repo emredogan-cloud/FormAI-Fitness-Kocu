@@ -338,8 +338,7 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
         'Çoğu kez başlayıp durdun. Sebep motivasyon değildi — sessizlikti.',
       'gormek' =>
         'Gözle ölçemediğin için yok sandın. Aslında yön yanlıştı, sen değil.',
-      'yalniz' =>
-        'Kimsenin yüksek sesle söylemediği en büyük sebep bu.',
+      'yalniz' => 'Kimsenin yüksek sesle söylemediği en büyük sebep bu.',
       _ => 'Anlamadığım bir şey değil bu.',
     };
   }
@@ -364,8 +363,7 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
   /// future to land in.
   String _futureText(String token) {
     return switch (token) {
-      'dongu' =>
-        '30 gün sonra döngüye değil, kendi ritmine bakıyor olacaksın.',
+      'dongu' => '30 gün sonra döngüye değil, kendi ritmine bakıyor olacaksın.',
       'gormek' => 'İlk farkı 21. günde göreceksin. Bekle bunu.',
       'yalniz' =>
         '30 gün sonra dönüp baktığında, yalnız olmadığını bileceksin.',
@@ -838,8 +836,7 @@ class _ChatInputPill extends StatelessWidget {
         children: [
           Expanded(
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(28),
@@ -884,8 +881,7 @@ class _ChatInputPill extends StatelessWidget {
                   enabledBorder: InputBorder.none,
                   focusedBorder: InputBorder.none,
                   disabledBorder: InputBorder.none,
-                  contentPadding:
-                      const EdgeInsets.symmetric(vertical: 14),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
                 ),
               ),
             ),

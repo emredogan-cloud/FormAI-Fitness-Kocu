@@ -163,8 +163,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         category: 'workout',
       );
       setState(() {
-        _error =
-            'Bu cihaz form analizi için gereken yapay zeka katmanını '
+        _error = 'Bu cihaz form analizi için gereken yapay zeka katmanını '
             'çalıştıramıyor. Antrenmana camera-free modda devam etmek için '
             'ana ekrandaki manuel egzersizleri kullanabilirsin.';
       });
@@ -465,12 +464,9 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
           // — keep their internal state machines running regardless
           // of how the exercise is presented; we just decline to
           // surface that signal as user-visible feedback.
-          final activeExercise = ref
-              .read(workoutSessionProvider)
-              .value
-              ?.activeExercise;
-          final isRepBased =
-              activeExercise?.type == ExerciseType.repBased;
+          final activeExercise =
+              ref.read(workoutSessionProvider).value?.activeExercise;
+          final isRepBased = activeExercise?.type == ExerciseType.repBased;
           if (!isRepBased) {
             // Time-based: skip haptic + rep counter + milestone speech.
             // Timer drives completion via `_onTimerComplete()`.
@@ -1160,8 +1156,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         content: const Text(
           'İlerlemen kaydedildi. Ana ekrana dönersen aynı seanstan '
           'devam edemezsin.',
-          style:
-              TextStyle(color: Colors.white70, fontSize: 14, height: 1.45),
+          style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.45),
         ),
         actions: [
           TextButton(

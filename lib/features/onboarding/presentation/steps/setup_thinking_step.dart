@@ -31,8 +31,7 @@ class SetupThinkingStep extends ConsumerStatefulWidget {
   final VoidCallback onContinue;
 
   @override
-  ConsumerState<SetupThinkingStep> createState() =>
-      _SetupThinkingStepState();
+  ConsumerState<SetupThinkingStep> createState() => _SetupThinkingStepState();
 }
 
 class _SetupThinkingStepState extends ConsumerState<SetupThinkingStep> {

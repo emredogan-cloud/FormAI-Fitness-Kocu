@@ -181,129 +181,129 @@ class _CinematicAiPresenceState extends State<CinematicAiPresence>
     return Material(
       type: MaterialType.transparency,
       child: Stack(
-      fit: StackFit.expand,
-      children: [
-        const ColoredBox(color: Color(0xFF050410)),
-        // Slowly breathing radial glow centered behind the avatar.
-        // Two-stop gradient (neon → neonAccent → background) gives
-        // the screen a sense of focal warmth without ever feeling
-        // light/bright.
-        RepaintBoundary(
-          child: AnimatedBuilder(
-            animation: _atmosphere,
-            builder: (context, _) {
-              final t = Curves.easeInOutSine.transform(_atmosphere.value);
-              return DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: const Alignment(0, -0.25),
-                    radius: 1.1,
-                    colors: [
-                      AppColors.neon.withValues(alpha: 0.20 + 0.08 * t),
-                      AppColors.neonAccent.withValues(alpha: 0.08 + 0.05 * t),
-                      const Color(0xFF050410),
-                    ],
-                    stops: const [0.0, 0.42, 1.0],
+        fit: StackFit.expand,
+        children: [
+          const ColoredBox(color: Color(0xFF050410)),
+          // Slowly breathing radial glow centered behind the avatar.
+          // Two-stop gradient (neon → neonAccent → background) gives
+          // the screen a sense of focal warmth without ever feeling
+          // light/bright.
+          RepaintBoundary(
+            child: AnimatedBuilder(
+              animation: _atmosphere,
+              builder: (context, _) {
+                final t = Curves.easeInOutSine.transform(_atmosphere.value);
+                return DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: const Alignment(0, -0.25),
+                      radius: 1.1,
+                      colors: [
+                        AppColors.neon.withValues(alpha: 0.20 + 0.08 * t),
+                        AppColors.neonAccent.withValues(alpha: 0.08 + 0.05 * t),
+                        const Color(0xFF050410),
+                      ],
+                      stops: const [0.0, 0.42, 1.0],
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
-        ),
-        const AmbientParticles(
-          count: 14,
-          color: AppColors.neon,
-          minAlpha: 0.08,
-          maxAlpha: 0.24,
-          minRadius: 1.0,
-          maxRadius: 2.2,
-          driftDuration: Duration(seconds: 28),
-          seed: 333,
-        ),
-        // Soft vignette at the edges — focuses the eye on the
-        // centered content without darkening the middle.
-        IgnorePointer(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment.center,
-                radius: 1.25,
-                colors: [
-                  Colors.transparent,
-                  const Color(0xFF050410).withValues(alpha: 0.75),
-                ],
-                stops: const [0.55, 1.0],
+          const AmbientParticles(
+            count: 14,
+            color: AppColors.neon,
+            minAlpha: 0.08,
+            maxAlpha: 0.24,
+            minRadius: 1.0,
+            maxRadius: 2.2,
+            driftDuration: Duration(seconds: 28),
+            seed: 333,
+          ),
+          // Soft vignette at the edges — focuses the eye on the
+          // centered content without darkening the middle.
+          IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment.center,
+                  radius: 1.25,
+                  colors: [
+                    Colors.transparent,
+                    const Color(0xFF050410).withValues(alpha: 0.75),
+                  ],
+                  stops: const [0.55, 1.0],
+                ),
               ),
             ),
           ),
-        ),
-        SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
-            child: Column(
-              children: [
-                const Spacer(flex: 3),
-                NeonRingStack(
-                  size: 234,
-                  primaryColor: AppColors.neonAccent,
-                  accentColor: AppColors.neon,
-                  child: LivingCoachAvatar(
-                    size: 132,
-                    innerSize: 92,
-                    mood: widget.mood,
-                  ),
-                ),
-                const Spacer(flex: 1),
-                Text(
-                  widget.title,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    height: 1.18,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                widget.subtitleTypewriter
-                    ? KineticTextReveal(
-                        text: widget.subtitle,
-                        charDuration: const Duration(milliseconds: 35),
-                        caret: false,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.78),
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          height: 1.45,
-                          letterSpacing: 0.1,
-                        ),
-                      )
-                    : Text(
-                        widget.subtitle,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.68),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          height: 1.45,
-                          letterSpacing: 0.1,
-                        ),
-                      ),
-                const Spacer(flex: 1),
-                widget.bottomActions ??
-                    _ChatInputBar(
-                      placeholder: widget.composingPlaceholder,
-                      cursorCtrl: _cursor,
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+              child: Column(
+                children: [
+                  const Spacer(flex: 3),
+                  NeonRingStack(
+                    size: 234,
+                    primaryColor: AppColors.neonAccent,
+                    accentColor: AppColors.neon,
+                    child: LivingCoachAvatar(
+                      size: 132,
+                      innerSize: 92,
+                      mood: widget.mood,
                     ),
-                const Spacer(flex: 2),
-              ],
+                  ),
+                  const Spacer(flex: 1),
+                  Text(
+                    widget.title,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      height: 1.18,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  widget.subtitleTypewriter
+                      ? KineticTextReveal(
+                          text: widget.subtitle,
+                          charDuration: const Duration(milliseconds: 35),
+                          caret: false,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.78),
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            height: 1.45,
+                            letterSpacing: 0.1,
+                          ),
+                        )
+                      : Text(
+                          widget.subtitle,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.68),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            height: 1.45,
+                            letterSpacing: 0.1,
+                          ),
+                        ),
+                  const Spacer(flex: 1),
+                  widget.bottomActions ??
+                      _ChatInputBar(
+                        placeholder: widget.composingPlaceholder,
+                        cursorCtrl: _cursor,
+                      ),
+                  const Spacer(flex: 2),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
-    ),
+        ],
+      ),
     );
   }
 }

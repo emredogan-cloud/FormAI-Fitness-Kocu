@@ -317,8 +317,7 @@ class _TrustBoosterPanel extends StatelessWidget {
                   value: shown,
                   minHeight: 8,
                   backgroundColor: Colors.white.withValues(alpha: 0.08),
-                  valueColor:
-                      const AlwaysStoppedAnimation(AppColors.neon),
+                  valueColor: const AlwaysStoppedAnimation(AppColors.neon),
                 ),
               ),
               const SizedBox(height: 10),
@@ -442,8 +441,7 @@ class _PlanStatRow extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: AppColors.neon.withValues(alpha: 0.18),
-            border:
-                Border.all(color: AppColors.neon.withValues(alpha: 0.5)),
+            border: Border.all(color: AppColors.neon.withValues(alpha: 0.5)),
           ),
           child: Icon(icon, color: AppColors.neon, size: 15),
         ),

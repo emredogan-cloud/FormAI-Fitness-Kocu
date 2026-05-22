@@ -44,8 +44,7 @@ class _ComposingDotsState extends State<ComposingDots>
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(vsync: this, duration: widget.cycle)
-      ..repeat();
+    _ctrl = AnimationController(vsync: this, duration: widget.cycle)..repeat();
   }
 
   @override

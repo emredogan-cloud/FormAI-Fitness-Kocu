@@ -116,10 +116,12 @@ class BicepsCurlAnalyzer implements PoseAnalyzer {
     String? formWarning;
     if (_state == CrunchState.up) {
       final dominantIsLeft = left != null;
-      final elbowLm = pose.landmarks[
-          dominantIsLeft ? PoseLandmarkType.leftElbow : PoseLandmarkType.rightElbow];
-      final hipLm = pose.landmarks[
-          dominantIsLeft ? PoseLandmarkType.leftHip : PoseLandmarkType.rightHip];
+      final elbowLm = pose.landmarks[dominantIsLeft
+          ? PoseLandmarkType.leftElbow
+          : PoseLandmarkType.rightElbow];
+      final hipLm = pose.landmarks[dominantIsLeft
+          ? PoseLandmarkType.leftHip
+          : PoseLandmarkType.rightHip];
       final ls = pose.landmarks[PoseLandmarkType.leftShoulder];
       final rs = pose.landmarks[PoseLandmarkType.rightShoulder];
       if (elbowLm != null && hipLm != null && ls != null && rs != null) {
@@ -370,8 +372,9 @@ class LateralRaiseAnalyzer implements PoseAnalyzer {
     String? formWarning;
     if (_state == CrunchState.up) {
       final dominantIsLeft = left != null;
-      final wrist = pose.landmarks[
-          dominantIsLeft ? PoseLandmarkType.leftWrist : PoseLandmarkType.rightWrist];
+      final wrist = pose.landmarks[dominantIsLeft
+          ? PoseLandmarkType.leftWrist
+          : PoseLandmarkType.rightWrist];
       final shoulder = pose.landmarks[dominantIsLeft
           ? PoseLandmarkType.leftShoulder
           : PoseLandmarkType.rightShoulder];

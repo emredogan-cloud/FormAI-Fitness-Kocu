@@ -112,8 +112,8 @@ class SquatAnalyzer implements PoseAnalyzer {
     // bending to tie a shoe between sets doesn't trip the warning.
     String? formWarning;
     if (_state == CrunchState.down) {
-      final shoulder = _pickHigher(pose, PoseLandmarkType.leftShoulder,
-          PoseLandmarkType.rightShoulder);
+      final shoulder = _pickHigher(
+          pose, PoseLandmarkType.leftShoulder, PoseLandmarkType.rightShoulder);
       final hip = _pickHigher(
           pose, PoseLandmarkType.leftHip, PoseLandmarkType.rightHip);
       if (shoulder != null && hip != null) {

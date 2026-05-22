@@ -345,20 +345,18 @@ class _BootGateState extends State<_BootGate> {
       final posthogHost = _envSafe('POSTHOG_HOST');
       await AnalyticsService.instance
           .init(
-            apiKey: _envSafe('POSTHOG_API_KEY'),
-            host: posthogHost.isEmpty
-                ? 'https://app.posthog.com'
-                : posthogHost,
-          )
+        apiKey: _envSafe('POSTHOG_API_KEY'),
+        host: posthogHost.isEmpty ? 'https://app.posthog.com' : posthogHost,
+      )
           .timeout(
-            const Duration(seconds: 5),
-            onTimeout: () {
-              AppLogger.warning(
-                'PostHog init timed out — analytics disabled',
-                category: 'analytics',
-              );
-            },
+        const Duration(seconds: 5),
+        onTimeout: () {
+          AppLogger.warning(
+            'PostHog init timed out — analytics disabled',
+            category: 'analytics',
           );
+        },
+      );
 
       // Phase 48 · RevenueCat configuration deferred. Was an `await
       // configureRevenueCat()` here on every cold start, blocking the

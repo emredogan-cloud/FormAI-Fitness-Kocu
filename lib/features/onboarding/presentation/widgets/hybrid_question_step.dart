@@ -190,8 +190,7 @@ class _HybridQuestionStepState extends State<HybridQuestionStep>
                   OptionCard(
                     option: opt,
                     selected: _selectedCardValue == opt.value,
-                    dimmed:
-                        _committingCard && _selectedCardValue != opt.value,
+                    dimmed: _committingCard && _selectedCardValue != opt.value,
                     onTap: () => _pickCard(opt.value),
                   ),
                   if (opt != widget.options.last) const SizedBox(height: 8),

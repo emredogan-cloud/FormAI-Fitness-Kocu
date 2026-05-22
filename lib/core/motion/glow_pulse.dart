@@ -53,8 +53,7 @@ class _GlowPulseState extends State<GlowPulse>
   @override
   void initState() {
     super.initState();
-    _controller =
-        AnimationController(vsync: this, duration: widget.duration);
+    _controller = AnimationController(vsync: this, duration: widget.duration);
     _curve = CurvedAnimation(
       parent: _controller,
       curve: MotionTokens.breathEase,
@@ -93,9 +92,8 @@ class _GlowPulseState extends State<GlowPulse>
           return DecoratedBox(
             decoration: BoxDecoration(
               shape: widget.shape,
-              borderRadius: widget.shape == BoxShape.circle
-                  ? null
-                  : widget.borderRadius,
+              borderRadius:
+                  widget.shape == BoxShape.circle ? null : widget.borderRadius,
               boxShadow: [
                 BoxShadow(
                   color: base.withValues(

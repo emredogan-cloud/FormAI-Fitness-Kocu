@@ -185,8 +185,7 @@ class _MultiSelectTile extends StatelessWidget {
                           : Colors.white.withValues(alpha: 0.85),
                       fontSize: 15,
                       height: 1.3,
-                      fontWeight:
-                          selected ? FontWeight.w800 : FontWeight.w600,
+                      fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
                       letterSpacing: 0.1,
                     ),
                   ),
@@ -216,9 +215,8 @@ class _SelectionCircle extends StatelessWidget {
         shape: BoxShape.circle,
         color: selected ? AppColors.neon : Colors.transparent,
         border: Border.all(
-          color: selected
-              ? AppColors.neon
-              : Colors.white.withValues(alpha: 0.45),
+          color:
+              selected ? AppColors.neon : Colors.white.withValues(alpha: 0.45),
           width: 1.5,
         ),
       ),

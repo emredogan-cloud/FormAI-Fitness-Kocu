@@ -117,8 +117,8 @@ class PushUpAnalyzer implements PoseAnalyzer {
     String? formWarning;
     final shoulder = _pickHigher(
         pose, PoseLandmarkType.leftShoulder, PoseLandmarkType.rightShoulder);
-    final hip = _pickHigher(
-        pose, PoseLandmarkType.leftHip, PoseLandmarkType.rightHip);
+    final hip =
+        _pickHigher(pose, PoseLandmarkType.leftHip, PoseLandmarkType.rightHip);
     final ankle = _pickHigher(
         pose, PoseLandmarkType.leftAnkle, PoseLandmarkType.rightAnkle);
     if (shoulder != null && hip != null && ankle != null) {
@@ -133,8 +133,7 @@ class PushUpAnalyzer implements PoseAnalyzer {
         ankle.likelihood
       ].reduce((a, b) => a < b ? a : b);
       if (minLikelihood >= 0.35) {
-        final lineAngle =
-            AngleCalculator.between(shoulder, hip, ankle);
+        final lineAngle = AngleCalculator.between(shoulder, hip, ankle);
         if (lineAngle < minBodyLineAngle) {
           final now = DateTime.now();
           if (now.difference(_lastFormWarning) >= formWarningCooldown) {
@@ -230,8 +229,7 @@ class ChestFlyAnalyzer implements PoseAnalyzer {
     final wristGapZ = (lw.z - rw.z).abs();
 
     // Use the larger of the two — the dominant signal on this frame.
-    final wristGap =
-        wristGap2D > wristGapZ ? wristGap2D : wristGapZ;
+    final wristGap = wristGap2D > wristGapZ ? wristGap2D : wristGapZ;
     final ratio = wristGap / shoulderWidth;
 
     final previous = _state;

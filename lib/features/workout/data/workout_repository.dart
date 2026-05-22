@@ -276,8 +276,8 @@ class WorkoutRepository {
       // Phase 99 · prefer bundled local image for Phase 96 exercises that
       // don't yet have Supabase-hosted videos; fall back to the composed
       // Supabase URL for all original exercises (unchanged path).
-      videoUrl: ExerciseMediaRegistry.localImagePath(slug) ??
-          _composeVideoUrl(slug),
+      videoUrl:
+          ExerciseMediaRegistry.localImagePath(slug) ?? _composeVideoUrl(slug),
       // Phase 134 · premium / new flags layered in at hydration time.
       // Source of truth is [PremiumExerciseTags] (client-side); the
       // Supabase row has no equivalent columns. Flags drive the

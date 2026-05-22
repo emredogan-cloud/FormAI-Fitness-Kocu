@@ -155,8 +155,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final checkpoint = prefs.loadWizardCheckpoint();
     if (checkpoint != null) {
       try {
-        final json =
-            jsonDecode(checkpoint.stateJson) as Map<String, dynamic>;
+        final json = jsonDecode(checkpoint.stateJson) as Map<String, dynamic>;
         ref.read(wizardProvider.notifier).restoreFromJson(json);
         // Clamp the step index to the live step list so a checkpoint
         // written by a release with a different _totalSteps can't
@@ -194,9 +193,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     // event. The wizard's _next() / _back() emit subsequent steps.
     AnalyticsService.instance.onboardingStepCompleted(
       stepIndex: _index,
-      stepName: _index < _stepNames.length
-          ? _stepNames[_index]
-          : _stepNames.first,
+      stepName:
+          _index < _stepNames.length ? _stepNames[_index] : _stepNames.first,
     );
   }
 
@@ -228,9 +226,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     _persistStepIndex();
     AnalyticsService.instance.onboardingStepCompleted(
       stepIndex: _index,
-      stepName: _index < _stepNames.length
-          ? _stepNames[_index]
-          : 'unknown_$_index',
+      stepName:
+          _index < _stepNames.length ? _stepNames[_index] : 'unknown_$_index',
     );
   }
 
@@ -241,9 +238,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     _persistStepIndex();
     AnalyticsService.instance.onboardingStepCompleted(
       stepIndex: _index,
-      stepName: _index < _stepNames.length
-          ? _stepNames[_index]
-          : 'unknown_$_index',
+      stepName:
+          _index < _stepNames.length ? _stepNames[_index] : 'unknown_$_index',
     );
   }
 
@@ -428,38 +424,38 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       child: Scaffold(
         backgroundColor: Colors.black,
         body: SafeArea(
-        child: Column(
-          children: [
-            // Header cross-fades + sizes in/out at the same cadence as
-            // the scene transition so the boundary between full-bleed
-            // moments (hook + interludes) and chrome moments (data
-            // collection + reveal + commitment) reads as one
-            // coordinated transition instead of a snap. Counter math
-            // skips interludes so the user sees a monotonic "x / 10"
-            // progression even when Form interrupts the flow.
-            AnimatedCrossFade(
-              firstChild: WizardHeader(
-                step: dataStepNum ?? 1,
-                total: _totalDataSteps,
-                onBack: _index == 0 ? null : _back,
+          child: Column(
+            children: [
+              // Header cross-fades + sizes in/out at the same cadence as
+              // the scene transition so the boundary between full-bleed
+              // moments (hook + interludes) and chrome moments (data
+              // collection + reveal + commitment) reads as one
+              // coordinated transition instead of a snap. Counter math
+              // skips interludes so the user sees a monotonic "x / 10"
+              // progression even when Form interrupts the flow.
+              AnimatedCrossFade(
+                firstChild: WizardHeader(
+                  step: dataStepNum ?? 1,
+                  total: _totalDataSteps,
+                  onBack: _index == 0 ? null : _back,
+                ),
+                secondChild: const SizedBox(width: double.infinity),
+                crossFadeState: showHeader
+                    ? CrossFadeState.showFirst
+                    : CrossFadeState.showSecond,
+                duration: MotionTokens.sceneCrossfade,
+                firstCurve: MotionTokens.enterEase,
+                secondCurve: MotionTokens.enterEase,
+                sizeCurve: MotionTokens.enterEase,
               ),
-              secondChild: const SizedBox(width: double.infinity),
-              crossFadeState: showHeader
-                  ? CrossFadeState.showFirst
-                  : CrossFadeState.showSecond,
-              duration: MotionTokens.sceneCrossfade,
-              firstCurve: MotionTokens.enterEase,
-              secondCurve: MotionTokens.enterEase,
-              sizeCurve: MotionTokens.enterEase,
-            ),
-            Expanded(
-              child: SceneTransition(
-                sceneKey: ValueKey<int>(_index),
-                scene: _buildStep(_index),
+              Expanded(
+                child: SceneTransition(
+                  sceneKey: ValueKey<int>(_index),
+                  scene: _buildStep(_index),
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
         ),
       ),
     );

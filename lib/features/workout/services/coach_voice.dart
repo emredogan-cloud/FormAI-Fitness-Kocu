@@ -252,9 +252,7 @@ class CoachVoice {
 
       final ls = pose.landmarks[PoseLandmarkType.leftShoulder];
       final rs = pose.landmarks[PoseLandmarkType.rightShoulder];
-      shoulderSpan = (ls != null && rs != null)
-          ? (ls.x - rs.x).abs()
-          : null;
+      shoulderSpan = (ls != null && rs != null) ? (ls.x - rs.x).abs() : null;
     }
 
     // Tier-B.4 calibration sampling. Runs only while the probe window
@@ -434,16 +432,14 @@ class CoachVoice {
     // shorter rests skip straight to the rotating cue + final 10s.
     if (total >= 30 && elapsed == (total / 2).floor()) {
       _fireOnce('rest-halfway', 'Nefesini topla, yarısı geçti.',
-          priority: SpeechPriority.ambient,
-          firedSet: _firedRestCheckpoints);
+          priority: SpeechPriority.ambient, firedSet: _firedRestCheckpoints);
     }
 
     // Final 10 s — only fires for rests long enough that 10 s left
     // isn't the first half (avoids talking over the rest-start
     // announcement on short windows).
     if (total >= 20 && remaining == 10) {
-      _fireOnce('rest-final-10',
-          'On saniye sonra başlıyoruz, hazırlan.',
+      _fireOnce('rest-final-10', 'On saniye sonra başlıyoruz, hazırlan.',
           priority: SpeechPriority.encouragement,
           firedSet: _firedRestCheckpoints);
     }

@@ -129,9 +129,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   Future<void> _hydrateSubscriptionForCurrentUser() async {
     if (!mounted) return;
     try {
-      await ref
-          .read(authControllerProvider)
-          .aliasRevenueCatWithCurrentUser();
+      await ref.read(authControllerProvider).aliasRevenueCatWithCurrentUser();
     } catch (e, st) {
       AppLogger.warning(
         'paywall mount alias hydration failed; falling back to existing '
@@ -394,42 +392,41 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           // moment" — the photos the user just walked through stay
           // present in the room, dimmed and blurred, as Form invites
           // them to commit.
-          if (isDark)
-            const Positioned.fill(child: _PaywallCinematicBackdrop()),
+          if (isDark) const Positioned.fill(child: _PaywallCinematicBackdrop()),
           // Layer 3 · paywall content (unchanged structure / order).
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
               child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _HeroSection(gender: ref.watch(wizardProvider).gender),
-                    const SizedBox(height: 24),
-                    _buildPlansRow(
-                      offerings: offerings,
-                      isLoading: offeringsLoading,
-                    ),
-                    const SizedBox(height: 18),
-                    const _NoPaymentBadge(),
-                    const SizedBox(height: 16),
-                    _buildCta(canPurchase: canPurchase),
-                    const SizedBox(height: 6),
-                    _buildRestoreButton(
-                      canPurchase: canPurchase,
-                      isLoading: offeringsLoading,
-                    ),
-                    const SizedBox(height: 6),
-                    const _LegalFooter(),
-                    // Phase 40: Sandbox override button is strictly a
-                    // debug-only affordance now. The `_kDevProOverrideKey`
-                    // logic in `monetization_provider` still reads from
-                    // SharedPreferences regardless so local devs can keep
-                    // the flag set, but the UI tile only renders in
-                    // debug builds — App Store reviewers never see it.
-                    if (kDebugMode) ...[
-                      const SizedBox(height: 12),
-                      _buildSandboxButton(),
-                    ],
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _HeroSection(gender: ref.watch(wizardProvider).gender),
+                  const SizedBox(height: 24),
+                  _buildPlansRow(
+                    offerings: offerings,
+                    isLoading: offeringsLoading,
+                  ),
+                  const SizedBox(height: 18),
+                  const _NoPaymentBadge(),
+                  const SizedBox(height: 16),
+                  _buildCta(canPurchase: canPurchase),
+                  const SizedBox(height: 6),
+                  _buildRestoreButton(
+                    canPurchase: canPurchase,
+                    isLoading: offeringsLoading,
+                  ),
+                  const SizedBox(height: 6),
+                  const _LegalFooter(),
+                  // Phase 40: Sandbox override button is strictly a
+                  // debug-only affordance now. The `_kDevProOverrideKey`
+                  // logic in `monetization_provider` still reads from
+                  // SharedPreferences regardless so local devs can keep
+                  // the flag set, but the UI tile only renders in
+                  // debug builds — App Store reviewers never see it.
+                  if (kDebugMode) ...[
+                    const SizedBox(height: 12),
+                    _buildSandboxButton(),
+                  ],
                 ],
               ),
             ),
@@ -824,9 +821,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       // which already blocks the CTA + Restore.
       if (mounted) setState(() => _busy = true);
       try {
-        await ref
-            .read(authControllerProvider)
-            .aliasRevenueCatWithCurrentUser();
+        await ref.read(authControllerProvider).aliasRevenueCatWithCurrentUser();
       } finally {
         if (mounted) setState(() => _busy = false);
       }
@@ -1884,71 +1879,71 @@ class _PaywallCinematicBackdropState extends State<_PaywallCinematicBackdrop>
         child: AnimatedBuilder(
           animation: _drift,
           builder: (context, _) {
-          // Smoothed bell so the parallax never reverses harshly at
-          // the loop ends; each photo reads its own alignment offset
-          // off this `t`, multiplied by a per-photo direction so
-          // parallax directions vary across the layer stack.
-          final t =
-              (math.sin(_drift.value * math.pi * 2 - math.pi / 2) + 1) / 2;
-          return Stack(
-            fit: StackFit.expand,
-            children: [
-              _BackdropImage(
-                asset: 'photos/cinsiyetseçimierkek.webp',
-                alignment: Alignment(-0.78 + 0.05 * t, -0.55 + 0.04 * t),
-                widthFraction: 0.42,
-                opacity: 0.18,
-                rotationDegrees: -3,
-              ),
-              _BackdropImage(
-                asset: 'photos/hedefinneSıkılaşmak.webp',
-                alignment: Alignment(0.65 - 0.05 * t, -0.62 + 0.03 * t),
-                widthFraction: 0.36,
-                opacity: 0.16,
-                rotationDegrees: 4,
-              ),
-              _BackdropImage(
-                asset: 'photos/hedefinneHacimKazanmak.webp',
-                alignment: Alignment(-0.55 + 0.04 * t, 0.30 - 0.05 * t),
-                widthFraction: 0.40,
-                opacity: 0.14,
-                rotationDegrees: -2,
-              ),
-              _BackdropImage(
-                asset: 'photos/hedef_guclenmek.webp',
-                alignment: Alignment(0.72 + 0.04 * t, 0.55 - 0.04 * t),
-                widthFraction: 0.38,
-                opacity: 0.18,
-                rotationDegrees: 5,
-              ),
-              _BackdropImage(
-                asset: 'photos/günlükaktivitenmasabaşı.webp',
-                alignment: Alignment(0.0, 0.85 - 0.04 * t),
-                widthFraction: 0.34,
-                opacity: 0.13,
-                rotationDegrees: 0,
-              ),
-              // Bottom-weighted dim gradient — keeps the marketing
-              // cards + CTA readable against the layered photos
-              // without flattening the depth at the top of the screen
-              // where the hero artwork sits.
-              const DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Color(0x00000000),
-                      Color(0x55000000),
-                      Color(0xAA000000),
-                    ],
-                    stops: [0.0, 0.45, 1.0],
+            // Smoothed bell so the parallax never reverses harshly at
+            // the loop ends; each photo reads its own alignment offset
+            // off this `t`, multiplied by a per-photo direction so
+            // parallax directions vary across the layer stack.
+            final t =
+                (math.sin(_drift.value * math.pi * 2 - math.pi / 2) + 1) / 2;
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                _BackdropImage(
+                  asset: 'photos/cinsiyetseçimierkek.webp',
+                  alignment: Alignment(-0.78 + 0.05 * t, -0.55 + 0.04 * t),
+                  widthFraction: 0.42,
+                  opacity: 0.18,
+                  rotationDegrees: -3,
+                ),
+                _BackdropImage(
+                  asset: 'photos/hedefinneSıkılaşmak.webp',
+                  alignment: Alignment(0.65 - 0.05 * t, -0.62 + 0.03 * t),
+                  widthFraction: 0.36,
+                  opacity: 0.16,
+                  rotationDegrees: 4,
+                ),
+                _BackdropImage(
+                  asset: 'photos/hedefinneHacimKazanmak.webp',
+                  alignment: Alignment(-0.55 + 0.04 * t, 0.30 - 0.05 * t),
+                  widthFraction: 0.40,
+                  opacity: 0.14,
+                  rotationDegrees: -2,
+                ),
+                _BackdropImage(
+                  asset: 'photos/hedef_guclenmek.webp',
+                  alignment: Alignment(0.72 + 0.04 * t, 0.55 - 0.04 * t),
+                  widthFraction: 0.38,
+                  opacity: 0.18,
+                  rotationDegrees: 5,
+                ),
+                _BackdropImage(
+                  asset: 'photos/günlükaktivitenmasabaşı.webp',
+                  alignment: Alignment(0.0, 0.85 - 0.04 * t),
+                  widthFraction: 0.34,
+                  opacity: 0.13,
+                  rotationDegrees: 0,
+                ),
+                // Bottom-weighted dim gradient — keeps the marketing
+                // cards + CTA readable against the layered photos
+                // without flattening the depth at the top of the screen
+                // where the hero artwork sits.
+                const DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Color(0x00000000),
+                        Color(0x55000000),
+                        Color(0xAA000000),
+                      ],
+                      stops: [0.0, 0.45, 1.0],
+                    ),
                   ),
                 ),
-              ),
-            ],
-          );
-        },
+              ],
+            );
+          },
         ),
       ),
     );

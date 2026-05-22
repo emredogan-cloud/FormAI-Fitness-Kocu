@@ -25,7 +25,7 @@ class StaggerColumn extends StatefulWidget {
     this.crossAxisAlignment = CrossAxisAlignment.center,
     this.mainAxisAlignment = MainAxisAlignment.start,
     this.startDelay = Duration.zero,
-  })  : assert(overlap >= 0.0 && overlap < 1.0);
+  }) : assert(overlap >= 0.0 && overlap < 1.0);
 
   final List<Widget> children;
   final Duration span;
@@ -47,8 +47,7 @@ class _StaggerColumnState extends State<StaggerColumn>
   @override
   void initState() {
     super.initState();
-    _controller =
-        AnimationController(vsync: this, duration: widget.span);
+    _controller = AnimationController(vsync: this, duration: widget.span);
     if (widget.startDelay == Duration.zero) {
       _controller.forward();
     } else {
@@ -78,8 +77,7 @@ class _StaggerColumnState extends State<StaggerColumn>
       crossAxisAlignment: widget.crossAxisAlignment,
       mainAxisAlignment: widget.mainAxisAlignment,
       children: [
-        for (var i = 0; i < n; i++)
-          _entry(i, winSize, widget.children[i]),
+        for (var i = 0; i < n; i++) _entry(i, winSize, widget.children[i]),
       ],
     );
   }
