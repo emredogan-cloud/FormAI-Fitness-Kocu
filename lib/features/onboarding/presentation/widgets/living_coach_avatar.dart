@@ -65,7 +65,7 @@ class LivingCoachAvatar extends StatelessWidget {
     super.key,
     this.size = 220,
     this.innerSize = 140,
-    this.assetPath = 'photos/kişiselyapayzekakoçfoto.webp',
+    this.assetPath = 'photos/PT_FORM.png',
     this.mood = CoachMood.idle,
   });
 

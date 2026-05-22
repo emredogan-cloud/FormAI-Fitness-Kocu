@@ -1644,7 +1644,7 @@ class _DailySummaryButtonState extends ConsumerState<_DailySummaryButton> {
 }
 
 /// Phase 38: the generic robot icon is replaced by the custom coach
-/// photograph (`photos/kişiselyapayzekakoçfoto.webp`, already declared
+/// photograph (`photos/PT_FORM.png`, already declared
 /// under the `photos/` asset root in pubspec.yaml). The image is
 /// clipped to a 45-px circle, surrounded by a 2-px neon-gradient ring
 /// + glow so the avatar reads as "your coach" and not a stock icon.
@@ -1705,7 +1705,7 @@ class _CoachAvatarState extends State<_CoachAvatar>
         ),
         child: ClipOval(
           child: Image.asset(
-            'photos/kişiselyapayzekakoçfoto.webp',
+            'photos/PT_FORM.png',
             width: 41,
             height: 41,
             fit: BoxFit.cover,

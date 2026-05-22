@@ -136,7 +136,7 @@ class _WelcomeStepState extends State<WelcomeStep>
               );
             },
             child: Image.asset(
-              'photos/ilkkarşılamaanaekranarkaplanı.webp',
+              'photos/First_opening.png',
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) => const DecoratedBox(
                 decoration: BoxDecoration(

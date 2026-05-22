@@ -237,7 +237,7 @@ class _CoachSpeechBubble extends StatelessWidget {
             ),
             child: ClipOval(
               child: Image.asset(
-                'photos/kişiselyapayzekakoçfoto.webp',
+                'photos/PT_FORM.png',
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => Container(
                   color: Colors.black26,

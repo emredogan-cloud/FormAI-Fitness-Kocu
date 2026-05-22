@@ -310,7 +310,7 @@ class _CoachHero extends StatelessWidget {
             ),
             child: ClipOval(
               child: Image.asset(
-                'photos/kişiselyapayzekakoçfoto.webp',
+                'photos/PT_FORM.png',
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => Container(
                   color: _neon.withValues(alpha: 0.9),

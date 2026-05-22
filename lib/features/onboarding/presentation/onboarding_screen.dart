@@ -139,7 +139,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     'photos/günlükaktivitenmasabaşı.webp',
     'photos/günlükaktivitenhafifhareketli.webp',
     'photos/günlükaktivitenneÇokAktif.webp',
-    'photos/kişiselyapayzekakoçfoto.webp',
+    'photos/PT_FORM.png',
   ];
 
   @override
