@@ -57,6 +57,13 @@ class AppHaptics {
     await HapticFeedback.lightImpact();
   }
 
+  /// Pull-to-refresh trigger — fires the moment the user crosses the
+  /// distance threshold and the spinner commits. Distinct from a
+  /// generic CTA tap because the gesture itself is bigger and
+  /// deserves a meatier confirmation. Routes to `mediumImpact` so
+  /// the policy ("refresh = medium") stays in this fasad.
+  static void refreshTrigger() => mediumImpact();
+
   // ===========================================================================
   // Raw passthroughs — kept for sites that genuinely need the unsemanticised
   // call (e.g. the per-rep tick where we just want a literal light tap).
