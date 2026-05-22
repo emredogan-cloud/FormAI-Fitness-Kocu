@@ -180,8 +180,7 @@ class CoachChatHeader extends StatelessWidget {
                       color: AppColors.neonGreen,
                       boxShadow: [
                         BoxShadow(
-                          color:
-                              AppColors.neonGreen.withValues(alpha: 0.55),
+                          color: AppColors.neonGreen.withValues(alpha: 0.55),
                           blurRadius: 6,
                           spreadRadius: 0.5,
                         ),

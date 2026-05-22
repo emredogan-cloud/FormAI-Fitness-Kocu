@@ -1525,8 +1525,7 @@ class _TierLaunchButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final exercises =
-        _isPremium ? plan.premiumExercises : plan.exercises;
+    final exercises = _isPremium ? plan.premiumExercises : plan.exercises;
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
@@ -1626,9 +1625,7 @@ class _TierLaunchButton extends ConsumerWidget {
       return;
     }
     if (!context.mounted) return;
-    ref
-        .read(workoutSessionProvider.notifier)
-        .initializeWorkout(exercises);
+    ref.read(workoutSessionProvider.notifier).initializeWorkout(exercises);
     context.push(AppRoutes.workout);
   }
 }

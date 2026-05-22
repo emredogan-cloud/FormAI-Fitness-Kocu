@@ -97,9 +97,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         // login lands the user on the paywall with the RC SDK still
         // pointing at the anonymous app-user-ID — a subsequent purchase
         // would be lost on the next sign-in.
-        await ref
-            .read(authControllerProvider)
-            .aliasRevenueCatWithCurrentUser();
+        await ref.read(authControllerProvider).aliasRevenueCatWithCurrentUser();
         // Phase 140 · latch the paywall gate cleared so its remount
         // after pushReplacement / context.go doesn't re-fire.
         ref.read(authGateClearedProvider.notifier).state = true;

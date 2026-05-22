@@ -119,8 +119,7 @@ class RecipeImage extends StatelessWidget {
           alignment: alignment,
           memCacheHeight: memCacheHeight,
           memCacheWidth: memCacheWidth,
-          errorBuilder: errorBuilder ??
-              (_, __, ___) => const SizedBox.shrink(),
+          errorBuilder: errorBuilder ?? (_, __, ___) => const SizedBox.shrink(),
         ),
       ],
     );

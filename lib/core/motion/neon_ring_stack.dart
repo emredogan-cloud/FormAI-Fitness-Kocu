@@ -181,7 +181,8 @@ class _RingStackPainter extends CustomPainter {
     final breathPhase = _modPhase(solidBreathMs);
     // Soft bell: 0 at edges of cycle, 1 mid-cycle. Slight floor so the
     // glow never fully disappears.
-    final breath = 0.55 + 0.45 * (1.0 - math.cos(breathPhase * math.pi * 2)) / 2.0;
+    final breath =
+        0.55 + 0.45 * (1.0 - math.cos(breathPhase * math.pi * 2)) / 2.0;
     final paint = Paint()
       ..color = primary.withValues(alpha: 0.30 * breath)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
@@ -190,7 +191,8 @@ class _RingStackPainter extends CustomPainter {
 
   void _paintSolidRing(Canvas canvas, Offset center, double radius) {
     final breathPhase = _modPhase(solidBreathMs);
-    final alpha = 0.55 + 0.30 * (1.0 - math.cos(breathPhase * math.pi * 2)) / 2.0;
+    final alpha =
+        0.55 + 0.30 * (1.0 - math.cos(breathPhase * math.pi * 2)) / 2.0;
     final paint = Paint()
       ..color = accent.withValues(alpha: alpha)
       ..style = PaintingStyle.stroke

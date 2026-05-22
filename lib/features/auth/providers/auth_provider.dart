@@ -65,8 +65,7 @@ class AuthGateClearedNotifier extends Notifier<bool> {
   set state(bool value) => super.state = value;
 }
 
-final authGateClearedProvider =
-    NotifierProvider<AuthGateClearedNotifier, bool>(
+final authGateClearedProvider = NotifierProvider<AuthGateClearedNotifier, bool>(
   AuthGateClearedNotifier.new,
 );
 

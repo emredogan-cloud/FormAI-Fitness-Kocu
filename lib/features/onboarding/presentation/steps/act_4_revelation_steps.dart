@@ -571,8 +571,7 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
                         duration: const Duration(milliseconds: 5200),
                         child: Container(
                           width: double.infinity,
-                          padding:
-                              const EdgeInsets.fromLTRB(18, 16, 18, 18),
+                          padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.04),
                             borderRadius: BorderRadius.circular(18),
@@ -638,8 +637,7 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Row(
-                          mainAxisAlignment:
-                              MainAxisAlignment.spaceBetween,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Text(
                               'Başarı olasılığı',
@@ -699,8 +697,7 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.neon,
                           foregroundColor: Colors.white,
-                          padding:
-                              const EdgeInsets.symmetric(vertical: 18),
+                          padding: const EdgeInsets.symmetric(vertical: 18),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(18),
                           ),
@@ -981,10 +978,11 @@ class _TrajectoryPainter extends CustomPainter {
     }
 
     _drawLabel(canvas, 'BUGÜN', Offset(start.dx - 2, start.dy + 8),
-        AppColors.neon.withValues(alpha: 0.70), align: _LabelAlign.left);
+        AppColors.neon.withValues(alpha: 0.70),
+        align: _LabelAlign.left);
     if (progress > 0.92) {
-      _drawLabel(canvas, '12 HAFTA',
-          Offset(end.dx + 2, end.dy - 16), AppColors.neon,
+      _drawLabel(
+          canvas, '12 HAFTA', Offset(end.dx + 2, end.dy - 16), AppColors.neon,
           align: _LabelAlign.right);
     }
   }

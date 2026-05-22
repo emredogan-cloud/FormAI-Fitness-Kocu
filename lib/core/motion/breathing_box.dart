@@ -46,8 +46,7 @@ class _BreathingBoxState extends State<BreathingBox>
   @override
   void initState() {
     super.initState();
-    _controller =
-        AnimationController(vsync: this, duration: widget.duration);
+    _controller = AnimationController(vsync: this, duration: widget.duration);
     _alpha = Tween<double>(begin: widget.minAlpha, end: widget.maxAlpha)
         .chain(CurveTween(curve: MotionTokens.breathEase))
         .animate(_controller);

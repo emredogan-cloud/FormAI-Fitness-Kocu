@@ -53,8 +53,7 @@ class _CoachIntroStepState extends State<CoachIntroStep>
   // effort-transparency. The "90 saniye" line sets a time-budget
   // expectation so the user mentally commits before the wizard starts —
   // norm-of-reciprocity + time-boxing psychology.
-  static const String _coachLine =
-      'Merhaba, ben Form. '
+  static const String _coachLine = 'Merhaba, ben Form. '
       '12 haftada vücudunu nasıl değiştireceğini sana göstereceğim. '
       'Önce seni tanıyalım — bu 90 saniye sürüyor.';
 
@@ -207,8 +206,7 @@ class _CoachIntroStepState extends State<CoachIntroStep>
                           color: AppColors.neon,
                           maxRadius: 240,
                           duration: const Duration(milliseconds: 1100),
-                          startDelay:
-                              const Duration(milliseconds: 200),
+                          startDelay: const Duration(milliseconds: 200),
                           child: FadeTransition(
                             opacity: _entryFade,
                             child: ScaleTransition(

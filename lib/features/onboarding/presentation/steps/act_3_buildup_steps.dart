@@ -281,6 +281,7 @@ class _ActivityStepState extends ConsumerState<ActivityStep>
       imageAsset: 'photos/günlükaktivitenneÇokAktif.webp',
     ),
   ];
+
   /// Default fallback when no card is picked yet (banner is invisible
   /// at that point, but the slot is built). Per-answer empathy lives
   /// in [_resolveFeedbackText].
@@ -423,8 +424,7 @@ class _ActivityStepState extends ConsumerState<ActivityStep>
                   OptionCard(
                     option: opt,
                     selected: _selectedCardValue == opt.value,
-                    dimmed:
-                        _committingCard && _selectedCardValue != opt.value,
+                    dimmed: _committingCard && _selectedCardValue != opt.value,
                     onTap: () => _pickCard(opt.value),
                   ),
                   if (opt != _options.last) const SizedBox(height: 8),
