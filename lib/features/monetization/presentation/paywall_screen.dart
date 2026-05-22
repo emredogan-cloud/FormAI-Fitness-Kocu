@@ -8,7 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
-import 'package:supabase_flutter/supabase_flutter.dart' show Supabase, User;
+import 'package:supabase_flutter/supabase_flutter.dart' show User;
 
 import '../../../core/services/analytics_service.dart';
 import '../../../core/services/connectivity_service.dart';
@@ -301,7 +301,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     // user, which would falsely trigger the gate. `currentUser` is
     // a synchronous getter against the in-memory session row, which
     // every auth operation updates before resolving its future.
-    _onAuthStateChanged(null, Supabase.instance.client.auth.currentUser);
+    _onAuthStateChanged(null, ref.read(supabaseAuthReader)());
 
     // Phase 141 · self-redirect for Pro users. The router auto-
     // bounces non-anonymous users from `/auth` → `/paywall` the

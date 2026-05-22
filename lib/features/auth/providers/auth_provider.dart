@@ -76,6 +76,15 @@ final currentUserProvider = Provider<User?>((ref) {
   return Supabase.instance.client.auth.currentUser;
 });
 
+/// Uncached synchronous live-read of the in-memory Supabase auth user.
+/// Mirrors `Supabase.instance.client.auth.currentUser` so callers that
+/// need the up-to-the-moment session (rather than the cached value from
+/// [currentUserProvider]) can still go through Riverpod. The indirection
+/// also lets widget tests override the read without booting Supabase.
+final supabaseAuthReader = Provider<User? Function()>((ref) {
+  return () => Supabase.instance.client.auth.currentUser;
+});
+
 /// Phase 50B · `true` when the current user carries the
 /// `app_metadata.role = 'admin'` claim minted from Supabase Studio.
 /// Routes / widgets behind the admin tools watch this provider so a
