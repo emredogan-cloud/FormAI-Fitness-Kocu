@@ -99,3 +99,29 @@ lib/features/progress/presentation/suggestions_screen.dart
 ```
 
 9 files, 10 string replacements. No structural changes.
+
+---
+
+## Task 4 — First opening screen background (hotfix, supersedes Task 2)
+
+Date: 2026-05-23
+
+**Old:** `photos/First_opening.png`
+**New:** `photos/APP_ICON.png`
+
+| File | Line | Context |
+| --- | --- | --- |
+| `lib/features/onboarding/presentation/steps/act_1_hook_step.dart` | 139 | parallax background `Image.asset` |
+
+Only the asset string changed. `BoxFit.cover`, parallax `AnimatedBuilder` (`_bgPan` transform + scale), `errorBuilder` radial gradient fallback, overlays, gradients, CTA button, text, cinematic effects, animations, and onboarding logic untouched.
+
+### Validation
+
+grep — `First_opening` is gone from `lib/` and `pubspec.yaml`; sole reference now reads `photos/APP_ICON.png`.
+
+```
+Analyzing FormAI-FitnessKoçu...
+No issues found! (ran in 8.2s)
+```
+
+1 file, 1 string replacement.
