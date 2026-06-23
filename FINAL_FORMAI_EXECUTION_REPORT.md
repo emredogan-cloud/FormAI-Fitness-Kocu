@@ -6,7 +6,7 @@
 > VALIDATION** olarak işaretlenmiştir. Hiçbir metrik, cihaz sonucu, test
 > çıktısı veya CI sonucu uydurulmamıştır.
 >
-> Branch: `prisk/phase-1-tests` · 9 roadmap commit (`da5b55f` taban üzerine) +
+> Branch: `prisk/phase-1-tests` · 10 roadmap commit (`da5b55f` taban üzerine) +
 > bu rapor. Toolchain: Flutter 3.41.9 / Dart 3.11.5, Java 17, Android SDK
 > 36.1.0, KVM. **Push edildi** (origin); main'e merge EDİLMEDİ (gerekçe §11).
 
@@ -78,6 +78,7 @@ edilmedi (§11). Toplam diff: **22 dosya, +1742 / −336**.
 | `0f32d68` | refactor(home): Faz 2 F09 — testable DashboardLogic çıkarımı |
 | `4fbe174` | test(workout): 4 rep-analyzer daha için golden testler |
 | `4a8f2db` | ci(release): Faz 3 F31 — release artefakt workflow'u |
+| `97f7d66` | refactor(workout): Faz 2 — 3 analyzer daha base'e taşındı (BicepsCurl/LateralRaise/Scapular) |
 
 **PR durumu:** Branch push edildi; PR açılabilir (GitHub linki push çıktısında).
 CI: `secret-scan.yml` prisk/* push'unda koşar; `ci.yml` (`test`+`integration`)
@@ -105,10 +106,12 @@ docstring placeholder'ları). Bekçi `.env` + `.env.example` üzerinde PASS.
 ## 5. Mimari İyileştirmeleri
 
 - **F08 `BaseRepCounterAnalyzer`:** Tekrarlanan rep-sayım durum makinesi
-  (denetim P1, ~3.200 LOC kopya) tek 134-satırlık tabana çıkarıldı; Squat /
-  PullUp / PushUp / BenchPress migrate edildi; egzersize-özel form kontrolleri
-  override'larla korundu. `countOnAngleAbove` polaritesi ekstansiyon ve
-  fleksiyon rep'lerini tek soyutlamada kapsıyor. **−197 net analyzer satırı.**
+  (denetim P1, ~3.200 LOC kopya) tek 134-satırlık tabana çıkarıldı; **7
+  analyzer** migrate edildi — Squat / PullUp / PushUp / BenchPress
+  (`a17c212`) + BicepsCurl / LateralRaise / Scapular (`97f7d66`).
+  Egzersize-özel form kontrolleri override'larla birebir korundu;
+  `countOnAngleAbove` polaritesi ekstansiyon ve fleksiyon rep'lerini tek
+  soyutlamada kapsıyor. **~−371 net analyzer satırı** (−197 + −174).
 - **F09 `DashboardLogic`:** 478-LOC God-object'in saf karar mantığı
   (`prefetchUrls`, `pendingBadgeCelebrations`) unit-test'li bir helper'a
   çıkarıldı; ekran delege ediyor. Davranış birebir aynı. (Tam state-facade
@@ -119,8 +122,9 @@ docstring placeholder'ları). Bekçi `.env` + `.env.example` üzerinde PASS.
 - **Davranış koruması:** Tüm refactor'lar sonrası **87/87 test yeşil** + analyze
   0 → kanıtlı regresyon ağı.
 
-**ERTELENDİ:** Tam Dashboard facade, kalan ~10 analyzer'ın migrasyonu (golden-
-test ağı hazır → güvenli), F19/F21/F22/F25/F26.
+**ERTELENDİ:** Tam Dashboard facade; base'e UYMAYAN analyzer'lar (ShoulderPress
+dinamik eşik / JumpingJack çift-çift histerezis / Burpee 3-faz) ve ek hook
+gerektirenler (Crunch inline-pacing+neck / HipHinge peak-ROM); F19/F21/F22/F25/F26.
 
 ---
 
@@ -207,7 +211,7 @@ gerektirir.
 | Hesap silme (KVKK) yok | Orta | Faz 4 — yapılmadı |
 | DashboardScreen tam decomposition | Orta | F09 kısmi; facade ERTELENDİ |
 | Video pipeline yok | Orta (özellik) | Roadmap B Faz 1-6 |
-| ~10/19 analyzer migrasyonsuz | Düşük-Orta | Golden-test ağı hazır → güvenli migrasyon |
+| 7/19 analyzer base'de; kalanlar uymuyor/hook gerektiriyor | Düşük | Tasarım gereği; tek-sinyal base'e uymayan analyzer'lar ayrı bırakıldı |
 
 ---
 
