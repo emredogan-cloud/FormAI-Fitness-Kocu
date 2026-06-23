@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 
 import '../../../core/utils/angle_calculator.dart';
+import 'base_rep_counter_analyzer.dart';
 import 'crunch_analyzer.dart' show CrunchResult, CrunchState;
 import 'pacing_tracker.dart';
 import 'pose_analyzer.dart';
@@ -18,21 +19,17 @@ import 'pose_analyzer.dart';
 /// torso length). A ratio above ~0.7 corresponds to >35° lean from
 /// vertical — common forward-fold cheat that loads the lower back.
 /// One warning per [formWarningCooldown].
-class SquatAnalyzer implements PoseAnalyzer {
+class SquatAnalyzer extends BaseRepCounterAnalyzer {
   SquatAnalyzer({
-    this.upThreshold = 165.0,
-    this.downThreshold = 100.0,
-    this.minRepInterval = const Duration(milliseconds: 1100),
+    super.upThreshold = 165.0,
+    super.downThreshold = 100.0,
+    super.minRepInterval = const Duration(milliseconds: 1100),
     this.torsoLeanRatio = 0.7,
     this.formWarningCooldown = const Duration(seconds: 12),
-  });
-
-  /// Knee angle threshold above which the leg is considered "extended".
-  final double upThreshold;
-
-  /// Knee angle threshold below which we count the user as "in the squat".
-  final double downThreshold;
-  final Duration minRepInterval;
+  }) : super(
+          countOnAngleAbove: true,
+          pacing: PacingPresets.strength(),
+        );
 
   /// `(|shoulder.x - hip.x|) / (|hip.y - shoulder.y|)` above this value
   /// is "leaning too far forward". 0.7 ≈ tan(35°).
@@ -41,103 +38,43 @@ class SquatAnalyzer implements PoseAnalyzer {
   /// Minimum gap between two spoken torso-lean warnings.
   final Duration formWarningCooldown;
 
-  int _reps = 0;
-  CrunchState _state = CrunchState.unknown;
-  DateTime? _lastRepTime;
   DateTime _lastFormWarning =
       DateTime.now().subtract(const Duration(seconds: 30));
-  final PacingTracker _pacing = PacingPresets.strength();
 
   @override
-  void reset() {
-    _reps = 0;
-    _state = CrunchState.unknown;
-    _lastRepTime = null;
+  void resetForm() {
     _lastFormWarning = DateTime.now().subtract(const Duration(seconds: 30));
-    _pacing.reset();
   }
 
   @override
-  CrunchResult analyze(Pose pose) {
-    final left = _kneeAngle(
-      pose,
-      PoseLandmarkType.leftHip,
-      PoseLandmarkType.leftKnee,
-      PoseLandmarkType.leftAnkle,
-    );
-    final right = _kneeAngle(
-      pose,
-      PoseLandmarkType.rightHip,
-      PoseLandmarkType.rightKnee,
-      PoseLandmarkType.rightAnkle,
-    );
-    final knee = left ?? right;
-    if (knee == null) {
-      return CrunchResult(
-        reps: _reps,
-        state: _state,
-        torsoAngle: null,
-        neckAngle: null,
-        formWarning: null,
-        repJustCompleted: false,
-      );
-    }
+  double? measureAngle(Pose pose) {
+    final left = _kneeAngle(pose, PoseLandmarkType.leftHip,
+        PoseLandmarkType.leftKnee, PoseLandmarkType.leftAnkle);
+    final right = _kneeAngle(pose, PoseLandmarkType.rightHip,
+        PoseLandmarkType.rightKnee, PoseLandmarkType.rightAnkle);
+    return left ?? right;
+  }
 
-    final previous = _state;
-    var repJustCompleted = false;
-    String? pacingFeedback;
-
-    if (knee < downThreshold) {
-      _state = CrunchState.down;
-    } else if (knee > upThreshold) {
-      if (previous == CrunchState.down) {
-        final now = DateTime.now();
-        final last = _lastRepTime;
-        if (last == null || now.difference(last) >= minRepInterval) {
-          final repDuration = last == null ? null : now.difference(last);
-          _reps += 1;
-          repJustCompleted = true;
-          _lastRepTime = now;
-          if (repDuration != null) {
-            pacingFeedback = _pacing.evaluate(repDuration, now);
-          }
-        }
-      }
-      _state = CrunchState.up;
-    }
-
-    // Tier-S form check: torso lean while at squat-bottom. Reads the
-    // higher-likelihood shoulder + hip on the same side we already
-    // trust the knee from. Skipped outside the DOWN state so a user
-    // bending to tie a shoe between sets doesn't trip the warning.
-    String? formWarning;
-    if (_state == CrunchState.down) {
-      final shoulder = _pickHigher(
-          pose, PoseLandmarkType.leftShoulder, PoseLandmarkType.rightShoulder);
-      final hip = _pickHigher(
-          pose, PoseLandmarkType.leftHip, PoseLandmarkType.rightHip);
-      if (shoulder != null && hip != null) {
-        final dx = (shoulder.x - hip.x).abs();
-        final dy = (hip.y - shoulder.y).abs();
-        if (dy > 1 && dx / dy > torsoLeanRatio) {
-          final now = DateTime.now();
-          if (now.difference(_lastFormWarning) >= formWarningCooldown) {
-            formWarning = 'Göğsünü yukarı tut, geriye doğru otur!';
-            _lastFormWarning = now;
-          }
-        }
+  // Tier-S form check: torso lean while at squat-bottom. Skipped outside the
+  // DOWN state so a user bending to tie a shoe between sets doesn't trip it.
+  @override
+  String? formWarning(Pose pose, double angle, CrunchState state) {
+    if (state != CrunchState.down) return null;
+    final shoulder = _pickHigher(
+        pose, PoseLandmarkType.leftShoulder, PoseLandmarkType.rightShoulder);
+    final hip = _pickHigher(
+        pose, PoseLandmarkType.leftHip, PoseLandmarkType.rightHip);
+    if (shoulder == null || hip == null) return null;
+    final dx = (shoulder.x - hip.x).abs();
+    final dy = (hip.y - shoulder.y).abs();
+    if (dy > 1 && dx / dy > torsoLeanRatio) {
+      final now = DateTime.now();
+      if (now.difference(_lastFormWarning) >= formWarningCooldown) {
+        _lastFormWarning = now;
+        return 'Göğsünü yukarı tut, geriye doğru otur!';
       }
     }
-
-    return CrunchResult(
-      reps: _reps,
-      state: _state,
-      torsoAngle: knee,
-      neckAngle: null,
-      formWarning: formWarning,
-      repJustCompleted: repJustCompleted,
-      pacingFeedback: pacingFeedback,
-    );
+    return null;
   }
 }
 
@@ -293,91 +230,25 @@ class HipHingeAnalyzer implements PoseAnalyzer {
 /// elbow bent, < 80°). Same state machine as [SquatAnalyzer], but the
 /// "down" position is the LARGE angle and the "up" is the SMALL one — i.e.
 /// we count on the small-angle commit.
-class PullUpAnalyzer implements PoseAnalyzer {
+class PullUpAnalyzer extends BaseRepCounterAnalyzer {
+  // Inverse polarity: DOWN is the large (hanging) angle, UP is the small
+  // (chin-over-bar) angle, so the rep commits on flexion.
   PullUpAnalyzer({
-    this.downThreshold = 150.0,
-    this.upThreshold = 80.0,
-    this.minRepInterval = const Duration(milliseconds: 1200),
-  });
-
-  /// Elbow angle threshold above which we consider the arm "hanging".
-  final double downThreshold;
-
-  /// Elbow angle threshold below which we consider the arm "pulled in".
-  final double upThreshold;
-  final Duration minRepInterval;
-
-  int _reps = 0;
-  CrunchState _state = CrunchState.unknown;
-  DateTime? _lastRepTime;
-  final PacingTracker _pacing = PacingPresets.strength();
+    super.downThreshold = 150.0,
+    super.upThreshold = 80.0,
+    super.minRepInterval = const Duration(milliseconds: 1200),
+  }) : super(
+          countOnAngleAbove: false,
+          pacing: PacingPresets.strength(),
+        );
 
   @override
-  void reset() {
-    _reps = 0;
-    _state = CrunchState.unknown;
-    _lastRepTime = null;
-    _pacing.reset();
-  }
-
-  @override
-  CrunchResult analyze(Pose pose) {
-    final left = _armAngle(
-      pose,
-      PoseLandmarkType.leftShoulder,
-      PoseLandmarkType.leftElbow,
-      PoseLandmarkType.leftWrist,
-    );
-    final right = _armAngle(
-      pose,
-      PoseLandmarkType.rightShoulder,
-      PoseLandmarkType.rightElbow,
-      PoseLandmarkType.rightWrist,
-    );
-    final elbow = left ?? right;
-    if (elbow == null) {
-      return CrunchResult(
-        reps: _reps,
-        state: _state,
-        torsoAngle: null,
-        neckAngle: null,
-        formWarning: null,
-        repJustCompleted: false,
-      );
-    }
-
-    final previous = _state;
-    var repJustCompleted = false;
-    String? pacingFeedback;
-
-    if (elbow > downThreshold) {
-      _state = CrunchState.down;
-    } else if (elbow < upThreshold) {
-      if (previous == CrunchState.down) {
-        final now = DateTime.now();
-        final last = _lastRepTime;
-        if (last == null || now.difference(last) >= minRepInterval) {
-          final repDuration = last == null ? null : now.difference(last);
-          _reps += 1;
-          repJustCompleted = true;
-          _lastRepTime = now;
-          if (repDuration != null) {
-            pacingFeedback = _pacing.evaluate(repDuration, now);
-          }
-        }
-      }
-      _state = CrunchState.up;
-    }
-
-    return CrunchResult(
-      reps: _reps,
-      state: _state,
-      torsoAngle: elbow,
-      neckAngle: null,
-      formWarning: null,
-      repJustCompleted: repJustCompleted,
-      pacingFeedback: pacingFeedback,
-    );
+  double? measureAngle(Pose pose) {
+    final left = _armAngle(pose, PoseLandmarkType.leftShoulder,
+        PoseLandmarkType.leftElbow, PoseLandmarkType.leftWrist);
+    final right = _armAngle(pose, PoseLandmarkType.rightShoulder,
+        PoseLandmarkType.rightElbow, PoseLandmarkType.rightWrist);
+    return left ?? right;
   }
 }
 

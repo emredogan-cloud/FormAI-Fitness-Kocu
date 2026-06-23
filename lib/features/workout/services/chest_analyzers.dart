@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 
 import '../../../core/utils/angle_calculator.dart';
+import 'base_rep_counter_analyzer.dart';
 import 'crunch_analyzer.dart' show CrunchResult, CrunchState;
 import 'pacing_tracker.dart';
 import 'pose_analyzer.dart';
@@ -18,21 +19,17 @@ import 'pose_analyzer.dart';
 /// (the most common push-up form fault). Throttled internally so a
 /// fatigued user with chronic sag only hears the cue every
 /// [formWarningCooldown].
-class PushUpAnalyzer implements PoseAnalyzer {
+class PushUpAnalyzer extends BaseRepCounterAnalyzer {
   PushUpAnalyzer({
-    this.upThreshold = 160.0,
-    this.downThreshold = 95.0,
-    this.minRepInterval = const Duration(milliseconds: 900),
+    super.upThreshold = 160.0,
+    super.downThreshold = 95.0,
+    super.minRepInterval = const Duration(milliseconds: 900),
     this.minBodyLineAngle = 155.0,
     this.formWarningCooldown = const Duration(seconds: 10),
-  });
-
-  /// Elbow angle threshold above which we consider the arm "extended".
-  final double upThreshold;
-
-  /// Elbow angle threshold below which we consider the arm "flexed".
-  final double downThreshold;
-  final Duration minRepInterval;
+  }) : super(
+          countOnAngleAbove: true,
+          pacing: PacingPresets.strength(),
+        );
 
   /// Shoulder-hip-ankle interior angle below this is "hips sagging".
   /// In a clean push-up the spine is nearly straight (≈ 180°); 155°
@@ -43,116 +40,51 @@ class PushUpAnalyzer implements PoseAnalyzer {
   /// Minimum gap between two spoken hip-sag warnings.
   final Duration formWarningCooldown;
 
-  int _reps = 0;
-  CrunchState _state = CrunchState.unknown;
-  DateTime? _lastRepTime;
   DateTime _lastFormWarning =
       DateTime.now().subtract(const Duration(seconds: 30));
-  final PacingTracker _pacing = PacingPresets.strength();
 
   @override
-  void reset() {
-    _reps = 0;
-    _state = CrunchState.unknown;
-    _lastRepTime = null;
+  void resetForm() {
     _lastFormWarning = DateTime.now().subtract(const Duration(seconds: 30));
-    _pacing.reset();
   }
 
   @override
-  CrunchResult analyze(Pose pose) {
+  double? measureAngle(Pose pose) {
     // Pick whichever arm has the cleanest tracking; works for one-handed
     // tripods at awkward angles where one side is occluded.
-    final left = _armAngle(
-      pose,
-      PoseLandmarkType.leftShoulder,
-      PoseLandmarkType.leftElbow,
-      PoseLandmarkType.leftWrist,
-    );
-    final right = _armAngle(
-      pose,
-      PoseLandmarkType.rightShoulder,
-      PoseLandmarkType.rightElbow,
-      PoseLandmarkType.rightWrist,
-    );
-    final elbowAngle = left ?? right;
-    if (elbowAngle == null) {
-      return CrunchResult(
-        reps: _reps,
-        state: _state,
-        torsoAngle: null,
-        neckAngle: null,
-        formWarning: null,
-        repJustCompleted: false,
-      );
-    }
+    final left = _armAngle(pose, PoseLandmarkType.leftShoulder,
+        PoseLandmarkType.leftElbow, PoseLandmarkType.leftWrist);
+    final right = _armAngle(pose, PoseLandmarkType.rightShoulder,
+        PoseLandmarkType.rightElbow, PoseLandmarkType.rightWrist);
+    return left ?? right;
+  }
 
-    final previous = _state;
-    var repJustCompleted = false;
-    String? pacingFeedback;
-
-    if (elbowAngle < downThreshold) {
-      _state = CrunchState.down;
-    } else if (elbowAngle > upThreshold) {
-      if (previous == CrunchState.down) {
-        final now = DateTime.now();
-        final last = _lastRepTime;
-        if (last == null || now.difference(last) >= minRepInterval) {
-          final repDuration = last == null ? null : now.difference(last);
-          _reps += 1;
-          repJustCompleted = true;
-          _lastRepTime = now;
-          if (repDuration != null) {
-            pacingFeedback = _pacing.evaluate(repDuration, now);
-          }
-        }
-      }
-      _state = CrunchState.up;
-    }
-
-    // Tier-S form check: hip sag detection. Reads the better-tracked
-    // shoulder/hip/ankle on either side. Three-landmark angle: a
-    // straight body holds ≈ 180°; sagging hips push the apex down so
-    // the interior angle at hip shrinks.
-    String? formWarning;
+  // Tier-S form check: hip sag detection. Reads the better-tracked
+  // shoulder/hip/ankle. A straight body holds ≈180°; sagging hips shrink
+  // the interior angle. The 0.35 floor is looser than the 0.4 rep-angle
+  // floor because a marginal ankle is still informative for the line check.
+  @override
+  String? formWarning(Pose pose, double angle, CrunchState state) {
     final shoulder = _pickHigher(
         pose, PoseLandmarkType.leftShoulder, PoseLandmarkType.rightShoulder);
     final hip =
         _pickHigher(pose, PoseLandmarkType.leftHip, PoseLandmarkType.rightHip);
     final ankle = _pickHigher(
         pose, PoseLandmarkType.leftAnkle, PoseLandmarkType.rightAnkle);
-    if (shoulder != null && hip != null && ankle != null) {
-      // All three must be reasonably reliable — the ankle is the most
-      // commonly noisy of the trio, so guard explicitly. The 0.35
-      // floor is slightly looser than the 0.4 the rep-angle uses
-      // because a marginal ankle is still informative for the line
-      // check.
-      final minLikelihood = [
-        shoulder.likelihood,
-        hip.likelihood,
-        ankle.likelihood
-      ].reduce((a, b) => a < b ? a : b);
-      if (minLikelihood >= 0.35) {
-        final lineAngle = AngleCalculator.between(shoulder, hip, ankle);
-        if (lineAngle < minBodyLineAngle) {
-          final now = DateTime.now();
-          if (now.difference(_lastFormWarning) >= formWarningCooldown) {
-            formWarning = 'Kalçanı yukarı tut, vücudunu düz tut!';
-            _lastFormWarning = now;
-          }
-        }
+    if (shoulder == null || hip == null || ankle == null) return null;
+    final minLikelihood =
+        [shoulder.likelihood, hip.likelihood, ankle.likelihood]
+            .reduce((a, b) => a < b ? a : b);
+    if (minLikelihood < 0.35) return null;
+    final lineAngle = AngleCalculator.between(shoulder, hip, ankle);
+    if (lineAngle < minBodyLineAngle) {
+      final now = DateTime.now();
+      if (now.difference(_lastFormWarning) >= formWarningCooldown) {
+        _lastFormWarning = now;
+        return 'Kalçanı yukarı tut, vücudunu düz tut!';
       }
     }
-
-    return CrunchResult(
-      reps: _reps,
-      state: _state,
-      torsoAngle: elbowAngle,
-      neckAngle: null,
-      formWarning: formWarning,
-      repJustCompleted: repJustCompleted,
-      pacingFeedback: pacingFeedback,
-    );
+    return null;
   }
 }
 
