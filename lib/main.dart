@@ -21,6 +21,7 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/theme_mode_provider.dart';
 import 'core/utils/app_logger.dart';
 import 'core/utils/audio_feedback.dart';
+import 'l10n/app_localizations.dart';
 
 /// Phase 94 · release-build resilience.
 ///
@@ -626,6 +627,11 @@ class _FormAIAppState extends ConsumerState<FormAIApp> {
     return MaterialApp.router(
       title: 'FormAI',
       debugShowCheckedModeBanner: false,
+      // Phase 2 (P-Risk) · localization foundation. Delegates + supported
+      // locales wired from the generated AppLocalizations; string migration
+      // from hard-coded Turkish is incremental from here.
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       // Phase 49 · the dark builder layers floating, neon-bordered
       // SnackBars on top of the seed-based ColorScheme so toasts read
       // as part of the brand. Phase 53 added [AppTheme.light] so

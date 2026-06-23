@@ -1,0 +1,27 @@
+{
+  "@@locale": "en",
+  "appTitle": "FormAI",
+  "@appTitle": {
+    "description": "Application title"
+  },
+  "retry": "Retry",
+  "@retry": {
+    "description": "Retry button on the boot error screen"
+  },
+  "settings": "Settings",
+  "@settings": {
+    "description": "Account settings screen title"
+  },
+  "deleteAccount": "Delete my account",
+  "@deleteAccount": {
+    "description": "Account deletion button label"
+  },
+  "connectionFailed": "Connection failed.",
+  "@connectionFailed": {
+    "description": "Boot error screen — network failure message"
+  },
+  "configurationFailed": "The app could not be configured.",
+  "@configurationFailed": {
+    "description": "Boot error screen — missing configuration message"
+  }
+}

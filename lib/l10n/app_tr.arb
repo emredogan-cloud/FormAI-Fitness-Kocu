@@ -1,0 +1,9 @@
+{
+  "@@locale": "tr",
+  "appTitle": "FormAI",
+  "retry": "Tekrar Dene",
+  "settings": "Ayarlar",
+  "deleteAccount": "Hesabımı Sil",
+  "connectionFailed": "Bağlantı kurulamadı.",
+  "configurationFailed": "Uygulama yapılandırılamadı."
+}

@@ -10,6 +10,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  # Phase 2 (P-Risk) · localization foundation (F-i18n). Adds the Flutter
+  # localization delegates and enables gen-l10n codegen (config: l10n.yaml).
+  # Starter scaffold only — the ~6,700-string migration is incremental.
+  flutter_localizations:
+    sdk: flutter
   # Phase 139 · `cupertino_icons` removed — 0 import sites in lib/ and
   # already tree-shaken to 848 B in release APKs. Removing the direct
   # dep reduces transitive resolution churn during `flutter pub get`
@@ -156,6 +161,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true
   assets:
     # Phase 0 (P-Risk) · `.env` bundles CLIENT-PUBLIC keys only (Supabase anon,
     # RevenueCat public SDK key, Sentry DSN, PostHog, Google web client id) —
