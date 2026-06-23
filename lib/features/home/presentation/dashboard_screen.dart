@@ -24,6 +24,7 @@ import '../../progress/providers/badge_unlocks_provider.dart';
 import '../../progress/providers/xp_award_listener.dart';
 import '../../progress/providers/xp_provider.dart';
 import '../../workout/providers/workout_provider.dart';
+import 'dashboard_logic.dart';
 import 'widgets/antrenman_tab.dart';
 import 'widgets/gelisim_tab.dart';
 import 'widgets/profile_tab.dart';
@@ -104,9 +105,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     if (plan == null) return;
     _didPrefetchMeals = true;
     final cacheManager = DefaultCacheManager();
-    for (final pm in plan.take(6)) {
-      final url = pm.recipe.imageUrl;
-      if (url == null || !url.startsWith('http')) continue;
+    for (final url
+        in DashboardLogic.prefetchUrls(plan.map((pm) => pm.recipe.imageUrl))) {
       unawaited(() async {
         try {
           await cacheManager.downloadFile(url);
@@ -304,8 +304,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     // `_onTabChanged`).
     if (_index != _gelisimTabIndex) return;
     final unlocked = ref.read(unlockedBadgesProvider);
-    final celebrated = ref.read(celebratedBadgesProvider) ?? unlocked;
-    final pending = unlocked.difference(celebrated).toList();
+    final pending = DashboardLogic.pendingBadgeCelebrations(
+      unlocked,
+      ref.read(celebratedBadgesProvider),
+    );
     if (pending.isEmpty) {
       // Initialise celebrated set if it was null but no unlocks pending.
       if (ref.read(celebratedBadgesProvider) == null) {
