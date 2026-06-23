@@ -22,9 +22,11 @@ tek oturumda gerçekçi olmadığından (çok-haftalık/çok-kişilik iş), bu r
 - **A · Faz 0 (Güvenlik): TAMAMLANDI.** `SUPABASE_DB_PASSWORD` gönderilen
   `.env`'den çıkarıldı; sır bekçisi + gitleaks CI; sertifika temizlendi;
   kritik build-blocker (geçersiz pubspec `name`) düzeltildi.
-- **A · Faz 1 (Test ağı): KISMİ.** Golden-frame + servis testleri; kapsam
-  **%0.1 → %16.8** (100 test); CI coverage + emülatör entegrasyon işi.
-  (80% kapısı KARŞILANMADI.)
+- **A · Faz 1 (Test ağı): KISMİ.** Golden-frame + servis + model testleri; kapsam
+  **%0.1 → %20.8** (242 test); CI coverage + emülatör entegrasyon işi. **Form-algılama
+  motoru (denetim P0) artık geniş kapsamlı**: analyzer_factory %100 · chest/back_legs %95 ·
+  shoulders/core %85-86 · crunch/base %80-82. (Genel %70-80 kapısı hâlâ KARŞILANMADI —
+  kalan boşluk presentation/provider katmanında.)
 - **A · Faz 2 (Mimari): KISMİ.** `BaseRepCounterAnalyzer` (F08) → **7 analyzer**
   migrate; `PosePainter` perf (F20); `DashboardLogic` çıkarımı (F09 kısmi);
   **F19** auth-gate niyet-metotları + lint guard. (Tam Dashboard facade ERTELENDİ.)
@@ -37,10 +39,10 @@ tek oturumda gerçekçi olmadığından (çok-haftalık/çok-kişilik iş), bu r
   RLS + storage), gerçek modeller, şeffaf form-skor heuristiği + testleri.
 
 **Doğrulanmış kazanımlar:** DB-parolası sızıntısı kapatıldı · analyze 0 sorun ·
-**100 test yeşil** · dart format temiz · release APK (128 MB) + AAB (110.6 MB)
+**242 test yeşil** · dart format temiz · release APK (128 MB) + AAB (110.6 MB)
 + i18n-scaffold debug APK temiz derlendi.
 
-**Açık riskler:** Kapsam %16.8 (hedef uzak) · `.git/config` canlı GitHub PAT
+**Açık riskler:** Kapsam %20.8 (hedef uzak) · `.git/config` canlı GitHub PAT
 (rotasyon gerekli) · tam i18n/SKU/release-imza/video-pipeline yok.
 
 ---
@@ -51,8 +53,8 @@ tek oturumda gerçekçi olmadığından (çok-haftalık/çok-kişilik iş), bu r
 |---|---|---|---|
 | Emülatör altyapısı | Pixel 7/API35 + Pixel 6/API34 | **Tamam** | İkisi de boot + adb teyit |
 | A · Faz 0 Güvenlik | F02/F17/F23/F24/F32 + pubspec fix | **Tamam** | analyze 0 · APK boot · 0 MissingConfig |
-| A · Faz 1 Test ağı | F01 (9 analyzer) + F29 (AppPrefs) + F04 CI | **Kısmi** | 100 test yeşil · %16.8 |
-| A · Faz 2 Mimari | F08 (7 analyzer) + F20 + F09 + F19 | **Kısmi** | analyze 0 · 100 test · ~−545 satır |
+| A · Faz 1 Test ağı | F01 (tüm analyzer'lar) + F29 (AppPrefs) + modeller + F04 CI | **Kısmi** | 242 test yeşil · %20.8 |
+| A · Faz 2 Mimari | F08 (7 analyzer) + F20 + F09 + F19 | **Kısmi** | analyze 0 · 242 test · ~−545 satır |
 | A · Faz 3 Lansman | F31 release.yml; F11 incelendi | **Kısmi** | release APK+AAB derlendi |
 | A · Faz 4 Ürün olgunluğu | i18n scaffold; hesap silme (zaten var) | **Kısmi** | gen-l10n + analyze + APK build |
 | B · Faz 0 Mimari hazırlık | DB/storage şema + model + form-skor | **Tamam** | analyze 0 · 9 test |
@@ -146,8 +148,8 @@ yok; değiştirilmedi (belgelendi).
 
 | Metrik | Taban | Şimdi | Hedef |
 |---|---|---|---|
-| Satır kapsamı | ~%0.1 | **%16.8** | %70-80 |
-| Test fonksiyonu | 57 | 100 | — |
+| Satır kapsamı | ~%0.1 | **%20.8** | %70-80 |
+| Test fonksiyonu | 57 | 242 | — |
 
 **Sınır:** %70+ için 1.9k-LOC presentation katmanına provider/repo/widget mock
 test takımları gerekir — çok-günlük, ERTELENDİ.
@@ -197,7 +199,7 @@ Refactor-sonrası emülatör re-smoke.
 | Risk | Severity | Not |
 |---|---|---|
 | `.git/config` canlı GitHub PAT | **Yüksek** | Hemen rotate + credential-helper/SSH |
-| Test kapsamı %16.8 (hedef %70-80) | Yüksek | Presentation/provider/repo mock testleri |
+| Test kapsamı %20.8 (hedef %70-80) | Yüksek | Presentation/provider/repo mock testleri (kalan boşluğun çoğu burada) |
 | Tam yerelleştirme yok (scaffold var) | Yüksek (TR-dışı) | ~6.700 string migrasyonu ERTELENDİ |
 | RevenueCat SKU + release-imza | Yüksek | Lansman blocker; harici |
 | Tam Dashboard facade | Orta | F09 kısmi |
@@ -212,7 +214,7 @@ Refactor-sonrası emülatör re-smoke.
 | Architecture | 6 | **7** | BaseRepCounterAnalyzer + F19 + DashboardLogic; tam facade değil |
 | Maintainability | 5 | **7** | ~−545 satır tekrar, lint guard, test ağı |
 | Security | 3.5 | **7** | DB sırrı + tarama; PAT + release-imza açık |
-| Testing | 2 | **4.5** | 100 test + CI coverage; %70 uzak |
+| Testing | 2 | **5.5** | 242 test; form-algılama motoru kapsamlı + CI coverage; %70 (presentation) uzak |
 | AI Readiness | 4 | **5** | Video şema + form-skor temeli; gerçek pipeline yok |
 | Production Readiness | 5 | **6.5** | Builds yeşil + sır + release pipeline + i18n scaffold; SKU/imza açık |
 
@@ -229,7 +231,7 @@ analyze/format/test'i geçiyor → CI `test` işi yeşil beklenir.
 yürütüldü" DEĞİL.**
 
 Gerçek, doğrulanmış ilerleme: P0 güvenlik açığı + kritik build-blocker
-kapatıldı; test ağı (%0.1→%16.8, 100 test); en maliyetli mimari borç kısmen
+kapatıldı; test ağı (%0.1→%20.8, 242 test; form-motoru kapsamlı); en maliyetli mimari borç kısmen
 ödendi (7 analyzer base'de, F19, F09); release pipeline; i18n scaffold; video
 özelliğinin DB+model+skor temeli. Release APK + AAB temiz derleniyor. Denetimin
 4 iddiası gerçek kodda çürütüldü (F11 bundle-id, F24 .env.example, F19-AppPrefs
