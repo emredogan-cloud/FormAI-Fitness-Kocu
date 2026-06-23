@@ -100,7 +100,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         await ref.read(authControllerProvider).aliasRevenueCatWithCurrentUser();
         // Phase 140 · latch the paywall gate cleared so its remount
         // after pushReplacement / context.go doesn't re-fire.
-        ref.read(authGateClearedProvider.notifier).state = true;
+        ref.read(authGateClearedProvider.notifier).markCleared();
         await _routePostAuth();
       } else {
         // If the user came in as a guest (signInAnonymously from the
@@ -118,7 +118,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           await ref
               .read(authControllerProvider)
               .aliasRevenueCatWithCurrentUser();
-          ref.read(authGateClearedProvider.notifier).state = true;
+          ref.read(authGateClearedProvider.notifier).markCleared();
           if (mounted) {
             _toast(
               'E-posta adresine doğrulama bağlantısı gönderildi. '
@@ -136,7 +136,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             await ref
                 .read(authControllerProvider)
                 .aliasRevenueCatWithCurrentUser();
-            ref.read(authGateClearedProvider.notifier).state = true;
+            ref.read(authGateClearedProvider.notifier).markCleared();
             await _routePostAuth();
           }
         }

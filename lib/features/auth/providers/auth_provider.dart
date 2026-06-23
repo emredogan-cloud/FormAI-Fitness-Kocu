@@ -61,8 +61,18 @@ final authStateProvider = StreamProvider<AuthState>((ref) {
 class AuthGateClearedNotifier extends Notifier<bool> {
   @override
   bool build() => false;
-  @override
-  set state(bool value) => super.state = value;
+
+  /// Phase 2 (P-Risk) F19 · explicit intent methods replace the previous
+  /// public `set state` override, which leaked Riverpod's protected state
+  /// setter onto the outward-facing API. Behaviour is identical.
+
+  /// Mark the paywall auth-gate as cleared (post sign-in / sign-up) so the
+  /// next emission short-circuits past the gate.
+  void markCleared() => state = true;
+
+  /// Re-arm the gate (sign-out / delete-account) so the next anonymous
+  /// session sees the gate again.
+  void reset() => state = false;
 }
 
 final authGateClearedProvider = NotifierProvider<AuthGateClearedNotifier, bool>(
@@ -245,7 +255,7 @@ class AuthController {
       await aliasRevenueCatWithCurrentUser();
       // Phase 140 · single-source latch — auth complete, paywall
       // gate stays down for the rest of this session.
-      _ref.read(authGateClearedProvider.notifier).state = true;
+      _ref.read(authGateClearedProvider.notifier).markCleared();
       return (outcome: SocialAuthOutcome.success, errorMessage: null);
     } on AuthException catch (e, st) {
       // Phase 88 · Supabase rejected the id token. Most common cause:
@@ -318,7 +328,7 @@ class AuthController {
       // Phase 94 · same RC-aliasing pattern as the Google path.
       await aliasRevenueCatWithCurrentUser();
       // Phase 140 · single-source latch (see authGateClearedProvider).
-      _ref.read(authGateClearedProvider.notifier).state = true;
+      _ref.read(authGateClearedProvider.notifier).markCleared();
       return (outcome: SocialAuthOutcome.success, errorMessage: null);
     } on AuthException catch (e, st) {
       AppLogger.error(
@@ -437,7 +447,7 @@ class AuthController {
     // Phase 140 · re-arm the paywall auth gate so a fresh anonymous
     // session (e.g. sign-out then continue-as-guest) sees the gate
     // again before any purchase action.
-    _ref.read(authGateClearedProvider.notifier).state = false;
+    _ref.read(authGateClearedProvider.notifier).reset();
   }
 
   /// Phase 94 · alias the RevenueCat anonymous app-user-ID to the
