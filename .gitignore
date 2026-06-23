@@ -92,3 +92,6 @@ Beslenme-Photos/
 # asosystem/ && npm run dev`; git operations from the Flutter root
 # stay clean.
 asosystem/
+
+# Phase 0 (P-Risk) · Play upload certificate (public cert; untracked for hygiene)
+upload-cert.pem

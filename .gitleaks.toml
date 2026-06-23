@@ -1,0 +1,18 @@
+# Phase 0 (P-Risk) · gitleaks configuration.
+# Scans tracked files + full history for committed secrets in CI.
+title = "FormAI gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allow empty example templates and resolved lockfiles"
+paths = [
+  '''\.env\.example$''',
+  '''pubspec\.lock$''',
+]
+# Placeholder values used in templates/docs must not trip the scanner.
+regexes = [
+  '''your-[a-z-]+-(key|id|dsn)''',
+  '''<redacted>''',
+]

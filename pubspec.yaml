@@ -1,7 +1,7 @@
 name: sixpack_ai
-description: "SixPack AI - 30 Günde Karın Kası. AI-powered fitness coaching."
+description: "FormAI - Kişisel Fitness Koçu."
 publish_to: 'none'
-version: 0.1.0+6
+version: 0.1.0+12
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -157,6 +157,12 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    # Phase 0 (P-Risk) · `.env` bundles CLIENT-PUBLIC keys only (Supabase anon,
+    # RevenueCat public SDK key, Sentry DSN, PostHog, Google web client id) —
+    # all extractable from any mobile binary by design and gated server-side.
+    # TRUE secrets (SUPABASE_DB_PASSWORD, service_role, *_SECRET) must NEVER be
+    # added here; they live in `.env.local` (not an asset) / CI secrets and are
+    # enforced by tool/check_env_no_secrets.sh + .github/workflows/secret-scan.yml.
     - .env
     # Bespoke onboarding + prediction artwork (all Turkish-named PNG/JPEG/
     # WEBP files live at the photos/ root). Folder is quoted for safety.
