@@ -18,6 +18,7 @@ import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import 'package:sixpack_ai/features/workout/services/back_legs_analyzers.dart';
 import 'package:sixpack_ai/features/workout/services/chest_analyzers.dart';
 import 'package:sixpack_ai/features/workout/services/crunch_analyzer.dart';
+import 'package:sixpack_ai/features/workout/services/shoulders_arms_cardio_analyzers.dart';
 
 PoseLandmark _lm(PoseLandmarkType t, double x, double y) =>
     PoseLandmark(type: t, x: x, y: y, z: 0, likelihood: 1.0);
@@ -201,6 +202,103 @@ void main() {
       final a = HipHingeAnalyzer();
       expect(a.analyze(folded).state, CrunchState.down);
       final r = a.analyze(locked);
+      expect(r.state, CrunchState.up);
+      expect(r.reps, 1);
+    });
+  });
+
+  group('BicepsCurlAnalyzer', () {
+    // Elbow extended ≈180° (> downThreshold 150) ⇒ DOWN.
+    final extended = _pose([
+      _lm(PoseLandmarkType.leftShoulder, 0, 0),
+      _lm(PoseLandmarkType.leftElbow, 1, 0),
+      _lm(PoseLandmarkType.leftWrist, 2, 0),
+    ]);
+    // Elbow flexed ≈20° (< upThreshold 50) ⇒ UP, rep on flexion.
+    final curled = _pose([
+      _lm(PoseLandmarkType.leftShoulder, 0, 0),
+      _lm(PoseLandmarkType.leftElbow, 1, 0),
+      _lm(PoseLandmarkType.leftWrist, 0.2, 0.3),
+    ]);
+
+    test('counts a rep on an extend→curl cycle', () {
+      final a = BicepsCurlAnalyzer();
+      expect(a.analyze(extended).state, CrunchState.down);
+      final r = a.analyze(curled);
+      expect(r.state, CrunchState.up);
+      expect(r.reps, 1);
+    });
+  });
+
+  group('LateralRaiseAnalyzer', () {
+    // Arm hanging at side: shoulder-vertex angle ≈0° (< downThreshold 25).
+    final atSide = _pose([
+      _lm(PoseLandmarkType.leftShoulder, 0, 0),
+      _lm(PoseLandmarkType.leftElbow, 0, 1),
+      _lm(PoseLandmarkType.leftHip, 0, 2),
+    ]);
+    // Arm raised to horizontal: angle ≈90° (> upThreshold 75) ⇒ UP, rep.
+    final raised = _pose([
+      _lm(PoseLandmarkType.leftShoulder, 0, 0),
+      _lm(PoseLandmarkType.leftElbow, 1, 0),
+      _lm(PoseLandmarkType.leftHip, 0, 2),
+    ]);
+
+    test('counts a rep on a raise-to-horizontal cycle', () {
+      final a = LateralRaiseAnalyzer();
+      expect(a.analyze(atSide).state, CrunchState.down);
+      final r = a.analyze(raised);
+      expect(r.state, CrunchState.up);
+      expect(r.reps, 1);
+    });
+  });
+
+  group('ShoulderPressAnalyzer', () {
+    // shoulderWidth = 1 (shoulders at x=0 and x=1).
+    // Pressed: wrists 1 unit above shoulder line ⇒ delta 1 > 0.7 ⇒ UP.
+    final pressed = _pose([
+      _lm(PoseLandmarkType.leftShoulder, 0, 0),
+      _lm(PoseLandmarkType.rightShoulder, 1, 0),
+      _lm(PoseLandmarkType.leftWrist, 0, -1),
+      _lm(PoseLandmarkType.rightWrist, 1, -1),
+    ]);
+    // Racked: wrists at shoulder line ⇒ delta 0 < 0.1 ⇒ DOWN, rep on lowering.
+    final racked = _pose([
+      _lm(PoseLandmarkType.leftShoulder, 0, 0),
+      _lm(PoseLandmarkType.rightShoulder, 1, 0),
+      _lm(PoseLandmarkType.leftWrist, 0, 0),
+      _lm(PoseLandmarkType.rightWrist, 1, 0),
+    ]);
+
+    test('counts a rep on a press→rack cycle (rep on lowering)', () {
+      final a = ShoulderPressAnalyzer();
+      expect(a.analyze(pressed).state, CrunchState.up);
+      final r = a.analyze(racked);
+      expect(r.state, CrunchState.down);
+      expect(r.reps, 1);
+    });
+  });
+
+  group('ScapularAnalyzer', () {
+    // Resting: wrist-mid at shoulder line ⇒ ratio 0 < 0.05 ⇒ DOWN.
+    final resting = _pose([
+      _lm(PoseLandmarkType.leftShoulder, 0, 0),
+      _lm(PoseLandmarkType.rightShoulder, 1, 0),
+      _lm(PoseLandmarkType.leftWrist, 0, 0),
+      _lm(PoseLandmarkType.rightWrist, 1, 0),
+    ]);
+    // Lifted: wrist-mid 1 unit above ⇒ ratio 1 > 0.45 ⇒ UP, rep.
+    final lifted = _pose([
+      _lm(PoseLandmarkType.leftShoulder, 0, 0),
+      _lm(PoseLandmarkType.rightShoulder, 1, 0),
+      _lm(PoseLandmarkType.leftWrist, 0, -1),
+      _lm(PoseLandmarkType.rightWrist, 1, -1),
+    ]);
+
+    test('counts a rep on a lift cycle', () {
+      final a = ScapularAnalyzer();
+      expect(a.analyze(resting).state, CrunchState.down);
+      final r = a.analyze(lifted);
       expect(r.state, CrunchState.up);
       expect(r.reps, 1);
     });
