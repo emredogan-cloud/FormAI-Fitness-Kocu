@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 
 import '../../../core/utils/angle_calculator.dart';
+import 'base_rep_counter_analyzer.dart';
 import 'crunch_analyzer.dart' show CrunchResult, CrunchState;
 import 'pacing_tracker.dart';
 import 'pose_analyzer.dart';
@@ -21,18 +22,18 @@ import 'pose_analyzer.dart';
 /// ("swinging"). If `|elbow.x - hip.x|` exceeds [maxElbowDriftRatio] of
 /// shoulder width while the arm is in the UP commit, warn
 /// "Dirseğini gövdene yapışık tut!".
-class BicepsCurlAnalyzer implements PoseAnalyzer {
+class BicepsCurlAnalyzer extends BaseRepCounterAnalyzer {
   BicepsCurlAnalyzer({
-    this.downThreshold = 150.0,
-    this.upThreshold = 50.0,
-    this.minRepInterval = const Duration(milliseconds: 900),
+    super.downThreshold = 150.0,
+    super.upThreshold = 50.0,
+    super.minRepInterval = const Duration(milliseconds: 900),
     this.maxElbowDriftRatio = 0.85,
     this.formWarningCooldown = const Duration(seconds: 12),
-  });
-
-  final double downThreshold;
-  final double upThreshold;
-  final Duration minRepInterval;
+  }) : super(
+          // Rep commits on the small-angle (flexion) crossing.
+          countOnAngleAbove: false,
+          pacing: PacingPresets.strength(),
+        );
 
   /// Elbow drift `(|elbow.x - hip.x|) / shoulderWidth` above this is
   /// "elbow leaving the rib cage". 0.85 leaves enough headroom for
@@ -43,111 +44,52 @@ class BicepsCurlAnalyzer implements PoseAnalyzer {
   /// Minimum gap between two spoken elbow-drift warnings.
   final Duration formWarningCooldown;
 
-  int _reps = 0;
-  CrunchState _state = CrunchState.unknown;
-  DateTime? _lastRepTime;
   DateTime _lastFormWarning =
       DateTime.now().subtract(const Duration(seconds: 30));
-  final PacingTracker _pacing = PacingPresets.strength();
 
   @override
-  void reset() {
-    _reps = 0;
-    _state = CrunchState.unknown;
-    _lastRepTime = null;
+  void resetForm() {
     _lastFormWarning = DateTime.now().subtract(const Duration(seconds: 30));
-    _pacing.reset();
   }
 
   @override
-  CrunchResult analyze(Pose pose) {
-    final left = _armAngle(
-      pose,
-      PoseLandmarkType.leftShoulder,
-      PoseLandmarkType.leftElbow,
-      PoseLandmarkType.leftWrist,
-    );
-    final right = _armAngle(
-      pose,
-      PoseLandmarkType.rightShoulder,
-      PoseLandmarkType.rightElbow,
-      PoseLandmarkType.rightWrist,
-    );
-    final elbow = left ?? right;
-    if (elbow == null) {
-      return CrunchResult(
-        reps: _reps,
-        state: _state,
-        torsoAngle: null,
-        neckAngle: null,
-        formWarning: null,
-        repJustCompleted: false,
-      );
+  double? measureAngle(Pose pose) {
+    final left = _armAngle(pose, PoseLandmarkType.leftShoulder,
+        PoseLandmarkType.leftElbow, PoseLandmarkType.leftWrist);
+    final right = _armAngle(pose, PoseLandmarkType.rightShoulder,
+        PoseLandmarkType.rightElbow, PoseLandmarkType.rightWrist);
+    return left ?? right;
+  }
+
+  // Tier-S form check: elbow drift away from the torso during the UP phase.
+  // Dominant side = the side the rep angle came from (recomputed here).
+  @override
+  String? formWarning(Pose pose, double angle, CrunchState state) {
+    if (state != CrunchState.up) return null;
+    final dominantIsLeft = _armAngle(pose, PoseLandmarkType.leftShoulder,
+            PoseLandmarkType.leftElbow, PoseLandmarkType.leftWrist) !=
+        null;
+    final elbowLm = pose.landmarks[dominantIsLeft
+        ? PoseLandmarkType.leftElbow
+        : PoseLandmarkType.rightElbow];
+    final hipLm = pose.landmarks[
+        dominantIsLeft ? PoseLandmarkType.leftHip : PoseLandmarkType.rightHip];
+    final ls = pose.landmarks[PoseLandmarkType.leftShoulder];
+    final rs = pose.landmarks[PoseLandmarkType.rightShoulder];
+    if (elbowLm == null || hipLm == null || ls == null || rs == null) {
+      return null;
     }
-
-    final previous = _state;
-    var repJustCompleted = false;
-    String? pacingFeedback;
-
-    if (elbow > downThreshold) {
-      _state = CrunchState.down;
-    } else if (elbow < upThreshold) {
-      if (previous == CrunchState.down) {
-        final now = DateTime.now();
-        final last = _lastRepTime;
-        if (last == null || now.difference(last) >= minRepInterval) {
-          final repDuration = last == null ? null : now.difference(last);
-          _reps += 1;
-          repJustCompleted = true;
-          _lastRepTime = now;
-          if (repDuration != null) {
-            pacingFeedback = _pacing.evaluate(repDuration, now);
-          }
-        }
-      }
-      _state = CrunchState.up;
-    }
-
-    // Tier-S form check: elbow drift away from the torso during the UP
-    // phase. We measure the dominant side (the one we already used for
-    // the rep angle) and compare elbow.x to hip.x on the same side.
-    // Normalised by shoulder-to-shoulder width so the check holds at
-    // any camera distance.
-    String? formWarning;
-    if (_state == CrunchState.up) {
-      final dominantIsLeft = left != null;
-      final elbowLm = pose.landmarks[dominantIsLeft
-          ? PoseLandmarkType.leftElbow
-          : PoseLandmarkType.rightElbow];
-      final hipLm = pose.landmarks[dominantIsLeft
-          ? PoseLandmarkType.leftHip
-          : PoseLandmarkType.rightHip];
-      final ls = pose.landmarks[PoseLandmarkType.leftShoulder];
-      final rs = pose.landmarks[PoseLandmarkType.rightShoulder];
-      if (elbowLm != null && hipLm != null && ls != null && rs != null) {
-        final shoulderWidth = (ls.x - rs.x).abs();
-        if (shoulderWidth > 1) {
-          final drift = (elbowLm.x - hipLm.x).abs() / shoulderWidth;
-          if (drift > maxElbowDriftRatio) {
-            final now = DateTime.now();
-            if (now.difference(_lastFormWarning) >= formWarningCooldown) {
-              formWarning = 'Dirseğini gövdene yapışık tut!';
-              _lastFormWarning = now;
-            }
-          }
-        }
+    final shoulderWidth = (ls.x - rs.x).abs();
+    if (shoulderWidth <= 1) return null;
+    final drift = (elbowLm.x - hipLm.x).abs() / shoulderWidth;
+    if (drift > maxElbowDriftRatio) {
+      final now = DateTime.now();
+      if (now.difference(_lastFormWarning) >= formWarningCooldown) {
+        _lastFormWarning = now;
+        return 'Dirseğini gövdene yapışık tut!';
       }
     }
-
-    return CrunchResult(
-      reps: _reps,
-      state: _state,
-      torsoAngle: elbow,
-      neckAngle: null,
-      formWarning: formWarning,
-      repJustCompleted: repJustCompleted,
-      pacingFeedback: pacingFeedback,
-    );
+    return null;
   }
 }
 
@@ -282,18 +224,17 @@ class ShoulderPressAnalyzer implements PoseAnalyzer {
 /// above the shoulder by more than [maxArmAboveShoulderRatio] of
 /// shoulder width while the arm is in the UP commit, warn
 /// "Kolları omuz hizasına kadar kaldır."
-class LateralRaiseAnalyzer implements PoseAnalyzer {
+class LateralRaiseAnalyzer extends BaseRepCounterAnalyzer {
   LateralRaiseAnalyzer({
-    this.upThreshold = 75.0,
-    this.downThreshold = 25.0,
-    this.minRepInterval = const Duration(milliseconds: 900),
+    super.upThreshold = 75.0,
+    super.downThreshold = 25.0,
+    super.minRepInterval = const Duration(milliseconds: 900),
     this.maxArmAboveShoulderRatio = 0.35,
     this.formWarningCooldown = const Duration(seconds: 12),
-  });
-
-  final double upThreshold;
-  final double downThreshold;
-  final Duration minRepInterval;
+  }) : super(
+          countOnAngleAbove: true,
+          pacing: PacingPresets.strength(),
+        );
 
   /// `(shoulder.y - wrist.y) / shoulderWidth` above this means the
   /// wrist is sitting clearly above the shoulder line — over-extension.
@@ -302,108 +243,55 @@ class LateralRaiseAnalyzer implements PoseAnalyzer {
   /// Minimum gap between two spoken arm-too-high warnings.
   final Duration formWarningCooldown;
 
-  int _reps = 0;
-  CrunchState _state = CrunchState.unknown;
-  DateTime? _lastRepTime;
   DateTime _lastFormWarning =
       DateTime.now().subtract(const Duration(seconds: 30));
-  final PacingTracker _pacing = PacingPresets.strength();
 
   @override
-  void reset() {
-    _reps = 0;
-    _state = CrunchState.unknown;
-    _lastRepTime = null;
+  void resetForm() {
     _lastFormWarning = DateTime.now().subtract(const Duration(seconds: 30));
-    _pacing.reset();
   }
 
   @override
-  CrunchResult analyze(Pose pose) {
-    final left = _shoulderArmAngle(
-      pose,
-      PoseLandmarkType.leftShoulder,
-      PoseLandmarkType.leftElbow,
-      PoseLandmarkType.leftHip,
-    );
-    final right = _shoulderArmAngle(
-      pose,
-      PoseLandmarkType.rightShoulder,
-      PoseLandmarkType.rightElbow,
-      PoseLandmarkType.rightHip,
-    );
-    final angle = left ?? right;
-    if (angle == null) {
-      return CrunchResult(
-        reps: _reps,
-        state: _state,
-        torsoAngle: null,
-        neckAngle: null,
-        formWarning: null,
-        repJustCompleted: false,
-      );
+  double? measureAngle(Pose pose) {
+    final left = _shoulderArmAngle(pose, PoseLandmarkType.leftShoulder,
+        PoseLandmarkType.leftElbow, PoseLandmarkType.leftHip);
+    final right = _shoulderArmAngle(pose, PoseLandmarkType.rightShoulder,
+        PoseLandmarkType.rightElbow, PoseLandmarkType.rightHip);
+    return left ?? right;
+  }
+
+  // Tier-S form check: wrist-above-shoulder during the UP phase.
+  @override
+  String? formWarning(Pose pose, double angle, CrunchState state) {
+    if (state != CrunchState.up) return null;
+    final dominantIsLeft = _shoulderArmAngle(
+            pose,
+            PoseLandmarkType.leftShoulder,
+            PoseLandmarkType.leftElbow,
+            PoseLandmarkType.leftHip) !=
+        null;
+    final wrist = pose.landmarks[dominantIsLeft
+        ? PoseLandmarkType.leftWrist
+        : PoseLandmarkType.rightWrist];
+    final shoulder = pose.landmarks[dominantIsLeft
+        ? PoseLandmarkType.leftShoulder
+        : PoseLandmarkType.rightShoulder];
+    final ls = pose.landmarks[PoseLandmarkType.leftShoulder];
+    final rs = pose.landmarks[PoseLandmarkType.rightShoulder];
+    if (wrist == null || shoulder == null || ls == null || rs == null) {
+      return null;
     }
-
-    final previous = _state;
-    var repJustCompleted = false;
-    String? pacingFeedback;
-
-    if (angle > upThreshold) {
-      if (previous == CrunchState.down) {
-        final now = DateTime.now();
-        final last = _lastRepTime;
-        if (last == null || now.difference(last) >= minRepInterval) {
-          final repDuration = last == null ? null : now.difference(last);
-          _reps += 1;
-          repJustCompleted = true;
-          _lastRepTime = now;
-          if (repDuration != null) {
-            pacingFeedback = _pacing.evaluate(repDuration, now);
-          }
-        }
-      }
-      _state = CrunchState.up;
-    } else if (angle < downThreshold) {
-      _state = CrunchState.down;
-    }
-
-    // Tier-S form check: wrist-above-shoulder during the UP phase.
-    // Same dominant-side pattern as the rep angle.
-    String? formWarning;
-    if (_state == CrunchState.up) {
-      final dominantIsLeft = left != null;
-      final wrist = pose.landmarks[dominantIsLeft
-          ? PoseLandmarkType.leftWrist
-          : PoseLandmarkType.rightWrist];
-      final shoulder = pose.landmarks[dominantIsLeft
-          ? PoseLandmarkType.leftShoulder
-          : PoseLandmarkType.rightShoulder];
-      final ls = pose.landmarks[PoseLandmarkType.leftShoulder];
-      final rs = pose.landmarks[PoseLandmarkType.rightShoulder];
-      if (wrist != null && shoulder != null && ls != null && rs != null) {
-        final shoulderWidth = (ls.x - rs.x).abs();
-        if (shoulderWidth > 1) {
-          final aboveBy = shoulder.y - wrist.y; // positive when wrist is higher
-          if (aboveBy / shoulderWidth > maxArmAboveShoulderRatio) {
-            final now = DateTime.now();
-            if (now.difference(_lastFormWarning) >= formWarningCooldown) {
-              formWarning = 'Kolları omuz hizasında tut, daha yukarı kaldırma.';
-              _lastFormWarning = now;
-            }
-          }
-        }
+    final shoulderWidth = (ls.x - rs.x).abs();
+    if (shoulderWidth <= 1) return null;
+    final aboveBy = shoulder.y - wrist.y; // positive when wrist is higher
+    if (aboveBy / shoulderWidth > maxArmAboveShoulderRatio) {
+      final now = DateTime.now();
+      if (now.difference(_lastFormWarning) >= formWarningCooldown) {
+        _lastFormWarning = now;
+        return 'Kolları omuz hizasında tut, daha yukarı kaldırma.';
       }
     }
-
-    return CrunchResult(
-      reps: _reps,
-      state: _state,
-      torsoAngle: angle,
-      neckAngle: null,
-      formWarning: formWarning,
-      repJustCompleted: repJustCompleted,
-      pacingFeedback: pacingFeedback,
-    );
+    return null;
   }
 }
 
@@ -439,101 +327,39 @@ class LateralRaiseAnalyzer implements PoseAnalyzer {
 /// movements with noisy wrist landmarks; a tight gate would miss most
 /// reps. Form warning is deliberately omitted — scapular reps are too
 /// subtle for any geometric form check that wouldn't false-positive.
-class ScapularAnalyzer implements PoseAnalyzer {
+class ScapularAnalyzer extends BaseRepCounterAnalyzer {
   ScapularAnalyzer({
-    this.upRatio = 0.45,
-    this.downRatio = 0.05,
-    this.minRepInterval = const Duration(milliseconds: 900),
-  });
-
-  /// `(shoulderMidY - wristMidY) / shoulderWidth` above this commits UP.
-  final double upRatio;
-
-  /// `(shoulderMidY - wristMidY) / shoulderWidth` below this commits DOWN.
-  final double downRatio;
-
-  final Duration minRepInterval;
-
-  int _reps = 0;
-  CrunchState _state = CrunchState.unknown;
-  DateTime? _lastRepTime;
-  final PacingTracker _pacing = PacingPresets.strength();
+    double upRatio = 0.45,
+    double downRatio = 0.05,
+    super.minRepInterval = const Duration(milliseconds: 900),
+  }) : super(
+          // The "angle" here is the wrist-vs-shoulder height ratio; up/down
+          // thresholds map directly. Rep commits on the high-ratio crossing.
+          downThreshold: downRatio,
+          upThreshold: upRatio,
+          countOnAngleAbove: true,
+          pacing: PacingPresets.strength(),
+        );
 
   @override
-  void reset() {
-    _reps = 0;
-    _state = CrunchState.unknown;
-    _lastRepTime = null;
-    _pacing.reset();
-  }
-
-  @override
-  CrunchResult analyze(Pose pose) {
+  double? measureAngle(Pose pose) {
     final ls = pose.landmarks[PoseLandmarkType.leftShoulder];
     final rs = pose.landmarks[PoseLandmarkType.rightShoulder];
     final lw = pose.landmarks[PoseLandmarkType.leftWrist];
     final rw = pose.landmarks[PoseLandmarkType.rightWrist];
-    if (ls == null || rs == null || lw == null || rw == null) {
-      return _empty();
-    }
-    // Skip the frame if either shoulder is unreliable — without a
-    // baseline shoulder line the ratio is meaningless. We tolerate one
-    // weak wrist (it gets averaged into the mid-point with the other).
+    if (ls == null || rs == null || lw == null || rw == null) return null;
+    // Skip the frame if either shoulder is unreliable — without a baseline
+    // shoulder line the ratio is meaningless. We tolerate one weak wrist
+    // (it gets averaged into the mid-point with the other).
     final minShoulder =
         ls.likelihood < rs.likelihood ? ls.likelihood : rs.likelihood;
-    if (minShoulder < 0.4) return _empty();
-
+    if (minShoulder < 0.4) return null;
     final shoulderWidth = (ls.x - rs.x).abs();
-    if (shoulderWidth < 1) return _empty();
-
+    if (shoulderWidth < 1) return null;
     final shoulderMidY = (ls.y + rs.y) / 2;
     final wristMidY = (lw.y + rw.y) / 2;
-    final ratio = (shoulderMidY - wristMidY) / shoulderWidth;
-
-    final previous = _state;
-    var repJustCompleted = false;
-    String? pacingFeedback;
-
-    if (ratio > upRatio) {
-      if (previous == CrunchState.down) {
-        final now = DateTime.now();
-        final last = _lastRepTime;
-        if (last == null || now.difference(last) >= minRepInterval) {
-          final repDuration = last == null ? null : now.difference(last);
-          _reps += 1;
-          repJustCompleted = true;
-          _lastRepTime = now;
-          if (repDuration != null) {
-            pacingFeedback = _pacing.evaluate(repDuration, now);
-          }
-        }
-      }
-      _state = CrunchState.up;
-    } else if (ratio < downRatio) {
-      _state = CrunchState.down;
-    }
-    // Between the two thresholds we hold the previous state — natural
-    // hysteresis that prevents borderline frames from re-counting.
-
-    return CrunchResult(
-      reps: _reps,
-      state: _state,
-      torsoAngle: ratio,
-      neckAngle: null,
-      formWarning: null,
-      repJustCompleted: repJustCompleted,
-      pacingFeedback: pacingFeedback,
-    );
+    return (shoulderMidY - wristMidY) / shoulderWidth;
   }
-
-  CrunchResult _empty() => CrunchResult(
-        reps: _reps,
-        state: _state,
-        torsoAngle: null,
-        neckAngle: null,
-        formWarning: null,
-        repJustCompleted: false,
-      );
 }
 
 // ============================================================================
