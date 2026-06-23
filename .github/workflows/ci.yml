@@ -41,8 +41,48 @@ jobs:
       - name: Verify formatting
         run: dart format --output=none --set-exit-if-changed .
 
+      - name: Guard .env template for ship-forbidden secrets
+        run: bash tool/check_env_no_secrets.sh .env.example
+
       - name: Analyze source
         run: flutter analyze
 
-      - name: Run unit and widget tests
-        run: flutter test
+      - name: Run unit and widget tests (with coverage)
+        run: flutter test --coverage
+
+      - name: Upload coverage (lcov)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-lcov
+          path: coverage/lcov.info
+          if-no-files-found: warn
+
+  integration:
+    name: Integration E2E (Android emulator)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Create empty .env for boot
+        run: touch .env
+
+      # Phase 1 (P-Risk) · runs integration_test/ on a real Android image.
+      # KVM-accelerated runner; mirrors the local Pixel/API34 validation.
+      - name: Run integration tests on emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          script: flutter test integration_test/app_test.dart
