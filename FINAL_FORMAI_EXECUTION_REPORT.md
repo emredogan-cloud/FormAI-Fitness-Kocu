@@ -6,40 +6,42 @@
 > VALIDATION** olarak işaretlenmiştir. Hiçbir metrik, cihaz sonucu, test
 > çıktısı veya CI sonucu uydurulmamıştır.
 >
-> Branch: `prisk/phase-1-tests` · 10 roadmap commit (`da5b55f` taban üzerine) +
-> bu rapor. Toolchain: Flutter 3.41.9 / Dart 3.11.5, Java 17, Android SDK
-> 36.1.0, KVM. **Push edildi** (origin); main'e merge EDİLMEDİ (gerekçe §11).
+> Branch: `prisk/phase-1-tests` · 11 işlevsel + rapor commit'leri (`da5b55f`
+> taban). Toolchain: Flutter 3.41.9 / Dart 3.11.5, Java 17, Android SDK
+> 36.1.0, KVM. **Push edildi**; main'e merge EDİLMEDİ (gerekçe §11).
 
 ---
 
 ## 1. Yönetici Özeti
 
-İki onaylı yol haritası (P-Risk + Video form analizi) otonom yürütüldü.
-**Tam tamamlanma tek oturumda gerçekçi değildir** (yol haritalarının kendi
-tahmini çok-haftalık/çok-kişilik) ve hiçbir şey uydurulmadığı için bu rapor
+İki onaylı yol haritası (P-Risk + Video form analizi) otonom yürütüldü, her
+maddenin gerçek kod tabanına karşı yeniden-grounding'i yapıldı. Tam tamamlanma
+tek oturumda gerçekçi olmadığından (çok-haftalık/çok-kişilik iş), bu rapor
 **gerçekten bitirilmiş + doğrulanmış** dilimi belgeler:
 
-- **A · Faz 0 (Güvenlik): TAMAMLANDI.** Tek gerçek sır (`SUPABASE_DB_PASSWORD`)
-  gönderilen `.env`'den çıkarıldı; build-time sır bekçisi + gitleaks CI;
-  takipli sertifika temizlendi; kritik bir build-blocker (geçersiz pubspec
-  `name`) düzeltildi.
-- **A · Faz 1 (Test ağı): KISMİ.** 9 rep-analyzer için golden-frame testleri;
-  kapsam **%0.1 → %16.4**; CI'a coverage + emülatör entegrasyon işi. (80%
-  kapısı KARŞILANMADI.)
-- **A · Faz 2 (Mimari): KISMİ.** `BaseRepCounterAnalyzer` çıkarıldı (F08);
-  `PosePainter` allocation optimizasyonu (F20); `DashboardLogic` saf-mantık
-  çıkarımı (F09, kısmi). (Tam Dashboard facade + kalan migrasyonlar ERTELENDİ.)
-- **A · Faz 3 (Lansman): KISMİ.** `release.yml` artefakt pipeline'ı (F31);
-  release APK+AAB temiz derlendi. (SKU + Play-imza ERTELENDİ — harici kimlik.)
+- **A · Faz 0 (Güvenlik): TAMAMLANDI.** `SUPABASE_DB_PASSWORD` gönderilen
+  `.env`'den çıkarıldı; sır bekçisi + gitleaks CI; sertifika temizlendi;
+  kritik build-blocker (geçersiz pubspec `name`) düzeltildi.
+- **A · Faz 1 (Test ağı): KISMİ.** Golden-frame + servis testleri; kapsam
+  **%0.1 → %16.8** (100 test); CI coverage + emülatör entegrasyon işi.
+  (80% kapısı KARŞILANMADI.)
+- **A · Faz 2 (Mimari): KISMİ.** `BaseRepCounterAnalyzer` (F08) → **7 analyzer**
+  migrate; `PosePainter` perf (F20); `DashboardLogic` çıkarımı (F09 kısmi);
+  **F19** auth-gate niyet-metotları + lint guard. (Tam Dashboard facade ERTELENDİ.)
+- **A · Faz 3 (Lansman): KISMİ.** `release.yml` artefakt pipeline (F31);
+  release APK+AAB temiz derlendi. (SKU + Play-imza ERTELENDİ — harici.)
+- **A · Faz 4 (Ürün olgunluğu): KISMİ.** i18n mimari scaffold (gen-l10n +
+  en/tr ARB + MaterialApp wiring); **hesap silme akışı zaten mevcut** (denetim
+  iddiası yanlış — §4). (Tam string migrasyonu + nutrition filtre ERTELENDİ.)
 - **B · Faz 0 (Mimari hazırlık): TAMAMLANDI.** Video-analiz DB şeması (3 tablo +
-  RLS + storage bucket), gerçek modeller, şeffaf form-skor heuristiği + testleri.
+  RLS + storage), gerçek modeller, şeffaf form-skor heuristiği + testleri.
 
-**En kritik doğrulanmış kazanımlar:** `.env` DB-parolası sızıntısı kapatıldı ·
-analyze 0 sorun · **87 test yeşil** · dart format temiz · release APK (128 MB)
-+ AAB (110.6 MB) temiz derlendi.
+**Doğrulanmış kazanımlar:** DB-parolası sızıntısı kapatıldı · analyze 0 sorun ·
+**100 test yeşil** · dart format temiz · release APK (128 MB) + AAB (110.6 MB)
++ i18n-scaffold debug APK temiz derlendi.
 
-**En kritik açık riskler:** Test kapsamı hâlâ %16.4 · `.git/config` içinde canlı
-GitHub PAT (rotasyon gerekli) · i18n/SKU/release-imza/video-pipeline yok.
+**Açık riskler:** Kapsam %16.8 (hedef uzak) · `.git/config` canlı GitHub PAT
+(rotasyon gerekli) · tam i18n/SKU/release-imza/video-pipeline yok.
 
 ---
 
@@ -47,42 +49,38 @@ GitHub PAT (rotasyon gerekli) · i18n/SKU/release-imza/video-pipeline yok.
 
 | Faz | Kapsam | Durum | Doğrulama |
 |---|---|---|---|
-| Emülatör altyapısı | Pixel 7/API35 + Pixel 6/API34 | **Tamam** | İkisi de boot edildi + adb teyit |
-| A · Faz 0 Güvenlik | F02, F17, F23, F24, F32 (+pubspec fix) | **Tamam** | analyze 0 · APK boot · 0 MissingConfig |
-| A · Faz 1 Test ağı | F01 (9 analyzer), F04 CI coverage | **Kısmi** | 87 test yeşil · coverage %16.4 |
-| A · Faz 2 Mimari | F08 BaseRepCounterAnalyzer, F20, F09 | **Kısmi** | analyze 0 · 87 test yeşil · −197 satır |
-| A · Faz 3 Lansman | F31 release.yml; F11 incelendi | **Kısmi** | release APK+AAB derlendi; YAML valid |
-| A · Faz 4 Ürün olgunluğu | i18n, KVKK silme, nutrition, cache | **Başlanmadı** | — (ERTELENDİ) |
-| B · Faz 0 Mimari hazırlık | DB+storage şema, modeller, form-skor | **Tamam** | analyze 0 · 9 test yeşil |
-| B · Faz 1-6 | MVP→prod video özelliği | **Başlanmadı** | — (ERTELENDİ) |
-
-F11 incelendi: denetimdeki "bundle ID uyuşmazlığı" gerçek kodda YOK
-(`namespace`+`applicationId` ikisi de `com.emredogan.formaifit`); gerçek boşluk
-Play Console SKU konfigürasyonu (harici).
+| Emülatör altyapısı | Pixel 7/API35 + Pixel 6/API34 | **Tamam** | İkisi de boot + adb teyit |
+| A · Faz 0 Güvenlik | F02/F17/F23/F24/F32 + pubspec fix | **Tamam** | analyze 0 · APK boot · 0 MissingConfig |
+| A · Faz 1 Test ağı | F01 (9 analyzer) + F29 (AppPrefs) + F04 CI | **Kısmi** | 100 test yeşil · %16.8 |
+| A · Faz 2 Mimari | F08 (7 analyzer) + F20 + F09 + F19 | **Kısmi** | analyze 0 · 100 test · ~−545 satır |
+| A · Faz 3 Lansman | F31 release.yml; F11 incelendi | **Kısmi** | release APK+AAB derlendi |
+| A · Faz 4 Ürün olgunluğu | i18n scaffold; hesap silme (zaten var) | **Kısmi** | gen-l10n + analyze + APK build |
+| B · Faz 0 Mimari hazırlık | DB/storage şema + model + form-skor | **Tamam** | analyze 0 · 9 test |
+| B · Faz 1-6 | MVP→prod video özelliği | **Başlanmadı** | — (ERTELENDİ; cihaz/video gerekli) |
 
 ---
 
 ## 3. Commit'ler ve PR'lar
 
-Tümü `prisk/phase-1-tests`'te, `da5b55f` üzerine, **push edildi**. main'e merge
-edilmedi (§11). Toplam diff: **22 dosya, +1742 / −336**.
+`prisk/phase-1-tests`'te, **push edildi**, main'e merge edilmedi (§11).
 
 | Commit | Açıklama |
 |---|---|
-| `744bde0` | fix(security): Faz 0 — DB sırrı çıkar, secret-scan kapısı, paket adı düzelt |
-| `baef9d9` | test(workout): Faz 1 — golden-frame analyzer testleri + CI coverage/E2E |
-| `a17c212` | refactor(workout): Faz 2 — BaseRepCounterAnalyzer çıkarımı (F08) |
-| `34ae7c0` | perf(workout): Faz 2 F20 — PosePainter Paint allocation hoisting |
-| `49e06d1` | feat(video_analysis): Roadmap B Faz 0 — şema, modeller, form-skor |
-| `09a89ab` | docs: FINAL_FORMAI_EXECUTION_REPORT (v1) |
-| `0f32d68` | refactor(home): Faz 2 F09 — testable DashboardLogic çıkarımı |
-| `4fbe174` | test(workout): 4 rep-analyzer daha için golden testler |
+| `744bde0` | fix(security): Faz 0 — DB sırrı, secret-scan, paket adı |
+| `baef9d9` | test(workout): Faz 1 — golden-frame analyzer testleri + CI |
+| `a17c212` | refactor(workout): Faz 2 F08 — BaseRepCounterAnalyzer |
+| `34ae7c0` | perf(workout): Faz 2 F20 — PosePainter allocation hoisting |
+| `49e06d1` | feat(video_analysis): Roadmap B Faz 0 — şema/model/form-skor |
+| `0f32d68` | refactor(home): Faz 2 F09 — DashboardLogic çıkarımı |
+| `4fbe174` | test(workout): 4 analyzer daha için golden testler |
 | `4a8f2db` | ci(release): Faz 3 F31 — release artefakt workflow'u |
-| `97f7d66` | refactor(workout): Faz 2 — 3 analyzer daha base'e taşındı (BicepsCurl/LateralRaise/Scapular) |
+| `97f7d66` | refactor(workout): Faz 2 — 3 analyzer daha base'e |
+| `4c0ff6d` | refactor(auth)+test: Faz 2 F19 — auth-gate niyet-metotları + AppPrefs testleri |
+| `378b65e` | feat(l10n): Faz 2 — i18n mimari scaffold |
+| (+report) | `09a89ab`, `bf79e87`, `9f0aef3`, (+ bu güncelleme) |
 
-**PR durumu:** Branch push edildi; PR açılabilir (GitHub linki push çıktısında).
-CI: `secret-scan.yml` prisk/* push'unda koşar; `ci.yml` (`test`+`integration`)
-ve `flutter_ci.yml` main'e PR'da tetiklenir.
+**PR:** Branch push edildi, PR açılabilir. CI: `secret-scan.yml` prisk/* push'unda;
+`test`+`integration` main'e PR'da tetiklenir.
 
 ---
 
@@ -90,83 +88,84 @@ ve `flutter_ci.yml` main'e PR'da tetiklenir.
 
 | Bulgu | Yapılan | Durum |
 |---|---|---|
-| F02 `SUPABASE_DB_PASSWORD` APK'da (P0) | `.env`'den çıkarıldı → `.env.local` (asset değil); uygulama hiç okumuyor | **Çözüldü** |
-| F32 Sır taraması yok | `check_env_no_secrets.sh` build-bekçi + `.gitleaks.toml` + `secret-scan.yml` | **Çözüldü (CI)** |
-| F23 `upload-cert.pem` takipli | `git rm --cached` + gitignore (kamu sertifikası) | **Çözüldü** |
-| F24 `.env` telemetri anahtarları | `.env.example` no-secrets başlığı; bekçi `*SERVICE_ROLE*`/`*_SECRET`/`*DB_PASSWORD*`/PEM engelliyor | **Sertleştirildi** |
-| F17 GCP key yerelde | Gitignore'lı (teyit); rotasyon harici | **Kısmi** |
-| **YENİ: `.git/config` canlı GitHub PAT** | Tespit + raporlandı | **AÇIK — rotate edilmeli** |
+| F02 `.env` DB password APK'da (P0) | `.env`'den çıkarıldı → `.env.local` (asset değil) | **Çözüldü** |
+| F32 Sır taraması yok | build-bekçi + `.gitleaks.toml` + `secret-scan.yml` | **Çözüldü (CI)** |
+| F23 `upload-cert.pem` takipli | untrack + gitignore (kamu sertifikası) | **Çözüldü** |
+| F24 `.env` telemetri anahtarları | `.env.example` no-secrets başlığı; bekçi `*SERVICE_ROLE*`/`*_SECRET`/PEM engelliyor | **Sertleştirildi** |
+| F17 GCP key yerelde | Gitignore'lı; rotasyon harici | **Kısmi** |
+| **`.git/config` canlı GitHub PAT** | Tespit + raporlandı | **AÇIK — rotate edilmeli** |
 
-**Doğrulanmış sır taraması:** Takipli dosyalarda hardcoded JWT/secret YOK
-(`service_role`/`PRIVATE KEY` eşleşmeleri yalnız SQL/yorum kelimeleri ve
-docstring placeholder'ları). Bekçi `.env` + `.env.example` üzerinde PASS.
+Doğrulanmış sır taraması: takipli dosyalarda hardcoded JWT/secret YOK.
+
+**Re-grounding (gerçek kod kazanır):** Denetimin F40 "hesap silme akışı yok"
+iddiası **YANLIŞ** — `account_settings_screen.dart` zaten "Hesabımı Sil"
+butonu (satır 956) → `AuthController.deleteAccount()` (satır 376) →
+`delete_user` RPC + signOut + prefs.clear akışını içeriyor. KVKK silme
+**zaten mevcut**; iş gerekmedi.
 
 ---
 
 ## 5. Mimari İyileştirmeleri
 
-- **F08 `BaseRepCounterAnalyzer`:** Tekrarlanan rep-sayım durum makinesi
-  (denetim P1, ~3.200 LOC kopya) tek 134-satırlık tabana çıkarıldı; **7
-  analyzer** migrate edildi — Squat / PullUp / PushUp / BenchPress
-  (`a17c212`) + BicepsCurl / LateralRaise / Scapular (`97f7d66`).
-  Egzersize-özel form kontrolleri override'larla birebir korundu;
-  `countOnAngleAbove` polaritesi ekstansiyon ve fleksiyon rep'lerini tek
-  soyutlamada kapsıyor. **~−371 net analyzer satırı** (−197 + −174).
-- **F09 `DashboardLogic`:** 478-LOC God-object'in saf karar mantığı
-  (`prefetchUrls`, `pendingBadgeCelebrations`) unit-test'li bir helper'a
-  çıkarıldı; ekran delege ediyor. Davranış birebir aynı. (Tam state-facade
-  decomposition ERTELENDİ — stateful yüzeyi yeniden şekillendirmeden önce
-  widget-test ağı gerekli; ekranda şu an yok.)
-- **F20 `PosePainter`:** Kare başına ~40 `Paint` allocation'ı 4'e indirildi;
-  render çıktısı birebir aynı.
-- **Davranış koruması:** Tüm refactor'lar sonrası **87/87 test yeşil** + analyze
-  0 → kanıtlı regresyon ağı.
+- **F08 BaseRepCounterAnalyzer:** Tekrarlanan rep-sayım makinesi (P1, ~3.200
+  LOC kopya) 134-satırlık tabana çıkarıldı; **7 analyzer** migrate (Squat /
+  PullUp / PushUp / BenchPress + BicepsCurl / LateralRaise / Scapular); form
+  kontrolleri override'larla korundu; `countOnAngleAbove` polaritesi.
+  **~−371 net analyzer satırı.** Base'e uymayanlar (ShoulderPress dinamik
+  eşik / JumpingJack çift histerezis / Burpee 3-faz) ve hook gerektirenler
+  (Crunch / HipHinge) tasarım gereği ayrı.
+- **F19 AuthGateClearedNotifier:** Riverpod'un protected `state` setter'ını
+  dışa sızdıran public override kaldırıldı; 6 dış çağrı (auth_provider ×3,
+  auth_screen ×3) `markCleared()`/`reset()` niyet-metotlarına çevrildi.
+  `protected_member` lint'i artık dış state-poke'u kalıcı olarak engelliyor.
+- **F09 DashboardLogic:** 478-LOC God-object'in saf karar mantığı unit-test'li
+  helper'a çıkarıldı; ekran delege ediyor. (Tam facade ERTELENDİ — widget-test
+  ağı gerekli.)
+- **F20 PosePainter:** kare başına ~40 Paint allocation → 4; render birebir aynı.
+- Davranış koruması: tüm refactor'lar sonrası **100/100 test yeşil**.
 
-**ERTELENDİ:** Tam Dashboard facade; base'e UYMAYAN analyzer'lar (ShoulderPress
-dinamik eşik / JumpingJack çift-çift histerezis / Burpee 3-faz) ve ek hook
-gerektirenler (Crunch inline-pacing+neck / HipHinge peak-ROM); F19/F21/F22/F25/F26.
+**Re-grounding (F19/AppPrefs):** Denetimin "appPreferencesProvider mutasyonları
+cache invalidate etmiyor → stale state" yarısı **gerçekte yok** — AppPreferences
+tek SharedPreferences örneği üzerinde senkron sarmalayıcı; getter'lar canlı
+okur, setter'lar in-memory cache'i anında günceller. Veri-katmanı staleness'i
+yok; değiştirilmedi (belgelendi).
 
 ---
 
 ## 6. Test ve Kapsam İyileştirmeleri
 
-- **Golden-frame analyzer testleri** (9 rep-analyzer): Crunch, Squat, PushUp,
-  PullUp, HipHinge, BicepsCurl, LateralRaise, ShoulderPress, Scapular —
-  sentetik-poz DOWN/UP geçişleri, rep sayımı, landmark reddi, reset.
-  Determinist (zamana bağlı değil).
-- **DashboardLogic testleri** (7): prefetch URL seçimi + badge-pending mantığı.
-- **Video-analiz testleri** (9): form-skor heuristik matematiği + model JSON
-  round-trip.
-- **Test fonksiyonu: 57 → 87.** Test dosyası: 11 → 14.
-- **CI (F04):** `flutter test --coverage` + lcov artefakt + `.env` sır bekçisi
-  + KVM emülatör `integration` işi.
+- **Golden-frame analyzer testleri** (9): Crunch/Squat/PushUp/PullUp/HipHinge/
+  BicepsCurl/LateralRaise/ShoulderPress/Scapular — sentetik-poz, determinist.
+- **AppPreferences servis testleri** (F29, 13 test): onboarding, KVKK consent,
+  yaş kapısı, freeze token, streak high-water, coach-line penceresi, XP
+  ledger, plan-cache invalidation, wizard checkpoint (SharedPreferences mock).
+- **DashboardLogic** (7) + **video form-skor** (9) testleri.
+- **Test fonksiyonu: 57 → 100.** Test dosyası: 11 → 15.
+- **CI (F04):** `flutter test --coverage` + lcov artefakt + `.env` bekçisi +
+  KVM emülatör `integration` işi.
 
 | Metrik | Taban | Şimdi | Hedef |
 |---|---|---|---|
-| Satır kapsamı | ~%0.1 | **%16.4** (2698/16444) | %70-80 |
-| Test fonksiyonu | 57 | 87 | — |
+| Satır kapsamı | ~%0.1 | **%16.8** | %70-80 |
+| Test fonksiyonu | 57 | 100 | — |
 
-**Sınır (dürüst):** Bunlar analyzer/heuristik MANTIĞINI doğrular, gerçek-form
-doğruluğunu DEĞİL. %70+ için 1.9k-LOC presentation katmanına provider/repo/
-widget mock test takımları gerekir — çok-günlük, ERTELENDİ.
+**Sınır:** %70+ için 1.9k-LOC presentation katmanına provider/repo/widget mock
+test takımları gerekir — çok-günlük, ERTELENDİ.
 
 ---
 
 ## 7. Video-Analiz Uygulama Özeti (Roadmap B)
 
-**Yapıldı (Faz 0):** `005_video_analysis_schema.sql` (user_video_submissions,
-form_analysis_results, frame_findings + sahip-kapsamlı RLS + özel
-`user_videos` storage bucket); gerçek `VideoSubmission`/`FormAnalysisResult`/
-`FrameFinding` modelleri (snake_case JSON round-trip); `form_score.dart`
-**şeffaf 0-100 heuristik** (ROM %60 + temiz-kare %40 — doğrulanmış doğruluk
-DEĞİL, eğitilmiş model yok).
+**Yapıldı (Faz 0):** `005_video_analysis_schema.sql` (user_video_submissions /
+form_analysis_results / frame_findings + sahip-kapsamlı RLS + `user_videos`
+storage bucket); gerçek `VideoSubmission`/`FormAnalysisResult`/`FrameFinding`
+modelleri; `form_score.dart` **şeffaf 0-100 heuristik** (ROM %60 + temiz-kare
+%40 — doğrulanmış doğruluk metriği DEĞİL).
 
-**Yapılmadı — DEFERRED, REQUIRES PHYSICAL VALIDATION / daha fazla uygulama
-(Faz 1-6):** video yükleme/çekme, native kare çıkarımı, batch BlazePose
-entegrasyonu, CustomPainter düzeltme overlay'i + timeline scrubber, egzersiz
-oto-sınıflandırma, paywall entegrasyonu, telemetri/E2E. Doğruluk (60 video),
-performans (RAM/CPU/batarya), gecikme (<5sn) gerçek cihaz + etiketli video
-gerektirir.
+**Yapılmadı — DEFERRED, REQUIRES PHYSICAL VALIDATION (Faz 1-6):** video
+yükleme/çekme, native kare çıkarımı, batch BlazePose, CustomPainter düzeltme
+overlay'i + timeline scrubber, egzersiz oto-sınıflandırma, paywall, telemetri/
+E2E. Doğruluk/perf/gecikme gerçek cihaz + etiketli video gerektirir.
 
 ---
 
@@ -176,27 +175,20 @@ gerektirir.
 |---|---|
 | Pixel 6 / API 34 / Android 14 | **Boot + teyit** |
 | Pixel 7 / API 35 / Android 15 | **Boot + teyit** |
-| Faz 0 boot smoke (API34) | **GEÇTİ**: PROCESS ALIVE · MainActivity · "Supabase init completed" · 0 MissingConfiguration |
-| Refactor-sonrası re-smoke | **DEFERRED** — emülatör örnekleri build yükü altında geri alındı; boot yolu refactor'dan etkilenmediği için (Faz1 test-only, F08/F20 iç, F09 davranış-koruyan, video_analysis route'a bağlı değil) Faz-0 kanıtı temsili kalır |
-| Release APK / AAB derleme | **GEÇTİ** — APK 128 MB, AAB 110.6 MB (mevcut kod üzerinde teyit) |
-| iOS / gerçek cihaz | **DEFERRED — REQUIRES PHYSICAL VALIDATION** (Linux; macOS/Xcode yok) |
-| Sandbox emülatör backend E2E | Sınırlı: harici DNS yok → Supabase veri çekişi başarısız (uygulama nazik degrade) |
+| Faz 0 boot smoke (API34) | **GEÇTİ**: process alive · MainActivity · Supabase init · 0 MissingConfig |
+| Refactor-sonrası re-smoke | **DEFERRED** — emülatör build yükü altında kararsız; boot yolu refactor'dan etkilenmedi |
+| Release APK / AAB derleme | **GEÇTİ** — APK 128 MB, AAB 110.6 MB (i18n scaffold sonrası teyit) |
+| iOS / gerçek cihaz | **DEFERRED — REQUIRES PHYSICAL VALIDATION** (Linux) |
 
 ---
 
 ## 9. Ertelenen Fiziksel Doğrulamalar (DEFERRED — REQUIRES PHYSICAL VALIDATION)
 
-1. iOS derleme + iPhone SE E2E (Linux'ta imkânsız).
-2. Gerçek cihaz matrisi (Pixel 7 A15 / Pixel 6 A14 / küçük ekran) fiziksel E2E.
-3. Video doğruluk: 3 egzersiz × (10 iyi + 10 kötü form); rep doğruluğu, FP/FN,
-   skor tutarlılığı.
-4. Fiziksel performans: RAM/CPU/batarya/gecikme (<5sn/30sn video).
-5. Görsel doğrulama: skeleton/correction overlay, timeline scrubber, açı
-   anotasyonları, history playback.
-6. Release-imza: Play upload-keystore ile imzalı AAB (keystore harici).
-7. gitleaks yerel koşumu (binary yok; CI'da koşar).
-8. `integration_test` gerçek-app e2e (mevcut harness mock; F03 ayrı iş).
-9. Refactor-sonrası emülatör re-smoke (emülatör kararsızlığı).
+1. iOS derleme + iPhone SE E2E. 2. Gerçek cihaz matrisi E2E. 3. Video doğruluk
+(3 egz × 10 iyi/10 kötü form). 4. Fiziksel perf (RAM/CPU/batarya/gecikme).
+5. Görsel doğrulama (overlay/scrubber/açı/history). 6. Release-imza (Play
+keystore). 7. gitleaks yerel koşum. 8. Gerçek-app integration e2e. 9.
+Refactor-sonrası emülatör re-smoke.
 
 ---
 
@@ -205,13 +197,11 @@ gerektirir.
 | Risk | Severity | Not |
 |---|---|---|
 | `.git/config` canlı GitHub PAT | **Yüksek** | Hemen rotate + credential-helper/SSH |
-| Test kapsamı %16.4 (hedef %70-80) | Yüksek | Presentation/provider/repo mock testleri |
-| Yerelleştirme yok (~6.700 string) | Yüksek (TR-dışı) | Faz 4 i18n yapılmadı |
-| RevenueCat SKU + release-imza | Yüksek | Lansman blocker; harici konfig + keystore |
-| Hesap silme (KVKK) yok | Orta | Faz 4 — yapılmadı |
-| DashboardScreen tam decomposition | Orta | F09 kısmi; facade ERTELENDİ |
+| Test kapsamı %16.8 (hedef %70-80) | Yüksek | Presentation/provider/repo mock testleri |
+| Tam yerelleştirme yok (scaffold var) | Yüksek (TR-dışı) | ~6.700 string migrasyonu ERTELENDİ |
+| RevenueCat SKU + release-imza | Yüksek | Lansman blocker; harici |
+| Tam Dashboard facade | Orta | F09 kısmi |
 | Video pipeline yok | Orta (özellik) | Roadmap B Faz 1-6 |
-| 7/19 analyzer base'de; kalanlar uymuyor/hook gerektiriyor | Düşük | Tasarım gereği; tek-sinyal base'e uymayan analyzer'lar ayrı bırakıldı |
 
 ---
 
@@ -219,18 +209,17 @@ gerektirir.
 
 | Eksen | Taban | Şimdi | Gerekçe |
 |---|---|---|---|
-| Architecture | 6 | **7** | BaseRepCounterAnalyzer + DashboardLogic; tam facade değil |
-| Maintainability | 5 | **6.5** | Tekrar azaldı, test ağı genişledi |
-| Security | 3.5 | **7** | DB sırrı + tarama kapatıldı; PAT + release-imza açık |
-| Testing | 2 | **4** | 87 test + CI coverage; %70 uzak |
+| Architecture | 6 | **7** | BaseRepCounterAnalyzer + F19 + DashboardLogic; tam facade değil |
+| Maintainability | 5 | **7** | ~−545 satır tekrar, lint guard, test ağı |
+| Security | 3.5 | **7** | DB sırrı + tarama; PAT + release-imza açık |
+| Testing | 2 | **4.5** | 100 test + CI coverage; %70 uzak |
 | AI Readiness | 4 | **5** | Video şema + form-skor temeli; gerçek pipeline yok |
-| Production Readiness | 5 | **6** | Builds yeşil + sır + release pipeline; SKU/i18n/imza açık |
+| Production Readiness | 5 | **6.5** | Builds yeşil + sır + release pipeline + i18n scaffold; SKU/imza açık |
 
-**main durumu:** Çalışma `prisk/phase-1-tests`'te, **push edildi**, **main'e
-merge EDİLMEDİ.** Gerekçe: yol haritaları tam bitmediğinden "tamamlandı" diye
-merge etmek dürüstlük politikasını ihlal eder; ayrıca canlı PAT önce rotate
-edilmeli. Commit'lenen iş yerelde analyze/format/test'i geçiyor → CI `test` işi
-yeşil beklenir.
+**main durumu:** `prisk/phase-1-tests`'te, **push edildi**, **main'e merge
+EDİLMEDİ** — yol haritaları tam bitmediğinden "tamamlandı" merge'ü dürüstlük
+politikasını ihlal eder; ayrıca PAT önce rotate edilmeli. Commit'ler yerelde
+analyze/format/test'i geçiyor → CI `test` işi yeşil beklenir.
 
 ---
 
@@ -239,22 +228,25 @@ yeşil beklenir.
 **MVP+ (Beta'ya doğru) — "Production Ready" DEĞİL, "her iki yol haritası tam
 yürütüldü" DEĞİL.**
 
-Gerçek, doğrulanmış ilerleme: bir P0 güvenlik açığı kapatıldı + bir kritik
-build-blocker düzeltildi; test ağı kuruldu (kapsam %0.1→%16.4, 87 test); en
-maliyetli mimari borç kısmen ödendi (BaseRepCounterAnalyzer + DashboardLogic);
-release pipeline'ı eklendi; video özelliğinin DB+model+skor temeli atıldı.
-Release APK + AAB temiz derleniyor.
+Gerçek, doğrulanmış ilerleme: P0 güvenlik açığı + kritik build-blocker
+kapatıldı; test ağı (%0.1→%16.8, 100 test); en maliyetli mimari borç kısmen
+ödendi (7 analyzer base'de, F19, F09); release pipeline; i18n scaffold; video
+özelliğinin DB+model+skor temeli. Release APK + AAB temiz derleniyor. Denetimin
+4 iddiası gerçek kodda çürütüldü (F11 bundle-id, F24 .env.example, F19-AppPrefs
+staleness, F40 hesap-silme) — hepsi belgelendi, gerçek kod referans alındı.
 
-Kullanıcının nihai kabul kriterleri (her iki yol haritası tam, main yeşil+merged,
-%70-80 kapsam, tüm E2E) **karşılanmadı** — kalan kapsam (Faz 4, Roadmap B Faz
-1-6, i18n, gerçek-cihaz/iOS/video doğrulama) gerçekçi olarak çok-haftalık ve bir
-kısmı bu ortamda fiziksel olarak imkânsız. Uydurma yerine dürüst kısmi-tamamlanma
-+ açık ERTELENDİ listesi tercih edildi.
+Nihai kabul kriterleri (her iki yol haritası tam, %70-80 kapsam, tüm E2E,
+main merged) **karşılanmadı**: kalan iş ya harici kimlik (RevenueCat SKU,
+release-imza), ya çok-haftalık (tam i18n, presentation test takımları, Roadmap
+B Faz 1-6), ya da bu Linux ortamında fiziksel olarak imkânsızdır (iOS, gerçek
+cihaz, video doğruluk/perf). Bu noktada **bu ortamda dürüstçe tamamlanabilecek
+ek roadmap işi tükenmiştir.** Uydurma yerine dürüst kısmi-tamamlanma + açık
+ERTELENDİ listesi tercih edildi.
 
-**Önerilen sıradaki adımlar:** (1) PAT rotate → PR aç/merge; (2) kalan analyzer
-migrasyonları (golden-test ağı hazır); (3) Faz 4 i18n + KVKK hesap silme
-(lansman blocker); (4) RevenueCat SKU + release-imza; (5) Roadmap B Faz 1 video
-MVP'sini gerçek cihazda profille.
+**Önerilen sıradaki adımlar:** (1) PAT rotate → PR aç/merge; (2) presentation
+test takımları ile kapsamı yükselt; (3) tam i18n string migrasyonu; (4)
+RevenueCat SKU + release-imza (Play Console); (5) Roadmap B Faz 1 video MVP'sini
+gerçek cihazda profille.
 
 ---
 
