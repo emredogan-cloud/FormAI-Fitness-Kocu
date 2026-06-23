@@ -101,12 +101,16 @@ void main() {
     test('ignores low-confidence landmarks (likelihood < 0.4)', () {
       final a = SquatAnalyzer();
       final blurry = Pose(landmarks: {
-        PoseLandmarkType.leftHip:
-            PoseLandmark(type: PoseLandmarkType.leftHip, x: 0, y: 0, z: 0, likelihood: 0.1),
-        PoseLandmarkType.leftKnee:
-            PoseLandmark(type: PoseLandmarkType.leftKnee, x: 0, y: 1, z: 0, likelihood: 0.1),
-        PoseLandmarkType.leftAnkle:
-            PoseLandmark(type: PoseLandmarkType.leftAnkle, x: 1, y: 1, z: 0, likelihood: 0.1),
+        PoseLandmarkType.leftHip: PoseLandmark(
+            type: PoseLandmarkType.leftHip, x: 0, y: 0, z: 0, likelihood: 0.1),
+        PoseLandmarkType.leftKnee: PoseLandmark(
+            type: PoseLandmarkType.leftKnee, x: 0, y: 1, z: 0, likelihood: 0.1),
+        PoseLandmarkType.leftAnkle: PoseLandmark(
+            type: PoseLandmarkType.leftAnkle,
+            x: 1,
+            y: 1,
+            z: 0,
+            likelihood: 0.1),
       });
       final r = a.analyze(blurry);
       expect(r.torsoAngle, isNull);

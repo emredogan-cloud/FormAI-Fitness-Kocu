@@ -62,8 +62,8 @@ class SquatAnalyzer extends BaseRepCounterAnalyzer {
     if (state != CrunchState.down) return null;
     final shoulder = _pickHigher(
         pose, PoseLandmarkType.leftShoulder, PoseLandmarkType.rightShoulder);
-    final hip = _pickHigher(
-        pose, PoseLandmarkType.leftHip, PoseLandmarkType.rightHip);
+    final hip =
+        _pickHigher(pose, PoseLandmarkType.leftHip, PoseLandmarkType.rightHip);
     if (shoulder == null || hip == null) return null;
     final dx = (shoulder.x - hip.x).abs();
     final dy = (hip.y - shoulder.y).abs();

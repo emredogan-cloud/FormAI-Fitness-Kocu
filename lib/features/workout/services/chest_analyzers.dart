@@ -72,9 +72,11 @@ class PushUpAnalyzer extends BaseRepCounterAnalyzer {
     final ankle = _pickHigher(
         pose, PoseLandmarkType.leftAnkle, PoseLandmarkType.rightAnkle);
     if (shoulder == null || hip == null || ankle == null) return null;
-    final minLikelihood =
-        [shoulder.likelihood, hip.likelihood, ankle.likelihood]
-            .reduce((a, b) => a < b ? a : b);
+    final minLikelihood = [
+      shoulder.likelihood,
+      hip.likelihood,
+      ankle.likelihood
+    ].reduce((a, b) => a < b ? a : b);
     if (minLikelihood < 0.35) return null;
     final lineAngle = AngleCalculator.between(shoulder, hip, ankle);
     if (lineAngle < minBodyLineAngle) {
