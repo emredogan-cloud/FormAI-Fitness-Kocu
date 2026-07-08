@@ -64,6 +64,18 @@ jobs:
       - name: Test
         run: flutter test
 
+      # REV-E10 · gradle silently falls back to DEBUG signing when
+      # android/key.properties is absent (deliberate, so local builds
+      # work) — but a debug-signed "release" artifact is not
+      # Play-uploadable and is dangerously easy to mis-distribute.
+      # Make the state unmissable in the job log + summary.
+      - name: Warn if artifacts will be DEBUG-signed
+        run: |
+          if [ ! -f android/key.properties ]; then
+            echo "::warning title=Debug-signed artifacts::android/key.properties is absent — the AAB/APK below are DEBUG-signed and NOT uploadable to Play. Configure the release keystore secrets before distributing."
+            echo "⚠️ **Artifacts are DEBUG-signed** (no release keystore configured)." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Build release App Bundle
         run: flutter build appbundle --release
 
