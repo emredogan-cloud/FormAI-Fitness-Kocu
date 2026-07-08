@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -213,8 +214,13 @@ class _AuthModalBottomSheetState extends ConsumerState<AuthModalBottomSheet>
                   _buildSubtitle(),
                   const Spacer(),
                   _buildGoogleButton(),
-                  const SizedBox(height: 12),
-                  _buildAppleButton(),
+                  // Apple Sign-In is iOS-only (see auth_screen.dart) —
+                  // on Android the native flow throws into an error
+                  // toast, so the button never renders there.
+                  if (Platform.isIOS) ...[
+                    const SizedBox(height: 12),
+                    _buildAppleButton(),
+                  ],
                   const SizedBox(height: 14),
                   _buildEmailLoginLink(),
                 ],

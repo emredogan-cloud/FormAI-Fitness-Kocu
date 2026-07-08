@@ -17,5 +17,14 @@
     <array>
         <string>group.app.formai.shared</string>
     </array>
+    <!-- Sign in with Apple (Apple 4.8): the auth screen offers
+         third-party (Google) sign-in, so a functional Apple option is
+         mandatory on iOS. The matching capability must also be enabled
+         for the App ID in the Developer portal / Xcode Signing &
+         Capabilities (REQUIRES APPLE ENVIRONMENT to validate). -->
+    <key>com.apple.developer.applesignin</key>
+    <array>
+        <string>Default</string>
+    </array>
 </dict>
 </plist>

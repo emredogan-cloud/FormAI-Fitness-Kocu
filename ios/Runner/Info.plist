@@ -47,10 +47,12 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>Antrenman sırasında formunu analiz etmek için kamerana ihtiyacımız var.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Antrenman seanslarını kaydederken mikrofon erişimi kullanılabilir.</string>
-	<key>NSUserTrackingUsageDescription</key>
-	<string>Sana daha iyi ve kişiselleştirilmiş bir deneyim sunabilmemiz için izin ver.</string>
+	<!-- NSMicrophoneUsageDescription removed: the camera session runs
+	     enableAudio:false and nothing records audio — an unused
+	     permission string invites Apple 5.1.1(b) minimal-data questions.
+	     NSUserTrackingUsageDescription removed with the ATT call: the
+	     privacy manifest declares NSPrivacyTracking=false. -->
+
 	<!-- Phase 54 · custom-scheme handler. Catches every `formai://...`
 	     URL dispatched by the share-sheet (referral invites, badge
 	     celebration deep-links). Universal Links over https://formai.app

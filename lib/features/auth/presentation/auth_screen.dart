@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -347,12 +349,18 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     enabled: !_busy && _social == null,
                     onPressed: _signInWithGoogle,
                   ),
-                  const SizedBox(height: 12),
-                  _AppleButton(
-                    busy: _social == _SocialProvider.apple,
-                    enabled: !_busy && _social == null,
-                    onPressed: _signInWithApple,
-                  ),
+                  // Apple Sign-In is iOS-only: on Android the native
+                  // flow has no credential provider and used to throw
+                  // straight into a generic error toast (Apple 4.8
+                  // requires it on iOS; nothing requires it on Android).
+                  if (Platform.isIOS) ...[
+                    const SizedBox(height: 12),
+                    _AppleButton(
+                      busy: _social == _SocialProvider.apple,
+                      enabled: !_busy && _social == null,
+                      onPressed: _signInWithApple,
+                    ),
+                  ],
                 ],
               ),
             ),

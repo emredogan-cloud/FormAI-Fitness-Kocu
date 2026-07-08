@@ -334,10 +334,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       context.go(AppRoutes.auth);
       return;
     }
-    // Now that the user has a session, raise the iOS ATT prompt BEFORE
-    // navigating. The ~400 ms internal debounce keeps the prompt from
-    // getting eaten by the next route's push.
-    await AnalyticsService.instance.requestAttIfNeeded();
+    // (ATT prompt removed — the app performs no cross-app tracking;
+    // the privacy manifest declares NSPrivacyTracking=false. See the
+    // note in AnalyticsService.)
     if (!mounted) return;
     context.go(AppRoutes.paywall);
   }
