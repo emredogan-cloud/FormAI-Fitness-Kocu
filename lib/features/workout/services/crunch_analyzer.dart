@@ -74,11 +74,13 @@ class CrunchAnalyzer implements PoseAnalyzer {
   DateTime? _lastRepTime;
   DateTime? _lastFeedbackTime;
 
-  /// Last time we emitted a posture warning. Seeded 10 seconds in the past
-  /// so the very first bad-form frame can fire the warning immediately
-  /// instead of being swallowed by an empty cooldown window.
+  /// Last time we emitted a posture warning. Seeded PAST the 15 s
+  /// debounce window so the very first bad-form frame can fire the
+  /// warning immediately. (The old 10 s seed silently under-shot the
+  /// >15 s gate — "fire immediately" was false by five seconds; cf.
+  /// PlankAnalyzer's 10 s seed against its 8 s gate, which works.)
   DateTime _lastPostureWarning =
-      DateTime.now().subtract(const Duration(seconds: 10));
+      DateTime.now().subtract(const Duration(seconds: 16));
 
   int get reps => _reps;
   CrunchState get state => _state;
@@ -89,7 +91,7 @@ class CrunchAnalyzer implements PoseAnalyzer {
     _state = CrunchState.unknown;
     _lastRepTime = null;
     _lastFeedbackTime = null;
-    _lastPostureWarning = DateTime.now().subtract(const Duration(seconds: 10));
+    _lastPostureWarning = DateTime.now().subtract(const Duration(seconds: 16));
   }
 
   @override
@@ -183,11 +185,16 @@ class CrunchAnalyzer implements PoseAnalyzer {
     );
   }
 
-  /// Prefer the landmark with higher likelihood to tolerate partial visibility.
+  /// Prefer the landmark with higher likelihood to tolerate partial
+  /// visibility — but never one below the 0.4 confidence floor the
+  /// newer analyzers enforce (a near-zero-likelihood ghost landmark
+  /// used to win the pick and count phantom reps in bad lighting).
   PoseLandmark? _pick(
       Pose pose, PoseLandmarkType left, PoseLandmarkType right) {
-    final l = pose.landmarks[left];
-    final r = pose.landmarks[right];
+    PoseLandmark? confident(PoseLandmark? lm) =>
+        lm != null && lm.likelihood >= 0.4 ? lm : null;
+    final l = confident(pose.landmarks[left]);
+    final r = confident(pose.landmarks[right]);
     if (l == null) return r;
     if (r == null) return l;
     return l.likelihood >= r.likelihood ? l : r;

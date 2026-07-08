@@ -172,6 +172,24 @@ void main() {
       expect(r.formWarning, isNull);
     });
 
+    test(
+        'a shallow press (clears the UP gate, misses the lockout bar) '
+        'counts but earns the partial-rep cue — this warning was dead '
+        'code while partialRatio < 1.0', () {
+      final a = ShoulderPressAnalyzer();
+      // delta 1.5: above upThreshold (1.4) → UP, but below the
+      // full-lockout bar upThreshold × 1.3 = 1.82.
+      final shallowPress = _pose([
+        ...shoulders,
+        _lm(PoseLandmarkType.leftWrist, 0, -1.5),
+        _lm(PoseLandmarkType.rightWrist, 2, -1.5),
+      ]);
+      expect(a.analyze(shallowPress).state, CrunchState.up);
+      final r = a.analyze(racked);
+      expect(r.reps, 1);
+      expect(r.formWarning, 'Kolları tam yukarı uzat!');
+    });
+
     test('returns empty when a wrist is missing', () {
       final a = ShoulderPressAnalyzer();
       final r = a.analyze(_pose([

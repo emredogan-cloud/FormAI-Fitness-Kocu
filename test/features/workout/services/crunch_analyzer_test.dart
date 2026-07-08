@@ -61,10 +61,12 @@ void main() {
     expect(r.neckAngle, isNull);
   });
 
-  test('does not emit the posture cue on the first acute-neck frame', () {
-    // Debounce seed (10 s) < gate (15 s) → suppressed. Pins current behaviour.
+  test('emits the posture cue on the first acute-neck frame', () {
+    // The debounce seed (16 s) now clears the >15 s gate, so the very
+    // first bad-form frame coaches immediately — the old 10 s seed
+    // silently swallowed the first 5 seconds of bad form.
     final a = CrunchAnalyzer();
     a.analyze(_pose(downLandmarks));
-    expect(a.analyze(_pose(upLandmarks)).formWarning, isNull);
+    expect(a.analyze(_pose(upLandmarks)).formWarning, 'Boynunu düz tut!');
   });
 }

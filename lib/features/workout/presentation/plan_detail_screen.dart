@@ -320,37 +320,36 @@ class _PlanDetailScreenState extends ConsumerState<PlanDetailScreen> {
       return;
     }
     if (realDay == null || realDay.exercises.isEmpty) return;
-    // Phase 89 · workout videos stream from Supabase Storage; without a
-    // connection the camera screen would render but every PIP slot
-    // would fall through to the "Video yüklenemedi" tile. Block at the
-    // entry instead so the user sees a single clear message.
-    if (!await _ensureOnlineForWorkout(context, ref)) return;
+    // P1-5 · workouts are NOT blocked offline anymore. The pose/form
+    // engine is fully on-device; only the demo videos stream from
+    // Supabase Storage, and their PIP slots already degrade to a
+    // graceful "Video yüklenemedi" tile. A heads-up snackbar sets the
+    // expectation and the session proceeds — killing the app's
+    // differentiator in gyms/planes for the sake of a demo clip was
+    // the wrong trade.
+    await _warnIfOffline(context, ref);
+    if (!context.mounted) return;
     await ref.read(workoutSessionProvider.notifier).startDay(dayNumber);
     if (!context.mounted) return;
     context.push(AppRoutes.workout);
   }
 
-  /// Phase 89 · pre-flight network check shared by both workout entry
-  /// points (`_onDayTap` for the program-day tiles, `_PlanStartCta` for
-  /// regional / equipment plans). Returns `true` when the device is
-  /// online; otherwise surfaces a SnackBar and returns `false` so the
-  /// caller skips the navigation.
-  Future<bool> _ensureOnlineForWorkout(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
+  /// P1-5 · shared offline heads-up for both workout entry points
+  /// (`_onDayTap` for the program-day tiles, `_PlanStartCta` for
+  /// regional / equipment plans). Informs, never blocks: rep counting
+  /// and voice coaching run on-device without a connection.
+  Future<void> _warnIfOffline(BuildContext context, WidgetRef ref) async {
     final online = await ref.read(connectivityServiceProvider).isOnline();
-    if (online) return true;
-    if (!context.mounted) return false;
+    if (online || !context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text(
-          'Bu içeriğe erişmek için internet bağlantısı gereklidir.',
+          'Çevrimdışısın — egzersiz videoları yüklenmeyebilir, '
+          'tekrar sayımı ve sesli koçluk çalışmaya devam eder.',
         ),
         duration: Duration(seconds: 3),
       ),
     );
-    return false;
   }
 
   WorkoutDay? _findDay(List<WorkoutDay> days, int dayNumber) {
@@ -1608,21 +1607,21 @@ class _TierLaunchButton extends ConsumerWidget {
       context.push(AppRoutes.paywall);
       return;
     }
-    // Phase 89 · same offline gate as the legacy single button. Duplicating
-    // it here (rather than threading a callback through the parent) keeps
-    // both tier buttons self-sufficient.
+    // P1-5 · informational offline heads-up (was a hard block). The CV
+    // engine runs on-device; only demo videos degrade, and their PIP
+    // tiles already handle that gracefully.
     final online = await ref.read(connectivityServiceProvider).isOnline();
     if (!online) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Bu içeriğe erişmek için internet bağlantısı gereklidir.',
+            'Çevrimdışısın — egzersiz videoları yüklenmeyebilir, '
+            'tekrar sayımı ve sesli koçluk çalışmaya devam eder.',
           ),
           duration: Duration(seconds: 3),
         ),
       );
-      return;
     }
     if (!context.mounted) return;
     ref.read(workoutSessionProvider.notifier).initializeWorkout(exercises);

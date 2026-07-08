@@ -297,6 +297,7 @@ class _AdminRecipeFormState extends ConsumerState<AdminRecipeForm> {
       // supports, including web — it reads the underlying blob into
       // a `Uint8List` that we hand to Supabase.uploadBinary later.
       final bytes = await picked.readAsBytes();
+      if (!mounted) return; // form may close while the picker resolves
       setState(() {
         _pickedImageBytes = bytes;
         _pickedImageName = picked.name;

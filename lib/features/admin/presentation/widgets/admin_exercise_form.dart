@@ -438,6 +438,7 @@ class _AdminExerciseFormState extends ConsumerState<AdminExerciseForm> {
       );
       if (picked == null) return;
       final bytes = await picked.readAsBytes();
+      if (!mounted) return; // form may close while the picker resolves
       setState(() {
         _thumbnailBytes = bytes;
         _thumbnailName = picked.name;
@@ -466,6 +467,7 @@ class _AdminExerciseFormState extends ConsumerState<AdminExerciseForm> {
       // don't try to stream because Supabase Storage's uploadBinary
       // wants the full bytes anyway.
       final bytes = await picked.readAsBytes();
+      if (!mounted) return; // form may close while the picker resolves
       setState(() {
         _videoBytes = bytes;
         _videoName = picked.name;

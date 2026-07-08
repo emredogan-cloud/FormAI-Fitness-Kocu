@@ -105,7 +105,7 @@ class ShoulderPressAnalyzer implements PoseAnalyzer {
   ShoulderPressAnalyzer({
     this.upRatio = 0.7,
     this.downRatio = 0.1,
-    this.partialRatio = 0.55,
+    this.partialRatio = 1.3,
     this.minRepInterval = const Duration(milliseconds: 900),
   });
 
@@ -116,8 +116,15 @@ class ShoulderPressAnalyzer implements PoseAnalyzer {
   /// Wrist back to within `downRatio × shoulderWidth` of shoulderY = DOWN.
   final double downRatio;
 
-  /// If the highest delta during a rep is below `partialRatio × upRatio`
-  /// the rep counts but we whisper a "go all the way up" warning.
+  /// Full-lockout bar for the partial-rep cue, as a multiple of
+  /// `upThreshold`: a counted rep whose peak delta stayed below
+  /// `upThreshold × partialRatio` (default ≈ 0.91 × shoulderWidth)
+  /// earns a "go all the way up" whisper. MUST be > 1.0 — entering the
+  /// UP state already guarantees the peak exceeded `upThreshold × 1.0`,
+  /// so the old 0.55 value made the warning mathematically unreachable
+  /// (dead code, audit P2). Full overhead extension puts the wrists
+  /// well past ~0.9 × shoulderWidth above the shoulder line; a press
+  /// that barely clears the 0.7 entry gate is the partial we coach.
   final double partialRatio;
   final Duration minRepInterval;
 

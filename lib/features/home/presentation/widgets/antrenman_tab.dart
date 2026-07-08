@@ -178,6 +178,19 @@ class _AntrenmanTabState extends ConsumerState<AntrenmanTab> {
       children: [
         _AntrenmanHeader(streak: streak),
         const SizedBox(height: 14),
+        // REV-C1 · offline-fallback stub (30 rest days) must announce
+        // itself instead of rendering as a silent all-rest program.
+        if (session.isStub)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+            child: ErrorCard(
+              compact: true,
+              message: 'Programın senkronize ediliyor — bağlantı '
+                  'kurulunca otomatik oluşturulacak.',
+              icon: Icons.cloud_sync_rounded,
+              onRetry: () => ref.invalidate(workoutSessionProvider),
+            ),
+          ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: WeeklyGoalCard(

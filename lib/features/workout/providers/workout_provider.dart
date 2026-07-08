@@ -435,6 +435,10 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
             orElse: () => day.copyWith(isCompleted: true),
           );
     _cancelRestTimer();
+    // Guard: sign-out / pull-to-refresh can invalidate this notifier
+    // during the awaits above — `state =` on the disposed instance
+    // throws (zone-caught) and silently drops the completion update.
+    if (!ref.mounted) return;
     state = AsyncData(current.copyWith(
       days: refreshed,
       activeDay: updatedDay,
@@ -528,6 +532,8 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
     _pendingExerciseLogs.clear();
     _setStartedAt = null;
     ref.invalidate(sessionLogsProvider);
+    // Guard: same disposed-notifier race as completeCurrentExercise.
+    if (!ref.mounted) return;
     state = AsyncData(WorkoutSessionState(
       days: result.days,
       activeDay: _firstIncomplete(result.days),

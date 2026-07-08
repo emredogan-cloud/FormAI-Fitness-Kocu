@@ -13,6 +13,7 @@ import '../../../../core/theme/theme_extension.dart';
 import '../../../../core/utils/app_haptics.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/audio_feedback.dart';
+import '../../../../core/widgets/error_card.dart';
 import '../../../../core/widgets/skeleton_loader.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../referral/providers/referral_provider.dart';
@@ -71,7 +72,14 @@ class GelisimTab extends ConsumerWidget {
     final activeDay = _firstIncomplete(days);
     final activeDayNumber = activeDay?.dayNumber ?? 1;
     final percent = (completedCount / _programLength).clamp(0.0, 1.0);
-    final isProgramComplete = days.isNotEmpty && activeDay == null;
+    // isStub = the repository's offline fallback (30 rest days). Its
+    // `_firstIncomplete` is null exactly like a FINISHED program, so
+    // without this exclusion the tab congratulated an offline
+    // onboarding with the "program complete" celebration card — the
+    // "Senkronize ediliyor" banner the repo comment promised was never
+    // built (review REV-C1).
+    final isStub = session?.isStub ?? false;
+    final isProgramComplete = days.isNotEmpty && activeDay == null && !isStub;
 
     // Per-week slice — stats + charts all snap to the 7-day bucket that
     // contains the active day so the three cards show "this week", not
@@ -170,7 +178,15 @@ class GelisimTab extends ConsumerWidget {
               streak: streak,
             ),
             const SizedBox(height: 14),
-            if (isProgramComplete)
+            if (isStub)
+              ErrorCard(
+                compact: true,
+                message: 'Programın senkronize ediliyor — bağlantı '
+                    'kurulunca otomatik oluşturulacak.',
+                icon: Icons.cloud_sync_rounded,
+                onRetry: () => ref.invalidate(workoutSessionProvider),
+              )
+            else if (isProgramComplete)
               const ProgramCompleteCard()
             else if (activeDay != null)
               TodayTaskCard(activeDay: activeDay),

@@ -179,6 +179,22 @@ class HipHingeAnalyzer implements PoseAnalyzer {
     String? pacingFeedback;
 
     if (angle < downThreshold) {
+      // Partial-ROM check happens HERE, on the descent that closes the
+      // cycle — `_peakAngle` now holds the true maximum of the whole
+      // UP phase. The old code evaluated it at the up-crossing commit
+      // frame, where the peak had just been reset and equalled the
+      // ~165° entry angle by construction: it nagged users who went on
+      // to reach a full 180° lockout right after the count (audit P2 —
+      // false positive on GOOD reps, the exact anti-trust failure a
+      // form coach can't afford).
+      if (previous == CrunchState.up) {
+        final now = DateTime.now();
+        if (_peakAngle < 175.0 &&
+            now.difference(_lastFormWarning) >= formWarningCooldown) {
+          formWarning = 'Kalçanı sonuna kadar yukarı sık!';
+          _lastFormWarning = now;
+        }
+      }
       _state = CrunchState.down;
       _peakAngle = angle;
     } else if (angle > upThreshold) {
@@ -192,20 +208,6 @@ class HipHingeAnalyzer implements PoseAnalyzer {
           _lastRepTime = now;
           if (repDuration != null) {
             pacingFeedback = _pacing.evaluate(repDuration, now);
-          }
-          // Partial-ROM check: a clean hip-hinge rep should approach
-          // full lockout (≥ 175°). Counting the rep at the lower
-          // gate (165°) lets fatigued users still hit their target,
-          // but we surface a coaching cue if the lockout is shallow.
-          // If pacing already fired, defer the form warning so the
-          // queue doesn't get two encouragement/cue lines in the
-          // same frame — pacing is a one-shot per cooldown so the
-          // next rep with bad ROM will still surface the warning.
-          if (pacingFeedback == null &&
-              _peakAngle < 175.0 &&
-              now.difference(_lastFormWarning) >= formWarningCooldown) {
-            formWarning = 'Kalçanı sonuna kadar yukarı sık!';
-            _lastFormWarning = now;
           }
         }
       }

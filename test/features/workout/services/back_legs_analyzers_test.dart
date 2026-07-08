@@ -76,12 +76,33 @@ void main() {
       _lm(PoseLandmarkType.leftKnee, 2, 0),
     ]);
 
-    test('counts the rep but warns on a shallow lockout', () {
+    test(
+        'counts the rep at the up-crossing and coaches the shallow '
+        'lockout on the NEXT descent (full-cycle peak, not the '
+        'commit-frame angle)', () {
       final a = HipHingeAnalyzer();
       expect(a.analyze(folded).state, CrunchState.down);
-      final r = a.analyze(shallowLockout);
-      expect(r.reps, 1);
-      expect(r.formWarning, isNotNull);
+      final commit = a.analyze(shallowLockout);
+      expect(commit.reps, 1);
+      // No premature nag at the commit frame — the user may still be
+      // extending toward full lockout.
+      expect(commit.formWarning, isNull);
+      // Descent closes the cycle: the peak stayed shallow → cue fires.
+      final descent = a.analyze(folded);
+      expect(descent.formWarning, 'Kalçanı sonuna kadar yukarı sık!');
+    });
+
+    test(
+        'a rep that reaches full lockout AFTER the count never gets '
+        'nagged (the old commit-frame check false-positived on exactly '
+        'this good rep)', () {
+      final a = HipHingeAnalyzer();
+      a.analyze(folded);
+      final commit = a.analyze(shallowLockout); // counted at ~168.7°
+      expect(commit.reps, 1);
+      a.analyze(fullLockout); // user keeps extending to ~180°
+      final descent = a.analyze(folded);
+      expect(descent.formWarning, isNull);
     });
 
     test('counts the rep with no warning on a full lockout', () {
@@ -90,6 +111,8 @@ void main() {
       final r = a.analyze(fullLockout);
       expect(r.reps, 1);
       expect(r.formWarning, isNull);
+      // And the closing descent stays quiet too — peak hit 180°.
+      expect(a.analyze(folded).formWarning, isNull);
     });
 
     test('returns empty when required landmarks are missing', () {

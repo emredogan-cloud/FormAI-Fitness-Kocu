@@ -92,6 +92,10 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
   int _secondsRemaining = 0;
   bool _isPaused = false;
 
+  /// One-shot per session: the "place the phone to your side" hint for
+  /// sagittal-plane exercises (squat / push-up / hinge families).
+  bool _spokeSideViewHint = false;
+
   @override
   void initState() {
     super.initState();
@@ -587,11 +591,42 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    final controller = _controller;
-    if (controller == null || !controller.value.isInitialized) return;
-    if (state == AppLifecycleState.inactive) {
-      controller.dispose();
-    } else if (state == AppLifecycleState.resumed && _camera != null) {
+    // P1-6 · interruption-safe session. The old handler disposed the
+    // controller on `inactive` WITHOUT stopping the image stream,
+    // without nulling `_controller`, and without pausing anything —
+    // so a phone call / notification-shade pull mid-plank left the
+    // timer draining, the coach talking to a dead camera, buffered
+    // frames racing into `_onCameraImage` against a disposing
+    // controller, and the next build dereferencing a disposed
+    // controller ("used after being disposed" crash).
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
+      final controller = _controller;
+      if (controller == null || !controller.value.isInitialized) return;
+      // Auto-pause through the same state the manual pause button uses:
+      // timer stops draining, coach goes quiet, and on return the user
+      // lands on the existing pause overlay with its resume affordance.
+      if (!_isPaused) {
+        _isPaused = true;
+        _workoutTimer?.cancel();
+        _workoutTimer = null;
+        _coach.onPause();
+      }
+      // Mirror dispose(): stop the stream FIRST so buffered frames are
+      // dropped at the platform layer, then dispose, then null the
+      // field so no code path can touch the disposed instance.
+      if (controller.value.isStreamingImages) {
+        unawaited(controller.stopImageStream().catchError((_) {}));
+      }
+      unawaited(controller.dispose());
+      _controller = null;
+      if (mounted) setState(() {});
+    } else if (state == AppLifecycleState.resumed &&
+        _controller == null &&
+        _camera != null) {
+      // Re-init the camera; the session stays paused until the user
+      // explicitly resumes from the overlay.
       _startController(_camera!);
     }
   }
@@ -769,6 +804,30 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       // gets cleared to start.
       if (exerciseChanged) {
         _analyzer = exercise == null ? CrunchAnalyzer() : analyzerFor(exercise);
+        // P2 form-trust · squat-lean / push-up-hip-sag / hinge-ROM
+        // checks measure sagittal-plane faults, which a straight-on
+        // selfie view geometrically can't capture. One spoken hint per
+        // session tells the user how to make those cues actually work
+        // instead of silently under-delivering the headline feature.
+        if (exercise != null && !_spokeSideViewHint) {
+          final slug = exercise.id.toLowerCase();
+          const sagittalMarkers = [
+            'squat',
+            'push_up',
+            'pushup',
+            'hinge',
+            'deadlift',
+            'good_morning',
+          ];
+          if (sagittalMarkers.any(slug.contains)) {
+            _spokeSideViewHint = true;
+            _audio.speak(
+              'İpucu: telefonu seni yandan görecek şekilde yerleştirirsen '
+              'duruş uyarıları çok daha isabetli olur.',
+              priority: SpeechPriority.milestone,
+            );
+          }
+        }
       }
 
       // Pause the per-exercise countdown during rest AND prep so the

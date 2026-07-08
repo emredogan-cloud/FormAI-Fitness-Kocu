@@ -113,6 +113,11 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     try {
       final info = await Purchases.purchasePackage(package);
       final isPro = info.entitlements.active.containsKey(kProEntitlementId);
+      // Guard: invalidation (sign-out) mid-purchase disposes this
+      // notifier; the purchase outcome still returns to the caller.
+      if (!ref.mounted) {
+        return isPro ? PurchaseOutcome.success : PurchaseOutcome.notEntitled;
+      }
       final current = state.value ?? const SubscriptionState();
       state = AsyncData(current.copyWith(isPro: isPro));
       if (isPro) {
@@ -158,6 +163,12 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     try {
       final info = await Purchases.restorePurchases();
       final isPro = info.entitlements.active.containsKey(kProEntitlementId);
+      // Guard: same disposed-notifier race as purchase().
+      if (!ref.mounted) {
+        return isPro
+            ? RestoreOutcome.restored
+            : RestoreOutcome.nothingToRestore;
+      }
       final current = state.value ?? const SubscriptionState();
       state = AsyncData(current.copyWith(isPro: isPro));
       return isPro ? RestoreOutcome.restored : RestoreOutcome.nothingToRestore;
