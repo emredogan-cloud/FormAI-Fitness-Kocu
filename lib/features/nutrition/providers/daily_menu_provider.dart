@@ -44,7 +44,24 @@ class DailyMenuNotifier extends AsyncNotifier<List<PlannedMeal>> {
         const <String, dynamic>{};
     final frequency =
         (metrics['mealFrequency'] as String?) ?? kDefaultMealFrequency;
-    return _generateInitialPlan(recipes: recipes, frequency: frequency);
+    // P1-11/12 · the collected preferences now actually shape the plan
+    // (they were stored and never read — a vegan got meat mains while
+    // the onboarding claimed the plan was being personalized).
+    final diet =
+        (metrics['dietPreference'] as String?) ?? kDefaultDietPreference;
+    final nutritionGoal =
+        (metrics['nutritionGoal'] as String?) ?? kDefaultNutritionGoal;
+    final taste =
+        (metrics['tastePreference'] as String?) ?? kDefaultTastePreference;
+    final dailyCalories = ref.watch(macroTargetProvider).calories;
+    return _generateInitialPlan(
+      recipes: recipes,
+      frequency: frequency,
+      diet: diet,
+      nutritionGoal: nutritionGoal,
+      taste: taste,
+      dailyCalories: dailyCalories,
+    );
   }
 
   // ==========================================================================
@@ -108,23 +125,48 @@ class DailyMenuNotifier extends AsyncNotifier<List<PlannedMeal>> {
   // Initial plan generation
   // ==========================================================================
 
+  /// Rule-based (NOT ML) personalization — honest about what it is:
+  ///   1. Diet filter first: vegan/vejetaryen match on curated recipe
+  ///      tags; ketojenik matches a keto tag OR a real low-carb macro
+  ///      (≤ 15 g). Falls back to the unfiltered pool when the
+  ///      catalogue has no match, so a thin tag set can never blank a
+  ///      meal slot.
+  ///   2. Candidates are then ranked by closeness to the slot's share
+  ///      of the user's real daily calorie target (Mifflin-St-Jeor via
+  ///      macroTargetProvider), with goal bias (kas_kazanimi → protein
+  ///      up-rank, yag_yakimi → over-budget penalty) and a taste-tag
+  ///      bonus on snack slots.
+  ///   3. Duplicate slots stagger through the ranked pool (offset)
+  ///      so two mains in one day aren't the same recipe.
   List<PlannedMeal> _generateInitialPlan({
     required List<Recipe> recipes,
     required String frequency,
+    required String diet,
+    required String nutritionGoal,
+    required String taste,
+    required int dailyCalories,
   }) {
     final slots = _slotsForFrequency(frequency);
+    final dietPool = _dietFiltered(recipes, diet);
     final result = <PlannedMeal>[];
-    // Count pulls per candidate pool so duplicate slots in one day
-    // (two mains in a 3-ögun plan) stagger through the pool instead of
-    // re-showing the same recipe.
     final pulled = <String, int>{};
     for (final slot in slots) {
-      final candidates = _candidatesFor(slot, recipes);
+      var candidates = _candidatesFor(slot, dietPool);
+      if (candidates.isEmpty) {
+        // Diet pool has nothing for this slot — degrade to the full
+        // catalogue rather than serving an empty plan.
+        candidates = _candidatesFor(slot, recipes);
+      }
       if (candidates.isEmpty) continue;
+      final budget = (dailyCalories * _slotShare(slot, frequency)).round();
+      final ranked = [...candidates]..sort(
+          (a, b) => _score(a, budget, nutritionGoal, taste, slot)
+              .compareTo(_score(b, budget, nutritionGoal, taste, slot)),
+        );
       final poolKey = _poolKeyFor(slot);
       final offset = pulled[poolKey] ?? 0;
       pulled[poolKey] = offset + 1;
-      final recipe = candidates[offset % candidates.length];
+      final recipe = ranked[offset % ranked.length];
       result.add(PlannedMeal(
         id: _nextId(),
         recipe: recipe,
@@ -132,6 +174,89 @@ class DailyMenuNotifier extends AsyncNotifier<List<PlannedMeal>> {
       ));
     }
     return result;
+  }
+
+  /// Lower is better: distance to the slot's calorie budget, adjusted
+  /// by goal + taste signals.
+  int _score(
+    Recipe r,
+    int budget,
+    String nutritionGoal,
+    String taste,
+    DailyMealSlot slot,
+  ) {
+    var score = (r.calories - budget).abs();
+    switch (nutritionGoal) {
+      case 'kas_kazanimi':
+        // Protein-forward: every gram of protein buys ~2 kcal of
+        // budget distance.
+        score -= r.protein * 2;
+      case 'yag_yakimi':
+        // Cutting: going OVER the slot budget costs double.
+        if (r.calories > budget) score += r.calories - budget;
+    }
+    if (slot == DailyMealSlot.snack) {
+      final tags = r.tags.map((t) => t.toLowerCase());
+      final wantsSweet = taste == 'tatli';
+      final wantsSavory = taste == 'tuzlu';
+      final isSweet =
+          tags.any((t) => t.contains('tatlı') || t.contains('tatli'));
+      if ((wantsSweet && isSweet) || (wantsSavory && !isSweet)) {
+        score -= 120;
+      }
+    }
+    return score;
+  }
+
+  /// Diet filter over the curated `tags` text[] column. Ketojenik also
+  /// accepts a real macro signal (carbs ≤ 15 g) so untagged low-carb
+  /// rows still qualify. Empty result → caller falls back.
+  List<Recipe> _dietFiltered(List<Recipe> recipes, String diet) {
+    bool matches(Recipe r) {
+      final tags = r.tags.map((t) => t.toLowerCase()).toList();
+      switch (diet) {
+        case 'vegan':
+          return tags.any((t) => t.contains('vegan'));
+        case 'vejetaryen':
+          return tags.any(
+            (t) =>
+                t.contains('vegan') ||
+                t.contains('vejetaryen') ||
+                t.contains('vegetarian'),
+          );
+        case 'ketojenik':
+          return tags.any((t) => t.contains('keto')) || r.carbs <= 15;
+        default:
+          return true;
+      }
+    }
+
+    final filtered = recipes.where(matches).toList(growable: false);
+    return filtered.isEmpty ? recipes : filtered;
+  }
+
+  /// Share of the daily calorie target assigned to each slot, per
+  /// meal-frequency choice. Sums to ~1.0 within a frequency.
+  double _slotShare(DailyMealSlot slot, String frequency) {
+    switch (frequency) {
+      case '2_ogun':
+        return 0.5;
+      case '4_ogun':
+        return switch (slot) {
+          DailyMealSlot.breakfast => 0.25,
+          DailyMealSlot.lunch => 0.30,
+          DailyMealSlot.snack => 0.15,
+          DailyMealSlot.dinner => 0.30,
+        };
+      case '3_ogun':
+      default:
+        return switch (slot) {
+          DailyMealSlot.breakfast => 0.30,
+          DailyMealSlot.lunch => 0.35,
+          DailyMealSlot.snack => 0.15,
+          DailyMealSlot.dinner => 0.35,
+        };
+    }
   }
 
   List<DailyMealSlot> _slotsForFrequency(String frequency) {

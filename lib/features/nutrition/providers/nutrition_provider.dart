@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/services/app_preferences.dart';
+import '../../../core/utils/app_logger.dart';
 import '../data/nutrition_repository.dart';
 import '../domain/models/macro_target.dart';
 import '../domain/models/planned_meal.dart';
@@ -132,8 +133,22 @@ class PaginatedRecipesNotifier extends AsyncNotifier<List<Recipe>> {
         from: current.length,
         limit: _pageSize,
       );
+      // Guard: pull-to-refresh / sign-out can invalidate this notifier
+      // while the page fetch is in flight — `state =` on the disposed
+      // instance throws (zone-caught) and drops the page.
+      if (!ref.mounted) return;
       _hasMore = next.length >= _pageSize;
       state = AsyncData([...current, ...next]);
+    } catch (e, st) {
+      // A failed page keeps the already-loaded list intact; the scroll
+      // listener will re-invoke loadMore and retry. Previously this had
+      // no catch: the error escaped to the zone handler and the footer
+      // spinner hung with no explanation.
+      AppLogger.warning(
+        'recipes loadMore failed — keeping current pages',
+        category: 'nutrition',
+        data: {'error': e.toString(), 'stack': st.toString()},
+      );
     } finally {
       _isLoadingMore = false;
     }

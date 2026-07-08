@@ -19,7 +19,6 @@ const String kDefaultPrepTime = 'hizli';
 // so a user that skips the prompt still gets reasonable macro / recipe
 // targeting downstream.
 const String kDefaultNutritionGoal = 'dengeli';
-const String kDefaultWaterIntake = 'orta';
 const String kDefaultTastePreference = 'karisik';
 
 class WizardState {
@@ -46,7 +45,6 @@ class WizardState {
     this.mealFrequency = kDefaultMealFrequency,
     this.prepTime = kDefaultPrepTime,
     this.nutritionGoal = kDefaultNutritionGoal,
-    this.waterIntake = kDefaultWaterIntake,
     this.tastePreference = kDefaultTastePreference,
   });
 
@@ -144,11 +142,6 @@ class WizardState {
   /// One of: `yag_yakimi`, `kas_kazanimi`, `dengeli`.
   final String nutritionGoal;
 
-  /// Phase 62 · self-reported daily water intake. Used by the
-  /// nutrition coach to prompt hydration targets.
-  /// One of: `cok_az` (0-1L), `orta` (1-2L), `iyi` (2L+).
-  final String waterIntake;
-
   /// Phase 62 · taste preference hint so the recipe selector can lean
   /// sweet/savoury when scoring otherwise-equivalent options.
   /// One of: `tatli`, `tuzlu`, `karisik`.
@@ -177,7 +170,6 @@ class WizardState {
     String? mealFrequency,
     String? prepTime,
     String? nutritionGoal,
-    String? waterIntake,
     String? tastePreference,
   }) {
     return WizardState(
@@ -204,7 +196,6 @@ class WizardState {
       mealFrequency: mealFrequency ?? this.mealFrequency,
       prepTime: prepTime ?? this.prepTime,
       nutritionGoal: nutritionGoal ?? this.nutritionGoal,
-      waterIntake: waterIntake ?? this.waterIntake,
       tastePreference: tastePreference ?? this.tastePreference,
     );
   }
@@ -232,7 +223,6 @@ class WizardState {
         'mealFrequency': mealFrequency,
         'prepTime': prepTime,
         'nutritionGoal': nutritionGoal,
-        'waterIntake': waterIntake,
         'tastePreference': tastePreference,
       };
 
@@ -295,7 +285,6 @@ class WizardState {
       mealFrequency: readNonNullString('mealFrequency', kDefaultMealFrequency),
       prepTime: readNonNullString('prepTime', kDefaultPrepTime),
       nutritionGoal: readNonNullString('nutritionGoal', kDefaultNutritionGoal),
-      waterIntake: readNonNullString('waterIntake', kDefaultWaterIntake),
       tastePreference:
           readNonNullString('tastePreference', kDefaultTastePreference),
     );
@@ -336,7 +325,6 @@ class WizardController extends Notifier<WizardState> {
   void setMealFrequency(String v) => state = state.copyWith(mealFrequency: v);
   void setPrepTime(String v) => state = state.copyWith(prepTime: v);
   void setNutritionGoal(String v) => state = state.copyWith(nutritionGoal: v);
-  void setWaterIntake(String v) => state = state.copyWith(waterIntake: v);
   void setTastePreference(String v) =>
       state = state.copyWith(tastePreference: v);
 
