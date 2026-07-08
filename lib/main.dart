@@ -184,7 +184,10 @@ void _captureSafe(Object error, StackTrace? stack) {
   }
 }
 
-const Color _kNeon = Color(0xFF00F0FF);
+// Brand primary (AppColors.neon). The boot wordmark used to paint a
+// one-off cyan (0xFF00F0FF) that matched nothing else in the brand —
+// the first two frames of the app disagreed with every frame after.
+const Color _kNeon = Color(0xFF8E5BFF);
 
 // Splashes the FormAI wordmark immediately, then hands off to the real app
 // once .env + Supabase + SharedPreferences are ready. Running the three

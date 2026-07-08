@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- First-frame window background: FormAI dark brand base. One
+         brand color from process start to the Flutter boot screen —
+         the old @android:color/white produced a hard white flash on
+         every cold start before the dark UI painted. -->
+    <color name="launch_background_color">#0A0612</color>
+</resources>
