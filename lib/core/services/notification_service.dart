@@ -155,14 +155,13 @@ class NotificationService {
   /// Returns true when the user grants (or when the platform doesn't need
   /// an explicit grant).
   ///
-  /// Phase 57 · also nudges the OS to allow exact alarms on Android
-  /// 12+. On Android 13+ the `USE_EXACT_ALARM` permission we declare
-  /// in the manifest is auto-granted; on Android 12 the user has to
-  /// flip a setting (`SCHEDULE_EXACT_ALARM`). The plugin returns false
-  /// when the setting is off — we don't block on it because
-  /// `inexactAllowWhileIdle` still works as a fallback, but we log so
-  /// the breadcrumb trail shows a "scheduled inexact" state during
-  /// triage.
+  /// Exact-alarm decision · the manifest no longer declares
+  /// `USE_EXACT_ALARM`/`SCHEDULE_EXACT_ALARM` (Play policy scrutiny for
+  /// non-alarm apps) and every schedule below runs
+  /// `inexactAllowWhileIdle`, so we don't request the exact-alarm
+  /// permission here either. A fitness reminder arriving within the
+  /// OS's inexact window (typically ≤ ~15 min) is acceptable; throwing
+  /// `exact_alarms_not_permitted` on Android 12+ was not.
   Future<bool> requestPermissions() async {
     await init();
     final android = _plugin.resolvePlatformSpecificImplementation<
@@ -173,21 +172,6 @@ class NotificationService {
     var granted = true;
     if (android != null) {
       granted = (await android.requestNotificationsPermission()) ?? true;
-      try {
-        final exactOk = (await android.requestExactAlarmsPermission()) ?? false;
-        AppLogger.info(
-          'Exact-alarm permission: $exactOk',
-          category: 'notifications',
-        );
-      } catch (e) {
-        // Older Android versions don't expose this surface; safe to
-        // ignore. We only need it on 12+ and the manifest declaration
-        // already covers 13+ auto-grant.
-        AppLogger.info(
-          'requestExactAlarmsPermission unavailable: $e',
-          category: 'notifications',
-        );
-      }
     }
     if (ios != null) {
       granted = (await ios.requestPermissions(
@@ -226,32 +210,42 @@ class NotificationService {
 
     final scheduled = _nextInstanceOf(time);
     final variant = _pickVariant(_variantsFor(condition));
-    // Phase 57 · `exactAllowWhileIdle` (was `inexactAllowWhileIdle`).
-    // The inexact mode is what doze defers; on Android 12+ the
-    // `USE_EXACT_ALARM` manifest entry auto-grants the system
-    // permission this requires, so a user who picks "remind me at
-    // 19:00" actually gets pinged at 19:00 instead of "sometime
-    // between 19:00 and 21:00 if the device wakes up." `Exact` was
-    // used here originally but threw on devices with the permission
-    // ungranted; the *AllowWhileIdle* variant gracefully degrades.
-    await _plugin.zonedSchedule(
-      id: _dailyReminderId,
-      title: variant.title,
-      body: variant.body,
-      scheduledDate: scheduled,
-      notificationDetails: const NotificationDetails(
-        android: AndroidNotificationDetails(
-          _channelId,
-          _channelName,
-          channelDescription: _channelDesc,
-          importance: Importance.high,
-          priority: Priority.high,
+    // Exact-alarm decision · `inexactAllowWhileIdle` (was
+    // `exactAllowWhileIdle`). The manifest no longer declares the
+    // exact-alarm permissions, and `exactAllowWhileIdle` without them
+    // THROWS `exact_alarms_not_permitted` on Android 12+ — silently
+    // killing every reminder. Inexact is Play-policy-safe and fires
+    // within the OS batching window (typically ≤ ~15 min), which is
+    // fine for a fitness nudge. try/catch belt-and-braces so a
+    // platform quirk can never take the caller down with it.
+    try {
+      await _plugin.zonedSchedule(
+        id: _dailyReminderId,
+        title: variant.title,
+        body: variant.body,
+        scheduledDate: scheduled,
+        notificationDetails: const NotificationDetails(
+          android: AndroidNotificationDetails(
+            _channelId,
+            _channelName,
+            channelDescription: _channelDesc,
+            importance: Importance.high,
+            priority: Priority.high,
+          ),
+          iOS: DarwinNotificationDetails(),
         ),
-        iOS: DarwinNotificationDetails(),
-      ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+    } catch (e, st) {
+      AppLogger.error(
+        'scheduleDailyReminder failed',
+        e,
+        stackTrace: st,
+        category: 'notifications',
+      );
+      return;
+    }
     AppLogger.info(
       'Scheduled daily reminder',
       category: 'notifications',
@@ -307,27 +301,36 @@ class NotificationService {
 
     final scheduled = tz.TZDateTime.now(tz.local).add(delay);
     final variant = _pickVariant(_streakVariants);
-    await _plugin.zonedSchedule(
-      id: _streakWarningId,
-      title: variant.title,
-      body: variant.body,
-      scheduledDate: scheduled,
-      notificationDetails: const NotificationDetails(
-        android: AndroidNotificationDetails(
-          _streakChannelId,
-          _streakChannelName,
-          channelDescription: _streakChannelDesc,
-          importance: Importance.high,
-          priority: Priority.high,
+    try {
+      await _plugin.zonedSchedule(
+        id: _streakWarningId,
+        title: variant.title,
+        body: variant.body,
+        scheduledDate: scheduled,
+        notificationDetails: const NotificationDetails(
+          android: AndroidNotificationDetails(
+            _streakChannelId,
+            _streakChannelName,
+            channelDescription: _streakChannelDesc,
+            importance: Importance.high,
+            priority: Priority.high,
+          ),
+          iOS: DarwinNotificationDetails(),
         ),
-        iOS: DarwinNotificationDetails(),
-      ),
-      // Phase 57 · upgraded to `exactAllowWhileIdle` (see comment in
-      // `scheduleDailyReminder`). The streak warning is the highest-
-      // signal retention nudge we have — being a few hours late
-      // defeats the purpose.
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-    );
+        // Exact-alarm decision · inexact like the daily reminder (see
+        // `scheduleDailyReminder`) — a 48 h streak warning arriving a
+        // few minutes late is harmless; throwing on Android 12+ (no
+        // exact-alarm permission in the manifest) killed it entirely.
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      );
+    } catch (e, st) {
+      AppLogger.error(
+        'scheduleStreakWarning failed',
+        e,
+        stackTrace: st,
+        category: 'notifications',
+      );
+    }
   }
 
   /// Phase 57 · cheap pseudo-random variant picker. `Random()` (not

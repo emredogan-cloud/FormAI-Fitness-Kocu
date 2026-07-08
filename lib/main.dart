@@ -627,11 +627,17 @@ class _FormAIAppState extends ConsumerState<FormAIApp> {
     return MaterialApp.router(
       title: 'FormAI',
       debugShowCheckedModeBanner: false,
-      // Phase 2 (P-Risk) · localization foundation. Delegates + supported
-      // locales wired from the generated AppLocalizations; string migration
-      // from hard-coded Turkish is incremental from here.
+      // Phase 2 (P-Risk) · localization foundation. Delegates wired from
+      // the generated AppLocalizations; string migration from hard-coded
+      // Turkish is incremental from here.
+      //
+      // Store honesty · ships TR-ONLY for launch. ~1,300 strings are
+      // still hard-coded Turkish, so declaring `en` (which the generated
+      // supportedLocales would) put a broken 6-EN/1,300-TR hybrid on
+      // English devices and an untrue language claim on the listing.
+      // Re-add Locale('en') only when the extraction track completes.
       localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
+      supportedLocales: const [Locale('tr')],
       // Phase 49 · the dark builder layers floating, neon-bordered
       // SnackBars on top of the seed-based ColorScheme so toasts read
       // as part of the brand. Phase 53 added [AppTheme.light] so

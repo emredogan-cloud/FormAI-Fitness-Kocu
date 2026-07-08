@@ -18,17 +18,6 @@
          reminders after a reboot so users don't silently lose them. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <!-- Phase 57 · `flutter_local_notifications` schedules through
-         AlarmManager; on Android 12+ AlarmManager refuses exact alarms
-         unless the app declares one of these permissions. We use
-         `USE_EXACT_ALARM` (auto-granted, intended for alarm/timer/
-         reminder apps where firing on time is essential to UX) plus
-         `SCHEDULE_EXACT_ALARM` as a belt-and-braces fallback for
-         platform variants that gate on the latter. Without this, the
-         daily reminder fell into doze deferral and could be delayed
-         hours or skipped entirely — exactly the bug the PM hit. -->
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
     <application
         android:label="FormAI"

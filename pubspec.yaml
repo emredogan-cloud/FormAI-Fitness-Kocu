@@ -1,7 +1,9 @@
 name: sixpack_ai
 description: "FormAI - Kişisel Fitness Koçu."
 publish_to: 'none'
-version: 0.1.0+12
+# Marketing version 1.0.0 for the first store submission (a 0.1.0
+# public release reads as unfinished to review + users).
+version: 1.0.0+13
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
