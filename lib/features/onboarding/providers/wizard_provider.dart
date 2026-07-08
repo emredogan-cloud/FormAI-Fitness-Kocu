@@ -12,7 +12,6 @@ enum ActivityLevel { sedentary, light, active }
 /// onboarding UI, the serialiser, and the macro engine can all reference
 /// the same token if they need to treat the default specially.
 const String kDefaultDietPreference = 'standart';
-const String kDefaultAllergies = 'yok';
 const String kDefaultMealFrequency = '3_ogun';
 const String kDefaultPrepTime = 'hizli';
 // Phase 62 · three additional nutrition fields surfaced by the V2
@@ -44,7 +43,6 @@ class WizardState {
     this.experienceDescription,
     this.painPointDescription,
     this.dietPreference = kDefaultDietPreference,
-    this.allergies = kDefaultAllergies,
     this.mealFrequency = kDefaultMealFrequency,
     this.prepTime = kDefaultPrepTime,
     this.nutritionGoal = kDefaultNutritionGoal,
@@ -133,11 +131,6 @@ class WizardState {
   /// Turkish ASCII to match the rest of the wizard's persisted tokens.
   final String dietPreference;
 
-  /// One of: `yok`, `kuruyemis`, `sut_urunleri`, `gluten`. Intentionally
-  /// a single-select string for now — the recipe filter currently only
-  /// needs one hot exclusion; multi-select can graduate to a list later.
-  final String allergies;
-
   /// One of: `2_ogun`, `3_ogun`, `4_ogun`.
   final String mealFrequency;
 
@@ -181,7 +174,6 @@ class WizardState {
     String? experienceDescription,
     String? painPointDescription,
     String? dietPreference,
-    String? allergies,
     String? mealFrequency,
     String? prepTime,
     String? nutritionGoal,
@@ -209,7 +201,6 @@ class WizardState {
           experienceDescription ?? this.experienceDescription,
       painPointDescription: painPointDescription ?? this.painPointDescription,
       dietPreference: dietPreference ?? this.dietPreference,
-      allergies: allergies ?? this.allergies,
       mealFrequency: mealFrequency ?? this.mealFrequency,
       prepTime: prepTime ?? this.prepTime,
       nutritionGoal: nutritionGoal ?? this.nutritionGoal,
@@ -238,7 +229,6 @@ class WizardState {
         'experienceDescription': experienceDescription,
         'painPointDescription': painPointDescription,
         'dietPreference': dietPreference,
-        'allergies': allergies,
         'mealFrequency': mealFrequency,
         'prepTime': prepTime,
         'nutritionGoal': nutritionGoal,
@@ -302,7 +292,6 @@ class WizardState {
       painPointDescription: json['painPointDescription'] as String?,
       dietPreference:
           readNonNullString('dietPreference', kDefaultDietPreference),
-      allergies: readNonNullString('allergies', kDefaultAllergies),
       mealFrequency: readNonNullString('mealFrequency', kDefaultMealFrequency),
       prepTime: readNonNullString('prepTime', kDefaultPrepTime),
       nutritionGoal: readNonNullString('nutritionGoal', kDefaultNutritionGoal),
@@ -344,7 +333,6 @@ class WizardController extends Notifier<WizardState> {
   void setPainPointDescription(String v) =>
       state = state.copyWith(painPointDescription: v);
   void setDietPreference(String v) => state = state.copyWith(dietPreference: v);
-  void setAllergies(String v) => state = state.copyWith(allergies: v);
   void setMealFrequency(String v) => state = state.copyWith(mealFrequency: v);
   void setPrepTime(String v) => state = state.copyWith(prepTime: v);
   void setNutritionGoal(String v) => state = state.copyWith(nutritionGoal: v);

@@ -904,11 +904,11 @@ class _HeroSection extends StatelessWidget {
           style: TextStyle(color: Colors.white60, fontSize: 13, height: 1.45),
         ),
         const SizedBox(height: 12),
-        // Phase 60D · social-proof tag right under the hero subtitle so
-        // the user sees crowd-validation before the price comparison
-        // even renders. Numbers stay round and rough — never fabricate
-        // a precision figure for marketing copy.
-        const _SocialProofTag(),
+        // Honesty pass · the old "🔥 10.000+ kişi kullanıyor" crowd tag
+        // was a fabricated count for a pre-launch app (Apple 2.3.1 /
+        // Play Misrepresentation). Replaced with a verifiable product
+        // capability — no user counts until we have real ones.
+        const _CapabilityTag(),
       ],
     );
   }
@@ -917,8 +917,8 @@ class _HeroSection extends StatelessWidget {
 /// Phase 60D · "🔥 10.000+ kişi kullanıyor" pill. Sits between the hero
 /// subtitle and the plan-card row so the user sees crowd validation
 /// before evaluating the price.
-class _SocialProofTag extends StatelessWidget {
-  const _SocialProofTag();
+class _CapabilityTag extends StatelessWidget {
+  const _CapabilityTag();
 
   @override
   Widget build(BuildContext context) {
@@ -934,7 +934,7 @@ class _SocialProofTag extends StatelessWidget {
           ),
         ),
         child: const Text(
-          '🔥 10.000+ kişi kullanıyor',
+          '🎯 130+ egzersizde canlı form analizi',
           style: TextStyle(
             color: Colors.white,
             fontSize: 12.5,

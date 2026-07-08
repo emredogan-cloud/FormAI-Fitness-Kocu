@@ -453,7 +453,11 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     try {
       await service.redeem(code);
       if (!context.mounted) return;
-      _toast(context, 'Tebrikler! 1 Aylık Pro hesabınız aktif edildi.');
+      _toast(
+        context,
+        'Davet kodun kaydedildi! Ödüller dağıtılmaya başladığında '
+        'hesabına yansıyacak.',
+      );
     } on ReferralException catch (e) {
       if (!context.mounted) return;
       _toast(context, e.localizedMessage());
@@ -1650,7 +1654,7 @@ class _ReferralCard extends ConsumerWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Sen ve arkadaşın 1 ay Pro kazanın',
+                  'Arkadaşını davet et',
                   style: TextStyle(
                     color: scheme.onSurface,
                     fontSize: 14,
@@ -1662,8 +1666,8 @@ class _ReferralCard extends ConsumerWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Davet kodunu paylaş — kullanan herkesle birlikte 30 günlük '
-            'Pro hesap kazanırsın.',
+            'Davet kodunu paylaş — kullanan arkadaşların kodun altında '
+            'kaydedilir, ödül programı açıldığında birlikte kazanırsınız.',
             style: TextStyle(
               color: scheme.onSurface.withValues(alpha: 0.65),
               fontSize: 12,
