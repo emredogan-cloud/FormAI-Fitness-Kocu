@@ -215,6 +215,17 @@ class _BootGateState extends State<_BootGate> {
   bool _supabaseInitialized = false;
   late Future<SharedPreferences> _bootstrap;
 
+  // The anon-flag auth listener must be cancel-and-replace: `_init()`
+  // re-runs on every boot retry, and an un-cancelled `.listen` from a
+  // failed attempt would stack another permanent subscription each time.
+  StreamSubscription<AuthState>? _authFlagSub;
+
+  @override
+  void dispose() {
+    _authFlagSub?.cancel();
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -304,7 +315,9 @@ class _BootGateState extends State<_BootGate> {
         // anon identity are RLS-locked away. That's an acceptable loss
         // for an identity that, by definition, was already disposable;
         // the alternative (forcing /auth) is worse for retention.
-        Supabase.instance.client.auth.onAuthStateChange.listen((authState) {
+        await _authFlagSub?.cancel();
+        _authFlagSub =
+            Supabase.instance.client.auth.onAuthStateChange.listen((authState) {
           final user = authState.session?.user;
           // signedOut → preserve the last-known flag so a subsequent
           // cold start can still trigger the recovery path.

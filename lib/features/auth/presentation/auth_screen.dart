@@ -187,6 +187,43 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             'Apple ile giriş yapmak için internet bağlantısı gereklidir.',
       );
 
+  /// "Şifremi unuttum" — asks for the address (prefilled from the email
+  /// field) and sends the Supabase reset mail. Success and failure both
+  /// land as toasts; no navigation, the user continues from their inbox.
+  Future<void> _forgotPassword() async {
+    final controller =
+        TextEditingController(text: _emailController.text.trim());
+    final email = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Şifreni sıfırla'),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.emailAddress,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'E-posta adresin',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Vazgeç'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
+            child: const Text('Bağlantı Gönder'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (email == null || email.isEmpty || !mounted) return;
+    final error = await ref.read(authControllerProvider).resetPassword(email);
+    if (!mounted) return;
+    _toast(error ?? 'Sıfırlama bağlantısı e-postana gönderildi.');
+  }
+
   Future<void> _runSocial(
     _SocialProvider provider,
     Future<SocialAuthResult> Function() run, {
@@ -306,7 +343,18 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                           )
                         : Text(isSignIn ? 'GİRİŞ YAP' : 'KAYIT OL'),
                   ),
-                  const SizedBox(height: 12),
+                  // Forgot-password affordance — sign-in mode only. An
+                  // email/password user who forgot was previously locked
+                  // out for good: nothing called resetPasswordForEmail.
+                  if (isSignIn)
+                    TextButton(
+                      onPressed: _busy ? null : _forgotPassword,
+                      child: const Text(
+                        'Şifremi unuttum',
+                        style: TextStyle(color: Colors.white54),
+                      ),
+                    ),
+                  const SizedBox(height: 4),
                   TextButton(
                     onPressed: _busy
                         ? null

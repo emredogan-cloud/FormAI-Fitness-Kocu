@@ -78,7 +78,11 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
 
   Future<SubscriptionState> _load() async {
     final prefs = await SharedPreferences.getInstance();
-    final devOverride = prefs.getBool(_kDevProOverrideKey) ?? false;
+    // Debug-only: the sandbox override must never unlock Pro in a
+    // release build — a stale flag left by a previously side-loaded
+    // debug build would otherwise grant a permanent free entitlement.
+    final devOverride =
+        kDebugMode && (prefs.getBool(_kDevProOverrideKey) ?? false);
     try {
       final customer = await Purchases.getCustomerInfo();
       final offerings = await Purchases.getOfferings();

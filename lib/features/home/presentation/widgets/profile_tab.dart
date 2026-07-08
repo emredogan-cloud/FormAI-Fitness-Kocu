@@ -374,7 +374,12 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
         data: {'error': e.message, 'stack': st.toString()},
       );
       if (!context.mounted) return;
-      _toast(context, 'Şifre güncellenemedi: ${e.message}');
+      // AuthException.message is raw English from Supabase ("Password
+      // should be at least 6 characters") — keep it out of the TR UI.
+      _toast(
+          context,
+          'Şifre güncellenemedi. Şifre en az 6 karakter olmalı '
+          've eskisinden farklı olmalı.');
     } catch (e, st) {
       AppLogger.error(
         'updatePassword failed',

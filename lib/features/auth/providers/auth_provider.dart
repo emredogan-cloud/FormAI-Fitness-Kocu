@@ -291,7 +291,10 @@ class AuthController {
         stackTrace: st,
         category: 'auth',
       );
-      return (outcome: SocialAuthOutcome.error, errorMessage: e.toString());
+      // null → the calling surface shows its localized fallback copy.
+      // Returning e.toString() here used to toast raw ClientException /
+      // SocketException dumps at users on flaky networks.
+      return (outcome: SocialAuthOutcome.error, errorMessage: null);
     }
   }
 
@@ -359,7 +362,8 @@ class AuthController {
         stackTrace: st,
         category: 'auth',
       );
-      return (outcome: SocialAuthOutcome.error, errorMessage: e.toString());
+      // null → localized fallback at the call site (see Google above).
+      return (outcome: SocialAuthOutcome.error, errorMessage: null);
     }
   }
 
@@ -385,6 +389,11 @@ class AuthController {
       );
       return DeleteAccountOutcome.error;
     }
+    // Drop the RevenueCat identity so the deleted account's Pro
+    // entitlement can't bleed into the next user of this device
+    // (Purchases.logIn is called on every sign-in; without a logOut
+    // the SDK keeps serving the old app-user-ID's customer info).
+    await _logOutRevenueCat();
     try {
       await Supabase.instance.client.auth.signOut();
     } catch (e) {
@@ -413,7 +422,14 @@ class AuthController {
   /// treat the returned future as "done when the UI is safe to
   /// redirect" — the router's authRefreshListenable will then route
   /// them to /auth automatically.
+  ///
+  /// Shared-device hygiene: also logs the RevenueCat identity out (so
+  /// the previous user's Pro entitlement can't leak to the next
+  /// session) and wipes user-scoped SharedPreferences (height/weight/
+  /// age/goal/plan/XP re-hydrated for a stranger otherwise). Device-
+  /// level keys — consent decisions, the 18+ age gate, theme — survive.
   Future<void> signOut() async {
+    await _logOutRevenueCat();
     try {
       await Supabase.instance.client.auth.signOut();
     } catch (e, st) {
@@ -424,7 +440,100 @@ class AuthController {
         category: 'auth',
       );
     }
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await _clearUserScopedPrefs(prefs);
+    } catch (e) {
+      AppLogger.warning(
+        'signOut prefs wipe (non-fatal)',
+        category: 'auth',
+        data: {'error': e.toString()},
+      );
+    }
     _invalidateUserScopedProviders();
+  }
+
+  /// Prefs that describe the DEVICE, not the account — they survive a
+  /// sign-out. Everything else (metrics, plan cache, wizard state, XP,
+  /// session logs, streaks, seen-flags…) is user data and is wiped so
+  /// the next account on this device starts clean.
+  static const Set<String> _deviceLevelPrefKeys = {
+    'sixpack.consent.decided',
+    'sixpack.consent.analytics',
+    'sixpack.consent.crash',
+    'sixpack.age_verified',
+    'sixpack.birth_year',
+    'sixpack.theme_mode',
+    'auth.was_anonymous',
+  };
+
+  Future<void> _clearUserScopedPrefs(SharedPreferences prefs) async {
+    final preserved = <String, Object>{};
+    for (final key in _deviceLevelPrefKeys) {
+      final value = prefs.get(key);
+      if (value != null) preserved[key] = value;
+    }
+    await prefs.clear();
+    for (final entry in preserved.entries) {
+      final value = entry.value;
+      switch (value) {
+        case final bool v:
+          await prefs.setBool(entry.key, v);
+        case final int v:
+          await prefs.setInt(entry.key, v);
+        case final double v:
+          await prefs.setDouble(entry.key, v);
+        case final String v:
+          await prefs.setString(entry.key, v);
+        case final List<Object?> v:
+          await prefs.setStringList(entry.key, v.whereType<String>().toList());
+      }
+    }
+  }
+
+  /// Best-effort RevenueCat identity drop. `logOut` throws when the
+  /// current RC user is already anonymous (nothing to log out) or when
+  /// the SDK isn't configured (dev builds without keys) — both are
+  /// fine to swallow with a breadcrumb.
+  Future<void> _logOutRevenueCat() async {
+    try {
+      await Purchases.logOut();
+    } catch (e) {
+      AppLogger.warning(
+        'RevenueCat logOut skipped',
+        category: 'auth',
+        data: {'error': e.toString()},
+      );
+    }
+  }
+
+  /// Sends a Supabase password-reset email. Returns `null` on success
+  /// or a localized, non-technical error message for the toast — never
+  /// the raw English Supabase string. An email/password user who
+  /// forgets their password was previously locked out permanently
+  /// (nothing in the app called `resetPasswordForEmail`).
+  Future<String?> resetPassword(String email) async {
+    try {
+      await Supabase.instance.client.auth.resetPasswordForEmail(email);
+      return null;
+    } on AuthException catch (e, st) {
+      AppLogger.error(
+        'resetPassword AuthException: ${e.message}',
+        e,
+        stackTrace: st,
+        category: 'auth',
+      );
+      return 'Sıfırlama e-postası gönderilemedi. Adresi kontrol edip '
+          'tekrar dene.';
+    } catch (e, st) {
+      AppLogger.error(
+        'resetPassword failed',
+        e,
+        stackTrace: st,
+        category: 'auth',
+      );
+      return 'Sıfırlama e-postası gönderilemedi. Lütfen tekrar dene.';
+    }
   }
 
   /// Invalidates every provider whose cached value belongs to the
