@@ -21,8 +21,8 @@ import '../../../feedback/services/feedback_service.dart';
 import '../../../monetization/presentation/churn_survey_sheet.dart';
 import '../../../monetization/providers/monetization_provider.dart';
 import '../../../referral/providers/referral_provider.dart';
+import '../../../progress/providers/streak_provider.dart';
 import '../../../referral/services/referral_service.dart';
-import '../../../workout/models/workout_day_model.dart';
 import '../../../workout/providers/workout_provider.dart';
 import 'stat_tile.dart';
 
@@ -55,7 +55,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     final user = ref.watch(currentUserProvider);
 
     final completed = session?.days.where((d) => d.isCompleted).length ?? 0;
-    final streak = _streakOf(session?.days ?? const []);
+    final streak = ref.watch(currentStreakProvider);
     final weight = metrics['weightKg'];
     final height = metrics['heightCm'];
     final age = metrics['age'];
@@ -312,18 +312,6 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
           ),
       ],
     );
-  }
-
-  int _streakOf(List<WorkoutDay> days) {
-    var streak = 0;
-    for (final day in days) {
-      if (day.isCompleted) {
-        streak += 1;
-      } else {
-        break;
-      }
-    }
-    return streak;
   }
 
   Future<void> _openEditSheet(Map<String, dynamic> initial) async {

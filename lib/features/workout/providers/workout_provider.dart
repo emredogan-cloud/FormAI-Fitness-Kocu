@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/services/analytics_service.dart';
 import '../../../core/services/app_preferences.dart';
 import '../../../core/utils/app_logger.dart';
+import '../../progress/domain/streak_calculator.dart';
 import '../data/session_log_repository.dart';
 import '../data/workout_repository.dart';
 import '../domain/services/workout_generator_service.dart';
@@ -397,13 +398,29 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
     final refreshed = refreshedResult.days;
     // Phase 52 · maintain the all-time-high streak watermark so the
     // AI Coach card can detect the "comeback" state (live streak == 0
-    // but a past best exists). The bump runs after `_loadProgram`
-    // because the freshly-completed day is already merged into
-    // `refreshed.isCompleted` — counting the leading run on the old
-    // `current.days` list would miss the just-completed day.
-    if (!isAdHoc) {
-      final newStreak = _streakOf(refreshed);
+    // but a past best exists) and the XP listener can pay streak
+    // milestones. Now derived from the REAL calendar-day streak over
+    // session-log timestamps (this completion's log was saved above),
+    // not the old leading-program-run count that capped at 3.
+    try {
+      final logs = await ref.read(sessionLogRepositoryProvider).loadAll();
+      final newStreak = calendarStreak(
+        [
+          for (final log in logs)
+            if (DateTime.tryParse(log.completedAtIso) != null)
+              DateTime.parse(log.completedAtIso),
+          DateTime.now(), // this completion counts even for ad-hoc runs
+        ],
+        now: DateTime.now(),
+      );
       await ref.read(appPreferencesProvider).bumpMaxStreakIfHigher(newStreak);
+    } catch (e, st) {
+      AppLogger.error(
+        'max-streak bump failed (non-fatal)',
+        e,
+        stackTrace: st,
+        category: 'progress',
+      );
     }
     // Phase 58 · stamp the wall-clock so the smart notification
     // scheduler can tell "user trained today" apart from "user
@@ -701,22 +718,6 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
       durationSeconds: totalDuration,
       exerciseLogs: exerciseLogs,
     );
-  }
-
-  /// Counts the leading run of completed days. Mirrors the helper in
-  /// `gelisim_tab.dart` / `profile_tab.dart` — a future cleanup could
-  /// lift it onto `WorkoutDay`, but for now we keep the duplication
-  /// quiet and local rather than reshaping the model in a UX phase.
-  int _streakOf(List<WorkoutDay> days) {
-    var streak = 0;
-    for (final day in days) {
-      if (day.isCompleted) {
-        streak += 1;
-      } else {
-        break;
-      }
-    }
-    return streak;
   }
 }
 

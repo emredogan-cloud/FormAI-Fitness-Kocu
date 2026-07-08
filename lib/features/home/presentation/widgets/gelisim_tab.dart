@@ -23,6 +23,7 @@ import '../../../progress/presentation/widgets/weekly_retrospective_card.dart';
 import '../../../workout/models/workout_day_model.dart';
 import '../../../workout/providers/workout_provider.dart';
 import 'today_task_card.dart';
+import '../../../progress/providers/streak_provider.dart';
 
 const Color _neon = Color(0xFF8B5CF6);
 const Color _neonDeep = Color(0xFF6A3DFF);
@@ -63,7 +64,7 @@ class GelisimTab extends ConsumerWidget {
     final isSessionLoading = sessionAsync.isLoading && session == null;
     final days = session?.days ?? const <WorkoutDay>[];
     final completedCount = days.where((d) => d.isCompleted).length;
-    final streak = _streakOf(days);
+    final streak = ref.watch(currentStreakProvider);
     final activeDay = _firstIncomplete(days);
     final activeDayNumber = activeDay?.dayNumber ?? 1;
     final percent = (completedCount / _programLength).clamp(0.0, 1.0);
@@ -181,18 +182,6 @@ class GelisimTab extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  int _streakOf(List<WorkoutDay> days) {
-    var streak = 0;
-    for (final day in days) {
-      if (day.isCompleted) {
-        streak += 1;
-      } else {
-        break;
-      }
-    }
-    return streak;
   }
 
   WorkoutDay? _firstIncomplete(List<WorkoutDay> days) {

@@ -13,6 +13,7 @@ import '../../../nutrition/providers/nutrition_provider.dart';
 import '../../../referral/providers/referral_provider.dart';
 import '../../models/workout_day_model.dart';
 import '../../providers/workout_provider.dart';
+import '../../../progress/providers/streak_provider.dart';
 
 const Color _neon = Color(0xFF00F0FF);
 const Color _neonPurple = Color(0xFF8E5BFF);
@@ -77,7 +78,7 @@ class _SessionCompleteOverlayState
     // started.
     final session = ref.watch(workoutSessionProvider).value;
     final completedDays = session?.days.where((d) => d.isCompleted).length ?? 0;
-    final streak = _streakOf(session?.days ?? const []);
+    final streak = ref.watch(currentStreakProvider);
     final percent =
         ((completedDays / AppConstants.programLength) * 100).round();
     final referralCode = ref.watch(referralCodeProvider).value;
@@ -186,18 +187,6 @@ class _SessionCompleteOverlayState
   /// used in `gelisim_tab.dart`. Inlined here rather than imported
   /// from a single source because the helper is two lines and
   /// extracting a util just for two callers would over-abstract.
-  int _streakOf(List<WorkoutDay> days) {
-    var streak = 0;
-    for (final day in days) {
-      if (day.isCompleted) {
-        streak += 1;
-      } else {
-        break;
-      }
-    }
-    return streak;
-  }
-
   /// Picks a recovery recipe prioritised by:
   ///   1. mealType in {`snack`, `main`, `lunch`, `dinner`} — these make
   ///      sense immediately after a workout;

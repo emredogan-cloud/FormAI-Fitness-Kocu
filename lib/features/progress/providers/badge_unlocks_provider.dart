@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/services/app_preferences.dart';
 import '../../workout/models/workout_day_model.dart';
 import '../../workout/providers/workout_provider.dart';
+import 'streak_provider.dart';
 
 /// Phase 48 · single source of truth for which badges the user has
 /// unlocked right now.
@@ -165,7 +166,10 @@ final unlockedBadgesProvider = Provider<Set<String>>((ref) {
   final session = ref.watch(workoutSessionProvider).value;
   final days = session?.days ?? const <WorkoutDay>[];
   final completedCount = days.where((d) => d.isCompleted).length;
-  final streak = _streakOf(days);
+  // Real calendar-day streak — 'disciplined' (≥3) and especially
+  // 'steady' (≥7) were unreachable under the old leading-program-run
+  // count, which the every-4th-day rest slot capped at 3.
+  final streak = ref.watch(currentStreakProvider);
   final weeklyKcal = completedCount * _kKcalPerCompletedDay;
   final cardioDaysCompleted = _cardioDaysCompleted(days);
   final coreDaysCompleted = _daysCompletedByMuscle(days, 'core');
@@ -189,18 +193,6 @@ final unlockedBadgesProvider = Provider<Set<String>>((ref) {
   }
   return unlocked;
 });
-
-int _streakOf(List<WorkoutDay> days) {
-  var streak = 0;
-  for (final day in days) {
-    if (day.isCompleted) {
-      streak += 1;
-    } else {
-      break;
-    }
-  }
-  return streak;
-}
 
 int _cardioDaysCompleted(List<WorkoutDay> days) {
   return days.where((d) {

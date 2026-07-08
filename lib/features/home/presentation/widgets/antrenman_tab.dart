@@ -18,6 +18,7 @@ import '../../../workout/providers/workout_provider.dart';
 import 'challenge_hero_card.dart';
 import 'equipment_strip.dart';
 import 'weekly_goal_card.dart';
+import '../../../progress/providers/streak_provider.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonAccent = Color(0xFF4DA6FF);
@@ -128,7 +129,7 @@ class _AntrenmanTabState extends ConsumerState<AntrenmanTab> {
 
   Widget _buildContent(BuildContext context, WorkoutSessionState session) {
     final completed = session.days.where((d) => d.isCompleted).length;
-    final streak = _streakOf(session.days);
+    final streak = ref.watch(currentStreakProvider);
     final nextDay = _firstIncomplete(session.days);
     final today = DateTime.now();
     final weekStart = today.subtract(Duration(days: today.weekday - 1));
@@ -195,18 +196,6 @@ class _AntrenmanTabState extends ConsumerState<AntrenmanTab> {
         _RegionalPlansList(plans: filteredPlans),
       ],
     );
-  }
-
-  int _streakOf(List<WorkoutDay> days) {
-    var streak = 0;
-    for (final day in days) {
-      if (day.isCompleted) {
-        streak += 1;
-      } else {
-        break;
-      }
-    }
-    return streak;
   }
 
   WorkoutDay? _firstIncomplete(List<WorkoutDay> days) {
