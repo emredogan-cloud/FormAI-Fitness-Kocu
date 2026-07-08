@@ -20,6 +20,8 @@ import '../../../nutrition/domain/models/planned_meal.dart';
 import '../../../nutrition/providers/daily_menu_provider.dart';
 import '../../../nutrition/providers/nutrition_provider.dart';
 import '../../../progress/presentation/widgets/weekly_retrospective_card.dart';
+import '../../../workout/data/session_log_repository.dart';
+import '../../../workout/models/session_log_model.dart';
 import '../../../workout/models/workout_day_model.dart';
 import '../../../workout/providers/workout_provider.dart';
 import 'today_task_card.dart';
@@ -85,7 +87,24 @@ class GelisimTab extends ConsumerWidget {
     });
     final weeklyCompleted =
         weeklyDays.where((d) => d?.isCompleted ?? false).length;
+    // Badge predicate only ("Kalori Avcısı" is DEFINED as completions ×
+    // kcalPerCompletedDay). The stat charts below no longer present
+    // this constant as a measurement — they draw real session-log data.
     final weeklyKcal = weeklyCompleted * _kcalPerDay;
+
+    // Honest chart series: measured duration + reps from the week's
+    // session logs (keyed by program-day number). Days without a log
+    // render as zero — a true empty state, not a decorative baseline.
+    final sessionLogs =
+        ref.watch(sessionLogsProvider).value ?? const <int, SessionLog>{};
+    final weeklyMinutes = List<double>.generate(7, (i) {
+      final log = sessionLogs[weekStart + i];
+      return log == null ? 0.0 : log.durationSeconds / 60.0;
+    });
+    final weeklyReps = List<double>.generate(7, (i) {
+      final log = sessionLogs[weekStart + i];
+      return log == null ? 0.0 : log.totalReps.toDouble();
+    });
 
     // Section spacing normalized to the 20–24 px system. 14 stays on
     // the top-row → today-task seam because those two blocks are a
@@ -161,7 +180,8 @@ class GelisimTab extends ConsumerWidget {
             _StatsCardsColumn(
               weeklyDays: weeklyDays,
               weeklyCompleted: weeklyCompleted,
-              weeklyKcal: weeklyKcal,
+              weeklyMinutes: weeklyMinutes,
+              weeklyReps: weeklyReps,
             ),
             const SizedBox(height: 22),
             // Phase 52 · weekly retrospective. The card returns
@@ -1005,8 +1025,15 @@ class _LockedCell extends StatelessWidget {
 }
 
 // =============================================================================
-// Three stats cards — weekly completion (bars), calories (area line),
-// workouts (green waveform). All three draw from the same 7-day bucket.
+// Three stats cards — weekly completion (bars), measured workout minutes
+// (area line), measured reps (bars). All three draw from the same 7-day
+// bucket; the last two read REAL session-log data.
+//
+// Honesty pass · the old cards fabricated their series: the "kcal" line
+// was `completed ? 1.0 : 0.2`, the value a flat completions × 250, and
+// the "ANTRENMAN" waveform alternated even/odd baselines purely for
+// shape. Progress charts are the reward for coming back — decorating
+// them with invented data broke exactly that trust.
 // =============================================================================
 
 /// Phase 38: was `_StatsCardsRow`. The three tight squares that lived
@@ -1017,11 +1044,17 @@ class _StatsCardsColumn extends StatelessWidget {
   const _StatsCardsColumn({
     required this.weeklyDays,
     required this.weeklyCompleted,
-    required this.weeklyKcal,
+    required this.weeklyMinutes,
+    required this.weeklyReps,
   });
   final List<WorkoutDay?> weeklyDays;
   final int weeklyCompleted;
-  final int weeklyKcal;
+
+  /// Measured workout minutes per weekday slot (0 = no session logged).
+  final List<double> weeklyMinutes;
+
+  /// Measured completed reps per weekday slot (0 = no session logged).
+  final List<double> weeklyReps;
 
   static const List<String> _dayLabels = [
     'Pzt',
@@ -1033,17 +1066,24 @@ class _StatsCardsColumn extends StatelessWidget {
     'Paz',
   ];
 
+  /// Normalizes a measured series into 0..1 bar heights. Zero stays a
+  /// hairline (0.03) so an empty day *looks* empty; non-zero values get
+  /// a visibility floor so a 5-minute day doesn't vanish next to a
+  /// 40-minute day.
+  static List<double> _normalize(List<double> values) {
+    final maxV = values.fold<double>(0, (a, b) => a > b ? a : b);
+    if (maxV <= 0) return List<double>.filled(values.length, 0.03);
+    return [
+      for (final v in values) v <= 0 ? 0.03 : 0.15 + 0.85 * (v / maxV),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final completionBars =
-        weeklyDays.map((d) => (d?.isCompleted ?? false) ? 1.0 : 0.25).toList();
-    final kcalValues =
-        weeklyDays.map((d) => (d?.isCompleted ?? false) ? 1.0 : 0.2).toList();
-    final waveformBars = List<double>.generate(weeklyDays.length, (i) {
-      final completed = weeklyDays[i]?.isCompleted ?? false;
-      final baseline = i.isEven ? 0.55 : 0.35;
-      return completed ? 1.0 : baseline;
-    });
+        weeklyDays.map((d) => (d?.isCompleted ?? false) ? 1.0 : 0.12).toList();
+    final totalMinutes = weeklyMinutes.fold<double>(0, (a, b) => a + b).round();
+    final totalReps = weeklyReps.fold<double>(0, (a, b) => a + b).round();
 
     return Column(
       children: [
@@ -1059,20 +1099,23 @@ class _StatsCardsColumn extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         _StatChartCard(
-          label: 'YAKILAN KALORİ',
-          value: _formatKcal(weeklyKcal),
-          unit: 'kcal',
+          label: 'ANTRENMAN SÜRESİ',
+          value: '$totalMinutes',
+          unit: 'dk',
           accent: _orange,
-          chart: _MiniAreaLine(values: kcalValues, color: _orange),
+          chart: _MiniAreaLine(
+            values: _normalize(weeklyMinutes),
+            color: _orange,
+          ),
         ),
         const SizedBox(height: 12),
         _StatChartCard(
-          label: 'ANTRENMAN',
-          value: '$weeklyCompleted',
-          unit: 'tamamlandı',
+          label: 'TEKRAR',
+          value: '$totalReps',
+          unit: 'tekrar',
           accent: _success,
           chart: _MiniBars(
-            values: waveformBars,
+            values: _normalize(weeklyReps),
             labels: _dayLabels,
             gradientColors: [
               _success.withValues(alpha: 0.9),
@@ -1083,14 +1126,6 @@ class _StatsCardsColumn extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  String _formatKcal(int kcal) {
-    if (kcal < 1000) return '$kcal';
-    final s = kcal.toString();
-    final head = s.substring(0, s.length - 3);
-    final tail = s.substring(s.length - 3);
-    return '$head.$tail';
   }
 }
 
