@@ -44,7 +44,9 @@ class BadgesScreen extends ConsumerWidget {
     final days = session?.days ?? const <WorkoutDay>[];
     final completedCount = days.where((d) => d.isCompleted).length;
     final streak = ref.watch(currentStreakProvider);
-    final weeklyKcal = completedCount * _kcalPerCompletedDay;
+    // Unified "Kalori Avcısı" definition: LIFETIME completions ×
+    // kcalPerCompletedDay (matches unlockedBadgesProvider + gelisim).
+    final totalKcal = completedCount * _kcalPerCompletedDay;
     final cardioDaysCompleted = _cardioDaysCompleted(days);
     final coreDaysCompleted = _daysCompletedByMuscle(days, 'core');
     final strengthDaysCompleted = _daysCompletedByStrength(days);
@@ -93,11 +95,11 @@ class BadgesScreen extends ConsumerWidget {
       ),
       _BadgeData(
         label: 'Kalori Avcısı',
-        subtitle: 'Haftada 1500 kcal',
+        subtitle: 'Toplam 1500 kcal',
         icon: Icons.local_fire_department,
         accent: _orange,
-        unlocked: weeklyKcal >= 1500,
-        progress: (weeklyKcal / 1500).clamp(0.0, 1.0),
+        unlocked: totalKcal >= 1500,
+        progress: (totalKcal / 1500).clamp(0.0, 1.0),
       ),
       _BadgeData(
         label: 'HIIT Ustası',

@@ -6,13 +6,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/routing/app_router.dart';
+import '../../../../core/services/app_preferences.dart';
 import '../../../../core/theme/theme_extension.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/placeholder_images.dart';
 import '../../../../core/widgets/cached_image.dart';
 import '../../../../core/widgets/error_card.dart';
+import '../../../workout/data/session_log_repository.dart';
 import '../../../workout/models/exercise_model.dart';
 import '../../../workout/models/workout_day_model.dart';
+import '../../../workout/models/session_log_model.dart';
 import '../../../workout/models/workout_plan_model.dart';
 import '../../../workout/providers/workout_provider.dart';
 import 'challenge_hero_card.dart';
@@ -137,6 +140,29 @@ class _AntrenmanTabState extends ConsumerState<AntrenmanTab> {
       7,
       (i) => DateTime(weekStart.year, weekStart.month, weekStart.day + i),
     );
+    // P1-4 · "weekly goal" used the LIFETIME completion count, so once
+    // a user passed 3 total workouts the card read 3/3 forever and the
+    // Monday reset never happened. Count distinct active days inside
+    // THIS calendar week from session-log timestamps (+ lastWorkoutAt,
+    // which also covers ad-hoc plan workouts).
+    final weekStartDate =
+        DateTime(weekStart.year, weekStart.month, weekStart.day);
+    final logs =
+        ref.watch(sessionLogsProvider).value ?? const <int, SessionLog>{};
+    final weeklyActiveDays = <DateTime>{};
+    void addIfThisWeek(DateTime? instant) {
+      if (instant == null) return;
+      final local = instant.toLocal();
+      final day = DateTime(local.year, local.month, local.day);
+      final offset = day.difference(weekStartDate).inDays;
+      if (offset >= 0 && offset < 7) weeklyActiveDays.add(day);
+    }
+
+    for (final log in logs.values) {
+      addIfThisWeek(DateTime.tryParse(log.completedAtIso));
+    }
+    addIfThisWeek(ref.watch(appPreferencesProvider).lastWorkoutAt);
+    final weeklyGoalCompleted = weeklyActiveDays.length;
 
     final plansAsync = ref.watch(workoutPlansProvider);
     // Phase 50A · the plans list is now async (Supabase-backed). Falling
@@ -157,7 +183,7 @@ class _AntrenmanTabState extends ConsumerState<AntrenmanTab> {
           child: WeeklyGoalCard(
             weekDates: weekDates,
             today: today,
-            weeklyCompleted: completed.clamp(0, 3),
+            weeklyCompleted: weeklyGoalCompleted.clamp(0, 3),
             weeklyTarget: 3,
           ),
         ),

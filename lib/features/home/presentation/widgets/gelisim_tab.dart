@@ -20,6 +20,7 @@ import '../../../nutrition/domain/models/planned_meal.dart';
 import '../../../nutrition/providers/daily_menu_provider.dart';
 import '../../../nutrition/providers/nutrition_provider.dart';
 import '../../../progress/presentation/widgets/weekly_retrospective_card.dart';
+import '../../../progress/providers/xp_provider.dart';
 import '../../../workout/data/session_log_repository.dart';
 import '../../../workout/models/session_log_model.dart';
 import '../../../workout/models/workout_day_model.dart';
@@ -87,10 +88,13 @@ class GelisimTab extends ConsumerWidget {
     });
     final weeklyCompleted =
         weeklyDays.where((d) => d?.isCompleted ?? false).length;
-    // Badge predicate only ("Kalori Avcısı" is DEFINED as completions ×
-    // kcalPerCompletedDay). The stat charts below no longer present
+    // Badge predicate only ("Kalori Avcısı" is DEFINED as LIFETIME
+    // completions × kcalPerCompletedDay ≥ 1500 — unified with
+    // unlockedBadgesProvider/badges_screen; this tab used to compute a
+    // program-week variant, so the same badge read locked here while
+    // unlocked in the gallery). The stat charts below no longer present
     // this constant as a measurement — they draw real session-log data.
-    final weeklyKcal = weeklyCompleted * _kcalPerDay;
+    final badgeKcal = completedCount * _kcalPerDay;
 
     // Honest chart series: measured duration + reps from the week's
     // session logs (keyed by program-day number). Days without a log
@@ -196,7 +200,7 @@ class GelisimTab extends ConsumerWidget {
             _BadgesSection(
               completedCount: completedCount,
               streak: streak,
-              weeklyKcal: weeklyKcal,
+              totalKcal: badgeKcal,
             ),
           ],
         ),
@@ -256,11 +260,19 @@ class _TopHeader extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 4),
+              // P1-3 · surface the (previously invisible) identity
+              // system: level + title + lifetime XP were computed and
+              // persisted with zero UI consumers.
               Text(
-                'İlerlemen bir bakışta.',
+                'Sv ${ref.watch(levelProgressProvider).level} · '
+                '${ref.watch(currentTitleProvider).title} · '
+                '${ref.watch(lifetimeXpProvider)} XP',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: scheme.onSurface.withValues(alpha: 0.55),
                   fontSize: 13,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
@@ -1759,12 +1771,16 @@ class _BadgesSection extends StatelessWidget {
   const _BadgesSection({
     required this.completedCount,
     required this.streak,
-    required this.weeklyKcal,
+    required this.totalKcal,
   });
 
   final int completedCount;
   final int streak;
-  final int weeklyKcal;
+
+  /// Lifetime completions × kcalPerCompletedDay — the ONE "Kalori
+  /// Avcısı" definition, shared with unlockedBadgesProvider and
+  /// badges_screen.
+  final int totalKcal;
 
   @override
   Widget build(BuildContext context) {
@@ -1787,8 +1803,8 @@ class _BadgesSection extends StatelessWidget {
         label: 'Kalori Avcısı',
         icon: Icons.local_fire_department,
         accent: _success,
-        unlocked: weeklyKcal >= 1500,
-        progress: (weeklyKcal / 1500).clamp(0.0, 1.0),
+        unlocked: totalKcal >= 1500,
+        progress: (totalKcal / 1500).clamp(0.0, 1.0),
       ),
       const _BadgeData(
         label: '30 Gün Şampiyonu',

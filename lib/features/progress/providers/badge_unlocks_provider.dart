@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../core/services/app_preferences.dart';
 import '../../workout/models/workout_day_model.dart';
 import '../../workout/providers/workout_provider.dart';
@@ -20,8 +21,6 @@ import 'streak_provider.dart';
 /// Returned as an immutable `Set<String>` of stable badge IDs (NOT
 /// Turkish labels — those would shift if we ever localise). Subscribers
 /// diff `previous` vs `next` to detect first-time unlocks.
-
-const int _kKcalPerCompletedDay = 250;
 
 /// Catalogue of every badge the app awards. Keep IDs short and stable;
 /// the celebration dialog uses [label] + [subtitle] for the user-facing
@@ -60,7 +59,7 @@ const List<BadgeDefinition> kBadgeCatalog = [
   BadgeDefinition(
     id: 'calorie_hunter',
     label: 'Kalori Avcısı',
-    subtitle: 'Haftada 1500 kcal yaktın!',
+    subtitle: 'Toplam 1500 kcal yaktın!',
     emoji: '⚡',
   ),
   BadgeDefinition(
@@ -170,7 +169,9 @@ final unlockedBadgesProvider = Provider<Set<String>>((ref) {
   // 'steady' (≥7) were unreachable under the old leading-program-run
   // count, which the every-4th-day rest slot capped at 3.
   final streak = ref.watch(currentStreakProvider);
-  final weeklyKcal = completedCount * _kKcalPerCompletedDay;
+  // Unified "Kalori Avcısı" definition: LIFETIME completions ×
+  // kcalPerCompletedDay (same predicate as badges_screen + gelisim).
+  final totalKcal = completedCount * AppConstants.kcalPerCompletedDay;
   final cardioDaysCompleted = _cardioDaysCompleted(days);
   final coreDaysCompleted = _daysCompletedByMuscle(days, 'core');
   final strengthDaysCompleted = _daysCompletedByStrength(days);
@@ -182,7 +183,7 @@ final unlockedBadgesProvider = Provider<Set<String>>((ref) {
   if (completedCount >= 7) unlocked.add('first_week');
   if (streak >= 7) unlocked.add('steady');
   if (completedCount >= 14) unlocked.add('halfway');
-  if (weeklyKcal >= 1500) unlocked.add('calorie_hunter');
+  if (totalKcal >= 1500) unlocked.add('calorie_hunter');
   if (cardioDaysCompleted >= 5) unlocked.add('hiit_master');
   if (coreDaysCompleted >= 5) unlocked.add('core_master');
   if (strengthDaysCompleted >= 5) unlocked.add('strength_stone');

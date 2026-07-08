@@ -22,6 +22,7 @@ import '../../../monetization/presentation/churn_survey_sheet.dart';
 import '../../../monetization/providers/monetization_provider.dart';
 import '../../../referral/providers/referral_provider.dart';
 import '../../../progress/providers/streak_provider.dart';
+import '../../../progress/providers/xp_provider.dart';
 import '../../../referral/services/referral_service.dart';
 import '../../../workout/providers/workout_provider.dart';
 import 'stat_tile.dart';
@@ -832,35 +833,70 @@ class _InfoTile extends StatelessWidget {
   }
 }
 
-class _ProfileHeader extends StatelessWidget {
+class _ProfileHeader extends ConsumerWidget {
   const _ProfileHeader({required this.email, required this.isGuest});
   final String? email;
   final bool isGuest;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final label = isGuest ? 'Misafir Kullanıcı' : (email ?? 'Hoşgeldin');
+    // P1-3 · the level/title/XP identity system was computed and
+    // persisted with zero UI consumers — the profile now carries it:
+    // level badge on the avatar, title + XP line, and a thin
+    // progress bar toward the next level.
+    final lp = ref.watch(levelProgressProvider);
+    final tier = ref.watch(currentTitleProvider);
+    final span = lp.nextLevelXp - lp.currentLevelXp;
+    final levelPct =
+        span <= 0 ? 1.0 : ((lp.xp - lp.currentLevelXp) / span).clamp(0.0, 1.0);
     return Row(
       children: [
-        Container(
-          width: 64,
-          height: 64,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: const LinearGradient(
-              colors: [_neon, _neonAccent],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: _neon.withValues(alpha: 0.5),
-                blurRadius: 18,
-                spreadRadius: 1,
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  colors: [_neon, _neonAccent],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: _neon.withValues(alpha: 0.5),
+                    blurRadius: 18,
+                    spreadRadius: 1,
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: const Icon(Icons.person, color: Colors.white, size: 32),
+              child: const Icon(Icons.person, color: Colors.white, size: 32),
+            ),
+            Positioned(
+              bottom: -4,
+              right: -4,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                decoration: BoxDecoration(
+                  color: context.colors.surface,
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: _neon, width: 1.2),
+                ),
+                child: Text(
+                  'Sv ${lp.level}',
+                  style: TextStyle(
+                    color: context.colors.onSurface,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(width: 14),
         Expanded(
@@ -886,6 +922,29 @@ class _ProfileHeader extends StatelessWidget {
                 style: TextStyle(
                   color: context.colors.onSurface.withValues(alpha: 0.65),
                   fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '${tier.title} · ${lp.xp} XP',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: _neon.withValues(alpha: 0.95),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.2,
+                ),
+              ),
+              const SizedBox(height: 5),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(999),
+                child: LinearProgressIndicator(
+                  value: levelPct,
+                  minHeight: 5,
+                  backgroundColor:
+                      context.colors.onSurface.withValues(alpha: 0.10),
+                  valueColor: const AlwaysStoppedAnimation<Color>(_neon),
                 ),
               ),
             ],
