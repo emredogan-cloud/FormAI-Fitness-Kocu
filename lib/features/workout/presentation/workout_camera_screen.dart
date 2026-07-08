@@ -10,6 +10,7 @@ import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
+import '../../../core/services/app_preferences.dart';
 import '../../../core/services/live_activity_service.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/utils/app_logger.dart';
@@ -231,6 +232,11 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
   }
 
   Future<bool> _showMlKitDisclosure() async {
+    // UX-10 · show once, remember forever. Re-prompting the same
+    // transparency dialog on every workout entry was friction with no
+    // added disclosure value.
+    final prefs = ref.read(appPreferencesProvider);
+    if (prefs.mlDisclosureAcked) return true;
     final result = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -277,6 +283,9 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         ],
       ),
     );
+    if (result == true) {
+      unawaited(prefs.setMlDisclosureAcked());
+    }
     return result ?? false;
   }
 

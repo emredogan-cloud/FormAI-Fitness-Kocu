@@ -122,9 +122,13 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               .aliasRevenueCatWithCurrentUser();
           ref.read(authGateClearedProvider.notifier).markCleared();
           if (mounted) {
+            // Honest copy: the email isn't attached until the user
+            // clicks the confirmation link — don't declare the upgrade
+            // done before it is.
             _toast(
-              'E-posta adresine doğrulama bağlantısı gönderildi. '
-              'Hesabın yükseltildi, ilerlemen korundu.',
+              'E-posta adresine doğrulama bağlantısı gönderildi — '
+              'onayladıktan sonra bu e-postayla giriş yapabilirsin. '
+              'İlerlemen korunuyor.',
             );
           }
           await _routePostAuth();

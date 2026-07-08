@@ -310,6 +310,19 @@ class AppPreferences {
     await _prefs.setBool(_dailyReminderEnabledKey, value);
   }
 
+  /// UX-10 · whether the on-device-ML transparency dialog has been
+  /// acknowledged. Shown once, then never again — re-prompting on every
+  /// single workout entry was pure friction at the core loop. (Cleared
+  /// on sign-out with the rest of the user-scoped keys, so a new
+  /// account on the device re-sees the disclosure once.)
+  static const String _mlDisclosureAckedKey = 'sixpack.ml_disclosure_acked';
+
+  bool get mlDisclosureAcked => _prefs.getBool(_mlDisclosureAckedKey) ?? false;
+
+  Future<void> setMlDisclosureAcked() async {
+    await _prefs.setBool(_mlDisclosureAckedKey, true);
+  }
+
   /// Phase 52 · highest streak this user has ever reached. Defaults to
   /// 0 so a fresh install reads "no past streak". Updated through
   /// [bumpMaxStreakIfHigher] so callers can't accidentally regress the
