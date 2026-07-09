@@ -52,7 +52,7 @@ All of it was merged into `MASTER_PRODUCT_MATURITY_ROADMAP.md` with priority/rea
 
 ## 5. Extended tracks (real, deliberately sequenced work — not abandoned)
 
-1. **Widget-test harness → 45–60% coverage** — the single biggest confidence unlock; reusable override patterns now exist (`paywall_screen_test.dart`, `daily_menu_provider_test.dart`) to fan out from.
+1. **Widget-test harness → 45–60% coverage** — the single biggest confidence unlock. **Substantially executed (2026-07-09, commits `c354bf5..42409e0`):** widget tests added for **11 previously-untested screens** — the full onboarding compliance spine (age-gate, consent, prediction), the nutrition surface (favorites, category, recipe-detail), account-settings, referral landing, level-up celebration, plan-detail Pro-gating, and the auth mode-toggle + client-side validation — **+30 tests (263 → 293), analyze 0 throughout, line coverage ~20.8% → 28.7%**. Reusable override patterns now cover mock-prefs, seeded AsyncNotifier/FutureProvider families, `currentUserProvider`/`isProProvider` value overrides, GoRouter-stub navigation asserts, and infinite-animation pumping. **Deferred (genuine blockers, not skipped):** `workout_camera` (real `CameraController` — device-gated, see external ledger), `dashboard` (~12-provider graph + post-frame scene triggers; its streak/XP/nutrition/session logic is already unit-tested), and `admin_dashboard` (admin-gated Supabase queries, low value).
 2. **Full i18n extraction** (~1,300 hardcoded TR strings) — scaffold live; TR-only shipped honestly meanwhile.
 3. **Video-analysis MVP** (Roadmap B Faz 1–6) — schema `005`, models, and the form-score heuristic are already in; meaningful progress needs a real device + real clips.
 4. **Onboarding notification-priming + paywall-placement experiment** (roadmap 4.3/4.4) — both restructure the 21-step onboarding, which the execution plan itself gates on the widget-test net; documented product decisions.
@@ -83,7 +83,7 @@ Both artifacts are **debug-signed** (no `android/key.properties` on this machine
 | Dimension | Before (audit) | Now | Why |
 |---|---:|---:|---|
 | Store-submission readiness (code-side) | 3/10 | **8.5/10** | All 8 code-fixable rejection triggers cleared; remaining risk is console/prod-apply execution, not code |
-| Android production readiness | 4/10 | **7/10** | Retention core real, stability races fixed, offline honest; presentation-layer coverage still thin |
+| Android production readiness | 4/10 | **7.5/10** | Retention core real, stability races fixed, offline honest; presentation coverage now spans 11 screens (~28.7% line cov), remaining gaps are the dashboard hub + camera (device-gated) |
 | iOS track readiness | 1.5/10 | **3/10** | Everything preparable from Linux is done (entitlement, gating, env scaffold, ATT coherence); the binary has still never been built on a Mac |
 | Retention machinery | broken | **working** | Streak/charts/XP/weekly-goal all real and time-based; day-2/7/30 hooks mechanically function |
 | Honesty/integrity | failing | **clean** | Zero fabricated claims, zero unkeepable promises, grep-verified |
