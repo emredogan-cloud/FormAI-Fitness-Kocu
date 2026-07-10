@@ -76,6 +76,8 @@ coverage/
 
 # Logs
 *.log
+# Captured device/run logs (was tracked by accident pre-submission; see Phase 0)
+logs.txt
 
 # Phase 40: untracked personal nutrition reference photography. Kept
 # off-repo because the folder is ~MB of user-owned shots with no

@@ -468,12 +468,12 @@ Provisions an S3 bucket + CloudFront distribution that serves `web/public/terms.
 
 | Component | Where | Notes |
 |---|---|---|
-| App database | Supabase Postgres | 4 migrations (`user_progress`, `user_metrics`, `pro_entitlements`, `admin_storage_rls`) |
+| App database | Supabase Postgres | 7 migrations (`001` initial schema … `005` video_analysis, `006` delete_user RPC, `007` referrals) |
 | RLS | All user tables | `auth.uid() = user_id` policies; admin role via JWT claim |
-| Object storage | Supabase Storage | Buckets: `exercises`, `recipes_images`, `exercises_media` |
+| Object storage | Supabase Storage | Migration-managed buckets: `recipes_images`, `user_videos`; exercise-media buckets seeded out-of-band (`supabase/sql/`) |
 | Server-side IAP | Deno Edge Function | RevenueCat webhook → `pro_entitlements` upsert with replay protection (`last_event_id`) |
 | Legal hosting | AWS S3 + CloudFront | Terraform-managed; HTTPS-only, 5-minute cache |
-| CI | GitHub Actions | Format / analyze / test on every PR; APK build on push |
+| CI | GitHub Actions | `ci.yml` (format/analyze/test/debug-APK/emulator integration) + `release.yml` (tagged release AAB/APK) + `secret-scan.yml` (gitleaks) |
 
 ---
 
@@ -503,27 +503,10 @@ Provisions an S3 bucket + CloudFront distribution that serves `web/public/terms.
 
 ## CI/CD
 
-```mermaid
-flowchart LR
-    Dev[Local change] --> Push[git push]
-    Push --> CI{GitHub Actions}
-    CI --> A[ci.yml<br/>main + PRs]
-    CI --> B[flutter_ci.yml<br/>main / staging / feature/*]
-    A --> A1[setup Flutter + pub get]
-    A1 --> A2[touch .env]
-    A2 --> A3[dart format --set-exit-if-changed]
-    A3 --> A4[flutter analyze]
-    A4 --> A5[flutter test]
-    B --> B1[setup Java 17 + Flutter]
-    B1 --> B2[touch .env + analyze + format]
-    B2 --> B3[flutter build apk --debug]
-    A5 --> Gate{Merge to main}
-    B3 --> Gate
-```
-
-- **`ci.yml`** — every push to `main` and every PR. Format → analyze → test. Cheap and fast; gates every merge.
-- **`flutter_ci.yml`** — broader trigger (`main`, `staging`, `feature/*`). Adds a debug APK smoke build on top of the analyze + format gate.
-- **No production secrets reach CI.** Both workflows `touch .env` so the analyzer is satisfied without leaking real keys.
+- **`ci.yml`** — the ONE workflow of record (pushes to `main`/`staging`/`feature/*`/`prisk/*` + PRs). Jobs: `test` (format gate → env secret-guard → analyze → `flutter test --coverage` → lcov artifact), `build-apk` (debug APK smoke), `integration` (API-34 emulator run of `integration_test/`). `flutter_ci.yml` was consolidated into it and deleted.
+- **`release.yml`** — tag `v*` / manual. Injects the client-public `.env` from CI secrets, runs the secret-guard + analyze + tests, builds release AAB+APK, warns loudly if artifacts would be debug-signed, uploads artifacts. Play-upload step is prepared behind repository secrets.
+- **`secret-scan.yml`** — gitleaks over full history + `.env.example` guard on every push/PR.
+- **No production secrets reach `ci.yml`** — it runs on `touch .env`; only `release.yml` receives the client-public key set.
 
 ---
 
@@ -533,7 +516,7 @@ flowchart LR
 |---|---|---|
 | Unit | [`test/`](test) | Pure-Dart services (generator, calculator, analyzers) |
 | Widget | [`test/`](test) | Critical screen rendering + provider wiring |
-| Integration | [`integration_test/`](integration_test) | On-device end-to-end flows (camera-mocked) |
+| Integration | [`integration_test/`](integration_test) | Mocked navigation harness mirroring the happy path (CI-safe; real-device E2E tracked on the external ledger) |
 | Manual smoke | `scripts/dev-run.sh release` | Pre-commit release sanity check |
 
 ```bash
