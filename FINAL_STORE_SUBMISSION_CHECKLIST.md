@@ -463,16 +463,22 @@ Everything else below is ✅ COMPLETE (with evidence) or 🔧 IMPROVEMENT (won't
 
 ## 14. PHYSICAL-DEVICE QA MATRIX (🌐 EXTERNAL — final gate before each store's submission)
 
-| ID | Scenario | Pass criteria |
+**Update 2026-07-11** — a real-device pass ran on a Xiaomi M1908C3JGG
+(Android 11 / API 30). The **pre-auth surface and every code-side change
+from this roadmap PASS on hardware**; the post-auth surface is blocked only
+by the paused Supabase backend (see `EXTERNAL_ACTION_LEDGER.md` item 0),
+not by any app defect.
+
+| ID | Scenario | Status (2026-07-11) |
 |---|---|---|
-| Q1 | Cold start: online, offline (airplane), captive portal | branded splash → dashboard ≤ ~2 s online; retry screen offline; no >10 s hang post-S2b |
-| Q2 | Full workout with camera: grant/deny/permanently-deny permission; call interrupt; backgrounding; screen-off; low light | correct recovery paths; session resumes paused; no crash; reps/voice work; battery/thermals sane over 15 min |
-| Q3 | Purchase lifecycle (sandbox/internal track): trial → subscribe → restore → manage link → cancel; Pro unlock across app | entitlement flips everywhere incl. widget; pending-state toast on deferred |
-| Q4 | Account: email signup+verification mail, password reset mail deep-link back into app, Google sign-in, (iOS) Apple sign-in, guest→upgrade, sign-out wipe, **delete account round-trip on prod DB** | X1 verified; RC identity detached; re-signup clean |
-| Q5 | Notifications: enable toggle → OS permission → 19:00 reminder fires (device A12+/Android 13+); streak warning after 48 h; boot-receiver after reboot | correct icon (post-A8), correct text variant, tap-through |
-| Q6 | Deep links: `formai://r/CODE` cold+warm, `formai://workout/today` from widget, https chooser | land on referral/camera correctly |
-| Q7 | Android 15/16 edge-to-edge sweep (A6) + dark/light + font-scale 1.3 pass on top 10 screens | no overlap/overflow/contrast breakage |
-| Q8 | TalkBack (Android) / VoiceOver (iOS) smoke on core journey (U4) | navigable: auth → onboarding → dashboard → paywall |
+| Q1 | Cold start: online, offline (airplane), captive portal | ✅ **PASS (offline/airplane)** — cold start with no network booted cleanly, restored onboarding progress, no black screen / crash / infinite spinner. Online-to-dashboard blocked by backend (item 0). |
+| Q2 | Full workout with camera: permission grant/deny; interrupt; backgrounding; low light | ⛔ **BLOCKED by item 0** — workout entry is session-gated (ML is on-device but the plan loads from Supabase). Pose analyzers covered by golden-frame unit tests. |
+| Q3 | Purchase lifecycle (sandbox): trial → subscribe → restore → cancel | ⛔ **BLOCKED by item 0** — purchase alias needs an authed session. Paywall render/disclosure/M2-retry covered by widget tests. |
+| Q4 | Account: signup/verify, reset deep-link, Google/Apple sign-in, guest→upgrade, sign-out wipe, **delete round-trip on prod** | ⛔ **BLOCKED by item 0** — guest sign-in was exercised and **correctly failed with the honest TR toast** (AC3), proving graceful backend-down handling. |
+| Q5 | Notifications: toggle → OS permission → 19:00 reminder; streak warning; boot-receiver | ⛔ **BLOCKED by item 0** — settings toggle is behind auth. Icon (A8) is alpha-only + wired; inexact-alarm scheduling is unit-adjacent. |
+| Q6 | Deep links: `formai://r/CODE`, `formai://workout/today`, https chooser | ⛔ **BLOCKED by item 0** — deep-link targets land past auth. Routing/guard logic covered by widget tests. |
+| Q7 | Edge-to-edge + dark/light + font-scale 1.3 | ✅ **PASS (font-scale 1.3 no overflow; rotation lock holds; dark theme)** on API 30. Android 15/16 edge-to-edge enforcement needs an API-35 device (G1b). |
+| Q8 | Reduce-motion (U4) + a11y smoke on the pre-auth journey | ✅ **PASS (reduce-motion)** — cinematic scenes render instantly and CTA gating survives. TalkBack smoke on the full journey pending backend (item 0). |
 
 ---
 

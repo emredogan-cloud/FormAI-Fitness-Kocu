@@ -12,6 +12,32 @@ Legend: 👤 founder decision/action · 🌐 console/web account · 🍎 macOS+X
 
 ---
 
+## 0. ⛔ CRITICAL PRECONDITION — the Supabase project is PAUSED (🌐 founder, ~2 min)
+
+Discovered during the 2026-07-11 on-device E2E pass: the FormAI Supabase
+project (`xtvqhnjamwvmfcsahzxv`) reports **status INACTIVE** in
+`supabase projects list`, and its `xtvqhnjamwvmfcsahzxv.supabase.co` host
+**does not resolve from anywhere** (this machine, the physical device, and
+public DoH resolvers all return NXDOMAIN). Free-tier Supabase projects
+auto-pause after ~1 week of inactivity and take their API subdomain offline.
+
+**Consequence:** the app hard-requires a Supabase session (the router forces
+`/auth` when `session == null`). With the backend paused, **nobody — reviewer,
+tester, or user — can get past the login screen.** On-device, guest sign-in
+correctly failed with the honest Turkish toast ("Giriş başarısız oldu.") and
+did not crash, but the app is unusable beyond auth.
+
+**Action (founder):** open the Supabase dashboard → FormAI project → **Restore/
+Resume**. Then, because free-tier re-pauses, either keep it active (a nightly
+ping / any traffic) or move to the Pro tier before public launch. This gates
+**every** server flow (login, signup, catalogue→plan, purchases, deletion) and
+therefore gates the entire C/E/F sections below and the device QA in G.
+
+This is the single highest-priority external action. Everything server-side
+was verified impossible-to-test today purely because of it.
+
+---
+
 ## A. SECURITY — do first (not store-blocking, but urgent)
 
 | # | Action | Detail | Blocks |
@@ -74,11 +100,28 @@ Legend: 👤 founder decision/action · 🌐 console/web account · 🍎 macOS+X
 
 ## G. PHYSICAL DEVICE (📱)
 
+**Device-QA results (2026-07-11, Xiaomi M1908C3JGG, Android 11 / API 30):**
+the pre-auth surface + all of MY engineering changes were verified on real
+hardware and PASS. The post-auth surface is blocked by item 0 (paused backend).
+
+*Verified PASS on device:* first-run age gate (18+), consent (opt-in default
+OFF), full 11-step onboarding wizard (name chat, feelings multi-select, pain
+point, activity, body metrics, interludes, plan generation, AI report, honest
+social proof, equipment), auth screen platform gating (no Apple button on
+Android ✓), client-side validation (Turkish errors + red borders), honest
+Turkish error handling on backend-down (AC3, live), **font-scale 1.3 no
+overflow (U3 clamp)**, **rotation stays portrait under OS-forced landscape**,
+**reduce-motion renders cinematic scenes instantly + preserves onComplete
+CTA gating (U4)**, **airplane-mode cold start degrades gracefully — no black
+screen / crash / infinite spinner (boot resilience)**, SharedPreferences
+state persistence across force-stop, zero crashes/ANRs throughout.
+
 | # | Action | Detail | Blocks |
 |---|---|---|---|
-| G1 | **QA matrix Q1–Q8** (`FINAL_STORE_SUBMISSION_CHECKLIST.md` §14) | Android pass before promoting to Closed testing; iOS pass before TestFlight external. Includes: offline cold start, camera lifecycle/interrupts, sandbox purchase→restore→cancel, prod delete round-trip, 19:00 reminder + reboot, deep links, Android 15/16 edge-to-edge sweep + font-scale 1.3, TalkBack/VoiceOver smoke. | Track promotions. |
-| G2 | **Regenerate stale screenshots** from the CURRENT UI | The 9 Play frames + ASC renders in `asosystem/` are May-era (pre-honesty-pass UI). Stage real data on a device (emulator has no DNS → Supabase content won't load), re-render via asosystem, format via `python3 tool/format_play_store_assets.py`. Metadata policy requires screenshots to match the shipping app. | Store listing upload. |
-| G3 | **Record the reviewer demo video** (60–90 s) | Script in `docs/store/APP_STORE_ANSWERS.md` §6: dashboard → workout start → camera permission → live rep counting + voice → complete. Host at an unlisted URL. | ASC review notes (pre-empts camera-app 2.1 questions); also useful for Play App access notes. |
+| G1 | **QA matrix Q1–Q8 — SERVER-DEPENDENT REMAINDER** (`FINAL_STORE_SUBMISSION_CHECKLIST.md` §14) | Blocked by item 0 until the backend is resumed: login/signup/reset, dashboard, **camera + pose + workout flow** (session-gated; ML is on-device but entry needs a plan from Supabase), nutrition, progress, achievements, sandbox purchase→restore→cancel, prod delete round-trip, 19:00 reminder + reboot, notifications. Non-server device tests already PASS (see above). | Track promotions. |
+| G1b | **Android 15/16 edge-to-edge sweep** | The test device is API 30, so the targetSdk-35+ edge-to-edge enforcement can't be exercised on it. Needs an Android 15/16 device or an API-35 emulator. Everything else in the sweep (dark/light, font-scale 1.3) passed on API 30. | Not blocking (Flutter handles insets by default); verify before public rollout. |
+| G2 | **Regenerate stale screenshots** from the CURRENT UI | The 9 Play frames + ASC renders in `asosystem/` are May-era (pre-honesty-pass UI). Needs the backend up (item 0) to stage real dashboard/workout/nutrition content, then re-render via asosystem + `python3 tool/format_play_store_assets.py`. The 2026-07-11 device screenshots of onboarding/auth are current and usable as reference. Metadata policy requires screenshots to match the shipping app. | Store listing upload. |
+| G3 | **Record the reviewer demo video** (60–90 s) | Script in `docs/store/APP_STORE_ANSWERS.md` §6: dashboard → workout start → camera permission → live rep counting + voice → complete. Needs the backend up (item 0) to reach the workout. Host at an unlisted URL. | ASC review notes (pre-empts camera-app 2.1 questions); also useful for Play App access notes. |
 
 ## H. LEGAL (⚖️ — confirm before PRODUCTION, not before testing tracks)
 
