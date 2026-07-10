@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../core/services/app_preferences.dart';
 import '../../../core/services/connectivity_service.dart';
+import '../auth_error_messages.dart';
 import '../../monetization/providers/monetization_provider.dart';
 import '../../onboarding/providers/wizard_provider.dart';
 import '../providers/auth_provider.dart';
@@ -159,28 +160,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     }
   }
 
-  /// Store-submission AC3 · Supabase raises English `AuthException`
-  /// messages; map the common ones to Turkish so raw English never
-  /// reaches the TR-only UI (detail still goes to the debug log).
+  /// Store-submission AC3 · maps Supabase's English `AuthException` to
+  /// Turkish (pure logic lives in [authErrorToTr] so it can be unit-
+  /// tested); the raw message still goes to the debug log here.
   String _authErrTr(AuthException e) {
-    final m = e.message.toLowerCase();
     debugPrint('[auth] AuthException: ${e.message}');
-    if (m.contains('invalid login credentials')) {
-      return 'E-posta veya şifre hatalı.';
-    }
-    if (m.contains('email not confirmed')) {
-      return 'Önce e-postanı doğrulaman gerekiyor — gelen kutunu kontrol et.';
-    }
-    if (m.contains('already registered')) {
-      return 'Bu e-posta zaten kayıtlı. Giriş yapmayı dene.';
-    }
-    if (m.contains('rate limit') || m.contains('security purposes')) {
-      return 'Çok fazla deneme yapıldı. Lütfen biraz sonra tekrar dene.';
-    }
-    if (m.contains('at least 6 characters') || m.contains('weak password')) {
-      return 'Şifre en az 6 karakter olmalı.';
-    }
-    return 'Giriş başarısız oldu. Lütfen tekrar dene.';
+    return authErrorToTr(e);
   }
 
   Future<void> _continueAsGuest() async {
