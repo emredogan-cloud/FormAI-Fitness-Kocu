@@ -226,4 +226,63 @@ void main() {
       expect(find.text('Kişiselleştirilmiş planınızı alın!'), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'store-submission M2 · loaded-but-no-offering shows the "Fiyatlar '
+    'yüklenemedi" retry notice instead of inventing prices',
+    (tester) async {
+      // A resolved SubscriptionState with a null offerings catalogue is
+      // the exact "RC configured but fetch failed / empty" signal.
+      await tester.pumpWidget(_wrapPaywall(
+        seededState: const SubscriptionState(isPro: false),
+      ));
+      await tester.pump();
+
+      // The honest load-failure notice + retry affordance are present.
+      expect(find.text('Fiyatlar yüklenemedi.'), findsOneWidget);
+      expect(find.text('Tekrar dene'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'store-submission M2 · the retired hardcoded fallback prices never '
+    'render (₺249,99 / ₺999,99 / ₺499,99 as invented values)',
+    (tester) async {
+      await tester.pumpWidget(_wrapPaywall(
+        seededState: const SubscriptionState(isPro: false),
+      ));
+      await tester.pump();
+
+      // None of the old marketing-spec fallback numbers may appear when
+      // there is no live offering — the price slot shows an em-dash.
+      expect(find.textContaining('249,99'), findsNothing);
+      expect(find.textContaining('499,99'), findsNothing);
+      // ₺999,99 only ever appears from a live SKU (covered by the trial
+      // tests above); with no offering it must be absent here too.
+      expect(find.textContaining('999,99'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'store-submission M2 · a live offering suppresses the retry notice '
+    'and shows the real store price',
+    (tester) async {
+      await tester.pumpWidget(_wrapPaywall(
+        seededState: SubscriptionState(
+          isPro: false,
+          offerings: _offeringsWithAnnual(intro: null),
+        ),
+      ));
+      await tester.pump();
+
+      // With a real offering there is nothing to retry; the notice is gone
+      // and the live price string renders instead of an em-dash.
+      expect(find.text('Fiyatlar yüklenemedi.'), findsNothing);
+      expect(find.text('Tekrar dene'), findsNothing);
+      expect(
+        find.textContaining('₺999,99 / yıl', findRichText: true),
+        findsOneWidget,
+      );
+    },
+  );
 }
