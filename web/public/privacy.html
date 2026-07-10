@@ -182,9 +182,8 @@
 
     <h3>1.2 Fitness &amp; health data (you provide)</h3>
     <ul>
-      <li><strong>Body metrics:</strong> Height, weight, sex, age range, fitness goal (e.g., lose weight, build muscle), activity level. Used to personalize workout and nutrition plans.</li>
-      <li><strong>Workout history:</strong> Completed workouts, sets, reps, durations, and timestamps.</li>
-      <li><strong>Optional progress photos:</strong> If you choose to take and save progress photos, they are stored on your device by default. If you opt to back them up to the cloud, they are stored encrypted at rest in our database.</li>
+      <li><strong>Body metrics (on-device only):</strong> Height, weight, sex, age range, fitness goal (e.g., lose weight, build muscle), activity level. These are stored <strong>only in the App's local storage on your device</strong> and are used there to personalize workout and nutrition plans — they are <strong>not uploaded to our servers</strong>. They are removed when you sign out, delete your account, or uninstall the App.</li>
+      <li><strong>Workout history:</strong> Which plan days you completed and when is synced to your account so your progress survives reinstalls. Detailed session logs (sets, reps, durations) stay on your device.</li>
     </ul>
 
     <h3>1.3 Camera feed (on-device only)</h3>
@@ -212,8 +211,8 @@
     <p>If you are in the European Economic Area, the United Kingdom, or Türkiye, our legal bases for processing are:</p>
     <ul>
       <li><strong>Contract (GDPR Art. 6(1)(b) / KVKK Art. 5(2)(c)):</strong> To provide the Service you have signed up for.</li>
-      <li><strong>Legitimate interest (GDPR Art. 6(1)(f) / KVKK Art. 5(2)(f)):</strong> Crash reporting and anonymous product analytics, balanced against your privacy interests.</li>
-      <li><strong>Consent (GDPR Art. 6(1)(a) / KVKK Art. 5(1)):</strong> Optional features like cloud backup of progress photos. You can withdraw consent at any time in Settings.</li>
+      <li><strong>Consent (GDPR Art. 6(1)(a) / KVKK Art. 5(1)):</strong> Crash reporting and anonymous product analytics. Both are <strong>off by default</strong> and only activate if you opt in on the in-app consent screen; you can withdraw consent at any time in Settings.</li>
+      <li><strong>Legitimate interest (GDPR Art. 6(1)(f) / KVKK Art. 5(2)(f)):</strong> Service security, fraud and abuse prevention, balanced against your privacy interests.</li>
       <li><strong>Legal obligation (GDPR Art. 6(1)(c) / KVKK Art. 5(2)(a)):</strong> Tax records relating to your subscription.</li>
     </ul>
 
@@ -233,7 +232,7 @@
         <tr>
           <td><strong>Supabase</strong></td>
           <td>Cloud database, authentication, storage</td>
-          <td>Account profile, body metrics, workout history, optional progress photos</td>
+          <td>Account profile (email, user ID), workout completion history, in-app feedback messages, referral code</td>
           <td>EU (Frankfurt)</td>
         </tr>
         <tr>
@@ -275,7 +274,8 @@
     <h2>5. Data Retention</h2>
     <ul>
       <li><strong>Account data:</strong> Retained while your account is active. Deleted within 30 days after you delete your account, with limited exceptions for legal recordkeeping (e.g., tax invoices retained per applicable law).</li>
-      <li><strong>Workout history &amp; body metrics:</strong> Retained while your account is active; deleted alongside your account.</li>
+      <li><strong>Workout completion history:</strong> Retained while your account is active; deleted alongside your account.</li>
+      <li><strong>Body metrics:</strong> Never stored on our servers — they live only on your device and are removed when you sign out, delete your account, or uninstall the App.</li>
       <li><strong>Crash reports:</strong> Retained for up to 90 days, then automatically purged.</li>
       <li><strong>Anonymous analytics:</strong> Aggregated event data has no fixed expiry and may persist after account deletion in non-identifying form.</li>
     </ul>
