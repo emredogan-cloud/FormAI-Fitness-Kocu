@@ -96,16 +96,18 @@ class WorkoutControlPanel extends StatelessWidget {
               if (onPrev != null)
                 _ControlIconButton(
                   icon: Icons.skip_previous_rounded,
+                  semanticLabel: 'Önceki egzersiz',
                   onTap: onPrev,
                 )
               else
-                const SizedBox(width: 40, height: 40),
+                const SizedBox(width: 48, height: 48),
               _CenterPlayButton(
                 isPaused: isPaused,
                 onTap: onTogglePlay,
               ),
               _ControlIconButton(
                 icon: Icons.skip_next_rounded,
+                semanticLabel: 'Sonraki egzersiz',
                 onTap: onNext,
               ),
             ],
@@ -167,23 +169,35 @@ class _SetIndicator extends StatelessWidget {
 }
 
 class _ControlIconButton extends StatelessWidget {
-  const _ControlIconButton({required this.icon, required this.onTap});
+  const _ControlIconButton({
+    required this.icon,
+    required this.semanticLabel,
+    required this.onTap,
+  });
   final IconData icon;
+  // U4 · icon-only control — TalkBack/VoiceOver otherwise announce
+  // nothing actionable here.
+  final String semanticLabel;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white.withValues(alpha: 0.05),
-      shape: const CircleBorder(
-        side: BorderSide(color: Colors.white24, width: 1),
-      ),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(9),
-          child: Icon(icon, color: Colors.white, size: 22),
+    return Semantics(
+      button: true,
+      label: semanticLabel,
+      child: Material(
+        color: Colors.white.withValues(alpha: 0.05),
+        shape: const CircleBorder(
+          side: BorderSide(color: Colors.white24, width: 1),
+        ),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: Padding(
+            // U4 · 13px pad + 22px icon = 48dp minimum touch target.
+            padding: const EdgeInsets.all(13),
+            child: Icon(icon, color: Colors.white, size: 22),
+          ),
         ),
       ),
     );
@@ -198,30 +212,34 @@ class _CenterPlayButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: _neon.withValues(alpha: 0.55),
-            blurRadius: 18,
-            spreadRadius: 1,
-          ),
-        ],
-      ),
-      child: Material(
-        color: _neon,
-        shape: const CircleBorder(),
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: onTap,
-          child: SizedBox(
-            width: 58,
-            height: 58,
-            child: Icon(
-              isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded,
-              color: Colors.black,
-              size: 30,
+    return Semantics(
+      button: true,
+      label: isPaused ? 'Antrenmana devam et' : 'Antrenmanı duraklat',
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: _neon.withValues(alpha: 0.55),
+              blurRadius: 18,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: Material(
+          color: _neon,
+          shape: const CircleBorder(),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: onTap,
+            child: SizedBox(
+              width: 58,
+              height: 58,
+              child: Icon(
+                isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded,
+                color: Colors.black,
+                size: 30,
+              ),
             ),
           ),
         ),

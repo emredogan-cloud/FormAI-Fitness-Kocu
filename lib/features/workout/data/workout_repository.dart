@@ -150,7 +150,15 @@ class WorkoutRepository {
       return const [];
     }
     try {
-      final rows = await _client.from(_exercisesTable).select().order('slug');
+      // Store-submission S2b · cap the fetch so a captive portal that
+      // slipped past the interface check can't freeze the catalogue
+      // path for the SDK's ~30 s default; the catch below already
+      // degrades to the rest-day fallback + retry.
+      final rows = await _client
+          .from(_exercisesTable)
+          .select()
+          .order('slug')
+          .timeout(const Duration(seconds: 10));
       return rows.map(_exerciseFromRow).toList(growable: false);
     } catch (e, st) {
       AppLogger.error(
@@ -1352,7 +1360,10 @@ class WorkoutRepository {
           .from(_progressTable)
           .select('day_number, is_completed')
           .eq('user_id', user.id)
-          .eq('is_completed', true);
+          .eq('is_completed', true)
+          // S2b · local-first: on a wedged link, fall back to the local
+          // set after 10 s instead of the SDK's ~30 s.
+          .timeout(const Duration(seconds: 10));
       final remote = <int>{
         for (final row in rows)
           if (row['day_number'] is int) row['day_number'] as int,
@@ -1380,7 +1391,9 @@ class WorkoutRepository {
           'completed_at': DateTime.now().toUtc().toIso8601String(),
         },
         onConflict: 'user_id,day_number',
-      );
+        // S2b · a wedged write parks in the pending queue after 10 s
+        // (false → _flushPending retries it) instead of hanging ~30 s.
+      ).timeout(const Duration(seconds: 10));
       return true;
     } catch (_) {
       return false;

@@ -800,7 +800,9 @@ class _TertiaryRow extends StatelessWidget {
         style: TextButton.styleFrom(
           foregroundColor: Colors.white60,
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          minimumSize: const Size(0, 32),
+          // U4 · 48dp minimum touch target (was 32; visual density
+          // unchanged — the extra height is hit-area, not chrome).
+          minimumSize: const Size(48, 48),
           textStyle: const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w800,

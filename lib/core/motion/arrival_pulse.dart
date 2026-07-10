@@ -101,6 +101,20 @@ class _ArrivalPulseState extends State<ArrivalPulse>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Reduce-motion (store-submission U4): skip the ring entirely but
+    // still fire [onComplete] — downstream beats (typewriter start,
+    // CTA enable) are gated on it.
+    if (!_done && (MediaQuery.maybeOf(context)?.disableAnimations ?? false)) {
+      _done = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) widget.onComplete?.call();
+      });
+    }
+  }
+
+  @override
   void dispose() {
     _ctrl.dispose();
     super.dispose();

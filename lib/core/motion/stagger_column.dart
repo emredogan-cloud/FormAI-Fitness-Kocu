@@ -72,6 +72,15 @@ class _StaggerColumnState extends State<StaggerColumn>
         mainAxisAlignment: widget.mainAxisAlignment,
       );
     }
+    // Reduce-motion (store-submission U4): skip the entrance ripple and
+    // present all children settled.
+    if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) {
+      return Column(
+        crossAxisAlignment: widget.crossAxisAlignment,
+        mainAxisAlignment: widget.mainAxisAlignment,
+        children: widget.children,
+      );
+    }
     final winSize = 1.0 / (1.0 + (n - 1) * (1.0 - widget.overlap));
     return Column(
       crossAxisAlignment: widget.crossAxisAlignment,

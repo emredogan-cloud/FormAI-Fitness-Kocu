@@ -225,7 +225,8 @@ class _ConsentScreenState extends ConsumerState<ConsentScreen> {
                       : () => _persist(analytics: true, crash: true),
                   style: TextButton.styleFrom(
                     foregroundColor: Colors.white60,
-                    minimumSize: const Size.fromHeight(40),
+                    // U4 · 48dp minimum touch target (was 40).
+                    minimumSize: const Size.fromHeight(48),
                   ),
                   child: const Text(
                     'Hepsini Kabul Et',

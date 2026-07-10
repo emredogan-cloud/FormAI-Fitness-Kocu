@@ -54,11 +54,16 @@ class NutritionRepository {
     int limit = defaultPageSize,
   }) async {
     await _throwIfOffline();
+    // Store-submission S2b · the offline pre-check only catches a dead
+    // interface; a captive portal / half-open link passes it and would
+    // otherwise spin for the SDK's ~30 s HTTP timeout before the error
+    // state can render. 10 s is generous for a 20-row page.
     final rows = await _client
         .from(_table)
         .select()
         .order('id', ascending: true)
-        .range(from, from + limit - 1);
+        .range(from, from + limit - 1)
+        .timeout(const Duration(seconds: 10));
     return rows.map<Recipe>(Recipe.fromJson).toList(growable: false);
   }
 
