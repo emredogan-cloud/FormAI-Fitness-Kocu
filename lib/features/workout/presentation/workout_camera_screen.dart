@@ -1558,7 +1558,9 @@ class _PermissionCard extends StatelessWidget {
     this.onSecondary,
   });
 
-  static const Color _neon = Color(0xFF00F0FF);
+  // Store-submission U7 · this card renders as a standalone pre-camera
+  // gate, so it follows the brand purple, not the in-workout cyan.
+  static const Color _neon = Color(0xFF8E5BFF);
 
   final IconData icon;
   final String title;

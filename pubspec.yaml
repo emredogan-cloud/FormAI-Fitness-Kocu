@@ -233,3 +233,10 @@ flutter_launcher_icons:
   ios: true
   image_path: "tool/app_icon.png"
   remove_alpha_ios: true
+  # Store-submission A9 · adaptive icon. Background = the artwork's own
+  # charcoal margin color; foreground = the full art scaled to the 60%
+  # safe zone (tool/app_icon_fg.png, generated from tool/app_icon.png —
+  # regenerate both together if the art changes). Without these layers
+  # Android 8+ letterboxes the legacy square icon.
+  adaptive_icon_background: "#212427"
+  adaptive_icon_foreground: "tool/app_icon_fg.png"

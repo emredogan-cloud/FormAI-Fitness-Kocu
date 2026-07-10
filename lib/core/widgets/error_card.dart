@@ -21,7 +21,8 @@ class ErrorCard extends StatelessWidget {
   /// the page. Default layout is centered and generous for full-screen use.
   final bool compact;
 
-  static const Color _neon = Color(0xFF00F0FF);
+  // Store-submission U7 · brand purple (was the retired one-off cyan).
+  static const Color _neon = Color(0xFF8E5BFF);
 
   @override
   Widget build(BuildContext context) {

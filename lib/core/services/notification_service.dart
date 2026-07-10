@@ -136,7 +136,10 @@ class NotificationService {
       // Location database missing — fall through to UTC.
     }
 
-    const androidInit = AndroidInitializationSettings('@mipmap/launcher_icon');
+    // Alpha-only status-bar glyph (store-submission A8); the launcher icon
+    // rendered as a white blob under Android 13+ silhouette filtering.
+    const androidInit =
+        AndroidInitializationSettings('@drawable/ic_stat_formai');
     const iosInit = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,

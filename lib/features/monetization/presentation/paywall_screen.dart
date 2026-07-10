@@ -376,11 +376,11 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     final subscription = ref.watch(subscriptionProvider);
     final offerings = subscription.value?.offerings;
     // Phase 96 · the gate is now `SDK ready AND offerings present`.
-    // Splitting these out lets us keep the existing skeleton-price /
-    // fallback-price treatment on the cards while disabling the
-    // action buttons more strictly — the cards must still draw
-    // *something* when the SDK is misconfigured (dev builds), but
-    // the action buttons must NOT fire a doomed BillingClient call.
+    // Splitting these out lets us keep the skeleton-price / em-dash
+    // treatment on the cards while disabling the action buttons more
+    // strictly — the cards must still draw *something* when the SDK is
+    // misconfigured (dev builds), but the action buttons must NOT fire
+    // a doomed BillingClient call.
     final canPurchase = _purchasesConfigured && offerings?.current != null;
     // Store-honesty pass · every trial/renewal line below derives from
     // the SELECTED plan's live RevenueCat package. No configured trial
@@ -391,8 +391,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     // RevenueCat fetch is genuinely in flight; once `_load` resolves —
     // even on the catch path that returns a no-offerings
     // `SubscriptionState` — `isLoading` flips to false and the card
-    // falls through to the marketing-spec fallback price. This is the
-    // explicit "loaded with no offering" signal the spec asked for.
+    // falls through to the em-dash slot while the plans row surfaces
+    // the "Fiyatlar yüklenemedi" retry notice (store-submission M2).
     final offeringsLoading = subscription.isLoading;
 
     // Phase 53F · drop the Scaffold's hardcoded `Colors.black` so the
@@ -519,6 +519,51 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   }
 
   Widget _buildPlansRow({
+    required Offerings? offerings,
+    required bool isLoading,
+  }) {
+    // Store-submission M2 · loaded-but-no-offering ⇒ say so and offer a
+    // retry instead of decorating the cards with invented prices (the
+    // CTA is already disabled in this state via the canPurchase gate).
+    final loadFailed = !isLoading && offerings?.current == null;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (loadFailed)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.wifi_off_rounded,
+                  size: 16,
+                  color: context.colors.onSurface.withValues(alpha: 0.6),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Fiyatlar yüklenemedi.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: context.colors.onSurface.withValues(alpha: 0.7),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    ref.read(subscriptionProvider.notifier).refresh();
+                    _refreshSdkReady();
+                  },
+                  child: const Text('Tekrar dene'),
+                ),
+              ],
+            ),
+          ),
+        _plansCards(offerings: offerings, isLoading: isLoading),
+      ],
+    );
+  }
+
+  Widget _plansCards({
     required Offerings? offerings,
     required bool isLoading,
   }) {
@@ -1320,7 +1365,7 @@ class _PlanCard extends StatelessWidget {
   /// Phase 95 · the resolved RevenueCat package for this plan, or null
   /// when no Offering has loaded yet (`isLoading == true`) or RC was
   /// never configured / failed to fetch (`isLoading == false`,
-  /// fall-through to [_fallbackPrice]). The card uses the package's
+  /// fall-through to the em-dash slot). The card uses the package's
   /// [StoreProduct.priceString] verbatim — RC formats it in the device
   /// locale (₺ for tr-TR, $ for en-US, etc.) so we don't rebuild the
   /// formatting ourselves.
@@ -1345,18 +1390,6 @@ class _PlanCard extends StatelessWidget {
         _Plan.quarterly => '3 Ay',
       };
 
-  /// Marketing-spec fallback shown ONLY when RevenueCat's offering
-  /// fetch resolved without a Package for this plan. Never displayed
-  /// while loading — the [SkeletonBox] takes that frame. The numbers
-  /// here mirror the Play Console SKU's reference prices for the
-  /// tr-TR market so the static fallback isn't wildly inconsistent
-  /// with what a working configuration would show.
-  String get _fallbackPrice => switch (plan) {
-        _Plan.monthly => '₺249,99',
-        _Plan.yearly => '₺999,99',
-        _Plan.quarterly => '₺499,99',
-      };
-
   String get _per => switch (plan) {
         _Plan.monthly => '/ ay',
         _Plan.yearly => '/ yıl',
@@ -1376,11 +1409,11 @@ class _PlanCard extends StatelessWidget {
   ///      `Purchases.getOfferings()` is in flight. Sized to roughly
   ///      match the eventual text height so the card doesn't jump
   ///      when the price lands.
-  ///   3. **Fallback**: hardcoded marketing-spec price, only when
-  ///      the load resolved without a Package (RC misconfigured /
-  ///      dev-fallback / no offerings). Same visual treatment as
-  ///      the real branch so a bad config still renders a usable
-  ///      paywall instead of an empty card.
+  ///   3. **Unavailable**: an em-dash when the load resolved without a
+  ///      Package (RC misconfigured / fetch failed / no offerings).
+  ///      Store-submission M2: we never invent a price here — the
+  ///      plans row shows a "Fiyatlar yüklenemedi" notice with a
+  ///      retry, and the CTA is disabled in this state.
   Widget _buildPriceSlot(ColorScheme scheme) {
     final fontSize = _isHighlighted ? 22.0 : 18.0;
     final priceStyle = TextStyle(
@@ -1407,7 +1440,7 @@ class _PlanCard extends StatelessWidget {
     }
     return FittedBox(
       fit: BoxFit.scaleDown,
-      child: Text(_fallbackPrice, style: priceStyle),
+      child: Text('—', style: priceStyle),
     );
   }
 

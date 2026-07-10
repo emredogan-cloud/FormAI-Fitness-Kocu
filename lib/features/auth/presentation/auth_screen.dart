@@ -148,12 +148,39 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         }
       }
     } on AuthException catch (e) {
-      if (mounted) _toast(e.message);
+      if (mounted) _toast(_authErrTr(e));
     } catch (e) {
-      if (mounted) _toast('Beklenmedik hata: $e');
+      debugPrint('[auth] unexpected: $e');
+      if (mounted) {
+        _toast('Beklenmedik bir hata oluştu. Lütfen tekrar dene.');
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  /// Store-submission AC3 · Supabase raises English `AuthException`
+  /// messages; map the common ones to Turkish so raw English never
+  /// reaches the TR-only UI (detail still goes to the debug log).
+  String _authErrTr(AuthException e) {
+    final m = e.message.toLowerCase();
+    debugPrint('[auth] AuthException: ${e.message}');
+    if (m.contains('invalid login credentials')) {
+      return 'E-posta veya şifre hatalı.';
+    }
+    if (m.contains('email not confirmed')) {
+      return 'Önce e-postanı doğrulaman gerekiyor — gelen kutunu kontrol et.';
+    }
+    if (m.contains('already registered')) {
+      return 'Bu e-posta zaten kayıtlı. Giriş yapmayı dene.';
+    }
+    if (m.contains('rate limit') || m.contains('security purposes')) {
+      return 'Çok fazla deneme yapıldı. Lütfen biraz sonra tekrar dene.';
+    }
+    if (m.contains('at least 6 characters') || m.contains('weak password')) {
+      return 'Şifre en az 6 karakter olmalı.';
+    }
+    return 'Giriş başarısız oldu. Lütfen tekrar dene.';
   }
 
   Future<void> _continueAsGuest() async {
@@ -167,9 +194,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       // can fire when they next reach /paywall.
       if (mounted) context.pushReplacement(AppRoutes.paywall);
     } on AuthException catch (e) {
-      if (mounted) _toast(e.message);
+      if (mounted) _toast(_authErrTr(e));
     } catch (e) {
-      if (mounted) _toast('Misafir girişi başarısız: $e');
+      debugPrint('[auth] guest sign-in failed: $e');
+      if (mounted) {
+        _toast('Misafir girişi başarısız oldu. Lütfen tekrar dene.');
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }

@@ -662,6 +662,20 @@ class _FormAIAppState extends ConsumerState<FormAIApp> {
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: themeMode,
+      // Store-submission U3 · honor system font scaling but clamp it:
+      // unbounded 2.0x scaling shatters the fixed-height plan/stat cards
+      // (many Rows lack Flexible guards). 1.3x keeps the top journeys
+      // intact; raise only after a dedicated large-type pass.
+      builder: (context, child) {
+        final mq = MediaQuery.of(context);
+        return MediaQuery(
+          data: mq.copyWith(
+            textScaler:
+                mq.textScaler.clamp(minScaleFactor: 1.0, maxScaleFactor: 1.3),
+          ),
+          child: child!,
+        );
+      },
       routerConfig: router,
     );
   }

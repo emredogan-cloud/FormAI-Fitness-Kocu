@@ -338,7 +338,7 @@ class _AuthModalBottomSheetState extends ConsumerState<AuthModalBottomSheet>
               children: const [
                 _GoogleLogo(size: 18),
                 SizedBox(width: 10),
-                Text('Continue with Google'),
+                Text('Google ile Devam Et'),
               ],
             ),
     );
@@ -379,7 +379,7 @@ class _AuthModalBottomSheetState extends ConsumerState<AuthModalBottomSheet>
               children: const [
                 Icon(Icons.apple, size: 22, color: Colors.white),
                 SizedBox(width: 8),
-                Text('Continue with Apple'),
+                Text('Apple ile Devam Et'),
               ],
             ),
     );
