@@ -83,5 +83,17 @@
 	     transition. -->
 	<key>NSSupportsLiveActivitiesFrequentUpdates</key>
 	<true/>
+	<!-- Store-submission I8 · standard HTTPS/TLS + platform crypto only —
+	     declaring exemption here skips the manual export-compliance
+	     questionnaire on every App Store Connect upload. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<!-- Store-submission I12 · the app ships Turkish-only (supportedLocales
+	     = [tr] in main.dart); declare it so the App Store and iOS Settings
+	     represent the app's language truthfully. -->
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>tr</string>
+	</array>
 </dict>
 </plist>

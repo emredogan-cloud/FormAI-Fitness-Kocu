@@ -1,0 +1,61 @@
+# Store-submission I1/I2/I11 · first real iOS Podfile.
+#   • platform 15.5 — GoogleMLKit pose-detection pods require ≥ 15.5
+#     (project deployment target raised to match in project.pbxproj).
+#   • permission_handler macro block — compiles OUT every permission
+#     API this app does not use, so the binary doesn't reference
+#     photo/location/contacts APIs it never calls (avoids App Review
+#     minimal-data questions). The app uses exactly: camera +
+#     notifications.
+# Run `pod install` from ios/ on macOS after `flutter pub get`.
+platform :ios, '15.5'
+
+# CocoaPods analytics sends network stats synchronously affecting flutter build latency.
+ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
+project 'Runner', {
+  'Debug' => :debug,
+  'Profile' => :release,
+  'Release' => :release,
+}
+
+def flutter_root
+  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
+  unless File.exist?(generated_xcode_build_settings_path)
+    raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
+  end
+
+  File.foreach(generated_xcode_build_settings_path) do |line|
+    matches = line.match(/FLUTTER_ROOT\=(.*)/)
+    return matches[1].strip if matches
+  end
+  raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig, then run flutter pub get"
+end
+
+require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
+
+flutter_ios_podfile_setup
+
+target 'Runner' do
+  use_frameworks!
+
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+  target 'RunnerTests' do
+    inherit! :search_paths
+  end
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    flutter_additional_ios_build_settings(target)
+    target.build_configurations.each do |config|
+      # permission_handler_apple: only the strategies listed =1 compile
+      # in; everything else (photos, location, contacts, microphone,
+      # bluetooth, …) is stripped from the binary.
+      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= [
+        '$(inherited)',
+        'PERMISSION_CAMERA=1',
+        'PERMISSION_NOTIFICATIONS=1',
+      ]
+    end
+  end
+end
