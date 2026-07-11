@@ -174,10 +174,14 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     try {
       await _client.auth.signInAnonymously();
       await _persistWizardMetrics();
-      // Guests must still see the paywall's auth gate — they have not
-      // authenticated; the latch stays false on purpose so the gate
-      // can fire when they next reach /paywall.
-      if (mounted) context.pushReplacement(AppRoutes.paywall);
+      // Guest → dashboard (free tier). The earlier `pushReplacement(
+      // paywall)` trapped guests: the paywall fires a non-dismissible
+      // auth gate on mount for anonymous users, so a guest (and any
+      // store reviewer picking "guest") could never reach the app. The
+      // no-anonymous-purchase guarantee is unaffected — the gate still
+      // fires whenever an anonymous user actually reaches /paywall (via
+      // a Pro-locked feature), and that gate now has a dashboard escape.
+      if (mounted) context.go(AppRoutes.dashboard);
     } on AuthException catch (e) {
       if (mounted) _toast(_authErrTr(e));
     } catch (e) {
