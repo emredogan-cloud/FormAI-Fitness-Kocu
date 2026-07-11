@@ -12,7 +12,31 @@ Legend: 👤 founder decision/action · 🌐 console/web account · 🍎 macOS+X
 
 ---
 
-## 0. ⛔ CRITICAL PRECONDITION — the Supabase project is PAUSED (🌐 founder, ~2 min)
+## STATUS 2026-07-11 — backend RESUMED; full device E2E done; P0s fixed
+
+The Supabase backend is now **ACTIVE** (item 0 resolved by the founder). A
+complete on-device end-to-end audit ran with the live backend and found +
+fixed **two P0 store-rejection issues** (both committed + verified):
+- **Guest mode was a dead-end loop** — fixed (`99cfcd4`); guests now reach
+  the dashboard (device-verified).
+- **Live privacy policy had a false data-storage claim** — corrected +
+  redeployed to CloudFront (`20f1877`); verified live.
+Plus profile-goal + goal-card-truncation UX fixes (`8a17922`). Full findings:
+`FINAL_RELEASE_CANDIDATE_AUDIT.md`. New founder/design items added below
+(D-series). Item 0 is retained for history but is DONE.
+
+### NEW founder/design items from the 2026-07-11 device audit
+| # | Action | Detail | Blocks |
+|---|---|---|---|
+| D1 🎨 | **Regenerate plan-cover art without the "SixPack AI" (S2) shield** | The bundled `photos/workouts/*.webp` covers (esp. the main 30-day plan card) carry the pre-rebrand SixPack shield watermark — visible on the most-seen dashboard card. Design task (image regen); it's baked into pixels, not code. | Not a hard blocker; brand-mismatch risk on screenshots/review. Do before public production. |
+| D2 💭 | **Theme decision: dark-first vs. system** | Onboarding is always-dark (cinematic); the rest follows the system theme, so on a light-mode device the app jumps dark→light mid-flow. Recommend defaulting `themeMode` to dark (brand is dark-first) keeping the light toggle, OR give onboarding a light variant. Product call + small code change. | Polish; not blocking. |
+| D3 🎨 | **Evolve the "Form" mascot** | The robot coach reads as stock-AI. A distinctive character would drive attachment (see audit §3). | Post-launch retention play. |
+| D4 👤 | **Ensure `support@formai.app` is monitored** | The hosted legal pages + in-app support are now unified on this address (was split). It must receive/forward mail before submission (DSR 30-day clock). | Submission (deletion/DSR channel). |
+| D5 👤 | **Formal registered address (optional)** | Privacy page names the developer as data controller with "address on request" — acceptable for an individual. Add a formal business address only if incorporating. | Not blocking for individual operation. |
+
+---
+
+## 0. ✅ RESOLVED — the Supabase project was PAUSED (now ACTIVE)
 
 Discovered during the 2026-07-11 on-device E2E pass: the FormAI Supabase
 project (`xtvqhnjamwvmfcsahzxv`) reports **status INACTIVE** in
