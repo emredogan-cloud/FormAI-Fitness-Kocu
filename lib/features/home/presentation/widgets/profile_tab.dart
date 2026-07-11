@@ -40,6 +40,17 @@ const Map<String, String> _goalLabels = {
   'sixpack': 'Sadece Six-Pack',
 };
 
+/// The onboarding Goal step writes `goal` (a distinct taxonomy from the
+/// account-settings `targetPhysique` enum). Without this fallback map,
+/// every onboarding-completed user saw "HEDEF —" because the profile
+/// only read `targetPhysique`, which onboarding never sets.
+const Map<String, String> _onboardingGoalLabels = {
+  'belly_burn': 'Göbek Eritmek',
+  'muscle_gain': 'Kas Yapmak',
+  'fitness_look': 'Daha Fit Görünmek',
+  'strength': 'Güçlenmek',
+};
+
 class ProfileTab extends ConsumerStatefulWidget {
   const ProfileTab({super.key});
 
@@ -60,8 +71,16 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     final weight = metrics['weightKg'];
     final height = metrics['heightCm'];
     final age = metrics['age'];
+    // Prefer the account-settings enum; fall back to the onboarding goal
+    // so a user who only completed onboarding still sees their target
+    // (previously always "—" for that path).
     final goalKey = metrics['targetPhysique'] as String?;
-    final goalLabel = goalKey == null ? '—' : (_goalLabels[goalKey] ?? goalKey);
+    final onboardingGoal = metrics['goal'] as String?;
+    final goalLabel = goalKey != null
+        ? (_goalLabels[goalKey] ?? goalKey)
+        : (onboardingGoal != null
+            ? (_onboardingGoalLabels[onboardingGoal] ?? '—')
+            : '—');
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
