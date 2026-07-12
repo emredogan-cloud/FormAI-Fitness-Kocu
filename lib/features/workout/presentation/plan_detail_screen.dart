@@ -381,7 +381,12 @@ class _PersonalizedSubtitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = goalLabel ?? 'sana özel';
+    // Flows cleanly whether or not a goal label exists — the old
+    // "Senin hedefine (sana özel) ve seviyene özel…" doubled "özel" and
+    // read awkwardly when the goal was unset.
+    final text = goalLabel != null
+        ? "'$goalLabel' hedefine ve seviyene özel olarak oluşturuldu."
+        : 'Hedefine ve seviyene özel olarak oluşturuldu.';
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
       child: Container(
@@ -397,7 +402,7 @@ class _PersonalizedSubtitle extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Senin hedefine ($label) ve seviyene özel oluşturuldu.',
+                text,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 13,
