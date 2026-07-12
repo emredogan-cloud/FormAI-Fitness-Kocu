@@ -1,0 +1,126 @@
+# Codemagic CI/CD — Mac-free iOS builds for FormAI.
+#
+# This is the recommended path (FINAL_RELEASE_CANDIDATE_AUDIT §7): a solo dev
+# with no macOS ships iOS entirely from the cloud. Codemagic's macOS runners do
+# `flutter pub get` → `pod install` → signing → `flutter build ipa` → TestFlight
+# with zero local Mac. Signing uses an App Store Connect API key (no certs to
+# manage by hand).
+#
+# ── ONE-TIME SETUP (founder, in the Codemagic web UI — see docs/ios/CODEMAGIC_SETUP.md) ──
+#   1. Connect this GitHub repo to Codemagic.
+#   2. Team settings → Integrations → App Store Connect: add an API key
+#      (Apple Developer → Users and Access → Integrations → App Store Connect API).
+#      Name it exactly:  FormAI ASC API Key
+#   3. Enable Sign in with Apple + App Groups on the App ID in the Apple Developer
+#      web portal (browser — no Mac). Entitlements are already committed.
+#   4. Environment variable group "formai_ios_env" (Codemagic UI → Environment
+#      variables), secure, holding the CLIENT-PUBLIC keys only (same set as
+#      .github/workflows/release.yml). NEVER put OPENAI/service-role/db passwords here.
+#   5. Set APP_STORE_APPLE_ID below to the app's numeric Apple ID once the app
+#      record exists in App Store Connect.
+#
+# Nothing here fabricates credentials — the API key + env group are supplied by
+# the founder in the UI; this file is the reproducible pipeline around them.
+
+workflows:
+  ios-testflight:
+    name: FormAI iOS → TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 90
+    integrations:
+      app_store_connect: FormAI ASC API Key
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      groups:
+        - formai_ios_env # client-public keys (Supabase/RevenueCat/Sentry/PostHog/CDN/Google)
+      vars:
+        BUNDLE_ID: "com.emredogan.formai"
+        APP_STORE_APPLE_ID: "0000000000" # ← founder: numeric App Store app id
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.emredogan.formai
+    scripts:
+      - name: Materialize client-public .env from the env group
+        script: |
+          cat > "$CM_BUILD_DIR/.env" <<ENV
+          SUPABASE_URL=$SUPABASE_URL
+          SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+          GOOGLE_WEB_CLIENT_ID=$GOOGLE_WEB_CLIENT_ID
+          GOOGLE_IOS_CLIENT_ID=$GOOGLE_IOS_CLIENT_ID
+          CDN_BASE_URL=$CDN_BASE_URL
+          SENTRY_DSN=$SENTRY_DSN
+          POSTHOG_API_KEY=$POSTHOG_API_KEY
+          POSTHOG_HOST=$POSTHOG_HOST
+          REVENUECAT_ANDROID_KEY=$REVENUECAT_ANDROID_KEY
+          REVENUECAT_IOS_KEY=$REVENUECAT_IOS_KEY
+          ENV
+      - name: Guard — no ship-forbidden secret reached .env
+        script: bash tool/check_env_no_secrets.sh "$CM_BUILD_DIR/.env"
+      - name: Flutter pub get
+        script: flutter pub get
+      - name: CocoaPods install
+        script: |
+          find . -name "Podfile" -execdir pod install \;
+      - name: Set up code signing (App Store Connect API key)
+        script: xcode-project use-profiles
+      - name: Analyze + test (fail fast before an expensive archive)
+        script: |
+          flutter analyze
+          flutter test
+      - name: Build signed IPA (obfuscated)
+        script: |
+          flutter build ipa --release \
+            --obfuscate --split-debug-info=build/symbols \
+            --export-options-plist=/Users/builder/export_options.plist
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - build/symbols
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        # Leave beta-group submission manual for the first build; add groups
+        # here once an external TestFlight group exists.
+
+  # Optional: parity Android release from the same CI, so tagged releases can
+  # produce both stores' artifacts. Play upload stays manual until the service
+  # account + keystore are added as a secure group (see release.yml).
+  android-release:
+    name: FormAI Android → AAB
+    instance_type: linux_x2
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      groups:
+        - formai_ios_env
+    triggering:
+      events:
+        - tag
+    scripts:
+      - name: Materialize .env
+        script: |
+          cat > "$CM_BUILD_DIR/.env" <<ENV
+          SUPABASE_URL=$SUPABASE_URL
+          SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+          GOOGLE_WEB_CLIENT_ID=$GOOGLE_WEB_CLIENT_ID
+          CDN_BASE_URL=$CDN_BASE_URL
+          SENTRY_DSN=$SENTRY_DSN
+          POSTHOG_API_KEY=$POSTHOG_API_KEY
+          POSTHOG_HOST=$POSTHOG_HOST
+          REVENUECAT_ANDROID_KEY=$REVENUECAT_ANDROID_KEY
+          REVENUECAT_IOS_KEY=$REVENUECAT_IOS_KEY
+          ENV
+      - name: Guard + analyze + test
+        script: |
+          bash tool/check_env_no_secrets.sh "$CM_BUILD_DIR/.env"
+          flutter pub get
+          flutter analyze
+          flutter test
+      - name: Build AAB (obfuscated)
+        script: flutter build appbundle --release --obfuscate --split-debug-info=build/symbols
+    artifacts:
+      - build/app/outputs/bundle/release/*.aab
+      - build/symbols
