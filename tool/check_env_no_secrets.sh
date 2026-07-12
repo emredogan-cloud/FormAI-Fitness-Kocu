@@ -14,6 +14,9 @@
 #
 # FORBIDDEN (must live in .env.local / CI secrets only, never an asset):
 #   *_DB_PASSWORD · *SERVICE_ROLE* · *_SECRET · *PRIVATE_KEY* · raw PEM blocks
+#   OPENAI_API_KEY · ANTHROPIC_API_KEY · *_API_SECRET  (billed provider keys —
+#   a leaked one lets anyone spend the founder's money; these are server-side
+#   / tooling-only and must never ship in the bundled .env)
 #
 # Usage:  bash tool/check_env_no_secrets.sh [path-to-.env]   (default: .env)
 set -euo pipefail
@@ -24,7 +27,7 @@ if [ ! -f "$ENV_FILE" ]; then
   exit 0
 fi
 
-FORBIDDEN='SUPABASE_DB_PASSWORD|.*SERVICE_ROLE.*|.*_SECRET|.*PRIVATE_KEY.*|.*DB_PASSWORD.*'
+FORBIDDEN='SUPABASE_DB_PASSWORD|.*SERVICE_ROLE.*|.*_SECRET|.*PRIVATE_KEY.*|.*DB_PASSWORD.*|OPENAI_API_KEY|ANTHROPIC_API_KEY|.*_API_SECRET'
 
 # Match forbidden KEY names that carry a non-empty value, redact the value.
 bad="$(grep -iE "^(${FORBIDDEN})=.+" "$ENV_FILE" | sed -E 's/=.*/=<redacted>/' || true)"
