@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/theme_extension.dart';
+import '../../domain/coach_message.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonAccent = Color(0xFF4DA6FF);
@@ -100,9 +101,14 @@ class WeeklyGoalCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          const _CoachSpeechBubble(
-            text: 'Haftayı tam gaz bitir! Bir antrenman daha yap, '
-                'harika başaracaksın!',
+          _CoachSpeechBubble(
+            // Contextual now (was a fixed string): reflects real weekly
+            // progress + time of day. Pure fn = future LLM swap-in point.
+            text: weeklyCoachLine(
+              completed: weeklyCompleted,
+              target: weeklyTarget,
+              hour: DateTime.now().hour,
+            ),
           ),
         ],
       ),
