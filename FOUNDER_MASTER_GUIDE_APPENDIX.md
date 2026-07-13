@@ -51,4 +51,30 @@ ready-to-run local harness lives at `tool/coach_eval.md` (scenarios + rubric).
 
 ---
 
+## 🟡 A3 — (Decision) Tune the nutrition free/Pro boundary
+
+Nutrition is no longer a hard paywall. Free users now get: the intro scene, the
+4-step onboarding, their real daily calorie/macro target, a taste of the AI
+prescription, and the full recipe library to browse + open. The premium wall
+sits on the **personalised daily meal plan** and **meal tracking / add-to-plan**
+(the `_NutritionProUpsell` card + gated "Hemen Ekle"/"Plana Ekle").
+
+That split is a business lever, not a fixed law. If conversion data later says
+you're giving too much (or too little), the boundary is a small code change in
+`nutrition_tab.dart` / `recipe_detail_screen.dart` (e.g. cap free recipe opens,
+or unlock the plan for a trial). Decide with real funnel numbers once live — no
+engineering blocker, just your call on the tradeoff.
+
+## 🟡 A4 — (QA) Exhaustive light-mode + tablet/orientation sweep
+
+Key screens were verified on-device in **both** dark and light this sprint
+(dashboard, coach, nutrition freemium, profile) and the new widgets are
+theme-aware. A *full* pre-launch pass across every remaining screen, plus a
+tablet form factor and landmark orientations, is standard QA that wants a device
+matrix — worth one focused session before public production. The always-dark
+Coach + onboarding screens are a deliberate premium choice (like many chat UIs),
+not a light-mode bug.
+
+---
+
 *(More items are appended below as the sprint progresses.)*
