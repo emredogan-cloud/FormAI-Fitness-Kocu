@@ -7,7 +7,12 @@ human-gated remainder. See `FOUNDER_MASTER_GUIDE.md` for the base handbook.
 
 ---
 
-## 🔴 A1 — Provide `ANTHROPIC_API_KEY` and deploy the AI Coach backend
+> **UPDATE 2026-07-13:** A1 and A2 are **DONE** — the key you placed in
+> `.env.local` let engineering deploy `coach-chat` and run the live eval
+> itself. The coach now runs on real Claude in production. Current founder
+> list: **`FINAL_FOUNDER_ACTIONS.md`**. (A1/A2 kept below for history.)
+
+## ✅ A1 (DONE) — Provide `ANTHROPIC_API_KEY` and deploy the AI Coach backend
 
 **Why:** The AI Coach was upgraded from rule-based to a real LLM. For security,
 the model key must **never** ship in the app (the `.env` guard enforces this and
