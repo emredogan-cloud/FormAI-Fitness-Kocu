@@ -69,6 +69,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Gradle + the Android build tree are disk-heavy; reclaim ~10 GB of
+      # unused pre-installed toolchains so a tight runner can't run out.
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/powershell \
+                      /usr/share/swift /opt/hostedtoolcache/CodeQL || true
+          sudo docker image prune --all --force || true
+          df -h /
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -96,6 +105,18 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      # The AVD system image + snapshot are several GB; on a tight runner the
+      # emulator job has intermittently hit "No space left on device". Reclaim
+      # ~10 GB of pre-installed toolchains this build never touches. Dependency
+      # -free (no third-party action) and safe — none of these back a Flutter/
+      # Android build.
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/powershell \
+                      /usr/share/swift /opt/hostedtoolcache/CodeQL || true
+          sudo docker image prune --all --force || true
+          df -h /
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
