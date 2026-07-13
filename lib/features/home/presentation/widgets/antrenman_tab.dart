@@ -200,6 +200,11 @@ class _AntrenmanTabState extends ConsumerState<AntrenmanTab> {
             weeklyTarget: 3,
           ),
         ),
+        const SizedBox(height: 16),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20),
+          child: _CoachEntryCard(),
+        ),
         const SizedBox(height: 26),
         const _SectionTitle(
           title: 'Kişisel Antrenman Programın',
@@ -605,6 +610,119 @@ class _CoachButton extends StatelessWidget {
                 errorBuilder: (_, __, ___) =>
                     const Icon(Icons.smart_toy, color: _neon, size: 18),
               ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The dashboard's prominent, always-present AI-coach entry. Deliberately a
+/// calm, tappable card in the home flow — not a floating bubble — so "talk to
+/// Form" reads as a first-class surface (à la WHOOP / Fitbod coach cards).
+/// Theme-aware; one tap opens the full coach conversation.
+class _CoachEntryCard extends StatelessWidget {
+  const _CoachEntryCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
+    return Semantics(
+      button: true,
+      label: 'AI koçun Form ile konuş',
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(18),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: () => context.push(AppRoutes.coach),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              color: isDark ? const Color(0xFF160C26) : scheme.surface,
+              border: Border.all(color: _neon.withValues(alpha: 0.5)),
+              boxShadow: [
+                BoxShadow(color: _neon.withValues(alpha: 0.15), blurRadius: 18),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: _neon.withValues(alpha: 0.6)),
+                  ),
+                  child: ClipOval(
+                    child: Image.asset(
+                      'photos/PT_FORM.png',
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) =>
+                          const Icon(Icons.smart_toy, color: _neon, size: 22),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'Form',
+                            style: TextStyle(
+                              color: scheme.onSurface,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF39FF14),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'çevrimiçi',
+                            style: TextStyle(
+                              color: scheme.onSurface.withValues(alpha: 0.55),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        'AI koçun. Bugün sana nasıl yardımcı olabilirim?',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: scheme.onSurface.withValues(alpha: 0.7),
+                          fontSize: 12.5,
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: _neon.withValues(alpha: 0.8),
+                  size: 15,
+                ),
+              ],
             ),
           ),
         ),

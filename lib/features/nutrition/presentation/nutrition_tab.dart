@@ -1889,16 +1889,22 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Theme-aware · was hardcoded white text on a near-transparent white
+    // surface — invisible on the light-mode scaffold. onSurface reads on both.
+    final scheme = context.colors;
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        color: Colors.white.withValues(alpha: 0.03),
-        border: Border.all(color: Colors.white12),
+        color: scheme.onSurface.withValues(alpha: 0.03),
+        border: Border.all(color: scheme.onSurface.withValues(alpha: 0.12)),
       ),
       child: Text(
         message,
-        style: const TextStyle(color: Colors.white54, fontSize: 13),
+        style: TextStyle(
+          color: scheme.onSurface.withValues(alpha: 0.55),
+          fontSize: 13,
+        ),
       ),
     );
   }
