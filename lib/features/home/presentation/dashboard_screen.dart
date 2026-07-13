@@ -8,10 +8,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/services/app_preferences.dart';
 import '../../../core/services/first_time_ai_scenes.dart';
 import '../../../core/theme/theme_extension.dart';
-import '../../monetization/models/locked_feature_type.dart';
 import '../../monetization/providers/monetization_provider.dart';
 import '../../monetization/services/conversion_moment_service.dart';
-import '../../monetization/services/premium_gate_service.dart';
 import '../../monetization/services/rating_moment_service.dart';
 import '../../nutrition/domain/models/planned_meal.dart';
 import '../../nutrition/presentation/nutrition_tab.dart';
@@ -357,21 +355,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
   void _onTabChanged(int newIndex) {
     final previous = _index;
-    // Phase 134 · nutrition is now a premium-gated section. When a
-    // non-pro user taps Beslenme, intercept the tab switch and route
-    // through PremiumGateService so the cinematic conversion scene
-    // (Phase 135) — or, until C4 lands, the paywall — fires instead
-    // of revealing nutrition content. Pro users fall through to the
-    // normal tab-switch path including the deferred-onboarding hook.
-    if (newIndex == _nutritionTabIndex &&
-        previous != _nutritionTabIndex &&
-        !ref.read(isProProvider)) {
-      ref.read(premiumGateProvider).handleLockedTap(
-            context,
-            LockedFeatureType.nutritionTab,
-          );
-      return;
-    }
+    // Freemium (post-beta) · nutrition is no longer walled off at the tab.
+    // Tapping Beslenme now opens a genuine free experience — the intro
+    // scene + onboarding, the day's calorie/macro target, and the full
+    // recipe library to browse. The premium wall appears *inside* the tab
+    // on the high-value surfaces (the personalised daily plan + meal
+    // tracking), which convert far better than a hard door does. Those
+    // in-tab gates live in `nutrition_tab.dart` / `recipe_detail_screen.dart`.
     setState(() => _index = newIndex);
     // Phase 46 · deferred nutrition onboarding. First time the user
     // lands on the Beslenme tab, present the four nutrition

@@ -8,6 +8,9 @@ import '../../../core/theme/theme_extension.dart';
 import '../../../core/widgets/error_card.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/cached_image.dart';
+import '../../monetization/models/locked_feature_type.dart';
+import '../../monetization/providers/monetization_provider.dart';
+import '../../monetization/services/premium_gate_service.dart';
 import '../domain/models/macro_target.dart';
 import 'widgets/recipe_image.dart';
 import '../domain/models/recipe.dart';
@@ -55,6 +58,13 @@ class NutritionTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final recipesAsync = ref.watch(recipesProvider);
+    // Freemium (post-beta) · the day's calorie/macro target + the whole
+    // recipe library are free to explore; the *personalised daily plan*
+    // (the highest-value surface) is the natural premium wall. Pro users
+    // get the live meal timeline; everyone else gets a compelling upsell
+    // exactly where the plan would be, after they've already seen real
+    // value above it.
+    final isPro = ref.watch(isProProvider);
     // Phase 49 · pull-to-refresh. Invalidates the recipe catalogue +
     // the daily-menu so a swipe-down on the Beslenme tab pulls fresh
     // rows from Supabase. Awaiting the recipe future keeps the
@@ -74,13 +84,16 @@ class NutritionTab extends ConsumerWidget {
       child: CustomScrollView(
         slivers: [
           _DecisionPanelSliver(expandedHeight: _expandedHeight),
-          const SliverPadding(
-            padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
-            sliver: SliverToBoxAdapter(
-              child: _SectionTitle(title: 'Günün Menüsü'),
+          if (isPro) ...[
+            const SliverPadding(
+              padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
+              sliver: SliverToBoxAdapter(
+                child: _SectionTitle(title: 'Günün Menüsü'),
+              ),
             ),
-          ),
-          const MealPlanSliver(),
+            const MealPlanSliver(),
+          ] else
+            const SliverToBoxAdapter(child: _NutritionProUpsell()),
           const SliverPadding(
             padding: EdgeInsets.fromLTRB(20, 22, 20, 8),
             sliver: SliverToBoxAdapter(
@@ -901,6 +914,16 @@ class _NextMealPreview extends ConsumerWidget {
 
   void _addToPlan(BuildContext context, WidgetRef ref, Recipe recipe) {
     // "Hemen Ekle" — primary CTA on the next-best-meal preview.
+    // Freemium · adding to the daily plan is meal tracking, a Pro surface.
+    // A non-pro tap opens the cinematic upsell instead of silently doing
+    // nothing (the plan they can't see wouldn't update anyway).
+    if (!ref.read(isProProvider)) {
+      ref.read(premiumGateProvider).handleLockedTap(
+            context,
+            LockedFeatureType.nutritionTab,
+          );
+      return;
+    }
     AppHaptics.primaryCta();
     ref
         .read(dailyMenuProvider.notifier)
@@ -1082,6 +1105,154 @@ class _CompactDecisionHeader extends ConsumerWidget {
                   backgroundColor: _proteinColor.withValues(alpha: 0.18),
                   valueColor: const AlwaysStoppedAnimation(_proteinColor),
                 ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// Freemium premium wall — sits where the personalised "Günün Menüsü" plan
+// would be for a non-pro user, after they have already seen their real
+// calorie/macro target above. Sells the three highest-value Pro surfaces
+// and routes taps through the cinematic conversion moment.
+// ============================================================================
+
+class _NutritionProUpsell extends ConsumerWidget {
+  const _NutritionProUpsell();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
+    void openPaywall() {
+      AppHaptics.primaryCta();
+      ref.read(premiumGateProvider).handleLockedTap(
+            context,
+            LockedFeatureType.nutritionTab,
+          );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          color: isDark ? const Color(0xFF160C26) : scheme.surface,
+          border: Border.all(color: _neon.withValues(alpha: 0.55)),
+          boxShadow: [
+            BoxShadow(
+              color: _neon.withValues(alpha: 0.18),
+              blurRadius: 22,
+              spreadRadius: 0.5,
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(999),
+                color: _neon.withValues(alpha: 0.18),
+                border: Border.all(color: _neon.withValues(alpha: 0.6)),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.workspace_premium, color: _neon, size: 13),
+                  SizedBox(width: 4),
+                  Text(
+                    'FormAI Pro',
+                    style: TextStyle(
+                      color: _neon,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Sana özel günlük beslenme planı',
+              style: TextStyle(
+                color: scheme.onSurface,
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                height: 1.2,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Yukarıdaki hedef senin. Onu her gün otomatik dolduran kişisel '
+              'menüyü, öğün takibini ve AI önerilerini Pro ile aç.',
+              style: TextStyle(
+                color: scheme.onSurface.withValues(alpha: 0.65),
+                fontSize: 13,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 14),
+            const _UpsellBullet(text: 'Hedefine göre otomatik günlük menü'),
+            const _UpsellBullet(
+                text: 'Öğün takibi + canlı kalori/makro halkası'),
+            const _UpsellBullet(text: 'Sıradaki en iyi öğün için AI önerisi'),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: openPaywall,
+                style: FilledButton.styleFrom(
+                  backgroundColor: _neon,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+                child: const Text("Pro'yu Keşfet"),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _UpsellBullet extends StatelessWidget {
+  const _UpsellBullet({required this.text});
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.check_circle, color: _neonGreen, size: 16),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                color: context.colors.onSurface.withValues(alpha: 0.85),
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                height: 1.3,
               ),
             ),
           ),

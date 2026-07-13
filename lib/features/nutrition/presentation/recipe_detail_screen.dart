@@ -9,6 +9,9 @@ import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/branded_media_fallback.dart';
 import '../../../core/widgets/top_toast.dart';
 import 'widgets/recipe_image.dart';
+import '../../monetization/models/locked_feature_type.dart';
+import '../../monetization/providers/monetization_provider.dart';
+import '../../monetization/services/premium_gate_service.dart';
 import '../../referral/providers/referral_provider.dart';
 import '../domain/models/daily_meal_slot.dart';
 import '../domain/models/recipe.dart';
@@ -645,6 +648,15 @@ Future<void> _handleAddToPlan(
   WidgetRef ref,
   Recipe recipe,
 ) async {
+  // Freemium · viewing the recipe is free; adding it to the daily plan is
+  // meal tracking (Pro). A non-pro tap opens the cinematic upsell.
+  if (!ref.read(isProProvider)) {
+    ref.read(premiumGateProvider).handleLockedTap(
+          context,
+          LockedFeatureType.nutritionTab,
+        );
+    return;
+  }
   final slot = await _showSlotPicker(context);
   if (slot == null) return;
   HapticFeedback.mediumImpact();
