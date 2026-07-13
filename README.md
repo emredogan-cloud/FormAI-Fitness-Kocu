@@ -1,6 +1,6 @@
 <div align="center">
 
-# SixPack AI · FormAI
+# FormAI — Fitness Koçu
 
 **A camera-driven AI fitness coach.** One Flutter codebase. On-device pose analysis. RLS-first Supabase backend. Native widgets, Live Activities, and a server-mirrored RevenueCat entitlement loop.
 
@@ -12,7 +12,7 @@
 [![RevenueCat](https://img.shields.io/badge/RevenueCat-Subscriptions-FF6B6B)](https://www.revenuecat.com)
 [![Terraform](https://img.shields.io/badge/IaC-Terraform%20%2B%20AWS-7B42BC?logo=terraform&logoColor=white)](https://www.terraform.io)
 [![CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)](.github/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: Proprietary](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
 
 <sub>~61 KLOC of Dart · 177 source files · 8 pose analyzers · 138-exercise catalogue · 4 Postgres migrations · 1 Deno Edge Function · Terraform-managed AWS edge for legal hosting</sub>
 
@@ -30,7 +30,7 @@
 
 ## Overview
 
-**SixPack AI** (shipped as **FormAI**) is a cross-platform mobile fitness application that pairs a 30-day personalised training programme with **on-device, camera-based pose analysis** for live rep counting and form correction. The app ships from a single Flutter codebase to iOS and Android, with Turkish-language onboarding, a Supabase-backed catalogue, RevenueCat-managed subscriptions, and native home-screen widgets / iOS Live Activities for the active session.
+**FormAI** (internal package name `sixpack_ai`, kept for data-migration safety) is a cross-platform mobile fitness application that pairs a 30-day personalised training programme with **on-device, camera-based pose analysis** for live rep counting and form correction. The app ships from a single Flutter codebase to iOS and Android, with Turkish-language onboarding, a Supabase-backed catalogue, RevenueCat-managed subscriptions, and native home-screen widgets / iOS Live Activities for the active session.
 
 The project is engineered for production: a four-layer release-build error guard catches every class of bootstrap failure, every user table is RLS-gated end-to-end, observability is wired through Sentry and PostHog behind a KVKK/GDPR consent gate, and the build pipeline is tuned to produce an arm64-only debug APK in ≈7 s of warm incremental build time.
 
