@@ -6,18 +6,15 @@ title = "FormAI gitleaks config"
 useDefault = true
 
 [allowlist]
-description = "Allow example templates, lockfiles, and the remediated debug log"
+description = "Allow example templates and resolved lockfiles"
 paths = [
   '''\.env\.example$''',
   '''pubspec\.lock$''',
-  # Captured adb/device log. It was removed from the tree and gitignored in the
-  # Phase 0 hygiene commit (811aae5), but real session tokens it once held still
-  # live in pre-811aae5 history. Rewriting main's history to purge them is
-  # disproportionate; instead the underlying credentials are being revoked
-  # (FOUNDER_MASTER_GUIDE §2) — that renders the historical copies inert. This
-  # path can never legitimately hold committed config (it is gitignored), so the
-  # allowlist entry cannot mask a real future leak.
-  '''(^|/)logs\.txt$''',
+  # NOTE: the historical logs.txt allowlist is GONE on purpose. When the repo
+  # went public, its pre-811aae5 history (which held real session tokens in a
+  # committed adb log) was rewritten with git-filter-repo to purge logs.txt
+  # entirely — so the scanner is fully strict again. If logs.txt ever
+  # reappears in a commit, it SHOULD fail this scan.
 ]
 # Placeholder values used in templates/docs must not trip the scanner.
 regexes = [
