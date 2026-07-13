@@ -1,6 +1,6 @@
 # FormAI — Final AI Coach Report
 
-**Date:** 2026-07-13 · **Branch:** `main` · **State:** the coach runs on **real Claude, deployed to production, verified live in the app on a physical device.** `flutter analyze` 0 · **329 tests** green.
+**Date:** 2026-07-13 · **Branch:** `main` · **State:** the coach runs on **real Claude, deployed to production, verified live in the app on a physical device.** `flutter analyze` 0 · **328 tests** green.
 
 ---
 
@@ -129,7 +129,7 @@ hundred effective tokens per turn; memory refresh adds one ≤250-token call per
 
 ## 9. Validation
 
-- `flutter analyze` **0** · `dart format` clean · **329 tests** (coach suite: 15 —
+- `flutter analyze` **0** · `dart format` clean · **328 tests** (coach suite: 15 —
   fallback matrix, history compression, greeting locality, context seams incl.
   today-exercises + last-session).
 - Live endpoint eval (7 scenarios + retests) against the deployed function.

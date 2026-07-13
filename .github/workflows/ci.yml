@@ -7,6 +7,7 @@ name: CI
 # build; both now live here and that file is gone. Branch triggers cover
 # the working branches the old workflow watched.
 on:
+  workflow_dispatch: # manual full run (incl. the emulator job)
   push:
     branches:
       - main
@@ -101,6 +102,11 @@ jobs:
 
   integration:
     name: Integration E2E (Android emulator)
+    # Minutes diet: this job costs ~20 runner-minutes and was running on every
+    # push, which exhausted the account's Actions quota (billing-blocked runs).
+    # It now runs on pull requests + manual dispatch only; the per-push gate
+    # stays the fast format/analyze/test + debug-APK jobs.
+    if: github.event_name != 'push'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

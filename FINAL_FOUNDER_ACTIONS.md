@@ -7,6 +7,19 @@ remains `FOUNDER_MASTER_GUIDE.md`; this list is only what's newly yours.
 
 ---
 
+## 0. GitHub Actions billing is BLOCKED (5 min) — do first
+Every CI run since this evening fails in 4 seconds with: *"The job was not
+started because recent account payments have failed or your spending limit
+needs to be increased."* Your Actions quota/payment is exhausted — nothing
+code-side (the same gates pass locally: format clean, analyze 0, 328 tests).
+- **github.com → Settings → Billing & plans**: fix the payment method or raise
+  the Actions spending limit (or wait for the monthly free-minute reset — the
+  date shows on that page).
+- Engineering already cut the burn ~80%: the ~20-minute emulator job no longer
+  runs on every push (PRs + manual `workflow_dispatch` only).
+- Free alternative: making the repo public gives unlimited public-repo minutes
+  — but only after the secret-history caveats in `FOUNDER_MASTER_GUIDE.md` §2.
+
 ## 1. Anthropic account guardrails (10 min) — do this week
 The coach now spends real money on your Anthropic key.
 - console.anthropic.com → **Billing → Spend limits**: set a monthly cap you're
