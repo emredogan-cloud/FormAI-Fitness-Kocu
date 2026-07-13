@@ -21,7 +21,7 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 
 const MODEL = Deno.env.get("COACH_MODEL") ?? "claude-haiku-4-5-20251001";
-const MAX_TOKENS = Number(Deno.env.get("COACH_MAX_TOKENS") ?? "400");
+const MAX_TOKENS = Number(Deno.env.get("COACH_MAX_TOKENS") ?? "700");
 
 // The definitive production persona. Static across every user and turn, so it
 // is marked cacheable below — Anthropic prompt caching then serves it at a
@@ -35,16 +35,36 @@ onu tanıyan gerçek bir koç gibi davranırsın. Kendini asla "yapay zekâ",
 KİŞİLİK:
 - Sıcak, motive edici ve profesyonel. Gerektiğinde nazikçe disiplinli.
 - Duygusal zekâsı yüksek: kullanıcının hâlini önemser, önce onu duyar.
-- Robotik değilsin; kısa, doğal, insana yakın konuşursun. Emoji'yi ölçülü
-  kullanırsın (bir mesajda en fazla bir tane).
+- Robotik değilsin; doğal, insana yakın, akıcı Türkçe konuşursun. Emoji'yi
+  ölçülü kullanırsın.
 
-KONUŞMA KURALLARI:
-- Her zaman Türkçe yanıt ver.
-- Kısa tut: 2-4 cümle. Uzun paragraflar yok. Net bir sonraki adım öner.
-- Kullanıcının GERÇEK verilerini kullan (aşağıdaki bağlam). Sahip olmadığın
-  bir bilgiyi UYDURMA; bilmiyorsan dürüstçe söyle ve uygulamada nereye
-  bakacağını göster.
-- Kullanıcıya adıyla, bağlamdaki hedefine ve bugünkü antrenmanına göre hitap et.
+GERÇEKLİK (en önemli kural):
+- SADECE aşağıdaki bağlamda ve konuşma geçmişinde verilen bilgileri kullan.
+- Geçmiş konuşma, ölçüm, istatistik, olay ASLA uydurma ("geçen hafta şöyle
+  demiştin", "kullanıcıların çoğu 3. günde bırakır" gibi cümleler YASAK —
+  bağlamda yoksa söyleme).
+- Bilmediğin bir şeyi dürüstçe söyle ve uygulamada nereye bakacağını göster.
+- Sayıları bağlamdan aynen al; yuvarlama/uydurma yok.
+- Egzersiz isimleri bağlamda varsa aynen kullan. Set/tekrar sayısı bağlamda
+  YOKSA uydurma — "planındaki set ve tekrar sayılarını uygula" de, ya da genel
+  bir öneri verdiğini açıkça belirt.
+
+YANIT BİÇİMİ:
+- Her zaman Türkçe.
+- Sohbet/duygu ağırlıklı sorularda: kısa ve doğal, 2-4 cümle, düz metin.
+- Plan/antrenman/beslenme gibi LİSTELENEBİLİR cevaplarda zengin biçim kullan:
+  emoji başlıklı kısa bölümler + madde işaretleri. Örnek:
+  🏋 Bugünkü antrenman
+  • Şınav — 3x12
+  • Plank — 3x40sn
+  💡 Koç ipucu
+  Dirseklerini gövdene yakın tut.
+- Önemli kelimeleri **kalın** yazabilirsin. En fazla 2-3 bölüm; tarama
+  kolaylığı esas. Uzun paragraf duvarı YASAK.
+- Yanıtını ASLA yarıda bırakma — uzun olacaksa baştan daha kısa yaz.
+- Temiz, akıcı Türkçe yaz; yalnızca Türk alfabesindeki karakterleri kullan,
+  yazım hatası yapma.
+- Net bir sonraki adımla bitir.
 
 GÜVENLİK (çok önemli):
 - Tıbbi tavsiye VERME. Ağrı, sakatlık, hastalık ya da ilaç konuları geçerse:
@@ -54,6 +74,17 @@ GÜVENLİK (çok önemli):
   ("2 haftada 10 kilo" gibi ifadeler yasak).
 
 Amacın: kullanıcıyı bugünkü doğru adıma yönlendirmek ve onu yolda tutmak.`;
+
+// Minimal instruction for the rolling-summary mode. Deliberately persona-free
+// and tiny: the output is machine-consumed (stored client-side and fed back as
+// "ÖNCEKİ KONUŞMALARDAN NOTLAR"), so every token counts.
+const SUMMARIZER = `Aşağıda bir fitness koçu ile kullanıcı arasındaki konuşma
+ve (varsa) önceki not özeti var. Kullanıcı hakkında koçun HATIRLAMASI gereken
+kalıcı bilgileri güncelle: hedefler, alışkanlıklar, tercih edilen antrenman/
+beslenme tarzı, güçlü/zayıf yönler, tekrarlayan hatalar, motivasyon durumu,
+kısıtlar (sakatlık, ekipman, zaman). Geçici gevezelikleri atla. UYDURMA.
+En fazla 8 kısa madde, her madde "- " ile başlasın, toplam 120 kelimeyi geçme.
+Sadece maddeleri yaz, başka hiçbir şey yazma.`;
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -84,18 +115,22 @@ serve(async (req) => {
     return json({ error: "coach_unconfigured" }, 502);
   }
 
-  let payload: { context?: string; turns?: Turn[]; message?: string };
+  let payload: {
+    context?: string;
+    turns?: Turn[];
+    message?: string;
+    summary?: string;
+    mode?: string;
+  };
   try {
     payload = await req.json();
   } catch {
     return json({ error: "bad_request" }, 400);
   }
 
-  const message = (payload.message ?? "").toString().trim();
-  if (!message) return json({ error: "empty_message" }, 400);
-
   const contextBlock = (payload.context ?? "").toString().slice(0, 4000);
   const history = Array.isArray(payload.turns) ? payload.turns : [];
+  const priorSummary = (payload.summary ?? "").toString().slice(0, 1200);
 
   // Map the recent conversation into Anthropic message turns. Anything that
   // isn't a clean user/assistant string is skipped defensively.
@@ -105,6 +140,34 @@ serve(async (req) => {
       role: t.role === "assistant" ? "assistant" : "user",
       content: t.text!.toString().slice(0, 2000),
     }));
+
+  // ── Rolling-summary mode ────────────────────────────────────────────────
+  // The client periodically sends the conversation (+ the previous summary)
+  // and stores the returned digest locally; subsequent chat calls carry it
+  // back via `summary`. Long-term memory without resending history.
+  if (payload.mode === "summarize") {
+    if (messages.length === 0) return json({ error: "empty_turns" }, 400);
+    const transcript = messages
+      .map((m) => `${m.role === "assistant" ? "Koç" : "Kullanıcı"}: ${m.content}`)
+      .join("\n");
+    const body = {
+      model: MODEL,
+      max_tokens: 250,
+      system: [{ type: "text", text: SUMMARIZER }],
+      messages: [
+        {
+          role: "user",
+          content: priorSummary
+            ? `ÖNCEKİ ÖZET:\n${priorSummary}\n\nYENİ KONUŞMA:\n${transcript}`
+            : `YENİ KONUŞMA:\n${transcript}`,
+        },
+      ],
+    };
+    return await callAnthropic(apiKey, body, "summary");
+  }
+
+  const message = (payload.message ?? "").toString().trim();
+  if (!message) return json({ error: "empty_message" }, 400);
   messages.push({ role: "user", content: message });
 
   // system = [cacheable persona] + [per-session context]. The persona is
@@ -114,12 +177,31 @@ serve(async (req) => {
     { type: "text", text: PERSONA, cache_control: { type: "ephemeral" } },
     {
       type: "text",
-      text: contextBlock
-        ? `KULLANICI BAĞLAMI (gerçek veriler):\n${contextBlock}`
-        : "Kullanıcı bağlamı henüz yok; genel ama dürüst rehberlik ver.",
+      text: [
+        contextBlock
+          ? `KULLANICI BAĞLAMI (gerçek veriler):\n${contextBlock}`
+          : "Kullanıcı bağlamı henüz yok; genel ama dürüst rehberlik ver.",
+        priorSummary
+          ? `\nÖNCEKİ KONUŞMALARDAN NOTLAR (koçun hafızası):\n${priorSummary}`
+          : "",
+      ].join(""),
     },
   ];
 
+  return await callAnthropic(
+    apiKey,
+    { model: MODEL, max_tokens: MAX_TOKENS, system, messages },
+    "reply",
+  );
+});
+
+/// Shared Anthropic call. Returns `{ [field]: text }` on success, a typed
+/// error JSON on failure (the app falls back to the rule brain on any of them).
+async function callAnthropic(
+  apiKey: string,
+  body: unknown,
+  field: "reply" | "summary",
+): Promise<Response> {
   try {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -128,12 +210,7 @@ serve(async (req) => {
         "x-api-key": apiKey,
         "anthropic-version": "2023-06-01",
       },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: MAX_TOKENS,
-        system,
-        messages,
-      }),
+      body: JSON.stringify(body),
     });
 
     if (!res.ok) {
@@ -143,7 +220,7 @@ serve(async (req) => {
     }
 
     const data = await res.json();
-    const reply = Array.isArray(data?.content)
+    const text = Array.isArray(data?.content)
       ? data.content
           .filter((b: { type?: string }) => b?.type === "text")
           .map((b: { text?: string }) => b.text ?? "")
@@ -151,10 +228,10 @@ serve(async (req) => {
           .trim()
       : "";
 
-    if (!reply) return json({ error: "empty_reply" }, 502);
-    return json({ reply });
+    if (!text) return json({ error: "empty_reply" }, 502);
+    return json({ [field]: text });
   } catch (e) {
     console.error("coach_chat_exception", String(e));
     return json({ error: "upstream_failure" }, 502);
   }
-});
+}

@@ -2,9 +2,13 @@ import 'coach_context.dart';
 
 /// One line in a coach conversation.
 class CoachTurn {
-  const CoachTurn({required this.fromCoach, required this.text});
+  const CoachTurn({required this.fromCoach, required this.text, this.at});
   final bool fromCoach;
   final String text;
+
+  /// Wall-clock moment the turn landed; shown as a subtle HH:mm caption.
+  /// Nullable so synthetic/test turns don't have to fake a clock.
+  final DateTime? at;
 }
 
 /// A suggested quick-reply the UI can render as a tappable chip. `intent`

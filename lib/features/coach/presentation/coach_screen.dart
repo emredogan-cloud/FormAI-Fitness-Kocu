@@ -49,11 +49,17 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
     });
   }
 
+  /// Turns already revealed — the newest coach bubble beyond this count gets
+  /// the typewriter entrance, then is marked revealed so it never replays.
+  int _revealedCount = 0;
+
   @override
   Widget build(BuildContext context) {
     final chat = ref.watch(coachChatProvider);
     final turns = chat.turns;
     final suggestions = ref.read(coachChatProvider.notifier).suggestions;
+    // Seed: the greeting (and any restored turns) render statically.
+    if (_revealedCount == 0 && turns.isNotEmpty) _revealedCount = turns.length;
 
     return Scaffold(
       backgroundColor: _bg,
@@ -101,9 +107,19 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
               // A trailing typing bubble while the coach is thinking.
               itemCount: turns.length + (chat.sending ? 1 : 0),
-              itemBuilder: (_, i) => i >= turns.length
-                  ? const _TypingBubble()
-                  : _Bubble(turn: turns[i]),
+              itemBuilder: (_, i) {
+                if (i >= turns.length) return const _TypingBubble();
+                final turn = turns[i];
+                final animate =
+                    turn.fromCoach && i >= _revealedCount && !chat.sending;
+                return _Bubble(
+                  key: ValueKey('turn-$i'),
+                  turn: turn,
+                  animate: animate,
+                  onRevealed:
+                      animate ? () => _revealedCount = turns.length : null,
+                );
+              },
             ),
           ),
           if (turns.length <= 1 && !chat.sending)
@@ -115,40 +131,221 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
   }
 }
 
-class _Bubble extends StatelessWidget {
-  const _Bubble({required this.turn});
+class _Bubble extends StatefulWidget {
+  const _Bubble(
+      {super.key, required this.turn, this.animate = false, this.onRevealed});
   final CoachTurn turn;
+
+  /// Typewriter-reveal the text (newest coach reply only).
+  final bool animate;
+  final VoidCallback? onRevealed;
+
+  @override
+  State<_Bubble> createState() => _BubbleState();
+}
+
+class _BubbleState extends State<_Bubble> {
+  bool _done = false;
 
   @override
   Widget build(BuildContext context) {
+    final turn = widget.turn;
     final coach = turn.fromCoach;
-    return Align(
-      alignment: coach ? Alignment.centerLeft : Alignment.centerRight,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        constraints:
-            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.82),
-        decoration: BoxDecoration(
-          color: coach ? _coachBubble : _neon,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(coach ? 4 : 16),
-            bottomRight: Radius.circular(coach ? 16 : 4),
-          ),
-          border: coach
-              ? Border.all(color: Colors.white.withValues(alpha: 0.06))
-              : null,
-        ),
-        child: Text(turn.text,
-            style: TextStyle(
+    final at = turn.at;
+    final body = coach
+        ? _RichCoachText(text: turn.text)
+        : Text(turn.text,
+            style: const TextStyle(
                 color: Colors.white,
                 fontSize: 14,
                 height: 1.4,
-                fontWeight: coach ? FontWeight.w500 : FontWeight.w600)),
-      ),
+                fontWeight: FontWeight.w600));
+
+    return Column(
+      crossAxisAlignment:
+          coach ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+      children: [
+        Align(
+          alignment: coach ? Alignment.centerLeft : Alignment.centerRight,
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 3),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.82),
+            decoration: BoxDecoration(
+              color: coach ? _coachBubble : _neon,
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(16),
+                topRight: const Radius.circular(16),
+                bottomLeft: Radius.circular(coach ? 4 : 16),
+                bottomRight: Radius.circular(coach ? 16 : 4),
+              ),
+              border: coach
+                  ? Border.all(color: Colors.white.withValues(alpha: 0.06))
+                  : null,
+            ),
+            child: widget.animate && !_done
+                ? _TypewriterReveal(
+                    text: turn.text,
+                    builder: (visible) => _RichCoachText(text: visible),
+                    onDone: () {
+                      _done = true;
+                      widget.onRevealed?.call();
+                    },
+                  )
+                : body,
+          ),
+        ),
+        if (at != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10, left: 4, right: 4),
+            child: Text(
+              '${at.hour.toString().padLeft(2, '0')}:'
+              '${at.minute.toString().padLeft(2, '0')}',
+              style: const TextStyle(color: Colors.white24, fontSize: 10),
+            ),
+          )
+        else
+          const SizedBox(height: 10),
+      ],
     );
+  }
+}
+
+/// ChatGPT-style entrance: the (already complete) reply types itself in over
+/// ~a second. Purely visual — the text is final before the animation starts,
+/// so nothing here can desync from the model output.
+class _TypewriterReveal extends StatefulWidget {
+  const _TypewriterReveal(
+      {required this.text, required this.builder, required this.onDone});
+  final String text;
+  final Widget Function(String visible) builder;
+  final VoidCallback onDone;
+
+  @override
+  State<_TypewriterReveal> createState() => _TypewriterRevealState();
+}
+
+class _TypewriterRevealState extends State<_TypewriterReveal>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    // ~8 ms/char, capped so long structured replies don't drag.
+    duration: Duration(
+        milliseconds: (widget.text.length * 8).clamp(300, 1400).toInt()),
+  )
+    ..addStatusListener((s) {
+      if (s == AnimationStatus.completed) widget.onDone();
+    })
+    ..forward();
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _c,
+      builder: (context, _) {
+        final n = (widget.text.length * _c.value).round();
+        return widget.builder(widget.text.substring(0, n));
+      },
+    );
+  }
+}
+
+/// Lightweight rich renderer for coach replies. The persona instructs the
+/// model to emit a constrained format — emoji-headed section lines, `•`
+/// bullets, and `**bold**` — so a tiny deterministic parser covers it with no
+/// markdown dependency. Anything unrecognised falls through as plain text,
+/// which also keeps the rule-brain's plain replies rendering identically.
+class _RichCoachText extends StatelessWidget {
+  const _RichCoachText({required this.text});
+  final String text;
+
+  static const _base = TextStyle(
+      color: Colors.white,
+      fontSize: 14,
+      height: 1.4,
+      fontWeight: FontWeight.w500);
+  static const _header = TextStyle(
+      color: Colors.white,
+      fontSize: 15,
+      height: 1.5,
+      fontWeight: FontWeight.w900);
+
+  bool _isHeader(String line) {
+    if (line.length > 48 || line.isEmpty) return false;
+    final r = line.runes.first;
+    return r >= 0x2190; // arrows/symbols/emoji block onward — never TR letters
+  }
+
+  /// `**bold**` → bold spans; everything else keeps [style].
+  List<TextSpan> _inline(String line, TextStyle style) {
+    final spans = <TextSpan>[];
+    final re = RegExp(r'\*\*(.+?)\*\*');
+    var idx = 0;
+    for (final m in re.allMatches(line)) {
+      if (m.start > idx) {
+        spans.add(TextSpan(text: line.substring(idx, m.start), style: style));
+      }
+      spans.add(TextSpan(
+          text: m.group(1),
+          style: style.copyWith(fontWeight: FontWeight.w800)));
+      idx = m.end;
+    }
+    if (idx < line.length) {
+      spans.add(TextSpan(text: line.substring(idx), style: style));
+    }
+    return spans;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final lines = text.split('\n');
+    final children = <Widget>[];
+    for (var i = 0; i < lines.length; i++) {
+      final raw = lines[i].trimRight();
+      final line = raw.trim();
+      if (line.isEmpty) {
+        children.add(const SizedBox(height: 6));
+        continue;
+      }
+      if (_isHeader(line)) {
+        children.add(Padding(
+          padding: EdgeInsets.only(top: i == 0 ? 0 : 6, bottom: 2),
+          child: Text.rich(TextSpan(children: _inline(line, _header))),
+        ));
+        continue;
+      }
+      if (line.startsWith('• ') || line.startsWith('- ')) {
+        children.add(Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 3),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('•',
+                  style: TextStyle(
+                      color: _neon, fontSize: 14, fontWeight: FontWeight.w900)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text.rich(
+                    TextSpan(children: _inline(line.substring(2), _base))),
+              ),
+            ],
+          ),
+        ));
+        continue;
+      }
+      children.add(Text.rich(TextSpan(children: _inline(line, _base))));
+    }
+    return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: children);
   }
 }
 
@@ -196,25 +393,30 @@ class _TypingBubbleState extends State<_TypingBubble>
           animation: _c,
           builder: (context, _) => Row(
             mainAxisSize: MainAxisSize.min,
-            children: List.generate(3, (i) {
-              final t = (_c.value + i * 0.2) % 1.0;
-              final o =
-                  (0.3 + 0.7 * (0.5 - (t - 0.5).abs()) * 2).clamp(0.3, 1.0);
-              return Padding(
-                padding: EdgeInsets.only(right: i < 2 ? 5 : 0),
-                child: Opacity(
-                  opacity: o,
-                  child: Container(
-                    width: 7,
-                    height: 7,
-                    decoration: const BoxDecoration(
-                      color: _neon,
-                      shape: BoxShape.circle,
+            children: [
+              ...List.generate(3, (i) {
+                final t = (_c.value + i * 0.2) % 1.0;
+                final o =
+                    (0.3 + 0.7 * (0.5 - (t - 0.5).abs()) * 2).clamp(0.3, 1.0);
+                return Padding(
+                  padding: const EdgeInsets.only(right: 5),
+                  child: Opacity(
+                    opacity: o,
+                    child: Container(
+                      width: 7,
+                      height: 7,
+                      decoration: const BoxDecoration(
+                        color: _neon,
+                        shape: BoxShape.circle,
+                      ),
                     ),
                   ),
-                ),
-              );
-            }),
+                );
+              }),
+              const SizedBox(width: 4),
+              const Text('Form yazıyor…',
+                  style: TextStyle(color: Colors.white38, fontSize: 12)),
+            ],
           ),
         ),
       ),

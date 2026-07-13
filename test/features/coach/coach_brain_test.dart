@@ -90,4 +90,18 @@ void main() {
     expect(p, contains('Seri: 5 gün'));
     expect(p, contains('BMI'));
   });
+
+  test('toPromptContext carries today\'s exercises + last logged session', () {
+    const c = CoachContext(
+      hour: 10,
+      todayDayNumber: 5,
+      todayExerciseCount: 2,
+      todayExerciseNames: ['Şınav', 'Squat'],
+      lastSessionLine:
+          'Son kaydedilen antrenman: 4. gün — toplam 84 tekrar, 12 dk',
+    );
+    final p = c.toPromptContext();
+    expect(p, contains('Şınav, Squat'));
+    expect(p, contains('84 tekrar'));
+  });
 }

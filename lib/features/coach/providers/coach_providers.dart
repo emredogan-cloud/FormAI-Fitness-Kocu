@@ -1,16 +1,39 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/services/app_preferences.dart';
 import '../../progress/providers/badge_unlocks_provider.dart';
 import '../../progress/providers/streak_provider.dart';
 import '../../progress/providers/xp_provider.dart';
+import '../../workout/data/session_log_repository.dart';
 import '../../workout/providers/workout_provider.dart';
 import '../domain/coach_brain.dart';
 import '../domain/coach_context.dart';
 import '../domain/llm_coach_brain.dart';
 import '../domain/rule_based_coach_brain.dart';
+
+/// Long-term coach memory: a rolling summary of what past conversations
+/// revealed about the user (preferences, constraints, recurring struggles).
+/// Stored locally, sent with every LLM turn as compact "notes", refreshed
+/// server-side (the `summarize` mode of coach-chat) every few turns — so the
+/// coach remembers ACROSS sessions without ever resending old transcripts.
+const String _kCoachMemoryKey = 'sixpack.coach_memory_v1';
+
+final coachMemoryProvider = Provider<CoachMemoryStore>(
+  (ref) => CoachMemoryStore(ref.watch(sharedPreferencesProvider)),
+);
+
+class CoachMemoryStore {
+  CoachMemoryStore(this._prefs);
+  final SharedPreferences _prefs;
+
+  String read() => _prefs.getString(_kCoachMemoryKey) ?? '';
+  Future<void> write(String summary) async {
+    await _prefs.setString(_kCoachMemoryKey, summary.trim());
+  }
+}
 
 const Map<String, String> _goalLabels = {
   'belly_burn': 'Göbek eritmek',
@@ -37,7 +60,11 @@ const Map<String, String> _activityLabels = {
 final coachBrainProvider = Provider<CoachBrain>((ref) {
   const rule = RuleBasedCoachBrain();
   if (!_llmEnabled) return rule;
-  return const LlmCoachBrain(transport: _supabaseCoachTransport);
+  final memory = ref.watch(coachMemoryProvider);
+  return LlmCoachBrain(
+    transport: (contextPrompt, recentTurns, message) =>
+        _invokeCoachChat(contextPrompt, recentTurns, message, memory.read()),
+  );
 });
 
 bool get _llmEnabled {
@@ -53,10 +80,12 @@ bool get _llmEnabled {
 /// server-side). Returns the reply text, or `null` on any non-2xx / shape
 /// mismatch so [LlmCoachBrain] falls back. Errors bubble as exceptions from
 /// `functions.invoke`; the brain's try/catch turns them into a fallback too.
-Future<String?> _supabaseCoachTransport(
+/// [memory] is the rolling long-term summary — compact notes, not transcript.
+Future<String?> _invokeCoachChat(
   String contextPrompt,
   List<CoachTurn> recentTurns,
   String message,
+  String memory,
 ) async {
   final res = await Supabase.instance.client.functions.invoke(
     'coach-chat',
@@ -69,11 +98,43 @@ Future<String?> _supabaseCoachTransport(
               })
           .toList(),
       'message': message,
+      if (memory.isNotEmpty) 'summary': memory,
     },
   );
   final data = res.data;
   if (data is Map && data['reply'] is String) {
     return data['reply'] as String;
+  }
+  return null;
+}
+
+/// Asks the server to fold the given turns into an updated rolling summary.
+/// Returns null on any failure — memory refresh is strictly best-effort and
+/// must never surface an error to the user.
+Future<String?> _invokeCoachSummarize(
+  List<CoachTurn> turns,
+  String priorSummary,
+) async {
+  try {
+    final res = await Supabase.instance.client.functions.invoke(
+      'coach-chat',
+      body: {
+        'mode': 'summarize',
+        'turns': turns
+            .map((t) => {
+                  'role': t.fromCoach ? 'assistant' : 'user',
+                  'text': t.text,
+                })
+            .toList(),
+        if (priorSummary.isNotEmpty) 'summary': priorSummary,
+      },
+    );
+    final data = res.data;
+    if (data is Map && data['summary'] is String) {
+      return data['summary'] as String;
+    }
+  } catch (_) {
+    // Best-effort by design.
   }
   return null;
 }
@@ -90,6 +151,7 @@ final coachContextProvider = Provider<CoachContext>((ref) {
   int? todayDay;
   int todayExercises = 0;
   bool todayDone = false;
+  List<String> todayNames = const [];
   if (session != null) {
     completed = session.days.where((d) => d.isCompleted).length;
     final active = session.activeDay;
@@ -97,7 +159,25 @@ final coachContextProvider = Provider<CoachContext>((ref) {
       todayDay = active.dayNumber;
       todayExercises = active.exercises.length;
       todayDone = active.isCompleted;
+      todayNames = active.exercises.map((e) => e.name).toList(growable: false);
     }
+  }
+
+  // Camera/workout ground truth: the most recent logged session (real reps,
+  // real duration, per-exercise) so the coach talks about what the user
+  // actually DID, not just the plan.
+  String? lastSession;
+  final logs = ref.watch(sessionLogsProvider).value;
+  if (logs != null && logs.isNotEmpty) {
+    final latest = logs.values.reduce(
+        (a, b) => a.completedAtIso.compareTo(b.completedAtIso) >= 0 ? a : b);
+    final mins = (latest.durationSeconds / 60).round();
+    final names = latest.exerciseLogs
+        .map((e) => '${e.exerciseName} ${e.actualReps} tekrar')
+        .take(6)
+        .join(', ');
+    lastSession = 'Son kaydedilen antrenman: ${latest.dayNumber}. gün — '
+        'toplam ${latest.totalReps} tekrar, $mins dk ($names)';
   }
 
   final goalKey =
@@ -122,6 +202,8 @@ final coachContextProvider = Provider<CoachContext>((ref) {
     todayDayNumber: todayDay,
     todayExerciseCount: todayExercises,
     todayIsCompleted: todayDone,
+    todayExerciseNames: todayNames,
+    lastSessionLine: lastSession,
   );
 });
 
@@ -162,6 +244,9 @@ class CoachChatNotifier extends Notifier<CoachChatState> {
     return brain.suggestions(ref.read(coachContextProvider));
   }
 
+  /// User turns since the rolling memory was last refreshed.
+  int _turnsSinceMemory = 0;
+
   Future<void> send(String message) async {
     final text = message.trim();
     if (text.isEmpty || state.sending) return;
@@ -171,15 +256,37 @@ class CoachChatNotifier extends Notifier<CoachChatState> {
     // the brain reasons over.
     final history = state.turns;
     state = state.copyWith(
-      turns: [...history, CoachTurn(fromCoach: false, text: text)],
+      turns: [
+        ...history,
+        CoachTurn(fromCoach: false, text: text, at: DateTime.now()),
+      ],
       sending: true,
     );
     final reply = await brain.respond(ctx, history, text);
     // The screen may have been popped mid-flight; don't touch disposed state.
     if (_disposed) return;
     state = state.copyWith(
-      turns: [...state.turns, CoachTurn(fromCoach: true, text: reply)],
+      turns: [
+        ...state.turns,
+        CoachTurn(fromCoach: true, text: reply, at: DateTime.now()),
+      ],
       sending: false,
     );
+    _maybeRefreshMemory();
+  }
+
+  /// Every few user turns, fold the conversation into the rolling long-term
+  /// summary (server-side, cheap) and persist it. Fire-and-forget: failures
+  /// are invisible, success means the NEXT conversation starts with memory.
+  void _maybeRefreshMemory() {
+    if (!_llmEnabled) return;
+    _turnsSinceMemory++;
+    if (_turnsSinceMemory < 3) return;
+    _turnsSinceMemory = 0;
+    final store = ref.read(coachMemoryProvider);
+    final turns = state.turns;
+    _invokeCoachSummarize(turns, store.read()).then((summary) {
+      if (summary != null && summary.isNotEmpty) store.write(summary);
+    });
   }
 }

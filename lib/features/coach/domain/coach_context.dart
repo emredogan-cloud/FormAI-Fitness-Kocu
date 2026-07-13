@@ -23,6 +23,8 @@ class CoachContext {
     this.todayDayNumber,
     this.todayExerciseCount = 0,
     this.todayIsCompleted = false,
+    this.todayExerciseNames = const [],
+    this.lastSessionLine,
   });
 
   final int hour; // 0–23 local
@@ -42,6 +44,16 @@ class CoachContext {
   final int? todayDayNumber;
   final int todayExerciseCount;
   final bool todayIsCompleted;
+
+  /// Names of today's exercises, so the coach can answer "bugün ne var?"
+  /// with the real plan instead of a generic description.
+  final List<String> todayExerciseNames;
+
+  /// One-line digest of the most recent logged workout (day, reps, duration,
+  /// exercises) built from the on-device session log — the camera/workout
+  /// pipeline's ground truth. Lets the coach reference what the user actually
+  /// did ("dün 84 tekrar yaptın") instead of guessing.
+  final String? lastSessionLine;
 
   String get firstName {
     final n = name?.trim();
@@ -84,6 +96,10 @@ class CoachContext {
           '(${todayIsCompleted ? 'tamamlandı' : '$todayExerciseCount egzersiz, '
               'henüz yapılmadı'})');
     }
+    if (todayExerciseNames.isNotEmpty) {
+      b.writeln('- Bugünkü egzersizler: ${todayExerciseNames.join(', ')}');
+    }
+    if (lastSessionLine != null) b.writeln('- $lastSessionLine');
     return b.toString().trim();
   }
 }
