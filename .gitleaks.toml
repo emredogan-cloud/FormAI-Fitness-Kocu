@@ -6,13 +6,24 @@ title = "FormAI gitleaks config"
 useDefault = true
 
 [allowlist]
-description = "Allow empty example templates and resolved lockfiles"
+description = "Allow example templates, lockfiles, and the remediated debug log"
 paths = [
   '''\.env\.example$''',
   '''pubspec\.lock$''',
+  # Captured adb/device log. It was removed from the tree and gitignored in the
+  # Phase 0 hygiene commit (811aae5), but real session tokens it once held still
+  # live in pre-811aae5 history. Rewriting main's history to purge them is
+  # disproportionate; instead the underlying credentials are being revoked
+  # (FOUNDER_MASTER_GUIDE §2) — that renders the historical copies inert. This
+  # path can never legitimately hold committed config (it is gitignored), so the
+  # allowlist entry cannot mask a real future leak.
+  '''(^|/)logs\.txt$''',
 ]
 # Placeholder values used in templates/docs must not trip the scanner.
 regexes = [
   '''your-[a-z-]+-(key|id|dsn)''',
   '''<redacted>''',
+  # Documentation example in supabase/functions/revenuecat-webhook/README.md —
+  # a literal placeholder in a local curl command, not a credential.
+  '''local-test-secret''',
 ]

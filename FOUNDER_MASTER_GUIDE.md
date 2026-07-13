@@ -99,6 +99,15 @@ None of these block a build, but do them before the repo goes public.
   `.env.local` and added a build guard (`tool/check_env_no_secrets.sh`) so it
   can never ship in the APK again. Because it briefly lived in a bundleable file,
   rotate it in the **OpenAI dashboard → API keys** to be safe.
+- **Session tokens in old `logs.txt` history** — a debug adb-logcat capture
+  (`logs.txt`) was committed early on and later removed from the tree +
+  gitignored (Phase 0). Its old commits still contain **live auth tokens** from a
+  dev login (Google/Supabase refresh + access tokens). Revoke them so the
+  historical copies are inert: **Google Account → Security → Third-party access →
+  remove FormAI/Google Sign-In**, and **Supabase → Authentication → Users → sign
+  out / rotate** any lingering dev session. (CI's secret scan allowlists this
+  one remediated path — see `.gitleaks.toml` — so it won't red on already-known
+  history; revocation is what actually closes the exposure.)
 
 ---
 
