@@ -198,7 +198,8 @@ class _TypingBubbleState extends State<_TypingBubble>
             mainAxisSize: MainAxisSize.min,
             children: List.generate(3, (i) {
               final t = (_c.value + i * 0.2) % 1.0;
-              final o = (0.3 + 0.7 * (0.5 - (t - 0.5).abs()) * 2).clamp(0.3, 1.0);
+              final o =
+                  (0.3 + 0.7 * (0.5 - (t - 0.5).abs()) * 2).clamp(0.3, 1.0);
               return Padding(
                 padding: EdgeInsets.only(right: i < 2 ? 5 : 0),
                 child: Opacity(
