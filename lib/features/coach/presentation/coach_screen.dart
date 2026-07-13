@@ -32,8 +32,15 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
 
   void _send(String text) {
     if (text.trim().isEmpty) return;
-    ref.read(coachChatProvider.notifier).send(text);
     _input.clear();
+    _scrollToBottomSoon();
+    // Fire the async turn; scroll again when the reply (or fallback) lands.
+    ref.read(coachChatProvider.notifier).send(text).then((_) {
+      if (mounted) _scrollToBottomSoon();
+    });
+  }
+
+  void _scrollToBottomSoon() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scroll.hasClients) {
         _scroll.animateTo(_scroll.position.maxScrollExtent,
@@ -44,7 +51,8 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final turns = ref.watch(coachChatProvider);
+    final chat = ref.watch(coachChatProvider);
+    final turns = chat.turns;
     final suggestions = ref.read(coachChatProvider.notifier).suggestions;
 
     return Scaffold(
@@ -91,11 +99,14 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
             child: ListView.builder(
               controller: _scroll,
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-              itemCount: turns.length,
-              itemBuilder: (_, i) => _Bubble(turn: turns[i]),
+              // A trailing typing bubble while the coach is thinking.
+              itemCount: turns.length + (chat.sending ? 1 : 0),
+              itemBuilder: (_, i) => i >= turns.length
+                  ? const _TypingBubble()
+                  : _Bubble(turn: turns[i]),
             ),
           ),
-          if (turns.length <= 1)
+          if (turns.length <= 1 && !chat.sending)
             _SuggestionRow(suggestions: suggestions, onTap: _send),
           _InputBar(controller: _input, onSend: _send),
         ],
@@ -141,6 +152,75 @@ class _Bubble extends StatelessWidget {
   }
 }
 
+/// Three pulsing dots in a coach bubble while the model is thinking. Mirrors
+/// the app's existing spinners (which also animate through reduce-motion) —
+/// a chat affordance the user expects to see move.
+class _TypingBubble extends StatefulWidget {
+  const _TypingBubble();
+
+  @override
+  State<_TypingBubble> createState() => _TypingBubbleState();
+}
+
+class _TypingBubbleState extends State<_TypingBubble>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1100),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: _coachBubble,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(16),
+            topRight: Radius.circular(16),
+            bottomLeft: Radius.circular(4),
+            bottomRight: Radius.circular(16),
+          ),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        ),
+        child: AnimatedBuilder(
+          animation: _c,
+          builder: (context, _) => Row(
+            mainAxisSize: MainAxisSize.min,
+            children: List.generate(3, (i) {
+              final t = (_c.value + i * 0.2) % 1.0;
+              final o = (0.3 + 0.7 * (0.5 - (t - 0.5).abs()) * 2).clamp(0.3, 1.0);
+              return Padding(
+                padding: EdgeInsets.only(right: i < 2 ? 5 : 0),
+                child: Opacity(
+                  opacity: o,
+                  child: Container(
+                    width: 7,
+                    height: 7,
+                    decoration: const BoxDecoration(
+                      color: _neon,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _SuggestionRow extends StatelessWidget {
   const _SuggestionRow({required this.suggestions, required this.onTap});
   final List<CoachSuggestion> suggestions;
@@ -160,7 +240,9 @@ class _SuggestionRow extends StatelessWidget {
           labelStyle: const TextStyle(color: _neon, fontSize: 13),
           backgroundColor: _neon.withValues(alpha: 0.12),
           side: BorderSide(color: _neon.withValues(alpha: 0.4)),
-          onPressed: () => onTap(suggestions[i].intent),
+          // Send the human-readable label (not the terse intent) so the
+          // user's own bubble reads naturally and the LLM gets real language.
+          onPressed: () => onTap(suggestions[i].label),
         ),
       ),
     );

@@ -36,7 +36,11 @@ class RuleBasedCoachBrain implements CoachBrain {
       ];
 
   @override
-  String respond(CoachContext ctx, List<CoachTurn> history, String message) {
+  Future<String> respond(
+    CoachContext ctx,
+    List<CoachTurn> history,
+    String message,
+  ) async {
     final m = message.toLowerCase().trim();
     if (_hits(m, ['today', 'bugün', 'ne yap', 'antrenman', 'workout'])) {
       return _today(ctx);

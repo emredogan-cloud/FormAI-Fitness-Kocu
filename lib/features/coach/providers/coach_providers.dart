@@ -1,4 +1,6 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/services/app_preferences.dart';
 import '../../progress/providers/badge_unlocks_provider.dart';
@@ -7,6 +9,7 @@ import '../../progress/providers/xp_provider.dart';
 import '../../workout/providers/workout_provider.dart';
 import '../domain/coach_brain.dart';
 import '../domain/coach_context.dart';
+import '../domain/llm_coach_brain.dart';
 import '../domain/rule_based_coach_brain.dart';
 
 const Map<String, String> _goalLabels = {
@@ -24,10 +27,56 @@ const Map<String, String> _activityLabels = {
   'active': 'Çok aktif',
 };
 
-/// The brain behind the coach. Swap this override for an `LlmCoachBrain`
-/// (same interface) to go live with a real model — nothing else changes.
-final coachBrainProvider =
-    Provider<CoachBrain>((ref) => const RuleBasedCoachBrain());
+/// The brain behind the coach. When `COACH_LLM_ENABLED=true` in the `.env`
+/// (set it once the `coach-chat` Edge Function is deployed with an
+/// `ANTHROPIC_API_KEY` secret — see FOUNDER_MASTER_GUIDE_APPENDIX), this
+/// returns the real [LlmCoachBrain]; otherwise it returns the honest offline
+/// [RuleBasedCoachBrain]. The LLM brain ALSO falls back to the rule brain on
+/// any network/model failure, so the flag only decides whether we attempt the
+/// model at all — the coach is never blank either way.
+final coachBrainProvider = Provider<CoachBrain>((ref) {
+  const rule = RuleBasedCoachBrain();
+  if (!_llmEnabled) return rule;
+  return const LlmCoachBrain(transport: _supabaseCoachTransport);
+});
+
+bool get _llmEnabled {
+  try {
+    if (!dotenv.isInitialized) return false;
+    return (dotenv.env['COACH_LLM_ENABLED'] ?? '').toLowerCase() == 'true';
+  } catch (_) {
+    return false;
+  }
+}
+
+/// Calls the `coach-chat` Supabase Edge Function (which holds the model key
+/// server-side). Returns the reply text, or `null` on any non-2xx / shape
+/// mismatch so [LlmCoachBrain] falls back. Errors bubble as exceptions from
+/// `functions.invoke`; the brain's try/catch turns them into a fallback too.
+Future<String?> _supabaseCoachTransport(
+  String contextPrompt,
+  List<CoachTurn> recentTurns,
+  String message,
+) async {
+  final res = await Supabase.instance.client.functions.invoke(
+    'coach-chat',
+    body: {
+      'context': contextPrompt,
+      'turns': recentTurns
+          .map((t) => {
+                'role': t.fromCoach ? 'assistant' : 'user',
+                'text': t.text,
+              })
+          .toList(),
+      'message': message,
+    },
+  );
+  final data = res.data;
+  if (data is Map && data['reply'] is String) {
+    return data['reply'] as String;
+  }
+  return null;
+}
 
 /// Aggregates everything the coach knows from the existing app state. Reads
 /// defensively (all fields nullable) so a partially-onboarded or offline
@@ -76,18 +125,36 @@ final coachContextProvider = Provider<CoachContext>((ref) {
   );
 });
 
-/// The live conversation. Seeded lazily with the brain's greeting on first
-/// read; `send()` appends the user turn + the brain's reply. In-memory for
-/// now (a session-scoped chat); the LLM design adds server-side memory.
+/// The live conversation + a `sending` flag so the UI can show a typing
+/// indicator while the brain thinks. Seeded lazily with the brain's greeting
+/// (instant, local). `send()` appends the user turn, awaits the reply, then
+/// appends it — the LLM round-trip is fully async.
 final coachChatProvider =
-    NotifierProvider<CoachChatNotifier, List<CoachTurn>>(CoachChatNotifier.new);
+    NotifierProvider<CoachChatNotifier, CoachChatState>(CoachChatNotifier.new);
 
-class CoachChatNotifier extends Notifier<List<CoachTurn>> {
+class CoachChatState {
+  const CoachChatState({required this.turns, this.sending = false});
+  final List<CoachTurn> turns;
+  final bool sending;
+
+  CoachChatState copyWith({List<CoachTurn>? turns, bool? sending}) =>
+      CoachChatState(
+        turns: turns ?? this.turns,
+        sending: sending ?? this.sending,
+      );
+}
+
+class CoachChatNotifier extends Notifier<CoachChatState> {
+  bool _disposed = false;
+
   @override
-  List<CoachTurn> build() {
+  CoachChatState build() {
+    ref.onDispose(() => _disposed = true);
     final brain = ref.read(coachBrainProvider);
     final ctx = ref.read(coachContextProvider);
-    return [CoachTurn(fromCoach: true, text: brain.greeting(ctx))];
+    return CoachChatState(
+      turns: [CoachTurn(fromCoach: true, text: brain.greeting(ctx))],
+    );
   }
 
   List<CoachSuggestion> get suggestions {
@@ -95,14 +162,24 @@ class CoachChatNotifier extends Notifier<List<CoachTurn>> {
     return brain.suggestions(ref.read(coachContextProvider));
   }
 
-  void send(String message) {
+  Future<void> send(String message) async {
     final text = message.trim();
-    if (text.isEmpty) return;
+    if (text.isEmpty || state.sending) return;
     final brain = ref.read(coachBrainProvider);
     final ctx = ref.read(coachContextProvider);
-    final userTurn = CoachTurn(fromCoach: false, text: text);
-    final reply =
-        CoachTurn(fromCoach: true, text: brain.respond(ctx, state, text));
-    state = [...state, userTurn, reply];
+    // Capture the prior history BEFORE appending the user turn — that's what
+    // the brain reasons over.
+    final history = state.turns;
+    state = state.copyWith(
+      turns: [...history, CoachTurn(fromCoach: false, text: text)],
+      sending: true,
+    );
+    final reply = await brain.respond(ctx, history, text);
+    // The screen may have been popped mid-flight; don't touch disposed state.
+    if (_disposed) return;
+    state = state.copyWith(
+      turns: [...state.turns, CoachTurn(fromCoach: true, text: reply)],
+      sending: false,
+    );
   }
 }

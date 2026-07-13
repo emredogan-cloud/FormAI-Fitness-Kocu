@@ -15,28 +15,40 @@ class CoachSuggestion {
   final String intent;
 }
 
-/// The swappable "brain" behind the coach. Today the only implementation is
-/// [RuleBasedCoachBrain] — genuinely contextual (it reads the real
-/// [CoachContext]) but honest: it never invents free-form intelligence it
-/// doesn't have. A future `LlmCoachBrain` implements the SAME interface,
-/// sending [CoachContext.toPromptContext] as the system prompt and [history]
-/// + the message as the conversation. Because the UI and providers depend
-/// only on this interface, that swap changes no call sites.
+/// The swappable "brain" behind the coach. Two implementations ship:
+///   • [RuleBasedCoachBrain] — genuinely contextual (reads the real
+///     [CoachContext]) and honest; it never invents free-form intelligence.
+///     Used offline and as the fallback.
+///   • `LlmCoachBrain` — sends [CoachContext.toPromptContext] + the recent
+///     [history] to a real Claude model and returns its reply, falling back
+///     to the rule brain on any error. Because the UI and providers depend
+///     only on this interface, swapping between them changes no call sites.
 ///
-/// LLM production design (documented, not yet built — no fake intelligence):
-///   • Never call the model directly from the client (the API key must not
-///     ship). Route through a Supabase Edge Function (`coach-chat`) that
-///     holds the provider key server-side, injects [toPromptContext], and
-///     streams the reply. See docs when implemented.
-///   • Persist a rolling summary per user for long-term memory.
-///   • Keep a hard "not medical advice" guardrail in the system prompt.
+/// LLM production design (now built):
+///   • The model is NEVER called from the client — the API key must not ship
+///     in the `.env` asset. `LlmCoachBrain` calls a Supabase Edge Function
+///     (`coach-chat`) that holds `ANTHROPIC_API_KEY` server-side, prepends the
+///     coaching persona + [toPromptContext], and returns the reply.
+///   • History is compressed (only the recent turns are sent) and the static
+///     persona is marked cacheable, so a typical turn is a few hundred tokens
+///     on the cheapest model tier.
+///   • A hard "not medical advice / defer to a professional" guardrail lives
+///     in the system prompt, mirrored by the rule brain's injury path.
 abstract class CoachBrain {
-  /// The proactive opener shown when the coach screen is first opened.
+  /// The proactive opener shown when the coach screen is first opened. Kept
+  /// synchronous and rule-based even for the LLM brain: it's instant, free,
+  /// and personalised from local state, so the user never waits to be greeted.
   String greeting(CoachContext ctx);
 
   /// The quick-reply chips offered alongside the greeting.
   List<CoachSuggestion> suggestions(CoachContext ctx);
 
-  /// Answer [message] given the full context and prior [history].
-  String respond(CoachContext ctx, List<CoachTurn> history, String message);
+  /// Answer [message] given the full context and prior [history]. Async because
+  /// the LLM brain performs a network round-trip; the rule brain returns an
+  /// already-completed future.
+  Future<String> respond(
+    CoachContext ctx,
+    List<CoachTurn> history,
+    String message,
+  );
 }
