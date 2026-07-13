@@ -92,6 +92,11 @@ class _AmbientParticlesState extends State<AmbientParticles>
 
   @override
   Widget build(BuildContext context) {
+    // A11y (P1-18) · honor the OS "Reduce Motion" setting: this is a
+    // purely decorative background layer, so it simply disappears.
+    if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) {
+      return const SizedBox.shrink();
+    }
     return RepaintBoundary(
       child: AnimatedBuilder(
         animation: _ctrl,

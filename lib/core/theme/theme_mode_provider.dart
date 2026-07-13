@@ -13,11 +13,13 @@ import '../services/app_preferences.dart';
 /// — UI consumers (Profile tab segmented button) can fire-and-forget
 /// `set(...)` without thinking about prefs.
 ///
-/// `ThemeMode.system` is the default for fresh installs because:
-///   1. It's what most users expect from a 2026 app.
-///   2. It mirrors whatever OS-level preference the user has already
-///      tuned, so the app feels "native" before they ever visit the
-///      Profile tab.
+/// `ThemeMode.dark` is the default for fresh installs (was `system`).
+/// FormAI is a dark-first brand and the entire onboarding is rendered
+/// dark/cinematic; defaulting the rest of the app to `system` made it
+/// snap from dark → light the moment onboarding finished on a
+/// light-mode device — a jarring, unpremium transition. Dark-first keeps
+/// the whole first session visually coherent. A user who explicitly
+/// picks "Sistem" (or Açık) in the Profile tab is still honored.
 final themeModeProvider =
     NotifierProvider<_ThemeModeNotifier, ThemeMode>(_ThemeModeNotifier.new);
 
@@ -61,8 +63,11 @@ class _ThemeModeNotifier extends Notifier<ThemeMode> {
       case _dark:
         return ThemeMode.dark;
       case _system:
-      default:
         return ThemeMode.system;
+      default:
+        // Fresh install (no stored choice) → dark-first (brand identity;
+        // avoids the onboarding→dashboard dark→light snap).
+        return ThemeMode.dark;
     }
   }
 

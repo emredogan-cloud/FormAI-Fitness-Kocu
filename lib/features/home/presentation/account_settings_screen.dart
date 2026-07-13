@@ -213,7 +213,10 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
         data: {'error': e.message, 'stack': st.toString()},
       );
       if (!mounted) return;
-      _toast('Şifre güncellenemedi: ${e.message}');
+      // AuthException.message is raw English from Supabase — keep it
+      // out of the TR UI.
+      _toast('Şifre güncellenemedi. Şifre en az 6 karakter olmalı '
+          've eskisinden farklı olmalı.');
     } catch (e, st) {
       AppLogger.error(
         'updatePassword failed',

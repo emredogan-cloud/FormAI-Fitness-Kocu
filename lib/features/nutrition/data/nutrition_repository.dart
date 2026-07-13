@@ -1,3 +1,4 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../domain/models/recipe.dart';
@@ -12,6 +13,18 @@ class NutritionRepository {
   final SupabaseClient _client;
 
   static const String _table = 'recipes';
+
+  /// Offline short-circuit (mirrors WorkoutRepository._fetchExercises):
+  /// without it a recipe fetch on a dead interface waits out the full
+  /// HTTP timeout (~30 s) before the UI's error state can render —
+  /// the discovery strip looked like it was loading forever offline.
+  Future<void> _throwIfOffline() async {
+    final results = await Connectivity().checkConnectivity();
+    final isOnline = results.any((r) => r != ConnectivityResult.none);
+    if (!isOnline) {
+      throw const NutritionOfflineException();
+    }
+  }
 
   /// Phase 48 · default page size for paginated fetches. 20 rows fits a
   /// 2-column grid 10-rows tall, which covers the user's first viewport
@@ -40,11 +53,17 @@ class NutritionRepository {
     int from = 0,
     int limit = defaultPageSize,
   }) async {
+    await _throwIfOffline();
+    // Store-submission S2b · the offline pre-check only catches a dead
+    // interface; a captive portal / half-open link passes it and would
+    // otherwise spin for the SDK's ~30 s HTTP timeout before the error
+    // state can render. 10 s is generous for a 20-row page.
     final rows = await _client
         .from(_table)
         .select()
         .order('id', ascending: true)
-        .range(from, from + limit - 1);
+        .range(from, from + limit - 1)
+        .timeout(const Duration(seconds: 10));
     return rows.map<Recipe>(Recipe.fromJson).toList(growable: false);
   }
 
@@ -88,6 +107,7 @@ class NutritionRepository {
     String categoryToken, {
     String? mealTypeSubFilter,
   }) async {
+    await _throwIfOffline();
     var query = _client.from(_table).select();
     if (categoryToken == budgetCategoryToken) {
       query = query.contains('tags', const [budgetCategoryTagLabel]);
@@ -100,4 +120,14 @@ class NutritionRepository {
     final rows = await query.order('id', ascending: true);
     return rows.map<Recipe>(Recipe.fromJson).toList(growable: false);
   }
+}
+
+/// Thrown by the offline short-circuit so `AsyncValue.error` surfaces
+/// instantly (instead of after the ~30 s HTTP timeout) and the UI can
+/// render its retry state with an accurate message.
+class NutritionOfflineException implements Exception {
+  const NutritionOfflineException();
+
+  @override
+  String toString() => 'NutritionOfflineException: no network interface';
 }

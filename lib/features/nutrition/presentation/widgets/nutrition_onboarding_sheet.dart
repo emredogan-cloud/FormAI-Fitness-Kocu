@@ -25,10 +25,8 @@ const Color _success = Color(0xFF22C55E);
 const List<String> _stepNames = [
   'nutrition_goal',
   'nutrition_diet_preference',
-  'nutrition_allergies',
   'nutrition_meal_frequency',
   'nutrition_prep_time',
-  'nutrition_water_intake',
   'nutrition_taste_preference',
 ];
 
@@ -111,7 +109,7 @@ class _NutritionOnboardingSheetState
     extends ConsumerState<NutritionOnboardingSheet> {
   // Phase 62 · seven-step flow. Order is locked by the PM brief:
   //   goal → diet → allergies → meals → prep → water → taste.
-  static const int _total = 7;
+  static const int _total = 5;
   final PageController _controller = PageController();
   int _index = 0;
   bool _busy = false;
@@ -131,18 +129,11 @@ class _NutritionOnboardingSheetState
     'photos/diet_vegetarian.webp',
     'photos/diet_vegan.webp',
     'photos/diet_keto.webp',
-    'photos/allergy_none.webp',
-    'photos/allergy_nuts.webp',
-    'photos/allergy_dairy.webp',
-    'photos/allergy_gluten.webp',
     'photos/meals_2.webp',
     'photos/meals_3.webp',
     'photos/meals_4.webp',
     'photos/prep_quick.webp',
     'photos/prep_slow.webp',
-    'photos/water_low.webp',
-    'photos/water_medium.webp',
-    'photos/water_high.webp',
     'photos/taste_sweet.webp',
     'photos/taste_savory.webp',
     'photos/taste_mixed.webp',
@@ -227,10 +218,8 @@ class _NutritionOnboardingSheetState
     final existing = Map<String, dynamic>.from(prefs.userMetrics ?? const {});
     existing['nutritionGoal'] = wizard.nutritionGoal;
     existing['dietPreference'] = wizard.dietPreference;
-    existing['allergies'] = wizard.allergies;
     existing['mealFrequency'] = wizard.mealFrequency;
     existing['prepTime'] = wizard.prepTime;
-    existing['waterIntake'] = wizard.waterIntake;
     existing['tastePreference'] = wizard.tastePreference;
     await prefs.saveUserMetrics(existing);
     await prefs.completeNutritionOnboarding();
@@ -274,10 +263,8 @@ class _NutritionOnboardingSheetState
             children: [
               _NutritionGoalPage(onSelected: _next),
               _DietPreferencePage(onSelected: _next),
-              _AllergiesPage(onSelected: _next),
               _MealFrequencyPage(onSelected: _next),
               _PrepTimePage(onSelected: _next),
-              _WaterIntakePage(onSelected: _next),
               _TastePreferencePage(onSelected: _next, busy: _busy),
             ],
           ),
@@ -292,9 +279,10 @@ class _NutritionOnboardingSheetState
 //
 // Replaces the Phase-48 calculating + ready pair with a single screen
 // that mirrors the main onboarding's `_AnalysisIllusionStep`: a
-// continuously pulsing AI core, a 5-phrase cycle every 1.5s, a 1/5 →
-// 5/5 segmented progress strip and a "10.000+ kişi…" trust booster
-// at the bottom. When the closing "Hazır!" line lands the screen
+// continuously pulsing AI core, a 5-phrase cycle every 1.5s and a
+// 1/5 → 5/5 segmented progress strip. (The old fabricated "10.000+
+// kişi" trust booster was removed in the store-honesty pass.)
+// When the closing "Hazır!" line lands the screen
 // flashes the glow, fires `HapticFeedback.heavyImpact()` and triggers
 // a smooth fade-out (`onFinished`) instead of a hard cut.
 // ============================================================================
@@ -316,7 +304,7 @@ class _AiIllusionScreenState extends State<_AiIllusionScreen>
     'Beslenme alışkanlıkların analiz ediliyor...',
     'Kalori ve makrolar hesaplanıyor...',
     'En uygun tarifler seçiliyor...',
-    'Planın optimize ediliyor...',
+    'Planın hazırlanıyor...',
     'Hazır!',
   ];
   static const Duration _phraseDuration = Duration(milliseconds: 1500);
@@ -460,7 +448,6 @@ class _AiIllusionScreenState extends State<_AiIllusionScreen>
               total: _phrases.length,
             ),
             const Spacer(flex: 3),
-            const _TrustBooster(),
           ],
         ),
       ),
@@ -605,34 +592,6 @@ class _IllusionProgressStrip extends StatelessWidget {
           if (i != total - 1) const SizedBox(width: 6),
         ],
       ],
-    );
-  }
-}
-
-/// "Very bottom" trust booster strip per PM brief. Quiet styling — a
-/// faint pill with low-contrast text so it reinforces credibility
-/// without competing with the orb above.
-class _TrustBooster extends StatelessWidget {
-  const _TrustBooster();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(999),
-        color: Colors.white.withValues(alpha: 0.04),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-      ),
-      child: const Text(
-        '🔥 10.000+ kişi bu sistemi kullanıyor',
-        style: TextStyle(
-          color: Colors.white70,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.3,
-        ),
-      ),
     );
   }
 }
@@ -866,7 +825,7 @@ class _NutritionOptionCardState extends State<_NutritionOptionCard> {
 // Pages — Phase 62 · seven Fitify-style cards.
 //
 // Order: nutritionGoal → dietPreference → allergies → mealFrequency →
-//        prepTime → waterIntake → tastePreference.
+//        prepTime → tastePreference.
 // Every option carries a bundled `photos/...` placeholder so
 // `OnboardingImage` renders the side-image layout. Where the asset
 // hasn't shipped, the gradient + icon fallback keeps the cards on
@@ -990,68 +949,6 @@ class _DietPreferencePage extends ConsumerWidget {
   }
 }
 
-class _AllergiesPage extends ConsumerWidget {
-  const _AllergiesPage({required this.onSelected});
-  final VoidCallback onSelected;
-
-  static const List<InteractiveOption> _options = [
-    InteractiveOption(
-      value: 'yok',
-      label: 'Yok',
-      helper: 'Bilinen bir alerjim yok.',
-      icon: Icons.verified_user_rounded,
-      imageAsset: 'photos/allergy_none.webp',
-    ),
-    InteractiveOption(
-      value: 'kuruyemis',
-      label: 'Kuruyemiş',
-      helper: 'Badem, fıstık, ceviz vb.',
-      icon: Icons.emoji_nature_rounded,
-      imageAsset: 'photos/allergy_nuts.webp',
-    ),
-    InteractiveOption(
-      value: 'sut_urunleri',
-      label: 'Süt Ürünleri',
-      helper: 'Süt, peynir, yoğurt vb.',
-      icon: Icons.icecream_rounded,
-      imageAsset: 'photos/allergy_dairy.webp',
-    ),
-    InteractiveOption(
-      value: 'gluten',
-      label: 'Glüten',
-      helper: 'Buğday, arpa, çavdar vb.',
-      icon: Icons.bakery_dining_rounded,
-      imageAsset: 'photos/allergy_gluten.webp',
-    ),
-  ];
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final selected = ref.watch(wizardProvider).allergies;
-    void pick(String value) {
-      ref.read(wizardProvider.notifier).setAllergies(value);
-      onSelected();
-    }
-
-    return Column(
-      children: [
-        const _PageTitle(
-          title: 'Herhangi bir gıda alerjin var mı?',
-          subtitle: 'Sana zarar verebilecek içerikleri tamamen çıkarıyorum.',
-        ),
-        const SizedBox(height: 12),
-        Expanded(
-          child: _nutritionOptionsList(
-            options: _options,
-            selectedValue: selected,
-            onPicked: pick,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class _MealFrequencyPage extends ConsumerWidget {
   const _MealFrequencyPage({required this.onSelected});
   final VoidCallback onSelected;
@@ -1141,61 +1038,6 @@ class _PrepTimePage extends ConsumerWidget {
         const _PageTitle(
           title: 'Yemek hazırlamak için ne kadar vaktin var?',
           subtitle: 'Hayat temposuna uygun tarifler seçiyorum.',
-        ),
-        const SizedBox(height: 12),
-        Expanded(
-          child: _nutritionOptionsList(
-            options: _options,
-            selectedValue: selected,
-            onPicked: pick,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _WaterIntakePage extends ConsumerWidget {
-  const _WaterIntakePage({required this.onSelected});
-  final VoidCallback onSelected;
-
-  static const List<InteractiveOption> _options = [
-    InteractiveOption(
-      value: 'cok_az',
-      label: 'Çok az (0-1L)',
-      helper: 'Gün içinde nadiren su içerim.',
-      icon: Icons.water_drop_outlined,
-      imageAsset: 'photos/water_low.webp',
-    ),
-    InteractiveOption(
-      value: 'orta',
-      label: 'Orta (1-2L)',
-      helper: 'Düzenli ama yeterli olmayabilir.',
-      icon: Icons.water_drop_rounded,
-      imageAsset: 'photos/water_medium.webp',
-    ),
-    InteractiveOption(
-      value: 'iyi',
-      label: 'İyi (2L+)',
-      helper: 'Hidrasyon önceliğim.',
-      icon: Icons.water_rounded,
-      imageAsset: 'photos/water_high.webp',
-    ),
-  ];
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final selected = ref.watch(wizardProvider).waterIntake;
-    void pick(String value) {
-      ref.read(wizardProvider.notifier).setWaterIntake(value);
-      onSelected();
-    }
-
-    return Column(
-      children: [
-        const _PageTitle(
-          title: 'Günlük su tüketimin nasıl?',
-          subtitle: 'Hidrasyon hedefini buna göre ayarlıyorum.',
         ),
         const SizedBox(height: 12),
         Expanded(

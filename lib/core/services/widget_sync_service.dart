@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:home_widget/home_widget.dart';
 
+import '../../features/progress/providers/streak_provider.dart';
 import '../../features/workout/models/workout_day_model.dart';
 import '../../features/workout/providers/workout_provider.dart';
 import '../utils/app_logger.dart';
@@ -138,7 +139,9 @@ final widgetSyncListenerProvider = Provider<void>((ref) {
       const totalDays = 30;
       final percent =
           totalDays == 0 ? 0 : ((completed / totalDays) * 100).round();
-      final streak = _streakOf(session.days);
+      // Real calendar-day streak (shared provider) — the widget used
+      // to show the leading-program-run count that capped at 3.
+      final streak = ref.read(currentStreakProvider);
       final activeDay = session.activeDay;
       final activeIndex = session.activeExerciseIndex;
       final exercise = (activeDay != null &&
@@ -169,20 +172,10 @@ final widgetSyncListenerProvider = Provider<void>((ref) {
   // Phase 55 · also nudge the widget when the user's nutrition streak
   // changes (handled via SharedPreferences). Cheap to watch — the
   // provider only re-runs when the AppPreferences instance flips.
+  // (This same watch re-materialises the listener when lastWorkoutAt
+  // bumps, so the widget's streak count refreshes too.)
   ref.watch(appPreferencesProvider);
 });
-
-int _streakOf(List<WorkoutDay> days) {
-  var streak = 0;
-  for (final day in days) {
-    if (day.isCompleted) {
-      streak += 1;
-    } else {
-      break;
-    }
-  }
-  return streak;
-}
 
 String _dayLabel(WorkoutDay day) {
   if (day.isRestDay) return 'Dinlenme';

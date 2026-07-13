@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/routing/app_router.dart';
+import '../../../core/services/app_preferences.dart';
 import '../../../core/theme/theme_extension.dart';
+import '../../../core/widgets/error_card.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/cached_image.dart';
 import '../domain/models/macro_target.dart';
@@ -113,8 +115,39 @@ class NutritionTab extends ConsumerWidget {
                   child: CircularProgressIndicator(color: _neon),
                 ),
               ),
-              error: (_, __) => const SizedBox.shrink(),
+              // Honesty/offline pass · this used to swallow the failure
+              // into SizedBox.shrink(): offline, the strip spun through
+              // the HTTP timeout then silently vanished with no retry
+              // anywhere on the tab.
+              error: (_, __) => Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+                child: ErrorCard(
+                  compact: true,
+                  message: 'Tarifler yüklenemedi. Bağlantını kontrol et.',
+                  onRetry: () => ref.invalidate(recipesProvider),
+                ),
+              ),
               data: (recipes) => _DiscoverySection(recipes: recipes),
+            ),
+          ),
+          // P1-13 · in-context medical disclaimer: the tab issues
+          // prescriptive kcal directives ("X kcal fazla aldın"), so the
+          // "not medical advice" line must live here, not only on the
+          // consent screen.
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(28, 16, 28, 0),
+              child: Text(
+                'Beslenme önerileri bilgilendirme amaçlıdır; tıbbi tavsiye '
+                'yerine geçmez. Sağlık durumunla ilgili kararlar için bir '
+                'uzmana danış.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: context.colors.onSurface.withValues(alpha: 0.45),
+                  fontSize: 11,
+                  height: 1.4,
+                ),
+              ),
             ),
           ),
           const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
@@ -429,6 +462,11 @@ class _DecisionHeaderRow extends ConsumerWidget {
     final score = ref.watch(dailyScoreProvider);
     final streak = ref.watch(nutritionStreakProvider);
     final tint = _scoreTint(score);
+    // Honesty pass · guest/default plans are labeled as such: with no
+    // saved metrics the macro target is computed from a placeholder
+    // 70 kg profile, and presenting that as "your plan" was theater.
+    final hasProfile =
+        ref.watch(appPreferencesProvider).userMetrics?.isNotEmpty ?? false;
     // Phase 53C · "Bugün" header + date were hardcoded white, leaving
     // them invisible on the light-mode panel. onSurface flips both.
     final scheme = context.colors;
@@ -451,7 +489,12 @@ class _DecisionHeaderRow extends ConsumerWidget {
                 ),
               ),
               Text(
-                _formatTurkishDate(DateTime.now()),
+                hasProfile
+                    ? _formatTurkishDate(DateTime.now())
+                    : '${_formatTurkishDate(DateTime.now())} · Örnek plan — '
+                        'profilini tamamla',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: scheme.onSurface.withValues(alpha: 0.55),
                   fontSize: 12,
@@ -465,12 +508,18 @@ class _DecisionHeaderRow extends ConsumerWidget {
           icon: Icons.emoji_events,
           tint: tint,
         ),
-        const SizedBox(width: 6),
-        _InlinePill(
-          label: '$streak Gün',
-          leadingEmoji: '🔥',
-          tint: const Color(0xFFFF8A00),
-        ),
+        // Honesty pass · the nutrition streak counter has no real
+        // backing yet (nothing increments it), so a permanent "🔥 0
+        // Gün" pill was dead UI. Render it only when a real streak
+        // system produces a value.
+        if (streak > 0) ...[
+          const SizedBox(width: 6),
+          _InlinePill(
+            label: '$streak Gün',
+            leadingEmoji: '🔥',
+            tint: const Color(0xFFFF8A00),
+          ),
+        ],
       ],
     );
   }

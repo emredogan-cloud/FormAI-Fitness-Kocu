@@ -13,6 +13,7 @@ import '../../../../core/theme/theme_extension.dart';
 import '../../../../core/utils/app_haptics.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/audio_feedback.dart';
+import '../../../../core/widgets/error_card.dart';
 import '../../../../core/widgets/skeleton_loader.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../referral/providers/referral_provider.dart';
@@ -20,9 +21,13 @@ import '../../../nutrition/domain/models/planned_meal.dart';
 import '../../../nutrition/providers/daily_menu_provider.dart';
 import '../../../nutrition/providers/nutrition_provider.dart';
 import '../../../progress/presentation/widgets/weekly_retrospective_card.dart';
+import '../../../progress/providers/xp_provider.dart';
+import '../../../workout/data/session_log_repository.dart';
+import '../../../workout/models/session_log_model.dart';
 import '../../../workout/models/workout_day_model.dart';
 import '../../../workout/providers/workout_provider.dart';
 import 'today_task_card.dart';
+import '../../../progress/providers/streak_provider.dart';
 
 const Color _neon = Color(0xFF8B5CF6);
 const Color _neonDeep = Color(0xFF6A3DFF);
@@ -63,11 +68,18 @@ class GelisimTab extends ConsumerWidget {
     final isSessionLoading = sessionAsync.isLoading && session == null;
     final days = session?.days ?? const <WorkoutDay>[];
     final completedCount = days.where((d) => d.isCompleted).length;
-    final streak = _streakOf(days);
+    final streak = ref.watch(currentStreakProvider);
     final activeDay = _firstIncomplete(days);
     final activeDayNumber = activeDay?.dayNumber ?? 1;
     final percent = (completedCount / _programLength).clamp(0.0, 1.0);
-    final isProgramComplete = days.isNotEmpty && activeDay == null;
+    // isStub = the repository's offline fallback (30 rest days). Its
+    // `_firstIncomplete` is null exactly like a FINISHED program, so
+    // without this exclusion the tab congratulated an offline
+    // onboarding with the "program complete" celebration card — the
+    // "Senkronize ediliyor" banner the repo comment promised was never
+    // built (review REV-C1).
+    final isStub = session?.isStub ?? false;
+    final isProgramComplete = days.isNotEmpty && activeDay == null && !isStub;
 
     // Per-week slice — stats + charts all snap to the 7-day bucket that
     // contains the active day so the three cards show "this week", not
@@ -84,7 +96,27 @@ class GelisimTab extends ConsumerWidget {
     });
     final weeklyCompleted =
         weeklyDays.where((d) => d?.isCompleted ?? false).length;
-    final weeklyKcal = weeklyCompleted * _kcalPerDay;
+    // Badge predicate only ("Kalori Avcısı" is DEFINED as LIFETIME
+    // completions × kcalPerCompletedDay ≥ 1500 — unified with
+    // unlockedBadgesProvider/badges_screen; this tab used to compute a
+    // program-week variant, so the same badge read locked here while
+    // unlocked in the gallery). The stat charts below no longer present
+    // this constant as a measurement — they draw real session-log data.
+    final badgeKcal = completedCount * _kcalPerDay;
+
+    // Honest chart series: measured duration + reps from the week's
+    // session logs (keyed by program-day number). Days without a log
+    // render as zero — a true empty state, not a decorative baseline.
+    final sessionLogs =
+        ref.watch(sessionLogsProvider).value ?? const <int, SessionLog>{};
+    final weeklyMinutes = List<double>.generate(7, (i) {
+      final log = sessionLogs[weekStart + i];
+      return log == null ? 0.0 : log.durationSeconds / 60.0;
+    });
+    final weeklyReps = List<double>.generate(7, (i) {
+      final log = sessionLogs[weekStart + i];
+      return log == null ? 0.0 : log.totalReps.toDouble();
+    });
 
     // Section spacing normalized to the 20–24 px system. 14 stays on
     // the top-row → today-task seam because those two blocks are a
@@ -146,7 +178,15 @@ class GelisimTab extends ConsumerWidget {
               streak: streak,
             ),
             const SizedBox(height: 14),
-            if (isProgramComplete)
+            if (isStub)
+              ErrorCard(
+                compact: true,
+                message: 'Programın senkronize ediliyor — bağlantı '
+                    'kurulunca otomatik oluşturulacak.',
+                icon: Icons.cloud_sync_rounded,
+                onRetry: () => ref.invalidate(workoutSessionProvider),
+              )
+            else if (isProgramComplete)
               const ProgramCompleteCard()
             else if (activeDay != null)
               TodayTaskCard(activeDay: activeDay),
@@ -160,7 +200,8 @@ class GelisimTab extends ConsumerWidget {
             _StatsCardsColumn(
               weeklyDays: weeklyDays,
               weeklyCompleted: weeklyCompleted,
-              weeklyKcal: weeklyKcal,
+              weeklyMinutes: weeklyMinutes,
+              weeklyReps: weeklyReps,
             ),
             const SizedBox(height: 22),
             // Phase 52 · weekly retrospective. The card returns
@@ -175,24 +216,12 @@ class GelisimTab extends ConsumerWidget {
             _BadgesSection(
               completedCount: completedCount,
               streak: streak,
-              weeklyKcal: weeklyKcal,
+              totalKcal: badgeKcal,
             ),
           ],
         ),
       ),
     );
-  }
-
-  int _streakOf(List<WorkoutDay> days) {
-    var streak = 0;
-    for (final day in days) {
-      if (day.isCompleted) {
-        streak += 1;
-      } else {
-        break;
-      }
-    }
-    return streak;
   }
 
   WorkoutDay? _firstIncomplete(List<WorkoutDay> days) {
@@ -247,11 +276,19 @@ class _TopHeader extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 4),
+              // P1-3 · surface the (previously invisible) identity
+              // system: level + title + lifetime XP were computed and
+              // persisted with zero UI consumers.
               Text(
-                'İlerlemen bir bakışta.',
+                'Sv ${ref.watch(levelProgressProvider).level} · '
+                '${ref.watch(currentTitleProvider).title} · '
+                '${ref.watch(lifetimeXpProvider)} XP',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: scheme.onSurface.withValues(alpha: 0.55),
                   fontSize: 13,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
@@ -1016,8 +1053,15 @@ class _LockedCell extends StatelessWidget {
 }
 
 // =============================================================================
-// Three stats cards — weekly completion (bars), calories (area line),
-// workouts (green waveform). All three draw from the same 7-day bucket.
+// Three stats cards — weekly completion (bars), measured workout minutes
+// (area line), measured reps (bars). All three draw from the same 7-day
+// bucket; the last two read REAL session-log data.
+//
+// Honesty pass · the old cards fabricated their series: the "kcal" line
+// was `completed ? 1.0 : 0.2`, the value a flat completions × 250, and
+// the "ANTRENMAN" waveform alternated even/odd baselines purely for
+// shape. Progress charts are the reward for coming back — decorating
+// them with invented data broke exactly that trust.
 // =============================================================================
 
 /// Phase 38: was `_StatsCardsRow`. The three tight squares that lived
@@ -1028,11 +1072,17 @@ class _StatsCardsColumn extends StatelessWidget {
   const _StatsCardsColumn({
     required this.weeklyDays,
     required this.weeklyCompleted,
-    required this.weeklyKcal,
+    required this.weeklyMinutes,
+    required this.weeklyReps,
   });
   final List<WorkoutDay?> weeklyDays;
   final int weeklyCompleted;
-  final int weeklyKcal;
+
+  /// Measured workout minutes per weekday slot (0 = no session logged).
+  final List<double> weeklyMinutes;
+
+  /// Measured completed reps per weekday slot (0 = no session logged).
+  final List<double> weeklyReps;
 
   static const List<String> _dayLabels = [
     'Pzt',
@@ -1044,17 +1094,24 @@ class _StatsCardsColumn extends StatelessWidget {
     'Paz',
   ];
 
+  /// Normalizes a measured series into 0..1 bar heights. Zero stays a
+  /// hairline (0.03) so an empty day *looks* empty; non-zero values get
+  /// a visibility floor so a 5-minute day doesn't vanish next to a
+  /// 40-minute day.
+  static List<double> _normalize(List<double> values) {
+    final maxV = values.fold<double>(0, (a, b) => a > b ? a : b);
+    if (maxV <= 0) return List<double>.filled(values.length, 0.03);
+    return [
+      for (final v in values) v <= 0 ? 0.03 : 0.15 + 0.85 * (v / maxV),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final completionBars =
-        weeklyDays.map((d) => (d?.isCompleted ?? false) ? 1.0 : 0.25).toList();
-    final kcalValues =
-        weeklyDays.map((d) => (d?.isCompleted ?? false) ? 1.0 : 0.2).toList();
-    final waveformBars = List<double>.generate(weeklyDays.length, (i) {
-      final completed = weeklyDays[i]?.isCompleted ?? false;
-      final baseline = i.isEven ? 0.55 : 0.35;
-      return completed ? 1.0 : baseline;
-    });
+        weeklyDays.map((d) => (d?.isCompleted ?? false) ? 1.0 : 0.12).toList();
+    final totalMinutes = weeklyMinutes.fold<double>(0, (a, b) => a + b).round();
+    final totalReps = weeklyReps.fold<double>(0, (a, b) => a + b).round();
 
     return Column(
       children: [
@@ -1070,20 +1127,23 @@ class _StatsCardsColumn extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         _StatChartCard(
-          label: 'YAKILAN KALORİ',
-          value: _formatKcal(weeklyKcal),
-          unit: 'kcal',
+          label: 'ANTRENMAN SÜRESİ',
+          value: '$totalMinutes',
+          unit: 'dk',
           accent: _orange,
-          chart: _MiniAreaLine(values: kcalValues, color: _orange),
+          chart: _MiniAreaLine(
+            values: _normalize(weeklyMinutes),
+            color: _orange,
+          ),
         ),
         const SizedBox(height: 12),
         _StatChartCard(
-          label: 'ANTRENMAN',
-          value: '$weeklyCompleted',
-          unit: 'tamamlandı',
+          label: 'TEKRAR',
+          value: '$totalReps',
+          unit: 'tekrar',
           accent: _success,
           chart: _MiniBars(
-            values: waveformBars,
+            values: _normalize(weeklyReps),
             labels: _dayLabels,
             gradientColors: [
               _success.withValues(alpha: 0.9),
@@ -1094,14 +1154,6 @@ class _StatsCardsColumn extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  String _formatKcal(int kcal) {
-    if (kcal < 1000) return '$kcal';
-    final s = kcal.toString();
-    final head = s.substring(0, s.length - 3);
-    final tail = s.substring(s.length - 3);
-    return '$head.$tail';
   }
 }
 
@@ -1644,7 +1696,7 @@ class _DailySummaryButtonState extends ConsumerState<_DailySummaryButton> {
 }
 
 /// Phase 38: the generic robot icon is replaced by the custom coach
-/// photograph (`photos/kişiselyapayzekakoçfoto.webp`, already declared
+/// photograph (`photos/PT_FORM.png`, already declared
 /// under the `photos/` asset root in pubspec.yaml). The image is
 /// clipped to a 45-px circle, surrounded by a 2-px neon-gradient ring
 /// + glow so the avatar reads as "your coach" and not a stock icon.
@@ -1705,7 +1757,7 @@ class _CoachAvatarState extends State<_CoachAvatar>
         ),
         child: ClipOval(
           child: Image.asset(
-            'photos/kişiselyapayzekakoçfoto.webp',
+            'photos/PT_FORM.png',
             width: 41,
             height: 41,
             fit: BoxFit.cover,
@@ -1735,12 +1787,16 @@ class _BadgesSection extends StatelessWidget {
   const _BadgesSection({
     required this.completedCount,
     required this.streak,
-    required this.weeklyKcal,
+    required this.totalKcal,
   });
 
   final int completedCount;
   final int streak;
-  final int weeklyKcal;
+
+  /// Lifetime completions × kcalPerCompletedDay — the ONE "Kalori
+  /// Avcısı" definition, shared with unlockedBadgesProvider and
+  /// badges_screen.
+  final int totalKcal;
 
   @override
   Widget build(BuildContext context) {
@@ -1763,8 +1819,8 @@ class _BadgesSection extends StatelessWidget {
         label: 'Kalori Avcısı',
         icon: Icons.local_fire_department,
         accent: _success,
-        unlocked: weeklyKcal >= 1500,
-        progress: (weeklyKcal / 1500).clamp(0.0, 1.0),
+        unlocked: totalKcal >= 1500,
+        progress: (totalKcal / 1500).clamp(0.0, 1.0),
       ),
       const _BadgeData(
         label: '30 Gün Şampiyonu',

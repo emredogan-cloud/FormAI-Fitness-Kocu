@@ -67,6 +67,27 @@ class PosePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Phase 2 (P-Risk) F20 · hoist Paint allocations out of the per-frame
+    // loops. Previously every bone (×18) and every joint allocated two
+    // fresh Paint objects per frame at ~30 fps → heavy GC churn. We now
+    // allocate four Paints once per paint() and mutate their per-element
+    // properties. Rendering output is byte-for-byte identical.
+    //
+    // DEFERRED — REQUIRES PHYSICAL VALIDATION: the larger cost flagged by
+    // the audit (the MaskFilter.blur glow drawn as a second pass per bone)
+    // is a *visual* change; removing it needs on-device frame-time
+    // profiling + a visual sign-off, so it is intentionally left intact.
+    final boneGlow = Paint()
+      ..strokeWidth = 12
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+    final bonePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    final fillPaint = Paint()..style = PaintingStyle.fill;
+    final ringPaint = Paint()..style = PaintingStyle.stroke;
+
     for (final connection in _connections) {
       final a = pose.landmarks[connection[0]];
       final b = pose.landmarks[connection[1]];
@@ -79,17 +100,10 @@ class PosePainter extends CustomPainter {
       final p1 = _project(a, size);
       final p2 = _project(b, size);
 
-      final boneGlow = Paint()
-        ..color = _neonCyan.withValues(alpha: 0.35 * boneAlpha)
-        ..strokeWidth = 12
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
-      final bonePaint = Paint()
+      boneGlow.color = _neonCyan.withValues(alpha: 0.35 * boneAlpha);
+      bonePaint
         ..color = _neonCyan.withValues(alpha: boneAlpha)
-        ..strokeWidth = boneLikelihood < _lowConfidenceThreshold ? 2.5 : 4.0
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round;
+        ..strokeWidth = boneLikelihood < _lowConfidenceThreshold ? 2.5 : 4.0;
 
       canvas.drawLine(p1, p2, boneGlow);
       canvas.drawLine(p1, p2, bonePaint);
@@ -98,24 +112,19 @@ class PosePainter extends CustomPainter {
     for (final landmark in pose.landmarks.values) {
       final center = _project(landmark, size);
       final alpha = _alphaFor(landmark.likelihood);
-      final ringPaint = Paint()
-        ..color = Colors.white.withValues(alpha: 0.85 * alpha)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.2;
 
       if (landmark.likelihood < _lowConfidenceThreshold) {
-        // Hollow joint — visually communicates "we see something here
-        // but it's uncertain." No fill, narrower ring.
-        final hollowRing = Paint()
+        // Hollow joint — "we see something here but it's uncertain."
+        ringPaint
           ..color = _neonGreen.withValues(alpha: alpha)
-          ..style = PaintingStyle.stroke
           ..strokeWidth = 1.5;
-        canvas.drawCircle(center, 5, hollowRing);
+        canvas.drawCircle(center, 5, ringPaint);
       } else {
-        final fillPaint = Paint()
-          ..color = _neonGreen.withValues(alpha: alpha)
-          ..style = PaintingStyle.fill;
+        fillPaint.color = _neonGreen.withValues(alpha: alpha);
         canvas.drawCircle(center, 5, fillPaint);
+        ringPaint
+          ..color = Colors.white.withValues(alpha: 0.85 * alpha)
+          ..strokeWidth = 1.2;
         canvas.drawCircle(center, 5, ringPaint);
       }
     }

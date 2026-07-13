@@ -30,6 +30,39 @@ class PaywallScreen extends ConsumerStatefulWidget {
 
 enum _Plan { monthly, yearly, quarterly }
 
+/// Store-honesty pass · returns the package's introductory offer ONLY
+/// when it is a genuinely free trial (intro price == 0). Every piece of
+/// "ücretsiz dene / şimdi ödeme yok" copy on this screen must derive
+/// from this — never hardcode a trial promise the store SKU doesn't
+/// carry (Apple 3.1.2 / Play subscriptions policy).
+IntroductoryPrice? _freeTrialOf(Package? package) {
+  final intro = package?.storeProduct.introductoryPrice;
+  if (intro == null || intro.price != 0) return null;
+  return intro;
+}
+
+/// Human Turkish label for a trial length, e.g. "7 gün", "1 hafta".
+/// Falls back to a unitless "ücretsiz deneme" phrasing when the store
+/// reports an unknown period unit.
+String _trialLengthLabel(IntroductoryPrice intro) {
+  final unit = switch (intro.periodUnit) {
+    PeriodUnit.day => 'gün',
+    PeriodUnit.week => 'hafta',
+    PeriodUnit.month => 'ay',
+    PeriodUnit.year => 'yıl',
+    _ => null,
+  };
+  if (unit == null) return 'ücretsiz deneme';
+  return '${intro.periodNumberOfUnits} $unit';
+}
+
+/// Billing-period label for the renewal disclosure line.
+String _periodLabelOf(_Plan plan) => switch (plan) {
+      _Plan.monthly => 'ay',
+      _Plan.yearly => 'yıl',
+      _Plan.quarterly => '3 ay',
+    };
+
 class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   static const Color _neon = Color(0xFF8E5BFF);
   static const Color _neonAccent = Color(0xFF4DA6FF);
@@ -343,18 +376,23 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     final subscription = ref.watch(subscriptionProvider);
     final offerings = subscription.value?.offerings;
     // Phase 96 · the gate is now `SDK ready AND offerings present`.
-    // Splitting these out lets us keep the existing skeleton-price /
-    // fallback-price treatment on the cards while disabling the
-    // action buttons more strictly — the cards must still draw
-    // *something* when the SDK is misconfigured (dev builds), but
-    // the action buttons must NOT fire a doomed BillingClient call.
+    // Splitting these out lets us keep the skeleton-price / em-dash
+    // treatment on the cards while disabling the action buttons more
+    // strictly — the cards must still draw *something* when the SDK is
+    // misconfigured (dev builds), but the action buttons must NOT fire
+    // a doomed BillingClient call.
     final canPurchase = _purchasesConfigured && offerings?.current != null;
+    // Store-honesty pass · every trial/renewal line below derives from
+    // the SELECTED plan's live RevenueCat package. No configured trial
+    // on the SKU → no trial promise anywhere on this screen.
+    final selectedPackage = _packageForPlan(_selected, offerings);
+    final selectedTrial = _freeTrialOf(selectedPackage);
     // Phase 95 · drives the per-card price slot. True only while the
     // RevenueCat fetch is genuinely in flight; once `_load` resolves —
     // even on the catch path that returns a no-offerings
     // `SubscriptionState` — `isLoading` flips to false and the card
-    // falls through to the marketing-spec fallback price. This is the
-    // explicit "loaded with no offering" signal the spec asked for.
+    // falls through to the em-dash slot while the plans row surfaces
+    // the "Fiyatlar yüklenemedi" retry notice (store-submission M2).
     final offeringsLoading = subscription.isLoading;
 
     // Phase 53F · drop the Scaffold's hardcoded `Colors.black` so the
@@ -407,16 +445,24 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                     isLoading: offeringsLoading,
                   ),
                   const SizedBox(height: 18),
-                  const _NoPaymentBadge(),
-                  const SizedBox(height: 16),
-                  _buildCta(canPurchase: canPurchase),
+                  // "Şimdi ödeme yok!" is only true when the selected
+                  // SKU actually carries a free trial — hidden otherwise.
+                  if (selectedTrial != null) ...const [
+                    _NoPaymentBadge(),
+                    SizedBox(height: 16),
+                  ],
+                  _buildCta(canPurchase: canPurchase, trial: selectedTrial),
                   const SizedBox(height: 6),
                   _buildRestoreButton(
                     canPurchase: canPurchase,
                     isLoading: offeringsLoading,
                   ),
                   const SizedBox(height: 6),
-                  const _LegalFooter(),
+                  _LegalFooter(
+                    trial: selectedTrial,
+                    priceString: selectedPackage?.storeProduct.priceString,
+                    periodLabel: _periodLabelOf(_selected),
+                  ),
                   // Phase 40: Sandbox override button is strictly a
                   // debug-only affordance now. The `_kDevProOverrideKey`
                   // logic in `monetization_provider` still reads from
@@ -476,6 +522,51 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     required Offerings? offerings,
     required bool isLoading,
   }) {
+    // Store-submission M2 · loaded-but-no-offering ⇒ say so and offer a
+    // retry instead of decorating the cards with invented prices (the
+    // CTA is already disabled in this state via the canPurchase gate).
+    final loadFailed = !isLoading && offerings?.current == null;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (loadFailed)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.wifi_off_rounded,
+                  size: 16,
+                  color: context.colors.onSurface.withValues(alpha: 0.6),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Fiyatlar yüklenemedi.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: context.colors.onSurface.withValues(alpha: 0.7),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    ref.read(subscriptionProvider.notifier).refresh();
+                    _refreshSdkReady();
+                  },
+                  child: const Text('Tekrar dene'),
+                ),
+              ],
+            ),
+          ),
+        _plansCards(offerings: offerings, isLoading: isLoading),
+      ],
+    );
+  }
+
+  Widget _plansCards({
+    required Offerings? offerings,
+    required bool isLoading,
+  }) {
     return SizedBox(
       height: 230,
       child: Row(
@@ -515,7 +606,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     );
   }
 
-  Widget _buildCta({required bool canPurchase}) {
+  Widget _buildCta({required bool canPurchase, IntroductoryPrice? trial}) {
     // Phase 53 · the paywall's primary "Devam Et / Try at ₺0,00" path
     // is the screen's monetisation hinge. Wrap with explicit semantics
     // so screen readers announce the action instead of trying to read
@@ -572,25 +663,27 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                             ),
                           ),
                         ]
-                      : const [
+                      : [
                           // Phase 53 · `maxLines: 2 + ellipsis` so the
                           // hero CTA copy gracefully wraps when the
                           // user has the system text scaler cranked
                           // (TextScaler ~1.6+ pushed the original
                           // single-line layout into a horizontal
                           // overflow on a 360 px iPhone SE).
+                          //
+                          // Store-honesty pass · "₺0,00 karşılığında
+                          // dene" is only shown when the selected SKU
+                          // really carries a free trial; otherwise the
+                          // CTA is a plain subscribe action.
                           Flexible(
                             child: Text(
-                              // Phase 60G · reverted to the legacy CTA
-                              // copy. "Karşılığında dene" reads as a
-                              // verb-led trial offer, which the PM
-                              // wants back paired with the new inline
-                              // trial badge inside the yearly plan.
-                              '₺0,00 karşılığında dene',
+                              trial != null
+                                  ? '₺0,00 karşılığında dene'
+                                  : "Premium'a Geç",
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               textAlign: TextAlign.center,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: 1.4,
@@ -598,8 +691,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                               ),
                             ),
                           ),
-                          SizedBox(width: 8),
-                          Icon(
+                          const SizedBox(width: 8),
+                          const Icon(
                             Icons.arrow_forward_rounded,
                             color: Colors.white,
                             size: 22,
@@ -904,11 +997,11 @@ class _HeroSection extends StatelessWidget {
           style: TextStyle(color: Colors.white60, fontSize: 13, height: 1.45),
         ),
         const SizedBox(height: 12),
-        // Phase 60D · social-proof tag right under the hero subtitle so
-        // the user sees crowd-validation before the price comparison
-        // even renders. Numbers stay round and rough — never fabricate
-        // a precision figure for marketing copy.
-        const _SocialProofTag(),
+        // Honesty pass · the old "🔥 10.000+ kişi kullanıyor" crowd tag
+        // was a fabricated count for a pre-launch app (Apple 2.3.1 /
+        // Play Misrepresentation). Replaced with a verifiable product
+        // capability — no user counts until we have real ones.
+        const _CapabilityTag(),
       ],
     );
   }
@@ -917,8 +1010,8 @@ class _HeroSection extends StatelessWidget {
 /// Phase 60D · "🔥 10.000+ kişi kullanıyor" pill. Sits between the hero
 /// subtitle and the plan-card row so the user sees crowd validation
 /// before evaluating the price.
-class _SocialProofTag extends StatelessWidget {
-  const _SocialProofTag();
+class _CapabilityTag extends StatelessWidget {
+  const _CapabilityTag();
 
   @override
   Widget build(BuildContext context) {
@@ -934,7 +1027,7 @@ class _SocialProofTag extends StatelessWidget {
           ),
         ),
         child: const Text(
-          '🔥 10.000+ kişi kullanıyor',
+          '🎯 130+ egzersizde canlı form analizi',
           style: TextStyle(
             color: Colors.white,
             fontSize: 12.5,
@@ -1272,7 +1365,7 @@ class _PlanCard extends StatelessWidget {
   /// Phase 95 · the resolved RevenueCat package for this plan, or null
   /// when no Offering has loaded yet (`isLoading == true`) or RC was
   /// never configured / failed to fetch (`isLoading == false`,
-  /// fall-through to [_fallbackPrice]). The card uses the package's
+  /// fall-through to the em-dash slot). The card uses the package's
   /// [StoreProduct.priceString] verbatim — RC formats it in the device
   /// locale (₺ for tr-TR, $ for en-US, etc.) so we don't rebuild the
   /// formatting ourselves.
@@ -1297,30 +1390,11 @@ class _PlanCard extends StatelessWidget {
         _Plan.quarterly => '3 Ay',
       };
 
-  /// Marketing-spec fallback shown ONLY when RevenueCat's offering
-  /// fetch resolved without a Package for this plan. Never displayed
-  /// while loading — the [SkeletonBox] takes that frame. The numbers
-  /// here mirror the Play Console SKU's reference prices for the
-  /// tr-TR market so the static fallback isn't wildly inconsistent
-  /// with what a working configuration would show.
-  String get _fallbackPrice => switch (plan) {
-        _Plan.monthly => '₺249,99',
-        _Plan.yearly => '₺999,99',
-        _Plan.quarterly => '₺499,99',
-      };
-
   String get _per => switch (plan) {
         _Plan.monthly => '/ ay',
         _Plan.yearly => '/ yıl',
         _Plan.quarterly => '/ 3 ay',
       };
-
-  /// Decoy reference price for the highlighted yearly card — pure
-  /// marketing copy ("was 2999.99"), not a discounted price the store
-  /// reports. Stays hardcoded; RevenueCat's `discounts` /
-  /// `introductoryPrice` fields don't model the "fictional anchor"
-  /// pattern this decoy uses.
-  String? get _decoy => plan == _Plan.yearly ? '₺2.999,99 idi' : null;
 
   /// Phase 95 · resolves the price slot to one of three widgets, in
   /// priority order:
@@ -1335,11 +1409,11 @@ class _PlanCard extends StatelessWidget {
   ///      `Purchases.getOfferings()` is in flight. Sized to roughly
   ///      match the eventual text height so the card doesn't jump
   ///      when the price lands.
-  ///   3. **Fallback**: hardcoded marketing-spec price, only when
-  ///      the load resolved without a Package (RC misconfigured /
-  ///      dev-fallback / no offerings). Same visual treatment as
-  ///      the real branch so a bad config still renders a usable
-  ///      paywall instead of an empty card.
+  ///   3. **Unavailable**: an em-dash when the load resolved without a
+  ///      Package (RC misconfigured / fetch failed / no offerings).
+  ///      Store-submission M2: we never invent a price here — the
+  ///      plans row shows a "Fiyatlar yüklenemedi" notice with a
+  ///      retry, and the CTA is disabled in this state.
   Widget _buildPriceSlot(ColorScheme scheme) {
     final fontSize = _isHighlighted ? 22.0 : 18.0;
     final priceStyle = TextStyle(
@@ -1366,7 +1440,7 @@ class _PlanCard extends StatelessWidget {
     }
     return FittedBox(
       fit: BoxFit.scaleDown,
-      child: Text(_fallbackPrice, style: priceStyle),
+      child: Text('—', style: priceStyle),
     );
   }
 
@@ -1448,31 +1522,14 @@ class _PlanCard extends StatelessWidget {
                           letterSpacing: 1,
                         ),
                       ),
-                      if (_decoy != null) ...[
-                        const SizedBox(height: 6),
-                        Text(
-                          _decoy!,
-                          style: TextStyle(
-                            color: scheme.onSurface.withValues(alpha: 0.55),
-                            fontSize: 11,
-                            decoration: TextDecoration.lineThrough,
-                            decorationColor:
-                                scheme.onSurface.withValues(alpha: 0.60),
-                            decorationThickness: 2,
-                          ),
-                        ),
-                      ],
-                      // Phase 60G · the new in-card trial badge for the
-                      // recommended (yearly) package only. The PM-spec'd
-                      // copy "7 gün ücretsiz dene — şimdi ödeme yok"
-                      // is split onto two lines because the card's
-                      // inner width (~80 px on a 360 px viewport) won't
-                      // fit it as a single line without aggressive
-                      // shrinking. The neon-tinted background + border
-                      // makes it read as a risk-removal callout.
-                      if (_isHighlighted) ...[
+                      // Store-honesty pass · the fictional "₺2.999,99
+                      // idi" strikethrough anchor is gone (Apple 2.3.1 /
+                      // TR-EU reference-price law). The in-card trial
+                      // badge renders only when THIS card's live SKU
+                      // carries a real free trial.
+                      if (_isHighlighted && _freeTrialOf(package) != null) ...[
                         const SizedBox(height: 8),
-                        const _InlineTrialBadge(),
+                        _InlineTrialBadge(trial: _freeTrialOf(package)!),
                       ],
                     ],
                   ),
@@ -1542,14 +1599,15 @@ class _PlanCard extends StatelessWidget {
   }
 }
 
-/// Phase 60G · trial badge rendered inside the highlighted (yearly)
-/// _PlanCard. Two-line layout — the PM-spec'd "7 gün ücretsiz dene
-/// — şimdi ödeme yok" line doesn't fit on a single line at the
+/// Trial badge rendered inside the highlighted (yearly) _PlanCard —
+/// ONLY when that card's live RevenueCat SKU carries a free trial.
+/// Two-line layout: the copy doesn't fit on a single line at the
 /// card's ~80 px inner width without shrinking the type beyond
-/// readability, so we split on the em-dash. Neon-tinted background +
-/// 1 px border so it reads as a risk-removal pill, not body copy.
+/// readability. Neon-tinted background + 1 px border so it reads as
+/// a risk-removal pill, not body copy.
 class _InlineTrialBadge extends StatelessWidget {
-  const _InlineTrialBadge();
+  const _InlineTrialBadge({required this.trial});
+  final IntroductoryPrice trial;
 
   @override
   Widget build(BuildContext context) {
@@ -1568,7 +1626,7 @@ class _InlineTrialBadge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            '7 gün ücretsiz dene',
+            '${_trialLengthLabel(trial)} ücretsiz dene',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: scheme.onSurface,
@@ -1663,7 +1721,22 @@ class _NoPaymentBadge extends StatelessWidget {
 }
 
 class _LegalFooter extends StatefulWidget {
-  const _LegalFooter();
+  const _LegalFooter({
+    required this.trial,
+    required this.priceString,
+    required this.periodLabel,
+  });
+
+  /// The selected plan's real free trial, or null when the SKU has
+  /// none — drives whether the footer mentions a trial at all.
+  final IntroductoryPrice? trial;
+
+  /// Localised store price of the selected plan (e.g. "₺999,99"),
+  /// null while offerings are loading / unavailable.
+  final String? priceString;
+
+  /// "ay" / "yıl" / "3 ay" — the selected plan's billing period.
+  final String periodLabel;
 
   @override
   State<_LegalFooter> createState() => _LegalFooterState();
@@ -1709,17 +1782,34 @@ class _LegalFooterState extends State<_LegalFooter> {
       decoration: TextDecoration.underline,
       decorationColor: const Color(0xFF8E5BFF).withValues(alpha: 0.8),
     );
+    // Store-honesty pass · the old footer promised a "7 günlük
+    // ücretsiz deneme" unconditionally. It now (a) mentions a trial
+    // only when the selected SKU really has one, with its real
+    // duration, and (b) always carries the explicit auto-renewal +
+    // store-billing disclosure Apple 3.1.2 / Play subscriptions
+    // require.
+    final trial = widget.trial;
+    final price = widget.priceString;
+    final renewal = price != null
+        ? 'Abonelik ($price / ${widget.periodLabel}) iptal edilmedikçe '
+            'her dönem sonunda otomatik yenilenir ve ücret mağaza '
+            'hesabına yansıtılır.'
+        : 'Abonelik iptal edilmedikçe her dönem sonunda otomatik '
+            'yenilenir ve ücret mağaza hesabına yansıtılır.';
+    final opening = trial != null
+        ? '${_trialLengthLabel(trial)} süren ücretsiz denemenin sonunda '
+            'seçtiğin abonelik otomatik başlar. $renewal Deneme süresi '
+            'içinde ayarlardan istediğin zaman iptal edebilirsin. '
+            'Devam ederek '
+        : '$renewal İstediğin zaman mağaza aboneliklerinden iptal '
+            'edebilirsin. Devam ederek ';
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Text.rich(
         TextSpan(
           style: baseStyle,
           children: [
-            const TextSpan(
-              text: '7 günlük ücretsiz deneme süresinin sonunda seçtiğin '
-                  'abonelik otomatik başlar. Deneme süresi içinde ayarlardan '
-                  'istediğin zaman iptal edebilirsin. Devam ederek ',
-            ),
+            TextSpan(text: opening),
             TextSpan(
               text: 'Kullanım Şartları',
               style: linkStyle,

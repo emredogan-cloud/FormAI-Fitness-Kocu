@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint, kDebugMode, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:video_player/video_player.dart';
@@ -265,7 +265,12 @@ class _ExerciseGuidePlayerState extends State<ExerciseGuidePlayer>
     // upstream sanitization gets escaped, eliminating the residual 400s
     // ExoPlayer was returning on otherwise-valid Storage URLs.
     final sanitizedUrl = Uri.encodeFull(stripped);
-    debugPrint('🔥 VIDEO_URL_DEBUG: $sanitizedUrl');
+    // Debug-only: `debugPrint` still executes in release builds (only
+    // throttled), and this line was spamming resolved Storage URLs
+    // into production logcat.
+    if (kDebugMode) {
+      debugPrint('🔥 VIDEO_URL_DEBUG: $sanitizedUrl');
+    }
 
     if (kIsWeb) {
       return VideoPlayerController.networkUrl(Uri.parse(sanitizedUrl));

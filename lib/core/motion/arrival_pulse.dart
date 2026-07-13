@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 
 import 'motion_tokens.dart';
@@ -74,6 +76,9 @@ class _ArrivalPulseState extends State<ArrivalPulse>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
   late final Animation<double> _curve;
+  // Cancelable so a still-pending start delay is torn down on dispose /
+  // reduce-motion (a Future.delayed leaks a timer past the widget's life).
+  Timer? _startTimer;
   bool _done = false;
 
   @override
@@ -94,14 +99,31 @@ class _ArrivalPulseState extends State<ArrivalPulse>
     if (widget.startDelay == Duration.zero) {
       _ctrl.forward();
     } else {
-      Future<void>.delayed(widget.startDelay, () {
-        if (mounted) _ctrl.forward();
+      _startTimer = Timer(widget.startDelay, () {
+        if (mounted && !_done) _ctrl.forward();
+      });
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Reduce-motion (store-submission U4): skip the ring entirely but
+    // still fire [onComplete] — downstream beats (typewriter start,
+    // CTA enable) are gated on it.
+    if (!_done && (MediaQuery.maybeOf(context)?.disableAnimations ?? false)) {
+      _done = true;
+      // Cancel any queued start so no animation timer outlives the skip.
+      _startTimer?.cancel();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) widget.onComplete?.call();
       });
     }
   }
 
   @override
   void dispose() {
+    _startTimer?.cancel();
     _ctrl.dispose();
     super.dispose();
   }

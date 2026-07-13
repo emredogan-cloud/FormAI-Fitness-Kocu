@@ -10,6 +10,7 @@ import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
+import '../../../core/services/app_preferences.dart';
 import '../../../core/services/live_activity_service.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/utils/app_logger.dart';
@@ -58,6 +59,11 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
   CameraDescription? _camera;
   List<Pose> _poses = const [];
   Size? _imageSize;
+  // Store-submission U6 · last frame that contained a detected pose
+  // (baseline = first processed frame). Drives the visual "get in
+  // frame" pill — previously the only cue was the voice coach, which
+  // is silent on muted phones.
+  DateTime? _lastPoseAt;
   // Phase 48 · single-flight gate. Prevents the camera's image stream
   // (running at 30 FPS) from queuing up multiple BlazePose inferences
   // simultaneously — when the previous frame is still being processed
@@ -91,6 +97,10 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
   Timer? _workoutTimer;
   int _secondsRemaining = 0;
   bool _isPaused = false;
+
+  /// One-shot per session: the "place the phone to your side" hint for
+  /// sagittal-plane exercises (squat / push-up / hinge families).
+  bool _spokeSideViewHint = false;
 
   @override
   void initState() {
@@ -227,6 +237,11 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
   }
 
   Future<bool> _showMlKitDisclosure() async {
+    // UX-10 · show once, remember forever. Re-prompting the same
+    // transparency dialog on every workout entry was friction with no
+    // added disclosure value.
+    final prefs = ref.read(appPreferencesProvider);
+    if (prefs.mlDisclosureAcked) return true;
     final result = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -273,6 +288,9 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         ],
       ),
     );
+    if (result == true) {
+      unawaited(prefs.setMlDisclosureAcked());
+    }
     return result ?? false;
   }
 
@@ -393,6 +411,16 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         _coach.onTimerTick(_secondsRemaining);
       }
     });
+  }
+
+  /// U6 · true when the live session has gone ≥4 s without a detected
+  /// pose (and isn't paused) — the visual counterpart to the voice
+  /// coach's "tüm vücudun görünmeli" framing cue.
+  bool get _showNoPoseHint {
+    if (_isPaused || _poses.isNotEmpty) return false;
+    final t = _lastPoseAt;
+    return t != null &&
+        DateTime.now().difference(t) >= const Duration(seconds: 4);
   }
 
   Future<void> _processImage(CameraImage image) async {
@@ -516,6 +544,13 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       if (!mounted) return;
       setState(() {
         _poses = poses;
+        if (poses.isNotEmpty) {
+          _lastPoseAt = DateTime.now();
+        } else {
+          // Baseline from the first processed frame so the framing hint
+          // can fire even if a person never enters the frame.
+          _lastPoseAt ??= DateTime.now();
+        }
         _imageSize = Size(image.width.toDouble(), image.height.toDouble());
         if (result != null) {
           _state = result.state;
@@ -587,11 +622,42 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    final controller = _controller;
-    if (controller == null || !controller.value.isInitialized) return;
-    if (state == AppLifecycleState.inactive) {
-      controller.dispose();
-    } else if (state == AppLifecycleState.resumed && _camera != null) {
+    // P1-6 · interruption-safe session. The old handler disposed the
+    // controller on `inactive` WITHOUT stopping the image stream,
+    // without nulling `_controller`, and without pausing anything —
+    // so a phone call / notification-shade pull mid-plank left the
+    // timer draining, the coach talking to a dead camera, buffered
+    // frames racing into `_onCameraImage` against a disposing
+    // controller, and the next build dereferencing a disposed
+    // controller ("used after being disposed" crash).
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
+      final controller = _controller;
+      if (controller == null || !controller.value.isInitialized) return;
+      // Auto-pause through the same state the manual pause button uses:
+      // timer stops draining, coach goes quiet, and on return the user
+      // lands on the existing pause overlay with its resume affordance.
+      if (!_isPaused) {
+        _isPaused = true;
+        _workoutTimer?.cancel();
+        _workoutTimer = null;
+        _coach.onPause();
+      }
+      // Mirror dispose(): stop the stream FIRST so buffered frames are
+      // dropped at the platform layer, then dispose, then null the
+      // field so no code path can touch the disposed instance.
+      if (controller.value.isStreamingImages) {
+        unawaited(controller.stopImageStream().catchError((_) {}));
+      }
+      unawaited(controller.dispose());
+      _controller = null;
+      if (mounted) setState(() {});
+    } else if (state == AppLifecycleState.resumed &&
+        _controller == null &&
+        _camera != null) {
+      // Re-init the camera; the session stays paused until the user
+      // explicitly resumes from the overlay.
       _startController(_camera!);
     }
   }
@@ -769,6 +835,30 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       // gets cleared to start.
       if (exerciseChanged) {
         _analyzer = exercise == null ? CrunchAnalyzer() : analyzerFor(exercise);
+        // P2 form-trust · squat-lean / push-up-hip-sag / hinge-ROM
+        // checks measure sagittal-plane faults, which a straight-on
+        // selfie view geometrically can't capture. One spoken hint per
+        // session tells the user how to make those cues actually work
+        // instead of silently under-delivering the headline feature.
+        if (exercise != null && !_spokeSideViewHint) {
+          final slug = exercise.id.toLowerCase();
+          const sagittalMarkers = [
+            'squat',
+            'push_up',
+            'pushup',
+            'hinge',
+            'deadlift',
+            'good_morning',
+          ];
+          if (sagittalMarkers.any(slug.contains)) {
+            _spokeSideViewHint = true;
+            _audio.speak(
+              'İpucu: telefonu seni yandan görecek şekilde yerleştirirsen '
+              'duruş uyarıları çok daha isabetli olur.',
+              priority: SpeechPriority.milestone,
+            );
+          }
+        }
       }
 
       // Pause the per-exercise countdown during rest AND prep so the
@@ -1030,7 +1120,15 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
                   _FormWarning(message: _formWarning!),
                   const SizedBox(height: 8),
                 ],
-                if (!_isPaused &&
+                // U6 · framing hint takes the tip slot while no pose has
+                // been detected for a few seconds (voice-only cue was
+                // invisible on muted phones); frames keep arriving, so
+                // the per-frame setState re-evaluates this continuously.
+                if (_showNoPoseHint)
+                  const _LiveTipPill(
+                    tip: 'Kadraja gir — analiz için tüm vücudun görünmeli',
+                  )
+                else if (!_isPaused &&
                     exercise != null &&
                     exercise.shortTip.isNotEmpty)
                   _LiveTipPill(tip: exercise.shortTip),
@@ -1490,7 +1588,9 @@ class _PermissionCard extends StatelessWidget {
     this.onSecondary,
   });
 
-  static const Color _neon = Color(0xFF00F0FF);
+  // Store-submission U7 · this card renders as a standalone pre-camera
+  // gate, so it follows the brand purple, not the in-workout cyan.
+  static const Color _neon = Color(0xFF8E5BFF);
 
   final IconData icon;
   final String title;

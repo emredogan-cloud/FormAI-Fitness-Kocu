@@ -83,6 +83,11 @@ class _GlowPulseState extends State<GlowPulse>
 
   @override
   Widget build(BuildContext context) {
+    // A11y (P1-18) · honor the OS "Reduce Motion" setting: render the
+    // resting frame instead of the continuous animation.
+    if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) {
+      return widget.child;
+    }
     final base = widget.color ?? const Color(0xFF8E5BFF);
     return RepaintBoundary(
       child: AnimatedBuilder(

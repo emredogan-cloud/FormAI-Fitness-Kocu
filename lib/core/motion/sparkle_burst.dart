@@ -110,6 +110,11 @@ class _SparkleBurstState extends State<SparkleBurst>
 
   @override
   Widget build(BuildContext context) {
+    // A11y (P1-18) · honor the OS "Reduce Motion" setting: render the
+    // resting frame instead of the continuous animation.
+    if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) {
+      return widget.child;
+    }
     return RepaintBoundary(
       child: Stack(
         alignment: Alignment.center,

@@ -6,6 +6,7 @@ import '../../../core/services/app_preferences.dart';
 import '../../../core/theme/theme_extension.dart';
 import '../../workout/models/workout_day_model.dart';
 import '../../workout/providers/workout_provider.dart';
+import '../providers/streak_provider.dart';
 
 const Color _neon = Color(0xFF8B5CF6);
 const Color _neonAccent = Color(0xFF4DA6FF);
@@ -42,8 +43,10 @@ class BadgesScreen extends ConsumerWidget {
     final session = ref.watch(workoutSessionProvider).value;
     final days = session?.days ?? const <WorkoutDay>[];
     final completedCount = days.where((d) => d.isCompleted).length;
-    final streak = _streakOf(days);
-    final weeklyKcal = completedCount * _kcalPerCompletedDay;
+    final streak = ref.watch(currentStreakProvider);
+    // Unified "Kalori Avcısı" definition: LIFETIME completions ×
+    // kcalPerCompletedDay (matches unlockedBadgesProvider + gelisim).
+    final totalKcal = completedCount * _kcalPerCompletedDay;
     final cardioDaysCompleted = _cardioDaysCompleted(days);
     final coreDaysCompleted = _daysCompletedByMuscle(days, 'core');
     final strengthDaysCompleted = _daysCompletedByStrength(days);
@@ -92,11 +95,11 @@ class BadgesScreen extends ConsumerWidget {
       ),
       _BadgeData(
         label: 'Kalori Avcısı',
-        subtitle: 'Haftada 1500 kcal',
+        subtitle: 'Toplam 1500 kcal',
         icon: Icons.local_fire_department,
         accent: _orange,
-        unlocked: weeklyKcal >= 1500,
-        progress: (weeklyKcal / 1500).clamp(0.0, 1.0),
+        unlocked: totalKcal >= 1500,
+        progress: (totalKcal / 1500).clamp(0.0, 1.0),
       ),
       _BadgeData(
         label: 'HIIT Ustası',
@@ -217,18 +220,6 @@ class BadgesScreen extends ConsumerWidget {
   // Derivation helpers — keep them pure so a widget test can feed a
   // synthetic `days: []` list and reproduce the unlock predicates.
   // ==========================================================================
-
-  int _streakOf(List<WorkoutDay> days) {
-    var streak = 0;
-    for (final day in days) {
-      if (day.isCompleted) {
-        streak += 1;
-      } else {
-        break;
-      }
-    }
-    return streak;
-  }
 
   int _cardioDaysCompleted(List<WorkoutDay> days) {
     return days.where((d) {

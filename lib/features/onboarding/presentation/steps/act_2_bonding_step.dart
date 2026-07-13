@@ -160,7 +160,7 @@ class _CoachIntroStepState extends State<CoachIntroStep>
               );
             },
             child: Image.asset(
-              'photos/merhababenseninkişiselyapayzekakoçunumyeniarkaplan.webp',
+              'photos/Second_screen.png',
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) =>
                   const ColoredBox(color: Color(0xFF0E0729)),

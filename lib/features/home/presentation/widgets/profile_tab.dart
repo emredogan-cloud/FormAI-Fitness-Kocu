@@ -21,8 +21,9 @@ import '../../../feedback/services/feedback_service.dart';
 import '../../../monetization/presentation/churn_survey_sheet.dart';
 import '../../../monetization/providers/monetization_provider.dart';
 import '../../../referral/providers/referral_provider.dart';
+import '../../../progress/providers/streak_provider.dart';
+import '../../../progress/providers/xp_provider.dart';
 import '../../../referral/services/referral_service.dart';
-import '../../../workout/models/workout_day_model.dart';
 import '../../../workout/providers/workout_provider.dart';
 import 'stat_tile.dart';
 
@@ -37,6 +38,17 @@ const Map<String, String> _goalLabels = {
   'tone': 'Sıkılaşmak',
   'bulk': 'Hacim Kazanmak',
   'sixpack': 'Sadece Six-Pack',
+};
+
+/// The onboarding Goal step writes `goal` (a distinct taxonomy from the
+/// account-settings `targetPhysique` enum). Without this fallback map,
+/// every onboarding-completed user saw "HEDEF —" because the profile
+/// only read `targetPhysique`, which onboarding never sets.
+const Map<String, String> _onboardingGoalLabels = {
+  'belly_burn': 'Göbek Eritmek',
+  'muscle_gain': 'Kas Yapmak',
+  'fitness_look': 'Daha Fit Görünmek',
+  'strength': 'Güçlenmek',
 };
 
 class ProfileTab extends ConsumerStatefulWidget {
@@ -55,12 +67,20 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     final user = ref.watch(currentUserProvider);
 
     final completed = session?.days.where((d) => d.isCompleted).length ?? 0;
-    final streak = _streakOf(session?.days ?? const []);
+    final streak = ref.watch(currentStreakProvider);
     final weight = metrics['weightKg'];
     final height = metrics['heightCm'];
     final age = metrics['age'];
+    // Prefer the account-settings enum; fall back to the onboarding goal
+    // so a user who only completed onboarding still sees their target
+    // (previously always "—" for that path).
     final goalKey = metrics['targetPhysique'] as String?;
-    final goalLabel = goalKey == null ? '—' : (_goalLabels[goalKey] ?? goalKey);
+    final onboardingGoal = metrics['goal'] as String?;
+    final goalLabel = goalKey != null
+        ? (_goalLabels[goalKey] ?? goalKey)
+        : (onboardingGoal != null
+            ? (_onboardingGoalLabels[onboardingGoal] ?? '—')
+            : '—');
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
@@ -314,18 +334,6 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     );
   }
 
-  int _streakOf(List<WorkoutDay> days) {
-    var streak = 0;
-    for (final day in days) {
-      if (day.isCompleted) {
-        streak += 1;
-      } else {
-        break;
-      }
-    }
-    return streak;
-  }
-
   Future<void> _openEditSheet(Map<String, dynamic> initial) async {
     // Phase 53H · drop the hardcoded `0xFF111118` so the sheet picks
     // up the active theme's surface tone — white in light mode, dark
@@ -374,7 +382,12 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
         data: {'error': e.message, 'stack': st.toString()},
       );
       if (!context.mounted) return;
-      _toast(context, 'Şifre güncellenemedi: ${e.message}');
+      // AuthException.message is raw English from Supabase ("Password
+      // should be at least 6 characters") — keep it out of the TR UI.
+      _toast(
+          context,
+          'Şifre güncellenemedi. Şifre en az 6 karakter olmalı '
+          've eskisinden farklı olmalı.');
     } catch (e, st) {
       AppLogger.error(
         'updatePassword failed',
@@ -453,7 +466,11 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     try {
       await service.redeem(code);
       if (!context.mounted) return;
-      _toast(context, 'Tebrikler! 1 Aylık Pro hesabınız aktif edildi.');
+      _toast(
+        context,
+        'Davet kodun kaydedildi! Ödüller dağıtılmaya başladığında '
+        'hesabına yansıyacak.',
+      );
     } on ReferralException catch (e) {
       if (!context.mounted) return;
       _toast(context, e.localizedMessage());
@@ -835,35 +852,70 @@ class _InfoTile extends StatelessWidget {
   }
 }
 
-class _ProfileHeader extends StatelessWidget {
+class _ProfileHeader extends ConsumerWidget {
   const _ProfileHeader({required this.email, required this.isGuest});
   final String? email;
   final bool isGuest;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final label = isGuest ? 'Misafir Kullanıcı' : (email ?? 'Hoşgeldin');
+    // P1-3 · the level/title/XP identity system was computed and
+    // persisted with zero UI consumers — the profile now carries it:
+    // level badge on the avatar, title + XP line, and a thin
+    // progress bar toward the next level.
+    final lp = ref.watch(levelProgressProvider);
+    final tier = ref.watch(currentTitleProvider);
+    final span = lp.nextLevelXp - lp.currentLevelXp;
+    final levelPct =
+        span <= 0 ? 1.0 : ((lp.xp - lp.currentLevelXp) / span).clamp(0.0, 1.0);
     return Row(
       children: [
-        Container(
-          width: 64,
-          height: 64,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: const LinearGradient(
-              colors: [_neon, _neonAccent],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: _neon.withValues(alpha: 0.5),
-                blurRadius: 18,
-                spreadRadius: 1,
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  colors: [_neon, _neonAccent],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: _neon.withValues(alpha: 0.5),
+                    blurRadius: 18,
+                    spreadRadius: 1,
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: const Icon(Icons.person, color: Colors.white, size: 32),
+              child: const Icon(Icons.person, color: Colors.white, size: 32),
+            ),
+            Positioned(
+              bottom: -4,
+              right: -4,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                decoration: BoxDecoration(
+                  color: context.colors.surface,
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: _neon, width: 1.2),
+                ),
+                child: Text(
+                  'Sv ${lp.level}',
+                  style: TextStyle(
+                    color: context.colors.onSurface,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(width: 14),
         Expanded(
@@ -889,6 +941,29 @@ class _ProfileHeader extends StatelessWidget {
                 style: TextStyle(
                   color: context.colors.onSurface.withValues(alpha: 0.65),
                   fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '${tier.title} · ${lp.xp} XP',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: _neon.withValues(alpha: 0.95),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.2,
+                ),
+              ),
+              const SizedBox(height: 5),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(999),
+                child: LinearProgressIndicator(
+                  value: levelPct,
+                  minHeight: 5,
+                  backgroundColor:
+                      context.colors.onSurface.withValues(alpha: 0.10),
+                  valueColor: const AlwaysStoppedAnimation<Color>(_neon),
                 ),
               ),
             ],
@@ -1650,7 +1725,7 @@ class _ReferralCard extends ConsumerWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Sen ve arkadaşın 1 ay Pro kazanın',
+                  'Arkadaşını davet et',
                   style: TextStyle(
                     color: scheme.onSurface,
                     fontSize: 14,
@@ -1662,8 +1737,8 @@ class _ReferralCard extends ConsumerWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Davet kodunu paylaş — kullanan herkesle birlikte 30 günlük '
-            'Pro hesap kazanırsın.',
+            'Davet kodunu paylaş — kullanan arkadaşların kodun altında '
+            'kaydedilir, ödül programı açıldığında birlikte kazanırsınız.',
             style: TextStyle(
               color: scheme.onSurface.withValues(alpha: 0.65),
               fontSize: 12,

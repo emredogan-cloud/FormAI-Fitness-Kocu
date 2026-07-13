@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../core/services/app_preferences.dart';
 import '../../workout/models/workout_day_model.dart';
 import '../../workout/providers/workout_provider.dart';
+import 'streak_provider.dart';
 
 /// Phase 48 · single source of truth for which badges the user has
 /// unlocked right now.
@@ -19,8 +21,6 @@ import '../../workout/providers/workout_provider.dart';
 /// Returned as an immutable `Set<String>` of stable badge IDs (NOT
 /// Turkish labels — those would shift if we ever localise). Subscribers
 /// diff `previous` vs `next` to detect first-time unlocks.
-
-const int _kKcalPerCompletedDay = 250;
 
 /// Catalogue of every badge the app awards. Keep IDs short and stable;
 /// the celebration dialog uses [label] + [subtitle] for the user-facing
@@ -59,7 +59,7 @@ const List<BadgeDefinition> kBadgeCatalog = [
   BadgeDefinition(
     id: 'calorie_hunter',
     label: 'Kalori Avcısı',
-    subtitle: 'Haftada 1500 kcal yaktın!',
+    subtitle: 'Toplam 1500 kcal yaktın!',
     emoji: '⚡',
   ),
   BadgeDefinition(
@@ -165,8 +165,13 @@ final unlockedBadgesProvider = Provider<Set<String>>((ref) {
   final session = ref.watch(workoutSessionProvider).value;
   final days = session?.days ?? const <WorkoutDay>[];
   final completedCount = days.where((d) => d.isCompleted).length;
-  final streak = _streakOf(days);
-  final weeklyKcal = completedCount * _kKcalPerCompletedDay;
+  // Real calendar-day streak — 'disciplined' (≥3) and especially
+  // 'steady' (≥7) were unreachable under the old leading-program-run
+  // count, which the every-4th-day rest slot capped at 3.
+  final streak = ref.watch(currentStreakProvider);
+  // Unified "Kalori Avcısı" definition: LIFETIME completions ×
+  // kcalPerCompletedDay (same predicate as badges_screen + gelisim).
+  final totalKcal = completedCount * AppConstants.kcalPerCompletedDay;
   final cardioDaysCompleted = _cardioDaysCompleted(days);
   final coreDaysCompleted = _daysCompletedByMuscle(days, 'core');
   final strengthDaysCompleted = _daysCompletedByStrength(days);
@@ -178,7 +183,7 @@ final unlockedBadgesProvider = Provider<Set<String>>((ref) {
   if (completedCount >= 7) unlocked.add('first_week');
   if (streak >= 7) unlocked.add('steady');
   if (completedCount >= 14) unlocked.add('halfway');
-  if (weeklyKcal >= 1500) unlocked.add('calorie_hunter');
+  if (totalKcal >= 1500) unlocked.add('calorie_hunter');
   if (cardioDaysCompleted >= 5) unlocked.add('hiit_master');
   if (coreDaysCompleted >= 5) unlocked.add('core_master');
   if (strengthDaysCompleted >= 5) unlocked.add('strength_stone');
@@ -189,18 +194,6 @@ final unlockedBadgesProvider = Provider<Set<String>>((ref) {
   }
   return unlocked;
 });
-
-int _streakOf(List<WorkoutDay> days) {
-  var streak = 0;
-  for (final day in days) {
-    if (day.isCompleted) {
-      streak += 1;
-    } else {
-      break;
-    }
-  }
-  return streak;
-}
 
 int _cardioDaysCompleted(List<WorkoutDay> days) {
   return days.where((d) {

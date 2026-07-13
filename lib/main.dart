@@ -21,6 +21,7 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/theme_mode_provider.dart';
 import 'core/utils/app_logger.dart';
 import 'core/utils/audio_feedback.dart';
+import 'l10n/app_localizations.dart';
 
 /// Phase 94 · release-build resilience.
 ///
@@ -183,7 +184,10 @@ void _captureSafe(Object error, StackTrace? stack) {
   }
 }
 
-const Color _kNeon = Color(0xFF00F0FF);
+// Brand primary (AppColors.neon). The boot wordmark used to paint a
+// one-off cyan (0xFF00F0FF) that matched nothing else in the brand —
+// the first two frames of the app disagreed with every frame after.
+const Color _kNeon = Color(0xFF8E5BFF);
 
 // Splashes the FormAI wordmark immediately, then hands off to the real app
 // once .env + Supabase + SharedPreferences are ready. Running the three
@@ -213,6 +217,17 @@ class _BootGateState extends State<_BootGate> {
   // idempotent, so those re-run safely).
   bool _supabaseInitialized = false;
   late Future<SharedPreferences> _bootstrap;
+
+  // The anon-flag auth listener must be cancel-and-replace: `_init()`
+  // re-runs on every boot retry, and an un-cancelled `.listen` from a
+  // failed attempt would stack another permanent subscription each time.
+  StreamSubscription<AuthState>? _authFlagSub;
+
+  @override
+  void dispose() {
+    _authFlagSub?.cancel();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -303,7 +318,9 @@ class _BootGateState extends State<_BootGate> {
         // anon identity are RLS-locked away. That's an acceptable loss
         // for an identity that, by definition, was already disposable;
         // the alternative (forcing /auth) is worse for retention.
-        Supabase.instance.client.auth.onAuthStateChange.listen((authState) {
+        await _authFlagSub?.cancel();
+        _authFlagSub =
+            Supabase.instance.client.auth.onAuthStateChange.listen((authState) {
           final user = authState.session?.user;
           // signedOut → preserve the last-known flag so a subsequent
           // cold start can still trigger the recovery path.
@@ -626,6 +643,17 @@ class _FormAIAppState extends ConsumerState<FormAIApp> {
     return MaterialApp.router(
       title: 'FormAI',
       debugShowCheckedModeBanner: false,
+      // Phase 2 (P-Risk) · localization foundation. Delegates wired from
+      // the generated AppLocalizations; string migration from hard-coded
+      // Turkish is incremental from here.
+      //
+      // Store honesty · ships TR-ONLY for launch. ~1,300 strings are
+      // still hard-coded Turkish, so declaring `en` (which the generated
+      // supportedLocales would) put a broken 6-EN/1,300-TR hybrid on
+      // English devices and an untrue language claim on the listing.
+      // Re-add Locale('en') only when the extraction track completes.
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: const [Locale('tr')],
       // Phase 49 · the dark builder layers floating, neon-bordered
       // SnackBars on top of the seed-based ColorScheme so toasts read
       // as part of the brand. Phase 53 added [AppTheme.light] so
@@ -634,6 +662,20 @@ class _FormAIAppState extends ConsumerState<FormAIApp> {
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: themeMode,
+      // Store-submission U3 · honor system font scaling but clamp it:
+      // unbounded 2.0x scaling shatters the fixed-height plan/stat cards
+      // (many Rows lack Flexible guards). 1.3x keeps the top journeys
+      // intact; raise only after a dedicated large-type pass.
+      builder: (context, child) {
+        final mq = MediaQuery.of(context);
+        return MediaQuery(
+          data: mq.copyWith(
+            textScaler:
+                mq.textScaler.clamp(minScaleFactor: 1.0, maxScaleFactor: 1.3),
+          ),
+          child: child!,
+        );
+      },
       routerConfig: router,
     );
   }

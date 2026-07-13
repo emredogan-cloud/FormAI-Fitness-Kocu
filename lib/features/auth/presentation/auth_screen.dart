@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../core/services/app_preferences.dart';
 import '../../../core/services/connectivity_service.dart';
+import '../auth_error_messages.dart';
 import '../../monetization/providers/monetization_provider.dart';
 import '../../onboarding/providers/wizard_provider.dart';
 import '../providers/auth_provider.dart';
@@ -100,7 +103,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         await ref.read(authControllerProvider).aliasRevenueCatWithCurrentUser();
         // Phase 140 · latch the paywall gate cleared so its remount
         // after pushReplacement / context.go doesn't re-fire.
-        ref.read(authGateClearedProvider.notifier).state = true;
+        ref.read(authGateClearedProvider.notifier).markCleared();
         await _routePostAuth();
       } else {
         // If the user came in as a guest (signInAnonymously from the
@@ -118,11 +121,15 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           await ref
               .read(authControllerProvider)
               .aliasRevenueCatWithCurrentUser();
-          ref.read(authGateClearedProvider.notifier).state = true;
+          ref.read(authGateClearedProvider.notifier).markCleared();
           if (mounted) {
+            // Honest copy: the email isn't attached until the user
+            // clicks the confirmation link — don't declare the upgrade
+            // done before it is.
             _toast(
-              'E-posta adresine doğrulama bağlantısı gönderildi. '
-              'Hesabın yükseltildi, ilerlemen korundu.',
+              'E-posta adresine doğrulama bağlantısı gönderildi — '
+              'onayladıktan sonra bu e-postayla giriş yapabilirsin. '
+              'İlerlemen korunuyor.',
             );
           }
           await _routePostAuth();
@@ -136,18 +143,29 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             await ref
                 .read(authControllerProvider)
                 .aliasRevenueCatWithCurrentUser();
-            ref.read(authGateClearedProvider.notifier).state = true;
+            ref.read(authGateClearedProvider.notifier).markCleared();
             await _routePostAuth();
           }
         }
       }
     } on AuthException catch (e) {
-      if (mounted) _toast(e.message);
+      if (mounted) _toast(_authErrTr(e));
     } catch (e) {
-      if (mounted) _toast('Beklenmedik hata: $e');
+      debugPrint('[auth] unexpected: $e');
+      if (mounted) {
+        _toast('Beklenmedik bir hata oluştu. Lütfen tekrar dene.');
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  /// Store-submission AC3 · maps Supabase's English `AuthException` to
+  /// Turkish (pure logic lives in [authErrorToTr] so it can be unit-
+  /// tested); the raw message still goes to the debug log here.
+  String _authErrTr(AuthException e) {
+    debugPrint('[auth] AuthException: ${e.message}');
+    return authErrorToTr(e);
   }
 
   Future<void> _continueAsGuest() async {
@@ -156,14 +174,21 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     try {
       await _client.auth.signInAnonymously();
       await _persistWizardMetrics();
-      // Guests must still see the paywall's auth gate — they have not
-      // authenticated; the latch stays false on purpose so the gate
-      // can fire when they next reach /paywall.
-      if (mounted) context.pushReplacement(AppRoutes.paywall);
+      // Guest → dashboard (free tier). The earlier `pushReplacement(
+      // paywall)` trapped guests: the paywall fires a non-dismissible
+      // auth gate on mount for anonymous users, so a guest (and any
+      // store reviewer picking "guest") could never reach the app. The
+      // no-anonymous-purchase guarantee is unaffected — the gate still
+      // fires whenever an anonymous user actually reaches /paywall (via
+      // a Pro-locked feature), and that gate now has a dashboard escape.
+      if (mounted) context.go(AppRoutes.dashboard);
     } on AuthException catch (e) {
-      if (mounted) _toast(e.message);
+      if (mounted) _toast(_authErrTr(e));
     } catch (e) {
-      if (mounted) _toast('Misafir girişi başarısız: $e');
+      debugPrint('[auth] guest sign-in failed: $e');
+      if (mounted) {
+        _toast('Misafir girişi başarısız oldu. Lütfen tekrar dene.');
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -184,6 +209,43 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         offlineMessage:
             'Apple ile giriş yapmak için internet bağlantısı gereklidir.',
       );
+
+  /// "Şifremi unuttum" — asks for the address (prefilled from the email
+  /// field) and sends the Supabase reset mail. Success and failure both
+  /// land as toasts; no navigation, the user continues from their inbox.
+  Future<void> _forgotPassword() async {
+    final controller =
+        TextEditingController(text: _emailController.text.trim());
+    final email = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Şifreni sıfırla'),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.emailAddress,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'E-posta adresin',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Vazgeç'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
+            child: const Text('Bağlantı Gönder'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (email == null || email.isEmpty || !mounted) return;
+    final error = await ref.read(authControllerProvider).resetPassword(email);
+    if (!mounted) return;
+    _toast(error ?? 'Sıfırlama bağlantısı e-postana gönderildi.');
+  }
 
   Future<void> _runSocial(
     _SocialProvider provider,
@@ -304,7 +366,18 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                           )
                         : Text(isSignIn ? 'GİRİŞ YAP' : 'KAYIT OL'),
                   ),
-                  const SizedBox(height: 12),
+                  // Forgot-password affordance — sign-in mode only. An
+                  // email/password user who forgot was previously locked
+                  // out for good: nothing called resetPasswordForEmail.
+                  if (isSignIn)
+                    TextButton(
+                      onPressed: _busy ? null : _forgotPassword,
+                      child: const Text(
+                        'Şifremi unuttum',
+                        style: TextStyle(color: Colors.white54),
+                      ),
+                    ),
+                  const SizedBox(height: 4),
                   TextButton(
                     onPressed: _busy
                         ? null
@@ -347,12 +420,18 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     enabled: !_busy && _social == null,
                     onPressed: _signInWithGoogle,
                   ),
-                  const SizedBox(height: 12),
-                  _AppleButton(
-                    busy: _social == _SocialProvider.apple,
-                    enabled: !_busy && _social == null,
-                    onPressed: _signInWithApple,
-                  ),
+                  // Apple Sign-In is iOS-only: on Android the native
+                  // flow has no credential provider and used to throw
+                  // straight into a generic error toast (Apple 4.8
+                  // requires it on iOS; nothing requires it on Android).
+                  if (Platform.isIOS) ...[
+                    const SizedBox(height: 12),
+                    _AppleButton(
+                      busy: _social == _SocialProvider.apple,
+                      enabled: !_busy && _social == null,
+                      onPressed: _signInWithApple,
+                    ),
+                  ],
                 ],
               ),
             ),

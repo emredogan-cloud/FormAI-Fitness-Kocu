@@ -1,18 +1,22 @@
 name: CI
 
-# Phase 44 · Continuous integration gate.
+# Phase 44 · Continuous integration gate — the ONE workflow of record.
 #
-# Runs on every push to main and on every pull request targeting main.
-# Keep this in sync with `flutter_ci.yml` — the older workflow kept the
-# Android APK build; this one handles the cheap format / analyze / unit-
-# test loop that should gate every merge.
+# Consolidation (roadmap 6.1): the older `flutter_ci.yml` duplicated the
+# format/analyze loop with drifting triggers and carried the debug-APK
+# build; both now live here and that file is gone. Branch triggers cover
+# the working branches the old workflow watched.
 on:
   push:
     branches:
       - main
+      - staging
+      - 'feature/*'
+      - 'prisk/*'
   pull_request:
     branches:
       - main
+      - staging
 
 jobs:
   test:
@@ -41,8 +45,76 @@ jobs:
       - name: Verify formatting
         run: dart format --output=none --set-exit-if-changed .
 
+      - name: Guard .env template for ship-forbidden secrets
+        run: bash tool/check_env_no_secrets.sh .env.example
+
       - name: Analyze source
         run: flutter analyze
 
-      - name: Run unit and widget tests
-        run: flutter test
+      - name: Run unit and widget tests (with coverage)
+        run: flutter test --coverage
+
+      - name: Upload coverage (lcov)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-lcov
+          path: coverage/lcov.info
+          if-no-files-found: warn
+
+  build-apk:
+    name: Build Android APK (debug)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Create empty .env for build
+        run: touch .env
+
+      - name: Build Android APK (debug)
+        run: flutter build apk --debug
+
+  integration:
+    name: Integration E2E (Android emulator)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Create empty .env for boot
+        run: touch .env
+
+      # Phase 1 (P-Risk) · runs integration_test/ on a real Android image.
+      # KVM-accelerated runner; mirrors the local Pixel/API34 validation.
+      - name: Run integration tests on emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          script: flutter test integration_test/app_test.dart

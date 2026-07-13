@@ -29,12 +29,13 @@ class AppPreferences {
   // dependency just for one string constant.
   static const String _planCacheKey = 'sixpack.user_custom_plan_v3';
   static const String _nutritionStreakKey = 'sixpack.nutrition_streak';
-  // Phase 46 · progressive disclosure. The four nutrition wizard
-  // questions (diet / allergies / meal-frequency / prep-time) were
-  // lifted out of the main onboarding flow so the initial 13-step
-  // wizard could shrink to 9. They are asked the first time the user
-  // opens the Beslenme tab instead; this flag is set to `true` once
-  // that deferred flow completes so the sheet never re-prompts.
+  // Phase 46 · progressive disclosure. The nutrition wizard questions
+  // (goal / diet / meal-frequency / prep-time / taste — allergy and
+  // water steps were removed in the store-honesty pass) were lifted
+  // out of the main onboarding flow so the initial 13-step wizard
+  // could shrink to 9. They are asked the first time the user opens
+  // the Beslenme tab instead; this flag is set to `true` once that
+  // deferred flow completes so the sheet never re-prompts.
   static const String _nutritionPrefsCompletedKey =
       'sixpack.nutrition_prefs_completed';
   // Phase 48 · daily-reminder toggle persisted so the account-settings
@@ -307,6 +308,19 @@ class AppPreferences {
 
   Future<void> setDailyReminderEnabled(bool value) async {
     await _prefs.setBool(_dailyReminderEnabledKey, value);
+  }
+
+  /// UX-10 · whether the on-device-ML transparency dialog has been
+  /// acknowledged. Shown once, then never again — re-prompting on every
+  /// single workout entry was pure friction at the core loop. (Cleared
+  /// on sign-out with the rest of the user-scoped keys, so a new
+  /// account on the device re-sees the disclosure once.)
+  static const String _mlDisclosureAckedKey = 'sixpack.ml_disclosure_acked';
+
+  bool get mlDisclosureAcked => _prefs.getBool(_mlDisclosureAckedKey) ?? false;
+
+  Future<void> setMlDisclosureAcked() async {
+    await _prefs.setBool(_mlDisclosureAckedKey, true);
   }
 
   /// Phase 52 · highest streak this user has ever reached. Defaults to

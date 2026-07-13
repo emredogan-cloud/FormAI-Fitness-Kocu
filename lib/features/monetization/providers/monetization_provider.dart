@@ -78,7 +78,11 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
 
   Future<SubscriptionState> _load() async {
     final prefs = await SharedPreferences.getInstance();
-    final devOverride = prefs.getBool(_kDevProOverrideKey) ?? false;
+    // Debug-only: the sandbox override must never unlock Pro in a
+    // release build — a stale flag left by a previously side-loaded
+    // debug build would otherwise grant a permanent free entitlement.
+    final devOverride =
+        kDebugMode && (prefs.getBool(_kDevProOverrideKey) ?? false);
     try {
       final customer = await Purchases.getCustomerInfo();
       final offerings = await Purchases.getOfferings();
@@ -90,7 +94,8 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     } catch (e, st) {
       // Happens in dev builds without API keys or when the device has no
       // Play Store / App Store session. Return a neutral state so the UI
-      // can still render — the paywall will fall back to hardcoded prices.
+      // can still render — the paywall shows the em-dash price slots and
+      // the "Fiyatlar yüklenemedi" retry notice (M2).
       AppLogger.warning(
         'SubscriptionNotifier load failed — paywall falls back',
         category: 'monetization',
@@ -107,8 +112,16 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
 
   Future<PurchaseOutcome> purchase(Package package) async {
     try {
-      final info = await Purchases.purchasePackage(package);
+      // purchases_flutter 10.x (M3/BL8): purchasePackage → purchase(
+      // PurchaseParams); the customer info now rides in PurchaseResult.
+      final result = await Purchases.purchase(PurchaseParams.package(package));
+      final info = result.customerInfo;
       final isPro = info.entitlements.active.containsKey(kProEntitlementId);
+      // Guard: invalidation (sign-out) mid-purchase disposes this
+      // notifier; the purchase outcome still returns to the caller.
+      if (!ref.mounted) {
+        return isPro ? PurchaseOutcome.success : PurchaseOutcome.notEntitled;
+      }
       final current = state.value ?? const SubscriptionState();
       state = AsyncData(current.copyWith(isPro: isPro));
       if (isPro) {
@@ -154,6 +167,12 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     try {
       final info = await Purchases.restorePurchases();
       final isPro = info.entitlements.active.containsKey(kProEntitlementId);
+      // Guard: same disposed-notifier race as purchase().
+      if (!ref.mounted) {
+        return isPro
+            ? RestoreOutcome.restored
+            : RestoreOutcome.nothingToRestore;
+      }
       final current = state.value ?? const SubscriptionState();
       state = AsyncData(current.copyWith(isPro: isPro));
       return isPro ? RestoreOutcome.restored : RestoreOutcome.nothingToRestore;

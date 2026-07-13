@@ -273,13 +273,17 @@ class AiPersonalizationEngine {
     return s.experienceLevel == 'regular' ? 5 : 4;
   }
 
+  // Store-compliance note: never emit quantified outcome promises here
+  // ("4-8 kg", "%20-30") — Apple 1.4.1 / Play health-misrepresentation
+  // reject guaranteed numeric results. Qualitative, effort-conditional
+  // framing only.
   static String _estimatedResults(WizardState s) {
     return switch (s.goal) {
-      'belly_burn' => '12 haftada 4-8 kg yağ kaybı',
-      'muscle_gain' => '12 haftada belirgin kas artışı',
-      'fitness_look' => '12 haftada belirgin form değişimi',
-      'strength' => '12 haftada %20-30 güç artışı',
-      _ => '12 haftada belirgin form değişimi',
+      'belly_burn' => '12 haftalık yağ yakımı odaklı program',
+      'muscle_gain' => '12 haftalık kas gelişimi odaklı program',
+      'fitness_look' => '12 haftalık form ve estetik odaklı program',
+      'strength' => '12 haftalık güç gelişimi odaklı program',
+      _ => '12 haftalık form dönüşümü odaklı program',
     };
   }
 }

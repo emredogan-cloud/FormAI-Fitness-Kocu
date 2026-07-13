@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -88,7 +89,9 @@ class _AuthGateScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    final modalHeight = screenHeight * 0.5;
+    // 0.56 (was 0.5) so the "Şimdilik değil" dashboard-escape link clears
+    // the system nav bar; the blurred paywall behind still reads clearly.
+    final modalHeight = screenHeight * 0.56;
     return Material(
       type: MaterialType.transparency,
       child: Stack(
@@ -213,10 +216,16 @@ class _AuthModalBottomSheetState extends ConsumerState<AuthModalBottomSheet>
                   _buildSubtitle(),
                   const Spacer(),
                   _buildGoogleButton(),
-                  const SizedBox(height: 12),
-                  _buildAppleButton(),
+                  // Apple Sign-In is iOS-only (see auth_screen.dart) —
+                  // on Android the native flow throws into an error
+                  // toast, so the button never renders there.
+                  if (Platform.isIOS) ...[
+                    const SizedBox(height: 12),
+                    _buildAppleButton(),
+                  ],
                   const SizedBox(height: 14),
                   _buildEmailLoginLink(),
+                  _buildDismissLink(),
                 ],
               ),
             ),
@@ -332,7 +341,7 @@ class _AuthModalBottomSheetState extends ConsumerState<AuthModalBottomSheet>
               children: const [
                 _GoogleLogo(size: 18),
                 SizedBox(width: 10),
-                Text('Continue with Google'),
+                Text('Google ile Devam Et'),
               ],
             ),
     );
@@ -373,9 +382,36 @@ class _AuthModalBottomSheetState extends ConsumerState<AuthModalBottomSheet>
               children: const [
                 Icon(Icons.apple, size: 22, color: Colors.white),
                 SizedBox(width: 8),
-                Text('Continue with Apple'),
+                Text('Apple ile Devam Et'),
               ],
             ),
+    );
+  }
+
+  /// Escape hatch so the gate is never a trap. Anonymous users (guests,
+  /// and store reviewers who pick "guest") can leave the gate to the
+  /// dashboard and keep using the free tier. This does NOT weaken the
+  /// no-anonymous-purchase guarantee: the gate re-fires on every fresh
+  /// paywall mount for an anonymous user, so the purchase button stays
+  /// unreachable while anonymous — dismissing only returns to the
+  /// dashboard, never to the paywall's plan cards.
+  Widget _buildDismissLink() {
+    final disabled = _busy != null;
+    return Center(
+      child: TextButton(
+        onPressed: disabled ? null : _onDismissPressed,
+        style: TextButton.styleFrom(
+          foregroundColor: Colors.white.withValues(alpha: 0.5),
+          disabledForegroundColor: Colors.white24,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          textStyle: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.3,
+          ),
+        ),
+        child: const Text('Şimdilik değil'),
+      ),
     );
   }
 
@@ -466,6 +502,15 @@ class _AuthModalBottomSheetState extends ConsumerState<AuthModalBottomSheet>
   void _onEmailLoginPressed() {
     Navigator.of(context, rootNavigator: true).pop();
     context.go(AppRoutes.auth);
+  }
+
+  /// Pops the gate AND leaves the paywall for the dashboard, so an
+  /// anonymous user is returned to the free tier rather than to the
+  /// paywall's (now gate-free) plan cards — keeping anonymous purchases
+  /// impossible while never trapping the user.
+  void _onDismissPressed() {
+    Navigator.of(context, rootNavigator: true).pop();
+    context.go(AppRoutes.dashboard);
   }
 
   void _toast(String message) {

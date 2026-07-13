@@ -405,12 +405,14 @@ class _DeepLinkSplashScreenState extends State<_DeepLinkSplashScreen> {
       body: Center(
         child: Text(
           'FormAI',
+          // Store-submission U7 · brand purple (matches the boot-splash
+          // wordmark); this screen previously kept the retired cyan.
           style: TextStyle(
-            color: Color(0xFF00F0FF),
+            color: Color(0xFF8E5BFF),
             fontSize: 36,
             fontWeight: FontWeight.w900,
             letterSpacing: 3,
-            shadows: [Shadow(blurRadius: 24, color: Color(0xFF00F0FF))],
+            shadows: [Shadow(blurRadius: 24, color: Color(0xFF8E5BFF))],
           ),
         ),
       ),

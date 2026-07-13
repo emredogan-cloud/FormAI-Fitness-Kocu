@@ -1,7 +1,11 @@
 name: sixpack_ai
-description: "SixPack AI - 30 Günde Karın Kası. AI-powered fitness coaching."
+description: "FormAI - Kişisel Fitness Koçu."
 publish_to: 'none'
-version: 0.1.0+6
+# Marketing version 1.0.0 for the first store submission (a 0.1.0
+# public release reads as unfinished to review + users).
+# +14 = first store-submission release candidate (Phase 2 of the
+# FINAL_STORE_SUBMISSION_ROADMAP).
+version: 1.0.0+14
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -9,6 +13,11 @@ environment:
 
 dependencies:
   flutter:
+    sdk: flutter
+  # Phase 2 (P-Risk) · localization foundation (F-i18n). Adds the Flutter
+  # localization delegates and enables gen-l10n codegen (config: l10n.yaml).
+  # Starter scaffold only — the ~6,700-string migration is incremental.
+  flutter_localizations:
     sdk: flutter
   # Phase 139 · `cupertino_icons` removed — 0 import sites in lib/ and
   # already tree-shaken to 848 B in release APKs. Removing the direct
@@ -41,8 +50,11 @@ dependencies:
   # Video playback for exercise guides
   video_player: ^2.8.6
 
-  # In-app purchases & subscriptions (RevenueCat)
-  purchases_flutter: ^8.1.1
+  # In-app purchases & subscriptions (RevenueCat).
+  # Store-submission M3 · ^10.x ships Play Billing Library 8 — Google
+  # stops accepting BL7 for new apps/updates after 2026-08-31, so
+  # launching on 8.x (BL7) would force a migration right after launch.
+  purchases_flutter: ^10.4.1
   flutter_local_notifications: ^21.0.0
   timezone: ^0.11.0
   # Network image + disk/memory cache. Phase 40: replaces `Image.network`
@@ -51,10 +63,11 @@ dependencies:
   # Phase 42 — Observability stack.
   #   • sentry_flutter: crash reporting + breadcrumb trail.
   #   • posthog_flutter: typed analytics events (funnel + churn).
-  #   • app_tracking_transparency: iOS 14.5+ ATT prompt wrapper.
+  # (app_tracking_transparency removed — no cross-app tracking; the
+  #  privacy manifest declares NSPrivacyTracking=false and linking the
+  #  ATT API while declaring no-tracking is an App Store auto-flag.)
   sentry_flutter: ^9.6.0
   posthog_flutter: ^5.3.0
-  app_tracking_transparency: ^2.0.6
   wakelock_plus: ^1.6.0
   url_launcher: ^6.3.2
   google_sign_in: ^7.2.0
@@ -138,6 +151,11 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  # Store-submission S3 · uploads the --split-debug-info Dart symbols
+  # (and native debug info) to Sentry from CI (`dart run
+  # sentry_dart_plugin`); org/project/token arrive via SENTRY_* env
+  # vars in release.yml — see the `sentry:` block at the bottom.
+  sentry_dart_plugin: ^3.1.0
   # Phase 44 QA · end-to-end UI testing harness. Runs on-device tests
   # from integration_test/ under `flutter test integration_test/` or
   # `flutter drive`, sharing the same assertions API as flutter_test.
@@ -156,7 +174,14 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true
   assets:
+    # Phase 0 (P-Risk) · `.env` bundles CLIENT-PUBLIC keys only (Supabase anon,
+    # RevenueCat public SDK key, Sentry DSN, PostHog, Google web client id) —
+    # all extractable from any mobile binary by design and gated server-side.
+    # TRUE secrets (SUPABASE_DB_PASSWORD, service_role, *_SECRET) must NEVER be
+    # added here; they live in `.env.local` (not an asset) / CI secrets and are
+    # enforced by tool/check_env_no_secrets.sh + .github/workflows/secret-scan.yml.
     - .env
     # Bespoke onboarding + prediction artwork (all Turkish-named PNG/JPEG/
     # WEBP files live at the photos/ root). Folder is quoted for safety.
@@ -213,8 +238,23 @@ flutter:
 # directory). This icon is read once at icon-generation time and
 # never at runtime, so bundling it was pure waste — ~1.4 MB removed
 # from every debug install + ~50-200 ms saved per `adb install`.
+# Store-submission S3 · sentry_dart_plugin config. Only debug symbols —
+# no source maps (no web release target). Org/project/auth come from the
+# SENTRY_ORG / SENTRY_PROJECT / SENTRY_AUTH_TOKEN env vars set in
+# release.yml, so nothing account-specific is committed here.
+sentry:
+  upload_debug_symbols: true
+  upload_source_maps: false
+
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
   image_path: "tool/app_icon.png"
   remove_alpha_ios: true
+  # Store-submission A9 · adaptive icon. Background = the artwork's own
+  # charcoal margin color; foreground = the full art scaled to the 60%
+  # safe zone (tool/app_icon_fg.png, generated from tool/app_icon.png —
+  # regenerate both together if the art changes). Without these layers
+  # Android 8+ letterboxes the legacy square icon.
+  adaptive_icon_background: "#212427"
+  adaptive_icon_foreground: "tool/app_icon_fg.png"

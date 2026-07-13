@@ -52,8 +52,13 @@ class SceneTransition extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Reduce-motion (store-submission U4): swap scenes instantly — the
+    // zero duration makes the transitionBuilder render at t = 1 (an
+    // identity transform) with no crossfade window.
+    final reduceMotion =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     return AnimatedSwitcher(
-      duration: duration,
+      duration: reduceMotion ? Duration.zero : duration,
       switchInCurve: curve,
       switchOutCurve: curve,
       transitionBuilder: (child, animation) {

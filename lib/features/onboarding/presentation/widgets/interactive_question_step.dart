@@ -433,7 +433,9 @@ class _CardTextContent extends StatelessWidget {
             children: [
               Text(
                 option.label,
-                maxLines: 1,
+                // 2 lines (was 1): image-backed goal cards left too little
+                // width, truncating "Daha fit görünmek" → "Daha fit görü…".
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: Colors.white,

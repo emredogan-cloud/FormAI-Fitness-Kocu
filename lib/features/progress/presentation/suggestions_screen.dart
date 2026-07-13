@@ -8,6 +8,7 @@ import '../../nutrition/domain/models/macro_target.dart';
 import '../../nutrition/providers/nutrition_provider.dart';
 import '../../workout/models/workout_day_model.dart';
 import '../../workout/providers/workout_provider.dart';
+import '../providers/streak_provider.dart';
 
 const Color _neon = Color(0xFF8B5CF6);
 const Color _neonAccent = Color(0xFF4DA6FF);
@@ -43,7 +44,7 @@ class SuggestionsScreen extends ConsumerWidget {
     final session = ref.watch(workoutSessionProvider).value;
     final days = session?.days ?? const <WorkoutDay>[];
     final activeDay = _firstIncomplete(days);
-    final streak = _streakOf(days);
+    final streak = ref.watch(currentStreakProvider);
     final remaining = ref.watch(remainingMacrosProvider);
 
     final suggestions = <_SuggestionData>[
@@ -211,18 +212,6 @@ class SuggestionsScreen extends ConsumerWidget {
     return null;
   }
 
-  int _streakOf(List<WorkoutDay> days) {
-    var streak = 0;
-    for (final day in days) {
-      if (day.isCompleted) {
-        streak += 1;
-      } else {
-        break;
-      }
-    }
-    return streak;
-  }
-
   String _focusLabel(WorkoutDay day) {
     if (day.isRestDay) return 'aktif dinlenme';
     final counts = <String, int>{};
@@ -310,7 +299,7 @@ class _CoachHero extends StatelessWidget {
             ),
             child: ClipOval(
               child: Image.asset(
-                'photos/kişiselyapayzekakoçfoto.webp',
+                'photos/PT_FORM.png',
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => Container(
                   color: _neon.withValues(alpha: 0.9),

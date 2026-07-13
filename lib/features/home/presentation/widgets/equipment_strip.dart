@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/routing/app_router.dart';
 import '../../../../core/widgets/cached_image.dart';
+import '../../../../core/widgets/error_card.dart';
 import '../../../workout/models/workout_plan_model.dart';
 import '../../../workout/providers/workout_provider.dart';
 
@@ -56,11 +57,18 @@ class EquipmentStrip extends ConsumerWidget {
         loading: () => const Center(
           child: CircularProgressIndicator(color: _neon),
         ),
-        // Empty state mirrors the loading shell — the dashboard already
-        // has plenty of other content, so a silent fallback is preferable
-        // to a red error banner here. The next FutureProvider rebuild
-        // (e.g. on pull-to-refresh) will retry automatically.
-        error: (_, __) => const SizedBox.shrink(),
+        // Offline pass · was SizedBox.shrink(): the strip spun through
+        // the HTTP timeout then vanished with no way to retry short of
+        // leaving the tab. A compact retry card keeps the dashboard
+        // honest about what failed.
+        error: (_, __) => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: ErrorCard(
+            compact: true,
+            message: 'Ekipman planları yüklenemedi.',
+            onRetry: () => ref.invalidate(equipmentPlansProvider),
+          ),
+        ),
         data: (plans) {
           if (plans.isEmpty) return const SizedBox.shrink();
           return ListView.separated(

@@ -10,122 +10,63 @@ import '../../../../core/utils/app_haptics.dart';
 import '../widgets/coach_mood.dart';
 import '../widgets/living_coach_avatar.dart';
 
-/// Phase 124 · social-proof scene, cinematic rebuild.
+/// Honesty rebuild of the Phase 124 social-proof scene.
 ///
-/// Visual target: `docs/reference-imagery/Give_us_rate_example.png` — art-directed
-/// hero composition with a layered hierarchy of hero / headline /
-/// stat anchors / 3-card-emphasis carousel / social momentum strip /
-/// star seal / CTA / footer. Reference cadence: ~2 s per card,
-/// PageView snap-with-dwell instead of continuous drift.
+/// The previous iteration rendered nine invented reviewers with star
+/// ratings, recency stamps, a "4.8 KULLANICI MEMNUNİYETİ" badge and
+/// "binlerce kişi" momentum copy — for a pre-launch app with zero
+/// users. That is fabricated social proof (Apple 2.3.1 / Google Play
+/// Misrepresentation) and it lied to our very first users.
 ///
-/// What Phase 123 got wrong:
+/// This scene keeps the cinematic composition (hero avatar, layered
+/// hierarchy, center-emphasis carousel, glow CTA) but every claim on
+/// screen is now a verifiable product fact:
 ///
-///  1. **Jitter.** Phase 123 used `ScrollController.jumpTo()` on a
-///     60 Hz ticker. `jumpTo` pixel-snaps the offset to integer
-///     logical pixels and triggers a viewport re-layout each frame.
-///     At ~80 px/s drift the per-frame delta is 1.33 px, so the
-///     offset rounded to 1, 2, 1, 1, 2... — visible tremble. Fixed
-///     here by switching to [PageView] with a timer-driven
-///     [PageController.nextPage]. PageView's internal scroll physics
-///     interpolate offsets at subpixel resolution; snapping at rest
-///     means there's no per-frame layout cost during the dwell.
+///   • "130+ egzersiz" — the analyzer factory routes 138 exercise
+///     slugs to real form analyzers (locked by unit tests).
+///   • "%100 cihazında" — pose analysis runs on-device via ML Kit;
+///     camera frames never leave the phone.
+///   • The carousel shows what the product actually does (rep
+///     counting, voice coaching, personalized plan, privacy) instead
+///     of who allegedly used it.
+///   • The momentum strip frames early access honestly instead of
+///     implying an existing crowd.
 ///
-///  2. **Empty lower half.** Phase 123 used `Spacer()` to push the
-///     CTA to the bottom — visually dead. Fixed here by filling the
-///     full column with deliberate density: stat badges, momentum
-///     strip, star seal, footer. No Spacer.
-///
-///  3. **Static card composition.** Phase 123 cards rendered uniform
-///     opacity / size — looked like a strip of components. Fixed here
-///     with per-card Transform.scale + Opacity driven by the
-///     PageController, so the centered card is full-size / full-bright
-///     and the side cards visibly recede.
-///
-///  4. **Form too passive.** Phase 123 used `proud` (1.05 scale,
-///     3.0 s halo). Bumped to `excited` (1.04 scale, 1.8 s halo, faster
-///     glow) so Form's energy *during* this scene reads as actively
-///     engaged with the stories, not just standing tall beside them.
-///     Speech bubble overlay reinforces ownership of the moment.
-///
-/// What I deliberately did NOT add: literal "300K+ USERS" claim from
-/// the target image's right-badge slot. FormAI is pre-launch with no
-/// 300K user base, and the 2026-05-09 saved direction is no fake
-/// stats. Replaced with the defensible "AI DESTEKLİ · TÜRKİYE'DE İLK"
-/// framing the user signed off on. The left badge's "4.8 ★" maps to
-/// "KULLANICI MEMNUNİYETİ" — also defensible given testimonials
-/// shown in this scene average to ~4.8★.
-
-class _Testimonial {
-  const _Testimonial({
-    required this.quote,
-    required this.name,
-    required this.age,
-    required this.daysAgo,
+/// No user counts, no ratings, no testimonials until we have real
+/// ones (the in_app_review flow can earn them post-launch).
+class _Highlight {
+  const _Highlight({
+    required this.icon,
+    required this.title,
+    required this.body,
   });
-  final String quote;
-  final String name;
-  final int age;
-
-  /// Adds a sense of recency to each card — "3 gün önce", "1 hafta
-  /// önce". The variation across the list reads as "different real
-  /// people posting at different times" rather than a synthetic batch.
-  final String daysAgo;
+  final IconData icon;
+  final String title;
+  final String body;
 }
 
-const List<_Testimonial> _kTestimonials = [
-  _Testimonial(
-    quote: '12 haftada 6 kilo. Kendimi hiç suçlu hissetmedim.',
-    name: 'Ayşe K.',
-    age: 32,
-    daysAgo: '3 gün önce',
+const List<_Highlight> _kHighlights = [
+  _Highlight(
+    icon: Icons.videocam_rounded,
+    title: 'Kameranla tekrar sayımı',
+    body:
+        'Telefonunun kamerası hareketini izler, her tekrarı gerçek zamanlı sayar.',
   ),
-  _Testimonial(
-    quote: 'Eskisine dönmem sanmıştım. Form yanımdaydı.',
-    name: 'Mehmet D.',
-    age: 28,
-    daysAgo: '1 hafta önce',
+  _Highlight(
+    icon: Icons.record_voice_over_rounded,
+    title: 'Sesli form koçluğu',
+    body: 'Formun bozulduğu anda sesli uyarı ve düzeltme önerisi alırsın.',
   ),
-  _Testimonial(
-    quote: 'Disiplin bende değil, plandaymış. 8 haftada anladım.',
-    name: 'Zeynep A.',
-    age: 24,
-    daysAgo: '4 gün önce',
+  _Highlight(
+    icon: Icons.tune_rounded,
+    title: 'Hedefine göre plan',
+    body: 'Programın hedefine, seviyene ve tempona göre kurulur.',
   ),
-  _Testimonial(
-    quote: 'Sabah korkusu 4 haftada alışkanlığa döndü.',
-    name: 'Can Y.',
-    age: 35,
-    daysAgo: '2 gün önce',
-  ),
-  _Testimonial(
-    quote: 'Yorgunken bile başlayabildim. Kısa olması her şeyi değiştirdi.',
-    name: 'Selin O.',
-    age: 29,
-    daysAgo: '5 gün önce',
-  ),
-  _Testimonial(
-    quote: 'Aynadan kaçınırdım. Şimdi her gün bakıyorum.',
-    name: 'Berk T.',
-    age: 31,
-    daysAgo: '6 gün önce',
-  ),
-  _Testimonial(
-    quote: 'Plan bana göre, ben plana göre değil. Fark bu.',
-    name: 'Deniz K.',
-    age: 27,
-    daysAgo: '2 hafta önce',
-  ),
-  _Testimonial(
-    quote: 'Başlayıp bırakmaktan yorulmuştum. Bu defa 60 günü geçtim.',
-    name: 'Onur B.',
-    age: 33,
-    daysAgo: '1 hafta önce',
-  ),
-  _Testimonial(
-    quote: 'Önce inanmadım. Gerçekten bana göre tasarlanmış gibi.',
-    name: 'Elif T.',
-    age: 26,
-    daysAgo: '4 gün önce',
+  _Highlight(
+    icon: Icons.lock_rounded,
+    title: 'Gizlilik önce',
+    body:
+        'Görüntülerin cihazından çıkmaz — analiz tamamen telefonunda çalışır.',
   ),
 ];
 
@@ -144,7 +85,7 @@ class _SocialProofStepState extends State<SocialProofStep> {
   void initState() {
     super.initState();
     // CTA gates after a 1.2 s settle so the user reads at least one
-    // testimonial before being able to advance.
+    // highlight before being able to advance.
     Future<void>.delayed(const Duration(milliseconds: 1200), () {
       if (mounted) setState(() => _readyForCommit = true);
     });
@@ -162,9 +103,6 @@ class _SocialProofStepState extends State<SocialProofStep> {
       fit: StackFit.expand,
       children: [
         const ColoredBox(color: Color(0xFF0A0814)),
-        // Denser star field than Phase 123 (10 → matches target image's
-        // visible background depth). Slightly wider radius range to add
-        // a bit more visual richness without breaking restraint.
         const AmbientParticles(
           count: 10,
           color: AppColors.neon,
@@ -188,7 +126,7 @@ class _SocialProofStepState extends State<SocialProofStep> {
                     colors: [AppColors.neon, AppColors.neonAccent],
                   ).createShader(rect),
                   child: const Text(
-                    'Sektöre katılan binlerce kişinin\nhikayesine sen de katıl.',
+                    'Gerçek zamanlı form koçun\nilk günden yanında.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white,
@@ -201,7 +139,7 @@ class _SocialProofStepState extends State<SocialProofStep> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'FormAI binlerce insanın dönüşüm yolculuğunda.',
+                  'Erken erişim dönemi — FormAI\'ı ilk deneyenlerden birisin.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.62),
@@ -214,28 +152,24 @@ class _SocialProofStepState extends State<SocialProofStep> {
                 Row(
                   children: const [
                     _StatBadge(
-                      number: '4.8',
-                      caption: 'KULLANICI\nMEMNUNİYETİ',
-                      showStar: true,
+                      number: '130+',
+                      caption: 'EGZERSİZ\nCANLI FORM ANALİZİ',
                     ),
                     SizedBox(width: 10),
                     _StatBadge(
                       number: 'AI',
-                      caption: "DESTEKLİ\nTÜRKİYE'DE İLK",
-                      showStar: false,
+                      caption: 'DESTEKLİ\n%100 CİHAZINDA',
                     ),
                   ],
                 ),
                 const SizedBox(height: 12),
                 const SizedBox(
                   height: 160,
-                  child: _ReviewCarousel(testimonials: _kTestimonials),
+                  child: _HighlightCarousel(highlights: _kHighlights),
                 ),
                 const SizedBox(height: 8),
-                const _SocialMomentum(),
-                const SizedBox(height: 10),
-                const _DecorationStars(),
-                const SizedBox(height: 8),
+                const _EarlyAccessStrip(),
+                const SizedBox(height: 18),
                 GlowPulse(
                   enabled: _readyForCommit,
                   color: AppColors.neon,
@@ -320,7 +254,7 @@ class _HeroZone extends StatelessWidget {
           Positioned(
             top: 6,
             right: 0,
-            child: _SpeechBubble(text: 'Gerçek sonuçlar,\ngerçek insanlar.'),
+            child: _SpeechBubble(text: 'Her tekrarında\nyanındayım.'),
           ),
         ],
       ),
@@ -378,17 +312,15 @@ class _SpeechBubble extends StatelessWidget {
 }
 
 /// One half of the stat-anchor row. Laurel-pill shape with gradient
-/// fill + neon border + soft glow. Number on top (with optional star),
-/// caption underneath in muted uppercase.
+/// fill + neon border + soft glow. Number on top, caption underneath
+/// in muted uppercase. Only verifiable product facts belong here.
 class _StatBadge extends StatelessWidget {
   const _StatBadge({
     required this.number,
     required this.caption,
-    required this.showStar,
   });
   final String number;
   final String caption;
-  final bool showStar;
 
   @override
   Widget build(BuildContext context) {
@@ -420,28 +352,15 @@ class _StatBadge extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  number,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
-                    height: 1.0,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-                if (showStar) ...const [
-                  SizedBox(width: 4),
-                  Icon(
-                    Icons.star_rounded,
-                    color: Color(0xFFFFC700),
-                    size: 20,
-                  ),
-                ],
-              ],
+            Text(
+              number,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.w900,
+                height: 1.0,
+                letterSpacing: 0.3,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
@@ -462,26 +381,23 @@ class _StatBadge extends StatelessWidget {
   }
 }
 
-/// Center-emphasis testimonial carousel. PageView with
-/// viewportFraction 0.72 so the centered card occupies the middle
-/// while the leading edges of left/right cards are visible. Each
-/// card's apparent scale + opacity is driven by its PageController
-/// page offset → centered card reads big and bright, side cards
-/// recede.
+/// Center-emphasis capability carousel. PageView with viewportFraction
+/// 0.72 so the centered card occupies the middle while the leading
+/// edges of left/right cards are visible. Each card's apparent scale +
+/// opacity is driven by its PageController page offset → centered card
+/// reads big and bright, side cards recede.
 ///
 /// Auto-advance via [Timer.periodic] on a 2.4 s cadence:
-/// 720 ms easeInOutCubic animation + 1.68 s dwell. PageView's
-/// internal scroll physics produce subpixel-smooth motion (no
-/// ScrollController.jumpTo jitter — Phase 123's root cause).
-class _ReviewCarousel extends StatefulWidget {
-  const _ReviewCarousel({required this.testimonials});
-  final List<_Testimonial> testimonials;
+/// 720 ms easeInOutCubic animation + 1.68 s dwell.
+class _HighlightCarousel extends StatefulWidget {
+  const _HighlightCarousel({required this.highlights});
+  final List<_Highlight> highlights;
 
   @override
-  State<_ReviewCarousel> createState() => _ReviewCarouselState();
+  State<_HighlightCarousel> createState() => _HighlightCarouselState();
 }
 
-class _ReviewCarouselState extends State<_ReviewCarousel> {
+class _HighlightCarouselState extends State<_HighlightCarousel> {
   late final PageController _pageCtrl;
   Timer? _timer;
 
@@ -493,11 +409,11 @@ class _ReviewCarouselState extends State<_ReviewCarousel> {
     super.initState();
     // Start deep into a virtually infinite list (× 500) so we never
     // hit either end during the user's dwell on this step. We use
-    // modulo for the testimonial lookup, so any page index resolves
-    // to a real testimonial.
+    // modulo for the highlight lookup, so any page index resolves to
+    // a real card.
     _pageCtrl = PageController(
       viewportFraction: 0.72,
-      initialPage: widget.testimonials.length * 500,
+      initialPage: widget.highlights.length * 500,
     );
     _timer = Timer.periodic(_advanceInterval, (_) {
       if (!mounted || !_pageCtrl.hasClients) return;
@@ -521,11 +437,11 @@ class _ReviewCarouselState extends State<_ReviewCarousel> {
       controller: _pageCtrl,
       physics: const NeverScrollableScrollPhysics(),
       itemBuilder: (context, i) {
-        final t = widget.testimonials[i % widget.testimonials.length];
+        final h = widget.highlights[i % widget.highlights.length];
         return _AnimatedCard(
           page: i,
           controller: _pageCtrl,
-          child: _TestimonialCard(testimonial: t),
+          child: _HighlightCard(highlight: h),
         );
       },
     );
@@ -576,14 +492,12 @@ class _AnimatedCard extends StatelessWidget {
   }
 }
 
-/// One testimonial card. Stylized for the rebuild:
-///   • Centered star row above the quote glyph + quote text
-///   • Quote-mark icon as soft watermark above the quote
-///   • Name + age below, date footer below that
-///   • Gradient fill + neon border + soft outer shadow
-class _TestimonialCard extends StatelessWidget {
-  const _TestimonialCard({required this.testimonial});
-  final _Testimonial testimonial;
+/// One capability card: neon icon medallion above the title + body.
+/// Gradient fill + neon border + soft outer shadow — same chrome as
+/// the old cards, honest content.
+class _HighlightCard extends StatelessWidget {
+  const _HighlightCard({required this.highlight});
+  final _Highlight highlight;
 
   @override
   Widget build(BuildContext context) {
@@ -617,61 +531,50 @@ class _TestimonialCard extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List<Widget>.generate(
-              5,
-              (_) => const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 1),
-                child: Icon(
-                  Icons.star_rounded,
-                  color: Color(0xFFFFC700),
-                  size: 14,
-                ),
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.neon.withValues(alpha: 0.55),
+                  AppColors.neonAccent.withValues(alpha: 0.35),
+                ],
+              ),
+              border: Border.all(
+                color: AppColors.neon.withValues(alpha: 0.6),
+                width: 1,
               ),
             ),
+            child: Icon(highlight.icon, color: Colors.white, size: 18),
           ),
           const SizedBox(height: 8),
-          Icon(
-            Icons.format_quote_rounded,
-            color: AppColors.neon.withValues(alpha: 0.55),
-            size: 18,
+          Text(
+            highlight.title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.2,
+            ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 4),
           Expanded(
             child: Center(
               child: Text(
-                testimonial.quote,
+                highlight.body,
                 textAlign: TextAlign.center,
-                maxLines: 4,
+                maxLines: 3,
                 overflow: TextOverflow.fade,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13.0,
-                  height: 1.4,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.75),
+                  fontSize: 11.5,
+                  height: 1.35,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            '${testimonial.name}, ${testimonial.age}',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 11.5,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.3,
-            ),
-          ),
-          const SizedBox(height: 1),
-          Text(
-            testimonial.daysAgo,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.40),
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.2,
             ),
           ),
         ],
@@ -680,32 +583,25 @@ class _TestimonialCard extends StatelessWidget {
   }
 }
 
-/// Social-momentum strip beneath the carousel: 3 stacked initial
-/// bubbles + "Binlerce kişi · FormAI ile dönüşüm yapıyor ✓".
-/// Replaces the target image's literal "300,000+ kişi" with truthful
-/// "Binlerce kişi" framing per the 2026-05-09 stats-honesty rule.
-class _SocialMomentum extends StatelessWidget {
-  const _SocialMomentum();
+/// Early-access strip beneath the carousel. Replaces the fabricated
+/// "Binlerce kişi · dönüşüm yapıyor" crowd claim with the truthful
+/// early-access framing — no invented users, no invented counts.
+class _EarlyAccessStrip extends StatelessWidget {
+  const _EarlyAccessStrip();
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        SizedBox(
-          width: 56,
-          height: 26,
-          child: Stack(
-            children: const [
-              Positioned(left: 0, child: _InitialBubble(letter: 'A', tint: 0)),
-              Positioned(left: 14, child: _InitialBubble(letter: 'M', tint: 1)),
-              Positioned(left: 28, child: _InitialBubble(letter: 'Z', tint: 2)),
-            ],
-          ),
+        Icon(
+          Icons.rocket_launch_rounded,
+          size: 16,
+          color: AppColors.neon.withValues(alpha: 0.9),
         ),
         const SizedBox(width: 8),
         const Text(
-          'Binlerce kişi',
+          'Erken erişim',
           style: TextStyle(
             color: Colors.white,
             fontSize: 12,
@@ -724,7 +620,7 @@ class _SocialMomentum extends StatelessWidget {
         ),
         const SizedBox(width: 6),
         Text(
-          'FormAI ile dönüşüm yapıyor',
+          'İlk kullanıcılardan biri ol',
           style: TextStyle(
             color: Colors.white.withValues(alpha: 0.72),
             fontSize: 11.5,
@@ -748,71 +644,6 @@ class _SocialMomentum extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _InitialBubble extends StatelessWidget {
-  const _InitialBubble({required this.letter, required this.tint});
-  final String letter;
-
-  /// 0 / 1 / 2 — picks one of three neon shades so the three bubbles
-  /// read as distinct people rather than copies.
-  final int tint;
-
-  @override
-  Widget build(BuildContext context) {
-    const tints = [AppColors.neon, AppColors.neonAccent, AppColors.neonDeep];
-    return Container(
-      width: 26,
-      height: 26,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: RadialGradient(
-          colors: [
-            tints[tint].withValues(alpha: 0.95),
-            tints[tint].withValues(alpha: 0.55),
-          ],
-        ),
-        border: Border.all(color: const Color(0xFF0A0814), width: 1.5),
-      ),
-      child: Center(
-        child: Text(
-          letter,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 11,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// 5-star decorative seal above the CTA. Center star largest +
-/// brightest, edge stars smaller + dimmer — directs the eye inward
-/// toward the CTA.
-class _DecorationStars extends StatelessWidget {
-  const _DecorationStars();
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List<Widget>.generate(5, (i) {
-        final fromCenter = (i - 2).abs();
-        final size = 18.0 - fromCenter * 3.0;
-        final opacity = (1.0 - fromCenter * 0.22).clamp(0.30, 1.0);
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 3),
-          child: Icon(
-            Icons.star_rounded,
-            color: AppColors.neon.withValues(alpha: opacity),
-            size: size,
-          ),
-        );
-      }),
     );
   }
 }

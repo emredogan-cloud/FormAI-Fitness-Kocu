@@ -1,6 +1,3 @@
-import 'dart:io' show Platform;
-
-import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
 
 import '../utils/app_logger.dart';
@@ -303,35 +300,12 @@ class AnalyticsService {
     return _capture('churn_reason_logged', {'reason': reason});
   }
 
-  // ==========================================================================
-  // iOS App Tracking Transparency — Apple requires this prompt before any
-  // cross-app tracking identifier (IDFA) can be read. PostHog uses IDFA
-  // when available for install attribution; if the user denies, we still
-  // capture events against a hashed UUID. Non-iOS is a no-op.
-  // ==========================================================================
-
-  Future<void> requestAttIfNeeded() async {
-    if (!Platform.isIOS) return;
-    try {
-      final status = await AppTrackingTransparency.trackingAuthorizationStatus;
-      if (status == TrackingStatus.notDetermined) {
-        // Give the OS a beat to settle so the prompt isn't eaten by the
-        // onboarding-finish navigation animation.
-        await Future<void>.delayed(const Duration(milliseconds: 400));
-        final resolved =
-            await AppTrackingTransparency.requestTrackingAuthorization();
-        AppLogger.info(
-          'ATT resolved: $resolved',
-          category: 'analytics',
-          data: {'status': resolved.name},
-        );
-      }
-    } catch (e, st) {
-      AppLogger.warning(
-        'ATT prompt failed: $e',
-        category: 'analytics',
-        data: {'error': e.toString(), 'stack': st.toString()},
-      );
-    }
-  }
+  // NOTE · App Tracking Transparency was deliberately REMOVED. The app's
+  // PrivacyInfo.xcprivacy declares `NSPrivacyTracking = false` and the
+  // published privacy policy states no cross-app tracking occurs — so
+  // requesting the ATT prompt (and linking the ATT API) contradicted
+  // both and risked automatic App Store rejection. First-party PostHog
+  // analytics work without IDFA. If install attribution via IDFA is
+  // ever wanted, flip the privacy manifest + policy FIRST, then
+  // reintroduce the prompt.
 }

@@ -738,8 +738,13 @@ PoseLandmark? _pickHigher(
   PoseLandmarkType left,
   PoseLandmarkType right,
 ) {
-  final l = pose.landmarks[left];
-  final r = pose.landmarks[right];
+  // 0.4 likelihood floor — consistent with the newer analyzers. Without
+  // it a 0.05-confidence ghost landmark still "won" the pick and the
+  // crunch/leg-raise/plank family counted phantom reps in bad lighting.
+  PoseLandmark? confident(PoseLandmark? lm) =>
+      lm != null && lm.likelihood >= 0.4 ? lm : null;
+  final l = confident(pose.landmarks[left]);
+  final r = confident(pose.landmarks[right]);
   if (l == null) return r;
   if (r == null) return l;
   return l.likelihood >= r.likelihood ? l : r;

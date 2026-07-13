@@ -72,6 +72,15 @@ class _MorphingNumberState extends State<MorphingNumber>
 
   @override
   Widget build(BuildContext context) {
+    // Reduce-motion (store-submission U4): land on the final value
+    // immediately instead of rolling up from 0.
+    if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) {
+      return Text(
+        widget.formatter(widget.value),
+        style: widget.style,
+        textAlign: widget.textAlign,
+      );
+    }
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, _) => Text(

@@ -561,7 +561,7 @@ class _PlanResultTile extends StatelessWidget {
 class _AiCoachPanel extends StatelessWidget {
   const _AiCoachPanel();
 
-  static const String _coachAsset = 'photos/kişiselyapayzekakoçfoto.webp';
+  static const String _coachAsset = 'photos/PT_FORM.png';
 
   @override
   Widget build(BuildContext context) {

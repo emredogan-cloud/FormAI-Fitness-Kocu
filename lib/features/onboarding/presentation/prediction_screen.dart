@@ -325,7 +325,7 @@ class _HeroCard extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: Image.asset(
-                  'photos/kişiselyapayzekakoçfoto.webp',
+                  'photos/PT_FORM.png',
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => DecoratedBox(
                     decoration: const BoxDecoration(

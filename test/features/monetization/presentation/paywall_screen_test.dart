@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:sixpack_ai/features/auth/providers/auth_provider.dart';
 import 'package:sixpack_ai/features/monetization/presentation/paywall_screen.dart';
 import 'package:sixpack_ai/features/monetization/providers/monetization_provider.dart';
@@ -62,6 +63,37 @@ Widget _wrapPaywall({required SubscriptionState seededState}) {
   );
 }
 
+/// Builds a minimal real `Offerings` whose current offering carries an
+/// annual package — optionally with an introductory price — so the
+/// paywall's trial-copy derivation runs against genuine RevenueCat
+/// model objects instead of stubs.
+Offerings _offeringsWithAnnual({IntroductoryPrice? intro}) {
+  const ctx = PresentedOfferingContext('default', null, null);
+  final product = StoreProduct(
+    'formai_pro_yearly',
+    'FormAI Pro yıllık abonelik',
+    'FormAI Pro (Yıllık)',
+    999.99,
+    '₺999,99',
+    'TRY',
+    introductoryPrice: intro,
+  );
+  final annual = Package(
+    r'$rc_annual',
+    PackageType.annual,
+    product,
+    ctx,
+  );
+  final offering = Offering(
+    'default',
+    'Default offering',
+    const <String, Object>{},
+    [annual],
+    annual: annual,
+  );
+  return Offerings({'default': offering}, current: offering);
+}
+
 void main() {
   testWidgets(
     'loading / null-offerings state still renders the plan cards + CTA',
@@ -92,31 +124,88 @@ void main() {
   );
 
   testWidgets(
-    'populated-offerings state renders the full plan ladder without '
-    'crashing when the user has no entitlement yet',
+    'no offerings -> NO trial promise renders anywhere (store honesty: '
+    'trial copy must derive from a real SKU, never be hardcoded)',
     (tester) async {
-      // `offerings` is left null — the widget tree doesn't reach into
-      // the RevenueCat-specific fields until the user taps CTA (which
-      // we don't exercise here). Smoke-testing the "populated but not
-      // purchased" snapshot is enough to catch a layout regression.
       await tester.pumpWidget(_wrapPaywall(
         seededState: const SubscriptionState(isPro: false),
       ));
       await tester.pump();
 
       expect(find.byType(PaywallScreen), findsOneWidget);
-      // Phase 60G · external badge reverted to legacy "Şimdi ödeme
-      // yok!" single-line. The "7 gün ücretsiz dene" half lives
-      // inside the yearly _PlanCard now (the highlighted plan), so
-      // the literal text still appears once on the screen — but the
-      // string asserted here is the line that survived in-card.
+      // With no RevenueCat offering there is no trial to promise:
+      // both the external badge and the in-card pill must be absent.
+      expect(find.text('Şimdi ödeme yok!'), findsNothing);
+      expect(find.textContaining('ücretsiz dene'), findsNothing);
+      // The fictional "was ₺2.999,99" decoy anchor is permanently gone.
+      expect(find.textContaining('2.999'), findsNothing);
+      // The legal footer must still disclose auto-renewal explicitly.
+      expect(
+        find.textContaining('otomatik yenilenir', findRichText: true),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'SKU with a real free trial -> trial badges + trial-aware footer '
+    'render with the real duration',
+    (tester) async {
+      await tester.pumpWidget(_wrapPaywall(
+        seededState: SubscriptionState(
+          isPro: false,
+          offerings: _offeringsWithAnnual(
+            intro: const IntroductoryPrice(
+              0,
+              '₺0,00',
+              'P1W',
+              1,
+              PeriodUnit.day,
+              7,
+            ),
+          ),
+        ),
+      ));
+      await tester.pump();
+
+      // External badge + in-card pill both derive from the live SKU.
       expect(find.text('Şimdi ödeme yok!'), findsOneWidget);
       expect(find.text('7 gün ücretsiz dene'), findsOneWidget);
-      // See the CTA-loading note above: offerings stay null in this
-      // test too (constructing a real RevenueCat `Offerings` object is
-      // too heavy for a layout smoke test), so the CTA renders as a
-      // spinner. The layout-regression guard is the assertions above.
-      expect(find.byType(CircularProgressIndicator), findsAtLeastNWidgets(1));
+      // Footer states the real trial length and the renewal terms.
+      expect(
+        find.textContaining('7 gün süren ücretsiz denemenin',
+            findRichText: true),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('₺999,99 / yıl', findRichText: true),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'SKU without a trial -> subscribe-only copy: no trial words, '
+    'price + renewal disclosure present',
+    (tester) async {
+      await tester.pumpWidget(_wrapPaywall(
+        seededState: SubscriptionState(
+          isPro: false,
+          offerings: _offeringsWithAnnual(intro: null),
+        ),
+      ));
+      await tester.pump();
+
+      expect(find.text('Şimdi ödeme yok!'), findsNothing);
+      expect(find.textContaining('ücretsiz dene'), findsNothing);
+      expect(
+        find.textContaining('₺999,99 / yıl', findRichText: true),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('otomatik yenilenir', findRichText: true),
+        findsOneWidget,
+      );
     },
   );
 
@@ -135,6 +224,65 @@ void main() {
       // would hit a redscreen).
       expect(find.byType(PaywallScreen), findsOneWidget);
       expect(find.text('Kişiselleştirilmiş planınızı alın!'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'store-submission M2 · loaded-but-no-offering shows the "Fiyatlar '
+    'yüklenemedi" retry notice instead of inventing prices',
+    (tester) async {
+      // A resolved SubscriptionState with a null offerings catalogue is
+      // the exact "RC configured but fetch failed / empty" signal.
+      await tester.pumpWidget(_wrapPaywall(
+        seededState: const SubscriptionState(isPro: false),
+      ));
+      await tester.pump();
+
+      // The honest load-failure notice + retry affordance are present.
+      expect(find.text('Fiyatlar yüklenemedi.'), findsOneWidget);
+      expect(find.text('Tekrar dene'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'store-submission M2 · the retired hardcoded fallback prices never '
+    'render (₺249,99 / ₺999,99 / ₺499,99 as invented values)',
+    (tester) async {
+      await tester.pumpWidget(_wrapPaywall(
+        seededState: const SubscriptionState(isPro: false),
+      ));
+      await tester.pump();
+
+      // None of the old marketing-spec fallback numbers may appear when
+      // there is no live offering — the price slot shows an em-dash.
+      expect(find.textContaining('249,99'), findsNothing);
+      expect(find.textContaining('499,99'), findsNothing);
+      // ₺999,99 only ever appears from a live SKU (covered by the trial
+      // tests above); with no offering it must be absent here too.
+      expect(find.textContaining('999,99'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'store-submission M2 · a live offering suppresses the retry notice '
+    'and shows the real store price',
+    (tester) async {
+      await tester.pumpWidget(_wrapPaywall(
+        seededState: SubscriptionState(
+          isPro: false,
+          offerings: _offeringsWithAnnual(intro: null),
+        ),
+      ));
+      await tester.pump();
+
+      // With a real offering there is nothing to retry; the notice is gone
+      // and the live price string renders instead of an em-dash.
+      expect(find.text('Fiyatlar yüklenemedi.'), findsNothing);
+      expect(find.text('Tekrar dene'), findsNothing);
+      expect(
+        find.textContaining('₺999,99 / yıl', findRichText: true),
+        findsOneWidget,
+      );
     },
   );
 }

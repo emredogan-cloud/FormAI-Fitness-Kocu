@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/constants/app_constants.dart';
-import '../../../../core/services/app_preferences.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../workout/data/session_log_repository.dart';
+import '../../../workout/models/session_log_model.dart';
 import '../../../workout/models/workout_day_model.dart';
 import '../../../workout/providers/workout_provider.dart';
 
@@ -20,17 +20,15 @@ import '../../../workout/providers/workout_provider.dart';
 /// `SizedBox.shrink()` on non-Sundays so the parent doesn't need to
 /// guard the visibility itself.
 ///
-/// Numbers:
+/// Numbers (all measured — the honesty pass removed the estimated
+/// kcal constant and the always-zero nutrition-adherence proxy):
 ///   • X — workouts completed THIS WEEK (the 7-day bucket containing
 ///     the user's first incomplete day, matching the rest of Gelişim's
 ///     weekly slicing).
-///   • Y — kcal burned ≈ X * `AppConstants.kcalPerCompletedDay`. We
-///     don't track per-workout calorimetry yet; the constant is the
-///     same one the Yakılan Kalori card uses so the two surfaces stay
-///     consistent.
-///   • Z — nutrition adherence as `min(100, nutritionStreak/7 * 100)`.
-///     We don't yet persist per-day macro hit/miss history, so the
-///     existing daily "Yedim/Atla" streak counter is the best proxy.
+///   • Y — minutes actually trained, summed from the week's
+///     session-log `durationSeconds`.
+///   • Z — reps actually completed, summed from the week's
+///     session-log exercise entries.
 class WeeklyRetrospectiveCard extends ConsumerWidget {
   const WeeklyRetrospectiveCard({super.key, this.today});
 
@@ -54,11 +52,21 @@ class WeeklyRetrospectiveCard extends ConsumerWidget {
         )
         .toList(growable: false);
     final weeklyCompleted = weeklyDays.where((d) => d.isCompleted).length;
-    final weeklyKcal = weeklyCompleted * AppConstants.kcalPerCompletedDay;
-
-    final nutritionStreak = ref.watch(appPreferencesProvider).nutritionStreak;
-    final nutritionAdherence =
-        ((nutritionStreak / 7) * 100).clamp(0, 100).round();
+    // Honesty pass · the retrospective used to claim "X kcal yaktın"
+    // from a flat completions × 250 constant and a "%N beslenme"
+    // adherence derived from a streak counter that is structurally
+    // always 0. Both replaced with MEASURED session-log numbers.
+    final logs =
+        ref.watch(sessionLogsProvider).value ?? const <int, SessionLog>{};
+    var weeklyMinutes = 0;
+    var weeklyReps = 0;
+    for (var dn = weekStart; dn < weekStart + 7; dn++) {
+      final log = logs[dn];
+      if (log != null) {
+        weeklyMinutes += (log.durationSeconds / 60).round();
+        weeklyReps += log.totalReps;
+      }
+    }
 
     return Container(
       // Self-padding on the bottom so the parent ListView in `gelisim_tab`
@@ -129,10 +137,12 @@ class WeeklyRetrospectiveCard extends ConsumerWidget {
                 const TextSpan(text: 'Bu hafta '),
                 _bold('$weeklyCompleted antrenman'),
                 const TextSpan(text: ' yaptın, '),
-                _bold('${_formatKcal(weeklyKcal)} kcal'),
-                const TextSpan(text: ' yaktın. Beslenme hedefine '),
-                _bold('%$nutritionAdherence'),
-                const TextSpan(text: ' uydun. Gelecek hafta için hazır mısın?'),
+                _bold('$weeklyMinutes dakika'),
+                const TextSpan(text: ' çalıştın ve '),
+                _bold('$weeklyReps tekrar'),
+                const TextSpan(
+                  text: ' tamamladın. Gelecek hafta için hazır mısın?',
+                ),
               ],
             ),
           ),
@@ -146,15 +156,15 @@ class WeeklyRetrospectiveCard extends ConsumerWidget {
               ),
               const SizedBox(width: 8),
               _StatChip(
-                icon: Icons.local_fire_department,
-                label: _formatKcal(weeklyKcal),
-                hint: 'kcal',
+                icon: Icons.timer_outlined,
+                label: '$weeklyMinutes',
+                hint: 'dakika',
               ),
               const SizedBox(width: 8),
               _StatChip(
-                icon: Icons.restaurant_menu,
-                label: '%$nutritionAdherence',
-                hint: 'beslenme',
+                icon: Icons.repeat_rounded,
+                label: '$weeklyReps',
+                hint: 'tekrar',
               ),
             ],
           ),
@@ -184,12 +194,6 @@ class WeeklyRetrospectiveCard extends ConsumerWidget {
       if (!day.isCompleted) return day.dayNumber;
     }
     return 1;
-  }
-
-  String _formatKcal(int kcal) {
-    if (kcal < 1000) return '$kcal';
-    final s = kcal.toString();
-    return '${s.substring(0, s.length - 3)}.${s.substring(s.length - 3)}';
   }
 }
 

@@ -100,6 +100,11 @@ class _NeonRingStackState extends State<NeonRingStack>
 
   @override
   Widget build(BuildContext context) {
+    // A11y (P1-18) · honor the OS "Reduce Motion" setting: render the
+    // resting frame instead of the continuous animation.
+    if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) {
+      return widget.child;
+    }
     return RepaintBoundary(
       child: SizedBox(
         width: widget.size,

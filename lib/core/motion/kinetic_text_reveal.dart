@@ -72,6 +72,17 @@ class _KineticTextRevealState extends State<KineticTextReveal>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Reduce-motion (store-submission U4): render the full line at once.
+    // Routed through [_skip] so the status listener still fires
+    // [onComplete] and CTA gating keeps working.
+    if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) {
+      _skip();
+    }
+  }
+
+  @override
   void dispose() {
     widget.controller?._detach();
     _typer.dispose();

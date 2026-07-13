@@ -12,7 +12,6 @@ enum ActivityLevel { sedentary, light, active }
 /// onboarding UI, the serialiser, and the macro engine can all reference
 /// the same token if they need to treat the default specially.
 const String kDefaultDietPreference = 'standart';
-const String kDefaultAllergies = 'yok';
 const String kDefaultMealFrequency = '3_ogun';
 const String kDefaultPrepTime = 'hizli';
 // Phase 62 · three additional nutrition fields surfaced by the V2
@@ -20,7 +19,6 @@ const String kDefaultPrepTime = 'hizli';
 // so a user that skips the prompt still gets reasonable macro / recipe
 // targeting downstream.
 const String kDefaultNutritionGoal = 'dengeli';
-const String kDefaultWaterIntake = 'orta';
 const String kDefaultTastePreference = 'karisik';
 
 class WizardState {
@@ -44,11 +42,9 @@ class WizardState {
     this.experienceDescription,
     this.painPointDescription,
     this.dietPreference = kDefaultDietPreference,
-    this.allergies = kDefaultAllergies,
     this.mealFrequency = kDefaultMealFrequency,
     this.prepTime = kDefaultPrepTime,
     this.nutritionGoal = kDefaultNutritionGoal,
-    this.waterIntake = kDefaultWaterIntake,
     this.tastePreference = kDefaultTastePreference,
   });
 
@@ -133,11 +129,6 @@ class WizardState {
   /// Turkish ASCII to match the rest of the wizard's persisted tokens.
   final String dietPreference;
 
-  /// One of: `yok`, `kuruyemis`, `sut_urunleri`, `gluten`. Intentionally
-  /// a single-select string for now — the recipe filter currently only
-  /// needs one hot exclusion; multi-select can graduate to a list later.
-  final String allergies;
-
   /// One of: `2_ogun`, `3_ogun`, `4_ogun`.
   final String mealFrequency;
 
@@ -150,11 +141,6 @@ class WizardState {
   /// nutrition engine can branch independently.
   /// One of: `yag_yakimi`, `kas_kazanimi`, `dengeli`.
   final String nutritionGoal;
-
-  /// Phase 62 · self-reported daily water intake. Used by the
-  /// nutrition coach to prompt hydration targets.
-  /// One of: `cok_az` (0-1L), `orta` (1-2L), `iyi` (2L+).
-  final String waterIntake;
 
   /// Phase 62 · taste preference hint so the recipe selector can lean
   /// sweet/savoury when scoring otherwise-equivalent options.
@@ -181,11 +167,9 @@ class WizardState {
     String? experienceDescription,
     String? painPointDescription,
     String? dietPreference,
-    String? allergies,
     String? mealFrequency,
     String? prepTime,
     String? nutritionGoal,
-    String? waterIntake,
     String? tastePreference,
   }) {
     return WizardState(
@@ -209,11 +193,9 @@ class WizardState {
           experienceDescription ?? this.experienceDescription,
       painPointDescription: painPointDescription ?? this.painPointDescription,
       dietPreference: dietPreference ?? this.dietPreference,
-      allergies: allergies ?? this.allergies,
       mealFrequency: mealFrequency ?? this.mealFrequency,
       prepTime: prepTime ?? this.prepTime,
       nutritionGoal: nutritionGoal ?? this.nutritionGoal,
-      waterIntake: waterIntake ?? this.waterIntake,
       tastePreference: tastePreference ?? this.tastePreference,
     );
   }
@@ -238,11 +220,9 @@ class WizardState {
         'experienceDescription': experienceDescription,
         'painPointDescription': painPointDescription,
         'dietPreference': dietPreference,
-        'allergies': allergies,
         'mealFrequency': mealFrequency,
         'prepTime': prepTime,
         'nutritionGoal': nutritionGoal,
-        'waterIntake': waterIntake,
         'tastePreference': tastePreference,
       };
 
@@ -302,11 +282,9 @@ class WizardState {
       painPointDescription: json['painPointDescription'] as String?,
       dietPreference:
           readNonNullString('dietPreference', kDefaultDietPreference),
-      allergies: readNonNullString('allergies', kDefaultAllergies),
       mealFrequency: readNonNullString('mealFrequency', kDefaultMealFrequency),
       prepTime: readNonNullString('prepTime', kDefaultPrepTime),
       nutritionGoal: readNonNullString('nutritionGoal', kDefaultNutritionGoal),
-      waterIntake: readNonNullString('waterIntake', kDefaultWaterIntake),
       tastePreference:
           readNonNullString('tastePreference', kDefaultTastePreference),
     );
@@ -344,11 +322,9 @@ class WizardController extends Notifier<WizardState> {
   void setPainPointDescription(String v) =>
       state = state.copyWith(painPointDescription: v);
   void setDietPreference(String v) => state = state.copyWith(dietPreference: v);
-  void setAllergies(String v) => state = state.copyWith(allergies: v);
   void setMealFrequency(String v) => state = state.copyWith(mealFrequency: v);
   void setPrepTime(String v) => state = state.copyWith(prepTime: v);
   void setNutritionGoal(String v) => state = state.copyWith(nutritionGoal: v);
-  void setWaterIntake(String v) => state = state.copyWith(waterIntake: v);
   void setTastePreference(String v) =>
       state = state.copyWith(tastePreference: v);
 
