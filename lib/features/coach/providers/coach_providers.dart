@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -229,14 +231,63 @@ class CoachChatState {
 class CoachChatNotifier extends Notifier<CoachChatState> {
   bool _disposed = false;
 
+  /// Persisted transcript (last [_kMaxSavedTurns]) so the conversation
+  /// survives app restarts — a coach that greets you from scratch every
+  /// launch doesn't feel like it knows you. Keys off SharedPreferences,
+  /// same store as the rolling memory.
+  static const String _kTurnsKey = 'sixpack.coach_turns_v1';
+  static const int _kMaxSavedTurns = 30;
+
   @override
   CoachChatState build() {
     ref.onDispose(() => _disposed = true);
+    final restored = _restoreTurns();
+    if (restored.isNotEmpty) return CoachChatState(turns: restored);
     final brain = ref.read(coachBrainProvider);
     final ctx = ref.read(coachContextProvider);
     return CoachChatState(
-      turns: [CoachTurn(fromCoach: true, text: brain.greeting(ctx))],
+      turns: [
+        CoachTurn(
+            fromCoach: true, text: brain.greeting(ctx), at: DateTime.now()),
+      ],
     );
+  }
+
+  List<CoachTurn> _restoreTurns() {
+    try {
+      final raw = ref.read(sharedPreferencesProvider).getString(_kTurnsKey);
+      if (raw == null || raw.isEmpty) return const [];
+      final list = jsonDecode(raw) as List<dynamic>;
+      return list
+          .whereType<Map<String, dynamic>>()
+          .map((m) => CoachTurn(
+                fromCoach: m['c'] == true,
+                text: (m['t'] ?? '') as String,
+                at: m['a'] is String
+                    ? DateTime.tryParse(m['a'] as String)
+                    : null,
+              ))
+          .where((t) => t.text.isNotEmpty)
+          .toList(growable: false);
+    } catch (_) {
+      return const []; // corrupt payload → fresh greeting, never a crash
+    }
+  }
+
+  void _persistTurns() {
+    try {
+      final turns = state.turns;
+      final tail = turns.length > _kMaxSavedTurns
+          ? turns.sublist(turns.length - _kMaxSavedTurns)
+          : turns;
+      final raw = jsonEncode([
+        for (final t in tail)
+          {'c': t.fromCoach, 't': t.text, 'a': t.at?.toIso8601String()},
+      ]);
+      ref.read(sharedPreferencesProvider).setString(_kTurnsKey, raw);
+    } catch (_) {
+      // Persistence is best-effort; the live conversation is unaffected.
+    }
   }
 
   List<CoachSuggestion> get suggestions {
@@ -272,6 +323,7 @@ class CoachChatNotifier extends Notifier<CoachChatState> {
       ],
       sending: false,
     );
+    _persistTurns();
     _maybeRefreshMemory();
   }
 
