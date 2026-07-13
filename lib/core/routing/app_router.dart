@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../features/admin/presentation/admin_dashboard_screen.dart';
 import '../../features/auth/presentation/auth_screen.dart';
+import '../../features/coach/presentation/coach_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/home/presentation/account_settings_screen.dart';
 import '../../features/home/presentation/dashboard_screen.dart';
@@ -54,6 +55,7 @@ class AppRoutes {
   static const String prediction = '/prediction';
   static const String planDetail = '/plan-detail';
   static const String accountSettings = '/account-settings';
+  static const String coach = '/coach';
 
   /// `/recipe` — full recipe detail view. Callers push with
   /// `context.push('/recipe', extra: recipe)`; the route unpacks
@@ -269,6 +271,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.accountSettings,
         name: 'accountSettings',
         builder: (context, state) => const AccountSettingsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.coach,
+        name: 'coach',
+        builder: (context, state) => const CoachScreen(),
       ),
       GoRoute(
         path: AppRoutes.recipeDetail,

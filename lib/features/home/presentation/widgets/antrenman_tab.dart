@@ -563,10 +563,51 @@ class _AntrenmanHeader extends StatelessWidget {
               ),
             ),
           ),
+          _CoachButton(),
+          const SizedBox(width: 8),
           _ProButton(),
           const SizedBox(width: 8),
           _FlameStreakBadge(streak: streak),
         ],
+      ),
+    );
+  }
+}
+
+/// Always-reachable entry to the AI coach — a persistent presence in the
+/// dashboard header (the coach is one tap away from anywhere on the home).
+class _CoachButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'AI koçunla konuş',
+      child: Material(
+        color: Colors.transparent,
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: () => context.push(AppRoutes.coach),
+          child: Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: _neon.withValues(alpha: 0.6)),
+              boxShadow: [
+                BoxShadow(color: _neon.withValues(alpha: 0.35), blurRadius: 10),
+              ],
+            ),
+            child: ClipOval(
+              child: Image.asset(
+                'photos/PT_FORM.png',
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) =>
+                    const Icon(Icons.smart_toy, color: _neon, size: 18),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
