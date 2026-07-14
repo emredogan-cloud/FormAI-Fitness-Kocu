@@ -31,10 +31,16 @@ class WorkoutGeneratorService {
   /// is a one-line change.
   static const String restDayTitle = 'Dinlenme Günü';
 
-  /// Base multiplier applied per 7-day block. Week 1 uses 1.0, week 2 uses
-  /// 1.2, week 3 uses 1.44, and so on — published reps/seconds come from
-  /// `rounding(baseValue * multiplier)`.
-  static const double weeklyOverloadMultiplier = 1.2;
+  /// RC-1 P4 (coach audit) · LINEAR weekly overload increment. The previous
+  /// implementation COMPOUNDED 1.2× per week (`pow(1.2, weekIndex)`), which
+  /// meant week 3 = 1.44× and days 29-30 = 2.07× — a beginner's 12-rep set
+  /// silently became 25 reps within a month. Compounding ~20 %/week is far
+  /// beyond accepted progression practice (~5-10 %/week) and is an overuse
+  /// risk exactly where the app is most trusted. Progression is now linear:
+  /// week 1 = 1.00, then +8 % of base per week (1.08, 1.16, 1.24, 1.32) —
+  /// ~32 % total volume growth across the program, a defensible coaching
+  /// prescription that still *feels* progressive every single week.
+  static const double weeklyOverloadIncrement = 0.08;
 
   /// Lower and upper bounds on exercises per active day. The generator
   /// picks a value in this range as a function of the day number so the
@@ -137,8 +143,7 @@ class WorkoutGeneratorService {
       ]);
 
       final exerciseCount = _dailyExerciseCount(dayNumber);
-      final multiplier =
-          math.pow(weeklyOverloadMultiplier, weekIndex).toDouble();
+      final multiplier = 1.0 + weeklyOverloadIncrement * weekIndex;
 
       final dayExercises = <Exercise>[];
       for (var i = 0; i < exerciseCount; i++) {

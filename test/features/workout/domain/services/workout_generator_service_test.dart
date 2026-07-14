@@ -512,7 +512,7 @@ void main() {
   });
 
   group('progressive overload', () {
-    test('week-2 reps scale by ~1.2x vs week-1 for a matching exercise', () {
+    test('week-2 reps scale up vs week-1 for a matching exercise', () {
       // Phase 50A · the previous version of this test relied on the
       // cursor wrapping back to position 0 by day 9, which depended on
       // the legacy 41-exercise catalogue size happening to divide the
@@ -553,11 +553,11 @@ void main() {
       expect(
         w2.targetReps!,
         greaterThan(w1.targetReps!),
-        reason: 'week 2 must apply the 1.2x reps multiplier',
+        reason: 'week 2 must apply the +8% weekly overload to reps',
       );
     });
 
-    test('week-2 time-based moves scale by ~1.2x vs week-1', () {
+    test('week-2 time-based moves scale up vs week-1', () {
       final plan = service.generate30DayPlan(
         userGoal: 'sixpack',
         fitnessLevel: 'beginner',
