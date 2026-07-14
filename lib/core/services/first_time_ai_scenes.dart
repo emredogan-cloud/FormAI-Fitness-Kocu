@@ -150,15 +150,18 @@ class _SceneConfig {
 
 const Map<FirstTimeAiScene, _SceneConfig> _configs = {
   // Dashboard welcome — landing here for the first time after the
-  // paywall. Tone: calm motivation, not hype. "Your journey
-  // officially starts now."
+  // paywall. Tone: calm motivation, not hype. RC-1 P12 · Form appears
+  // ONCE: the first-day line, a one-breath tour of the surfaces, and
+  // where to find Form again — then disappears for good (seen-flag).
   FirstTimeAiScene.dashboardWelcome: _SceneConfig(
-    title: 'Hoş geldin.',
-    subtitle: 'Bugün dönüşümünün ilk gerçek günü.\n'
-        'İlk antrenmana hazır mısın?',
+    title: 'Bugün dönüşümünün ilk günü.',
+    subtitle: 'Antrenmanın burada. Beslenme, Gelişim ve Profil '
+        'aşağıdaki sekmelerde.\n'
+        'Bana ihtiyacın olduğunda üstteki avatarımdan yaz — '
+        'her zaman buradayım. 💜',
     composingPlaceholder: 'Sana özel bir şey hazırlıyorum...',
     mood: CoachMood.proud,
-    autoCloseAfter: Duration(milliseconds: 6500),
+    autoCloseAfter: Duration(milliseconds: 8000),
   ),
 
   // Nutrition intro — first tap on the nutrition tab. Tone: smart,
