@@ -6,9 +6,6 @@ import '../../../../core/motion/breathing_box.dart';
 import '../../../../core/motion/glow_pulse.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_haptics.dart';
-import '../../domain/ai_personalization_engine.dart';
-import '../../providers/wizard_provider.dart';
-import '../widgets/onboarding_image.dart';
 
 /// Act 5 · Commitment.
 ///
@@ -55,18 +52,15 @@ class _PrePaywallSummaryStepState extends ConsumerState<PrePaywallSummaryStep>
   late final Animation<Offset> _cardSlide;
 
   late final AnimationController _trustCtrl;
-  late final Animation<double> _trustFill;
 
   /// Flips when the entrance fades complete; gates the plan card's
   /// ambient breathing so the breath doesn't compete with the
   /// entrance choreography.
   bool _entranceDone = false;
 
-  /// Flips when the trust-booster bar finishes its land. Gates the
-  /// CTA's ambient GlowPulse so the pulse waits its turn.
+  /// Flips when the CTA-pacing controller lands. Gates the CTA's ambient
+  /// GlowPulse so the pulse waits its turn.
   bool _trustLanded = false;
-
-  static const double _confidenceTarget = 0.92;
 
   @override
   void initState() {
@@ -86,16 +80,12 @@ class _PrePaywallSummaryStepState extends ConsumerState<PrePaywallSummaryStep>
       }
     });
 
+    // RC-1 P10/P11 · the trust bar is gone (the %92 confidence already
+    // landed on the report screen); the controller now only paces the
+    // CTA's glow so the button "wakes up" a beat after the content.
     _trustCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1100),
-    );
-    // easeOutBack so the % overshoots slightly past 92 then settles —
-    // matches the dynamic-report confidence pattern so the two
-    // confidence reveals across the wizard feel like one motion
-    // language.
-    _trustFill = Tween<double>(begin: 0.0, end: _confidenceTarget).animate(
-      CurvedAnimation(parent: _trustCtrl, curve: Curves.easeOutBack),
     );
     _trustCtrl.addStatusListener((s) {
       if (s == AnimationStatus.completed && mounted && !_trustLanded) {
@@ -119,8 +109,6 @@ class _PrePaywallSummaryStepState extends ConsumerState<PrePaywallSummaryStep>
 
   @override
   Widget build(BuildContext context) {
-    final report =
-        AiPersonalizationEngine.generateReport(ref.watch(wizardProvider));
     return SafeArea(
       child: Stack(
         fit: StackFit.expand,
@@ -142,55 +130,119 @@ class _PrePaywallSummaryStepState extends ConsumerState<PrePaywallSummaryStep>
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
             child: Column(
               children: [
-                ShaderMask(
-                  shaderCallback: (rect) => const LinearGradient(
-                    colors: [AppColors.neon, AppColors.neonAccent],
-                  ).createShader(rect),
-                  child: const Text(
-                    'Bu plan sana özel oluşturuldu.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.4,
-                      height: 1.2,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  'AI motorun seni baştan sona dinledi ve sana özel '
-                  'yolculuğunu kurdu.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white60,
-                    fontSize: 13,
-                    height: 1.45,
-                  ),
-                ),
-                const SizedBox(height: 18),
                 Expanded(
-                  child: SingleChildScrollView(
-                    child: FadeTransition(
-                      opacity: _cardFade,
-                      child: SlideTransition(
-                        position: _cardSlide,
-                        child: BreathingBox(
-                          enabled: _entranceDone,
-                          minAlpha: 0.96,
-                          maxAlpha: 1.0,
-                          duration: const Duration(milliseconds: 6000),
-                          child: _SummaryCard(report: report),
+                  child: FadeTransition(
+                    opacity: _cardFade,
+                    child: SlideTransition(
+                      position: _cardSlide,
+                      child: SingleChildScrollView(
+                        // RC-1 P10/P11 · rebuilt per photos/planıma_geç.png:
+                        // Form hero + speech bubble, the form-coach promise
+                        // headline, honest capability cards, voice-coaching
+                        // card, benefit icon row, early-access line. The
+                        // plan-summary card moved OUT — the report screen
+                        // immediately before this one already presents the
+                        // plan data; repeating it here dulled the close.
+                        child: Column(
+                          children: [
+                            const _FormHeroWithBubble(),
+                            const SizedBox(height: 16),
+                            RichText(
+                              textAlign: TextAlign.center,
+                              text: TextSpan(
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w900,
+                                  height: 1.22,
+                                  letterSpacing: 0.3,
+                                ),
+                                children: [
+                                  const TextSpan(text: 'Gerçek zamanlı\n'),
+                                  TextSpan(
+                                    text: 'form koçun',
+                                    style: TextStyle(
+                                      foreground: Paint()
+                                        ..shader = const LinearGradient(
+                                          colors: [
+                                            AppColors.neon,
+                                            AppColors.neonAccent,
+                                          ],
+                                        ).createShader(
+                                          const Rect.fromLTWH(0, 0, 220, 40),
+                                        ),
+                                    ),
+                                  ),
+                                  const TextSpan(text: ' ilk günden yanında.'),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Erken erişim dönemi — FormAI\'i ilk '
+                              'deneyenlerden birisin.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.white54,
+                                fontSize: 13,
+                                height: 1.4,
+                              ),
+                            ),
+                            const SizedBox(height: 18),
+                            Row(
+                              children: const [
+                                Expanded(
+                                  child: _StatMiniCard(
+                                    icon: Icons.monitor_heart_outlined,
+                                    big: '130+',
+                                    line1: 'EGZERSİZ',
+                                    line2: 'CANLI FORM ANALİZİ',
+                                  ),
+                                ),
+                                SizedBox(width: 12),
+                                Expanded(
+                                  child: _StatMiniCard(
+                                    icon: Icons.memory_rounded,
+                                    big: 'AI',
+                                    line1: 'DESTEKLİ',
+                                    line2: '%100 CİHAZINDA',
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            const _VoiceCoachCard(),
+                            const SizedBox(height: 14),
+                            const _BenefitIconRow(),
+                            const SizedBox(height: 14),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
+                                Icon(Icons.rocket_launch_rounded,
+                                    color: AppColors.neon, size: 15),
+                                SizedBox(width: 6),
+                                Text(
+                                  'Erken erişim',
+                                  style: TextStyle(
+                                    color: AppColors.neon,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                Text(
+                                  '  ·  İlk kullanıcılardan biri ol',
+                                  style: TextStyle(
+                                    color: Colors.white54,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 14),
-                FadeTransition(
-                  opacity: _cardFade,
-                  child: _TrustBoosterPanel(fill: _trustFill),
                 ),
                 const SizedBox(height: 14),
                 GlowPulse(
@@ -204,30 +256,74 @@ class _PrePaywallSummaryStepState extends ConsumerState<PrePaywallSummaryStep>
                   shape: BoxShape.rectangle,
                   borderRadius: BorderRadius.circular(18),
                   duration: const Duration(milliseconds: 2900),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: FilledButton.icon(
-                      onPressed: () {
-                        AppHaptics.secondaryTap();
-                        widget.onComplete();
-                      },
-                      icon: const Icon(Icons.arrow_forward_rounded),
-                      label: const Text('YOLCULUĞA BAŞLA'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.neon,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 18),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
+                  // Reference CTA: full-width pill, circled arrow left,
+                  // 'PLANIMA GEÇ' centered.
+                  child: Material(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(999),
+                    child: Ink(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.neon.withValues(alpha: 0.28),
+                            AppColors.neon.withValues(alpha: 0.14),
+                          ],
                         ),
-                        textStyle: const TextStyle(
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 2.5,
-                          fontSize: 15,
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: AppColors.neon.withValues(alpha: 0.8),
+                          width: 1.4,
+                        ),
+                      ),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(999),
+                        onTap: () {
+                          AppHaptics.secondaryTap();
+                          widget.onComplete();
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 10),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 46,
+                                height: 46,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: AppColors.neon.withValues(alpha: 0.35),
+                                  border: Border.all(
+                                    color:
+                                        AppColors.neon.withValues(alpha: 0.9),
+                                  ),
+                                ),
+                                child: const Icon(Icons.arrow_forward_rounded,
+                                    color: Colors.white, size: 22),
+                              ),
+                              const Expanded(
+                                child: Text(
+                                  'PLANIMA GEÇ',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 3,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 46),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Planına geçmeden önce son adım',
+                  style: TextStyle(color: Colors.white38, fontSize: 12),
                 ),
               ],
             ),
@@ -238,313 +334,160 @@ class _PrePaywallSummaryStepState extends ConsumerState<PrePaywallSummaryStep>
   }
 }
 
-class _TrustBoosterPanel extends StatelessWidget {
-  const _TrustBoosterPanel({required this.fill});
-
-  final Animation<double> fill;
+/// RC-1 P11 · Form portrait in a glow ring with a floating speech bubble
+/// ('Her tekrarında yanındayım.') anchored top-right — the reference's hero.
+class _FormHeroWithBubble extends StatelessWidget {
+  const _FormHeroWithBubble();
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: fill,
-      builder: (context, _) {
-        // easeOutBack overshoots — clamp the on-screen value so the
-        // user sees 92 % at peak instead of 95 % en route.
-        final shown = fill.value.clamp(0.0, 1.0);
-        final pct = (shown * 100).round();
-        return Container(
-          width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppColors.neon.withValues(alpha: 0.16),
-                AppColors.neonAccent.withValues(alpha: 0.10),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: AppColors.neon.withValues(alpha: 0.55),
-              width: 1.2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.neon.withValues(alpha: 0.32),
-                blurRadius: 24,
-                spreadRadius: -4,
+    return SizedBox(
+      height: 150,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: 128,
+            height: 128,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: AppColors.neon.withValues(alpha: 0.75),
+                width: 2,
               ),
-            ],
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.neon.withValues(alpha: 0.45),
+                  blurRadius: 34,
+                ),
+              ],
+            ),
+            child: ClipOval(
+              child: Image.asset(
+                'photos/PT_FORM.png',
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const Icon(Icons.smart_toy,
+                    color: AppColors.neon, size: 48),
+              ),
+            ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(
-                    Icons.verified_rounded,
-                    color: AppColors.neonAccent,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Başarı Olasılığı',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.95),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.3,
-                      ),
-                    ),
-                  ),
+          Positioned(
+            top: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF17102B),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(14),
+                  topRight: Radius.circular(14),
+                  bottomRight: Radius.circular(14),
+                  bottomLeft: Radius.circular(4),
+                ),
+                border: Border.all(
+                  color: AppColors.neon.withValues(alpha: 0.5),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(Icons.bolt_rounded, color: AppColors.neon, size: 14),
+                  SizedBox(width: 4),
                   Text(
-                    '%$pct',
-                    style: const TextStyle(
-                      color: AppColors.neon,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.4,
+                    'Her tekrarında\nyanındayım.',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 11.5,
+                      height: 1.25,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(999),
-                child: LinearProgressIndicator(
-                  value: shown,
-                  minHeight: 8,
-                  backgroundColor: Colors.white.withValues(alpha: 0.08),
-                  valueColor: const AlwaysStoppedAnimation(AppColors.neon),
-                ),
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                'Bu program, girdiğin veriler çaprazlanarak tamamen sana özel '
-                'milimetrik olarak hesaplandı.',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12.5,
-                  height: 1.45,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-/// The detailed Plan Card. Side-image layout: stat rows stack on the
-/// left, the AI coach face panel anchors the right ~45 %. Neon
-/// BoxShadow behind the entire card to make it feel "alive" and
-/// high-value.
-class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({required this.report});
-  final AiReport report;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: AppColors.neon.withValues(alpha: 0.45),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.neon.withValues(alpha: 0.32),
-            blurRadius: 38,
-            spreadRadius: 2,
+            ),
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(22),
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                flex: 11,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 8, 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _PlanStatRow(
-                        label: 'HEDEF',
-                        value: report.goalLabel,
-                        icon: Icons.flag_rounded,
-                      ),
-                      const SizedBox(height: 10),
-                      _PlanStatRow(
-                        label: 'SÜRE',
-                        value: report.durationLabel,
-                        icon: Icons.calendar_month_rounded,
-                      ),
-                      const SizedBox(height: 10),
-                      _PlanStatRow(
-                        label: 'ZORLUK',
-                        value: report.difficultyLabel,
-                        icon: Icons.bolt_rounded,
-                      ),
-                      const SizedBox(height: 10),
-                      _PlanStatRow(
-                        label: 'HAFTALIK',
-                        value: '${report.weeklyWorkoutCount} gün',
-                        icon: Icons.fitness_center_rounded,
-                      ),
-                      const SizedBox(height: 12),
-                      _PlanResultTile(text: report.estimatedResults),
-                    ],
-                  ),
-                ),
-              ),
-              const Expanded(
-                flex: 9,
-                child: _AiCoachPanel(),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
 
-class _PlanStatRow extends StatelessWidget {
-  const _PlanStatRow({
-    required this.label,
-    required this.value,
+/// Small honest-capability card (130+ exercises / on-device AI).
+class _StatMiniCard extends StatelessWidget {
+  const _StatMiniCard({
     required this.icon,
+    required this.big,
+    required this.line1,
+    required this.line2,
   });
 
-  final String label;
-  final String value;
   final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 32,
-          height: 32,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: AppColors.neon.withValues(alpha: 0.18),
-            border: Border.all(color: AppColors.neon.withValues(alpha: 0.5)),
-          ),
-          child: Icon(icon, color: AppColors.neon, size: 15),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white54,
-                  fontSize: 9.5,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              const SizedBox(height: 1),
-              Text(
-                value,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w900,
-                  height: 1.2,
-                  letterSpacing: 0.1,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _PlanResultTile extends StatelessWidget {
-  const _PlanResultTile({required this.text});
-  final String text;
+  final String big;
+  final String line1;
+  final String line2;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+      padding: const EdgeInsets.fromLTRB(12, 14, 12, 14),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.neon.withValues(alpha: 0.24),
-            AppColors.neonAccent.withValues(alpha: 0.18),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.neon.withValues(alpha: 0.55),
-          width: 1,
-        ),
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.neon.withValues(alpha: 0.45)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.neon.withValues(alpha: 0.18),
-            blurRadius: 14,
+            color: AppColors.neon.withValues(alpha: 0.16),
+            blurRadius: 18,
             spreadRadius: -4,
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+      child: Row(
         children: [
-          Row(
-            children: const [
-              Icon(
-                Icons.trending_up_rounded,
-                color: AppColors.neonAccent,
-                size: 14,
-              ),
-              SizedBox(width: 4),
-              Text(
-                'TAHMİNİ SONUÇ',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 9,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.2,
+          Icon(icon, color: AppColors.neonAccent, size: 26),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ShaderMask(
+                  shaderCallback: (rect) => const LinearGradient(
+                    colors: [AppColors.neon, AppColors.neonAccent],
+                  ).createShader(rect),
+                  child: Text(
+                    big,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      height: 1.0,
+                    ),
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 2),
-          Text(
-            text,
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12.5,
-              fontWeight: FontWeight.w900,
-              height: 1.3,
+                const SizedBox(height: 3),
+                Text(
+                  line1,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                Text(
+                  line2,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white38,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.6,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -553,90 +496,139 @@ class _PlanResultTile extends StatelessWidget {
   }
 }
 
-/// Form's face on the right of the plan card. Wrapped in [GlowPulse]
-/// so the coach's "presence" stays consistent with how Form pulses on
-/// the coach-intro screen — cross-scene identity continuity. Glow is
-/// subtle here (alpha 0.20→0.40, blur 14→22) since the panel sits
-/// inside an already-glowing card.
-class _AiCoachPanel extends StatelessWidget {
-  const _AiCoachPanel();
-
-  static const String _coachAsset = 'photos/PT_FORM.png';
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        const GlowPulse(
-          color: AppColors.neon,
-          minAlpha: 0.20,
-          maxAlpha: 0.40,
-          minBlur: 14,
-          maxBlur: 22,
-          spread: -3,
-          shape: BoxShape.rectangle,
-          duration: Duration(milliseconds: 3400),
-          child: OnboardingImage(
-            asset: _coachAsset,
-            fallbackIcon: Icons.smart_toy_rounded,
-            borderRadius: 0,
-            dimOverlay: false,
-          ),
-        ),
-        const DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-              colors: [Colors.black, Colors.transparent],
-            ),
-          ),
-        ),
-        const Positioned(
-          top: 10,
-          left: 6,
-          right: 6,
-          child: Center(child: _CoachBadge()),
-        ),
-      ],
-    );
-  }
-}
-
-class _CoachBadge extends StatelessWidget {
-  const _CoachBadge();
+/// 'SESLİ FORM KOÇLUĞU' card — copy left, glowing mic badge right.
+class _VoiceCoachCard extends StatelessWidget {
+  const _VoiceCoachCard();
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.7),
+        color: Colors.white.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.neon.withValues(alpha: 0.7)),
+        border: Border.all(color: AppColors.neon.withValues(alpha: 0.45)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.neon.withValues(alpha: 0.4),
-            blurRadius: 10,
-            spreadRadius: -2,
+            color: AppColors.neon.withValues(alpha: 0.16),
+            blurRadius: 18,
+            spreadRadius: -4,
           ),
         ],
       ),
-      child: const Row(
-        mainAxisSize: MainAxisSize.min,
+      child: Row(
         children: [
-          Icon(Icons.auto_awesome, color: AppColors.neon, size: 10),
-          SizedBox(width: 4),
-          Text(
-            'Form · AI Koçun',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 9.5,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 0.5,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                RichText(
+                  text: const TextSpan(
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.6,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: 'SESLİ ',
+                        style: TextStyle(color: AppColors.neon),
+                      ),
+                      TextSpan(
+                        text: 'FORM KOÇLUĞU',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Formun bozulduğunda sesli uyarı ve düzeltme '
+                  'önerisi alırsın.',
+                  style: TextStyle(
+                    color: Colors.white60,
+                    fontSize: 12.5,
+                    height: 1.4,
+                  ),
+                ),
+              ],
             ),
           ),
+          const SizedBox(width: 12),
+          Container(
+            width: 62,
+            height: 62,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.neon.withValues(alpha: 0.12),
+              border: Border.all(
+                color: AppColors.neonAccent.withValues(alpha: 0.8),
+                width: 1.6,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.neonAccent.withValues(alpha: 0.35),
+                  blurRadius: 18,
+                ),
+              ],
+            ),
+            child: const Icon(Icons.mic_rounded, color: Colors.white, size: 28),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Four-benefit icon row from the reference (goal · live progress ·
+/// motivation · data safety).
+class _BenefitIconRow extends StatelessWidget {
+  const _BenefitIconRow();
+
+  static const List<(IconData, String)> _items = [
+    (Icons.track_changes_rounded, 'Kişisel\nhedeflerine odaklan'),
+    (Icons.bar_chart_rounded, 'İlerlemeni\nanlık takip et'),
+    (Icons.military_tech_rounded, 'Motivasyonun\nhiç düşmesin'),
+    (Icons.shield_outlined, 'Verilerin\ngüvende'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+      ),
+      child: Row(
+        children: [
+          for (var i = 0; i < _items.length; i++) ...[
+            if (i > 0)
+              Container(
+                width: 1,
+                height: 40,
+                color: Colors.white.withValues(alpha: 0.10),
+              ),
+            Expanded(
+              child: Column(
+                children: [
+                  Icon(_items[i].$1, color: AppColors.neonAccent, size: 22),
+                  const SizedBox(height: 6),
+                  Text(
+                    _items[i].$2,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 9.5,
+                      height: 1.25,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
