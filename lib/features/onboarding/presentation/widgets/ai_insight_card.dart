@@ -44,37 +44,75 @@ class AiInsightCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
+      // RC-1 P8 · a small Form avatar anchors the card to the coach — the
+      // user should instantly read "this message comes from Form", not from
+      // an anonymous system. Avatar left, content right (chat-app grammar).
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.auto_awesome_rounded,
-                color: AppColors.neonAccent,
-                size: 16,
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: AppColors.neon.withValues(alpha: 0.65),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  headline,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.95),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.3,
-                  ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.neon.withValues(alpha: 0.30),
+                  blurRadius: 10,
+                ),
+              ],
+            ),
+            child: ClipOval(
+              child: Image.asset(
+                'photos/PT_FORM.png',
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const Icon(
+                  Icons.auto_awesome_rounded,
+                  color: AppColors.neonAccent,
+                  size: 18,
                 ),
               ),
-            ],
+            ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            body,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 13,
-              height: 1.45,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        headline,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.95),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    const Icon(
+                      Icons.auto_awesome_rounded,
+                      color: AppColors.neonAccent,
+                      size: 14,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  body,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 13,
+                    height: 1.45,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
