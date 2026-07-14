@@ -135,9 +135,18 @@ class _WelcomeStepState extends State<WelcomeStep>
                 ),
               );
             },
+            // RC-1 P6 · the background was the SQUARE app-icon artwork
+            // (photos/APP_ICON.png) center-cropped by BoxFit.cover — on a
+            // 9:19.5 phone that amputated both sides and misplaced the
+            // composition. Replaced with the portrait hero from the design
+            // reference (First_opening.png, imagery-only crop — title/CTA
+            // stay native Flutter below), anchored topCenter so the FormAI
+            // logo + robot stay framed while cover absorbs every aspect
+            // ratio without gaps or distortion.
             child: Image.asset(
-              'photos/APP_ICON.png',
+              'photos/onboarding_hero_start.webp',
               fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
               errorBuilder: (_, __, ___) => const DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: RadialGradient(
