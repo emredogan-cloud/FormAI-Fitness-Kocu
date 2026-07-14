@@ -110,6 +110,29 @@ Future<String?> _invokeCoachChat(
   return null;
 }
 
+/// One-shot Form line for the ONBOARDING conversation (RC-1 P7). Sends a
+/// single instruction to the live coach and returns Form's reply, or `null`
+/// when the LLM is disabled, offline, slow (8 s), or fails in any way — the
+/// caller keeps its scripted copy as the fallback, so onboarding NEVER
+/// stalls on the network (an App-Review-critical property).
+Future<String?> onboardingCoachReply(String instruction) async {
+  if (!_llmEnabled) return null;
+  try {
+    final reply = await _invokeCoachChat(
+      'Bağlam: uygulamanın tanışma (onboarding) sohbeti. Kullanıcı seni yeni '
+          'tanıyor. Tek mesajlık, kısa ve samimi bir yanıt ver.',
+      const [],
+      instruction,
+      '',
+    ).timeout(const Duration(seconds: 8));
+    final trimmed = reply?.trim();
+    if (trimmed == null || trimmed.isEmpty) return null;
+    return trimmed;
+  } catch (_) {
+    return null;
+  }
+}
+
 /// Asks the server to fold the given turns into an updated rolling summary.
 /// Returns null on any failure — memory refresh is strictly best-effort and
 /// must never surface an error to the user.

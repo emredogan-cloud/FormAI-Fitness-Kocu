@@ -5,6 +5,7 @@ import '../../../../core/motion/ambient_particles.dart';
 import '../../../../core/motion/glow_pulse.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_haptics.dart';
+import '../../../coach/providers/coach_providers.dart';
 import '../../providers/wizard_provider.dart';
 import '../widgets/coach_chat_bubble.dart';
 import '../widgets/coach_mood.dart';
@@ -55,9 +56,12 @@ class NameCaptureStep extends ConsumerStatefulWidget {
 
 class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
     with SingleTickerProviderStateMixin {
-  static const String _prompt1 = 'Bu yolculukta sana nasıl sesleneyim?';
-  static const String _prompt2 =
-      'Bu plan boyunca seninle bu isimle konuşacağım.';
+  // RC-1 P7 · Form introduces itself briefly, then asks the name. The
+  // acknowledgment replies are REAL LLM turns (coach-chat) with these
+  // scripted lines as instant offline fallbacks — onboarding never waits
+  // on the network beyond one composing beat.
+  static const String _prompt1 = 'Merhaba! Ben Form — kişisel AI koçun. 👋';
+  static const String _prompt2 = 'Bu yolculukta sana nasıl sesleneyim?';
   static const String _reframePrompt = 'Şu an seni en çok ne yoruyor?';
 
   /// 750 ms composing-dots beat between every user chip tap and
@@ -96,23 +100,23 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
   bool _msg1Done = false;
   bool _msg2Done = false;
   bool _userNamePosted = false;
+  bool _nameAckReady = false;
   bool _ackNameDone = false;
   bool _reframeAskDone = false;
   bool _reframeChosen = false;
   bool _ackReady = false;
   bool _ackDone = false;
-  bool _confirmReady = false;
-  bool _confirmDone = false;
-  bool _companionReady = false;
-  bool _companionDone = false;
-  bool _futureReady = false;
-  bool _futureDone = false;
   bool _transitionReady = false;
   bool _transitionDone = false;
 
   String _capturedName = '';
   String? _capturedReframeToken;
   String _capturedReframeBubble = '';
+
+  /// Live Claude replies for the two acknowledgment beats — null means the
+  /// scripted fallback line renders instead (offline / LLM off / slow).
+  String? _llmNameAck;
+  String? _llmReframeAck;
 
   @override
   void initState() {
@@ -138,17 +142,12 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
       _msg1Done = true;
       _msg2Done = true;
       _userNamePosted = true;
+      _nameAckReady = true;
       _ackNameDone = true;
       _reframeAskDone = true;
       _reframeChosen = true;
       _ackReady = true;
       _ackDone = true;
-      _confirmReady = true;
-      _confirmDone = true;
-      _companionReady = true;
-      _companionDone = true;
-      _futureReady = true;
-      _futureDone = true;
       _transitionReady = true;
       _transitionDone = true;
       _capturedName = existingName;
@@ -169,6 +168,7 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
       _msg1Done = true;
       _msg2Done = true;
       _userNamePosted = true;
+      _nameAckReady = true;
       _ackNameDone = true;
       _capturedName = existingName;
     }
@@ -207,6 +207,24 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
       _userNamePosted = true;
     });
     _scrollToEnd();
+    // RC-1 P7 · the welcome is a REAL Form turn: ask the live coach for a
+    // one-line personalised greeting while the composing dots show. The
+    // beat lasts at least one composing cadence, at most the LLM timeout;
+    // a null reply keeps the scripted fallback. Onboarding cannot stall.
+    final llm = onboardingCoachReply(
+      'Kullanıcı adını söyledi: "$name". Ona adıyla hitap ederek tek cümlelik '
+      'sıcak bir hoş geldin ver. Soru sorma, uzatma — bir sonraki adıma ben '
+      'geçeceğim.',
+    );
+    Future.wait<dynamic>([llm, Future<void>.delayed(_composingBeat)])
+        .then((results) {
+      if (!mounted || _nameAckReady) return;
+      setState(() {
+        _llmNameAck = results.first as String?;
+        _nameAckReady = true;
+      });
+      _scrollToEnd();
+    });
   }
 
   void _onAckNameDone() {
@@ -231,43 +249,32 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
       _reframeChosen = true;
     });
     _scrollToEnd();
-    _scheduleNext(() => _ackReady, () => setState(() => _ackReady = true));
+    // RC-1 P7 · empathetic acknowledgment is a live Form turn too —
+    // referencing the user's name AND what they said tires them most.
+    // Scripted _ackText stays as the instant fallback.
+    final llm = onboardingCoachReply(
+      'Kullanıcının adı: "$_capturedName". "Şu an seni en çok ne yoruyor?" '
+      'sorusuna "${choice.userBubble}" diye cevap verdi. Bunu duyduğunu '
+      'hissettiren, adıyla hitap eden, 1-2 cümlelik empatik ve umut veren '
+      'bir yanıt ver. Soru sorma.',
+    );
+    Future.wait<dynamic>([llm, Future<void>.delayed(_composingBeat)])
+        .then((results) {
+      if (!mounted || _ackReady) return;
+      setState(() {
+        _llmReframeAck = results.first as String?;
+        _ackReady = true;
+      });
+      _scrollToEnd();
+    });
   }
 
   void _onAckDone() {
     if (!mounted || _ackDone) return;
     setState(() => _ackDone = true);
     _scrollToEnd();
-    _scheduleNext(
-      () => _confirmReady,
-      () => setState(() => _confirmReady = true),
-    );
-  }
-
-  void _onConfirmDone() {
-    if (!mounted || _confirmDone) return;
-    setState(() => _confirmDone = true);
-    _scrollToEnd();
-    _scheduleNext(
-      () => _companionReady,
-      () => setState(() => _companionReady = true),
-    );
-  }
-
-  void _onCompanionDone() {
-    if (!mounted || _companionDone) return;
-    setState(() => _companionDone = true);
-    _scrollToEnd();
-    _scheduleNext(
-      () => _futureReady,
-      () => setState(() => _futureReady = true),
-    );
-  }
-
-  void _onFutureDone() {
-    if (!mounted || _futureDone) return;
-    setState(() => _futureDone = true);
-    _scrollToEnd();
+    // RC-1 P7 · the confirm/companion/future monologue beats are CUT —
+    // the first conversation stays short. Straight to the transition line.
     _scheduleNext(
       () => _transitionReady,
       () => setState(() => _transitionReady = true),
@@ -330,48 +337,6 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
     };
   }
 
-  /// Message 2 — confirm understanding. Reframes the pain so the
-  /// user sees it from a useful angle, not as a personal failing.
-  String _confirmText(String token) {
-    return switch (token) {
-      'dongu' =>
-        'Çoğu kez başlayıp durdun. Sebep motivasyon değildi — sessizlikti.',
-      'gormek' =>
-        'Gözle ölçemediğin için yok sandın. Aslında yön yanlıştı, sen değil.',
-      'yalniz' => 'Kimsenin yüksek sesle söylemediği en büyük sebep bu.',
-      _ => 'Anlamadığım bir şey değil bu.',
-    };
-  }
-
-  /// Message 3 — companion offer. Positions Form as the constant
-  /// presence the user has been missing. "Yanındayım" without saying
-  /// it out loud.
-  String _companionText(String token) {
-    return switch (token) {
-      'dongu' =>
-        'Ben her gün sessizliği kıracağım. Sözle değil — küçük, sıralı adımlarla.',
-      'gormek' =>
-        'Ben her tekrarını izleyeceğim. Yön doğru olunca, sonuç sessizce gelir.',
-      'yalniz' =>
-        'Bundan sonra her sabah ben buradayım — hatırlatan, ölçen, gören.',
-      _ => 'Bundan sonra her gün ben buradayım.',
-    };
-  }
-
-  /// Message 4 — future-self pull. Plants a specific milestone the
-  /// user can look forward to so the present effort gets a concrete
-  /// future to land in.
-  String _futureText(String token) {
-    return switch (token) {
-      'dongu' => '30 gün sonra döngüye değil, kendi ritmine bakıyor olacaksın.',
-      'gormek' => 'İlk farkı 21. günde göreceksin. Bekle bunu.',
-      'yalniz' =>
-        '30 gün sonra dönüp baktığında, yalnız olmadığını bileceksin.',
-      _ => '30 gün sonra bambaşka bir yerde olacaksın.',
-    };
-  }
-
-  /// Message 5 — transition. Closes the emotional beat and hands off
   /// to the next onboarding step ("now I'm building your plan").
   String _transitionText(String name) {
     final n = _normalizeForGreeting(name);
@@ -504,14 +469,20 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
                           side: ChatBubbleSide.user,
                         ),
                         const SizedBox(height: 8),
-                        CoachChatBubble(
-                          text: 'Tamam, '
-                              '${_normalizeForGreeting(_capturedName)}.',
-                          side: ChatBubbleSide.form,
-                          typewriter: !_isReturning,
-                          startDelay: const Duration(milliseconds: 400),
-                          onTypingComplete: _onAckNameDone,
-                        ),
+                        if (!_nameAckReady)
+                          const _ComposingBubble()
+                        else
+                          CoachChatBubble(
+                            text: _llmNameAck ??
+                                'Tamam, '
+                                    '${_normalizeForGreeting(_capturedName)}. '
+                                    'Birlikte çalışacağımız için '
+                                    'heyecanlıyım.',
+                            side: ChatBubbleSide.form,
+                            typewriter: !_isReturning,
+                            startDelay: const Duration(milliseconds: 200),
+                            onTypingComplete: _onAckNameDone,
+                          ),
                       ],
                       if (_ackNameDone) ...[
                         const SizedBox(height: 8),
@@ -534,10 +505,11 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
                           const _ComposingBubble()
                         else
                           CoachChatBubble(
-                            text: _ackText(
-                              _capturedReframeToken ?? '',
-                              _capturedName,
-                            ),
+                            text: _llmReframeAck ??
+                                _ackText(
+                                  _capturedReframeToken ?? '',
+                                  _capturedName,
+                                ),
                             side: ChatBubbleSide.form,
                             typewriter: !_isReturning,
                             startDelay: const Duration(milliseconds: 200),
@@ -545,45 +517,6 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
                           ),
                       ],
                       if (_ackDone) ...[
-                        const SizedBox(height: 8),
-                        if (!_confirmReady)
-                          const _ComposingBubble()
-                        else
-                          CoachChatBubble(
-                            text: _confirmText(_capturedReframeToken ?? ''),
-                            side: ChatBubbleSide.form,
-                            typewriter: !_isReturning,
-                            startDelay: const Duration(milliseconds: 200),
-                            onTypingComplete: _onConfirmDone,
-                          ),
-                      ],
-                      if (_confirmDone) ...[
-                        const SizedBox(height: 8),
-                        if (!_companionReady)
-                          const _ComposingBubble()
-                        else
-                          CoachChatBubble(
-                            text: _companionText(_capturedReframeToken ?? ''),
-                            side: ChatBubbleSide.form,
-                            typewriter: !_isReturning,
-                            startDelay: const Duration(milliseconds: 200),
-                            onTypingComplete: _onCompanionDone,
-                          ),
-                      ],
-                      if (_companionDone) ...[
-                        const SizedBox(height: 8),
-                        if (!_futureReady)
-                          const _ComposingBubble()
-                        else
-                          CoachChatBubble(
-                            text: _futureText(_capturedReframeToken ?? ''),
-                            side: ChatBubbleSide.form,
-                            typewriter: !_isReturning,
-                            startDelay: const Duration(milliseconds: 200),
-                            onTypingComplete: _onFutureDone,
-                          ),
-                      ],
-                      if (_futureDone) ...[
                         const SizedBox(height: 8),
                         if (!_transitionReady)
                           const _ComposingBubble()
