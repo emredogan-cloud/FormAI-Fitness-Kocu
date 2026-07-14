@@ -365,9 +365,9 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
   // guided sequentially through the report — Form first, then
   // title, then subtitle cascading down to the CTA. Reads as a
   // *directed* reveal rather than one synchronous block.
-  late final _RevealAnim _avatarReveal;
-  late final _RevealAnim _titleReveal;
-  late final _RevealAnim _subtitleReveal;
+  // RC-1 P9 · the avatar/title/subtitle trio collapsed into one hero CARD
+  // (reference: photos/kişisel_aı_raporun.png) so the reveal list shrank.
+  late final _RevealAnim _heroReveal;
   late final _RevealAnim _metricsReveal;
   late final _RevealAnim _projectionReveal;
   late final _RevealAnim _assessmentReveal;
@@ -376,12 +376,6 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
   /// Set when the confidence bar finishes its land. Gates the CTA's
   /// ambient [GlowPulse] so it doesn't compete with the bar's filling.
   bool _confidenceLanded = false;
-
-  /// Form's mood on this scene. Mounts in `excited` (peak energy at
-  /// the moment of reveal — "I've finished computing!"), settles to
-  /// `proud` once the entrance choreography completes. The 500 ms
-  /// cross-fade inside [LivingCoachAvatar] handles the transition.
-  CoachMood _avatarMood = CoachMood.excited;
 
   @override
   void initState() {
@@ -396,9 +390,7 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
       duration: const Duration(milliseconds: 1800),
     )..forward();
 
-    _avatarReveal = _makeReveal(0.00, 0.30);
-    _titleReveal = _makeReveal(0.10, 0.40);
-    _subtitleReveal = _makeReveal(0.20, 0.45);
+    _heroReveal = _makeReveal(0.00, 0.35);
     _metricsReveal = _makeReveal(0.25, 0.55);
     _projectionReveal = _makeReveal(0.30, 0.60);
     _assessmentReveal = _makeReveal(0.40, 0.70);
@@ -416,14 +408,7 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
 
     _intro.addStatusListener((s) {
       if (s == AnimationStatus.completed && mounted && !_confidenceLanded) {
-        setState(() {
-          _confidenceLanded = true;
-          // Form has finished *delivering* the report — settles from
-          // excited (peak reveal energy) into proud (sustained
-          // satisfaction). Visible posture shift: scale 1.04 → 1.05,
-          // halo cycle 1.8 s → 3.0 s, glow alpha 0.45-0.75 → 0.40-0.70.
-          _avatarMood = CoachMood.proud;
-        });
+        setState(() => _confidenceLanded = true);
         AppHaptics.success();
       }
     });
@@ -487,46 +472,10 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
             child: Column(
               children: [
                 _staggered(
-                  reveal: _avatarReveal,
-                  // Form personally delivers the report. Mounts in
-                  // `excited` (peak energy moment of reveal), settles
-                  // to `proud` once the entrance choreography
-                  // completes. The 500 ms cross-fade inside
-                  // LivingCoachAvatar handles the transition.
-                  child: LivingCoachAvatar(
-                    size: 80,
-                    innerSize: 56,
-                    mood: _avatarMood,
-                  ),
+                  reveal: _heroReveal,
+                  child: const _ReportHeroCard(),
                 ),
-                const SizedBox(height: 12),
-                _staggered(
-                  reveal: _titleReveal,
-                  child: ShaderMask(
-                    shaderCallback: (rect) => const LinearGradient(
-                      colors: [AppColors.neon, AppColors.neonAccent],
-                    ).createShader(rect),
-                    child: const Text(
-                      'Kişisel AI Raporun',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.4,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                _staggered(
-                  reveal: _subtitleReveal,
-                  child: const Text(
-                    'AI değerlendirmen hazır',
-                    style: TextStyle(color: Colors.white54, fontSize: 13),
-                  ),
-                ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
                 _staggered(
                   reveal: _metricsReveal,
                   child: Row(
@@ -538,16 +487,22 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
                           formatter: (v) => v.toStringAsFixed(1),
                           startDelay: const Duration(milliseconds: 200),
                           icon: Icons.monitor_weight_outlined,
+                          gaugeFraction: ((bmi - 14.0) / 22.0).clamp(0.05, 1.0),
+                          statusLabel: _bmiCategory(bmi),
+                          statusColor: _bmiTint(bmi),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: _ReportMetricCard(
-                          label: 'GÜNLÜK KAL.',
+                          label: 'GÜNLÜK KALORİ',
                           morphingValue: calories.toDouble(),
                           formatter: (v) => v.round().toString(),
                           startDelay: const Duration(milliseconds: 350),
                           icon: Icons.local_fire_department_rounded,
+                          gaugeFraction: (calories / 3200.0).clamp(0.05, 1.0),
+                          statusLabel: 'kcal',
+                          statusColor: AppColors.neonAccent,
                         ),
                       ),
                     ],
@@ -626,47 +581,51 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
                   ),
                 ),
                 const SizedBox(height: 14),
+                // RC-1 P9 · success probability as a RING + copy row
+                // (reference layout) instead of a bare linear bar.
                 AnimatedBuilder(
                   animation: _confidence,
                   builder: (context, _) {
                     // Clamp display: easeOutBack overshoots, but we
                     // don't want to show 95 % en route to 92 %.
                     final shown = _confidence.value.clamp(0.0, 1.0);
-                    final pct = (shown * 100).round();
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                    return Row(
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'Başarı olasılığı',
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
+                        _SuccessRing(fraction: shown),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Başarı olasılığı',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w800,
+                                ),
                               ),
-                            ),
-                            Text(
-                              '%$pct',
-                              style: const TextStyle(
-                                color: AppColors.neon,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w900,
+                              const SizedBox(height: 4),
+                              const Text(
+                                'Hedeflerine çok yakınsın!',
+                                style: TextStyle(
+                                  color: Colors.white54,
+                                  fontSize: 12,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: LinearProgressIndicator(
-                            value: shown,
-                            minHeight: 6,
-                            backgroundColor: Colors.white12,
-                            valueColor: const AlwaysStoppedAnimation(
-                              AppColors.neon,
-                            ),
+                              const SizedBox(height: 8),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: LinearProgressIndicator(
+                                  value: shown,
+                                  minHeight: 5,
+                                  backgroundColor: Colors.white12,
+                                  valueColor: const AlwaysStoppedAnimation(
+                                    AppColors.neon,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -687,27 +646,64 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
                     shape: BoxShape.rectangle,
                     borderRadius: BorderRadius.circular(18),
                     duration: const Duration(milliseconds: 2900),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: () {
-                          AppHaptics.secondaryTap();
-                          widget.onComplete();
-                        },
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.neon,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 18),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
+                    // RC-1 P9 · gradient two-line CTA per the reference:
+                    // sparkle + 'KİŞİSEL PLANIMI AL' with the mission
+                    // subline. Material+InkWell keeps the ripple.
+                    child: Material(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(18),
+                      child: Ink(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [AppColors.neon, AppColors.neonAccent],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
                           ),
-                          textStyle: const TextStyle(
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 2.5,
-                            fontSize: 15,
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(18),
+                          onTap: () {
+                            AppHaptics.secondaryTap();
+                            widget.onComplete();
+                          },
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: const [
+                                    Icon(Icons.auto_awesome,
+                                        color: Colors.white, size: 18),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'KİŞİSEL PLANIMI AL',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: 2.2,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  'HEDEFİNE BİRLİKTE ULAŞALIM',
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 1.6,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        child: const Text('KİŞİSEL PLANIMI AL'),
                       ),
                     ),
                   ),
@@ -721,6 +717,22 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
   }
 }
 
+/// RC-1 P9 · BMI category label/tint for the metric card status line
+/// (reference shows "24.2 / Normal" in green). Standard WHO bands; the
+/// wording stays descriptive, not diagnostic.
+String _bmiCategory(double bmi) {
+  if (bmi < 18.5) return 'Düşük';
+  if (bmi < 25.0) return 'Normal';
+  if (bmi < 30.0) return 'Yüksek';
+  return 'Çok yüksek';
+}
+
+Color _bmiTint(double bmi) {
+  if (bmi >= 18.5 && bmi < 25.0) return AppColors.neonGreen;
+  if (bmi < 18.5 || bmi < 30.0) return const Color(0xFFEAFF00);
+  return const Color(0xFFFF5577);
+}
+
 class _ReportMetricCard extends StatelessWidget {
   const _ReportMetricCard({
     required this.label,
@@ -728,6 +740,9 @@ class _ReportMetricCard extends StatelessWidget {
     required this.formatter,
     required this.icon,
     required this.startDelay,
+    required this.gaugeFraction,
+    required this.statusLabel,
+    required this.statusColor,
   });
 
   final String label;
@@ -735,6 +750,12 @@ class _ReportMetricCard extends StatelessWidget {
   final String Function(double) formatter;
   final IconData icon;
   final Duration startDelay;
+
+  /// 0..1 sweep of the gauge arc around the icon (reference: circular
+  /// gauges on the BMI + calorie cards).
+  final double gaugeFraction;
+  final String statusLabel;
+  final Color statusColor;
 
   @override
   Widget build(BuildContext context) {
@@ -757,19 +778,23 @@ class _ReportMetricCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            width: 38,
-            height: 38,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.neon.withValues(alpha: 0.18),
-              border: Border.all(
-                color: AppColors.neon.withValues(alpha: 0.5),
-                width: 1,
+          // Icon wrapped in an animated gauge arc — reads as a measured
+          // value, not a decoration. Sweep tweens in with the card.
+          SizedBox(
+            width: 44,
+            height: 44,
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: gaugeFraction),
+              duration: const Duration(milliseconds: 1100),
+              curve: Curves.easeOutCubic,
+              builder: (context, v, child) => CustomPaint(
+                painter: _GaugeArcPainter(fraction: v, color: statusColor),
+                child: child,
+              ),
+              child: Center(
+                child: Icon(icon, color: Colors.white, size: 18),
               ),
             ),
-            child: Icon(icon, color: Colors.white, size: 20),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -778,6 +803,8 @@ class _ReportMetricCard extends StatelessWidget {
               children: [
                 Text(
                   label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: Colors.white54,
                     fontSize: 10,
@@ -799,7 +826,236 @@ class _ReportMetricCard extends StatelessWidget {
                     letterSpacing: 0.3,
                   ),
                 ),
+                const SizedBox(height: 1),
+                Text(
+                  statusLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: statusColor,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Partial ring around the metric icon — a ~270° gauge whose sweep maps
+/// the metric onto its plausible range.
+class _GaugeArcPainter extends CustomPainter {
+  const _GaugeArcPainter({required this.fraction, required this.color});
+  final double fraction;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final inset = rect.deflate(2.5);
+    const start = 2.2; // radians — opens bottom-left like the reference
+    const maxSweep = 5.0;
+    final track = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round
+      ..color = Colors.white.withValues(alpha: 0.10);
+    final value = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round
+      ..color = color;
+    canvas.drawArc(inset, start, maxSweep, false, track);
+    canvas.drawArc(
+        inset, start, maxSweep * fraction.clamp(0.0, 1.0), false, value);
+  }
+
+  @override
+  bool shouldRepaint(_GaugeArcPainter old) =>
+      old.fraction != fraction || old.color != color;
+}
+
+/// RC-1 P9 · hero card per photos/kişisel_aı_raporun.png — Form's portrait
+/// left; "AI HAZIR" chip, the two-line gradient title, and the ready-line
+/// right. Replaces the plain centered avatar + title.
+class _ReportHeroCard extends StatelessWidget {
+  const _ReportHeroCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.neon.withValues(alpha: 0.14),
+            Colors.black.withValues(alpha: 0.35),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.neon.withValues(alpha: 0.45)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.neon.withValues(alpha: 0.22),
+            blurRadius: 26,
+            spreadRadius: -4,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 84,
+            height: 84,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: AppColors.neon.withValues(alpha: 0.7),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.neon.withValues(alpha: 0.4),
+                  blurRadius: 22,
+                ),
+              ],
+            ),
+            child: ClipOval(
+              child: Image.asset(
+                'photos/PT_FORM.png',
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const Icon(
+                  Icons.smart_toy,
+                  color: AppColors.neon,
+                  size: 36,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(999),
+                    color: Colors.white.withValues(alpha: 0.06),
+                    border: Border.all(
+                      color: AppColors.neonGreen.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      _PulsingDot(),
+                      SizedBox(width: 5),
+                      Text(
+                        'AI HAZIR',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ShaderMask(
+                  shaderCallback: (rect) => const LinearGradient(
+                    colors: [Colors.white, AppColors.neon],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ).createShader(rect),
+                  child: const Text(
+                    'KİŞİSEL\nAI RAPORUN',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 21,
+                      fontWeight: FontWeight.w900,
+                      height: 1.08,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 5),
+                const Text(
+                  'AI değerlendirmen hazır',
+                  style: TextStyle(color: Colors.white54, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Live-status dot inside the AI HAZIR chip.
+class _PulsingDot extends StatelessWidget {
+  const _PulsingDot();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 7,
+      height: 7,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: AppColors.neonGreen,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.neonGreen.withValues(alpha: 0.6),
+            blurRadius: 6,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// RC-1 P9 · circular %92 ring for the success-probability row.
+class _SuccessRing extends StatelessWidget {
+  const _SuccessRing({required this.fraction});
+  final double fraction;
+
+  @override
+  Widget build(BuildContext context) {
+    final pct = (fraction * 100).round();
+    return SizedBox(
+      width: 56,
+      height: 56,
+      child: Stack(
+        fit: StackFit.expand,
+        alignment: Alignment.center,
+        children: [
+          CircularProgressIndicator(
+            value: fraction,
+            strokeWidth: 5,
+            strokeCap: StrokeCap.round,
+            backgroundColor: Colors.white12,
+            valueColor: const AlwaysStoppedAnimation(AppColors.neon),
+          ),
+          Center(
+            child: Text(
+              '%$pct',
+              style: const TextStyle(
+                color: AppColors.neon,
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ),
         ],
