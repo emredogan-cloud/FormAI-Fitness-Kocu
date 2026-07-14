@@ -72,17 +72,14 @@
 			</array>
 		</dict>
 	</array>
-	<!-- Phase 55 · iOS 16.1+ Live Activities flag. Without this key the
-	     `live_activities` plugin's `init` succeeds but `createActivity`
-	     no-ops silently. Both Runner and FormAIWidget targets need it. -->
-	<key>NSSupportsLiveActivities</key>
-	<true/>
-	<!-- Phase 55 · allow updates while the app is in the background.
-	     Required for `WorkoutLiveActivityService.updateWorkout` calls
-	     fired from the workout-camera background isolate as exercises
-	     transition. -->
-	<key>NSSupportsLiveActivitiesFrequentUpdates</key>
-	<true/>
+	<!-- RC-1 P1 (Apple audit) · Live-Activity keys REMOVED. v1 ships
+	     WITHOUT the FormAIWidget extension target (the one Mac-only build
+	     task — see docs/ios/CODEMAGIC_SETUP.md), and declaring the
+	     capability with no extension present is dead config: ActivityKit
+	     can't render without the widget bundle, and the Dart
+	     `live_activities` calls no-op harmlessly when the key is absent.
+	     Restore both NSSupportsLiveActivities keys together with the
+	     extension target in v1.1 (Phase 55 wiring is otherwise intact). -->
 	<!-- Store-submission I8 · standard HTTPS/TLS + platform crypto only —
 	     declaring exemption here skips the manual export-compliance
 	     questionnaire on every App Store Connect upload. -->
