@@ -138,7 +138,8 @@ Every engineering box is checked; these need your Play account:
 | **Signing cert SHA-1** | `CF:37:A2:DE:76:F2:FA:C0:30:5D:18:D3:4C:7B:E2:D5:DB:4D:08:B3` |
 | **Signing cert SHA-256** | `6F:C8:0F:F1:AC:ED:8A:B7:D6:25:3F:E1:68:6B:87:9A:F2:A0:1B:53:85:AF:7E:A6:5F:E3:51:F0:3F:CF:7E:40` |
 | **Signed with** | upload keystore, alias `upload` (cert SHA-256 **verified identical** to the AAB's) |
-| Obfuscated | ✅ (`--obfuscate`; symbols in `build/symbols/` — keep for crash de-obfuscation) |
+| Obfuscated (Dart) | ✅ (`--obfuscate`; symbols in `build/symbols/` — keep for crash de-obfuscation) |
+| R8 / Proguard (Java/Kotlin) | ✅ **enabled** — `isMinifyEnabled = true`, `proguard-android-optimize.txt` + custom `proguard-rules.pro`; AAB built cleanly (rules correctly keep plugin reflection) |
 | 16 KB page-aligned | ✅ (all 9 arm64 `.so`) |
 | Debuggable | ✅ **No** |
 | allowBackup | `false` |
