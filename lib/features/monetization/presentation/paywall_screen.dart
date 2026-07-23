@@ -463,22 +463,31 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const _HeroSection(),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 14),
                   _buildPlansRow(
                     offerings: offerings,
                     isLoading: offeringsLoading,
                   ),
-                  const SizedBox(height: 18),
-                  // "Şimdi ödeme yok!" is only true when the selected
-                  // SKU actually carries a free trial — hidden otherwise.
+                  const SizedBox(height: 14),
+                  _buildCta(canPurchase: canPurchase, trial: selectedTrial),
+                  const SizedBox(height: 14),
+                  // Task 2 (closed-test hotfix) · the trust content (trial
+                  // badge + guarantee card) sits BELOW the CTA so the purchase
+                  // button clears the fold without scrolling on 6.1–6.7"
+                  // phones. "Şimdi ödeme yok!" still only shows when the
+                  // selected SKU actually carries a free trial.
                   if (selectedTrial != null) ...const [
                     _NoPaymentBadge(),
-                    SizedBox(height: 16),
+                    SizedBox(height: 12),
                   ],
                   const _GuaranteeCard(),
-                  const SizedBox(height: 16),
-                  _buildCta(canPurchase: canPurchase, trial: selectedTrial),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 14),
+                  // Task 2 · the AI-features detail card moved below the CTA
+                  // too, so the hero + plan cards + purchase button all sit
+                  // above the fold. The 3 hero feature tiles stay up top as
+                  // the pre-CTA persuasion.
+                  const _AiFeaturesCard(),
+                  const SizedBox(height: 10),
                   _buildRestoreButton(
                     canPurchase: canPurchase,
                     isLoading: offeringsLoading,
@@ -598,7 +607,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     // RC price — never an invented anchor (Apple 2.3.1 / TR reference-price law).
     final monthly = _packageForPlan(_Plan.monthly, offerings);
     return SizedBox(
-      height: 244,
+      height: 214,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -984,7 +993,7 @@ class _HeroSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-          height: 320,
+          height: 280,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1046,7 +1055,7 @@ class _HeroSection extends StatelessWidget {
                   child: Image.asset(
                     'photos/PT_FORM.png',
                     fit: BoxFit.cover,
-                    height: 320,
+                    height: 280,
                     alignment: Alignment.topCenter,
                     errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                   ),
@@ -1055,7 +1064,7 @@ class _HeroSection extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         const Row(
           children: [
             Expanded(
@@ -1081,8 +1090,6 @@ class _HeroSection extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 20),
-        const _AiFeaturesCard(),
       ],
     );
   }
@@ -1194,7 +1201,7 @@ class _AiFeaturesCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      padding: const EdgeInsets.fromLTRB(16, 11, 16, 11),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         color: Colors.white.withValues(alpha: 0.04),
@@ -1462,7 +1469,7 @@ class _PlanCard extends StatelessWidget {
     final scheme = context.colors;
     final isDark = context.isDarkMode;
     final savings = _savings;
-    final cardHeight = _isHighlighted ? 234.0 : 196.0;
+    final cardHeight = _isHighlighted ? 206.0 : 176.0;
     final borderColor = isSelected
         ? _PaywallScreenState._neon
         : (_isHighlighted
@@ -1473,7 +1480,7 @@ class _PlanCard extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
-        height: 244,
+        height: 214,
         child: Stack(
           clipBehavior: Clip.none,
           alignment: Alignment.center,
