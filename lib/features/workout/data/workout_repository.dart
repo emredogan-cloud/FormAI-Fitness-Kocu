@@ -825,7 +825,7 @@ class WorkoutRepository {
         'side_plank',
         'plank',
       ],
-      image: 'photos/workouts/core_steel_abs.webp',
+      image: 'photos/workouts/mobility_stretch.webp',
     ),
     // ---- Phase 97 · Göğüs ----
     _PlanTemplate(
@@ -927,7 +927,7 @@ class WorkoutRepository {
       level: 'Başlangıç',
       durationMinutes: 10,
       exerciseSlugs: ['scapular_wall_slide', 'pike_walk', 'downward_dog'],
-      image: 'photos/workouts/shoulders_v_taper.webp',
+      image: 'photos/workouts/mobility_stretch.webp',
     ),
     _PlanTemplate(
       id: 'shoulders_scapular_stability',
@@ -1068,7 +1068,7 @@ class WorkoutRepository {
         'hip_flexor_stretch',
         'standing_hamstring_stretch',
       ],
-      image: 'photos/workouts/cardio_mobility_stretch.webp',
+      image: 'photos/workouts/mobility_stretch.webp',
     ),
     _PlanTemplate(
       id: 'cardio_shadow_box',
