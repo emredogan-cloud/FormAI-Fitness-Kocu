@@ -11,6 +11,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show User;
 
 import '../../../core/services/analytics_service.dart';
+import '../../../core/services/app_preferences.dart';
 import '../../../core/services/connectivity_service.dart';
 import '../../../core/theme/theme_extension.dart';
 import '../../../core/utils/app_logger.dart';
@@ -20,6 +21,7 @@ import '../../auth/presentation/auth_modal_bottom_sheet.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../onboarding/providers/wizard_provider.dart';
 import '../providers/monetization_provider.dart';
+import 'premium_welcome_sheet.dart';
 
 class PaywallScreen extends ConsumerStatefulWidget {
   const PaywallScreen({super.key});
@@ -811,7 +813,17 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     switch (outcome) {
       case PurchaseOutcome.success:
         _toast('Premium aktif edildi!');
-        await Future<void>.delayed(const Duration(milliseconds: 600));
+        // Closed-test polish (Task 2) · one-time premium welcome tour on the
+        // user's FIRST successful purchase. The seen-flag is written BEFORE the
+        // sheet so a mid-sheet backgrounding can't replay it.
+        final prefs = ref.read(appPreferencesProvider);
+        if (!prefs.hasSeenPremiumWelcome) {
+          await prefs.setPremiumWelcomeSeen();
+          if (!mounted) return;
+          await PremiumWelcomeSheet.show(context);
+        } else {
+          await Future<void>.delayed(const Duration(milliseconds: 600));
+        }
         if (!mounted) return;
         _close(context);
       case PurchaseOutcome.cancelled:

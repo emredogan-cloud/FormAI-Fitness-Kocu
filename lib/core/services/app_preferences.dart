@@ -323,6 +323,18 @@ class AppPreferences {
     await _prefs.setBool(_mlDisclosureAckedKey, true);
   }
 
+  /// Closed-test polish · the premium welcome sheet shows exactly once,
+  /// after the user's FIRST successful purchase. Defaults false so a fresh
+  /// install (or a user who hasn't bought yet) hasn't "seen" it.
+  static const String _premiumWelcomeSeenKey = 'sixpack.premium_welcome_seen';
+
+  bool get hasSeenPremiumWelcome =>
+      _prefs.getBool(_premiumWelcomeSeenKey) ?? false;
+
+  Future<void> setPremiumWelcomeSeen() async {
+    await _prefs.setBool(_premiumWelcomeSeenKey, true);
+  }
+
   /// Phase 52 · highest streak this user has ever reached. Defaults to
   /// 0 so a fresh install reads "no past streak". Updated through
   /// [bumpMaxStreakIfHigher] so callers can't accidentally regress the
