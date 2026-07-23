@@ -72,28 +72,38 @@ class _WelcomeStepState extends State<WelcomeStep>
               // Task 3 · the wordmark is horizontally centered, sits inside
               // the safe area, and carries its own intentional padding.
               const Padding(
-                padding: EdgeInsets.fromLTRB(20, 10, 20, 2),
+                padding: EdgeInsets.fromLTRB(20, 8, 20, 2),
                 child: Center(child: _FormAiWordmark()),
               ),
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(20, 6, 20, 18),
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 6),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const _Hero(),
-                      const SizedBox(height: 18),
-                      const _CapabilityCard(),
-                      const SizedBox(height: 14),
-                      const _AnalysisCard(),
-                      const SizedBox(height: 14),
-                      const _TrustCard(),
-                      const SizedBox(height: 22),
-                      _cta(),
-                      const SizedBox(height: 12),
-                      const _WelcomeLegalLine(),
+                    children: const [
+                      _Hero(),
+                      SizedBox(height: 12),
+                      _CapabilityCard(),
+                      SizedBox(height: 10),
+                      _AnalysisCard(),
+                      SizedBox(height: 10),
+                      _TrustCard(),
                     ],
                   ),
+                ),
+              ),
+              // Task 1 (RC-18) · the BAŞLA CTA + legal line are PINNED below
+              // the scroll area so the primary CTA is visible immediately —
+              // no scrolling is needed to start. The value-prop cards above
+              // only scroll on unusually short screens / very large text scales.
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+                child: Column(
+                  children: [
+                    _cta(),
+                    const SizedBox(height: 10),
+                    const _WelcomeLegalLine(),
+                  ],
                 ),
               ),
             ],
@@ -181,23 +191,25 @@ class _Hero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 300,
+    // Task 2 (RC-18) · IntrinsicHeight makes the hero size to its copy column
+    // (adaptive, overflow-safe at any width / text scale); the coach fills
+    // that height. Replaces the previous fixed 300 px.
+    return IntrinsicHeight(
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
             flex: 51,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 6),
                 const _AiDestekliBadge(),
-                const SizedBox(height: 18),
+                const SizedBox(height: 12),
                 RichText(
                   text: const TextSpan(
                     style: TextStyle(
-                      fontSize: 30,
+                      fontSize: 26,
                       fontWeight: FontWeight.w900,
                       height: 1.12,
                       letterSpacing: 0.3,
@@ -218,14 +230,14 @@ class _Hero extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 10),
                 const Text(
                   'Her tekrarını analiz eder, formunu düzeltir ve 30 günlük '
                   'programla hedefine her gün biraz daha yaklaşmanı sağlar.',
                   style: TextStyle(
                     color: Colors.white60,
-                    fontSize: 12.5,
-                    height: 1.45,
+                    fontSize: 12,
+                    height: 1.4,
                   ),
                 ),
               ],
@@ -234,23 +246,30 @@ class _Hero extends StatelessWidget {
           const SizedBox(width: 4),
           Expanded(
             flex: 49,
-            child: ShaderMask(
-              // Fade the coach's left/bottom edges into the dark backdrop so
-              // the photo reads as a cutout, not a boxed image.
-              shaderCallback: (rect) => const LinearGradient(
-                begin: Alignment.bottomLeft,
-                end: Alignment.topRight,
-                colors: [Colors.transparent, Colors.white, Colors.white],
-                stops: [0.0, 0.32, 1.0],
-              ).createShader(rect),
-              blendMode: BlendMode.dstIn,
-              child: Image.asset(
-                'photos/PT_FORM.png',
-                fit: BoxFit.cover,
-                height: 300,
-                alignment: Alignment.topCenter,
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-              ),
+            // Positioned.fill keeps the photo from driving the IntrinsicHeight
+            // (the copy column does); the coach then cover-fills that height.
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: ShaderMask(
+                    // Fade the coach's left/bottom edges into the dark backdrop
+                    // so the photo reads as a cutout, not a boxed image.
+                    shaderCallback: (rect) => const LinearGradient(
+                      begin: Alignment.bottomLeft,
+                      end: Alignment.topRight,
+                      colors: [Colors.transparent, Colors.white, Colors.white],
+                      stops: [0.0, 0.32, 1.0],
+                    ).createShader(rect),
+                    blendMode: BlendMode.dstIn,
+                    child: Image.asset(
+                      'photos/PT_FORM.png',
+                      fit: BoxFit.cover,
+                      alignment: Alignment.topCenter,
+                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -299,7 +318,7 @@ class _CapabilityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         color: Colors.white.withValues(alpha: 0.03),
@@ -342,7 +361,7 @@ class _CapDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         width: 1,
-        height: 74,
+        height: 56,
         color: Colors.white.withValues(alpha: 0.08),
       );
 }
@@ -399,7 +418,7 @@ class _AnalysisCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+      padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         gradient: LinearGradient(
@@ -415,17 +434,17 @@ class _AnalysisCard extends StatelessWidget {
       child: Row(
         children: [
           SizedBox(
-            width: 84,
-            height: 84,
+            width: 72,
+            height: 72,
             child: Stack(
               alignment: Alignment.center,
               children: [
                 SizedBox(
-                  width: 84,
-                  height: 84,
+                  width: 72,
+                  height: 72,
                   child: CircularProgressIndicator(
                     value: 0.82,
-                    strokeWidth: 6,
+                    strokeWidth: 5,
                     backgroundColor: Colors.white.withValues(alpha: 0.10),
                     valueColor:
                         const AlwaysStoppedAnimation(Color(0xFF39FF14)),
@@ -515,7 +534,7 @@ class _TrustCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         color: Colors.white.withValues(alpha: 0.03),

@@ -82,6 +82,35 @@ void main() {
       // exists, it just isn't visible to the user.
     });
 
+    testWidgets(
+      'RC-18 · the BAŞLA CTA sits above the fold on a 393×851 phone — no '
+      'scroll needed to start',
+      (tester) async {
+        // A small 6.1" Android viewport: 393 × 851 logical px.
+        tester.view.physicalSize = const Size(393, 851);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        });
+
+        final prefs = await SharedPreferences.getInstance();
+        await tester.pumpWidget(_hostOnboarding(prefs));
+        await tester.pump();
+
+        // The BAŞLA CTA is pinned below the scroll area, so its bottom edge
+        // must land within the 851 px viewport — visible without scrolling.
+        final basla = find.text('BAŞLA');
+        expect(basla, findsOneWidget);
+        final ctaBottom = tester.getBottomLeft(basla).dy;
+        expect(
+          ctaBottom,
+          lessThanOrEqualTo(851.0),
+          reason: 'BAŞLA bottom ($ctaBottom px) must be above the fold',
+        );
+      },
+    );
+
     testWidgets('tapping BAŞLA advances to the coach-intro page',
         (tester) async {
       // CoachIntroStep is taller than the default 800×600 test viewport
