@@ -291,4 +291,41 @@ void main() {
       );
     },
   );
+
+  testWidgets(
+    'closed-test hotfix (Task 2) · the purchase CTA sits above the fold on a '
+    '6.1" phone — visible without scrolling',
+    (tester) async {
+      // A 6.1" logical viewport (Pixel / iPhone-14 class): 393 × 852.
+      tester.view.physicalSize = const Size(393, 852);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      await tester.pumpWidget(_wrapPaywall(
+        seededState: SubscriptionState(
+          isPro: false,
+          offerings: _offeringsWithAnnual(intro: null),
+        ),
+      ));
+      await tester.pump();
+
+      // The primary purchase CTA carries a stable key so we can locate it
+      // regardless of its loading/loaded state.
+      final cta = find.byKey(const ValueKey('paywall_primary_cta'));
+      expect(cta, findsOneWidget);
+
+      // Its top edge must land comfortably inside the 852 px viewport so the
+      // user never has to scroll to reach it. Before the hotfix (guarantee +
+      // AI-features card above the CTA, 320 px hero) it sat ~967 px down.
+      final ctaTop = tester.getTopLeft(cta).dy;
+      expect(
+        ctaTop,
+        lessThan(800),
+        reason: 'CTA top ($ctaTop px) must be above the 852 px fold',
+      );
+    },
+  );
 }

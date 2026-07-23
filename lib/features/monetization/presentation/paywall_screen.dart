@@ -470,12 +470,16 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   ),
                   const SizedBox(height: 14),
                   _buildCta(canPurchase: canPurchase, trial: selectedTrial),
+                  const SizedBox(height: 16),
+                  // Task 2 (closed-test hotfix) · everything except the hero +
+                  // plan cards sits BELOW the CTA so the purchase button clears
+                  // the fold without scrolling on 6.1–6.7" phones: the 3 hero
+                  // feature tiles, then the trust content (trial badge +
+                  // guarantee) and the AI-features detail card.
+                  const _HeroFeatureRow(),
                   const SizedBox(height: 14),
-                  // Task 2 (closed-test hotfix) · the trust content (trial
-                  // badge + guarantee card) sits BELOW the CTA so the purchase
-                  // button clears the fold without scrolling on 6.1–6.7"
-                  // phones. "Şimdi ödeme yok!" still only shows when the
-                  // selected SKU actually carries a free trial.
+                  // "Şimdi ödeme yok!" still only shows when the selected SKU
+                  // actually carries a free trial.
                   if (selectedTrial != null) ...const [
                     _NoPaymentBadge(),
                     SizedBox(height: 12),
@@ -663,6 +667,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     // tap silently no-op'd, and the user thought the app was broken.
     final waiting = _busy || !canPurchase;
     return Semantics(
+      key: const ValueKey('paywall_primary_cta'),
       button: true,
       enabled: !waiting,
       label: waiting ? 'Yükleniyor' : 'Aboneliğe devam et',
@@ -992,10 +997,13 @@ class _HeroSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(
-          height: 280,
+        // Task 2 hotfix · the hero sizes to its (variable-height) copy column
+        // via IntrinsicHeight so it never overflows on narrow phones where the
+        // long Turkish title wraps; the coach fills that height. This is what
+        // trims the hero on wide layouts while staying overflow-safe.
+        IntrinsicHeight(
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
                 flex: 52,
@@ -1042,53 +1050,76 @@ class _HeroSection extends StatelessWidget {
               const SizedBox(width: 6),
               Expanded(
                 flex: 46,
-                child: ShaderMask(
-                  // Fade the trainer's left/bottom edges into the dark backdrop
-                  // so the photo reads as a cutout, not a boxed image.
-                  shaderCallback: (rect) => const LinearGradient(
-                    begin: Alignment.bottomLeft,
-                    end: Alignment.topRight,
-                    colors: [Colors.transparent, Colors.white, Colors.white],
-                    stops: [0.0, 0.35, 1.0],
-                  ).createShader(rect),
-                  blendMode: BlendMode.dstIn,
-                  child: Image.asset(
-                    'photos/PT_FORM.png',
-                    fit: BoxFit.cover,
-                    height: 280,
-                    alignment: Alignment.topCenter,
-                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                  ),
+                // Positioned.fill keeps the photo from driving the
+                // IntrinsicHeight (the copy column does); the coach then
+                // cover-fills whatever height the copy needs.
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: ShaderMask(
+                        // Fade the trainer's left/bottom edges into the dark
+                        // backdrop so the photo reads as a cutout.
+                        shaderCallback: (rect) => const LinearGradient(
+                          begin: Alignment.bottomLeft,
+                          end: Alignment.topRight,
+                          colors: [
+                            Colors.transparent,
+                            Colors.white,
+                            Colors.white,
+                          ],
+                          stops: [0.0, 0.35, 1.0],
+                        ).createShader(rect),
+                        blendMode: BlendMode.dstIn,
+                        child: Image.asset(
+                          'photos/PT_FORM.png',
+                          fit: BoxFit.cover,
+                          alignment: Alignment.topCenter,
+                          errorBuilder: (_, __, ___) =>
+                              const SizedBox.shrink(),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 10),
-        const Row(
-          children: [
-            Expanded(
-              child: _HeroFeature(
-                icon: Icons.bar_chart_rounded,
-                title: '130+',
-                body: 'egzersizde\ncanlı analiz',
-              ),
-            ),
-            Expanded(
-              child: _HeroFeature(
-                icon: Icons.track_changes_rounded,
-                title: 'Kişisel',
-                body: 'hedeflere\nözel plan',
-              ),
-            ),
-            Expanded(
-              child: _HeroFeature(
-                icon: Icons.trending_up_rounded,
-                title: 'İlerlemeni',
-                body: 'takip et,\ngelişimini gör',
-              ),
-            ),
-          ],
+      ],
+    );
+  }
+}
+
+/// The three hero feature tiles (130+ · Kişisel · İlerlemeni). Rendered below
+/// the CTA in the closed-test hotfix so the hero + plan cards + purchase button
+/// clear the fold; they stay as a quick value recap.
+class _HeroFeatureRow extends StatelessWidget {
+  const _HeroFeatureRow();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
+      children: [
+        Expanded(
+          child: _HeroFeature(
+            icon: Icons.bar_chart_rounded,
+            title: '130+',
+            body: 'egzersizde\ncanlı analiz',
+          ),
+        ),
+        Expanded(
+          child: _HeroFeature(
+            icon: Icons.track_changes_rounded,
+            title: 'Kişisel',
+            body: 'hedeflere\nözel plan',
+          ),
+        ),
+        Expanded(
+          child: _HeroFeature(
+            icon: Icons.trending_up_rounded,
+            title: 'İlerlemeni',
+            body: 'takip et,\ngelişimini gör',
+          ),
         ),
       ],
     );
