@@ -68,8 +68,10 @@ void main() {
       await tester.pumpWidget(_hostOnboarding(prefs));
       await tester.pump();
 
+      // Task 1 hotfix · the hook title is now a three-line gradient
+      // RichText ("Vücudunu" / "Yapay Zeka" / "ile Şekillendir").
       expect(
-        find.text('Vücudunu Yapay Zeka ile Şekillendir'),
+        find.textContaining('Şekillendir', findRichText: true),
         findsOneWidget,
       );
       expect(find.text('BAŞLA'), findsOneWidget);

@@ -1,34 +1,24 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
-import '../../../../core/motion/breathing_box.dart';
 import '../../../../core/motion/glow_pulse.dart';
-import '../../../../core/motion/motion_tokens.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_haptics.dart';
 import '../../../../core/utils/legal_urls.dart';
 
-/// Act 1 · Emotional hook.
+/// Act 1 · Emotional hook — the "Başla" entry screen.
 ///
-/// The very first surface a user sees on a cold launch into onboarding.
-/// Stays composed of the same elements as before — full-bleed photo,
-/// gradient title, subtitle, CTA, legal line — but layers in cinematic
-/// atmosphere:
-///
-///   • A 16-second background parallax (gentle vertical translate +
-///     scale, easeInOutCubic). Imperceptible per-frame; the screen
-///     feels "alive" without anyone being able to point at the motion.
-///   • Title wrapped in [BreathingBox] (0.92 → 1.0, 4.2 s) once the
-///     entrance settles. Reads as "the brand is breathing", not
-///     "something is fading."
-///   • CTA wrapped in [GlowPulse] (alpha 0.45 → 0.70, blur 24 → 36
-///     over 3 s) once the entrance settles. Says "I'm waiting for
-///     you" without competing for attention.
-///
-/// Ambient effects gate on `_entranceDone` so the entrance timing isn't
-/// muddied by overlapping pulses. After the title settles, the screen
-/// shifts from "introducing itself" to "waiting for the user."
-
+/// Closed-test UI hotfix (Task 1 + 3): the old full-bleed neon-robot artwork
+/// ("old AI coach", photos/onboarding_hero_start.webp) is gone. The screen is
+/// rebuilt natively around the current official Form coach
+/// (photos/PT_FORM.png) per photos/new-image/giriş-page-redesign.png:
+///   • a perfectly centered, safe-area-aware FormAI wordmark up top (Task 3),
+///   • a two-column hero (AI-destekli badge + gradient title + coach cutout),
+///   • the "AI KOÇ · KİŞİSEL PLAN · GERÇEK SONUÇ" capability card,
+///   • a compact AI-analysis preview card,
+///   • a trust row, and the BAŞLA CTA.
+/// Everything scrolls, so it never overflows on a 6.1" phone. RevenueCat and
+/// the onboarding flow are untouched — only `onStart` fires the wizard.
 class WelcomeStep extends StatefulWidget {
   const WelcomeStep({super.key, required this.onStart});
   final VoidCallback onStart;
@@ -38,22 +28,10 @@ class WelcomeStep extends StatefulWidget {
 }
 
 class _WelcomeStepState extends State<WelcomeStep>
-    with TickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
   late final AnimationController _intro;
-  late final Animation<double> _titleFade;
-  late final Animation<Offset> _titleSlide;
-  late final Animation<double> _subtitleFade;
-  late final Animation<Offset> _subtitleSlide;
-  late final Animation<double> _ctaFade;
-  late final Animation<Offset> _ctaSlide;
 
-  /// Slow vertical pan of the background hero — 16 s up + 16 s down.
-  /// Imperceptible per-frame; the user feels the screen breathing
-  /// without consciously noticing why.
-  late final AnimationController _bgPan;
-
-  /// Flips true when the entrance choreography settles. Gates the
-  /// ambient breathing/glow so they don't compete with the entrance.
+  /// Gates the CTA glow so it doesn't compete with the entrance fade.
   bool _entranceDone = false;
 
   @override
@@ -61,220 +39,560 @@ class _WelcomeStepState extends State<WelcomeStep>
     super.initState();
     _intro = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 850),
     )..forward();
     _intro.addStatusListener((s) {
       if (s == AnimationStatus.completed && mounted) {
         setState(() => _entranceDone = true);
       }
     });
-
-    _bgPan = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 16),
-    )..repeat(reverse: true);
-
-    Animation<double> fade(double a, double b) => CurvedAnimation(
-          parent: _intro,
-          curve: Interval(a, b, curve: MotionTokens.enterEase),
-        );
-    Animation<Offset> slide(double a, double b) =>
-        Tween<Offset>(begin: const Offset(0, 0.4), end: Offset.zero).animate(
-          CurvedAnimation(
-            parent: _intro,
-            curve: Interval(a, b, curve: MotionTokens.enterEase),
-          ),
-        );
-
-    _titleFade = fade(0.0, 0.55);
-    _titleSlide = slide(0.0, 0.55);
-    _subtitleFade = fade(0.2, 0.75);
-    _subtitleSlide = slide(0.2, 0.75);
-    _ctaFade = fade(0.45, 1.0);
-    _ctaSlide = slide(0.45, 1.0);
   }
 
   @override
   void dispose() {
     _intro.dispose();
-    _bgPan.dispose();
     super.dispose();
-  }
-
-  Widget _appear({
-    required Animation<double> fade,
-    required Animation<Offset> slide,
-    required Widget child,
-  }) {
-    return FadeTransition(
-      opacity: fade,
-      child: SlideTransition(position: slide, child: child),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        // Background hero with slow ambient parallax. Translates up to
-        // 10 px and scales 1.04 → 1.065 over the 16 s loop. The
-        // RepaintBoundary keeps the rest of the screen from re-painting
-        // when only the background transforms.
-        RepaintBoundary(
-          child: AnimatedBuilder(
-            animation: _bgPan,
-            builder: (context, child) {
-              final t = MotionTokens.reassuranceEase.transform(_bgPan.value);
-              return Transform.translate(
-                offset: Offset(0, -10.0 * t),
-                child: Transform.scale(
-                  scale: 1.04 + (0.025 * t),
-                  alignment: Alignment.center,
-                  child: child,
-                ),
-              );
-            },
-            // RC-1 P6 · the background was the SQUARE app-icon artwork
-            // (photos/APP_ICON.png) center-cropped by BoxFit.cover — on a
-            // 9:19.5 phone that amputated both sides and misplaced the
-            // composition. Replaced with the portrait hero from the design
-            // reference (First_opening.png, imagery-only crop — title/CTA
-            // stay native Flutter below), anchored topCenter so the FormAI
-            // logo + robot stay framed while cover absorbs every aspect
-            // ratio without gaps or distortion.
-            child: Image.asset(
-              'photos/onboarding_hero_start.webp',
-              fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
-              errorBuilder: (_, __, ___) => const DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: Alignment.topCenter,
-                    radius: 1.4,
-                    colors: [Color(0xFF1A0B3D), Colors.black],
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: RadialGradient(
+          center: Alignment(0, -0.75),
+          radius: 1.35,
+          colors: [Color(0xFF1B0C40), Color(0xFF0A0612)],
+        ),
+      ),
+      child: SafeArea(
+        child: FadeTransition(
+          opacity: _intro,
+          child: Column(
+            children: [
+              // Task 3 · the wordmark is horizontally centered, sits inside
+              // the safe area, and carries its own intentional padding.
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 10, 20, 2),
+                child: Center(child: _FormAiWordmark()),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(20, 6, 20, 18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const _Hero(),
+                      const SizedBox(height: 18),
+                      const _CapabilityCard(),
+                      const SizedBox(height: 14),
+                      const _AnalysisCard(),
+                      const SizedBox(height: 14),
+                      const _TrustCard(),
+                      const SizedBox(height: 22),
+                      _cta(),
+                      const SizedBox(height: 12),
+                      const _WelcomeLegalLine(),
+                    ],
                   ),
                 ),
               ),
-            ),
+            ],
           ),
         ),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.transparent,
-                Colors.black.withValues(alpha: 0.5),
-                Colors.black.withValues(alpha: 0.95),
-              ],
-              stops: const [0.0, 0.55, 1.0],
+      ),
+    );
+  }
+
+  Widget _cta() {
+    return GlowPulse(
+      enabled: _entranceDone,
+      color: AppColors.neon,
+      minAlpha: 0.45,
+      maxAlpha: 0.70,
+      minBlur: 24,
+      maxBlur: 36,
+      spread: 1,
+      shape: BoxShape.rectangle,
+      borderRadius: BorderRadius.circular(20),
+      duration: const Duration(milliseconds: 3000),
+      child: SizedBox(
+        width: double.infinity,
+        child: FilledButton(
+          onPressed: () {
+            AppHaptics.secondaryTap();
+            widget.onStart();
+          },
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.neon,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 18),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            textStyle: const TextStyle(
+              fontWeight: FontWeight.w900,
+              letterSpacing: 4,
+              fontSize: 18,
             ),
           ),
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('BAŞLA'),
+              SizedBox(width: 12),
+              Icon(Icons.arrow_forward_rounded, size: 22),
+            ],
+          ),
         ),
-        SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(28, 24, 28, 28),
+      ),
+    );
+  }
+}
+
+/// Centered neon "FormAI" wordmark (Task 3).
+class _FormAiWordmark extends StatelessWidget {
+  const _FormAiWordmark();
+
+  @override
+  Widget build(BuildContext context) {
+    return ShaderMask(
+      shaderCallback: (rect) => const LinearGradient(
+        colors: [AppColors.neon, AppColors.neonAccent],
+      ).createShader(rect),
+      child: const Text(
+        'FormAI',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 26,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 3,
+          shadows: [Shadow(blurRadius: 20, color: Color(0x998E5BFF))],
+        ),
+      ),
+    );
+  }
+}
+
+/// Two-column hero: AI-destekli badge + gradient title + subtitle on the left,
+/// the official Form coach cutout on the right.
+class _Hero extends StatelessWidget {
+  const _Hero();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 300,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 51,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Spacer(flex: 3),
-                _appear(
-                  fade: _titleFade,
-                  slide: _titleSlide,
-                  child: BreathingBox(
-                    enabled: _entranceDone,
-                    minAlpha: 0.92,
-                    maxAlpha: 1.0,
-                    duration: const Duration(milliseconds: 4200),
-                    child: ShaderMask(
-                      shaderCallback: (rect) => const LinearGradient(
-                        colors: [AppColors.neon, AppColors.neonAccent],
-                      ).createShader(rect),
-                      child: const Text(
-                        'Vücudunu Yapay Zeka ile Şekillendir',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 32,
-                          fontWeight: FontWeight.w900,
-                          height: 1.12,
-                          letterSpacing: 0.4,
-                          shadows: [
-                            Shadow(blurRadius: 24, color: Colors.black87),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _appear(
-                  fade: _subtitleFade,
-                  slide: _subtitleSlide,
-                  child: const Text(
-                    '12 hafta · 4 antrenman/hafta · AI ile kalibre. '
-                    'Sana özel bir yol haritası.',
-                    textAlign: TextAlign.center,
+                const SizedBox(height: 6),
+                const _AiDestekliBadge(),
+                const SizedBox(height: 18),
+                RichText(
+                  text: const TextSpan(
                     style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 15,
-                      height: 1.5,
-                      shadows: [Shadow(blurRadius: 18, color: Colors.black87)],
+                      fontSize: 30,
+                      fontWeight: FontWeight.w900,
+                      height: 1.12,
+                      letterSpacing: 0.3,
                     ),
-                  ),
-                ),
-                const Spacer(flex: 2),
-                _appear(
-                  fade: _ctaFade,
-                  slide: _ctaSlide,
-                  child: GlowPulse(
-                    enabled: _entranceDone,
-                    color: AppColors.neon,
-                    minAlpha: 0.45,
-                    maxAlpha: 0.70,
-                    minBlur: 24,
-                    maxBlur: 36,
-                    spread: 1,
-                    shape: BoxShape.rectangle,
-                    borderRadius: BorderRadius.circular(20),
-                    duration: const Duration(milliseconds: 3000),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: () {
-                          AppHaptics.secondaryTap();
-                          widget.onStart();
-                        },
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.neon,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 22),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          textStyle: const TextStyle(
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 4,
-                            fontSize: 18,
-                          ),
-                        ),
-                        child: const Text('BAŞLA'),
+                    children: [
+                      TextSpan(
+                        text: 'Vücudunu\n',
+                        style: TextStyle(color: Colors.white),
                       ),
-                    ),
+                      TextSpan(
+                        text: 'Yapay Zeka\n',
+                        style: TextStyle(color: AppColors.neon),
+                      ),
+                      TextSpan(
+                        text: 'ile Şekillendir',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 12),
-                _appear(
-                  fade: _ctaFade,
-                  slide: _ctaSlide,
-                  child: const _WelcomeLegalLine(),
+                const SizedBox(height: 14),
+                const Text(
+                  'Her tekrarını analiz eder, formunu düzeltir ve 30 günlük '
+                  'programla hedefine her gün biraz daha yaklaşmanı sağlar.',
+                  style: TextStyle(
+                    color: Colors.white60,
+                    fontSize: 12.5,
+                    height: 1.45,
+                  ),
                 ),
               ],
             ),
           ),
+          const SizedBox(width: 4),
+          Expanded(
+            flex: 49,
+            child: ShaderMask(
+              // Fade the coach's left/bottom edges into the dark backdrop so
+              // the photo reads as a cutout, not a boxed image.
+              shaderCallback: (rect) => const LinearGradient(
+                begin: Alignment.bottomLeft,
+                end: Alignment.topRight,
+                colors: [Colors.transparent, Colors.white, Colors.white],
+                stops: [0.0, 0.32, 1.0],
+              ).createShader(rect),
+              blendMode: BlendMode.dstIn,
+              child: Image.asset(
+                'photos/PT_FORM.png',
+                fit: BoxFit.cover,
+                height: 300,
+                alignment: Alignment.topCenter,
+                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// "✦ AI DESTEKLİ" pill.
+class _AiDestekliBadge extends StatelessWidget {
+  const _AiDestekliBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        color: AppColors.neon.withValues(alpha: 0.14),
+        border: Border.all(color: AppColors.neon.withValues(alpha: 0.55)),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.auto_awesome, color: AppColors.neonAccent, size: 13),
+          SizedBox(width: 6),
+          Text(
+            'AI DESTEKLİ',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The three-capability card (AI KOÇ · KİŞİSEL PLAN · GERÇEK SONUÇ).
+class _CapabilityCard extends StatelessWidget {
+  const _CapabilityCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        color: Colors.white.withValues(alpha: 0.03),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: _Capability(
+              icon: Icons.psychology_rounded,
+              title: 'AI KOÇ',
+              body: 'Tekrarlarını analiz\neder, formunu düzeltir.',
+            ),
+          ),
+          _CapDivider(),
+          Expanded(
+            child: _Capability(
+              icon: Icons.track_changes_rounded,
+              title: 'KİŞİSEL PLAN',
+              body: 'Sana özel antrenman\nve beslenme planları.',
+            ),
+          ),
+          _CapDivider(),
+          Expanded(
+            child: _Capability(
+              icon: Icons.show_chart_rounded,
+              title: 'GERÇEK SONUÇ',
+              body: '30 gün boyunca\nistikrarlı gelişim.',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CapDivider extends StatelessWidget {
+  const _CapDivider();
+  @override
+  Widget build(BuildContext context) => Container(
+        width: 1,
+        height: 74,
+        color: Colors.white.withValues(alpha: 0.08),
+      );
+}
+
+class _Capability extends StatelessWidget {
+  const _Capability({
+    required this.icon,
+    required this.title,
+    required this.body,
+  });
+  final IconData icon;
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      child: Column(
+        children: [
+          Icon(icon, color: AppColors.neonAccent, size: 26),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            body,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 10.5,
+              height: 1.3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Compact AI form-analysis preview: an 82% readiness ring + target stats.
+/// Illustrative (same preview the old baked artwork showed) — no user data.
+class _AnalysisCard extends StatelessWidget {
+  const _AnalysisCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.neon.withValues(alpha: 0.14),
+            Colors.white.withValues(alpha: 0.02),
+          ],
         ),
-      ],
+        border: Border.all(color: AppColors.neon.withValues(alpha: 0.28)),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 84,
+            height: 84,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                SizedBox(
+                  width: 84,
+                  height: 84,
+                  child: CircularProgressIndicator(
+                    value: 0.82,
+                    strokeWidth: 6,
+                    backgroundColor: Colors.white.withValues(alpha: 0.10),
+                    valueColor:
+                        const AlwaysStoppedAnimation(Color(0xFF39FF14)),
+                  ),
+                ),
+                const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '%82',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    Text(
+                      'HAZIRLIK',
+                      style: TextStyle(
+                        color: Colors.white54,
+                        fontSize: 8,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 18),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'CANLI FORM ANALİZİ',
+                  style: TextStyle(
+                    color: Colors.white54,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Text(
+                      'HEDEF ',
+                      style: TextStyle(color: Colors.white54, fontSize: 12),
+                    ),
+                    const Text(
+                      '%94 FORM',
+                      style: TextStyle(
+                        color: Color(0xFF39FF14),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: 0.94,
+                    minHeight: 6,
+                    backgroundColor: Colors.white.withValues(alpha: 0.10),
+                    valueColor:
+                        const AlwaysStoppedAnimation(AppColors.neon),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Four trust tiles (güvenli · zaman · verim · hedef).
+class _TrustCard extends StatelessWidget {
+  const _TrustCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        color: Colors.white.withValues(alpha: 0.03),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: const Row(
+        children: [
+          Expanded(
+            child: _Trust(
+              icon: Icons.verified_user_rounded,
+              title: 'GÜVENLİ',
+              body: 'Bilimsel\nyöntemler',
+            ),
+          ),
+          Expanded(
+            child: _Trust(
+              icon: Icons.timer_rounded,
+              title: 'HIZLI',
+              body: 'Vaktini en\niyi kullan',
+            ),
+          ),
+          Expanded(
+            child: _Trust(
+              icon: Icons.local_fire_department_rounded,
+              title: 'VERİMLİ',
+              body: 'Maksimum\nsonuç',
+            ),
+          ),
+          Expanded(
+            child: _Trust(
+              icon: Icons.emoji_events_rounded,
+              title: 'HEDEF',
+              body: 'Hayalindeki\nvücut',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Trust extends StatelessWidget {
+  const _Trust({required this.icon, required this.title, required this.body});
+  final IconData icon;
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Column(
+        children: [
+          Icon(icon, color: AppColors.neon, size: 22),
+          const SizedBox(height: 7),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 10.5,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.4,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            body,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 9.5,
+              height: 1.25,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -308,11 +626,7 @@ class _WelcomeLegalLineState extends State<_WelcomeLegalLine> {
 
   @override
   Widget build(BuildContext context) {
-    const baseStyle = TextStyle(
-      color: Colors.white70,
-      fontSize: 11,
-      shadows: [Shadow(blurRadius: 12, color: Colors.black)],
-    );
+    const baseStyle = TextStyle(color: Colors.white54, fontSize: 11);
     final linkStyle = baseStyle.copyWith(
       color: const Color(0xFF00F0FF),
       fontWeight: FontWeight.w700,
