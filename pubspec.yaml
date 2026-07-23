@@ -4,8 +4,9 @@ publish_to: 'none'
 # Marketing version 1.0.0 for the first store submission (a 0.1.0
 # public release reads as unfinished to review + users).
 # +14 = first store-submission release candidate (Phase 2 of the
-# FINAL_STORE_SUBMISSION_ROADMAP).
-version: 1.0.0+14
+# FINAL_STORE_SUBMISSION_ROADMAP). +15 was uploaded to the closed test;
+# +16 = closed-test polish Part 2 (image refresh + illustration assets).
+version: 1.0.0+16
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -226,6 +227,12 @@ flutter:
     # bucket in this same migration; the LQIPs stay bundled because
     # network-loading a placeholder would defeat its purpose.
     - "assets/lqip/meals/"
+    # Closed-test polish (Part 2) · two bespoke illustration assets —
+    # a milestone medal (level-up celebration sigil) and an XP gem
+    # (Gelişim identity line). Transparent WebP, ~35 KB total. Sourced
+    # from assets/in-app-assets/ (raw 1.5-2.4 MB PNGs, NOT bundled) and
+    # background-keyed + compressed before shipping.
+    - "assets/illustrations/"
 
 # Launcher icon source. Uses a square PNG (derived from the onboarding
 # webp by ImageMagick convert) because flutter_launcher_icons needs PNG

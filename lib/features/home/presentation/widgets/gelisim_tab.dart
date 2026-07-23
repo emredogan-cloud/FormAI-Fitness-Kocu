@@ -279,17 +279,33 @@ class _TopHeader extends ConsumerWidget {
               // P1-3 · surface the (previously invisible) identity
               // system: level + title + lifetime XP were computed and
               // persisted with zero UI consumers.
-              Text(
-                'Sv ${ref.watch(levelProgressProvider).level} · '
-                '${ref.watch(currentTitleProvider).title} · '
-                '${ref.watch(lifetimeXpProvider)} XP',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: scheme.onSurface.withValues(alpha: 0.55),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // XP gem glyph — a premium accent on the (otherwise plain)
+                  // level · title · lifetime-XP identity line.
+                  Image.asset(
+                    'assets/illustrations/xp_gem.webp',
+                    width: 9,
+                    height: 16,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      'Sv ${ref.watch(levelProgressProvider).level} · '
+                      '${ref.watch(currentTitleProvider).title} · '
+                      '${ref.watch(lifetimeXpProvider)} XP',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: scheme.onSurface.withValues(alpha: 0.55),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

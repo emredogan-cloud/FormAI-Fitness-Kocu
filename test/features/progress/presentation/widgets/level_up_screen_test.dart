@@ -17,7 +17,7 @@ Widget _host({required int level, required LevelTier tier}) {
 }
 
 void main() {
-  testWidgets('renders the aspirational tier label and chevron sigil',
+  testWidgets('renders the aspirational tier label and medal sigil',
       (tester) async {
     await tester.pumpWidget(_host(level: 20, tier: tierForLevel(20)));
     await tester.pump(); // schedules the timeline via postFrameCallback
@@ -26,7 +26,7 @@ void main() {
     expect(find.text('YENİ SEVİYE'), findsOneWidget);
     expect(find.text('Lv 20 · Atlet'), findsOneWidget);
     expect(
-      find.byIcon(Icons.keyboard_double_arrow_up_rounded),
+      find.image(const AssetImage('assets/illustrations/milestone_medal.webp')),
       findsOneWidget,
     );
   });

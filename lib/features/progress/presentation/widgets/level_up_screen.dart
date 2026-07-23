@@ -197,11 +197,6 @@ class _LevelUpScreenState extends State<LevelUpScreen>
         height: 160,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          gradient: const LinearGradient(
-            colors: [_gold, _goldDeep],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
           boxShadow: [
             BoxShadow(
               color: _gold.withValues(alpha: glow),
@@ -211,12 +206,13 @@ class _LevelUpScreenState extends State<LevelUpScreen>
           ],
         ),
         alignment: Alignment.center,
-        // Chevron sigil — three stacked carets reading "ascent" without
-        // any character or mascot.
-        child: const Icon(
-          Icons.keyboard_double_arrow_up_rounded,
-          color: Colors.white,
-          size: 84,
+        // Milestone medal sigil floating in the celebratory gold glow —
+        // reads "achievement earned" without a character or mascot.
+        child: Image.asset(
+          'assets/illustrations/milestone_medal.webp',
+          width: 150,
+          height: 150,
+          fit: BoxFit.contain,
         ),
       ),
     );
