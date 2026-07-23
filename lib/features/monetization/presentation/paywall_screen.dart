@@ -19,7 +19,6 @@ import '../../../core/utils/legal_urls.dart';
 import '../../../core/widgets/skeleton_loader.dart';
 import '../../auth/presentation/auth_modal_bottom_sheet.dart';
 import '../../auth/providers/auth_provider.dart';
-import '../../onboarding/providers/wizard_provider.dart';
 import '../providers/monetization_provider.dart';
 import 'premium_welcome_sheet.dart';
 
@@ -56,6 +55,29 @@ String _trialLengthLabel(IntroductoryPrice intro) {
   };
   if (unit == null) return 'ücretsiz deneme';
   return '${intro.periodNumberOfUnits} $unit';
+}
+
+/// Scales a store-formatted price string to [total] while preserving its
+/// currency symbol/prefix and Turkish grouping (thousands ".", decimals ",").
+/// Example: `("₺179,99", 2159.88)` → `"₺2.159,88"`. Returns null when
+/// [source] carries no parseable amount, so the caller omits the strikethrough
+/// rather than fabricating one.
+String? _scalePriceString(String? source, double total) {
+  if (source == null || source.isEmpty) return null;
+  final m = RegExp(r'[0-9][0-9.,\s]*').firstMatch(source);
+  if (m == null) return null;
+  final prefix = source.substring(0, m.start);
+  final suffix = source.substring(m.end);
+  final fixed = total.toStringAsFixed(2); // e.g. "2159.88"
+  final dot = fixed.indexOf('.');
+  final intPart = fixed.substring(0, dot);
+  final dec = fixed.substring(dot + 1);
+  final grouped = StringBuffer();
+  for (var i = 0; i < intPart.length; i++) {
+    if (i > 0 && (intPart.length - i) % 3 == 0) grouped.write('.');
+    grouped.write(intPart[i]);
+  }
+  return '$prefix$grouped,$dec$suffix';
 }
 
 /// Billing-period label for the renewal disclosure line.
@@ -440,7 +462,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _HeroSection(gender: ref.watch(wizardProvider).gender),
+                  const _HeroSection(),
                   const SizedBox(height: 24),
                   _buildPlansRow(
                     offerings: offerings,
@@ -453,6 +475,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                     _NoPaymentBadge(),
                     SizedBox(height: 16),
                   ],
+                  const _GuaranteeCard(),
+                  const SizedBox(height: 16),
                   _buildCta(canPurchase: canPurchase, trial: selectedTrial),
                   const SizedBox(height: 6),
                   _buildRestoreButton(
@@ -569,8 +593,12 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     required Offerings? offerings,
     required bool isLoading,
   }) {
+    // The monthly package is the honest baseline for the annual/quarterly
+    // "monthly-equivalent" strikethrough + savings %. Computed from the live
+    // RC price — never an invented anchor (Apple 2.3.1 / TR reference-price law).
+    final monthly = _packageForPlan(_Plan.monthly, offerings);
     return SizedBox(
-      height: 230,
+      height: 244,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -579,7 +607,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               plan: _Plan.monthly,
               isSelected: _selected == _Plan.monthly,
               onTap: () => setState(() => _selected = _Plan.monthly),
-              package: _packageForPlan(_Plan.monthly, offerings),
+              package: monthly,
+              monthlyPackage: monthly,
               isLoading: isLoading,
             ),
           ),
@@ -590,6 +619,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               isSelected: _selected == _Plan.yearly,
               onTap: () => setState(() => _selected = _Plan.yearly),
               package: _packageForPlan(_Plan.yearly, offerings),
+              monthlyPackage: monthly,
               isLoading: isLoading,
             ),
           ),
@@ -600,6 +630,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               isSelected: _selected == _Plan.quarterly,
               onTap: () => setState(() => _selected = _Plan.quarterly),
               package: _packageForPlan(_Plan.quarterly, offerings),
+              monthlyPackage: monthly,
               isLoading: isLoading,
             ),
           ),
@@ -936,427 +967,356 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   }
 }
 
+/// Task 1 (closed-test polish) · redesigned per photos/new_paywall.png. A
+/// two-column marketing hero — copy + AI-DESTEKLİ badge on the left, the FORM
+/// trainer on the right — followed by the three capability icons and the AI-
+/// features checklist card. No RevenueCat logic lives here; the pricing row,
+/// CTA and restore below are untouched.
 class _HeroSection extends StatelessWidget {
-  const _HeroSection({required this.gender});
+  const _HeroSection();
 
-  final Gender? gender;
+  static const Color _neon = _PaywallScreenState._neon;
+  static const Color _neonAccent = _PaywallScreenState._neonAccent;
 
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AspectRatio(
-          aspectRatio: 16 / 9,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              gradient: const LinearGradient(
-                colors: [Color(0xFF2A1B5C), Color(0xFF0E0729)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              border: Border.all(
-                color: _PaywallScreenState._neon.withValues(alpha: 0.3),
-                width: 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: _PaywallScreenState._neon.withValues(alpha: 0.25),
-                  blurRadius: 30,
-                  spreadRadius: 1,
+        SizedBox(
+          height: 320,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 52,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 4),
+                    const _AiDestekliBadge(),
+                    const SizedBox(height: 16),
+                    RichText(
+                      text: const TextSpan(
+                        style: TextStyle(
+                          fontSize: 29,
+                          fontWeight: FontWeight.w900,
+                          height: 1.12,
+                          letterSpacing: 0.2,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: 'Kişiselleştirilmiş\n',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          TextSpan(
+                            text: 'planınızı alın!',
+                            style: TextStyle(color: _neon),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Yapay zeka her tekrarını izlesin, formunu düzeltsin '
+                      've 30 günlük programla hedefine her gün biraz daha '
+                      'yaklaşsın.',
+                      style: TextStyle(
+                        color: Colors.white60,
+                        fontSize: 12.5,
+                        height: 1.45,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
-              // Male/female users see a personalised before/after composite
-              // from the photos/ bundle; "Diğer" and null fall through to
-              // the original stylised silhouette placeholder.
-              child: _heroContent(gender),
-            ),
-          ),
-        ),
-        const SizedBox(height: 20),
-        ShaderMask(
-          shaderCallback: (rect) => const LinearGradient(
-            colors: [
-              _PaywallScreenState._neon,
-              _PaywallScreenState._neonAccent,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                flex: 46,
+                child: ShaderMask(
+                  // Fade the trainer's left/bottom edges into the dark backdrop
+                  // so the photo reads as a cutout, not a boxed image.
+                  shaderCallback: (rect) => const LinearGradient(
+                    begin: Alignment.bottomLeft,
+                    end: Alignment.topRight,
+                    colors: [Colors.transparent, Colors.white, Colors.white],
+                    stops: [0.0, 0.35, 1.0],
+                  ).createShader(rect),
+                  blendMode: BlendMode.dstIn,
+                  child: Image.asset(
+                    'photos/PT_FORM.png',
+                    fit: BoxFit.cover,
+                    height: 320,
+                    alignment: Alignment.topCenter,
+                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                  ),
+                ),
+              ),
             ],
-          ).createShader(rect),
-          // Phase 60G · reverted to the legacy headline copy. The
-          // "alın!" call-to-action verb out-performed the static
-          // "hazır" form during the in-house copy review and is the
-          // PM's preferred line going forward.
-          child: const Text(
-            'Kişiselleştirilmiş planınızı alın!',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 26,
-              fontWeight: FontWeight.w900,
-              height: 1.15,
-              letterSpacing: 0.4,
-            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          'Yapay zeka her tekrarını izlesin, formunu düzeltsin ve '
-          '30 günlük programla hedefine her gün biraz daha yaklaşsın. '
-          'Sonuçlar bireysel çabaya ve tutarlılığa bağlıdır.',
-          textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.white60, fontSize: 13, height: 1.45),
         ),
         const SizedBox(height: 12),
-        // Honesty pass · the old "🔥 10.000+ kişi kullanıyor" crowd tag
-        // was a fabricated count for a pre-launch app (Apple 2.3.1 /
-        // Play Misrepresentation). Replaced with a verifiable product
-        // capability — no user counts until we have real ones.
-        const _CapabilityTag(),
-      ],
-    );
-  }
-}
-
-/// Phase 60D · "🔥 10.000+ kişi kullanıyor" pill. Sits between the hero
-/// subtitle and the plan-card row so the user sees crowd validation
-/// before evaluating the price.
-class _CapabilityTag extends StatelessWidget {
-  const _CapabilityTag();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-        decoration: BoxDecoration(
-          color: _PaywallScreenState._neon.withValues(alpha: 0.16),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: _PaywallScreenState._neon.withValues(alpha: 0.55),
-            width: 1,
-          ),
-        ),
-        child: const Text(
-          '🎯 130+ egzersizde canlı form analizi',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 12.5,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.3,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-Widget _heroContent(Gender? gender) {
-  switch (gender) {
-    case Gender.male:
-      return const _GenderBeforeAfter(
-        todayAsset: 'photos/kişiselleştirilmişplandabugünkühalERKEK.webp',
-        thirtyDayAsset: 'photos/kişiselleştirilmiş planda30.günERKEK.webp',
-      );
-    case Gender.female:
-      return const _GenderBeforeAfter(
-        todayAsset: 'photos/kişiselleştirilmişplandabugünkühalKADIN.webp',
-        thirtyDayAsset: 'photos/kişiselleştirilmişplanda30.günKADIN.webp',
-      );
-    case Gender.other:
-    case null:
-      return const _TransformationPlaceholder();
-  }
-}
-
-/// Side-by-side today-vs-30-day composite with a glowing arrow in the
-/// middle and a bold "30 Günlük Değişimin!" ribbon across the bottom.
-/// Shipped images live in photos/ (converted to webp in Phase 23.1).
-class _GenderBeforeAfter extends StatelessWidget {
-  const _GenderBeforeAfter({
-    required this.todayAsset,
-    required this.thirtyDayAsset,
-  });
-
-  final String todayAsset;
-  final String thirtyDayAsset;
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Row(
+        const Row(
           children: [
-            Expanded(child: _buildSide(todayAsset, dim: true)),
-            Expanded(child: _buildSide(thirtyDayAsset, dim: false)),
+            Expanded(
+              child: _HeroFeature(
+                icon: Icons.bar_chart_rounded,
+                title: '130+',
+                body: 'egzersizde\ncanlı analiz',
+              ),
+            ),
+            Expanded(
+              child: _HeroFeature(
+                icon: Icons.track_changes_rounded,
+                title: 'Kişisel',
+                body: 'hedeflere\nözel plan',
+              ),
+            ),
+            Expanded(
+              child: _HeroFeature(
+                icon: Icons.trending_up_rounded,
+                title: 'İlerlemeni',
+                body: 'takip et,\ngelişimini gör',
+              ),
+            ),
           ],
         ),
-        // Dark gradient at the bottom so the ribbon text stays readable
-        // regardless of which part of the photo sits behind it.
-        Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.center,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.transparent,
-                  Colors.black.withValues(alpha: 0.82),
-                ],
-              ),
-            ),
-          ),
-        ),
-        const Positioned(
-          top: 10,
-          left: 10,
-          child: _HeroTag(label: 'BUGÜN', color: Colors.white70),
-        ),
-        const Positioned(
-          top: 10,
-          right: 10,
-          child: _HeroTag(
-            label: '30. GÜN',
-            color: _PaywallScreenState._neonAccent,
-          ),
-        ),
-        Center(child: _GlowingArrow()),
-        const Positioned(
-          bottom: 12,
-          left: 0,
-          right: 0,
-          child: Center(
-            child: Text(
-              '30 Günlük Değişimin!',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.4,
-                shadows: [
-                  Shadow(blurRadius: 18, color: Colors.black),
-                  Shadow(
-                    blurRadius: 32,
-                    color: _PaywallScreenState._neon,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSide(String asset, {required bool dim}) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Image.asset(
-          asset,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => const ColoredBox(
-            color: Color(0xFF1A0B3D),
-          ),
-        ),
-        if (dim)
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.3),
-            ),
-          ),
+        const SizedBox(height: 20),
+        const _AiFeaturesCard(),
       ],
     );
   }
 }
 
-class _HeroTag extends StatelessWidget {
-  const _HeroTag({required this.label, required this.color});
-  final String label;
-  final Color color;
+/// "✦ AI DESTEKLİ" pill from the reference hero.
+class _AiDestekliBadge extends StatelessWidget {
+  const _AiDestekliBadge();
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.6), width: 0.6),
+        borderRadius: BorderRadius.circular(999),
+        color: _HeroSection._neon.withValues(alpha: 0.14),
+        border: Border.all(color: _HeroSection._neon.withValues(alpha: 0.6)),
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: color,
-          fontSize: 10,
-          letterSpacing: 2,
-          fontWeight: FontWeight.w900,
-        ),
-      ),
-    );
-  }
-}
-
-class _GlowingArrow extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: _PaywallScreenState._neon.withValues(alpha: 0.85),
-            blurRadius: 28,
-            spreadRadius: 3,
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.auto_awesome, color: _HeroSection._neon, size: 13),
+          SizedBox(width: 6),
+          Text(
+            'AI DESTEKLİ',
+            style: TextStyle(
+              color: _HeroSection._neon,
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.4,
+            ),
           ),
         ],
       ),
-      child: Container(
-        width: 56,
-        height: 56,
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: LinearGradient(
-            colors: [
-              _PaywallScreenState._neon,
-              _PaywallScreenState._neonAccent,
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    );
+  }
+}
+
+/// One of the three capability tiles under the hero (icon box + bold title +
+/// two-line caption).
+class _HeroFeature extends StatelessWidget {
+  const _HeroFeature({
+    required this.icon,
+    required this.title,
+    required this.body,
+  });
+
+  final IconData icon;
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: _HeroSection._neon.withValues(alpha: 0.16),
+              border: Border.all(
+                color: _HeroSection._neon.withValues(alpha: 0.5),
+              ),
+            ),
+            child: Icon(icon, color: _HeroSection._neonAccent, size: 20),
           ),
-        ),
-        child: const Icon(
-          Icons.arrow_forward_rounded,
-          color: Colors.white,
-          size: 28,
-        ),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            body,
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 11,
+              height: 1.3,
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _TransformationPlaceholder extends StatelessWidget {
-  const _TransformationPlaceholder();
+/// The AI-features checklist card from the reference (dark, neon-bordered): a
+/// glowing body glyph, the four capability lines, and a compact FORM SKORU
+/// gauge evoking the phone mock.
+class _AiFeaturesCard extends StatelessWidget {
+  const _AiFeaturesCard();
+
+  static const List<String> _items = [
+    'Vücudunu analiz eden AI koç',
+    'Gerçek zamanlı form düzeltme',
+    'Bilimsel ve etkili antrenman planları',
+    '30 günlük adım adım gelişim',
+  ];
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        const DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: Alignment.center,
-              radius: 0.8,
-              colors: [Color(0x668E5BFF), Colors.transparent],
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        color: Colors.white.withValues(alpha: 0.04),
+        border: Border.all(color: _HeroSection._neon.withValues(alpha: 0.4)),
+        boxShadow: [
+          BoxShadow(
+            color: _HeroSection._neon.withValues(alpha: 0.15),
+            blurRadius: 22,
+            spreadRadius: -4,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Left · glowing body glyph.
+          Container(
+            width: 62,
+            height: 62,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  _HeroSection._neon.withValues(alpha: 0.45),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+            child: Icon(
+              Icons.accessibility_new_rounded,
+              color: _HeroSection._neonAccent,
+              size: 40,
+              shadows: [
+                Shadow(
+                  color: _HeroSection._neon.withValues(alpha: 0.8),
+                  blurRadius: 16,
+                ),
+              ],
             ),
           ),
-        ),
-        Positioned.fill(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          const SizedBox(width: 12),
+          // Middle · checklist.
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final item in _items)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 3),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.check_circle,
+                            color: _HeroSection._neon, size: 15),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            item,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12.5,
+                              height: 1.3,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          // Right · FORM SKORU gauge (evokes the reference phone mock).
+          Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              _Silhouette(
-                opacity: 0.45,
-                size: 100,
-                label: 'BUGÜN',
-                color: Colors.white60,
-              ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 4),
-                child: Icon(
-                  Icons.arrow_forward_rounded,
-                  color: _PaywallScreenState._neon,
-                  size: 30,
+              const Text(
+                'FORM\nSKORU',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white54,
+                  fontSize: 8,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1,
+                  height: 1.2,
                 ),
               ),
-              _Silhouette(
-                opacity: 1,
-                size: 120,
-                label: '30 GÜN',
-                color: _PaywallScreenState._neonAccent,
-                glow: true,
+              const SizedBox(height: 5),
+              SizedBox(
+                width: 46,
+                height: 46,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    const SizedBox(
+                      width: 46,
+                      height: 46,
+                      child: CircularProgressIndicator(
+                        value: 0.94,
+                        strokeWidth: 4,
+                        strokeCap: StrokeCap.round,
+                        backgroundColor: Colors.white12,
+                        valueColor: AlwaysStoppedAnimation(Color(0xFF39FF14)),
+                      ),
+                    ),
+                    const Text(
+                      '94',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-        ),
-        Positioned(
-          top: 12,
-          left: 12,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: _PaywallScreenState._neon.withValues(alpha: 0.6),
-                width: 0.6,
-              ),
-            ),
-            child: const Text(
-              'AI DESTEKLİ',
-              style: TextStyle(
-                color: _PaywallScreenState._neon,
-                fontSize: 10,
-                letterSpacing: 1.6,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _Silhouette extends StatelessWidget {
-  const _Silhouette({
-    required this.opacity,
-    required this.size,
-    required this.label,
-    required this.color,
-    this.glow = false,
-  });
-
-  final double opacity;
-  final double size;
-  final String label;
-  final Color color;
-  final bool glow;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          Icons.accessibility_new,
-          color: color.withValues(alpha: opacity),
-          size: size,
-          shadows: glow
-              ? [
-                  Shadow(
-                    color: color.withValues(alpha: 0.7),
-                    blurRadius: 20,
-                  ),
-                ]
-              : null,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            color: color,
-            fontSize: 10,
-            letterSpacing: 2,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -1367,12 +1327,49 @@ class _PlanCard extends StatelessWidget {
     required this.isSelected,
     required this.onTap,
     required this.package,
+    required this.monthlyPackage,
     required this.isLoading,
   });
 
   final _Plan plan;
   final bool isSelected;
   final VoidCallback onTap;
+
+  /// The live monthly package — the honest baseline for the "monthly-
+  /// equivalent" strikethrough + savings % on the annual/quarterly cards.
+  final Package? monthlyPackage;
+
+  /// Number of monthly cycles this plan bills for (0 = the monthly card
+  /// itself, which shows no savings framing).
+  int get _monthsCovered => switch (plan) {
+        _Plan.monthly => 0,
+        _Plan.quarterly => 3,
+        _Plan.yearly => 12,
+      };
+
+  /// Honest savings vs paying monthly, derived entirely from the live RC
+  /// prices. `struck` = the monthly-equivalent total (e.g. 12 × the monthly
+  /// price), formatted in the store currency; `percent` = the rounded saving.
+  /// Both null when there's no baseline, no saving, or a formatting failure —
+  /// so a misconfigured store never fabricates a discount.
+  ({String? struck, int? percent}) get _savings {
+    final self = package?.storeProduct.price;
+    final monthly = monthlyPackage?.storeProduct.price;
+    final monthlyStr = monthlyPackage?.storeProduct.priceString;
+    final months = _monthsCovered;
+    if (self == null || monthly == null || monthly <= 0 || months == 0) {
+      return (struck: null, percent: null);
+    }
+    final full = monthly * months;
+    if (self >= full) return (struck: null, percent: null);
+    final percent = ((1 - self / full) * 100).round();
+    // Format the monthly-equivalent total by borrowing the currency symbol +
+    // grouping from the live monthly priceString (e.g. "₺179,99" → "₺2.159,88").
+    // No intl / locale-data dependency; falls back to null on an unexpected
+    // format so a strikethrough is never guessed.
+    final struck = _scalePriceString(monthlyStr, full);
+    return (struck: struck, percent: percent <= 0 ? null : percent);
+  }
 
   /// Phase 95 · the resolved RevenueCat package for this plan, or null
   /// when no Offering has loaded yet (`isLoading == true`) or RC was
@@ -1464,7 +1461,8 @@ class _PlanCard extends StatelessWidget {
     // state's neon tint stays because it's the brand emphasis.
     final scheme = context.colors;
     final isDark = context.isDarkMode;
-    final cardHeight = _isHighlighted ? 220.0 : 180.0;
+    final savings = _savings;
+    final cardHeight = _isHighlighted ? 234.0 : 196.0;
     final borderColor = isSelected
         ? _PaywallScreenState._neon
         : (_isHighlighted
@@ -1475,7 +1473,7 @@ class _PlanCard extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
-        height: 230,
+        height: 244,
         child: Stack(
           clipBehavior: Clip.none,
           alignment: Alignment.center,
@@ -1524,6 +1522,23 @@ class _PlanCard extends StatelessWidget {
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      // Monthly-equivalent strikethrough (honest: monthly ×
+                      // cycles, from the live RC price). Absent on the monthly
+                      // card and whenever the store price can't back it.
+                      if (savings.struck != null) ...[
+                        Text(
+                          savings.struck!,
+                          style: TextStyle(
+                            color: scheme.onSurface.withValues(alpha: 0.42),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            decoration: TextDecoration.lineThrough,
+                            decorationColor:
+                                scheme.onSurface.withValues(alpha: 0.42),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                      ],
                       _buildPriceSlot(scheme),
                       const SizedBox(height: 2),
                       Text(
@@ -1534,13 +1549,16 @@ class _PlanCard extends StatelessWidget {
                           letterSpacing: 1,
                         ),
                       ),
-                      // Store-honesty pass · the fictional "₺2.999,99
-                      // idi" strikethrough anchor is gone (Apple 2.3.1 /
-                      // TR-EU reference-price law). The in-card trial
-                      // badge renders only when THIS card's live SKU
-                      // carries a real free trial.
-                      if (_isHighlighted && _freeTrialOf(package) != null) ...[
+                      // "%N İNDİRİM" badge — shown on the highlighted (yearly)
+                      // card, the biggest honest saving. Derived, never faked.
+                      if (_isHighlighted && savings.percent != null) ...[
                         const SizedBox(height: 8),
+                        _DiscountBadge(percent: savings.percent!),
+                      ],
+                      // Real free-trial pill (only when the live SKU carries
+                      // one). Store-honesty pass: no invented anchors.
+                      if (_isHighlighted && _freeTrialOf(package) != null) ...[
+                        const SizedBox(height: 6),
                         _InlineTrialBadge(trial: _freeTrialOf(package)!),
                       ],
                     ],
@@ -1594,17 +1612,49 @@ class _PlanCard extends StatelessWidget {
                     ],
                   ),
                   child: const Text(
-                    'POPÜLER',
+                    '🔥 EN POPÜLER',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 10,
                       fontWeight: FontWeight.w900,
-                      letterSpacing: 1.4,
+                      letterSpacing: 1.2,
                     ),
                   ),
                 ),
               ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// "%N İNDİRİM" pill inside the highlighted plan card. [percent] is a real,
+/// derived saving (monthly-equivalent vs the plan price) — never fabricated.
+class _DiscountBadge extends StatelessWidget {
+  const _DiscountBadge({required this.percent});
+  final int percent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [
+            _PaywallScreenState._neon,
+            _PaywallScreenState._neonAccent,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        '%$percent İNDİRİM',
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 10.5,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.6,
         ),
       ),
     );
@@ -1657,6 +1707,112 @@ class _InlineTrialBadge extends StatelessWidget {
               fontWeight: FontWeight.w700,
               height: 1.2,
               letterSpacing: 0.2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Task 1 · "%100 Memnuniyet Garantisi" reassurance card + a 7-GÜN crest,
+/// matching photos/new_paywall.png. Purely presentational — the 7-day refund
+/// claim mirrors the store's standard cancellation window.
+class _GuaranteeCard extends StatelessWidget {
+  const _GuaranteeCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colors;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        color: scheme.onSurface.withValues(alpha: 0.05),
+        border: Border.all(
+          color: _PaywallScreenState._neon.withValues(alpha: 0.35),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.verified_user_rounded,
+            color: _PaywallScreenState._neon,
+            size: 34,
+            shadows: [
+              Shadow(
+                color: _PaywallScreenState._neon.withValues(alpha: 0.7),
+                blurRadius: 14,
+              ),
+            ],
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '%100 Memnuniyet Garantisi',
+                  style: TextStyle(
+                    color: scheme.onSurface,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  'İlk 7 gün içinde koşulsuz iade hakkın var.',
+                  style: TextStyle(
+                    color: scheme.onSurface.withValues(alpha: 0.6),
+                    fontSize: 12.5,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          // 7-GÜN crest.
+          Container(
+            width: 54,
+            height: 60,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  _PaywallScreenState._neon.withValues(alpha: 0.35),
+                  _PaywallScreenState._neon.withValues(alpha: 0.12),
+                ],
+              ),
+              border: Border.all(
+                color: _PaywallScreenState._neon.withValues(alpha: 0.7),
+              ),
+            ),
+            child: const Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  '7',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    height: 1,
+                  ),
+                ),
+                Text(
+                  'GÜN',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

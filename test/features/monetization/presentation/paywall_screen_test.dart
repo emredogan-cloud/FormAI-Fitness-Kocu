@@ -106,7 +106,10 @@ void main() {
       await tester.pump();
 
       // Hero copy renders.
-      expect(find.text('Kişiselleştirilmiş planınızı alın!'), findsOneWidget);
+      // Task 1 redesign · the hero title is now a two-colour RichText
+      // ("Kişiselleştirilmiş" / "planınızı alın!"), so match the rich span.
+      expect(find.textContaining('planınızı alın', findRichText: true),
+          findsOneWidget);
       // The three plan pickers (1 Ay / 3 Ay / 12 Ay) are all on screen.
       expect(find.text('1 Ay'), findsOneWidget);
       expect(find.text('3 Ay'), findsOneWidget);
@@ -223,7 +226,10 @@ void main() {
       // in this state (otherwise Pro users who get deep-linked here
       // would hit a redscreen).
       expect(find.byType(PaywallScreen), findsOneWidget);
-      expect(find.text('Kişiselleştirilmiş planınızı alın!'), findsOneWidget);
+      // Task 1 redesign · the hero title is now a two-colour RichText
+      // ("Kişiselleştirilmiş" / "planınızı alın!"), so match the rich span.
+      expect(find.textContaining('planınızı alın', findRichText: true),
+          findsOneWidget);
     },
   );
 
