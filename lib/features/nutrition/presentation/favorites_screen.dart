@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../core/routing/app_router.dart';
 import '../../../core/services/analytics_service.dart';
 import '../../../core/theme/theme_extension.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/utils/app_logger.dart';
 import '../domain/models/recipe.dart';
@@ -56,7 +58,20 @@ class FavoritesScreen extends ConsumerWidget {
           final saved = allRecipes
               .where((r) => favorites.contains(r.id))
               .toList(growable: false);
-          if (saved.isEmpty) return const _EmptyState();
+          if (saved.isEmpty) {
+            // Roadmap Phase 2 (C37) · adds the CTA the old state lacked:
+            // a user with no favourites needs a route to recipes, not
+            // just a description of emptiness.
+            return EmptyState(
+              icon: Icons.favorite_border_rounded,
+              title: 'Henüz favori tarifin yok',
+              body: 'Bir tarif aç ve kalp simgesine dokun. Burada '
+                  'listelenir; sonra alışveriş listesini tek tıkla '
+                  'paylaşabilirsin.',
+              ctaLabel: 'Tarifleri Keşfet',
+              onCta: () => context.push(AppRoutes.nutritionDiscover),
+            );
+          }
           return Column(
             children: [
               Expanded(
@@ -312,50 +327,6 @@ class _Thumb extends StatelessWidget {
       fit: BoxFit.cover,
       memCacheHeight: 200,
       errorBuilder: (_, __, ___) => fallback,
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = context.colors;
-    return Padding(
-      padding: const EdgeInsets.all(32),
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.favorite_border,
-              size: 56,
-              color: scheme.onSurface.withValues(alpha: 0.30),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Henüz favori tarifin yok',
-              style: TextStyle(
-                color: scheme.onSurface,
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Bir tarif aç ve kalp simgesine dokun. Burada listelenir; '
-              'sonra alışveriş listesini tek tıkla paylaşabilirsin.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: scheme.onSurface.withValues(alpha: 0.60),
-                fontSize: 13,
-                height: 1.4,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

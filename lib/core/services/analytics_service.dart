@@ -360,6 +360,70 @@ class AnalyticsService {
     return _capture('survey_dismissed', {'survey_id': surveyId});
   }
 
+  // ─── Roadmap Phase 2 (R1.1 · C27 · C28) · walkthrough ─────────────
+
+  /// A spotlight tour began. [source] separates the one-shot first-run
+  /// presentation from a user-initiated replay, which matters: replay
+  /// volume is a signal that the first run wasn't absorbed.
+  Future<void> tourStarted({required String tour, required String source}) {
+    return _capture('tour_started', {'tour': tour, 'source': source});
+  }
+
+  /// Fires per step. The drop-off curve across steps is the metric that
+  /// says whether the tour is the right length.
+  Future<void> tourStepViewed({
+    required String tour,
+    required int stepIndex,
+  }) {
+    return _capture('tour_step_viewed', {
+      'tour': tour,
+      'step_index': stepIndex,
+    });
+  }
+
+  Future<void> tourCompleted({required String tour}) {
+    return _capture('tour_completed', {'tour': tour});
+  }
+
+  /// Paired with [tourCompleted] to give the completion / skip ratio.
+  Future<void> tourSkipped({required String tour}) {
+    return _capture('tour_skipped', {'tour': tour});
+  }
+
+  /// The post-paywall capability carousel was opened.
+  Future<void> showcaseViewed() {
+    return _capture('showcase_viewed', const {});
+  }
+
+  /// The carousel was read to the end (vs. dismissed part-way).
+  Future<void> showcaseCompleted({required int cardsViewed}) {
+    return _capture('showcase_completed', {'cards_viewed': cardsViewed});
+  }
+
+  /// First-ever visit to a tab. Read as a cohort funnel, this is the
+  /// direct measure of the feature-visibility problem the Testers
+  /// Community reported: what share of users ever discover Beslenme,
+  /// Gelişim and Profil at all.
+  Future<void> tabFirstVisit({required int tabIndex}) {
+    return _capture('tab_first_visit', {'tab_index': tabIndex});
+  }
+
+  /// A contextual "Biliyor muydun?" tip was surfaced.
+  Future<void> tipShown({required String tipId}) {
+    return _capture('tip_shown', {'tip_id': tipId});
+  }
+
+  /// The user dismissed a tip. Dismissal is permanent per tip.
+  Future<void> tipDismissed({required String tipId}) {
+    return _capture('tip_dismissed', {'tip_id': tipId});
+  }
+
+  /// The user acted on a tip's CTA — the signal that tips are earning
+  /// their screen space rather than just occupying it.
+  Future<void> tipActioned({required String tipId}) {
+    return _capture('tip_actioned', {'tip_id': tipId});
+  }
+
   /// Phase 56 Lite · churn-survey response. Fired before the user is
   /// handed off to the App Store / Play Store cancellation flow so we
   /// always capture intent even if the user backs out at the last

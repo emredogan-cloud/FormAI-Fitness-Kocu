@@ -11,6 +11,7 @@ import '../../../../core/routing/app_router.dart';
 import '../../../../core/services/app_preferences.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/share_service.dart';
+import '../../../../core/services/tour_service.dart';
 import '../../../../core/theme/theme_extension.dart';
 import '../../../../core/theme/theme_mode_provider.dart';
 import '../../../../core/utils/app_logger.dart';
@@ -26,6 +27,7 @@ import '../../../progress/providers/streak_provider.dart';
 import '../../../progress/providers/xp_provider.dart';
 import '../../../referral/services/referral_service.dart';
 import '../../../workout/providers/workout_provider.dart';
+import '../dashboard_screen.dart';
 import 'stat_tile.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
@@ -322,6 +324,17 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
           subtitle: 'Play Store\'da bizi değerlendir.',
           onTap: () => _openRateApp(context),
         ),
+        // Roadmap Phase 2 (R1.1) · replayable tour. The first-run tour is
+        // one-shot, which means a user who skipped it — or was
+        // interrupted — would otherwise lose it permanently. This row is
+        // that recovery path, and it's also the answer to the Testers
+        // Community observation for *returning* users, not just new ones.
+        _SettingsTile(
+          icon: Icons.explore_outlined,
+          title: 'Uygulama Turu',
+          subtitle: 'Ekranları ve özellikleri yeniden gez.',
+          onTap: () => _replayTour(context),
+        ),
         // Roadmap Phase 1 (C30) · sits directly above the feedback row
         // so a user with a question finds the answer before writing a
         // ticket.
@@ -536,6 +549,22 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
   /// does something useful even without Play Services.
   Future<void> _openRateApp(BuildContext context) async {
     await ref.read(ratingMomentProvider).openStoreListing();
+  }
+
+  /// Roadmap Phase 2 (R1.1) · replay the dashboard tour.
+  ///
+  /// The tour spotlights widgets that live on the Antrenman tab and the
+  /// bottom nav, so it has to run with the dashboard visible. From the
+  /// Profil tab the nav is present but the Antrenman-tab targets are
+  /// inside a non-visible `IndexedStack` branch — their RenderBoxes exist
+  /// but resolve to stale rects. Switching to Antrenman first is what
+  /// makes the replay show the same thing a first-run user saw.
+  Future<void> _replayTour(BuildContext context) async {
+    DashboardScreen.requestTab(ref, 0);
+    // One frame for the IndexedStack to swap branches and lay out.
+    await Future<void>.delayed(const Duration(milliseconds: 260));
+    if (!context.mounted) return;
+    await ref.read(tourServiceProvider).replayDashboardTour(context);
   }
 
   /// Phase 56 Lite · churn flow. Pops the survey sheet first

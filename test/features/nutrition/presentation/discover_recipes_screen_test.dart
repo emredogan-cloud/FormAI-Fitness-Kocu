@@ -100,6 +100,32 @@ void main() {
     await tester.pump(const Duration(milliseconds: 220));
 
     expect(tester.takeException(), isNull);
-    expect(find.text('Bu filtreye uygun tarif bulunamadı.'), findsOneWidget);
+    // Roadmap Phase 2 (C37) · this screen's private `_EmptyState` was
+    // replaced by the shared `EmptyState`, which splits the old single
+    // sentence into a title + body and adds a CTA that clears the filter.
+    expect(find.text('Bu filtreye uygun tarif bulunamadı'), findsOneWidget);
+    expect(find.text('Filtreyi Kaldır'), findsOneWidget);
+  });
+
+  testWidgets(
+      'Roadmap Phase 2 (C37) · the empty state no longer dead-ends — its '
+      'CTA clears the filter and the results come back', (tester) async {
+    await tester.pumpWidget(_host([
+      _recipe(id: '1', title: 'Unflagged Bowl'),
+    ]));
+    await tester.pump();
+    await tester.pump();
+
+    await tester.tap(find.text('Vegan').first);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 220));
+    expect(find.text('Unflagged Bowl'), findsNothing);
+
+    await tester.tap(find.text('Filtreyi Kaldır'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 220));
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Unflagged Bowl'), findsOneWidget);
   });
 }

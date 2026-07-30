@@ -173,6 +173,28 @@ class AppPreferences {
   static const String _answeredSurveysKey = 'sixpack.surveys_answered';
   static const String _lastSurveyShownAtKey = 'sixpack.survey_last_shown_at';
 
+  // ─── Roadmap Phase 2 · walkthrough & feature discovery ────────────
+  //
+  // `_seenDashboardTour` gates the one-shot spotlight tour. It is NOT a
+  // permanent lock-out: the Settings "Uygulama Turu" row replays the
+  // tour on demand, which is the recovery path for a user who skipped
+  // or was interrupted.
+  static const String _seenDashboardTourKey = 'sixpack.seen_dashboard_tour';
+
+  // `_seenFeatureShowcase` gates the post-paywall capability carousel.
+  static const String _seenFeatureShowcaseKey = 'sixpack.seen_feature_showcase';
+
+  // Tabs the user has actually opened, as stable index strings. Drives
+  // the "new" dot on the bottom nav — the cheapest possible fix for the
+  // feature-visibility half of what the testers reported (P3). Once a
+  // tab is visited its dot never returns.
+  static const String _visitedTabsKey = 'sixpack.visited_tabs';
+
+  // Contextual tips the user has dismissed. A dismissed tip is never
+  // shown again — treating a dismissal as "not now" and re-showing is
+  // how tip systems become nagging.
+  static const String _dismissedTipsKey = 'sixpack.dismissed_tips';
+
   // Phase 138 · H-2 KVKK / GDPR consent. Three keys: `decided` flag
   // tracks whether the user has interacted with the consent dialog;
   // `analytics` + `crash` are the per-channel grants. Defaults are
@@ -718,6 +740,85 @@ class AppPreferences {
   Future<void> recordSurveyShown(DateTime at) async {
     await _prefs.setString(_lastSurveyShownAtKey, at.toIso8601String());
   }
+
+  // ─── Roadmap Phase 2 · walkthrough & feature discovery ────────────
+
+  /// Whether the one-shot dashboard spotlight tour has run. Replay from
+  /// Settings does NOT consult or set this — see [TourService].
+  bool get seenDashboardTour => _prefs.getBool(_seenDashboardTourKey) ?? false;
+
+  Future<void> markSeenDashboardTour() async {
+    await _prefs.setBool(_seenDashboardTourKey, true);
+  }
+
+  bool get seenFeatureShowcase =>
+      _prefs.getBool(_seenFeatureShowcaseKey) ?? false;
+
+  Future<void> markSeenFeatureShowcase() async {
+    await _prefs.setBool(_seenFeatureShowcaseKey, true);
+  }
+
+  /// Tab indices the user has opened at least once.
+  Set<int> get visitedTabs {
+    final raw = _prefs.getStringList(_visitedTabsKey) ?? const <String>[];
+    return raw.map(int.tryParse).whereType<int>().toSet();
+  }
+
+  /// Records a tab visit. Returns `true` when this was the first visit,
+  /// so the caller can rebuild the nav to retire the dot without
+  /// re-reading prefs.
+  Future<bool> markTabVisited(int index) async {
+    final current = visitedTabs;
+    if (current.contains(index)) return false;
+    current.add(index);
+    await _prefs.setStringList(
+      _visitedTabsKey,
+      current.map((i) => i.toString()).toList(),
+    );
+    return true;
+  }
+
+  Set<String> get dismissedTipIds =>
+      (_prefs.getStringList(_dismissedTipsKey) ?? const <String>[]).toSet();
+
+  Future<void> markTipDismissed(String tipId) async {
+    final current = dismissedTipIds..add(tipId);
+    await _prefs.setStringList(_dismissedTipsKey, current.toList());
+  }
+
+  /// Whether the user has ever actually *said something* to the AI coach.
+  ///
+  /// Reads the coach feature's own persisted transcript rather than
+  /// introducing a separate "opened the screen" flag: it is ground truth,
+  /// and it needs zero changes to the coach feature. The key is
+  /// duplicated as a literal here for the same reason [_planCacheKey] is
+  /// — a core → feature import for one string would be the worse trade.
+  ///
+  /// Critically this looks for a turn with `c != true`, i.e. a *user*
+  /// turn. The transcript also holds the coach's opening greeting, so a
+  /// mere length or non-null check would report "has chatted" for someone
+  /// who opened the screen and typed nothing — exactly the user the
+  /// `coach_unused` tip is meant to reach.
+  bool get hasChattedWithCoach {
+    final raw = _prefs.getString(_coachTurnsKey);
+    if (raw == null || raw.isEmpty) return false;
+    try {
+      final list = jsonDecode(raw);
+      if (list is! List) return false;
+      return list.any(
+        (t) =>
+            t is Map &&
+            t['c'] != true &&
+            (t['t'] as String?)?.isNotEmpty == true,
+      );
+    } catch (_) {
+      // Corrupt payload → treat as "hasn't chatted". Showing the tip once
+      // too often is a far cheaper failure than crashing the dashboard.
+      return false;
+    }
+  }
+
+  static const String _coachTurnsKey = 'sixpack.coach_turns_v1';
 
   // ─── Progress Phase 5.D · Year-in-Review one-shot flag ────────────
 

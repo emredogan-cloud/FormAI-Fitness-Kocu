@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../core/services/app_preferences.dart';
 import '../../../core/theme/theme_extension.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_card.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/widgets/cached_image.dart';
@@ -1457,10 +1458,19 @@ class _DiscoverySection extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         if (filteredRecipes.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20),
-            child: _EmptyState(
-              message: 'Bu filtreye uygun tarif bulunamadı.',
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            // Roadmap Phase 2 (C37) · was a bare sentence in a box with
+            // no way out. Now explains the cause and offers the action
+            // that fixes it.
+            child: EmptyState(
+              compact: true,
+              icon: Icons.filter_alt_off_rounded,
+              title: 'Bu filtreye uygun tarif yok',
+              body: 'Farklı bir etiket seçebilir ya da tüm tarif '
+                  'kütüphanesine göz atabilirsin.',
+              ctaLabel: 'Tarifleri Keşfet',
+              onCta: () => context.push(AppRoutes.nutritionDiscover),
             ),
           )
         else
@@ -1877,33 +1887,6 @@ class _CompactDiscoveryCard extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.message});
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    // Theme-aware · was hardcoded white text on a near-transparent white
-    // surface — invisible on the light-mode scaffold. onSurface reads on both.
-    final scheme = context.colors;
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        color: scheme.onSurface.withValues(alpha: 0.03),
-        border: Border.all(color: scheme.onSurface.withValues(alpha: 0.12)),
-      ),
-      child: Text(
-        message,
-        style: TextStyle(
-          color: scheme.onSurface.withValues(alpha: 0.55),
-          fontSize: 13,
         ),
       ),
     );

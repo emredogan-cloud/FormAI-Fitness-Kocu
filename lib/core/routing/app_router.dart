@@ -18,6 +18,7 @@ import '../../features/nutrition/presentation/favorites_screen.dart';
 import '../../features/nutrition/presentation/recipe_detail_screen.dart';
 import '../../features/onboarding/presentation/age_gate_screen.dart';
 import '../../features/onboarding/presentation/consent_screen.dart';
+import '../../features/onboarding/presentation/feature_showcase_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/onboarding/presentation/prediction_screen.dart';
 import '../../features/progress/presentation/badges_screen.dart';
@@ -91,6 +92,11 @@ class AppRoutes {
   /// feedback row so it deflects tickets rather than competing with
   /// them.
   static const String helpCenter = '/help';
+
+  /// Roadmap Phase 2 (R1.1) · one-shot post-paywall capability showcase.
+  /// Not navigated to directly by any widget — the router's redirect
+  /// interposes it between the paywall decision and the dashboard.
+  static const String featureShowcase = '/showcase';
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -164,6 +170,26 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isAdmin = role is String && role == 'admin';
       return isAdmin ? null : AppRoutes.dashboard;
     }
+    // Roadmap Phase 2 (R1.1) · one-shot capability showcase between the
+    // paywall decision and the dashboard.
+    //
+    // Intercepted HERE rather than at the paywall's three `context.go('/')`
+    // exits, for two reasons: (1) those exits sit inside RevenueCat
+    // purchase / entitlement-listener code that earlier phases
+    // deliberately keep byte-untouched, and (2) one redirect covers every
+    // path to the dashboard — purchase success, explicit dismiss, and the
+    // Pro self-redirect — without three chances to get it wrong.
+    //
+    // Only fires for a user who has finished onboarding and is signed in
+    // (both already true at this point in the function), so a returning
+    // user with the flag set never sees it, and a guest reaching the
+    // dashboard via the auth-gate escape gets it exactly once.
+    if (path == AppRoutes.dashboard && !prefs.seenFeatureShowcase) {
+      return AppRoutes.featureShowcase;
+    }
+    // Never bounce off the showcase once it's the target; the screen
+    // itself flips the flag and `go`s to the dashboard.
+    if (path == AppRoutes.featureShowcase) return null;
     return null;
   }
 
@@ -353,6 +379,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.helpCenter,
         name: 'helpCenter',
         builder: (context, state) => const HelpCenterScreen(),
+      ),
+      // Roadmap Phase 2 (R1.1) · post-paywall capability showcase.
+      GoRoute(
+        path: AppRoutes.featureShowcase,
+        name: 'featureShowcase',
+        builder: (context, state) => const FeatureShowcaseScreen(),
       ),
       // Phase 50B · admin panel. The redirect above already forces
       // non-admins to /, so the builder can render unconditionally.

@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/routing/app_router.dart';
 import '../../../../core/services/app_preferences.dart';
+import '../../../../core/services/tour_targets.dart';
 import '../../../../core/theme/theme_extension.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/placeholder_images.dart';
@@ -201,9 +202,14 @@ class _AntrenmanTabState extends ConsumerState<AntrenmanTab> {
           ),
         ),
         const SizedBox(height: 16),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20),
-          child: _CoachEntryCard(),
+        // Roadmap Phase 2 (C27) · tour target. KeyedSubtree rather than a
+        // key on the Padding so the resolved rect hugs the card itself.
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: KeyedSubtree(
+            key: ref.read(tourTargetsProvider).coachCard,
+            child: const _CoachEntryCard(),
+          ),
         ),
         const SizedBox(height: 26),
         const _SectionTitle(
@@ -213,12 +219,17 @@ class _AntrenmanTabState extends ConsumerState<AntrenmanTab> {
         const SizedBox(height: 12),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: ChallengeHeroCard(
-            title: _challengeTitleFor(nextDay),
-            dayNumber: nextDay?.dayNumber ?? 1,
-            completed: completed,
-            total: 30,
-            onTap: () => context.push(AppRoutes.planDetail),
+          // Roadmap Phase 2 (C27) · tour step 1 points here: "today's
+          // workout lives here".
+          child: KeyedSubtree(
+            key: ref.read(tourTargetsProvider).planCard,
+            child: ChallengeHeroCard(
+              title: _challengeTitleFor(nextDay),
+              dayNumber: nextDay?.dayNumber ?? 1,
+              completed: completed,
+              total: 30,
+              onTap: () => context.push(AppRoutes.planDetail),
+            ),
           ),
         ),
         const SizedBox(height: 28),

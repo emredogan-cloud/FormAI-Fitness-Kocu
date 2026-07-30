@@ -4,10 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/services/app_preferences.dart';
 import '../../../core/services/first_time_ai_scenes.dart';
+import '../../../core/services/tour_service.dart';
+import '../../../core/services/tour_targets.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme_extension.dart';
+import '../../../core/services/analytics_service.dart';
 import '../../feedback/domain/survey.dart';
 import '../../feedback/presentation/survey_sheet.dart';
 import '../../feedback/services/survey_service.dart';
@@ -28,7 +33,9 @@ import '../../progress/providers/xp_award_listener.dart';
 import '../../progress/providers/xp_provider.dart';
 import '../../workout/providers/workout_provider.dart';
 import 'dashboard_logic.dart';
+import '../domain/discovery_tips.dart';
 import 'widgets/antrenman_tab.dart';
+import 'widgets/discovery_tip_card.dart';
 import 'widgets/gelisim_tab.dart';
 import 'widgets/profile_tab.dart';
 
@@ -46,8 +53,52 @@ const int _nutritionTabIndex = 1;
 // actually on Gelişim.
 const int _gelisimTabIndex = 2;
 
+/// Roadmap Phase 2 · a request channel for switching dashboard tabs from
+/// outside the dashboard's own State.
+///
+/// The Profil tab's "Uygulama Turu" row needs to put the user back on
+/// Antrenman before replaying the tour (the tour's targets live there,
+/// and an `IndexedStack` branch that isn't showing resolves to stale
+/// rects). Rather than lift `_index` out of State — which every celebration
+/// / nutrition-prompt / badge path reads — this exposes a one-way request
+/// that the dashboard listens to and applies.
+///
+/// A monotonically-bumped sequence rides along with the index so two
+/// consecutive requests for the *same* tab still notify. Without it, a
+/// second "go to Antrenman" while already on Antrenman would be
+/// swallowed by equality.
+class DashboardTabRequest {
+  const DashboardTabRequest({required this.index, required this.seq});
+
+  final int index;
+  final int seq;
+}
+
+class DashboardTabRequestNotifier extends Notifier<DashboardTabRequest?> {
+  @override
+  DashboardTabRequest? build() => null;
+
+  int _seq = 0;
+
+  void request(int index) {
+    _seq++;
+    state = DashboardTabRequest(index: index, seq: _seq);
+  }
+}
+
+final dashboardTabRequestProvider =
+    NotifierProvider<DashboardTabRequestNotifier, DashboardTabRequest?>(
+  DashboardTabRequestNotifier.new,
+);
+
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
+
+  /// Asks the mounted dashboard to switch to [index]. No-op if no
+  /// dashboard is listening.
+  static void requestTab(WidgetRef ref, int index) {
+    ref.read(dashboardTabRequestProvider.notifier).request(index);
+  }
 
   @override
   ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
@@ -79,6 +130,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   // firing the prefetch on cold start.
   bool _didPrefetchMeals = false;
   ProviderSubscription<AsyncValue<List<PlannedMeal>>>? _menuSub;
+  ProviderSubscription<DashboardTabRequest?>? _tabRequestSub;
+
+  // Roadmap Phase 2 (C37 · P3) · tabs the user has opened at least once.
+  // Drives the discovery dot on the bottom nav. Seeded in initState from
+  // prefs so a returning user never sees dots on tabs they know.
+  Set<int> _visitedTabs = const <int>{};
+
+  // Roadmap Phase 2 (C28) · the currently-surfaced dashboard tip, or
+  // null. Recomputed after the tour, after a first tab visit, and after
+  // a dismissal.
+  DiscoveryTip? _tip;
 
   @override
   void initState() {
@@ -98,6 +160,28 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       dailyMenuProvider,
       (_, next) {
         if (next.value != null) _maybePrefetchTodaysMeals();
+      },
+    );
+    // Roadmap Phase 2 · seed the visited-tab set + the tip slot from
+    // persisted state, so a returning user gets no stale dots and sees a
+    // relevant tip on the very first frame rather than after a rebuild.
+    final prefs = ref.read(appPreferencesProvider);
+    _visitedTabs = prefs.visitedTabs;
+    // Tab 0 is where every user lands, so record it here rather than
+    // waiting for a tab *change* that may never come.
+    unawaited(_recordTabVisit(0));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _refreshTip();
+    });
+    // Roadmap Phase 2 · honour external tab requests (currently the
+    // Profil tab's tour-replay row). listenManual, not a build-time
+    // ref.listen, so applying a request never happens during build.
+    _tabRequestSub = ref.listenManual<DashboardTabRequest?>(
+      dashboardTabRequestProvider,
+      (_, next) {
+        if (next == null || !mounted) return;
+        if (next.index == _index) return;
+        _onTabChanged(next.index);
       },
     );
   }
@@ -134,6 +218,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   @override
   void dispose() {
     _menuSub?.close();
+    _tabRequestSub?.close();
     _routeObserver?.unsubscribe(this);
     super.dispose();
   }
@@ -149,13 +234,28 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     // inside [FirstTimeAiScenes] makes this a no-op on subsequent
     // dashboard pushes; on the first push it pushes a cinematic
     // welcome over the dashboard, then auto-pops back here.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    //
+    // Roadmap Phase 2 (R1.1) · the spotlight tour runs immediately
+    // AFTER that scene resolves. The two are deliberately layered, not
+    // merged: the scene carries the emotional beat ("bugün dönüşümünün
+    // ilk günü") and the tour carries the functional one (where things
+    // are). Awaiting the scene first means the tour never draws over a
+    // cinematic route.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
-      FirstTimeAiScenes.showIfNeeded(
+      await FirstTimeAiScenes.showIfNeeded(
         context,
         ref,
         FirstTimeAiScene.dashboardWelcome,
       );
+      if (!mounted) return;
+      // One extra frame so the dashboard has certainly laid out — the
+      // tour resolves target rects from live RenderBoxes.
+      await Future<void>.delayed(const Duration(milliseconds: 320));
+      if (!mounted) return;
+      await ref.read(tourServiceProvider).maybeStartDashboardTour(context);
+      if (!mounted) return;
+      _refreshTip();
     });
   }
 
@@ -310,19 +410,42 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         // background — exactly the bug the PM screenshotted.
         body: SafeArea(
           bottom: false,
-          child: IndexedStack(
-            index: _index,
-            children: const [
-              AntrenmanTab(),
-              NutritionTab(),
-              GelisimTab(),
-              ProfileTab(),
+          child: Column(
+            children: [
+              Expanded(
+                child: IndexedStack(
+                  index: _index,
+                  children: const [
+                    AntrenmanTab(),
+                    NutritionTab(),
+                    GelisimTab(),
+                    ProfileTab(),
+                  ],
+                ),
+              ),
+              // Roadmap Phase 2 (C28) · the tip slot. Sits between the
+              // tab content and the nav so it reads as a system message
+              // rather than part of whichever tab is showing, and never
+              // covers content — it takes its own space or none at all.
+              if (_tip != null)
+                DiscoveryTipCard(
+                  tip: _tip!,
+                  onDismiss: () => _dismissTip(_tip!),
+                  onAction: () {
+                    final tip = _tip!;
+                    AnalyticsService.instance.tipActioned(tipId: tip.id);
+                    final route = tip.route;
+                    if (route != null) context.push(route);
+                  },
+                ),
             ],
           ),
         ),
         bottomNavigationBar: _BottomNav(
           index: _index,
           onChanged: _onTabChanged,
+          targets: ref.read(tourTargetsProvider),
+          visitedTabs: _visitedTabs,
         ),
       ),
     );
@@ -401,6 +524,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
   void _onTabChanged(int newIndex) {
     final previous = _index;
+    // Roadmap Phase 2 (C37 · P3) · retire the "new" dot and record the
+    // first visit. Fire-and-forget: the write is a single prefs entry
+    // and the dot is cosmetic, so a lost race just means one extra
+    // frame with the dot still showing.
+    unawaited(_recordTabVisit(newIndex));
     // Freemium (post-beta) · nutrition is no longer walled off at the tab.
     // Tapping Beslenme now opens a genuine free experience — the intro
     // scene + onboarding, the day's calorie/macro target, and the full
@@ -426,6 +554,58 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     }
   }
 
+  /// Roadmap Phase 2 · marks [index] visited and rebuilds the nav so the
+  /// discovery dot disappears. No-op after the first visit.
+  Future<void> _recordTabVisit(int index) async {
+    final isFirst =
+        await ref.read(appPreferencesProvider).markTabVisited(index);
+    if (!isFirst || !mounted) return;
+    AnalyticsService.instance.tabFirstVisit(tabIndex: index);
+    setState(() => _visitedTabs = ref.read(appPreferencesProvider).visitedTabs);
+    // A newly-visited tab can satisfy (or invalidate) a tip condition.
+    _refreshTip();
+  }
+
+  /// Roadmap Phase 2 (C28) · recompute the dashboard tip slot.
+  ///
+  /// Suppressed while the one-shot tour is still pending, so the tip and
+  /// the tour never compete for the user's attention on first run.
+  void _refreshTip() {
+    if (!mounted) return;
+    final prefs = ref.read(appPreferencesProvider);
+    if (!prefs.seenDashboardTour) {
+      if (_tip != null) setState(() => _tip = null);
+      return;
+    }
+    final session = ref.read(workoutSessionProvider).value;
+    final completed = session?.days.where((d) => d.isCompleted).length ?? 0;
+    final next = selectTip(
+      context: TipContext(
+        completedDays: completed,
+        currentStreak: ref.read(currentStreakProvider),
+        visitedTabs: prefs.visitedTabs,
+        hasUsedCoach: prefs.hasChattedWithCoach,
+        nutritionOnboarded: prefs.hasCompletedNutritionPrefs,
+        daysSinceInstall: prefs.daysSinceInstall,
+      ),
+      dismissedIds: prefs.dismissedTipIds,
+    );
+    if (next?.id == _tip?.id) return;
+    setState(() => _tip = next);
+    if (next != null) {
+      AnalyticsService.instance.tipShown(tipId: next.id);
+    }
+  }
+
+  Future<void> _dismissTip(DiscoveryTip tip) async {
+    AnalyticsService.instance.tipDismissed(tipId: tip.id);
+    await ref.read(appPreferencesProvider).markTipDismissed(tip.id);
+    if (!mounted) return;
+    setState(() => _tip = null);
+    // Another tip may now be the best match.
+    _refreshTip();
+  }
+
   void _maybePromptNutritionSheet() {
     // Phase 126 · the deferred nutrition wizard now chains through the
     // first-time AI intro scene. Both have their own seen-flags, so:
@@ -449,10 +629,34 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 }
 
 class _BottomNav extends StatelessWidget {
-  const _BottomNav({required this.index, required this.onChanged});
+  const _BottomNav({
+    required this.index,
+    required this.onChanged,
+    required this.targets,
+    required this.visitedTabs,
+  });
 
   final int index;
   final ValueChanged<int> onChanged;
+
+  /// Roadmap Phase 2 (C27) · carries [TourTargets.navBar], the single key
+  /// the spotlight tour resolves nav-item rects from.
+  final TourTargets targets;
+
+  /// Tabs already opened at least once. Anything absent gets a dot.
+  final Set<int> visitedTabs;
+
+  /// Overlays the discovery dot when the tab has never been opened.
+  /// Applied to the inactive icon only — the active tab is by definition
+  /// one the user has just visited, so it never needs a dot.
+  Widget _item(Widget icon, int tabIndex) {
+    if (visitedTabs.contains(tabIndex)) return icon;
+    return Badge(
+      backgroundColor: AppColors.neon,
+      smallSize: 8,
+      child: icon,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -467,7 +671,10 @@ class _BottomNav extends StatelessWidget {
     // entirely.
     final navTheme = Theme.of(context).bottomNavigationBarTheme;
     final scheme = context.colors;
+    // Roadmap Phase 2 (C27) · one key on the bar; the tour derives each
+    // item's rect from this via TourTargets.navItemRect.
     return DecoratedBox(
+      key: targets.navBar,
       // Hairline border above the nav so the strip reads as a distinct
       // surface even when its background and the scaffold both land on
       // near-white tones in light mode. The border colour pulls from
@@ -488,25 +695,25 @@ class _BottomNav extends StatelessWidget {
         selectedFontSize: 12,
         unselectedFontSize: 12,
         showUnselectedLabels: true,
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.fitness_center_outlined),
-            activeIcon: Icon(Icons.fitness_center),
+            icon: _item(const Icon(Icons.fitness_center_outlined), 0),
+            activeIcon: const Icon(Icons.fitness_center),
             label: 'Antrenman',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.restaurant_outlined),
-            activeIcon: Icon(Icons.restaurant),
+            icon: _item(const Icon(Icons.restaurant_outlined), 1),
+            activeIcon: const Icon(Icons.restaurant),
             label: 'Beslenme',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.insights_outlined),
-            activeIcon: Icon(Icons.insights),
+            icon: _item(const Icon(Icons.insights_outlined), 2),
+            activeIcon: const Icon(Icons.insights),
             label: 'Gelişim',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
+            icon: _item(const Icon(Icons.person_outline), 3),
+            activeIcon: const Icon(Icons.person),
             label: 'Profil',
           ),
         ],

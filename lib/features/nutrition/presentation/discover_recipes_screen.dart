@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/widgets/empty_state.dart';
 import '../../../core/theme/theme_extension.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/utils/app_logger.dart';
@@ -148,9 +149,26 @@ class _DiscoverRecipesScreenState extends ConsumerState<DiscoverRecipesScreen> {
                 ),
               ),
               if (filtered.isEmpty)
-                const SliverFillRemaining(
+                SliverFillRemaining(
                   hasScrollBody: false,
-                  child: _EmptyState(),
+                  // Roadmap Phase 2 (C37) · the CTA clears the filter that
+                  // produced the empty result, which is the action the
+                  // user actually wants.
+                  child: EmptyState(
+                    icon: Icons.restaurant_menu_rounded,
+                    title: 'Bu filtreye uygun tarif bulunamadı',
+                    body: 'Farklı bir etiket deneyebilir veya filtreyi '
+                        'kaldırabilirsin.',
+                    ctaLabel: activeFilter == null ? null : 'Filtreyi Kaldır',
+                    // `toggle` on the active chip is already the clear
+                    // operation (see FilterChipsNotifier) — no need for a
+                    // second method that does the same thing.
+                    onCta: activeFilter == null
+                        ? null
+                        : () => ref
+                            .read(filterChipsProvider.notifier)
+                            .toggle(activeFilter),
+                  ),
                 )
               else
                 SliverPadding(
