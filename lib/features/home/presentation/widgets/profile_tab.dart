@@ -20,6 +20,7 @@ import '../../../feedback/presentation/feedback_sheet.dart';
 import '../../../feedback/services/feedback_service.dart';
 import '../../../monetization/presentation/churn_survey_sheet.dart';
 import '../../../monetization/providers/monetization_provider.dart';
+import '../../../monetization/services/rating_moment_service.dart';
 import '../../../referral/providers/referral_provider.dart';
 import '../../../progress/providers/streak_provider.dart';
 import '../../../progress/providers/xp_provider.dart';
@@ -310,6 +311,26 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
           subtitle: 'Veri ve izinler',
           onTap: () => _openPrivacySheet(context),
         ),
+        // Roadmap Phase 1 (R2.1) · the Testers Community observation
+        // verbatim: a user who wants to rate the app had no path. Always
+        // present — never gated by Pro, never one-shot, never on a
+        // cooldown. The prompted rating moment (RatingMomentService) is
+        // a separate, rate-limited surface; this one is the user's own.
+        _SettingsTile(
+          icon: Icons.star_rounded,
+          title: 'Uygulamayı Değerlendir',
+          subtitle: 'Play Store\'da bizi değerlendir.',
+          onTap: () => _openRateApp(context),
+        ),
+        // Roadmap Phase 1 (C30) · sits directly above the feedback row
+        // so a user with a question finds the answer before writing a
+        // ticket.
+        _SettingsTile(
+          icon: Icons.help_outline_rounded,
+          title: 'Yardım Merkezi',
+          subtitle: 'Sık sorulan sorular ve çözümler.',
+          onTap: () => context.push(AppRoutes.helpCenter),
+        ),
         // Phase 56 Lite · "Destek" → "Destek & Geri Bildirim". The
         // tile now opens the in-app feedback sheet (subject dropdown +
         // message), and FeedbackService falls through to the same
@@ -492,13 +513,29 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
   /// message landed in Supabase (silent on the server) or whether
   /// their mail client opened (because Supabase was unreachable / RLS
   /// rejected the row / the user is fully signed-out).
+  /// Roadmap Phase 1 (R2.3) · the toast now also confirms the
+  /// participation reward when one was granted. The reward is attached
+  /// to *submitting feedback*, never to leaving a rating or review —
+  /// see [FeedbackRewardService] for the policy rationale.
   Future<void> _openFeedback(BuildContext context) async {
     final result = await showFeedbackSheet(context);
     if (result == null || !context.mounted) return;
-    final message = result.transport == FeedbackTransport.supabase
+    final base = result.transport == FeedbackTransport.supabase
         ? 'Mesajın iletildi. Teşekkürler!'
         : 'Mail uygulaman açıldı — gönderince ulaşır.';
-    _toast(context, message);
+    final reward = result.reward;
+    _toast(
+      context,
+      reward == null ? base : '$base +${reward.xp} XP kazandın.',
+    );
+  }
+
+  /// Roadmap Phase 1 (R2.1) · user-initiated store rating. Delegates to
+  /// [RatingMomentService.openStoreListing], which tries the platform
+  /// store intent, then `market://`, then the https listing — so the tap
+  /// does something useful even without Play Services.
+  Future<void> _openRateApp(BuildContext context) async {
+    await ref.read(ratingMomentProvider).openStoreListing();
   }
 
   /// Phase 56 Lite · churn flow. Pops the survey sheet first

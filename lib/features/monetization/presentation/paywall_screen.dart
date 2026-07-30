@@ -1074,8 +1074,7 @@ class _HeroSection extends StatelessWidget {
                           'photos/PT_FORM.png',
                           fit: BoxFit.cover,
                           alignment: Alignment.topCenter,
-                          errorBuilder: (_, __, ___) =>
-                              const SizedBox.shrink(),
+                          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                         ),
                       ),
                     ),

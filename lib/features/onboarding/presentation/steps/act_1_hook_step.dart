@@ -446,8 +446,7 @@ class _AnalysisCard extends StatelessWidget {
                     value: 0.82,
                     strokeWidth: 5,
                     backgroundColor: Colors.white.withValues(alpha: 0.10),
-                    valueColor:
-                        const AlwaysStoppedAnimation(Color(0xFF39FF14)),
+                    valueColor: const AlwaysStoppedAnimation(Color(0xFF39FF14)),
                   ),
                 ),
                 const Column(
@@ -514,8 +513,7 @@ class _AnalysisCard extends StatelessWidget {
                     value: 0.94,
                     minHeight: 6,
                     backgroundColor: Colors.white.withValues(alpha: 0.10),
-                    valueColor:
-                        const AlwaysStoppedAnimation(AppColors.neon),
+                    valueColor: const AlwaysStoppedAnimation(AppColors.neon),
                   ),
                 ),
               ],

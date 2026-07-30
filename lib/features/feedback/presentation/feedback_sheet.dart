@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/theme_extension.dart';
+import '../services/feedback_reward_service.dart';
 import '../services/feedback_service.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
@@ -11,7 +13,22 @@ const Color _neon = Color(0xFF8E5BFF);
 /// pops with a [FeedbackResult] so the caller can decide which toast
 /// to surface; on validation failure (empty message) the sheet stays
 /// open and inline-flags the field.
-Future<FeedbackResult?> showFeedbackSheet(BuildContext context) {
+///
+/// Roadmap Phase 1 extends it three ways:
+///   * [initialSubject] lets a caller pre-select the topic. The
+///     sentiment routing in `RatingMomentService` uses it so a user who
+///     tapped 1–3 stars lands on a form that already knows why they're
+///     there.
+///   * [introOverride] lets the caller reframe the prompt for that
+///     context without a second sheet implementation.
+///   * Successful submission grants the participation reward (R2.3)
+///     and reports it on [FeedbackResult], so both call sites get the
+///     reward without duplicating the policy.
+Future<FeedbackResult?> showFeedbackSheet(
+  BuildContext context, {
+  FeedbackSubject initialSubject = FeedbackSubject.bug,
+  String? introOverride,
+}) {
   return showModalBottomSheet<FeedbackResult>(
     context: context,
     isScrollControlled: true,
@@ -19,25 +36,39 @@ Future<FeedbackResult?> showFeedbackSheet(BuildContext context) {
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
-    builder: (_) => const _FeedbackSheet(),
+    builder: (_) => _FeedbackSheet(
+      initialSubject: initialSubject,
+      introOverride: introOverride,
+    ),
   );
 }
 
 class FeedbackResult {
-  const FeedbackResult(this.transport);
+  const FeedbackResult(this.transport, {this.reward});
+
   final FeedbackTransport transport;
+
+  /// The participation reward granted for this submission, or `null`
+  /// when the user is inside the reward cooldown.
+  final FeedbackReward? reward;
 }
 
-class _FeedbackSheet extends StatefulWidget {
-  const _FeedbackSheet();
+class _FeedbackSheet extends ConsumerStatefulWidget {
+  const _FeedbackSheet({
+    required this.initialSubject,
+    this.introOverride,
+  });
+
+  final FeedbackSubject initialSubject;
+  final String? introOverride;
 
   @override
-  State<_FeedbackSheet> createState() => _FeedbackSheetState();
+  ConsumerState<_FeedbackSheet> createState() => _FeedbackSheetState();
 }
 
-class _FeedbackSheetState extends State<_FeedbackSheet> {
+class _FeedbackSheetState extends ConsumerState<_FeedbackSheet> {
   final _messageCtrl = TextEditingController();
-  FeedbackSubject _subject = FeedbackSubject.bug;
+  late FeedbackSubject _subject = widget.initialSubject;
   bool _submitting = false;
   String? _error;
 
@@ -62,8 +93,13 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
         subject: _subject,
         message: body,
       );
+      // The reward is granted here rather than at the call sites so the
+      // policy lives in exactly one place and both entry points (the
+      // Settings row and the sentiment-routed rating flow) behave
+      // identically.
+      final reward = await ref.read(feedbackRewardProvider).grantIfEligible();
       if (!mounted) return;
-      Navigator.of(context).pop(FeedbackResult(transport));
+      Navigator.of(context).pop(FeedbackResult(transport, reward: reward));
     } on FeedbackException catch (e) {
       if (!mounted) return;
       setState(() => _error = e.message);
@@ -107,7 +143,8 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
             ),
             const SizedBox(height: 6),
             Text(
-              'Sorunu, fikrini ya da sorunu yaz; ekibimize doğrudan ulaşır.',
+              widget.introOverride ??
+                  'Sorunu, fikrini ya da sorunu yaz; ekibimize doğrudan ulaşır.',
               style: TextStyle(
                 color: scheme.onSurface.withValues(alpha: 0.65),
                 fontSize: 13,

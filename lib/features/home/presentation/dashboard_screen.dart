@@ -8,6 +8,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/services/app_preferences.dart';
 import '../../../core/services/first_time_ai_scenes.dart';
 import '../../../core/theme/theme_extension.dart';
+import '../../feedback/domain/survey.dart';
+import '../../feedback/presentation/survey_sheet.dart';
+import '../../feedback/services/survey_service.dart';
+import '../../monetization/domain/rating_trigger.dart';
 import '../../monetization/providers/monetization_provider.dart';
 import '../../monetization/services/conversion_moment_service.dart';
 import '../../monetization/services/rating_moment_service.dart';
@@ -19,6 +23,7 @@ import '../../progress/data/level_titles.dart';
 import '../../progress/presentation/widgets/badge_unlock_dialog.dart';
 import '../../progress/presentation/widgets/level_up_screen.dart';
 import '../../progress/providers/badge_unlocks_provider.dart';
+import '../../progress/providers/streak_provider.dart';
 import '../../progress/providers/xp_award_listener.dart';
 import '../../progress/providers/xp_provider.dart';
 import '../../workout/providers/workout_provider.dart';
@@ -163,18 +168,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     _runDashboardReturnFlow();
   }
 
-  /// Phase 135 + 136 · sequenced post-return flow. Order matters for
-  /// emotional beat sequencing:
+  /// Phase 135 + 136, extended in roadmap Phase 1 · sequenced
+  /// post-return flow. Order matters for emotional beat sequencing:
   ///
   ///   1. Badge / level-up celebrations — "I unlocked something"
   ///   2. First-workout Pro invitation (non-pro only, 1+ workouts)
-  ///   3. 3rd-workout rating cinematic (pro only, 3+ workouts)
+  ///   3. Contextual rating moment (ALL users — see [RatingTrigger])
+  ///   4. Micro-survey, only if nothing above interrupted the user
   ///
-  /// Each step is gated by its own SharedPreferences flag so the
-  /// sequence is idempotent and re-running the flow on a subsequent
-  /// dashboard return doesn't replay anything the user already saw.
+  /// Each step is gated by its own persisted state so the sequence is
+  /// idempotent and re-running the flow on a subsequent dashboard
+  /// return doesn't replay anything the user already saw.
+  ///
+  /// Step 4's ordering is the important one: a survey never stacks on
+  /// top of a rating ask or a celebration. At most ONE interruption per
+  /// return to the dashboard, which is what keeps a growing set of
+  /// prompts from degrading into nagging.
   Future<void> _runDashboardReturnFlow() async {
-    await _maybeCelebrate();
+    final badgeJustUnlocked = await _maybeCelebrate();
     if (!mounted) return;
     final session = ref.read(workoutSessionProvider).value;
     if (session == null) return;
@@ -186,11 +197,38 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           isPro: isPro,
         );
     if (!mounted) return;
-    await ref.read(ratingMomentProvider).maybeShow(
+
+    final firedTrigger = await ref.read(ratingMomentProvider).maybeShow(
           context,
-          completedDays: completed,
-          isPro: isPro,
+          ratingContext: RatingContext(
+            completedDays: completed,
+            currentStreak: ref.read(currentStreakProvider),
+            badgeJustUnlocked: badgeJustUnlocked,
+          ),
         );
+    if (!mounted) return;
+    if (firedTrigger != null || badgeJustUnlocked) return;
+
+    await _maybeShowSurvey(completedDays: completed);
+  }
+
+  /// Roadmap Phase 1 (C8) · surface the next eligible micro-survey.
+  /// Called only from the tail of [_runDashboardReturnFlow], so a
+  /// survey can never appear on top of another prompt.
+  Future<void> _maybeShowSurvey({required int completedDays}) async {
+    final service = ref.read(surveyServiceProvider);
+    final survey = service.pending(
+      SurveyContext(
+        completedDays: completedDays,
+        daysSinceInstall: ref.read(appPreferencesProvider).daysSinceInstall,
+      ),
+    );
+    if (survey == null) return;
+    // Stamp before presenting — same idempotency contract as the
+    // rating moment and the first-time AI scenes.
+    await service.markShown(survey);
+    if (!mounted) return;
+    await showSurveySheet(context, survey: survey);
   }
 
   @override
@@ -290,8 +328,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     );
   }
 
-  Future<void> _maybeCelebrate() async {
-    if (!mounted || !_routeIsCurrent || _celebrating) return;
+  /// Returns `true` when at least one badge celebration was actually
+  /// shown in this call. Roadmap Phase 1 uses that as the
+  /// `badgeJustUnlocked` signal for [RatingTrigger.badgeUnlocked] — a
+  /// rating ask that rides an existing celebration lands far better
+  /// than one that arrives cold.
+  Future<bool> _maybeCelebrate() async {
+    if (!mounted || !_routeIsCurrent || _celebrating) return false;
     // Phase 57 · the PM specifically asked that badge unlocks ONLY
     // surface on the Gelişim (progress) tab. Holding the celebration
     // until the user lands there mirrors the rest of the badge UI
@@ -300,7 +343,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     // celebratedBadgesProvider` — the diff that drives this method
     // re-runs the moment the user switches to Gelişim (see
     // `_onTabChanged`).
-    if (_index != _gelisimTabIndex) return;
+    if (_index != _gelisimTabIndex) return false;
     final unlocked = ref.read(unlockedBadgesProvider);
     final pending = DashboardLogic.pendingBadgeCelebrations(
       unlocked,
@@ -311,8 +354,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       if (ref.read(celebratedBadgesProvider) == null) {
         ref.read(celebratedBadgesProvider.notifier).setAll(unlocked);
       }
-      return;
+      return false;
     }
+    var celebratedAny = false;
     _celebrating = true;
     try {
       // ─── 1. Badge celebrations ─────────────────────────────────
@@ -325,6 +369,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           continue;
         }
         await showBadgeUnlockedDialog(context, badge);
+        celebratedAny = true;
         if (!mounted) break;
         ref.read(celebratedBadgesProvider.notifier).add(id);
       }
@@ -351,6 +396,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     } finally {
       _celebrating = false;
     }
+    return celebratedAny;
   }
 
   void _onTabChanged(int newIndex) {

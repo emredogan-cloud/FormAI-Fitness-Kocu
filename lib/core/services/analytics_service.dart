@@ -199,27 +199,51 @@ class AnalyticsService {
     return _capture('conversion_moment_dismissed', {'source': source});
   }
 
-  /// Phase 136 · fires when the cinematic 3rd-workout rating scene is
-  /// presented to a Pro user. Paired with [ratingPromptLaunched] and
-  /// [ratingPromptDismissed] so the rate / skip ratio is derivable.
-  Future<void> ratingPromptShown() {
-    return _capture('rating_prompt_shown', const {});
+  /// Phase 136, extended in roadmap Phase 1 · fires when the cinematic
+  /// rating scene is presented. Paired with [ratingSentimentCaptured],
+  /// [ratingPromptLaunched] and [ratingPromptDismissed] so the
+  /// rate / skip ratio is derivable **per trigger** — which is the
+  /// signal needed to tune which moments actually earn reviews.
+  Future<void> ratingPromptShown({required String trigger}) {
+    return _capture('rating_prompt_shown', {'trigger': trigger});
   }
 
-  /// Phase 136 · the user tapped a star, which fires
-  /// `InAppReview.requestReview()`. The OS handles the actual rating
-  /// flow from here — the response is intentionally opaque to us
-  /// (Apple/Google policy), so this is the most-downstream signal
-  /// the app gets.
+  /// Roadmap Phase 1 (C9) · the star value the user selected, and where
+  /// it routed them. This is the app's only view into sentiment — the
+  /// platform review dialog's outcome is opaque by policy — so it is
+  /// the metric that tells us whether the routing split is working.
+  Future<void> ratingSentimentCaptured({
+    required int stars,
+    required String trigger,
+    required bool routedToStore,
+  }) {
+    return _capture('rating_sentiment_captured', {
+      'stars': stars,
+      'trigger': trigger,
+      'routed_to_store': routedToStore,
+    });
+  }
+
+  /// Phase 136 · the platform review dialog was requested. The OS
+  /// handles the actual rating flow from here — the response is
+  /// intentionally opaque to us (Apple/Google policy), so this is the
+  /// most-downstream signal the app gets.
   Future<void> ratingPromptLaunched() {
     return _capture('rating_prompt_launched', const {});
   }
 
   /// Phase 136 · the user dismissed the rating scene with "Daha sonra"
-  /// instead of tapping a star. Captures the rate-on-prompt skip
-  /// pattern so we can later tune trigger timing.
-  Future<void> ratingPromptDismissed() {
-    return _capture('rating_prompt_dismissed', const {});
+  /// instead of picking a star. Captures the skip pattern per trigger
+  /// so we can retire triggers that consistently get declined.
+  Future<void> ratingPromptDismissed({required String trigger}) {
+    return _capture('rating_prompt_dismissed', {'trigger': trigger});
+  }
+
+  /// Roadmap Phase 1 (R2.1) · the user opened the store listing
+  /// themselves. [source] is the entry point (`settings`), so
+  /// self-initiated ratings stay separable from prompted ones.
+  Future<void> rateTapped({required String source}) {
+    return _capture('rate_tapped', {'source': source});
   }
 
   /// Fires from `DailyMenuNotifier.addRecipeToPlan`.
@@ -288,6 +312,52 @@ class AnalyticsService {
       'subject': subject,
       'transport': transport,
     });
+  }
+
+  /// Roadmap Phase 1 (R2.3) · the participation reward was granted.
+  /// Note what this event is NOT: it never carries a rating or review,
+  /// because the reward is attached to submitting feedback, never to
+  /// leaving a review (Play Developer Program Policy).
+  Future<void> feedbackRewardGranted({required int xp}) {
+    return _capture('feedback_reward_granted', {'xp': xp});
+  }
+
+  /// Roadmap Phase 1 (C30) · the help centre was opened. Read against
+  /// [feedbackSubmitted] to measure ticket deflection.
+  Future<void> helpCenterOpened() {
+    return _capture('help_center_opened', const {});
+  }
+
+  // ─── Roadmap Phase 1 (C8) · micro-surveys ─────────────────────────
+
+  /// A survey was presented. [surveyId] is the stable catalogue id.
+  Future<void> surveyShown({required String surveyId}) {
+    return _capture('survey_shown', {'survey_id': surveyId});
+  }
+
+  /// A survey was answered. Exactly one of [score] / [optionToken] is
+  /// set depending on the survey kind; [npsBucket] is pre-computed here
+  /// rather than in the dashboard so the promoter/passive/detractor
+  /// definition can never drift between the app and the analytics view.
+  Future<void> surveyAnswered({
+    required String surveyId,
+    int? score,
+    String? optionToken,
+    String? npsBucket,
+  }) {
+    return _capture('survey_answered', {
+      'survey_id': surveyId,
+      if (score != null) 'score': score,
+      if (optionToken != null) 'option_token': optionToken,
+      if (npsBucket != null) 'nps_bucket': npsBucket,
+    });
+  }
+
+  /// A survey was closed without an answer. Tracked because a high
+  /// dismissal rate is itself a finding — it means we are asking at the
+  /// wrong moment.
+  Future<void> surveyDismissed({required String surveyId}) {
+    return _capture('survey_dismissed', {'survey_id': surveyId});
   }
 
   /// Phase 56 Lite · churn-survey response. Fired before the user is

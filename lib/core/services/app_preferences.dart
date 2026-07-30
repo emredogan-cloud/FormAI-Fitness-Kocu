@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -125,8 +126,52 @@ class AppPreferences {
   // scene. Captures the habit-formation momentum at the moment it
   // becomes self-sustaining (third session done). Pro-only; non-pro
   // users skip the trigger entirely.
+  //
+  // Roadmap Phase 1 (R2.2/C10) SUPERSEDES this key with the multi-
+  // trigger ledger below. It is still read once, at migration time,
+  // so a user who already saw the Pro 3rd-workout scene is not asked
+  // again by the new `thirdWorkout` trigger. Never write it again.
   static const String _seenPro3rdWorkoutRatingKey =
       'sixpack.seen_pro_3rd_workout_rating';
+
+  // ─── Roadmap Phase 1 · rating & feedback loop ─────────────────────
+  //
+  // The rating moment moved from a single Pro-gated one-shot to a set
+  // of contextual triggers (first workout, 3rd workout, 7-day streak,
+  // badge unlock, program complete) available to ALL users. Three
+  // pieces of state make that safe:
+  //
+  //   1. `_firedRatingTriggersKey` — ledger of trigger tokens already
+  //      used, so each trigger fires at most once per install.
+  //   2. `_lastRatingPromptAtKey` — global cooldown timestamp. Play's
+  //      own In-App Review quota is roughly monthly; we self-limit to
+  //      90 days so we never burn a quota slot on a user who just
+  //      declined.
+  //   3. `_ratingPromptCountKey` — lifetime cap. After
+  //      [kMaxLifetimeRatingPrompts] asks we stop permanently; a user
+  //      who has ignored three prompts has answered the question.
+  static const String _firedRatingTriggersKey = 'sixpack.rating_fired_triggers';
+  static const String _lastRatingPromptAtKey = 'sixpack.rating_last_prompt_at';
+  static const String _ratingPromptCountKey = 'sixpack.rating_prompt_count';
+
+  // Roadmap Phase 1 (R2.3) · feedback-participation reward ledger.
+  // Rewards attach to *submitting feedback*, never to leaving a rating
+  // or a review — Play's Developer Program Policy prohibits
+  // incentivising reviews, and tying the reward to submission keeps
+  // the full engagement benefit without the listing risk.
+  //
+  // `_feedbackCountKey` also backs the `voice_heard` badge predicate,
+  // mirroring how `nutritionStreak` backs `nutrition_hero`.
+  static const String _feedbackCountKey = 'sixpack.feedback_submitted_count';
+  static const String _lastFeedbackRewardAtKey =
+      'sixpack.feedback_last_reward_at';
+
+  // Roadmap Phase 1 (C8) · micro-survey scheduling. `_answeredSurveys`
+  // is the per-survey ledger (a survey is asked at most once); the
+  // timestamp enforces a global spacing so two surveys can never
+  // stack in the same week.
+  static const String _answeredSurveysKey = 'sixpack.surveys_answered';
+  static const String _lastSurveyShownAtKey = 'sixpack.survey_last_shown_at';
 
   // Phase 138 · H-2 KVKK / GDPR consent. Three keys: `decided` flag
   // tracks whether the user has interacted with the consent dialog;
@@ -157,7 +202,36 @@ class AppPreferences {
   static const String _ageVerifiedKey = 'sixpack.age_verified';
   static const String _birthYearKey = 'sixpack.birth_year';
 
+  // Roadmap Phase 1 · install timestamp, stamped lazily the first time
+  // anything asks for it. Backs time-based eligibility (the day-14 NPS
+  // survey) without needing a boot-sequence hook. Existing users are
+  // stamped at upgrade time, which is the honest answer for them —
+  // "days we have observed you", not a fabricated install date.
+  static const String _installedAtKey = 'sixpack.installed_at';
+
   bool get isFirstTime => _prefs.getBool(_firstTimeKey) ?? true;
+
+  /// First moment this install was observed. Self-seeding: the first
+  /// read stamps `now` and returns it, so callers never see null and
+  /// no boot-sequence wiring is required.
+  ///
+  /// The write is fire-and-forget — a stamp that loses a race with a
+  /// process kill simply re-seeds one launch later, which shifts a
+  /// survey by a day and breaks nothing.
+  DateTime get installedAt {
+    final raw = _prefs.getString(_installedAtKey);
+    final parsed = raw == null ? null : DateTime.tryParse(raw);
+    if (parsed != null) return parsed;
+    final now = DateTime.now();
+    unawaited(_prefs.setString(_installedAtKey, now.toIso8601String()));
+    return now;
+  }
+
+  /// Whole days since [installedAt]. Never negative.
+  int get daysSinceInstall {
+    final delta = DateTime.now().difference(installedAt).inDays;
+    return delta < 0 ? 0 : delta;
+  }
 
   /// Phase 138 · B-4. Returns `true` once the user has confirmed they
   /// are 18+ via the age-gate screen. The router routes first-time
@@ -548,14 +622,101 @@ class AppPreferences {
     await _prefs.setBool(_seenFirstWorkoutProInvitationKey, true);
   }
 
-  /// Phase 136 · Pro-only 3rd-workout cinematic rating moment. Fires
-  /// once per install when a Pro user returns to the dashboard after
-  /// their third completed workout. See [RatingMomentService].
+  /// Phase 136 · legacy Pro-only 3rd-workout rating flag.
+  ///
+  /// SUPERSEDED by the multi-trigger ledger ([firedRatingTriggers]).
+  /// Retained read-only so [RatingMomentService] can migrate an
+  /// existing user's history forward — someone who already saw the Pro
+  /// scene must not be asked again by the new `thirdWorkout` trigger.
   bool get seenPro3rdWorkoutRating =>
       _prefs.getBool(_seenPro3rdWorkoutRatingKey) ?? false;
 
-  Future<void> markSeenPro3rdWorkoutRating() async {
-    await _prefs.setBool(_seenPro3rdWorkoutRatingKey, true);
+  // ─── Roadmap Phase 1 · rating triggers ────────────────────────────
+
+  /// Hard ceiling on how many times we will ever ask a single install
+  /// to rate. Three asks across a user's lifetime is generous; beyond
+  /// that, silence is the respectful answer.
+  static const int kMaxLifetimeRatingPrompts = 3;
+
+  /// Minimum gap between two rating prompts, regardless of which
+  /// trigger fires. Deliberately longer than Play's own In-App Review
+  /// quota window so we never waste a quota slot.
+  static const Duration kRatingPromptCooldown = Duration(days: 90);
+
+  /// Trigger tokens ([RatingTrigger.token]) that have already fired.
+  Set<String> get firedRatingTriggers =>
+      (_prefs.getStringList(_firedRatingTriggersKey) ?? const <String>[])
+          .toSet();
+
+  Future<void> markRatingTriggerFired(String token) async {
+    final current = firedRatingTriggers..add(token);
+    await _prefs.setStringList(_firedRatingTriggersKey, current.toList());
+  }
+
+  /// When we last showed ANY rating prompt. `null` on a fresh install.
+  DateTime? get lastRatingPromptAt {
+    final raw = _prefs.getString(_lastRatingPromptAtKey);
+    if (raw == null) return null;
+    return DateTime.tryParse(raw);
+  }
+
+  int get ratingPromptCount => _prefs.getInt(_ratingPromptCountKey) ?? 0;
+
+  /// Stamps a prompt as shown: bumps the lifetime counter and resets
+  /// the cooldown clock. Called by [RatingMomentService] *before* the
+  /// scene is presented, matching the mark-seen-first idempotency
+  /// contract used by [FirstTimeAiScenes].
+  Future<void> recordRatingPromptShown(DateTime at) async {
+    await _prefs.setString(_lastRatingPromptAtKey, at.toIso8601String());
+    await _prefs.setInt(_ratingPromptCountKey, ratingPromptCount + 1);
+  }
+
+  // ─── Roadmap Phase 1 · feedback participation ─────────────────────
+
+  /// Minimum gap between two feedback rewards. Stops reward farming
+  /// via repeated low-effort submissions without ever blocking the
+  /// user from *sending* feedback (only the reward is rate-limited).
+  static const Duration kFeedbackRewardCooldown = Duration(days: 7);
+
+  /// Lifetime count of feedback messages this install has submitted.
+  /// Also the signal behind the `voice_heard` badge.
+  int get feedbackSubmittedCount => _prefs.getInt(_feedbackCountKey) ?? 0;
+
+  Future<void> incrementFeedbackSubmittedCount() async {
+    await _prefs.setInt(_feedbackCountKey, feedbackSubmittedCount + 1);
+  }
+
+  DateTime? get lastFeedbackRewardAt {
+    final raw = _prefs.getString(_lastFeedbackRewardAtKey);
+    if (raw == null) return null;
+    return DateTime.tryParse(raw);
+  }
+
+  Future<void> recordFeedbackRewardGranted(DateTime at) async {
+    await _prefs.setString(_lastFeedbackRewardAtKey, at.toIso8601String());
+  }
+
+  // ─── Roadmap Phase 1 · micro-surveys ──────────────────────────────
+
+  /// Minimum gap between two surveys of any kind.
+  static const Duration kSurveyCooldown = Duration(days: 30);
+
+  Set<String> get answeredSurveyIds =>
+      (_prefs.getStringList(_answeredSurveysKey) ?? const <String>[]).toSet();
+
+  Future<void> markSurveyAnswered(String surveyId) async {
+    final current = answeredSurveyIds..add(surveyId);
+    await _prefs.setStringList(_answeredSurveysKey, current.toList());
+  }
+
+  DateTime? get lastSurveyShownAt {
+    final raw = _prefs.getString(_lastSurveyShownAtKey);
+    if (raw == null) return null;
+    return DateTime.tryParse(raw);
+  }
+
+  Future<void> recordSurveyShown(DateTime at) async {
+    await _prefs.setString(_lastSurveyShownAtKey, at.toIso8601String());
   }
 
   // ─── Progress Phase 5.D · Year-in-Review one-shot flag ────────────

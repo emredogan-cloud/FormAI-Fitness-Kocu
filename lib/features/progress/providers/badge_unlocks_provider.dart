@@ -56,6 +56,15 @@ const List<BadgeDefinition> kBadgeCatalog = [
     subtitle: '14 gün — yarıya geldin!',
     emoji: '⛰️',
   ),
+  // Roadmap Phase 1 (R2.3) · awarded for participating in feedback.
+  // Attached to submitting feedback, never to leaving a rating or a
+  // review — see [FeedbackRewardService] for the policy rationale.
+  BadgeDefinition(
+    id: 'voice_heard',
+    label: 'Sesini Duyduk',
+    subtitle: 'Geri bildirim gönderdin — FormAI\'ı şekillendirdin!',
+    emoji: '💬',
+  ),
   BadgeDefinition(
     id: 'calorie_hunter',
     label: 'Kalori Avcısı',
@@ -175,10 +184,16 @@ final unlockedBadgesProvider = Provider<Set<String>>((ref) {
   final cardioDaysCompleted = _cardioDaysCompleted(days);
   final coreDaysCompleted = _daysCompletedByMuscle(days, 'core');
   final strengthDaysCompleted = _daysCompletedByStrength(days);
-  final nutritionStreak = ref.watch(appPreferencesProvider).nutritionStreak;
+  final prefs = ref.watch(appPreferencesProvider);
+  final nutritionStreak = prefs.nutritionStreak;
+  // Roadmap Phase 1 · prefs-backed signal, same shape as
+  // `nutritionStreak` above. One submitted message is enough — the
+  // badge recognises participation, not volume.
+  final feedbackCount = prefs.feedbackSubmittedCount;
 
   final unlocked = <String>{};
   if (completedCount >= 1) unlocked.add('first_step');
+  if (feedbackCount >= 1) unlocked.add('voice_heard');
   if (streak >= 3) unlocked.add('disciplined');
   if (completedCount >= 7) unlocked.add('first_week');
   if (streak >= 7) unlocked.add('steady');

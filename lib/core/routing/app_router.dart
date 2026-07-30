@@ -7,6 +7,7 @@ import '../../features/admin/presentation/admin_dashboard_screen.dart';
 import '../../features/auth/presentation/auth_screen.dart';
 import '../../features/coach/presentation/coach_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
+import '../../features/feedback/presentation/help_center_screen.dart';
 import '../../features/home/presentation/account_settings_screen.dart';
 import '../../features/home/presentation/dashboard_screen.dart';
 import '../../features/monetization/presentation/paywall_screen.dart';
@@ -84,6 +85,12 @@ class AppRoutes {
   /// Phase 56 Lite · "Favorilerim" — saved recipes hub with
   /// shopping-list export. Reached from a Profile-tab tile.
   static const String nutritionFavorites = '/nutrition/favorites';
+
+  /// Roadmap Phase 1 (C30) · searchable FAQ / help centre. Reached from
+  /// the AYARLAR section of the Profile tab, directly above the
+  /// feedback row so it deflects tickets rather than competing with
+  /// them.
+  static const String helpCenter = '/help';
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -340,6 +347,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.nutritionFavorites,
         name: 'nutritionFavorites',
         builder: (context, state) => const FavoritesScreen(),
+      ),
+      // Roadmap Phase 1 (C30) · help centre / FAQ.
+      GoRoute(
+        path: AppRoutes.helpCenter,
+        name: 'helpCenter',
+        builder: (context, state) => const HelpCenterScreen(),
       ),
       // Phase 50B · admin panel. The redirect above already forces
       // non-admins to /, so the builder can render unconditionally.

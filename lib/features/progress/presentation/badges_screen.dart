@@ -50,7 +50,11 @@ class BadgesScreen extends ConsumerWidget {
     final cardioDaysCompleted = _cardioDaysCompleted(days);
     final coreDaysCompleted = _daysCompletedByMuscle(days, 'core');
     final strengthDaysCompleted = _daysCompletedByStrength(days);
-    final nutritionStreak = ref.watch(appPreferencesProvider).nutritionStreak;
+    final prefs = ref.watch(appPreferencesProvider);
+    final nutritionStreak = prefs.nutritionStreak;
+    // Roadmap Phase 1 · same prefs-backed signal `unlockedBadgesProvider`
+    // uses for the `voice_heard` badge.
+    final feedbackCount = prefs.feedbackSubmittedCount;
 
     final badges = <_BadgeData>[
       _BadgeData(
@@ -149,6 +153,20 @@ class BadgesScreen extends ConsumerWidget {
         unlocked: completedCount >= 30 && nutritionStreak >= 30,
         progress: (((completedCount / 30) + (nutritionStreak / 30)) / 2)
             .clamp(0.0, 1.0),
+      ),
+      // Roadmap Phase 1 (R2.3) · mirrors the `voice_heard` entry in
+      // [kBadgeCatalog]. This gallery keeps its own list (it carries
+      // per-badge progress + accent, which the catalogue doesn't), so a
+      // new catalogue badge must be added here too or it unlocks
+      // invisibly — the celebration fires but the user can never find
+      // the badge afterwards.
+      _BadgeData(
+        label: 'Sesini Duyduk',
+        subtitle: 'Geri bildirim gönder',
+        icon: Icons.forum_rounded,
+        accent: _neonAccent,
+        unlocked: feedbackCount >= 1,
+        progress: (feedbackCount / 1).clamp(0.0, 1.0),
       ),
     ];
 
