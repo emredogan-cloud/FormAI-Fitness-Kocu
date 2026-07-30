@@ -424,6 +424,46 @@ class AnalyticsService {
     return _capture('tip_actioned', {'tip_id': tipId});
   }
 
+  // ─── Roadmap Phase 3 (R1.2 · C26 · C21) · camera tutorial ─────────
+
+  /// The guided camera setup was opened.
+  Future<void> tutorialStarted() {
+    return _capture('tutorial_started', const {});
+  }
+
+  /// Live calibration confirmed a stable full-body read — the "Seni
+  /// görüyorum" moment. [confidence] is the mean landmark likelihood at
+  /// the moment of confirmation, so a low-but-passing distribution shows
+  /// up as a signal to tighten the thresholds rather than as silence.
+  Future<void> tutorialCalibrationSucceeded({required double confidence}) {
+    return _capture('tutorial_calibration_succeeded', {
+      'confidence': double.parse(confidence.toStringAsFixed(3)),
+    });
+  }
+
+  /// Camera access was refused. [permanent] separates a one-off "deny"
+  /// from "don't ask again", which need different recovery copy.
+  Future<void> tutorialCameraDeclined({required bool permanent}) {
+    return _capture('tutorial_camera_declined', {'permanent': permanent});
+  }
+
+  /// The tutorial reached a terminal choice. [mode] is `camera` or
+  /// `manual` — the split that says how many users the camera
+  /// requirement would otherwise have excluded.
+  Future<void> tutorialCompleted({required String mode}) {
+    return _capture('tutorial_completed', {'mode': mode});
+  }
+
+  /// A camera-free workout session began.
+  Future<void> manualModeSessionStarted() {
+    return _capture('manual_mode_session_started', const {});
+  }
+
+  /// The user switched modes mid-journey.
+  Future<void> workoutModeSwitched({required String to}) {
+    return _capture('workout_mode_switched', {'to': to});
+  }
+
   /// Phase 56 Lite · churn-survey response. Fired before the user is
   /// handed off to the App Store / Play Store cancellation flow so we
   /// always capture intent even if the user backs out at the last

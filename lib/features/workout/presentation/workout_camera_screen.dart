@@ -3,7 +3,6 @@ import 'dart:io' show Platform;
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
@@ -22,6 +21,7 @@ import '../services/analyzer_factory.dart';
 import '../services/coach_voice.dart';
 import '../services/crunch_analyzer.dart';
 import '../services/pose_analyzer.dart';
+import '../services/camera_frame_converter.dart';
 import '../services/pose_detector_service.dart';
 import 'pose_painter.dart';
 import 'widgets/exercise_guide_player.dart';
@@ -45,13 +45,6 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
   PoseAnalyzer _analyzer = CrunchAnalyzer();
   final AudioFeedback _audio = AudioFeedback();
   late final CoachVoice _coach = CoachVoice(_audio);
-
-  static const Map<DeviceOrientation, int> _orientations = {
-    DeviceOrientation.portraitUp: 0,
-    DeviceOrientation.landscapeLeft: 90,
-    DeviceOrientation.portraitDown: 180,
-    DeviceOrientation.landscapeRight: 270,
-  };
 
   static const Color _neon = Color(0xFF00F0FF);
 
@@ -564,40 +557,16 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     }
   }
 
+  /// Roadmap Phase 3 · delegates to the shared [CameraFrameConverter],
+  /// which the camera tutorial screen also uses. Behaviour unchanged.
   InputImage? _toInputImage(CameraImage image) {
     final camera = _camera;
     final controller = _controller;
     if (camera == null || controller == null) return null;
-
-    final sensorOrientation = camera.sensorOrientation;
-    InputImageRotation? rotation;
-    if (Platform.isIOS) {
-      rotation = InputImageRotationValue.fromRawValue(sensorOrientation);
-    } else if (Platform.isAndroid) {
-      final deviceRotation = _orientations[controller.value.deviceOrientation];
-      if (deviceRotation == null) return null;
-      final compensated = camera.lensDirection == CameraLensDirection.front
-          ? (sensorOrientation + deviceRotation) % 360
-          : (sensorOrientation - deviceRotation + 360) % 360;
-      rotation = InputImageRotationValue.fromRawValue(compensated);
-    }
-    if (rotation == null) return null;
-
-    final format = InputImageFormatValue.fromRawValue(image.format.raw);
-    if (format == null) return null;
-    if (Platform.isAndroid && format != InputImageFormat.nv21) return null;
-    if (Platform.isIOS && format != InputImageFormat.bgra8888) return null;
-    if (image.planes.isEmpty) return null;
-
-    final plane = image.planes.first;
-    return InputImage.fromBytes(
-      bytes: plane.bytes,
-      metadata: InputImageMetadata(
-        size: Size(image.width.toDouble(), image.height.toDouble()),
-        rotation: rotation,
-        format: format,
-        bytesPerRow: plane.bytesPerRow,
-      ),
+    return CameraFrameConverter.toInputImage(
+      image,
+      camera: camera,
+      controller: controller,
     );
   }
 
@@ -607,16 +576,10 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     if (camera == null || controller == null) {
       return InputImageRotation.rotation0deg;
     }
-    if (Platform.isIOS) {
-      return InputImageRotationValue.fromRawValue(camera.sensorOrientation) ??
-          InputImageRotation.rotation0deg;
-    }
-    final deviceRotation =
-        _orientations[controller.value.deviceOrientation] ?? 0;
-    final compensated = camera.lensDirection == CameraLensDirection.front
-        ? (camera.sensorOrientation + deviceRotation) % 360
-        : (camera.sensorOrientation - deviceRotation + 360) % 360;
-    return InputImageRotationValue.fromRawValue(compensated) ??
+    return CameraFrameConverter.rotationFor(
+          camera: camera,
+          controller: controller,
+        ) ??
         InputImageRotation.rotation0deg;
   }
 

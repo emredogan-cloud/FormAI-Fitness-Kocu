@@ -26,7 +26,10 @@ import '../../features/progress/presentation/calendar_screen.dart';
 import '../../features/progress/presentation/suggestions_screen.dart';
 import '../../features/progress/providers/badge_unlocks_provider.dart';
 import '../../features/referral/presentation/referral_landing_screen.dart';
+import '../../features/workout/domain/workout_mode.dart';
 import '../../features/workout/models/workout_plan_model.dart';
+import '../../features/workout/presentation/camera_tutorial_screen.dart';
+import '../../features/workout/presentation/manual_workout_screen.dart';
 import '../../features/workout/presentation/plan_detail_screen.dart';
 import '../../features/workout/presentation/workout_camera_screen.dart';
 import '../services/app_preferences.dart';
@@ -97,6 +100,13 @@ class AppRoutes {
   /// Not navigated to directly by any widget — the router's redirect
   /// interposes it between the paywall decision and the dashboard.
   static const String featureShowcase = '/showcase';
+
+  /// Roadmap Phase 3 (R1.2 · C26) · guided camera setup + calibration.
+  /// Interposed before the FIRST `/workout`; skipped forever after.
+  static const String cameraTutorial = '/workout/tutorial';
+
+  /// Roadmap Phase 3 (C21) · the camera-free workout surface.
+  static const String manualWorkout = '/workout/manual';
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -170,6 +180,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isAdmin = role is String && role == 'admin';
       return isAdmin ? null : AppRoutes.dashboard;
     }
+    // Roadmap Phase 3 (R1.2 · C21) · route the workout entry point.
+    //
+    // Two interceptions, both here rather than at the ~6 widgets that
+    // push `/workout`:
+    //   1. First ever workout → the guided camera setup, so nobody meets
+    //      pose detection by failing at it.
+    //   2. A user who chose the camera-free path → the manual surface.
+    // Both are skipped once the tutorial is done and the mode is camera.
+    if (path == AppRoutes.workout) {
+      if (!prefs.cameraTutorialCompleted) return AppRoutes.cameraTutorial;
+      if (prefs.preferredWorkoutMode == WorkoutMode.manual) {
+        return AppRoutes.manualWorkout;
+      }
+      return null;
+    }
+
     // Roadmap Phase 2 (R1.1) · one-shot capability showcase between the
     // paywall decision and the dashboard.
     //
@@ -385,6 +411,23 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.featureShowcase,
         name: 'featureShowcase',
         builder: (context, state) => const FeatureShowcaseScreen(),
+      ),
+      // Roadmap Phase 3 (R1.2) · guided camera setup.
+      //
+      // Declared as a sibling of `/workout`, not a child. GoRouter
+      // matches full paths for non-nested routes, so `/workout` does not
+      // shadow `/workout/tutorial` regardless of declaration order — the
+      // same way the existing `/workout/today` alias already coexists.
+      GoRoute(
+        path: AppRoutes.cameraTutorial,
+        name: 'cameraTutorial',
+        builder: (context, state) => const CameraTutorialScreen(),
+      ),
+      // Roadmap Phase 3 (C21) · camera-free workout.
+      GoRoute(
+        path: AppRoutes.manualWorkout,
+        name: 'manualWorkout',
+        builder: (context, state) => const ManualWorkoutScreen(),
       ),
       // Phase 50B · admin panel. The redirect above already forces
       // non-admins to /, so the builder can render unconditionally.

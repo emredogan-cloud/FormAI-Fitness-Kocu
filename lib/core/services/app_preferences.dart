@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../features/workout/domain/workout_mode.dart';
+
 /// Overridden in main() with the initialized SharedPreferences instance so
 /// the router can read flags synchronously at startup.
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
@@ -194,6 +196,28 @@ class AppPreferences {
   // shown again — treating a dismissal as "not now" and re-showing is
   // how tip systems become nagging.
   static const String _dismissedTipsKey = 'sixpack.dismissed_tips';
+
+  // ─── Roadmap Phase 3 · first-workout tutorial & workout mode ──────
+  //
+  // `_cameraTutorialCompletedKey` gates the one-time guided camera
+  // setup. It is set when the user reaches a terminal choice — either
+  // calibrating successfully or explicitly choosing the camera-free
+  // path — and NOT when they merely back out mid-setup, so an
+  // interrupted user gets the guidance again rather than being dropped
+  // into a camera they never learned to position.
+  static const String _cameraTutorialCompletedKey =
+      'sixpack.camera_tutorial_completed';
+
+  // The user's persisted workout mode (camera / manual). A durable
+  // preference rather than a per-session question: asking every time is
+  // its own friction, and it is switchable from the workout screen.
+  static const String _workoutModeKey = 'sixpack.workout_mode';
+
+  // One-shot gate for the in-session coach-mark layer that explains the
+  // rep counter, form indicator and pause control during the first real
+  // workout.
+  static const String _seenInSessionTutorialKey =
+      'sixpack.seen_in_session_tutorial';
 
   // Phase 138 · H-2 KVKK / GDPR consent. Three keys: `decided` flag
   // tracks whether the user has interacted with the consent dialog;
@@ -784,6 +808,34 @@ class AppPreferences {
   Future<void> markTipDismissed(String tipId) async {
     final current = dismissedTipIds..add(tipId);
     await _prefs.setStringList(_dismissedTipsKey, current.toList());
+  }
+
+  // ─── Roadmap Phase 3 · tutorial & workout mode ────────────────────
+
+  /// Whether the guided camera setup has reached a terminal choice.
+  /// Backing out mid-setup deliberately does NOT set this.
+  bool get cameraTutorialCompleted =>
+      _prefs.getBool(_cameraTutorialCompletedKey) ?? false;
+
+  Future<void> markCameraTutorialCompleted() async {
+    await _prefs.setBool(_cameraTutorialCompletedKey, true);
+  }
+
+  /// The user's chosen workout mode. Defaults to camera — the product's
+  /// differentiator, and a user with no stored preference hasn't opted
+  /// out of anything.
+  WorkoutMode get preferredWorkoutMode =>
+      WorkoutMode.fromToken(_prefs.getString(_workoutModeKey));
+
+  Future<void> setPreferredWorkoutMode(WorkoutMode mode) async {
+    await _prefs.setString(_workoutModeKey, mode.token);
+  }
+
+  bool get seenInSessionTutorial =>
+      _prefs.getBool(_seenInSessionTutorialKey) ?? false;
+
+  Future<void> markSeenInSessionTutorial() async {
+    await _prefs.setBool(_seenInSessionTutorialKey, true);
   }
 
   /// Whether the user has ever actually *said something* to the AI coach.
