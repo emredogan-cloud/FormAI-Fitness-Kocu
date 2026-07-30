@@ -212,14 +212,20 @@ class _FaqTile extends StatelessWidget {
     final scheme = context.colors;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: scheme.onSurface.withValues(alpha: 0.04),
+      // Material, not DecoratedBox. ExpansionTile paints its background
+      // and ink splashes on the nearest Material ancestor, so a
+      // DecoratedBox wrapper would swallow the tap feedback — Flutter
+      // asserts on exactly this. Same treatment as _ChoiceList and
+      // _StillStuckCard.
+      child: Material(
+        color: scheme.onSurface.withValues(alpha: 0.04),
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(
+          side: BorderSide(
             color: scheme.onSurface.withValues(alpha: 0.08),
           ),
         ),
+        clipBehavior: Clip.antiAlias,
         child: Theme(
           // Strip the default divider so the card reads as one surface.
           data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
