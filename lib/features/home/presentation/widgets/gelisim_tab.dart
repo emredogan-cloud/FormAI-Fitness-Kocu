@@ -1938,8 +1938,12 @@ class _HexBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 100, not 82. The longest badge label — "30 Gün Şampiyonu" — needs
+    // 100 px to wrap onto two lines; at 82 it needed three, which is why
+    // it rendered clipped mid-word on a device. The hex itself stays 72
+    // and simply sits centred in the wider column.
     return SizedBox(
-      width: 82,
+      width: 100,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
@@ -1964,23 +1968,25 @@ class _HexBadge extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              data.label,
-              maxLines: 1,
-              textAlign: TextAlign.center,
-              // Phase 53C · badge labels under the hex were hardcoded
-              // white / white38, leaving them invisible on a light
-              // scaffold. Pull onSurface so unlocked = primary, locked
-              // = dimmed primary.
-              style: TextStyle(
-                color: data.unlocked
-                    ? context.colors.onSurface
-                    : context.colors.onSurface.withValues(alpha: 0.45),
-                fontSize: 10.5,
-                fontWeight: FontWeight.w800,
-              ),
+          // Wraps rather than scales. `FittedBox` lays its child out
+          // unbounded, so the text never wrapped and never shrank —
+          // "30 Gün Şampiyonu" simply rendered as "30 Gün Şampiy",
+          // clipped mid-word under the hex. Found on a device.
+          Text(
+            data.label,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            // Phase 53C · badge labels under the hex were hardcoded
+            // white / white38, leaving them invisible on a light
+            // scaffold. Pull onSurface so unlocked = primary, locked
+            // = dimmed primary.
+            style: TextStyle(
+              color: data.unlocked
+                  ? context.colors.onSurface
+                  : context.colors.onSurface.withValues(alpha: 0.45),
+              fontSize: 10.5,
+              fontWeight: FontWeight.w800,
             ),
           ),
           if (!data.unlocked && data.progress > 0)
