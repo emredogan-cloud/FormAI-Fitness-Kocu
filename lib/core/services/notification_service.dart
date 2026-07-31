@@ -1,12 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-
-import '../../l10n/app_localizations.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
+import '../../l10n/app_localizations.dart';
 import '../utils/app_logger.dart';
 
 /// Phase 58 · the three states the smart-reminder scheduler picks
@@ -65,6 +64,7 @@ class NotificationService {
   /// from any BuildContext.
   static Future<AppLocalizations> _copy() =>
       AppLocalizations.delegate.load(copyLocale);
+
   // Phase 58 · smart-reminder variant pools, keyed by the
   // [SmartReminderCondition] the user is in at scheduling time.
   //
@@ -81,37 +81,43 @@ class NotificationService {
   // the rest of each pool offers tonal variation so the user doesn't
   // see the same string every day.
   static List<({String title, String body})> _noWorkoutVariants(
-          AppLocalizations l) =>
+          AppLocalizations l10n) =>
       [
-        (title: l.notifTrainTimeTitle, body: l.notifTrainTimeBody),
+        (title: l10n.notifTrainTimeTitle, body: l10n.notifTrainTimeBody),
         (
-          title: l.notifTodaysWorkoutWaitsTitle,
-          body: l.notifTodaysWorkoutWaitsBody
+          title: l10n.notifTodaysWorkoutWaitsTitle,
+          body: l10n.notifTodaysWorkoutWaitsBody
         ),
-        (title: l.notifYouHaveAGoalTitle, body: l.notifYouHaveAGoalBody),
+        (title: l10n.notifYouHaveAGoalTitle, body: l10n.notifYouHaveAGoalBody),
       ];
   static List<({String title, String body})> _workoutNoFoodVariants(
-          AppLocalizations l) =>
+          AppLocalizations l10n) =>
       [
-        (title: l.notifFuelNeededTitle, body: l.notifFuelNeededBody),
-        (title: l.notifRecoveryTimeTitle, body: l.notifRecoveryTimeBody),
+        (title: l10n.notifFuelNeededTitle, body: l10n.notifFuelNeededBody),
+        (title: l10n.notifRecoveryTimeTitle, body: l10n.notifRecoveryTimeBody),
       ];
   static List<({String title, String body})> _bothDoneVariants(
-          AppLocalizations l) =>
+          AppLocalizations l10n) =>
       [
-        (title: l.notifConqueredTheDayTitle, body: l.notifConqueredTheDayBody),
-        (title: l.notifPerfectDayTitle, body: l.notifPerfectDayBody),
-        (title: l.notifKeepGoingTitle, body: l.notifKeepGoingBody),
+        (
+          title: l10n.notifConqueredTheDayTitle,
+          body: l10n.notifConqueredTheDayBody
+        ),
+        (title: l10n.notifPerfectDayTitle, body: l10n.notifPerfectDayBody),
+        (title: l10n.notifKeepGoingTitle, body: l10n.notifKeepGoingBody),
       ];
 
   // Streak warning fires after 48 h of inactivity; intentionally
   // separate from the smart-reminder pools because by definition
   // the user *hasn't* worked out, so it always uses urgency framing.
   static List<({String title, String body})> _streakVariants(
-          AppLocalizations l) =>
+          AppLocalizations l10n) =>
       [
-        (title: l.notifStreakAtRiskTitle, body: l.notifStreakAtRiskBody),
-        (title: l.notifTimeToComeBackTitle, body: l.notifTimeToComeBackBody),
+        (title: l10n.notifStreakAtRiskTitle, body: l10n.notifStreakAtRiskBody),
+        (
+          title: l10n.notifTimeToComeBackTitle,
+          body: l10n.notifTimeToComeBackBody
+        ),
       ];
 
   Future<void> init() async {

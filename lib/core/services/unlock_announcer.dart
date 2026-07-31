@@ -12,6 +12,8 @@ import 'app_preferences.dart';
 import 'disclosure_providers.dart';
 import 'feature_flags.dart';
 import 'progressive_disclosure.dart';
+import '../../features/home/presentation/unlock_hint_copy.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Roadmap Phase 4 (R1.3) · the unlock moment.
 ///
@@ -114,16 +116,22 @@ class UnlockAnnouncer {
   /// one, the streak — a celebration that could have been written for
   /// anyone doesn't feel like a coach.
   static String announcementBody(
-    Capability capability, {
+    Capability capability,
+    AppLocalizations l10n, {
     String? firstName,
     int streakDays = 0,
   }) {
     final name = (firstName ?? '').trim();
-    final opener = name.isEmpty ? 'Bugün' : '$name, bugün';
+    final title = capability.title(l10n);
+    // Whole sentences rather than assembled fragments: Turkish puts the
+    // name in front of a comma, English can put it anywhere, and a
+    // translator handed "opener + rest" can fix neither.
+    final lead = name.isEmpty
+        ? l10n.unlockAnnouncementLeadAnon(title)
+        : l10n.unlockAnnouncementLeadNamed(name, title);
     final streakLine =
-        streakDays >= 2 ? ' $streakDays günlük serin bunu hak etti.' : '';
-    return '$opener yeni bir şey açıldı: ${capability.title}.$streakLine\n'
-        '${capability.blurb}';
+        streakDays >= 2 ? ' ${l10n.unlockAnnouncementStreak(streakDays)}' : '';
+    return '$lead$streakLine\n${capability.blurb(l10n)}';
   }
 
   static Future<void> _present(
@@ -143,14 +151,16 @@ class UnlockAnnouncer {
       reverseTransitionDuration: const Duration(milliseconds: 320),
       pageBuilder: (_, __, ___) => Builder(
         builder: (innerContext) => CinematicAiPresence(
-          title: 'Yeni bir şey açıldı.',
+          title: AppLocalizations.of(innerContext).unlockAnnouncementTitle,
           subtitle: announcementBody(
             capability,
+            AppLocalizations.of(innerContext),
             firstName: firstName,
             streakDays: streakDays,
           ),
           subtitleTypewriter: false,
-          composingPlaceholder: capability.title,
+          composingPlaceholder:
+              capability.title(AppLocalizations.of(innerContext)),
           mood: CoachMood.proud,
           autoCloseAfter: _dwell,
           onComplete: () {

@@ -1667,5 +1667,150 @@
   "notifChannelStreakDesc": "A heads-up when you are about to lose your training streak.",
   "@notifChannelStreakDesc": {
     "description": "Android channel description for the streak warning"
+  },
+  "capabilityNutritionTitle": "Nutrition",
+  "@capabilityNutritionTitle": {
+    "description": "Discovery hub name for the nutrition capability"
+  },
+  "capabilityNutritionBlurb": "Your calorie and macro targets, the recipe library and a daily plan.",
+  "@capabilityNutritionBlurb": {
+    "description": "Discovery hub one-line description for the nutrition capability"
+  },
+  "capabilityProgressTitle": "Progress",
+  "@capabilityProgressTitle": {
+    "description": "Discovery hub name for the progress capability"
+  },
+  "capabilityProgressBlurb": "Your weekly charts, volume and duration stats.",
+  "@capabilityProgressBlurb": {
+    "description": "Discovery hub one-line description for the progress capability"
+  },
+  "capabilityBadgesTitle": "Badges and XP",
+  "@capabilityBadgesTitle": {
+    "description": "Discovery hub name for the badges capability"
+  },
+  "capabilityBadgesBlurb": "The badges you earned, your level and XP history.",
+  "@capabilityBadgesBlurb": {
+    "description": "Discovery hub one-line description for the badges capability"
+  },
+  "capabilityCalendarTitle": "Calendar and history",
+  "@capabilityCalendarTitle": {
+    "description": "Discovery hub name for the calendar capability"
+  },
+  "capabilityCalendarBlurb": "See what you did, day by day.",
+  "@capabilityCalendarBlurb": {
+    "description": "Discovery hub one-line description for the calendar capability"
+  },
+  "capabilityReferralTitle": "Invite a friend",
+  "@capabilityReferralTitle": {
+    "description": "Discovery hub name for the referral capability"
+  },
+  "capabilityReferralBlurb": "Bring your friends in with your invite code.",
+  "@capabilityReferralBlurb": {
+    "description": "Discovery hub one-line description for the referral capability"
+  },
+  "capabilityAdvancedSettingsTitle": "Advanced settings",
+  "@capabilityAdvancedSettingsTitle": {
+    "description": "Discovery hub name for the advancedSettings capability"
+  },
+  "capabilityAdvancedSettingsBlurb": "Reminders, the voice coach and every data preference.",
+  "@capabilityAdvancedSettingsBlurb": {
+    "description": "Discovery hub one-line description for the advancedSettings capability"
+  },
+  "pillarTraining": "Training",
+  "@pillarTraining": {
+    "description": "Discovery hub section heading grouping capabilities under the training pillar"
+  },
+  "pillarNutrition": "Nutrition",
+  "@pillarNutrition": {
+    "description": "Discovery hub section heading grouping capabilities under the nutrition pillar"
+  },
+  "pillarProgress": "Progress",
+  "@pillarProgress": {
+    "description": "Discovery hub section heading grouping capabilities under the progress pillar"
+  },
+  "pillarCoach": "Coach",
+  "@pillarCoach": {
+    "description": "Discovery hub section heading grouping capabilities under the coach pillar"
+  },
+  "pillarCommunity": "Community",
+  "@pillarCommunity": {
+    "description": "Discovery hub section heading grouping capabilities under the community pillar"
+  },
+  "unlockAfterSessions": "{count, plural, =1{Opens after 1 workout} other{Opens after {count} workouts}}",
+  "@unlockAfterSessions": {
+    "description": "Lock hint when the training path is the shorter road to unlocking a capability.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unlockAfterDays": "{count, plural, =1{Opens tomorrow} other{Opens in {count} days}}",
+  "@unlockAfterDays": {
+    "description": "Lock hint when the calendar is the shorter road. The =1 case is NOT 'in 1 day' — it names the day, which is why this needs ICU rather than string interpolation.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unlockSoon": "Opening soon",
+  "@unlockSoon": {
+    "description": "Lock hint when both counters are spent but the capability is still closed"
+  },
+  "discoveryCardOpenSemantics": "{name}. Open.",
+  "@discoveryCardOpenSemantics": {
+    "description": "Screen-reader label for an unlocked capability card",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "discoveryCardLockedSemantics": "{name}. {hint}.",
+  "@discoveryCardLockedSemantics": {
+    "description": "Screen-reader label for a locked capability card: the name, then when it opens",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "hint": {
+        "type": "String"
+      }
+    }
+  },
+  "unlockAnnouncementTitle": "Something new is open.",
+  "@unlockAnnouncementTitle": {
+    "description": "Headline of the full-screen capability-unlock announcement"
+  },
+  "unlockAnnouncementLeadAnon": "Something new opened today: {capability}.",
+  "@unlockAnnouncementLeadAnon": {
+    "description": "Unlock announcement lead when we do not know the user's first name. Kept as a whole sentence rather than assembled from fragments so a translator can move the capability name where their language wants it.",
+    "placeholders": {
+      "capability": {
+        "type": "String"
+      }
+    }
+  },
+  "unlockAnnouncementLeadNamed": "{name}, something new opened today: {capability}.",
+  "@unlockAnnouncementLeadNamed": {
+    "description": "Unlock announcement lead addressed to the user by first name",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "capability": {
+        "type": "String"
+      }
+    }
+  },
+  "unlockAnnouncementStreak": "{days, plural, =1{Your 1-day streak earned this.} other{Your {days}-day streak earned this.}}",
+  "@unlockAnnouncementStreak": {
+    "description": "Appended to the unlock announcement when the user has a streak of 2 or more. Only shown at 2+, so the =1 case exists for completeness rather than for a real state.",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
   }
 }

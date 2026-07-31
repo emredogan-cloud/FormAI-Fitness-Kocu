@@ -45,12 +45,10 @@ void main() {
       expect(Capability.fromKey('nope'), isNull);
     });
 
-    test('every capability has user-facing copy', () {
-      for (final c in Capability.values) {
-        expect(c.title.trim(), isNotEmpty, reason: c.key);
-        expect(c.blurb.trim(), isNotEmpty, reason: c.key);
-      }
-    });
+    // Roadmap Phase 5 · the copy check moved to
+    // test/features/home/presentation/unlock_hint_copy_test.dart, which
+    // runs it over every supported locale rather than the one that used
+    // to be compiled into the enum.
 
     test('every capability is reachable — a route or a tab, never neither', () {
       // A capability the hub can list but not open would be a promise
@@ -194,21 +192,31 @@ void main() {
     test('names the shorter road — training, when training is closer', () {
       // Day 0, 2 sessions done: badges need 1 more session or 5 days.
       final hint = unlockHint(Capability.badges, state(days: 0, sessions: 2));
-      expect(hint, '1 antrenman sonra açılıyor');
+      // Asserts the DECISION, not the sentence. Phase 5 moved the words
+      // to ARB; what this test always meant to pin is that the hint
+      // counts sessions rather than days, and says one.
+      expect(
+        hint,
+        isA<UnlockAfterSessions>().having((h) => h.sessions, 'sessions', 1),
+      );
     });
 
     test('falls back to days when the calendar is closer', () {
       // Day 6, no sessions: calendar is 1 day away, 5 sessions away.
       final hint = unlockHint(Capability.calendar, state(days: 6));
-      expect(hint, 'Yarın açılıyor');
+      expect(hint, isA<UnlockAfterDays>().having((h) => h.days, 'days', 1));
     });
 
-    test('every locked capability produces non-empty copy', () {
+    test('every locked capability produces a hint', () {
+      // A locked row with no hint is a dead end: the user sees a lock
+      // and nothing telling them how to open it.
       for (var day = 0; day <= 14; day++) {
         for (final c in lockedCapabilities(state(days: day))) {
-          final hint = unlockHint(c, state(days: day));
-          expect(hint, isNotNull, reason: '${c.key} on day $day');
-          expect(hint!.trim(), isNotEmpty, reason: '${c.key} on day $day');
+          expect(
+            unlockHint(c, state(days: day)),
+            isNotNull,
+            reason: '${c.key} on day $day',
+          );
         }
       }
     });

@@ -6,6 +6,8 @@ import 'package:sixpack_ai/core/services/app_preferences.dart';
 import 'package:sixpack_ai/core/services/disclosure_providers.dart';
 import 'package:sixpack_ai/core/services/progressive_disclosure.dart';
 import 'package:sixpack_ai/features/home/presentation/discovery_hub_screen.dart';
+import 'package:sixpack_ai/features/home/presentation/unlock_hint_copy.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// Roadmap Phase 4 (C28 · R1.3) · the capability map.
 ///
@@ -44,20 +46,30 @@ Future<ProviderContainer> _pump(
   await tester.pumpWidget(
     UncontrolledProviderScope(
       container: container,
-      child: const MaterialApp(home: DiscoveryHubScreen()),
+      child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: const [Locale('tr')],
+        home: const DiscoveryHubScreen(),
+      ),
     ),
   );
   await tester.pump();
   return container;
 }
 
+late AppLocalizations l10n;
+
 void main() {
+  setUpAll(() async {
+    l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+  });
+
   group('nothing is hidden', () {
     testWidgets('every capability is listed on a brand-new install', (t) async {
       await _pump(t);
       for (final capability in Capability.values) {
         expect(
-          find.text(capability.title),
+          find.text(capability.title(l10n)),
           findsOneWidget,
           reason: '${capability.key} missing from the hub',
         );
@@ -68,7 +80,7 @@ void main() {
       await _pump(t);
       final pillars = Capability.values.map((c) => c.pillar).toSet();
       for (final pillar in pillars) {
-        expect(find.text(pillar.label.toUpperCase()), findsOneWidget);
+        expect(find.text(pillar.label(l10n).toUpperCase()), findsOneWidget);
       }
     });
 
@@ -177,7 +189,7 @@ void main() {
       await _pump(t);
       final handle = t.ensureSemantics();
       expect(
-        find.bySemanticsLabel(RegExp('${Capability.nutrition.title}\\.')),
+        find.bySemanticsLabel(RegExp('${Capability.nutrition.title(l10n)}\\.')),
         findsWidgets,
       );
       handle.dispose();

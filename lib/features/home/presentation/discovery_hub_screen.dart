@@ -6,9 +6,11 @@ import '../../../core/services/analytics_service.dart';
 import '../../../core/services/app_preferences.dart';
 import '../../../core/services/disclosure_providers.dart';
 import '../../../core/services/progressive_disclosure.dart';
+import 'unlock_hint_copy.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/app_haptics.dart';
 import 'dashboard_screen.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Roadmap Phase 4 (C28 · R1.3) · the "Keşfet" capability map.
 ///
@@ -117,7 +119,7 @@ class _DiscoveryHubScreenState extends ConsumerState<DiscoveryHubScreen> {
       Padding(
         padding: const EdgeInsets.only(bottom: 10, top: 4),
         child: Text(
-          pillar.label.toUpperCase(),
+          pillar.label(AppLocalizations.of(context)).toUpperCase(),
           style: TextStyle(
             color: AppColors.neon.withValues(alpha: 0.9),
             fontSize: 11.5,
@@ -227,7 +229,7 @@ class _CapabilityCard extends StatelessWidget {
 
   final Capability capability;
   final bool unlocked;
-  final String? hint;
+  final UnlockHint? hint;
   final VoidCallback onOpen;
   final VoidCallback onUnlock;
 
@@ -238,12 +240,16 @@ class _CapabilityCard extends StatelessWidget {
     // pattern is reserved for Pro; this is "not introduced yet".
     final titleAlpha = unlocked ? 1.0 : 0.72;
     final borderAlpha = unlocked ? 0.32 : 0.12;
+    final l10n = AppLocalizations.of(context);
 
     return Semantics(
       container: true,
       label: unlocked
-          ? '${capability.title}. Açık.'
-          : '${capability.title}. ${hint ?? 'Yakında açılıyor'}.',
+          ? l10n.discoveryCardOpenSemantics(capability.title(l10n))
+          : l10n.discoveryCardLockedSemantics(
+              capability.title(l10n),
+              (hint ?? const UnlockSoon()).text(l10n),
+            ),
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
         decoration: BoxDecoration(
@@ -267,7 +273,7 @@ class _CapabilityCard extends StatelessWidget {
                 const SizedBox(width: 9),
                 Expanded(
                   child: Text(
-                    capability.title,
+                    capability.title(l10n),
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: titleAlpha),
                       fontSize: 15.5,
@@ -279,7 +285,7 @@ class _CapabilityCard extends StatelessWidget {
             ),
             const SizedBox(height: 7),
             Text(
-              capability.blurb,
+              capability.blurb(l10n),
               style: TextStyle(
                 color: Colors.white.withValues(alpha: unlocked ? 0.62 : 0.5),
                 fontSize: 13,
@@ -309,7 +315,7 @@ class _CapabilityCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      hint ?? 'Yakında açılıyor',
+                      (hint ?? const UnlockSoon()).text(l10n),
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.5),
                         fontSize: 12.5,

@@ -36,8 +36,6 @@ enum Capability {
   nutrition(
     key: 'nutrition',
     pillar: CapabilityPillar.nutrition,
-    title: 'Beslenme',
-    blurb: 'Kalori ve makro hedefin, tarif kütüphanesi ve günlük plan.',
     unlockDay: 2,
     unlockSessions: 1,
     route: null,
@@ -46,8 +44,6 @@ enum Capability {
   progress(
     key: 'progress',
     pillar: CapabilityPillar.progress,
-    title: 'Gelişim',
-    blurb: 'Haftalık grafiklerin, hacim ve süre istatistiklerin.',
     unlockDay: 3,
     unlockSessions: 2,
     route: null,
@@ -56,8 +52,6 @@ enum Capability {
   badges(
     key: 'badges',
     pillar: CapabilityPillar.progress,
-    title: 'Rozetler ve XP',
-    blurb: 'Kazandığın rozetler, seviyen ve XP geçmişin.',
     unlockDay: 5,
     unlockSessions: 3,
     route: '/progress/badges',
@@ -66,8 +60,6 @@ enum Capability {
   calendar(
     key: 'calendar',
     pillar: CapabilityPillar.progress,
-    title: 'Takvim ve geri dönüş',
-    blurb: 'Hangi günü ne yaptığını gün gün görebilirsin.',
     unlockDay: 7,
     unlockSessions: 5,
     route: null,
@@ -76,8 +68,6 @@ enum Capability {
   referral(
     key: 'referral',
     pillar: CapabilityPillar.community,
-    title: 'Arkadaşını davet et',
-    blurb: 'Davet kodunla arkadaşlarını çağır.',
     unlockDay: 10,
     unlockSessions: 7,
     route: '/referral',
@@ -86,8 +76,6 @@ enum Capability {
   advancedSettings(
     key: 'advanced_settings',
     pillar: CapabilityPillar.coach,
-    title: 'Gelişmiş ayarlar',
-    blurb: 'Hatırlatmalar, sesli koç ve veri tercihlerinin tamamı.',
     unlockDay: 14,
     unlockSessions: 10,
     route: '/account-settings',
@@ -97,8 +85,6 @@ enum Capability {
   const Capability({
     required this.key,
     required this.pillar,
-    required this.title,
-    required this.blurb,
     required this.unlockDay,
     required this.unlockSessions,
     required this.route,
@@ -110,8 +96,6 @@ enum Capability {
   final String key;
 
   final CapabilityPillar pillar;
-  final String title;
-  final String blurb;
 
   /// Days since install at which this opens on its own.
   final int unlockDay;
@@ -135,14 +119,11 @@ enum Capability {
 
 /// Grouping for the discovery hub's capability map.
 enum CapabilityPillar {
-  training('Antrenman'),
-  nutrition('Beslenme'),
-  progress('Gelişim'),
-  coach('Koç'),
-  community('Topluluk');
-
-  const CapabilityPillar(this.label);
-  final String label;
+  training,
+  nutrition,
+  progress,
+  coach,
+  community,
 }
 
 /// The inputs a disclosure decision reads. A plain value object — no
@@ -218,7 +199,7 @@ List<Capability> newlyUnlocked({
 /// Phrased as an invitation rather than a countdown: the point is that
 /// something is coming, not that the user is being kept waiting. Returns
 /// null when [capability] is already open.
-String? unlockHint(Capability capability, DisclosureState state) {
+UnlockHint? unlockHint(Capability capability, DisclosureState state) {
   if (isUnlocked(capability, state)) return null;
 
   final daysLeft = capability.unlockDay - state.daysSinceInstall;
@@ -228,12 +209,40 @@ String? unlockHint(Capability capability, DisclosureState state) {
   // is the shorter road, saying so turns the lock into a nudge toward
   // the thing the app actually wants the user to do.
   if (sessionsLeft > 0 && sessionsLeft <= daysLeft) {
-    return sessionsLeft == 1
-        ? '1 antrenman sonra açılıyor'
-        : '$sessionsLeft antrenman sonra açılıyor';
+    return UnlockAfterSessions(sessionsLeft);
   }
-  if (daysLeft > 0) {
-    return daysLeft == 1 ? 'Yarın açılıyor' : '$daysLeft gün sonra açılıyor';
-  }
-  return 'Yakında açılıyor';
+  if (daysLeft > 0) return UnlockAfterDays(daysLeft);
+  return const UnlockSoon();
+}
+
+/// What a lock has left to say, without saying it.
+///
+/// Roadmap Phase 5 · [unlockHint] used to return the sentence. This
+/// file's contract is "no providers, no clock, no BuildContext — every
+/// function pure and exhaustively testable", and a rendered Turkish
+/// string quietly broke it. The shape keeps the decision here and moves
+/// the words to `home/presentation/unlock_hint_copy.dart`, where the
+/// plural forms belong anyway: "opens tomorrow" is not "opens in 1
+/// day", and only ICU can express that per language.
+sealed class UnlockHint {
+  const UnlockHint();
+}
+
+/// Training is the shorter road — name it, because it nudges toward the
+/// thing the app actually wants the user to do.
+final class UnlockAfterSessions extends UnlockHint {
+  const UnlockAfterSessions(this.sessions);
+  final int sessions;
+}
+
+/// The calendar is closer than the training path.
+final class UnlockAfterDays extends UnlockHint {
+  const UnlockAfterDays(this.days);
+  final int days;
+}
+
+/// Both counters are spent but the capability is still closed — the
+/// grandfathering path can land here.
+final class UnlockSoon extends UnlockHint {
+  const UnlockSoon();
 }

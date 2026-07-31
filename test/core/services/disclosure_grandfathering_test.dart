@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -5,6 +6,8 @@ import 'package:sixpack_ai/core/services/app_preferences.dart';
 import 'package:sixpack_ai/core/services/disclosure_providers.dart';
 import 'package:sixpack_ai/core/services/progressive_disclosure.dart';
 import 'package:sixpack_ai/core/services/unlock_announcer.dart';
+import 'package:sixpack_ai/features/home/presentation/unlock_hint_copy.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// Roadmap Phase 4 (R1.3) · the upgrade path.
 ///
@@ -106,33 +109,51 @@ void main() {
   });
 
   group('unlock announcement copy', () {
+    // Roadmap Phase 5 · the copy moved to ARB, so the body now needs an
+    // AppLocalizations. Loaded through the delegate rather than a widget
+    // tree — the assertions below are about the sentence, not the UI,
+    // and pumping a MaterialApp to reach them would be noise.
+    late AppLocalizations l10n;
+    setUpAll(() async {
+      l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+    });
+
     test('names the capability', () {
-      final body = UnlockAnnouncer.announcementBody(Capability.nutrition);
-      expect(body, contains(Capability.nutrition.title));
+      final body = UnlockAnnouncer.announcementBody(Capability.nutrition, l10n);
+      expect(body, contains(Capability.nutrition.title(l10n)));
       expect(body, contains('yeni bir şey açıldı'));
     });
 
     test('uses the name when there is one', () {
       final body = UnlockAnnouncer.announcementBody(
         Capability.progress,
+        l10n,
         firstName: 'Deniz',
       );
       expect(body, startsWith('Deniz,'));
     });
 
     test('stays grammatical with no name', () {
-      final body = UnlockAnnouncer.announcementBody(Capability.progress);
+      final body = UnlockAnnouncer.announcementBody(Capability.progress, l10n);
       expect(body, startsWith('Bugün'));
       expect(body, isNot(contains(', bugün')));
     });
 
     test('mentions the streak only when there is one worth mentioning', () {
       expect(
-        UnlockAnnouncer.announcementBody(Capability.badges, streakDays: 1),
+        UnlockAnnouncer.announcementBody(
+          Capability.badges,
+          l10n,
+          streakDays: 1,
+        ),
         isNot(contains('serin')),
       );
       expect(
-        UnlockAnnouncer.announcementBody(Capability.badges, streakDays: 4),
+        UnlockAnnouncer.announcementBody(
+          Capability.badges,
+          l10n,
+          streakDays: 4,
+        ),
         contains('4 günlük serin'),
       );
     });
@@ -140,6 +161,7 @@ void main() {
     test('a blank name is treated as no name, not as an empty prefix', () {
       final body = UnlockAnnouncer.announcementBody(
         Capability.badges,
+        l10n,
         firstName: '   ',
       );
       expect(body, startsWith('Bugün'));
@@ -149,11 +171,12 @@ void main() {
       for (final capability in Capability.values) {
         final body = UnlockAnnouncer.announcementBody(
           capability,
+          l10n,
           firstName: 'Efe',
           streakDays: 3,
         );
         expect(body.trim(), isNotEmpty, reason: capability.key);
-        expect(body, contains(capability.blurb), reason: capability.key);
+        expect(body, contains(capability.blurb(l10n)), reason: capability.key);
       }
     });
   });
