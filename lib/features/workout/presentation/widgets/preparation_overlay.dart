@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/exercise_model.dart';
 import 'workout_back_button.dart';
+import '../../../../l10n/app_localizations.dart';
 
 const Color _neon = Color(0xFF00F0FF);
 
@@ -55,8 +56,8 @@ class PreparationOverlay extends StatelessWidget {
                         width: 1,
                       ),
                     ),
-                    child: const Text(
-                      'HAZIRLAN',
+                    child: Text(
+                      AppLocalizations.of(context).prepGetReady,
                       style: TextStyle(
                         color: _neon,
                         fontSize: 12,
@@ -81,7 +82,7 @@ class PreparationOverlay extends StatelessWidget {
                   Text(
                     exercise.description.isNotEmpty
                         ? exercise.description
-                        : 'Pozisyonunu al ve hazırlan.',
+                        : AppLocalizations.of(context).prepTakePosition,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: Colors.white70,

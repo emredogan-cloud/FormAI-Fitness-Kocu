@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../services/crunch_analyzer.dart';
+import '../../../../l10n/app_localizations.dart';
 
 const Color _neon = Color(0xFF00F0FF);
 const Color _panel = Color(0xFF101010);
@@ -112,7 +113,8 @@ class WorkoutControlPanel extends StatelessWidget {
               if (onPrev != null)
                 _ControlIconButton(
                   icon: Icons.skip_previous_rounded,
-                  semanticLabel: 'Önceki egzersiz',
+                  semanticLabel:
+                      AppLocalizations.of(context).workoutPrevExercise,
                   onTap: onPrev,
                 )
               else
@@ -125,7 +127,7 @@ class WorkoutControlPanel extends StatelessWidget {
               _ControlIconButton(
                 key: nextControlKey,
                 icon: Icons.skip_next_rounded,
-                semanticLabel: 'Sonraki egzersiz',
+                semanticLabel: AppLocalizations.of(context).workoutNextExercise,
                 onTap: onNext,
               ),
             ],
@@ -240,7 +242,9 @@ class _CenterPlayButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: isPaused ? 'Antrenmana devam et' : 'Antrenmanı duraklat',
+      label: isPaused
+          ? AppLocalizations.of(context).workoutResume
+          : AppLocalizations.of(context).workoutPause,
       child: DecoratedBox(
         decoration: BoxDecoration(
           shape: BoxShape.circle,

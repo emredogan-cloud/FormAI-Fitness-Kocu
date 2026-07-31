@@ -6,6 +6,7 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../core/utils/app_logger.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Adaptive exercise guide preview.
 ///
@@ -470,7 +471,9 @@ class _FallbackTile extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            errorMode ? 'Video yüklenemedi' : (exerciseName ?? 'Yükleniyor...'),
+            errorMode
+                ? AppLocalizations.of(context).guideVideoFailed
+                : (exerciseName ?? AppLocalizations.of(context).guideLoading),
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,

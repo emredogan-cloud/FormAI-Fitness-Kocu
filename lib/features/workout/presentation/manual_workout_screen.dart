@@ -11,6 +11,7 @@ import '../../../core/widgets/empty_state.dart';
 import '../domain/workout_mode.dart';
 import '../providers/workout_provider.dart';
 import 'widgets/session_complete_overlay.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Roadmap Phase 3 (C21) · the camera-free workout.
 ///
@@ -85,8 +86,8 @@ class _ManualWorkoutScreenState extends ConsumerState<ManualWorkoutScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: Colors.white,
-        title: const Text(
-          'Antrenman',
+        title: Text(
+          AppLocalizations.of(context).workoutTitle,
           style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 0.4),
         ),
         actions: [
@@ -97,20 +98,20 @@ class _ManualWorkoutScreenState extends ConsumerState<ManualWorkoutScreen> {
           // committing to a camera session first.
           Semantics(
             button: true,
-            label: 'Kamera kurulumunu göster',
+            label: AppLocalizations.of(context).workoutShowCameraSetup,
             child: IconButton(
               onPressed: _showSetupGuide,
               icon: const Icon(Icons.center_focus_strong_outlined),
-              tooltip: 'Kamera kurulumunu göster',
+              tooltip: AppLocalizations.of(context).workoutShowCameraSetup,
             ),
           ),
           Semantics(
             button: true,
-            label: 'Kamerayı aç',
+            label: AppLocalizations.of(context).workoutOpenCamera,
             child: IconButton(
               onPressed: _switchToCamera,
               icon: const Icon(Icons.videocam_outlined),
-              tooltip: 'Kamerayı aç',
+              tooltip: AppLocalizations.of(context).workoutOpenCamera,
             ),
           ),
         ],
@@ -124,18 +125,18 @@ class _ManualWorkoutScreenState extends ConsumerState<ManualWorkoutScreen> {
               ),
               error: (_, __) => EmptyState(
                 icon: Icons.error_outline_rounded,
-                title: 'Antrenman yüklenemedi',
-                body: 'Planın alınırken bir sorun oldu. Tekrar dener misin?',
-                ctaLabel: 'Tekrar Dene',
+                title: AppLocalizations.of(context).workoutLoadFailed,
+                body: AppLocalizations.of(context).workoutLoadFailedBody,
+                ctaLabel: AppLocalizations.of(context).commonTryAgain,
                 onCta: () => ref.invalidate(workoutSessionProvider),
               ),
               data: (state) {
                 final exercise = state.activeExercise;
                 if (exercise == null) {
-                  return const EmptyState(
+                  return EmptyState(
                     icon: Icons.done_all_rounded,
-                    title: 'Bugünlük bu kadar',
-                    body: 'Bu günün tüm egzersizlerini tamamladın.',
+                    title: AppLocalizations.of(context).workoutDayDone,
+                    body: AppLocalizations.of(context).workoutDayDoneBody,
                   );
                 }
                 if (state.isResting) {
@@ -251,8 +252,8 @@ class _ActiveView extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              child: const Text(
-                'SETİ TAMAMLA',
+              child: Text(
+                AppLocalizations.of(context).workoutCompleteSet,
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w900,
@@ -286,7 +287,7 @@ class _RepCounter extends StatelessWidget {
         children: [
           _RoundButton(
             icon: Icons.remove_rounded,
-            label: 'Bir tekrar çıkar',
+            label: AppLocalizations.of(context).workoutDecrementRep,
             onTap: () => onAdjust(-1),
           ),
           SizedBox(
@@ -304,7 +305,7 @@ class _RepCounter extends StatelessWidget {
           ),
           _RoundButton(
             icon: Icons.add_rounded,
-            label: 'Bir tekrar ekle',
+            label: AppLocalizations.of(context).workoutIncrementRep,
             onTap: () => onAdjust(1),
           ),
         ],
@@ -362,7 +363,7 @@ class _RestView extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'DİNLEN',
+            AppLocalizations.of(context).workoutResting,
             style: TextStyle(
               color: AppColors.neon.withValues(alpha: 0.9),
               fontSize: 12.5,
@@ -420,8 +421,7 @@ class _ManualModeBanner extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Kamerasız mod — tekrarları sen sayıyorsun. '
-              'İlerlemen normal şekilde kaydedilir.',
+              AppLocalizations.of(context).workoutManualModeBanner,
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.62),
                 fontSize: 12,

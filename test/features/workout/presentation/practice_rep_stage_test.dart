@@ -4,6 +4,7 @@ import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import 'package:sixpack_ai/features/workout/presentation/widgets/practice_rep_stage.dart';
 import 'package:sixpack_ai/features/workout/services/back_legs_analyzers.dart';
 import 'package:sixpack_ai/features/workout/services/crunch_analyzer.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// Roadmap Phase 3 feature 3 (R1.2) · the guided practice rep.
 ///
@@ -26,6 +27,8 @@ Future<void> _pump(
     MediaQuery(
       data: MediaQueryData(textScaler: TextScaler.linear(textScale)),
       child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: [Locale('tr')],
         home: Scaffold(
           backgroundColor: const Color(0xFF0A0612),
           body: PracticeRepStage(
@@ -56,7 +59,7 @@ void main() {
       // does not back — invisible in review, and the most corrosive kind
       // of dishonesty in a feature whose whole pitch is "it sees you".
       expect(
-        PracticeRepStage.trackedJoints.keys.toSet(),
+        PracticeRepStage.trackedJoints.toSet(),
         {
           PoseLandmarkType.leftShoulder,
           PoseLandmarkType.leftHip,
@@ -66,11 +69,24 @@ void main() {
       );
     });
 
-    test('every label is non-empty Turkish copy', () {
-      for (final label in PracticeRepStage.trackedJoints.values) {
+    testWidgets('every tracked joint has non-empty label copy', (t) async {
+      // Roadmap Phase 5 · the joint SET is still a compile-time constant
+      // (asserted above, against the analyzer's geometry); only the
+      // labels moved to ARB, so they now need a Localizations scope.
+      late Map<PoseLandmarkType, String> labels;
+      await t.pumpWidget(MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: [const Locale('tr')],
+        home: Builder(builder: (context) {
+          labels = PracticeRepStage.jointLabels(AppLocalizations.of(context));
+          return const SizedBox.shrink();
+        }),
+      ));
+      expect(labels.keys.toSet(), PracticeRepStage.trackedJoints.toSet());
+      for (final label in labels.values) {
         expect(label.trim(), isNotEmpty);
       }
-      expect(PracticeRepStage.trackedJoints.values, contains('Diz'));
+      expect(labels.values, contains('Diz'));
     });
 
     test('the analyzer under the stage is the production SquatAnalyzer', () {

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../services/crunch_analyzer.dart' show CrunchState;
 import '../pose_painter.dart';
 
@@ -47,12 +48,27 @@ class PracticeRepStage extends StatelessWidget {
   /// the rep cycle, shoulder for the torso-lean form check. Labelling
   /// anything else would be theatre — and the kind that is invisible in
   /// review because it looks equally convincing on screen.
-  static const Map<PoseLandmarkType, String> trackedJoints = {
-    PoseLandmarkType.leftShoulder: 'Omuz',
-    PoseLandmarkType.leftHip: 'Kalça',
-    PoseLandmarkType.leftKnee: 'Diz',
-    PoseLandmarkType.leftAnkle: 'Ayak bileği',
-  };
+  static const List<PoseLandmarkType> trackedJoints = [
+    PoseLandmarkType.leftShoulder,
+    PoseLandmarkType.leftHip,
+    PoseLandmarkType.leftKnee,
+    PoseLandmarkType.leftAnkle,
+  ];
+
+  /// Roadmap Phase 5 · the joint SET stays const; only the labels are
+  /// localised.
+  ///
+  /// Splitting them keeps the thing that must match the analyzer — which
+  /// landmarks are read — as a compile-time constant that a test can
+  /// assert against `SquatAnalyzer`'s geometry, while the words shown on
+  /// the body move to ARB. Storing localized strings in the map would
+  /// have coupled a correctness invariant to a translation.
+  static Map<PoseLandmarkType, String> jointLabels(AppLocalizations l10n) => {
+        PoseLandmarkType.leftShoulder: l10n.practiceJointShoulder,
+        PoseLandmarkType.leftHip: l10n.practiceJointHip,
+        PoseLandmarkType.leftKnee: l10n.practiceJointKnee,
+        PoseLandmarkType.leftAnkle: l10n.practiceJointAnkle,
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +106,8 @@ class PracticeRepStage extends StatelessWidget {
                               // further rotation is applied here.
                               rotation: InputImageRotation.rotation0deg,
                               cameraLensDirection: lens,
-                              trackedJoints: trackedJoints,
+                              trackedJoints:
+                                  jointLabels(AppLocalizations.of(context)),
                             ),
                           ),
                       ],
@@ -117,10 +134,10 @@ class PracticeRepStage extends StatelessWidget {
             ],
           ),
         ),
-        const Padding(
+        Padding(
           padding: EdgeInsets.fromLTRB(24, 14, 24, 4),
           child: Text(
-            'Bir kez çömel ve kalk.',
+            AppLocalizations.of(context).practiceSquatOnce,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white,
@@ -132,8 +149,7 @@ class PracticeRepStage extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 28),
           child: Text(
-            'İzlediğim eklemleri ekranda işaretledim. Tek tekrar yeter — '
-            'sayabildiğimi göreceksin.',
+            AppLocalizations.of(context).practiceExplainer,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.66),
@@ -151,8 +167,8 @@ class PracticeRepStage extends StatelessWidget {
             foregroundColor: Colors.white.withValues(alpha: 0.55),
             minimumSize: const Size(120, 48),
           ),
-          child: const Text(
-            'Bu adımı atla',
+          child: Text(
+            AppLocalizations.of(context).practiceSkipStep,
             style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
           ),
         ),
@@ -207,8 +223,8 @@ class _PracticeHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  'TEKRAR',
+                Text(
+                  AppLocalizations.of(context).practiceRepsLabel,
                   style: TextStyle(
                     color: AppColors.neon,
                     fontSize: 11,
@@ -218,7 +234,9 @@ class _PracticeHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  tracking ? 'Seni takip ediyorum' : 'Kadraja gir',
+                  tracking
+                      ? AppLocalizations.of(context).practiceTrackingYou
+                      : AppLocalizations.of(context).practiceGetInFrame,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.7),
                     fontSize: 12.5,

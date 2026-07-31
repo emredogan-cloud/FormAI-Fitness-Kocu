@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/exercise_model.dart';
 import 'workout_back_button.dart';
+import '../../../../l10n/app_localizations.dart';
 
 const Color _neon = Color(0xFF00F0FF);
 
@@ -62,8 +63,8 @@ class RestOverlay extends StatelessWidget {
                       width: 1,
                     ),
                   ),
-                  child: const Text(
-                    'DİNLENME ZAMANI',
+                  child: Text(
+                    AppLocalizations.of(context).restTitle,
                     style: TextStyle(
                       color: _neon,
                       fontSize: 12,
@@ -88,8 +89,8 @@ class RestOverlay extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 24),
-                const Text(
-                  'SIRADAKİ',
+                Text(
+                  AppLocalizations.of(context).restNext,
                   style: TextStyle(
                     color: Colors.white54,
                     fontSize: 11,
@@ -153,13 +154,13 @@ class _SkipButton extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(40),
           onTap: onTap,
-          child: const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 36, vertical: 14),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 14),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'GEÇ',
+                  AppLocalizations.of(context).restSkip,
                   style: TextStyle(
                     color: Colors.black,
                     fontSize: 16,

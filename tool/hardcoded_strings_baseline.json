@@ -36,13 +36,6 @@
   "lib/features/onboarding/presentation/steps/setup_thinking_step.dart": 5,
   "lib/features/onboarding/presentation/steps/social_proof_step.dart": 13,
   "lib/features/workout/presentation/camera_tutorial_screen.dart": 38,
-  "lib/features/workout/presentation/manual_workout_screen.dart": 16,
   "lib/features/workout/presentation/plan_detail_screen.dart": 24,
-  "lib/features/workout/presentation/widgets/exercise_guide_player.dart": 2,
-  "lib/features/workout/presentation/widgets/practice_rep_stage.dart": 8,
-  "lib/features/workout/presentation/widgets/preparation_overlay.dart": 1,
-  "lib/features/workout/presentation/widgets/rest_overlay.dart": 3,
-  "lib/features/workout/presentation/widgets/session_complete_overlay.dart": 4,
-  "lib/features/workout/presentation/widgets/workout_control_panel.dart": 2,
   "lib/features/workout/presentation/workout_camera_screen.dart": 47
 }

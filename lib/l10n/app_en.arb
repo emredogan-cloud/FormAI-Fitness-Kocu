@@ -947,5 +947,153 @@
   "recipeIngredients": "Ingredients",
   "@recipeIngredients": {
     "description": "Recipe ingredients section heading"
+  },
+  "prepGetReady": "GET READY",
+  "@prepGetReady": {
+    "description": "Preparation countdown eyebrow"
+  },
+  "prepTakePosition": "Take your position and get ready.",
+  "@prepTakePosition": {
+    "description": "Preparation countdown body"
+  },
+  "workoutPrevExercise": "Previous exercise",
+  "@workoutPrevExercise": {
+    "description": "Control panel semantic label"
+  },
+  "workoutNextExercise": "Next exercise",
+  "@workoutNextExercise": {
+    "description": "Control panel semantic label"
+  },
+  "workoutPause": "Pause workout",
+  "@workoutPause": {
+    "description": "Control panel semantic label"
+  },
+  "workoutResume": "Resume workout",
+  "@workoutResume": {
+    "description": "Control panel semantic label"
+  },
+  "guideVideoFailed": "Video could not load",
+  "@guideVideoFailed": {
+    "description": "Exercise guide error"
+  },
+  "guideLoading": "Loading…",
+  "@guideLoading": {
+    "description": "Exercise guide loading"
+  },
+  "restTitle": "REST TIME",
+  "@restTitle": {
+    "description": "Rest overlay heading"
+  },
+  "restNext": "NEXT UP",
+  "@restNext": {
+    "description": "Rest overlay next-exercise label"
+  },
+  "restSkip": "SKIP",
+  "@restSkip": {
+    "description": "Rest overlay skip action"
+  },
+  "sessionCompleteBody": "Great work — see you tomorrow.",
+  "@sessionCompleteBody": {
+    "description": "Session complete message"
+  },
+  "commonShare": "Share",
+  "@commonShare": {
+    "description": "Generic share action"
+  },
+  "sessionRecoveryTip": "RECOVERY TIP",
+  "@sessionRecoveryTip": {
+    "description": "Session complete recovery section"
+  },
+  "sessionViewRecipe": "View recipe",
+  "@sessionViewRecipe": {
+    "description": "Session complete recipe CTA"
+  },
+  "practiceJointHip": "Hip",
+  "@practiceJointHip": {
+    "description": "Tracked joint label in the practice rep"
+  },
+  "practiceJointKnee": "Knee",
+  "@practiceJointKnee": {
+    "description": "Tracked joint label in the practice rep"
+  },
+  "practiceJointAnkle": "Ankle",
+  "@practiceJointAnkle": {
+    "description": "Tracked joint label in the practice rep"
+  },
+  "practiceJointShoulder": "Shoulder",
+  "@practiceJointShoulder": {
+    "description": "Tracked joint label in the practice rep"
+  },
+  "practiceSquatOnce": "Squat once and stand back up.",
+  "@practiceSquatOnce": {
+    "description": "Practice rep instruction"
+  },
+  "practiceExplainer": "I've marked the joints I'm watching. One rep is enough — you'll see me count it.",
+  "@practiceExplainer": {
+    "description": "Practice rep explainer"
+  },
+  "practiceSkipStep": "Skip this step",
+  "@practiceSkipStep": {
+    "description": "Practice rep skip action"
+  },
+  "practiceRepsLabel": "REPS",
+  "@practiceRepsLabel": {
+    "description": "Practice rep counter label"
+  },
+  "practiceTrackingYou": "I'm tracking you",
+  "@practiceTrackingYou": {
+    "description": "Practice rep tracking state"
+  },
+  "practiceGetInFrame": "Step into frame",
+  "@practiceGetInFrame": {
+    "description": "Practice rep no-pose state"
+  },
+  "workoutTitle": "Workout",
+  "@workoutTitle": {
+    "description": "Manual workout screen title"
+  },
+  "workoutShowCameraSetup": "Show camera setup",
+  "@workoutShowCameraSetup": {
+    "description": "Manual screen action"
+  },
+  "workoutOpenCamera": "Open camera",
+  "@workoutOpenCamera": {
+    "description": "Manual screen action"
+  },
+  "workoutLoadFailed": "Workout could not load",
+  "@workoutLoadFailed": {
+    "description": "Manual screen error title"
+  },
+  "workoutLoadFailedBody": "Something went wrong fetching your plan. Try again?",
+  "@workoutLoadFailedBody": {
+    "description": "Manual screen error body"
+  },
+  "workoutDayDone": "That's it for today",
+  "@workoutDayDone": {
+    "description": "Manual screen day-complete title"
+  },
+  "workoutDayDoneBody": "You've completed every exercise for today.",
+  "@workoutDayDoneBody": {
+    "description": "Manual screen day-complete body"
+  },
+  "workoutCompleteSet": "COMPLETE SET",
+  "@workoutCompleteSet": {
+    "description": "Manual screen set action"
+  },
+  "workoutDecrementRep": "Remove one rep",
+  "@workoutDecrementRep": {
+    "description": "Manual screen semantic label"
+  },
+  "workoutIncrementRep": "Add one rep",
+  "@workoutIncrementRep": {
+    "description": "Manual screen semantic label"
+  },
+  "workoutResting": "REST",
+  "@workoutResting": {
+    "description": "Manual screen rest state"
+  },
+  "workoutManualModeBanner": "Camera-free mode — you count the reps. Your progress is saved as normal.",
+  "@workoutManualModeBanner": {
+    "description": "Manual mode honesty banner"
   }
 }

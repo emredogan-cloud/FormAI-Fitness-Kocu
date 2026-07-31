@@ -14,6 +14,7 @@ import '../../../referral/providers/referral_provider.dart';
 import '../../models/workout_day_model.dart';
 import '../../providers/workout_provider.dart';
 import '../../../progress/providers/streak_provider.dart';
+import '../../../../l10n/app_localizations.dart';
 
 const Color _neon = Color(0xFF00F0FF);
 const Color _neonPurple = Color(0xFF8E5BFF);
@@ -107,8 +108,8 @@ class _SessionCompleteOverlayState
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Harika iş çıkardın, yarın görüşürüz.',
+                Text(
+                  AppLocalizations.of(context).sessionCompleteBody,
                   style: TextStyle(color: Colors.white70, fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
@@ -138,7 +139,7 @@ class _SessionCompleteOverlayState
                           );
                         },
                         icon: const Icon(Icons.ios_share_rounded, size: 18),
-                        label: const Text('Paylaş'),
+                        label: Text(AppLocalizations.of(context).commonShare),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: _neon,
                           side: const BorderSide(color: _neon, width: 1.4),
@@ -238,12 +239,12 @@ class _RecoverySuggestionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
               Icon(Icons.restaurant, color: _neonPurple, size: 16),
               SizedBox(width: 6),
               Text(
-                'TOPARLANMA ÖNERİSİ',
+                AppLocalizations.of(context).sessionRecoveryTip,
                 style: TextStyle(
                   color: _neonPurple,
                   fontSize: 11,
@@ -303,7 +304,7 @@ class _RecoverySuggestionCard extends StatelessWidget {
             child: FilledButton.icon(
               onPressed: () => context.push('/recipe', extra: recipe),
               icon: const Icon(Icons.receipt_long, size: 18),
-              label: const Text('Tarifi Gör'),
+              label: Text(AppLocalizations.of(context).sessionViewRecipe),
               style: FilledButton.styleFrom(
                 backgroundColor: _neonPurple,
                 foregroundColor: Colors.white,

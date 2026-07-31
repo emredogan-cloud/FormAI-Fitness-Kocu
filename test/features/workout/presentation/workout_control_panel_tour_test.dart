@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sixpack_ai/core/services/tour_targets.dart';
 import 'package:sixpack_ai/features/workout/presentation/widgets/workout_control_panel.dart';
 import 'package:sixpack_ai/features/workout/services/crunch_analyzer.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// Roadmap Phase 3b · spotlight anchors for the in-session tutorial.
 ///
@@ -22,6 +23,8 @@ Future<void> _pump(
   addTearDown(() => tester.binding.setSurfaceSize(null));
   await tester.pumpWidget(
     MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: [Locale('tr')],
       home: Scaffold(
         body: SizedBox(
           height: 220,

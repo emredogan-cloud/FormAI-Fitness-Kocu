@@ -7,6 +7,7 @@ import 'package:sixpack_ai/features/workout/models/exercise_model.dart';
 import 'package:sixpack_ai/features/workout/models/workout_day_model.dart';
 import 'package:sixpack_ai/features/workout/presentation/manual_workout_screen.dart';
 import 'package:sixpack_ai/features/workout/providers/workout_provider.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// Roadmap Phase 3 (C21) · the camera-free workout surface.
 ///
@@ -84,7 +85,9 @@ Future<ProviderContainer> _pump(
       container: container,
       child: MediaQuery(
         data: MediaQueryData(textScaler: TextScaler.linear(textScale)),
-        child: const MaterialApp(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: [Locale('tr')],
           home: ManualWorkoutScreen(),
           debugShowCheckedModeBanner: false,
         ),
