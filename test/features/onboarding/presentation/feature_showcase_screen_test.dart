@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sixpack_ai/core/services/app_preferences.dart';
 import 'package:sixpack_ai/features/onboarding/presentation/feature_showcase_screen.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// Roadmap Phase 2 (R1.1) · the post-paywall capability showcase.
 ///
@@ -42,6 +43,8 @@ Future<ProviderContainer> _pump(
       child: MediaQuery(
         data: MediaQueryData(textScaler: TextScaler.linear(textScale)),
         child: MaterialApp.router(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: const [Locale('tr')],
           routerConfig: router,
           debugShowCheckedModeBanner: false,
         ),

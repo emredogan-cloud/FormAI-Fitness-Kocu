@@ -7,6 +7,7 @@ import '../../../core/services/analytics_service.dart';
 import '../../../core/services/app_preferences.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/app_haptics.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Roadmap Phase 2 (R1.1) · the post-paywall capability showcase.
 ///
@@ -83,6 +84,7 @@ class _FeatureShowcaseScreenState extends ConsumerState<FeatureShowcaseScreen> {
   @override
   Widget build(BuildContext context) {
     final isLast = _index == _kCards.length - 1;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFF0A0612),
       body: SafeArea(
@@ -100,9 +102,9 @@ class _FeatureShowcaseScreenState extends ConsumerState<FeatureShowcaseScreen> {
                     foregroundColor: Colors.white.withValues(alpha: 0.55),
                     minimumSize: const Size(64, 48),
                   ),
-                  child: const Text(
-                    'Atla',
-                    style: TextStyle(
+                  child: Text(
+                    l10n.showcaseSkip,
+                    style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
@@ -136,7 +138,7 @@ class _FeatureShowcaseScreenState extends ConsumerState<FeatureShowcaseScreen> {
                     ),
                   ),
                   child: Text(
-                    isLast ? 'BAŞLAYALIM' : 'DEVAM',
+                    isLast ? l10n.showcaseStart : l10n.onbBodyCta,
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w900,
@@ -153,6 +155,8 @@ class _FeatureShowcaseScreenState extends ConsumerState<FeatureShowcaseScreen> {
   }
 }
 
+typedef _Copy = String Function(AppLocalizations);
+
 class _ShowcaseCardData {
   const _ShowcaseCardData({
     required this.asset,
@@ -163,48 +167,47 @@ class _ShowcaseCardData {
   });
 
   final String asset;
-  final String eyebrow;
-  final String title;
-  final String body;
+  final _Copy eyebrow;
+  final _Copy title;
+  final _Copy body;
 
   /// The concrete claim. Every card carries one verifiable fact rather
   /// than an adjective — the same store-honesty discipline the paywall
   /// follows.
-  final String proof;
+  final _Copy proof;
 }
 
-const List<_ShowcaseCardData> _kCards = [
+/// The card copy is resolved per-locale, so the catalogue holds
+/// lookups rather than strings. The asset paths stay literal — they
+/// are bundled files, not copy.
+final List<_ShowcaseCardData> _kCards = [
   _ShowcaseCardData(
     asset: 'assets/illustrations/showcase_form_analysis.webp',
-    eyebrow: 'CANLI FORM ANALİZİ',
-    title: 'Her tekrarını izliyorum.',
-    body: 'Telefonun kamerası hareketini gerçek zamanlı analiz eder; '
-        'formun bozulduğunda seni anında uyarırım.',
-    proof: 'Tamamen cihazında çalışır — görüntün hiçbir yere gitmez.',
+    eyebrow: (l) => l.liveFormAnalysisEyebrow,
+    title: (l) => l.showcaseFormTitle,
+    body: (l) => l.showcaseFormBody,
+    proof: (l) => l.showcaseFormProof,
   ),
   _ShowcaseCardData(
     asset: 'assets/illustrations/showcase_ai_coach.webp',
-    eyebrow: 'KİŞİSEL AI KOÇ',
-    title: 'Ben Form. Her an buradayım.',
-    body: 'Planını, geçmişini ve hedefini bilen bir koçla '
-        'dilediğin zaman yazışabilirsin.',
-    proof: 'Antrenman, beslenme ve motivasyon — hepsini sorabilirsin.',
+    eyebrow: (l) => l.showcaseCoachEyebrow,
+    title: (l) => l.showcaseCoachTitle,
+    body: (l) => l.showcaseCoachBody,
+    proof: (l) => l.showcaseCoachProof,
   ),
   _ShowcaseCardData(
     asset: 'assets/illustrations/showcase_plan.webp',
-    eyebrow: 'SANA ÖZEL PROGRAM',
-    title: '30 gün, senin için kurulmuş.',
-    body: 'Hedefine, seviyene, ekipmanına ve ayırabildiğin süreye '
-        'göre oluşturulmuş günlük bir plan.',
-    proof: 'Ekipman gerekmez — evde, otelde, her yerde çalışır.',
+    eyebrow: (l) => l.showcasePlanEyebrow,
+    title: (l) => l.showcasePlanTitle,
+    body: (l) => l.showcasePlanBody,
+    proof: (l) => l.showcasePlanProof,
   ),
   _ShowcaseCardData(
     asset: 'assets/illustrations/showcase_nutrition.webp',
-    eyebrow: 'BESLENME',
-    title: 'İşin diğer yarısı.',
-    body: 'Kalori ve makro hedefin hesaplanır, damak zevkine ve '
-        'diyetine uygun tarifler önerilir.',
-    proof: 'Yüzlerce tarif — hepsi hedefine göre filtrelenir.',
+    eyebrow: (l) => l.showcaseNutritionEyebrow,
+    title: (l) => l.showcaseNutritionTitle,
+    body: (l) => l.showcaseNutritionBody,
+    proof: (l) => l.showcaseNutritionProof,
   ),
 ];
 
@@ -215,6 +218,7 @@ class _ShowcaseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -249,7 +253,7 @@ class _ShowcaseCard extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Text(
-            card.eyebrow,
+            card.eyebrow(l10n),
             style: TextStyle(
               color: AppColors.neon.withValues(alpha: 0.95),
               fontSize: 11.5,
@@ -259,7 +263,7 @@ class _ShowcaseCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            card.title,
+            card.title(l10n),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 24,
@@ -269,7 +273,7 @@ class _ShowcaseCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            card.body,
+            card.body(l10n),
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.74),
               fontSize: 14.5,
@@ -288,7 +292,7 @@ class _ShowcaseCard extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  card.proof,
+                  card.proof(l10n),
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.6),
                     fontSize: 12.5,

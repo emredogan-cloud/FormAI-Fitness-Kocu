@@ -5048,5 +5048,281 @@
   "bmiVeryHigh": "Very high",
   "@bmiVeryHigh": {
     "description": "BMI band, descriptive rather than diagnostic."
+  },
+  "liveFormAnalysisEyebrow": "LIVE FORM ANALYSIS",
+  "@liveFormAnalysisEyebrow": {
+    "description": "Eyebrow for the live form-analysis capability. Shared by the hook screen and the post-paywall showcase."
+  },
+  "legalTermsLabel": "Terms of Use",
+  "@legalTermsLabel": {
+    "description": "Link label for the terms-of-use document."
+  },
+  "legalPrivacyLabel": "Privacy Policy",
+  "@legalPrivacyLabel": {
+    "description": "Link label for the privacy-policy document."
+  },
+  "showcaseSkip": "Skip",
+  "@showcaseSkip": {
+    "description": "Skip control on the post-paywall feature showcase."
+  },
+  "showcaseStart": "LET'S GO",
+  "@showcaseStart": {
+    "description": "CTA on the last showcase card."
+  },
+  "showcaseFormTitle": "I watch every rep.",
+  "@showcaseFormTitle": {
+    "description": "Showcase card title: live form analysis."
+  },
+  "showcaseFormBody": "Your phone's camera analyses your movement in real time; the moment your form slips, I tell you.",
+  "@showcaseFormBody": {
+    "description": "Showcase card body: live form analysis."
+  },
+  "showcaseFormProof": "Runs entirely on your device — your video never leaves it.",
+  "@showcaseFormProof": {
+    "description": "Showcase card proof line: live form analysis. A verifiable claim, not an adjective."
+  },
+  "showcaseCoachEyebrow": "YOUR OWN AI COACH",
+  "@showcaseCoachEyebrow": {
+    "description": "Showcase card eyebrow: AI coach."
+  },
+  "showcaseCoachTitle": "I'm Form. I'm here whenever you need me.",
+  "@showcaseCoachTitle": {
+    "description": "Showcase card title: AI coach. 'Form' is the coach's name and is never translated."
+  },
+  "showcaseCoachBody": "Message a coach who knows your plan, your history and your goal, any time.",
+  "@showcaseCoachBody": {
+    "description": "Showcase card body: AI coach."
+  },
+  "showcaseCoachProof": "Training, nutrition, motivation — ask about any of it.",
+  "@showcaseCoachProof": {
+    "description": "Showcase card proof line: AI coach."
+  },
+  "showcasePlanEyebrow": "A PROGRAM BUILT FOR YOU",
+  "@showcasePlanEyebrow": {
+    "description": "Showcase card eyebrow: personal plan."
+  },
+  "showcasePlanTitle": "30 days, built around you.",
+  "@showcasePlanTitle": {
+    "description": "Showcase card title: personal plan."
+  },
+  "showcasePlanBody": "A daily plan built from your goal, your level, your equipment and the time you can spare.",
+  "@showcasePlanBody": {
+    "description": "Showcase card body: personal plan."
+  },
+  "showcasePlanProof": "No equipment needed — works at home, in a hotel, anywhere.",
+  "@showcasePlanProof": {
+    "description": "Showcase card proof line: personal plan."
+  },
+  "showcaseNutritionEyebrow": "NUTRITION",
+  "@showcaseNutritionEyebrow": {
+    "description": "Showcase card eyebrow: nutrition."
+  },
+  "showcaseNutritionTitle": "The other half of the work.",
+  "@showcaseNutritionTitle": {
+    "description": "Showcase card title: nutrition."
+  },
+  "showcaseNutritionBody": "Your calorie and macro targets are calculated, and recipes are suggested to match your taste and your diet.",
+  "@showcaseNutritionBody": {
+    "description": "Showcase card body: nutrition."
+  },
+  "showcaseNutritionProof": "Hundreds of recipes — all filtered against your goal.",
+  "@showcaseNutritionProof": {
+    "description": "Showcase card proof line: nutrition."
+  },
+  "nameCaptureIntro": "Hi! I'm Form — your personal AI coach. 👋",
+  "@nameCaptureIntro": {
+    "description": "Form's opening line in the name-capture chat."
+  },
+  "nameCaptureAsk": "What should I call you on this journey?",
+  "@nameCaptureAsk": {
+    "description": "Form asks for the user's name."
+  },
+  "nameCaptureHint": "Your name",
+  "@nameCaptureHint": {
+    "description": "Placeholder in the name input."
+  },
+  "nameCaptureReframeAsk": "What's wearing you down most right now?",
+  "@nameCaptureReframeAsk": {
+    "description": "Form asks the emotional-reframe question."
+  },
+  "nameCaptureChipLoop": "Falling into the same loop",
+  "@nameCaptureChipLoop": {
+    "description": "Reframe answer chip."
+  },
+  "nameCaptureChipResults": "Not seeing results",
+  "@nameCaptureChipResults": {
+    "description": "Reframe answer chip."
+  },
+  "nameCaptureChipAlone": "Feeling alone in it",
+  "@nameCaptureChipAlone": {
+    "description": "Reframe answer chip."
+  },
+  "nameCaptureWelcome": "Got it, {name}. I'm excited to work with you.",
+  "@nameCaptureWelcome": {
+    "description": "Scripted welcome used when the live coach reply does not arrive in time.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "nameCaptureAckLoop": "{name}, falling into the same loop...",
+  "@nameCaptureAckLoop": {
+    "description": "Form names the pain back to the user. Reframe answer: the loop.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "nameCaptureAckResults": "{name}, carrying on without seeing results is exhausting.",
+  "@nameCaptureAckResults": {
+    "description": "Form names the pain back to the user. Reframe answer: no results.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "nameCaptureAckAlone": "{name}, feeling alone in it...",
+  "@nameCaptureAckAlone": {
+    "description": "Form names the pain back to the user. Reframe answer: alone.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "nameCaptureAckGeneric": "{name}, I hear you.",
+  "@nameCaptureAckGeneric": {
+    "description": "Fallback acknowledgment for an unrecognised reframe token.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "nameCaptureAckGenericNoName": "I hear you.",
+  "@nameCaptureAckGenericNoName": {
+    "description": "Acknowledgment when no name was captured, so the sentence never opens with a stray comma."
+  },
+  "nameCaptureTransition": "{name}, now I'm building your plan.",
+  "@nameCaptureTransition": {
+    "description": "Form's hand-off line into the rest of onboarding.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "nameCaptureTransitionNoName": "Now I'm building your plan.",
+  "@nameCaptureTransitionNoName": {
+    "description": "Hand-off line when no name was captured."
+  },
+  "act1Cta": "START",
+  "@act1Cta": {
+    "description": "Primary CTA on the first onboarding screen."
+  },
+  "act1HeroTitle": "Reshape\nYour Body\nwith {ai}",
+  "@act1HeroTitle": {
+    "description": "Three-line hero title. {ai} is rendered in the neon accent colour, so the translator controls where in the sentence the highlight falls; the line breaks are theirs too.",
+    "placeholders": {
+      "ai": {
+        "type": "String"
+      }
+    }
+  },
+  "act1HeroTitleHighlight": "AI",
+  "@act1HeroTitleHighlight": {
+    "description": "The neon-highlighted fragment inside the hero title."
+  },
+  "act1HeroBlurb": "It analyses every rep, corrects your form, and with a 30-day program moves you a little closer to your goal each day.",
+  "@act1HeroBlurb": {
+    "description": "Supporting paragraph under the hero title."
+  },
+  "act1AiBadge": "AI POWERED",
+  "@act1AiBadge": {
+    "description": "Badge above the hero title."
+  },
+  "act1CapCoachTitle": "AI COACH",
+  "@act1CapCoachTitle": {
+    "description": "Capability card title."
+  },
+  "act1CapCoachBody": "Analyses your reps,\ncorrects your form.",
+  "@act1CapCoachBody": {
+    "description": "Capability card body. The line break is deliberate — three cards share a row and must stay balanced."
+  },
+  "act1CapPlanTitle": "PERSONAL PLAN",
+  "@act1CapPlanTitle": {
+    "description": "Capability card title."
+  },
+  "act1CapPlanBody": "Training and nutrition\nplans built for you.",
+  "@act1CapPlanBody": {
+    "description": "Capability card body."
+  },
+  "act1CapResultTitle": "REAL RESULTS",
+  "@act1CapResultTitle": {
+    "description": "Capability card title."
+  },
+  "act1CapResultBody": "Steady progress\nfor 30 days.",
+  "@act1CapResultBody": {
+    "description": "Capability card body."
+  },
+  "act1AnalysisTargetLabel": "TARGET",
+  "@act1AnalysisTargetLabel": {
+    "description": "Label beside the sample form score on the hook screen."
+  },
+  "act1AnalysisTargetValue": "{percent}% FORM",
+  "@act1AnalysisTargetValue": {
+    "description": "Sample form score. The percent sign leads the number in Turkish and trails it in English, which is why this is a string and not a concatenation.",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "act1TrustSafeTitle": "SAFE",
+  "@act1TrustSafeTitle": {
+    "description": "Trust badge title."
+  },
+  "act1TrustSafeBody": "Evidence-based\nmethods",
+  "@act1TrustSafeBody": {
+    "description": "Trust badge body."
+  },
+  "act1TrustFastTitle": "FAST",
+  "@act1TrustFastTitle": {
+    "description": "Trust badge title."
+  },
+  "act1TrustFastBody": "Make the most\nof your time",
+  "@act1TrustFastBody": {
+    "description": "Trust badge body."
+  },
+  "act1TrustEfficientTitle": "EFFICIENT",
+  "@act1TrustEfficientTitle": {
+    "description": "Trust badge title."
+  },
+  "act1TrustEfficientBody": "Maximum\nresults",
+  "@act1TrustEfficientBody": {
+    "description": "Trust badge body."
+  },
+  "act1TrustGoalTitle": "GOAL",
+  "@act1TrustGoalTitle": {
+    "description": "Trust badge title."
+  },
+  "act1TrustGoalBody": "The body you\nwant",
+  "@act1TrustGoalBody": {
+    "description": "Trust badge body."
+  },
+  "act1LegalNotice": "By continuing you accept the {terms} and the {privacy}.",
+  "@act1LegalNotice": {
+    "description": "Legal line under the start button. Both placeholders are rendered as tappable links, so the whole sentence must stay one string — the translator decides where the links sit.",
+    "placeholders": {
+      "terms": {
+        "type": "String"
+      },
+      "privacy": {
+        "type": "String"
+      }
+    }
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sixpack_ai/core/services/app_preferences.dart';
+import 'package:sixpack_ai/core/theme/app_colors.dart';
 import 'package:sixpack_ai/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:sixpack_ai/l10n/app_localizations.dart';
 
@@ -84,6 +85,61 @@ void main() {
       // against 'FormAI' here would be a false negative — the widget
       // exists, it just isn't visible to the user.
     });
+
+    testWidgets(
+      'the hero title renders as one localised sentence with the AI '
+      'fragment highlighted',
+      (tester) async {
+        final prefs = await SharedPreferences.getInstance();
+        await tester.pumpWidget(_hostOnboarding(prefs));
+        await tester.pump();
+
+        // Phase 5 · the title used to be three hardcoded TextSpans, one
+        // per line, which pinned the neon word to the middle line. It is
+        // now one ARB sentence with the highlight as a placeholder, so
+        // a translator can move the accent anywhere. What must hold is
+        // that the whole sentence still reaches the screen AND the
+        // fragment is still painted in the accent colour.
+        final richText = _richTextContaining(tester, 'Şekillendir');
+        final plain = richText.text.toPlainText();
+        expect(plain, contains('Vücudunu'));
+        expect(plain, contains('Yapay Zeka'));
+        expect(plain, contains('Şekillendir'));
+
+        final highlighted = _flatten(richText.text as TextSpan)
+            .where((s) => s.style?.color == AppColors.neon)
+            .toList();
+        expect(highlighted, hasLength(1));
+        expect(highlighted.single.text, 'Yapay Zeka');
+      },
+    );
+
+    testWidgets(
+      'both legal documents stay tappable inside the localised sentence',
+      (tester) async {
+        final prefs = await SharedPreferences.getInstance();
+        await tester.pumpWidget(_hostOnboarding(prefs));
+        await tester.pump();
+
+        final legal = _richTextContaining(tester, 'Kullanım Şartları');
+        final plain = legal.text.toPlainText();
+        expect(plain, contains('Gizlilik Politikası'));
+        expect(plain, endsWith('kabul edersin.'));
+
+        // The sentence is one ARB string split around the two link
+        // labels at render time. If a translation drops a label the
+        // link silently disappears — so the count is asserted, not the
+        // presence of the words alone.
+        final tappable = _flatten(legal.text as TextSpan)
+            .where((s) => s.recognizer != null)
+            .toList();
+        expect(tappable, hasLength(2));
+        expect(
+          tappable.map((s) => s.text),
+          containsAll(<String>['Kullanım Şartları', 'Gizlilik Politikası']),
+        );
+      },
+    );
 
     testWidgets(
       'RC-18 · the BAŞLA CTA sits above the fold on a 393×851 phone — no '
@@ -295,4 +351,21 @@ class _FinalPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Center(child: Text('PAGE_3'));
   }
+}
+
+/// `Text.rich` nests the caller's span inside one it builds for the
+/// ambient style, so the interesting spans are never direct children.
+Iterable<TextSpan> _flatten(TextSpan root) sync* {
+  yield root;
+  for (final child in root.children ?? const <InlineSpan>[]) {
+    if (child is TextSpan) yield* _flatten(child);
+  }
+}
+
+RichText _richTextContaining(WidgetTester tester, String fragment) {
+  return tester.widget<RichText>(
+    find.byWidgetPredicate(
+      (w) => w is RichText && w.text.toPlainText().contains(fragment),
+    ),
+  );
 }

@@ -5,6 +5,7 @@ import '../../../../core/motion/ambient_particles.dart';
 import '../../../../core/motion/glow_pulse.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_haptics.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../coach/providers/coach_providers.dart';
 import '../../providers/wizard_provider.dart';
 import '../widgets/coach_chat_bubble.dart';
@@ -60,32 +61,33 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
   // acknowledgment replies are REAL LLM turns (coach-chat) with these
   // scripted lines as instant offline fallbacks — onboarding never waits
   // on the network beyond one composing beat.
-  static const String _prompt1 = 'Merhaba! Ben Form — kişisel AI koçun. 👋';
-  static const String _prompt2 = 'Bu yolculukta sana nasıl sesleneyim?';
-  static const String _reframePrompt = 'Şu an seni en çok ne yoruyor?';
+  String get _prompt1 => AppLocalizations.of(context).nameCaptureIntro;
+  String get _prompt2 => AppLocalizations.of(context).nameCaptureAsk;
+  String get _reframePrompt =>
+      AppLocalizations.of(context).nameCaptureReframeAsk;
 
   /// 750 ms composing-dots beat between every user chip tap and
   /// Form's reply, and between each AI cascade message.
   static const Duration _composingBeat = Duration(milliseconds: 750);
 
   /// The three emotional-reframe tokens captured in beat 2.
-  static const List<_ChipChoice> _reframeChoices = [
-    _ChipChoice(
-      token: 'dongu',
-      label: 'Aynı döngüye düşmek',
-      userBubble: 'Aynı döngüye düşmek',
-    ),
-    _ChipChoice(
-      token: 'gormek',
-      label: 'Sonuç görememek',
-      userBubble: 'Sonuç görememek',
-    ),
-    _ChipChoice(
-      token: 'yalniz',
-      label: 'Yalnız hissetmek',
-      userBubble: 'Yalnız hissetmek',
-    ),
-  ];
+  static List<_ChipChoice> _reframeChoicesFor(AppLocalizations l10n) => [
+        _ChipChoice(
+          token: 'dongu',
+          label: l10n.nameCaptureChipLoop,
+          userBubble: l10n.nameCaptureChipLoop,
+        ),
+        _ChipChoice(
+          token: 'gormek',
+          label: l10n.nameCaptureChipResults,
+          userBubble: l10n.nameCaptureChipResults,
+        ),
+        _ChipChoice(
+          token: 'yalniz',
+          label: l10n.nameCaptureChipAlone,
+          userBubble: l10n.nameCaptureChipAlone,
+        ),
+      ];
 
   late final TextEditingController _textCtrl;
   late final FocusNode _focusNode;
@@ -111,7 +113,6 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
 
   String _capturedName = '';
   String? _capturedReframeToken;
-  String _capturedReframeBubble = '';
 
   /// Live Claude replies for the two acknowledgment beats — null means the
   /// scripted fallback line renders instead (offline / LLM off / slow).
@@ -152,12 +153,6 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
       _transitionDone = true;
       _capturedName = existingName;
       _capturedReframeToken = existingReframe;
-      _capturedReframeBubble = _reframeChoices
-          .firstWhere(
-            (c) => c.token == existingReframe,
-            orElse: () => _reframeChoices.first,
-          )
-          .userBubble;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Future<void>.delayed(const Duration(milliseconds: 1500), () {
           if (mounted) widget.onContinue();
@@ -212,9 +207,12 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
     // beat lasts at least one composing cadence, at most the LLM timeout;
     // a null reply keeps the scripted fallback. Onboarding cannot stall.
     final llm = onboardingCoachReply(
+      // Prompt scaffolding, not UI copy — never rendered. Per-locale
+      // prompts are Phase 7's job; `onboardingCoachReply` already
+      // threads the locale to the server-side persona registry.
       'Kullanıcı adını söyledi: "$name". Ona adıyla hitap ederek tek cümlelik '
-      'sıcak bir hoş geldin ver. Soru sorma, uzatma — bir sonraki adıma ben '
-      'geçeceğim.',
+      'sıcak bir hoş geldin ver. Soru sorma, uzatma — bir sonraki adıma ben ' // i18n-ignore
+      'geçeceğim.', // i18n-ignore
     );
     Future.wait<dynamic>([llm, Future<void>.delayed(_composingBeat)])
         .then((results) {
@@ -245,7 +243,6 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
     ref.read(wizardProvider.notifier).setCoachingTone(choice.token);
     setState(() {
       _capturedReframeToken = choice.token;
-      _capturedReframeBubble = choice.userBubble;
       _reframeChosen = true;
     });
     _scrollToEnd();
@@ -253,10 +250,11 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
     // referencing the user's name AND what they said tires them most.
     // Scripted _ackText stays as the instant fallback.
     final llm = onboardingCoachReply(
+      // Prompt scaffolding, not UI copy — see above.
       'Kullanıcının adı: "$_capturedName". "Şu an seni en çok ne yoruyor?" '
       'sorusuna "${choice.userBubble}" diye cevap verdi. Bunu duyduğunu '
-      'hissettiren, adıyla hitap eden, 1-2 cümlelik empatik ve umut veren '
-      'bir yanıt ver. Soru sorma.',
+      'hissettiren, adıyla hitap eden, 1-2 cümlelik empatik ve umut veren ' // i18n-ignore
+      'bir yanıt ver. Soru sorma.', // i18n-ignore
     );
     Future.wait<dynamic>([llm, Future<void>.delayed(_composingBeat)])
         .then((results) {
@@ -316,6 +314,16 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
     });
   }
 
+  /// The user's own answer bubble, resolved from the stored token
+  /// rather than remembered as text — a token survives a locale change,
+  /// a captured sentence would not.
+  String _reframeBubbleFor(String? token) {
+    final choices = _reframeChoicesFor(AppLocalizations.of(context));
+    return choices
+        .firstWhere((c) => c.token == token, orElse: () => choices.first)
+        .userBubble;
+  }
+
   String _normalizeForGreeting(String raw) {
     final trimmed = raw.trim();
     if (trimmed.isEmpty) return '';
@@ -327,21 +335,26 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
   /// the pain back to the user so they feel heard before Form
   /// reframes it.
   String _ackText(String token, String name) {
+    final l10n = AppLocalizations.of(context);
     final n = _normalizeForGreeting(name);
-    final prefix = n.isEmpty ? '' : '$n, ';
+    // Both entry points guard on a non-empty name, but the no-name
+    // sentence exists so a future caller cannot open the line with a
+    // stray comma.
+    if (n.isEmpty) return l10n.nameCaptureAckGenericNoName;
     return switch (token) {
-      'dongu' => '${prefix}aynı döngüye düşmek...',
-      'gormek' => '${prefix}sonuç göremezken devam etmek yorar.',
-      'yalniz' => '${prefix}yalnız hissetmek...',
-      _ => '${prefix}anladım.',
+      'dongu' => l10n.nameCaptureAckLoop(n),
+      'gormek' => l10n.nameCaptureAckResults(n),
+      'yalniz' => l10n.nameCaptureAckAlone(n),
+      _ => l10n.nameCaptureAckGeneric(n),
     };
   }
 
   /// to the next onboarding step ("now I'm building your plan").
   String _transitionText(String name) {
+    final l10n = AppLocalizations.of(context);
     final n = _normalizeForGreeting(name);
-    final prefix = n.isEmpty ? '' : '$n, ';
-    return '$prefix' 'şimdi sana özel planı kuruyorum.';
+    if (n.isEmpty) return l10n.nameCaptureTransitionNoName;
+    return l10n.nameCaptureTransition(n);
   }
 
   CoachMood _currentMood() {
@@ -474,10 +487,9 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
                         else
                           CoachChatBubble(
                             text: _llmNameAck ??
-                                'Tamam, '
-                                    '${_normalizeForGreeting(_capturedName)}. '
-                                    'Birlikte çalışacağımız için '
-                                    'heyecanlıyım.',
+                                AppLocalizations.of(context).nameCaptureWelcome(
+                                  _normalizeForGreeting(_capturedName),
+                                ),
                             side: ChatBubbleSide.form,
                             typewriter: !_isReturning,
                             startDelay: const Duration(milliseconds: 200),
@@ -497,7 +509,7 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
                       if (_reframeChosen) ...[
                         const SizedBox(height: 8),
                         CoachChatBubble(
-                          text: _capturedReframeBubble,
+                          text: _reframeBubbleFor(_capturedReframeToken),
                           side: ChatBubbleSide.user,
                         ),
                         const SizedBox(height: 8),
@@ -541,7 +553,7 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
                 inputEnabled: _msg2Done && !_userNamePosted,
                 canSubmit: ctaEnabled,
                 onSubmit: _submitName,
-                chips: _reframeChoices,
+                chips: _reframeChoicesFor(AppLocalizations.of(context)),
                 onChipTap: _onReframeTap,
               ),
             ],
@@ -803,7 +815,7 @@ class _ChatInputPill extends StatelessWidget {
                 cursorColor: AppColors.neon,
                 decoration: InputDecoration(
                   isDense: true,
-                  hintText: 'Adın',
+                  hintText: AppLocalizations.of(context).nameCaptureHint,
                   hintStyle: TextStyle(
                     color: Colors.white.withValues(alpha: 0.35),
                     fontSize: 16,

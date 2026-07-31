@@ -5,6 +5,7 @@ import '../../../../core/motion/glow_pulse.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_haptics.dart';
 import '../../../../core/utils/legal_urls.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Act 1 · Emotional hook — the "Başla" entry screen.
 ///
@@ -145,12 +146,18 @@ class _WelcomeStepState extends State<WelcomeStep>
               fontSize: 18,
             ),
           ),
-          child: const Row(
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('BAŞLA'),
-              SizedBox(width: 12),
-              Icon(Icons.arrow_forward_rounded, size: 22),
+              Flexible(
+                child: Text(
+                  AppLocalizations.of(context).act1Cta,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Icon(Icons.arrow_forward_rounded, size: 22),
             ],
           ),
         ),
@@ -207,34 +214,26 @@ class _Hero extends StatelessWidget {
                 const _AiDestekliBadge(),
                 const SizedBox(height: 12),
                 RichText(
-                  text: const TextSpan(
-                    style: TextStyle(
+                  text: TextSpan(
+                    style: const TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.w900,
                       height: 1.12,
                       letterSpacing: 0.3,
+                      color: Colors.white,
                     ),
-                    children: [
-                      TextSpan(
-                        text: 'Vücudunu\n',
-                        style: TextStyle(color: Colors.white),
+                    children: _highlighted(
+                      AppLocalizations.of(context).act1HeroTitle(
+                        AppLocalizations.of(context).act1HeroTitleHighlight,
                       ),
-                      TextSpan(
-                        text: 'Yapay Zeka\n',
-                        style: TextStyle(color: AppColors.neon),
-                      ),
-                      TextSpan(
-                        text: 'ile Şekillendir',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ],
+                      AppLocalizations.of(context).act1HeroTitleHighlight,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 10),
-                const Text(
-                  'Her tekrarını analiz eder, formunu düzeltir ve 30 günlük '
-                  'programla hedefine her gün biraz daha yaklaşmanı sağlar.',
-                  style: TextStyle(
+                Text(
+                  AppLocalizations.of(context).act1HeroBlurb,
+                  style: const TextStyle(
                     color: Colors.white60,
                     fontSize: 12,
                     height: 1.4,
@@ -291,14 +290,14 @@ class _AiDestekliBadge extends StatelessWidget {
         color: AppColors.neon.withValues(alpha: 0.14),
         border: Border.all(color: AppColors.neon.withValues(alpha: 0.55)),
       ),
-      child: const Row(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.auto_awesome, color: AppColors.neonAccent, size: 13),
           SizedBox(width: 6),
           Text(
-            'AI DESTEKLİ',
-            style: TextStyle(
+            AppLocalizations.of(context).act1AiBadge,
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 11,
               fontWeight: FontWeight.w800,
@@ -317,6 +316,7 @@ class _CapabilityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
       decoration: BoxDecoration(
@@ -324,30 +324,30 @@ class _CapabilityCard extends StatelessWidget {
         color: Colors.white.withValues(alpha: 0.03),
         border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
-      child: const Row(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             child: _Capability(
               icon: Icons.psychology_rounded,
-              title: 'AI KOÇ',
-              body: 'Tekrarlarını analiz\neder, formunu düzeltir.',
+              title: l10n.act1CapCoachTitle,
+              body: l10n.act1CapCoachBody,
             ),
           ),
           _CapDivider(),
           Expanded(
             child: _Capability(
               icon: Icons.track_changes_rounded,
-              title: 'KİŞİSEL PLAN',
-              body: 'Sana özel antrenman\nve beslenme planları.',
+              title: l10n.act1CapPlanTitle,
+              body: l10n.act1CapPlanBody,
             ),
           ),
           _CapDivider(),
           Expanded(
             child: _Capability(
               icon: Icons.show_chart_rounded,
-              title: 'GERÇEK SONUÇ',
-              body: '30 gün boyunca\nistikrarlı gelişim.',
+              title: l10n.act1CapResultTitle,
+              body: l10n.act1CapResultBody,
             ),
           ),
         ],
@@ -417,6 +417,7 @@ class _AnalysisCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
       decoration: BoxDecoration(
@@ -480,9 +481,9 @@ class _AnalysisCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  'CANLI FORM ANALİZİ',
-                  style: TextStyle(
+                Text(
+                  l10n.liveFormAnalysisEyebrow,
+                  style: const TextStyle(
                     color: Colors.white54,
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
@@ -492,13 +493,17 @@ class _AnalysisCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    const Text(
-                      'HEDEF ',
-                      style: TextStyle(color: Colors.white54, fontSize: 12),
+                    Text(
+                      l10n.act1AnalysisTargetLabel,
+                      style: const TextStyle(
+                        color: Colors.white54,
+                        fontSize: 12,
+                      ),
                     ),
-                    const Text(
-                      '%94 FORM',
-                      style: TextStyle(
+                    const SizedBox(width: 4),
+                    Text(
+                      l10n.act1AnalysisTargetValue(94),
+                      style: const TextStyle(
                         color: Color(0xFF39FF14),
                         fontSize: 15,
                         fontWeight: FontWeight.w900,
@@ -531,6 +536,7 @@ class _TrustCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
       decoration: BoxDecoration(
@@ -538,34 +544,34 @@ class _TrustCard extends StatelessWidget {
         color: Colors.white.withValues(alpha: 0.03),
         border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
-      child: const Row(
+      child: Row(
         children: [
           Expanded(
             child: _Trust(
               icon: Icons.verified_user_rounded,
-              title: 'GÜVENLİ',
-              body: 'Bilimsel\nyöntemler',
+              title: l10n.act1TrustSafeTitle,
+              body: l10n.act1TrustSafeBody,
             ),
           ),
           Expanded(
             child: _Trust(
               icon: Icons.timer_rounded,
-              title: 'HIZLI',
-              body: 'Vaktini en\niyi kullan',
+              title: l10n.act1TrustFastTitle,
+              body: l10n.act1TrustFastBody,
             ),
           ),
           Expanded(
             child: _Trust(
               icon: Icons.local_fire_department_rounded,
-              title: 'VERİMLİ',
-              body: 'Maksimum\nsonuç',
+              title: l10n.act1TrustEfficientTitle,
+              body: l10n.act1TrustEfficientBody,
             ),
           ),
           Expanded(
             child: _Trust(
               icon: Icons.emoji_events_rounded,
-              title: 'HEDEF',
-              body: 'Hayalindeki\nvücut',
+              title: l10n.act1TrustGoalTitle,
+              body: l10n.act1TrustGoalBody,
             ),
           ),
         ],
@@ -650,26 +656,70 @@ class _WelcomeLegalLineState extends State<_WelcomeLegalLine> {
       decoration: TextDecoration.underline,
       decorationColor: const Color(0xFF00F0FF).withValues(alpha: 0.8),
     );
+    final l10n = AppLocalizations.of(context);
+    final terms = l10n.legalTermsLabel;
+    final privacy = l10n.legalPrivacyLabel;
     return Text.rich(
       TextSpan(
         style: baseStyle,
-        children: [
-          const TextSpan(text: 'Devam ederek '),
-          TextSpan(
-            text: 'Kullanım Şartları',
-            style: linkStyle,
-            recognizer: _termsTap,
-          ),
-          const TextSpan(text: ' ve '),
-          TextSpan(
-            text: 'Gizlilik Politikası',
-            style: linkStyle,
-            recognizer: _privacyTap,
-          ),
-          const TextSpan(text: '’nı kabul edersin.'),
-        ],
+        children: _linked(
+          l10n.act1LegalNotice(terms, privacy),
+          {terms: _termsTap, privacy: _privacyTap},
+          linkStyle,
+        ),
       ),
       textAlign: TextAlign.center,
     );
   }
+}
+
+/// Splits [sentence] around [fragment] and paints that one fragment in
+/// the neon accent. A translator who drops the fragment simply gets an
+/// unhighlighted title — the sentence still renders, which is the right
+/// failure mode for a purely visual concern.
+List<TextSpan> _highlighted(String sentence, String fragment) {
+  final index = fragment.isEmpty ? -1 : sentence.indexOf(fragment);
+  if (index < 0) return [TextSpan(text: sentence)];
+  return [
+    if (index > 0) TextSpan(text: sentence.substring(0, index)),
+    TextSpan(
+      text: fragment,
+      style: const TextStyle(color: AppColors.neon),
+    ),
+    if (index + fragment.length < sentence.length)
+      TextSpan(text: sentence.substring(index + fragment.length)),
+  ];
+}
+
+/// Splits [sentence] around each key of [links] and attaches that key's
+/// tap recogniser to the matching fragment. A fragment the translation
+/// dropped is simply not linked — the legal text still reads correctly
+/// and the reader can reach both documents from Settings, so a
+/// translation slip degrades rather than breaks compliance.
+List<TextSpan> _linked(
+  String sentence,
+  Map<String, GestureRecognizer> links,
+  TextStyle linkStyle,
+) {
+  var spans = <TextSpan>[TextSpan(text: sentence)];
+  links.forEach((fragment, recognizer) {
+    if (fragment.isEmpty) return;
+    final next = <TextSpan>[];
+    for (final span in spans) {
+      final text = span.text;
+      if (text == null || span.recognizer != null || !text.contains(fragment)) {
+        next.add(span);
+        continue;
+      }
+      final index = text.indexOf(fragment);
+      if (index > 0) next.add(TextSpan(text: text.substring(0, index)));
+      next.add(
+        TextSpan(text: fragment, style: linkStyle, recognizer: recognizer),
+      );
+      final rest = text.substring(index + fragment.length);
+      if (rest.isNotEmpty) next.add(TextSpan(text: rest));
+    }
+    spans = next;
+  });
+  return spans;
 }
