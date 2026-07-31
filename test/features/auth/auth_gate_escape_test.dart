@@ -30,7 +30,7 @@ void main() {
             // delegates; assertions stay unchanged because the
             // Turkish ARB values are the same literals.
             localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: const [Locale('tr')],
+            supportedLocales: [Locale('tr')],
             home: Scaffold(body: AuthModalBottomSheet()),
           ),
         ),
