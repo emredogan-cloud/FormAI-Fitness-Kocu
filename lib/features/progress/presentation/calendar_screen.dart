@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/theme_extension.dart';
 import '../../workout/models/workout_day_model.dart';
 import '../../workout/providers/workout_provider.dart';
+import '../../../l10n/app_localizations.dart';
 
 const Color _neon = Color(0xFF8B5CF6);
 const Color _success = Color(0xFF22C55E);
@@ -35,29 +37,30 @@ class CalendarScreen extends ConsumerStatefulWidget {
 }
 
 class _CalendarScreenState extends ConsumerState<CalendarScreen> {
-  static const List<String> _weekdayLabels = [
-    'Pt',
-    'Sa',
-    'Ça',
-    'Pe',
-    'Cu',
-    'Ct',
-    'Pa',
-  ];
-  static const List<String> _monthNames = [
-    'Ocak',
-    'Şubat',
-    'Mart',
-    'Nisan',
-    'Mayıs',
-    'Haziran',
-    'Temmuz',
-    'Ağustos',
-    'Eylül',
-    'Ekim',
-    'Kasım',
-    'Aralık',
-  ];
+  /// Roadmap Phase 5 (C12) · month names come from `intl`; the
+  /// two-letter weekday labels stay in ARB.
+  ///
+  /// The split is deliberate. `DateFormat.MMMM` already knows every
+  /// locale's month names and matches the Turkish array it replaces
+  /// exactly, so that array was pure duplication. The weekday row is
+  /// different: its two-letter form ("Pt", "Ça") is a density choice
+  /// this header makes, not the locale's standard abbreviation — intl
+  /// offers "Pzt", and it has no narrow form at all
+  /// (`EEEEEE` throws "Short weekdays are currently not supported").
+  /// Deriving them would have changed the design; ARB keeps it and
+  /// still lets a translator pick the right two letters.
+  List<String> _weekdayLabels(AppLocalizations l10n) => [
+        l10n.calendarWeekdayMon,
+        l10n.calendarWeekdayTue,
+        l10n.calendarWeekdayWed,
+        l10n.calendarWeekdayThu,
+        l10n.calendarWeekdayFri,
+        l10n.calendarWeekdaySat,
+        l10n.calendarWeekdaySun,
+      ];
+
+  String _monthName(DateTime month, String locale) =>
+      DateFormat.MMMM(locale).format(month);
 
   late DateTime _visibleMonth;
 
@@ -89,6 +92,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // The app's locale, not the device's — the calendar must read in the
+    // same language as everything around it.
+    final localeTag = Localizations.localeOf(context).toLanguageTag();
     final session = ref.watch(workoutSessionProvider).value;
     final days = session?.days ?? const <WorkoutDay>[];
     final activeDayNumber = session?.activeDay?.dayNumber ??
@@ -120,7 +126,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         elevation: 0,
         foregroundColor: scheme.onSurface,
         title: Text(
-          'Takvimim',
+          AppLocalizations.of(context).calendarTitle,
           style: TextStyle(
             color: scheme.onSurface,
             fontWeight: FontWeight.w900,
@@ -143,13 +149,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
           children: [
             _MonthNavigator(
-              label: '${_monthNames[_visibleMonth.month - 1]} '
+              label: '${_monthName(_visibleMonth, localeTag)} '
                   '${_visibleMonth.year}',
               onBack: () => _stepMonth(-1),
               onForward: () => _stepMonth(1),
             ),
             const SizedBox(height: 18),
-            _WeekdayRow(labels: _weekdayLabels),
+            _WeekdayRow(labels: _weekdayLabels(AppLocalizations.of(context))),
             const SizedBox(height: 10),
             _MonthGrid(
               visibleMonth: _visibleMonth,
@@ -300,7 +306,7 @@ class _MonthGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final firstOfMonth = DateTime(visibleMonth.year, visibleMonth.month);
     // Monday-indexed leading blanks — DateTime.weekday returns 1..7 where
-    // 1 is Monday. `_weekdayLabels[0] == 'Pt'` aligns with Monday, so
+    // 1 is Monday, and `_weekdayLabels` is generated Mon-first, so
     // `firstOfMonth.weekday - 1` is the count of leading empty cells.
     final leading = firstOfMonth.weekday - 1;
     final daysInMonth =
@@ -455,9 +461,10 @@ class _Legend extends StatelessWidget {
       child: Wrap(
         spacing: 16,
         runSpacing: 10,
-        children: const [
+        children: [
           _LegendItem(color: _success, label: 'Tamamlanan'),
-          _LegendItem(color: _neon, label: 'Bugün'),
+          _LegendItem(
+              color: _neon, label: AppLocalizations.of(context).calendarToday),
           _LegendItem(color: _restAmber, label: 'Dinlenme'),
           _LegendItem(color: Color(0xFF2A2A36), label: 'Bekleyen'),
         ],
@@ -548,7 +555,7 @@ class _MonthSummaryCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'BU AY ÖZET',
+            AppLocalizations.of(context).calendarMonthSummary,
             style: TextStyle(
               color: scheme.onSurface.withValues(alpha: 0.70),
               fontSize: 10,

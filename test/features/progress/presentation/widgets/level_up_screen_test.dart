@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sixpack_ai/features/progress/data/level_titles.dart';
 import 'package:sixpack_ai/features/progress/presentation/widgets/level_up_screen.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// The level-up celebration overlay. It's a pure presentation widget
 /// (level + tier in, choreographed reveal out), so the tests assert the
@@ -11,6 +12,8 @@ import 'package:sixpack_ai/features/progress/presentation/widgets/level_up_scree
 
 Widget _host({required int level, required LevelTier tier}) {
   return MaterialApp(
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: [Locale('tr')],
     home: LevelUpScreen(level: level, tier: tier),
     debugShowCheckedModeBanner: false,
   );

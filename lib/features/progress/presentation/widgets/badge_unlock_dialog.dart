@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/share_service.dart';
 import '../../../referral/providers/referral_provider.dart';
 import '../../providers/badge_unlocks_provider.dart';
+import '../../../../l10n/app_localizations.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonAccent = Color(0xFF4DA6FF);
@@ -77,8 +78,8 @@ class _BadgeUnlockDialogState extends State<_BadgeUnlockDialog>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              'YENİ ROZET',
+            Text(
+              AppLocalizations.of(context).badgeUnlockEyebrow,
               style: TextStyle(
                 color: _neonAccent,
                 fontSize: 11,
@@ -166,7 +167,8 @@ class _BadgeUnlockDialogState extends State<_BadgeUnlockDialog>
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: const Text('HARİKA!'),
+                    child: Text(
+                        AppLocalizations.of(context).badgeUnlockAcknowledge),
                   ),
                 ),
               ],
@@ -200,7 +202,7 @@ class _SharePillButton extends ConsumerWidget {
         );
       },
       icon: const Icon(Icons.ios_share_rounded, size: 16),
-      label: const Text('Paylaş'),
+      label: Text(AppLocalizations.of(context).badgeUnlockShare),
       style: OutlinedButton.styleFrom(
         foregroundColor: Colors.white,
         side:

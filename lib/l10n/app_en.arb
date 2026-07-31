@@ -179,5 +179,127 @@
   "referralCodeCopied": "Code copied",
   "@referralCodeCopied": {
     "description": "Referral code copy toast"
+  },
+  "calendarTitle": "My calendar",
+  "@calendarTitle": {
+    "description": "Calendar screen title"
+  },
+  "calendarToday": "Today",
+  "@calendarToday": {
+    "description": "Calendar legend — today marker"
+  },
+  "calendarRest": "Rest",
+  "@calendarRest": {
+    "description": "Calendar legend — rest day"
+  },
+  "calendarMonthSummary": "THIS MONTH",
+  "@calendarMonthSummary": {
+    "description": "Calendar monthly summary heading"
+  },
+  "levelUpEyebrow": "NEW LEVEL",
+  "@levelUpEyebrow": {
+    "description": "Level-up screen eyebrow"
+  },
+  "levelUpRareAir": "Few people get here. You did.",
+  "@levelUpRareAir": {
+    "description": "Level-up line for high levels"
+  },
+  "levelUpDisciplinePaying": "Discipline is starting to pay off. Keep going.",
+  "@levelUpDisciplinePaying": {
+    "description": "Level-up line for mid levels"
+  },
+  "levelUpConsistencyIsCharacter": "Consistency has become character.",
+  "@levelUpConsistencyIsCharacter": {
+    "description": "Level-up line for sustained streaks"
+  },
+  "levelUpTowardsNext": "On to the next level.",
+  "@levelUpTowardsNext": {
+    "description": "Level-up closing line"
+  },
+  "badgeUnlockEyebrow": "NEW BADGE",
+  "@badgeUnlockEyebrow": {
+    "description": "Badge unlock dialog eyebrow"
+  },
+  "badgeUnlockAcknowledge": "AWESOME!",
+  "@badgeUnlockAcknowledge": {
+    "description": "Badge unlock dismiss button"
+  },
+  "badgeUnlockShare": "Share",
+  "@badgeUnlockShare": {
+    "description": "Badge unlock share button"
+  },
+  "retrospectiveEyebrow": "THIS WEEK",
+  "@retrospectiveEyebrow": {
+    "description": "Weekly retrospective card eyebrow"
+  },
+  "retrospectiveSummary": "This week you did {workouts} workouts, trained for {minutes} minutes and completed {reps} reps. Ready for next week?",
+  "@retrospectiveSummary": {
+    "description": "Weekly retrospective sentence. Parameterised rather than concatenated so a translator can reorder the clauses.",
+    "placeholders": {
+      "workouts": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "String"
+      },
+      "reps": {
+        "type": "String"
+      }
+    }
+  },
+  "retrospectiveWorkoutsValue": "{count} workouts",
+  "@retrospectiveWorkoutsValue": {
+    "description": "Bolded workout-count fragment inside the retrospective sentence",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "retrospectiveMinutesValue": "{count} minutes",
+  "@retrospectiveMinutesValue": {
+    "description": "Bolded minutes fragment inside the retrospective sentence",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "retrospectiveRepsValue": "{count} reps",
+  "@retrospectiveRepsValue": {
+    "description": "Bolded rep-count fragment inside the retrospective sentence",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "calendarWeekdayMon": "Mo",
+  "@calendarWeekdayMon": {
+    "description": "Two-letter Mon label in the calendar header row"
+  },
+  "calendarWeekdayTue": "Tu",
+  "@calendarWeekdayTue": {
+    "description": "Two-letter Tue label in the calendar header row"
+  },
+  "calendarWeekdayWed": "We",
+  "@calendarWeekdayWed": {
+    "description": "Two-letter Wed label in the calendar header row"
+  },
+  "calendarWeekdayThu": "Th",
+  "@calendarWeekdayThu": {
+    "description": "Two-letter Thu label in the calendar header row"
+  },
+  "calendarWeekdayFri": "Fr",
+  "@calendarWeekdayFri": {
+    "description": "Two-letter Fri label in the calendar header row"
+  },
+  "calendarWeekdaySat": "Sa",
+  "@calendarWeekdaySat": {
+    "description": "Two-letter Sat label in the calendar header row"
+  },
+  "calendarWeekdaySun": "Su",
+  "@calendarWeekdaySun": {
+    "description": "Two-letter Sun label in the calendar header row"
   }
 }

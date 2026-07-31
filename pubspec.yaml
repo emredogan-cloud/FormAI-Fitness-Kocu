@@ -74,6 +74,12 @@ dependencies:
   google_sign_in: ^7.2.0
   sign_in_with_apple: ^7.0.1
   crypto: ^3.0.7
+  # Roadmap Phase 5 (C12) · locale-aware dates, numbers and
+  # durations. Already present transitively via
+  # flutter_localizations; promoted to a direct dependency because
+  # the calendar now formats month and weekday names through
+  # DateFormat instead of hardcoded Turkish arrays.
+  intl: ^0.20.2
   # Phase 49 · skeleton loaders. The shimmer animation drives the
   # `SkeletonBox` / `SkeletonLine` widgets in lib/core/widgets/
   # skeleton_loader.dart, replacing generic CircularProgressIndicators

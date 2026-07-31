@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../data/level_titles.dart';
+import '../../../../l10n/app_localizations.dart';
 
 const Color _gold = Color(0xFFE0B547);
 const Color _goldDeep = Color(0xFFC18D2A);
@@ -165,8 +166,8 @@ class _LevelUpScreenState extends State<LevelUpScreen>
       opacity: segT,
       child: Transform.translate(
         offset: Offset(0, 8 * (1 - segT)),
-        child: const Text(
-          'YENİ SEVİYE',
+        child: Text(
+          AppLocalizations.of(context).levelUpEyebrow,
           style: TextStyle(
             color: _amber,
             fontSize: 12,
@@ -246,7 +247,7 @@ class _LevelUpScreenState extends State<LevelUpScreen>
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 36),
         child: Text(
-          _subtitleFor(widget.tier),
+          _subtitleFor(context, widget.tier),
           textAlign: TextAlign.center,
           style: const TextStyle(
             color: Colors.white70,
@@ -294,17 +295,17 @@ class _LevelUpScreenState extends State<LevelUpScreen>
 /// level-up is rare enough that even 5 strings feel fresh, and a long
 /// corpus would push toward gamer-toned territory the user explicitly
 /// ruled out.
-String _subtitleFor(LevelTier tier) {
+String _subtitleFor(BuildContext context, LevelTier tier) {
   if (tier.minLevel >= 30) {
-    return 'Az insan buraya gelir. Sen geldin.';
+    return AppLocalizations.of(context).levelUpRareAir;
   }
   if (tier.minLevel >= 20) {
-    return 'Disiplin sonuç vermeye başladı. Aynen böyle devam.';
+    return AppLocalizations.of(context).levelUpDisciplinePaying;
   }
   if (tier.minLevel >= 10) {
-    return 'Tutarlılık karakter haline geldi.';
+    return AppLocalizations.of(context).levelUpConsistencyIsCharacter;
   }
-  return 'Bir sonraki seviyeye doğru.';
+  return AppLocalizations.of(context).levelUpTowardsNext;
 }
 
 class _GoldParticle {

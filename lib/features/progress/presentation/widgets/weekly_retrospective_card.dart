@@ -6,6 +6,7 @@ import '../../../workout/data/session_log_repository.dart';
 import '../../../workout/models/session_log_model.dart';
 import '../../../workout/models/workout_day_model.dart';
 import '../../../workout/providers/workout_provider.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Phase 52 · weekly retrospective card. Surfaces every Sunday on the
 /// Gelişim tab to bookend the user's training week with a snapshot of
@@ -113,8 +114,8 @@ class WeeklyRetrospectiveCard extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              const Text(
-                'HAFTANIN ÖZETİ',
+              Text(
+                AppLocalizations.of(context).retrospectiveEyebrow,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 11,
@@ -125,6 +126,15 @@ class WeeklyRetrospectiveCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 14),
+          // Roadmap Phase 5 · one parameterised sentence rather than
+          // seven concatenated spans.
+          //
+          // The old form hardcoded Turkish clause order into the widget
+          // tree, so no translator could have reordered it — and several
+          // languages must. The bold emphasis on the three numbers is
+          // preserved by splitting the rendered sentence around the
+          // substituted fragments, which keeps the visual design while
+          // letting the sentence be rewritten freely around them.
           Text.rich(
             TextSpan(
               style: const TextStyle(
@@ -133,17 +143,24 @@ class WeeklyRetrospectiveCard extends ConsumerWidget {
                 height: 1.6,
                 fontWeight: FontWeight.w600,
               ),
-              children: [
-                const TextSpan(text: 'Bu hafta '),
-                _bold('$weeklyCompleted antrenman'),
-                const TextSpan(text: ' yaptın, '),
-                _bold('$weeklyMinutes dakika'),
-                const TextSpan(text: ' çalıştın ve '),
-                _bold('$weeklyReps tekrar'),
-                const TextSpan(
-                  text: ' tamamladın. Gelecek hafta için hazır mısın?',
+              children: _emphasised(
+                AppLocalizations.of(context).retrospectiveSummary(
+                  AppLocalizations.of(context)
+                      .retrospectiveWorkoutsValue(weeklyCompleted),
+                  AppLocalizations.of(context)
+                      .retrospectiveMinutesValue(weeklyMinutes),
+                  AppLocalizations.of(context)
+                      .retrospectiveRepsValue(weeklyReps),
                 ),
-              ],
+                [
+                  AppLocalizations.of(context)
+                      .retrospectiveWorkoutsValue(weeklyCompleted),
+                  AppLocalizations.of(context)
+                      .retrospectiveMinutesValue(weeklyMinutes),
+                  AppLocalizations.of(context)
+                      .retrospectiveRepsValue(weeklyReps),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 14),
@@ -169,16 +186,6 @@ class WeeklyRetrospectiveCard extends ConsumerWidget {
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  TextSpan _bold(String text) {
-    return TextSpan(
-      text: text,
-      style: const TextStyle(
-        color: Colors.white,
-        fontWeight: FontWeight.w900,
       ),
     );
   }
@@ -251,4 +258,42 @@ class _StatChip extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Splits [sentence] around each of [emphasise] and returns spans with
+/// those fragments bolded.
+///
+/// A fragment the translator dropped simply isn't found and isn't
+/// bolded — the sentence still renders correctly, which is the right
+/// failure mode for a cosmetic concern.
+List<TextSpan> _emphasised(String sentence, List<String> emphasise) {
+  var spans = <TextSpan>[TextSpan(text: sentence)];
+  for (final fragment in emphasise) {
+    if (fragment.isEmpty) continue;
+    final next = <TextSpan>[];
+    for (final span in spans) {
+      final text = span.text;
+      if (text == null || span.style != null || !text.contains(fragment)) {
+        next.add(span);
+        continue;
+      }
+      final index = text.indexOf(fragment);
+      if (index > 0) next.add(TextSpan(text: text.substring(0, index)));
+      next.add(_bold(fragment));
+      final rest = text.substring(index + fragment.length);
+      if (rest.isNotEmpty) next.add(TextSpan(text: rest));
+    }
+    spans = next;
+  }
+  return spans;
+}
+
+TextSpan _bold(String text) {
+  return TextSpan(
+    text: text,
+    style: const TextStyle(
+      color: Colors.white,
+      fontWeight: FontWeight.w900,
+    ),
+  );
 }

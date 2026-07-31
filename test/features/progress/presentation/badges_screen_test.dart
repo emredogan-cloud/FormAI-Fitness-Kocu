@@ -6,6 +6,7 @@ import 'package:sixpack_ai/core/services/app_preferences.dart';
 import 'package:sixpack_ai/features/progress/presentation/badges_screen.dart';
 import 'package:sixpack_ai/features/workout/models/workout_day_model.dart';
 import 'package:sixpack_ai/features/workout/providers/workout_provider.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 class _StubWorkoutSessionNotifier extends WorkoutSessionNotifier {
   _StubWorkoutSessionNotifier(this._seed);
@@ -25,7 +26,9 @@ Future<Widget> _host(WorkoutSessionState seed) async {
         () => _StubWorkoutSessionNotifier(seed),
       ),
     ],
-    child: const MaterialApp(
+    child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: [Locale('tr')],
       home: BadgesScreen(),
       debugShowCheckedModeBanner: false,
     ),

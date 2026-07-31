@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sixpack_ai/features/progress/presentation/calendar_screen.dart';
 import 'package:sixpack_ai/features/workout/models/workout_day_model.dart';
 import 'package:sixpack_ai/features/workout/providers/workout_provider.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// Stub AsyncNotifier so the calendar screen doesn't hit the real
 /// Supabase-backed workout repository during widget tests.
@@ -22,7 +23,9 @@ Widget _host(WorkoutSessionState seed) {
         () => _StubWorkoutSessionNotifier(seed),
       ),
     ],
-    child: const MaterialApp(
+    child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: [Locale('tr')],
       home: CalendarScreen(),
       debugShowCheckedModeBanner: false,
     ),
