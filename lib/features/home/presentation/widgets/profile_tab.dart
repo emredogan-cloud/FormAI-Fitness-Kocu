@@ -636,8 +636,9 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     try {
       await ref.read(authControllerProvider).signOut();
     } catch (_) {
-      if (context.mounted)
+      if (context.mounted) {
         _toast(context, AppLocalizations.of(context).profileSignOutFailed);
+      }
     }
   }
 
@@ -829,9 +830,12 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
       decoration: _decoration(context: context, label: label, icon: icon),
       validator: (value) {
         final v = int.tryParse(value?.trim() ?? '');
-        if (v == null)
+        if (v == null) {
           return AppLocalizations.of(context).profileEditInvalidNumber;
-        if (v < min || v > max) return '$min–$max aralığında olmalı';
+        }
+        if (v < min || v > max) {
+          return AppLocalizations.of(context).profileEditOutOfRange(min, max);
+        }
         return null;
       },
     );

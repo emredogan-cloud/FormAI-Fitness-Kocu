@@ -281,8 +281,9 @@ class _AntrenmanTabState extends ConsumerState<AntrenmanTab> {
     for (final exercise in day.exercises) {
       counts[exercise.targetMuscle] = (counts[exercise.targetMuscle] ?? 0) + 1;
     }
-    if (counts.isEmpty)
+    if (counts.isEmpty) {
       return AppLocalizations.of(context).workoutPersonalSession;
+    }
 
     final dominant =
         counts.entries.reduce((a, b) => a.value >= b.value ? a : b).key;

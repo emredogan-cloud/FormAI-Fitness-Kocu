@@ -666,9 +666,12 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                     icon: Icons.badge_outlined),
                 validator: (value) {
                   final v = value?.trim() ?? '';
-                  if (v.isEmpty)
+                  if (v.isEmpty) {
                     return AppLocalizations.of(context).accountNameRequired;
-                  if (v.length > 40) return 'En fazla 40 karakter';
+                  }
+                  if (v.length > 40) {
+                    return AppLocalizations.of(context).accountNameTooLong(40);
+                  }
                   return null;
                 },
               ),
@@ -683,10 +686,12 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                     icon: Icons.cake_outlined),
                 validator: (value) {
                   final v = int.tryParse(value?.trim() ?? '');
-                  if (v == null)
+                  if (v == null) {
                     return AppLocalizations.of(context).accountAgeInvalid;
-                  if (v < 12 || v > 100)
+                  }
+                  if (v < 12 || v > 100) {
                     return AppLocalizations.of(context).accountAgeOutOfRange;
+                  }
                   return null;
                 },
               ),

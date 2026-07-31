@@ -4545,5 +4545,306 @@
         "type": "String"
       }
     }
+  },
+  "onbGenderTitle": "Your gender?",
+  "@onbGenderTitle": {
+    "description": "Onboarding gender step title."
+  },
+  "onbGenderSubtitle": "Let's calibrate your program for you.",
+  "@onbGenderSubtitle": {
+    "description": "Onboarding gender step subtitle."
+  },
+  "onbGenderFeedback": "I'm calibrating your program just for you.",
+  "@onbGenderFeedback": {
+    "description": "Feedback banner after the gender answer."
+  },
+  "onbGenderFemale": "Female",
+  "@onbGenderFemale": {
+    "description": "Gender option label."
+  },
+  "onbGenderMale": "Male",
+  "@onbGenderMale": {
+    "description": "Gender option label."
+  },
+  "onbGenderOther": "Other",
+  "@onbGenderOther": {
+    "description": "Gender option label."
+  },
+  "onbAiNoteHeadline": "💡 AI note",
+  "@onbAiNoteHeadline": {
+    "description": "Headline of the AI insight card shown during onboarding."
+  },
+  "onbGenderAiNote": "We analyse your gender data so we can build the training skeleton that best fits your physiology and biomechanics.",
+  "@onbGenderAiNote": {
+    "description": "AI insight body on the gender step."
+  },
+  "onbGoalTitle": "What's your goal?",
+  "@onbGoalTitle": {
+    "description": "Onboarding goal step title."
+  },
+  "onbGoalSubtitle": "I'll build the plan that suits you best on top of this.",
+  "@onbGoalSubtitle": {
+    "description": "Onboarding goal step subtitle."
+  },
+  "onbGoalFeedback": "🔥 Great choice! Most people who start with this goal see a difference within 30 days. Results depend on individual effort and consistency.",
+  "@onbGoalFeedback": {
+    "description": "Fallback feedback banner on the goal step."
+  },
+  "onbGoalFeedbackBellyBurn": "Fat loss is usually a matter of consistency. I won't set you up with a plan that starts heavy.",
+  "@onbGoalFeedbackBellyBurn": {
+    "description": "Per-answer goal feedback: belly burn."
+  },
+  "onbGoalFeedbackMuscleGain": "Building muscle takes patience. I'll set up a program that isn't in a hurry but is determined.",
+  "@onbGoalFeedbackMuscleGain": {
+    "description": "Per-answer goal feedback: muscle gain."
+  },
+  "onbGoalFeedbackFitnessLook": "'Looking fit' really means 'feeling at home in your body'. I'll reflect that in the plan.",
+  "@onbGoalFeedbackFitnessLook": {
+    "description": "Per-answer goal feedback: fitness look."
+  },
+  "onbGoalFeedbackStrength": "A strength base is laid slowly. We'll build a solid program that isn't rushed.",
+  "@onbGoalFeedbackStrength": {
+    "description": "Per-answer goal feedback: strength."
+  },
+  "onbExperienceTitle": "Have you trained before?",
+  "@onbExperienceTitle": {
+    "description": "Onboarding experience step title."
+  },
+  "onbExperienceSubtitle": "I'll calibrate the program's difficulty to your level.",
+  "@onbExperienceSubtitle": {
+    "description": "Onboarding experience step subtitle."
+  },
+  "onbExperienceFeedback": "Got it, I'm tuning your program accordingly.",
+  "@onbExperienceFeedback": {
+    "description": "Fallback feedback banner on the experience step."
+  },
+  "onbExperienceFeedbackNone": "Starting from scratch is actually an advantage — no bad habits to unlearn.",
+  "@onbExperienceFeedbackNone": {
+    "description": "Per-answer experience feedback: none."
+  },
+  "onbExperienceFeedbackOccasional": "You have a base; building on it will be easy.",
+  "@onbExperienceFeedbackOccasional": {
+    "description": "Per-answer experience feedback: occasional."
+  },
+  "onbExperienceFeedbackRegular": "Thanks to your background I can take the plan up a notch.",
+  "@onbExperienceFeedbackRegular": {
+    "description": "Per-answer experience feedback: regular."
+  },
+  "onbExperienceNone": "Never have",
+  "@onbExperienceNone": {
+    "description": "Experience option label: none."
+  },
+  "onbExperienceNoneHelper": "No problem at all. We'll start from zero and progress fast.",
+  "@onbExperienceNoneHelper": {
+    "description": "Experience option helper: none."
+  },
+  "onbExperienceOccasional": "Now and then",
+  "@onbExperienceOccasional": {
+    "description": "Experience option label: occasional."
+  },
+  "onbExperienceOccasionalHelper": "Great, we'll strengthen your base and get better results.",
+  "@onbExperienceOccasionalHelper": {
+    "description": "Experience option helper: occasional."
+  },
+  "onbExperienceRegular": "Regularly",
+  "@onbExperienceRegular": {
+    "description": "Experience option label: regular."
+  },
+  "onbExperienceRegularHelper": "We'll take your level up a step.",
+  "@onbExperienceRegularHelper": {
+    "description": "Experience option helper: regular."
+  },
+  "onbExperienceInputLabel": "Tell us about your training history and we can help you better",
+  "@onbExperienceInputLabel": {
+    "description": "Free-text label on the experience step."
+  },
+  "onbExperienceInputHint": "E.g. I played basketball in high school but haven't trained for 2 years...",
+  "@onbExperienceInputHint": {
+    "description": "Free-text hint on the experience step."
+  },
+  "onbMinutesTitle": "How much time can you spare a day?",
+  "@onbMinutesTitle": {
+    "description": "Onboarding daily-minutes step title."
+  },
+  "onbMinutesSubtitle": "I'll plan your session length around this.",
+  "@onbMinutesSubtitle": {
+    "description": "Onboarding daily-minutes step subtitle."
+  },
+  "onbMinutesFeedback": "Even with this much time you can get serious results.",
+  "@onbMinutesFeedback": {
+    "description": "Fallback feedback banner on the daily-minutes step."
+  },
+  "onbMinutesFeedbackShort": "15 minutes is ideal for busy days. Consistency matters more to me than duration.",
+  "@onbMinutesFeedbackShort": {
+    "description": "Per-answer daily-minutes feedback: 10-15."
+  },
+  "onbMinutesFeedbackMedium": "That's the sweet spot. We can build a program that's both sustainable and effective.",
+  "@onbMinutesFeedbackMedium": {
+    "description": "Per-answer daily-minutes feedback: 20-30."
+  },
+  "onbMinutesFeedbackLong": "Few people can spare this much time. I'm building a program with solid foundations.",
+  "@onbMinutesFeedbackLong": {
+    "description": "Per-answer daily-minutes feedback: 45+."
+  },
+  "onbMinutesShort": "10–15 minutes",
+  "@onbMinutesShort": {
+    "description": "Daily-minutes option label."
+  },
+  "onbMinutesShortHelper": "We'll get maximum value out of a short session.",
+  "@onbMinutesShortHelper": {
+    "description": "Daily-minutes option helper: 10-15."
+  },
+  "onbMinutesMedium": "20–30 minutes",
+  "@onbMinutesMedium": {
+    "description": "Daily-minutes option label."
+  },
+  "onbMinutesMediumHelper": "The ideal range. Fast progress is possible.",
+  "@onbMinutesMediumHelper": {
+    "description": "Daily-minutes option helper: 20-30."
+  },
+  "onbMinutesLong": "45+ minutes",
+  "@onbMinutesLong": {
+    "description": "Daily-minutes option label."
+  },
+  "onbMinutesLongHelper": "We can progress more aggressively.",
+  "@onbMinutesLongHelper": {
+    "description": "Daily-minutes option helper: 45+."
+  },
+  "onbFormNoteHeadline": "💡 Form says:",
+  "@onbFormNoteHeadline": {
+    "description": "Headline of the coach note card. 'Form' is the coach's name and is never translated."
+  },
+  "onbMinutesAiNote": "Even just 15 minutes a day is 100% more effective than none at all. Consistency matters far more than duration.",
+  "@onbMinutesAiNote": {
+    "description": "Coach note body on the daily-minutes step."
+  },
+  "onbActivityTitle": "Your daily activity?",
+  "@onbActivityTitle": {
+    "description": "Onboarding activity step title."
+  },
+  "onbActivitySubtitle": "I'm calculating your calorie needs from this.",
+  "@onbActivitySubtitle": {
+    "description": "Onboarding activity step subtitle."
+  },
+  "onbActivityFeedback": "I'm tuning your personal calories and program intensity to this.",
+  "@onbActivityFeedback": {
+    "description": "Fallback feedback banner on the activity step."
+  },
+  "onbActivityFeedbackSedentary": "Desk life is very common. I'll build your movement habit with gentle starts.",
+  "@onbActivityFeedbackSedentary": {
+    "description": "Per-answer activity feedback: sedentary."
+  },
+  "onbActivityFeedbackLight": "Lightly active is a good place to start. Going up from here is easy.",
+  "@onbActivityFeedbackLight": {
+    "description": "Per-answer activity feedback: light."
+  },
+  "onbActivityFeedbackActive": "An active lifestyle strengthens the foundation.",
+  "@onbActivityFeedbackActive": {
+    "description": "Per-answer activity feedback: active."
+  },
+  "onbActivityInputLabel": "Describe your day and we can help you better",
+  "@onbActivityInputLabel": {
+    "description": "Free-text label on the activity step."
+  },
+  "onbActivityInputHint": "My day is mostly at a desk but I walk in the evenings...",
+  "@onbActivityInputHint": {
+    "description": "Free-text hint on the activity step."
+  },
+  "onbContinueCta": "CONTINUE",
+  "@onbContinueCta": {
+    "description": "Uppercase continue button used on onboarding steps."
+  },
+  "onbBodyTitle": "Your body details",
+  "@onbBodyTitle": {
+    "description": "Onboarding physical-data step title."
+  },
+  "onbBodySubtitle": "A short data entry for full personalisation.",
+  "@onbBodySubtitle": {
+    "description": "Onboarding physical-data step subtitle."
+  },
+  "onbBodyCalculating": "Calculating your metabolism…",
+  "@onbBodyCalculating": {
+    "description": "Progress line shown while the physical-data step commits."
+  },
+  "onbBodyCtaBusy": "CALCULATING…",
+  "@onbBodyCtaBusy": {
+    "description": "Physical-data step CTA while calculating."
+  },
+  "onbBodyCta": "NEXT",
+  "@onbBodyCta": {
+    "description": "Physical-data step CTA."
+  },
+  "onbPainTitle": "What challenges you most?",
+  "@onbPainTitle": {
+    "description": "Onboarding pain-point step title."
+  },
+  "onbPainSubtitle": "Your program will be built to solve exactly this.",
+  "@onbPainSubtitle": {
+    "description": "Onboarding pain-point step subtitle."
+  },
+  "onbPainFeedback": "I'll optimise your plan to solve this.",
+  "@onbPainFeedback": {
+    "description": "Fallback feedback banner on the pain-point step."
+  },
+  "onbPainFeedbackMotivation": "Motivation fluctuates — a system doesn't. The plan will take its place.",
+  "@onbPainFeedbackMotivation": {
+    "description": "Per-answer pain-point feedback: motivation."
+  },
+  "onbPainFeedbackConsistency": "Consistency is where everyone struggles. The plan will account for the hard moments.",
+  "@onbPainFeedbackConsistency": {
+    "description": "Per-answer pain-point feedback: consistency."
+  },
+  "onbPainFeedbackNoIdea": "Moving without a clear roadmap is exhausting. We'll walk it step by step.",
+  "@onbPainFeedbackNoIdea": {
+    "description": "Per-answer pain-point feedback: no idea."
+  },
+  "onbPainFeedbackDiet": "Diet is where people get stuck most often. I'll build the plan with a flexible approach.",
+  "@onbPainFeedbackDiet": {
+    "description": "Per-answer pain-point feedback: diet."
+  },
+  "onbPainConsistency": "Consistency",
+  "@onbPainConsistency": {
+    "description": "Pain-point option label."
+  },
+  "onbPainMotivation": "Motivation",
+  "@onbPainMotivation": {
+    "description": "Pain-point option label."
+  },
+  "onbPainDiet": "Diet",
+  "@onbPainDiet": {
+    "description": "Pain-point option label."
+  },
+  "onbPainNoIdea": "I don't know what to do",
+  "@onbPainNoIdea": {
+    "description": "Pain-point option label."
+  },
+  "onbPainInputLabel": "You can spell out exactly what makes it hard for you",
+  "@onbPainInputLabel": {
+    "description": "Free-text label on the pain-point step."
+  },
+  "onbPainInputHint": "E.g. I'm very tired in the evenings and break my diet...",
+  "@onbPainInputHint": {
+    "description": "Free-text hint on the pain-point step."
+  },
+  "accountNameTooLong": "At most {max} characters",
+  "@accountNameTooLong": {
+    "description": "Validation error when the display name exceeds the length limit.",
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "profileEditOutOfRange": "Must be between {min} and {max}",
+  "@profileEditOutOfRange": {
+    "description": "Validation error for a numeric profile field outside its allowed range.",
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
   }
 }

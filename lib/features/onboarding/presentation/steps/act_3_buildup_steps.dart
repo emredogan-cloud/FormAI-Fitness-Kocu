@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_haptics.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../providers/wizard_provider.dart';
 import '../onboarding_chrome.dart';
 import '../widgets/ai_insight_card.dart';
@@ -28,35 +29,34 @@ class GenderStep extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final current = ref.watch(wizardProvider).gender;
+    final l10n = AppLocalizations.of(context);
     return InteractiveQuestionStep(
-      title: 'Cinsiyetin?',
-      subtitle: 'Programını sana göre kalibre edelim.',
+      title: l10n.onbGenderTitle,
+      subtitle: l10n.onbGenderSubtitle,
       initialValue: current?.name,
-      feedbackText: 'Programını sana özel kalibre ediyorum.',
-      options: const [
+      feedbackText: l10n.onbGenderFeedback,
+      options: [
         InteractiveOption(
           value: 'female',
-          label: 'Kadın',
+          label: l10n.onbGenderFemale,
           icon: Icons.female_rounded,
-          imageAsset: 'photos/cinsiyetseçimikadın.webp',
+          imageAsset: 'photos/cinsiyetseçimikadın.webp', // i18n-ignore
         ),
         InteractiveOption(
           value: 'male',
-          label: 'Erkek',
+          label: l10n.onbGenderMale,
           icon: Icons.male_rounded,
-          imageAsset: 'photos/cinsiyetseçimierkek.webp',
+          imageAsset: 'photos/cinsiyetseçimierkek.webp', // i18n-ignore
         ),
         InteractiveOption(
           value: 'other',
-          label: 'Diğer',
+          label: l10n.onbGenderOther,
           icon: Icons.transgender_rounded,
         ),
       ],
-      bottomSlot: const AiInsightCard(
-        headline: '💡 Yapay Zeka Notu',
-        body: 'Fiziksel özelliklerine ve biyomekaniğine en uygun '
-            'antrenman iskeletini kurabilmek için cinsiyet verini '
-            'analiz ediyoruz.',
+      bottomSlot: AiInsightCard(
+        headline: l10n.onbAiNoteHeadline,
+        body: l10n.onbGenderAiNote,
       ),
       onCommitted: (value) {
         final picked = Gender.values.firstWhere(
@@ -79,49 +79,44 @@ class GoalStep extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final current = ref.watch(wizardProvider).goal;
+    final l10n = AppLocalizations.of(context);
     return InteractiveQuestionStep(
-      title: 'Hedefin ne?',
-      subtitle: 'Sana en uygun planı bunun üzerine inşa edeceğim.',
+      title: l10n.onbGoalTitle,
+      subtitle: l10n.onbGoalSubtitle,
       initialValue: current,
-      feedbackText:
-          '🔥 Harika seçim! Bu hedefle başlayanların çoğu 30 gün içinde '
-          'fark görüyor. Sonuçlar bireysel çabaya ve tutarlılığa bağlıdır.',
+      feedbackText: l10n.onbGoalFeedback,
       // Phase 104 · predictive empathy. Form observes the choice
       // rather than just confirming it — each answer reads as Form
       // already understanding what kind of plan suits this user.
       feedbackTextBuilder: (value) => switch (value) {
-        'belly_burn' => 'Yağ kaybı çoğu zaman süreklilik meselesidir. '
-            'Sana ağır başlayan bir plan kurmayacağım.',
-        'muscle_gain' => 'Kas büyütmek sabır işi. Acelesi olmayan '
-            'ama kararlı bir program kuracağım.',
-        'fitness_look' => "'Fit görünmek' aslında 'kendinde rahat "
-            "hissetmek' demek. Plana onu yansıtacağım.",
-        'strength' => 'Güç temeli yavaş atılır. Aceleye getirmeyen, '
-            'sağlam bir program kuracağız.',
+        'belly_burn' => l10n.onbGoalFeedbackBellyBurn,
+        'muscle_gain' => l10n.onbGoalFeedbackMuscleGain,
+        'fitness_look' => l10n.onbGoalFeedbackFitnessLook,
+        'strength' => l10n.onbGoalFeedbackStrength,
         _ => null,
       },
-      options: const [
+      options: [
         InteractiveOption(
           value: 'belly_burn',
-          label: 'Göbek eritmek',
+          label: l10n.goalBellyBurnLower,
           icon: Icons.local_fire_department_rounded,
-          imageAsset: 'photos/hedefinneSıkılaşmak.webp',
+          imageAsset: 'photos/hedefinneSıkılaşmak.webp', // i18n-ignore
         ),
         InteractiveOption(
           value: 'muscle_gain',
-          label: 'Kas yapmak',
+          label: l10n.goalMuscleGainLower,
           icon: Icons.fitness_center_rounded,
           imageAsset: 'photos/hedefinneHacimKazanmak.webp',
         ),
         InteractiveOption(
           value: 'fitness_look',
-          label: 'Daha fit görünmek',
+          label: l10n.goalFitnessLookLower,
           icon: Icons.auto_awesome_rounded,
           imageAsset: 'photos/hedefinneSadeceSix-Pack.webp',
         ),
         InteractiveOption(
           value: 'strength',
-          label: 'Güçlenmek',
+          label: l10n.goalStrengthLower,
           icon: Icons.bolt_rounded,
           imageAsset: 'photos/hedef_guclenmek.webp',
         ),
@@ -143,44 +138,41 @@ class ExperienceStep extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final wizard = ref.watch(wizardProvider);
+    final l10n = AppLocalizations.of(context);
     return HybridQuestionStep(
-      title: 'Daha önce spor yaptın mı?',
-      subtitle: 'Programın zorluğunu seviyene göre kalibre edeceğim.',
-      feedbackText: 'Tamam, programını buna göre ayarlıyorum.',
+      title: l10n.onbExperienceTitle,
+      subtitle: l10n.onbExperienceSubtitle,
+      feedbackText: l10n.onbExperienceFeedback,
       feedbackTextBuilder: (value) => switch (value) {
-        'none' => 'Sıfırdan başlamak aslında bir avantaj — kötü '
-            'alışkanlık birikmemiş.',
-        'occasional' => 'Temelin var; devamını getirmek kolay olacak.',
-        'regular' => 'Geçmişin sayesinde planı bir basamak yukarı '
-            'çıkarabilirim.',
+        'none' => l10n.onbExperienceFeedbackNone,
+        'occasional' => l10n.onbExperienceFeedbackOccasional,
+        'regular' => l10n.onbExperienceFeedbackRegular,
         _ => null,
       },
       initialCardValue: wizard.experienceLevel,
       initialDescription: wizard.experienceDescription,
-      options: const [
+      options: [
         InteractiveOption(
           value: 'none',
-          label: 'Hiç yapmadım',
+          label: l10n.onbExperienceNone,
           icon: Icons.spa_rounded,
-          helper:
-              'Hiç sorun değil. Sıfırdan başlayıp hızlı gelişim sağlayacağız.',
+          helper: l10n.onbExperienceNoneHelper,
         ),
         InteractiveOption(
           value: 'occasional',
-          label: 'Ara sıra yaptım',
+          label: l10n.onbExperienceOccasional,
           icon: Icons.directions_walk_rounded,
-          helper: 'Harika, temelini güçlendirip daha iyi sonuç alacağız.',
+          helper: l10n.onbExperienceOccasionalHelper,
         ),
         InteractiveOption(
           value: 'regular',
-          label: 'Düzenli yapıyorum',
+          label: l10n.onbExperienceRegular,
           icon: Icons.fitness_center_rounded,
-          helper: 'Seviyeni bir üst noktaya taşıyacağız.',
+          helper: l10n.onbExperienceRegularHelper,
         ),
       ],
-      inputLabel: 'Spor geçmişinizi anlatırsanız daha iyi yardımcı oluruz',
-      inputHint: 'Örn: Lisede basketbol oynardım ama 2 yıldır spor '
-          'yapmıyorum...',
+      inputLabel: l10n.onbExperienceInputLabel,
+      inputHint: l10n.onbExperienceInputHint,
       onCardCommitted: (value) {
         ref.read(wizardProvider.notifier).setExperienceLevel(value);
         onCommitted();
@@ -202,44 +194,41 @@ class DailyMinutesStep extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final current = ref.watch(wizardProvider).dailyMinutes;
+    final l10n = AppLocalizations.of(context);
     return InteractiveQuestionStep(
-      title: 'Günde ne kadar zaman ayırabilirsin?',
-      subtitle: 'Antrenman uzunluğunu buna göre planlayacağım.',
+      title: l10n.onbMinutesTitle,
+      subtitle: l10n.onbMinutesSubtitle,
       initialValue: current,
-      feedbackText: 'Bu süreyle bile ciddi sonuç alabilirsin.',
+      feedbackText: l10n.onbMinutesFeedback,
       feedbackTextBuilder: (value) => switch (value) {
-        '10_15' => 'Yoğun günler için 15 dakika idealdir. Süreklilik '
-            'benim için süreden önemli.',
-        '20_30' => 'İdeal aralıkta. Hem sürdürülebilir hem etkili '
-            'bir program kurabiliriz.',
-        '45_plus' => 'Bu kadar zaman ayırabilenler azınlıktadır. '
-            'Temeli sağlam atan bir program inşa ediyorum.',
+        '10_15' => l10n.onbMinutesFeedbackShort,
+        '20_30' => l10n.onbMinutesFeedbackMedium,
+        '45_plus' => l10n.onbMinutesFeedbackLong,
         _ => null,
       },
-      options: const [
+      options: [
         InteractiveOption(
           value: '10_15',
-          label: '10–15 dakika',
+          label: l10n.onbMinutesShort,
           icon: Icons.timer_outlined,
-          helper: 'Kısa sürede maksimum verim alacağız.',
+          helper: l10n.onbMinutesShortHelper,
         ),
         InteractiveOption(
           value: '20_30',
-          label: '20–30 dakika',
+          label: l10n.onbMinutesMedium,
           icon: Icons.access_time_rounded,
-          helper: 'En ideal aralık. Hızlı gelişim mümkün.',
+          helper: l10n.onbMinutesMediumHelper,
         ),
         InteractiveOption(
           value: '45_plus',
-          label: '45+ dakika',
+          label: l10n.onbMinutesLong,
           icon: Icons.local_fire_department_outlined,
-          helper: 'Daha agresif ilerleyebiliriz.',
+          helper: l10n.onbMinutesLongHelper,
         ),
       ],
-      bottomSlot: const AiInsightCard(
-        headline: '💡 Form Diyor ki:',
-        body: 'Günde sadece 15 dakika bile, hiç yapmamaktan %100 daha '
-            'etkilidir. İstikrar, süreden çok daha önemlidir.',
+      bottomSlot: AiInsightCard(
+        headline: l10n.onbFormNoteHeadline,
+        body: l10n.onbMinutesAiNote,
       ),
       onCommitted: (value) {
         ref.read(wizardProvider.notifier).setDailyMinutes(value);
@@ -261,44 +250,46 @@ class ActivityStep extends ConsumerStatefulWidget {
 
 class _ActivityStepState extends ConsumerState<ActivityStep>
     with TickerProviderStateMixin {
-  static const List<InteractiveOption> _options = [
-    InteractiveOption(
-      value: 'sedentary',
-      label: 'Masa başı',
-      icon: Icons.chair_outlined,
-      imageAsset: 'photos/günlükaktivitenmasabaşı.webp',
-    ),
-    InteractiveOption(
-      value: 'light',
-      label: 'Hafif hareketli',
-      icon: Icons.directions_walk_rounded,
-      imageAsset: 'photos/günlükaktivitenhafifhareketli.webp',
-    ),
-    InteractiveOption(
-      value: 'active',
-      label: 'Çok aktif',
-      icon: Icons.directions_run_rounded,
-      imageAsset: 'photos/günlükaktivitenneÇokAktif.webp',
-    ),
-  ];
+  /// Hoisted so the path fits on one line with its `i18n-ignore`
+  /// marker — the asset filename is Turkish, which is enough for the
+  /// hardcoded-string gate to read it as copy.
+  static const String _lightActivityImage =
+      'photos/günlükaktivitenhafifhareketli.webp'; // i18n-ignore
 
-  /// Default fallback when no card is picked yet (banner is invisible
-  /// at that point, but the slot is built). Per-answer empathy lives
-  /// in [_resolveFeedbackText].
-  static const String _feedbackText =
-      'Kişisel kalori ve program yoğunluğunu buna göre ayarlıyorum.';
+  /// The option list carries copy, so it is built per-locale rather
+  /// than held as a `const` field. The `value` tokens are the wizard
+  /// state identities and never move.
+  static List<InteractiveOption> _optionsFor(AppLocalizations l10n) => [
+        InteractiveOption(
+          value: 'sedentary',
+          label: l10n.activityDesk,
+          icon: Icons.chair_outlined,
+          imageAsset: 'photos/günlükaktivitenmasabaşı.webp', // i18n-ignore
+        ),
+        InteractiveOption(
+          value: 'light',
+          label: l10n.activityLight,
+          icon: Icons.directions_walk_rounded,
+          imageAsset: _lightActivityImage, // i18n-ignore
+        ),
+        InteractiveOption(
+          value: 'active',
+          label: l10n.activityVeryActive,
+          icon: Icons.directions_run_rounded,
+          imageAsset: 'photos/günlükaktivitenneÇokAktif.webp', // i18n-ignore
+        ),
+      ];
 
   /// Phase 104 · activity-step empathy. Each lifestyle answer gets a
   /// reading-back observation from Form rather than a generic
-  /// confirmation.
-  String _resolveFeedbackText() {
+  /// confirmation. Falls back to a neutral line before a card is
+  /// picked (the banner is invisible then, but the slot is built).
+  String _resolveFeedbackText(AppLocalizations l10n) {
     return switch (_selectedCardValue) {
-      'sedentary' => 'Masa başı çok yaygın. Hareket alışkanlığını '
-          'yumuşak başlangıçlarla oturtacağım.',
-      'light' => 'Hafif aktif bir başlangıç için iyi durum. '
-          'Buradan yukarı çıkmak kolay.',
-      'active' => 'Aktif yaşam tarzı temeli sağlamlaştırıyor.',
-      _ => _feedbackText,
+      'sedentary' => l10n.onbActivityFeedbackSedentary,
+      'light' => l10n.onbActivityFeedbackLight,
+      'active' => l10n.onbActivityFeedbackActive,
+      _ => l10n.onbActivityFeedback,
     };
   }
 
@@ -407,11 +398,13 @@ class _ActivityStepState extends ConsumerState<ActivityStep>
   @override
   Widget build(BuildContext context) {
     final ctaEnabled = _textCtrl.text.trim().isNotEmpty;
+    final l10n = AppLocalizations.of(context);
+    final options = _optionsFor(l10n);
     return Column(
       children: [
-        const StepTitle(
-          title: 'Günlük aktiviten?',
-          subtitle: 'Kalori ihtiyacını buna göre hesaplıyorum.',
+        StepTitle(
+          title: l10n.onbActivityTitle,
+          subtitle: l10n.onbActivitySubtitle,
         ),
         const SizedBox(height: 14),
         Expanded(
@@ -420,20 +413,20 @@ class _ActivityStepState extends ConsumerState<ActivityStep>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                for (final opt in _options) ...[
+                for (final opt in options) ...[
                   OptionCard(
                     option: opt,
                     selected: _selectedCardValue == opt.value,
                     dimmed: _committingCard && _selectedCardValue != opt.value,
                     onTap: () => _pickCard(opt.value),
                   ),
-                  if (opt != _options.last) const SizedBox(height: 8),
+                  if (opt != options.last) const SizedBox(height: 8),
                 ],
                 const SizedBox(height: 12),
                 FeedbackBanner(
                   fade: _feedbackFade,
                   slide: _feedbackSlide,
-                  text: _resolveFeedbackText(),
+                  text: _resolveFeedbackText(l10n),
                 ),
                 const SizedBox(height: 14),
                 _ActivityFreeTextInput(
@@ -467,7 +460,7 @@ class _ActivityStepState extends ConsumerState<ActivityStep>
                               fontSize: 14,
                             ),
                           ),
-                          child: const Text('DEVAM ET'),
+                          child: Text(l10n.onbContinueCta),
                         ),
                       ),
                     ),
@@ -495,6 +488,7 @@ class _ActivityFreeTextInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -508,7 +502,7 @@ class _ActivityFreeTextInput extends StatelessWidget {
             const SizedBox(width: 6),
             Expanded(
               child: Text(
-                'Gününü açıklarsan daha iyi yardımcı olabiliriz',
+                l10n.onbActivityInputLabel,
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.85),
                   fontSize: 13,
@@ -532,8 +526,7 @@ class _ActivityFreeTextInput extends StatelessWidget {
               const TextStyle(color: Colors.white, fontSize: 14, height: 1.4),
           cursorColor: AppColors.neon,
           decoration: InputDecoration(
-            hintText: 'Günüm genelde masa başında geçiyor ama akşam yürüyüş '
-                'yapıyorum...',
+            hintText: l10n.onbActivityInputHint,
             hintStyle: const TextStyle(
               color: Colors.white38,
               fontSize: 13,
@@ -643,11 +636,12 @@ class _PhysicalDataStepState extends ConsumerState<PhysicalDataStep>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       children: [
-        const StepTitle(
-          title: 'Vücut bilgilerin',
-          subtitle: 'Tam kişiselleştirme için kısa bir veri girişi.',
+        StepTitle(
+          title: l10n.onbBodyTitle,
+          subtitle: l10n.onbBodySubtitle,
         ),
         const SizedBox(height: 8),
         Expanded(
@@ -657,7 +651,7 @@ class _PhysicalDataStepState extends ConsumerState<PhysicalDataStep>
               children: [
                 Expanded(
                   child: _CupertinoWheel(
-                    label: 'YAŞ',
+                    label: l10n.profileFieldAge,
                     controller: _ageCtrl,
                     min: _minAge,
                     max: _maxAge,
@@ -667,7 +661,7 @@ class _PhysicalDataStepState extends ConsumerState<PhysicalDataStep>
                 ),
                 Expanded(
                   child: _CupertinoWheel(
-                    label: 'BOY',
+                    label: l10n.profileFieldHeight,
                     suffix: 'cm',
                     controller: _heightCtrl,
                     min: _minHeight,
@@ -678,7 +672,7 @@ class _PhysicalDataStepState extends ConsumerState<PhysicalDataStep>
                 ),
                 Expanded(
                   child: _CupertinoWheel(
-                    label: 'KİLO',
+                    label: l10n.profileFieldWeight,
                     suffix: 'kg',
                     controller: _weightCtrl,
                     min: _minWeight,
@@ -693,12 +687,12 @@ class _PhysicalDataStepState extends ConsumerState<PhysicalDataStep>
         ),
         FadeTransition(
           opacity: _feedbackCtrl,
-          child: const Padding(
-            padding: EdgeInsets.fromLTRB(24, 0, 24, 12),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(
+                const SizedBox(
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(
@@ -706,14 +700,16 @@ class _PhysicalDataStepState extends ConsumerState<PhysicalDataStep>
                     valueColor: AlwaysStoppedAnimation(AppColors.neon),
                   ),
                 ),
-                SizedBox(width: 12),
-                Text(
-                  'Metabolizmanı hesaplıyorum…',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.3,
+                const SizedBox(width: 12),
+                Flexible(
+                  child: Text(
+                    l10n.onbBodyCalculating,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.3,
+                    ),
                   ),
                 ),
               ],
@@ -721,7 +717,7 @@ class _PhysicalDataStepState extends ConsumerState<PhysicalDataStep>
           ),
         ),
         PrimaryOnboardingButton(
-          label: _calculating ? 'HESAPLANIYOR…' : 'DEVAM',
+          label: _calculating ? l10n.onbBodyCtaBusy : l10n.onbBodyCta,
           onPressed: _calculating ? null : _commit,
         ),
       ],
@@ -833,19 +829,16 @@ class PainPointStep extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final wizard = ref.watch(wizardProvider);
+    final l10n = AppLocalizations.of(context);
     return HybridQuestionStep(
-      title: 'Seni en çok zorlayan ne?',
-      subtitle: 'Programın bu noktayı çözecek şekilde kurulacak.',
-      feedbackText: 'Bunu çözmek için planını optimize edeceğim.',
+      title: l10n.onbPainTitle,
+      subtitle: l10n.onbPainSubtitle,
+      feedbackText: l10n.onbPainFeedback,
       feedbackTextBuilder: (value) => switch (value) {
-        'motivation' => 'Motivasyon dalgalanır — sistem dalgalanmaz. '
-            'Plan onun yerini alacak.',
-        'consistency' => 'Süreklilik herkesin zorlandığı yerdir. '
-            'Plan, zorlanma anlarını hesaba katacak.',
-        'no_idea' => 'Net bir yol haritası olmadan hareket etmek '
-            'yorucu. Adım adım yürüyeceğiz.',
-        'diet' => 'Diyet en sık takılan yer. Esnek bir yaklaşımla '
-            'planı kuracağım.',
+        'motivation' => l10n.onbPainFeedbackMotivation,
+        'consistency' => l10n.onbPainFeedbackConsistency,
+        'no_idea' => l10n.onbPainFeedbackNoIdea,
+        'diet' => l10n.onbPainFeedbackDiet,
         _ => null,
       },
       initialCardValue: wizard.painPoint,
@@ -857,31 +850,30 @@ class PainPointStep extends ConsumerWidget {
       // consistency (most common, normalising) → motivation
       // (acceptable everyday struggle) → diet (concrete) →
       // no_idea (the answer that requires the most courage).
-      options: const [
+      options: [
         InteractiveOption(
           value: 'consistency',
-          label: 'Süreklilik',
+          label: l10n.onbPainConsistency,
           icon: Icons.repeat_rounded,
         ),
         InteractiveOption(
           value: 'motivation',
-          label: 'Motivasyon',
+          label: l10n.onbPainMotivation,
           icon: Icons.local_fire_department_outlined,
         ),
         InteractiveOption(
           value: 'diet',
-          label: 'Diyet',
+          label: l10n.onbPainDiet,
           icon: Icons.restaurant_menu_rounded,
         ),
         InteractiveOption(
           value: 'no_idea',
-          label: 'Ne yapacağımı bilmiyorum',
+          label: l10n.onbPainNoIdea,
           icon: Icons.help_outline_rounded,
         ),
       ],
-      inputLabel: 'Seni tam olarak neyin zorladığını detaylandırabilirsin',
-      inputHint: 'Örn: Akşamları çok yorgun oluyorum ve diyeti '
-          'bozuyorum...',
+      inputLabel: l10n.onbPainInputLabel,
+      inputHint: l10n.onbPainInputHint,
       onCardCommitted: (value) {
         ref.read(wizardProvider.notifier).setPainPoint(value);
         onCommitted();
