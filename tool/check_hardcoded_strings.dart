@@ -31,9 +31,11 @@ import 'dart:convert';
 import 'dart:io';
 
 /// Directories whose user-visible strings must eventually live in ARB.
+///
+/// This was `lib/features` + `lib/core/widgets` until the camera
+/// tutorial slice: see [_isGatedPath] for why it is now all of `lib`.
 const _scannedRoots = <String>[
-  'lib/features',
-  'lib/core/widgets',
+  'lib',
 ];
 
 /// The documented allowlist the roadmap calls for: paths whose literals
@@ -53,12 +55,38 @@ const _scannedRoots = <String>[
 /// allowlist material.
 const _allowlistedPrefixes = <String>[
   'lib/features/admin/',
+  // The seeded exercise and plan catalogue: names, descriptions and
+  // cues that mirror rows in the `exercises` / `workout_plans` tables.
+  // These are the one genuine case of the original "domain and data
+  // hold content" argument — they are DATA IDENTITY, not app copy, and
+  // Phase 7 localises them through the `*_i18n` columns added in
+  // migration 011. Putting them in ARB would fork the catalogue: the
+  // seed would translate and the database rows would not.
+  'lib/features/workout/data/workout_repository.dart',
 ];
 
-/// Only presentation-layer files are gated. Domain and data files hold
-/// content (exercise names, FAQ bodies) that Phase 7 localises through
-/// the database rather than ARB, and flagging them here would train
-/// people to ignore the tool.
+/// Every Dart file under `lib/` is gated, minus the allowlist above.
+///
+/// It used to be presentation-only, on the reasoning that "domain and
+/// data files hold content that Phase 7 localises through the database".
+/// That reasoning held for exactly one file (the exercise catalogue) and
+/// was wrong about the rest.
+///
+/// What it missed: `FramingResult.hint` — the live "can I see you?"
+/// guidance under the camera preview, six hardcoded Turkish strings in
+/// `domain/`, and the most-read line on the calibration screen. The
+/// tutorial screen could be extracted to zero and reported clean while
+/// its most important sentence stayed untranslated. Behind it sat ~540
+/// more in the same blind spot: spoken coach lines, notification bodies,
+/// badge names, form warnings, FAQ answers — none of it DB-backed, all
+/// of it read by users.
+///
+/// A gate is a claim about coverage. Scoping it to the layer where copy
+/// is *supposed* to live means it can only ever verify the discipline of
+/// people who already have it, and stays silent about the copy that
+/// leaked. So the scope is now "all of lib", and anything genuinely not
+/// user-facing earns an allowlist entry with a written reason — visible
+/// in the report, rather than invisible in a path rule.
 bool _isGatedPath(String path) {
   final p = path.replaceAll(r'\', '/');
   if (!p.endsWith('.dart')) return false;
@@ -67,8 +95,7 @@ bool _isGatedPath(String path) {
   for (final prefix in _allowlistedPrefixes) {
     if (p.startsWith(prefix)) return false;
   }
-  if (p.startsWith('lib/core/widgets/')) return true;
-  return p.contains('/presentation/');
+  return true;
 }
 
 final _turkishSignal = RegExp(
@@ -137,22 +164,37 @@ Map<String, int> _scan() {
   return counts;
 }
 
-/// How many literals the allowlist is suppressing, so the report can say
-/// so out loud rather than letting an exclusion masquerade as progress.
-int _allowlistedCount() {
-  var total = 0;
+/// How many literals each allowlist entry is suppressing, so the report
+/// can say so out loud rather than letting an exclusion masquerade as
+/// progress.
+///
+/// Reported per entry, not as one total: an allowlist is a standing
+/// promise that a body of strings is genuinely unreachable, and a promise
+/// nobody can audit line by line is one that quietly grows.
+Map<String, int> _allowlistedCounts() {
+  final counts = <String, int>{};
   for (final prefix in _allowlistedPrefixes) {
-    final dir = Directory(prefix);
-    if (!dir.existsSync()) continue;
-    for (final entity in dir.listSync(recursive: true)) {
-      if (entity is! File) continue;
-      final path = entity.path.replaceAll(r'\', '/');
-      if (!path.endsWith('.dart')) continue;
-      if (!path.contains('/presentation/')) continue;
-      total += _countViolations(entity.readAsStringSync());
+    var total = 0;
+    // Entries are either a directory prefix or a single file path.
+    final asFile = File(prefix);
+    if (asFile.existsSync()) {
+      total = _countViolations(asFile.readAsStringSync());
+    } else {
+      final dir = Directory(prefix);
+      if (!dir.existsSync()) continue;
+      for (final entity in dir.listSync(recursive: true)) {
+        if (entity is! File) continue;
+        final path = entity.path.replaceAll(r'\', '/');
+        if (!path.endsWith('.dart')) continue;
+        if (path.endsWith('.g.dart') || path.endsWith('.freezed.dart')) {
+          continue;
+        }
+        total += _countViolations(entity.readAsStringSync());
+      }
     }
+    if (total > 0) counts[prefix] = total;
   }
-  return total;
+  return counts;
 }
 
 const _baselinePath = 'tool/hardcoded_strings_baseline.json';
@@ -200,10 +242,14 @@ void main(List<String> args) {
   // extraction work in the numbers, and "we got the count down" stops
   // meaning anything. An allowlisted string is untranslated; it is just
   // untranslated on purpose.
-  final allowlisted = _allowlistedCount();
-  if (allowlisted > 0) {
-    stdout.writeln('  (excluded by allowlist, NOT extracted: $allowlisted in '
-        '${_allowlistedPrefixes.join(", ")})');
+  final allowlisted = _allowlistedCounts();
+  if (allowlisted.isNotEmpty) {
+    final sum = allowlisted.values.fold<int>(0, (a, b) => a + b);
+    stdout.writeln('  (excluded by allowlist, NOT extracted: $sum)');
+    for (final entry in allowlisted.entries) {
+      stdout.writeln('      ${entry.value.toString().padLeft(5)}  '
+          '${entry.key}');
+    }
   }
 
   if (regressions.isEmpty) {

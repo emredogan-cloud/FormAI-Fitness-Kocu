@@ -75,7 +75,9 @@ class NutritionCalculatorService {
         return 5;
       case 'female':
       case 'f':
-      case 'kadın':
+      // A stored profile value, not copy: translating it would silently
+      // change every existing user's BMR.
+      case 'kadın': // i18n-ignore
       case 'kadin':
         return -161;
       default:
@@ -109,7 +111,8 @@ class NutritionCalculatorService {
         return 1.55;
       case 'very_active':
       case 'athlete':
-      case 'çok_aktif':
+      // Stored activity-level token, not copy.
+      case 'çok_aktif': // i18n-ignore
       case 'cok_aktif':
         return 1.725;
       default:
