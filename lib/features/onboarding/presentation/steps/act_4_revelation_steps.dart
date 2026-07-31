@@ -56,13 +56,19 @@ class AnalysisIllusionStep extends StatefulWidget {
 
 class _AnalysisIllusionStepState extends State<AnalysisIllusionStep>
     with TickerProviderStateMixin {
-  static const List<String> _phrases = [
-    'Vücudun analiz ediliyor…',
-    'Metabolizma hesaplanıyor…',
-    'Kas potansiyelin değerlendiriliyor…',
-    'Yağ oranı tahmin ediliyor…',
-    'Sana özel plan oluşturuluyor…',
-  ];
+  static List<String> _phrasesFor(AppLocalizations l10n) => [
+        l10n.analysisPhraseBody,
+        l10n.analysisPhraseMetabolism,
+        l10n.analysisPhraseMuscle,
+        l10n.analysisPhraseFat,
+        l10n.analysisPhrasePlan,
+      ];
+
+  /// The rotation timer starts in `initState`, before there is a
+  /// `BuildContext` to resolve copy against, so the count it paces
+  /// against is a constant. The assert in `build` keeps the two from
+  /// drifting apart.
+  static const int _phraseCount = 5;
   static const Duration _phraseDuration = Duration(milliseconds: 1200);
 
   Timer? _timer;
@@ -88,7 +94,7 @@ class _AnalysisIllusionStepState extends State<AnalysisIllusionStep>
     )..repeat(reverse: true);
     _timer = Timer.periodic(_phraseDuration, (timer) {
       if (!mounted) return;
-      if (_index >= _phrases.length - 1) {
+      if (_index >= _phraseCount - 1) {
         timer.cancel();
         // Final beat: heavy haptic so the user feels the illusion *land*
         // before the dynamic-report rises. This is the emotional pivot
@@ -102,7 +108,7 @@ class _AnalysisIllusionStepState extends State<AnalysisIllusionStep>
         // Subtle crescendo: light per intermediate phrase, medium on
         // the penultimate. The final-phrase milestone fires on
         // completion above.
-        if (newIndex >= _phrases.length - 1) {
+        if (newIndex >= _phraseCount - 1) {
           AppHaptics.primaryCta();
         } else {
           AppHaptics.secondaryTap();
@@ -122,6 +128,8 @@ class _AnalysisIllusionStepState extends State<AnalysisIllusionStep>
 
   @override
   Widget build(BuildContext context) {
+    final phrases = _phrasesFor(AppLocalizations.of(context));
+    assert(phrases.length == _phraseCount);
     return SafeArea(
       child: Stack(
         fit: StackFit.expand,
@@ -197,7 +205,7 @@ class _AnalysisIllusionStepState extends State<AnalysisIllusionStep>
                     );
                   },
                   child: Text(
-                    _phrases[_index],
+                    phrases[_index],
                     key: ValueKey<int>(_index),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
@@ -211,7 +219,7 @@ class _AnalysisIllusionStepState extends State<AnalysisIllusionStep>
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  '${_index + 1} / ${_phrases.length}',
+                  '${_index + 1} / ${phrases.length}',
                   style: const TextStyle(
                     color: Colors.white38,
                     fontSize: 11,
@@ -446,10 +454,8 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
   @override
   Widget build(BuildContext context) {
     final wizard = ref.watch(wizardProvider);
-    final report = AiPersonalizationEngine.generateReport(
-      AppLocalizations.of(context),
-      wizard,
-    );
+    final l10n = AppLocalizations.of(context);
+    final report = AiPersonalizationEngine.generateReport(l10n, wizard);
     final bmi = report.bmi;
     final calories = report.maintenanceCalories;
     final assessment = report.assessment;
@@ -510,14 +516,14 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
                                   icon: Icons.monitor_weight_outlined,
                                   gaugeFraction:
                                       ((bmi - 14.0) / 22.0).clamp(0.05, 1.0),
-                                  statusLabel: _bmiCategory(bmi),
+                                  statusLabel: _bmiCategory(l10n, bmi),
                                   statusColor: _bmiTint(bmi),
                                 ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: _ReportMetricCard(
-                                  label: 'GÜNLÜK KALORİ',
+                                  label: l10n.reportMetricDailyCalories,
                                   morphingValue: calories.toDouble(),
                                   formatter: (v) => v.round().toString(),
                                   startDelay: const Duration(milliseconds: 350),
@@ -569,7 +575,7 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
-                                    children: const [
+                                    children: [
                                       Icon(
                                         Icons.psychology_outlined,
                                         color: AppColors.neonAccent,
@@ -583,10 +589,10 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
                                       // accessibility text scale.
                                       Flexible(
                                           child: Text(
-                                        'AI DEĞERLENDİRMESİ',
+                                        l10n.reportAiAssessmentEyebrow,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           color: AppColors.neonAccent,
                                           fontSize: 11,
                                           fontWeight: FontWeight.w900,
@@ -630,18 +636,18 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'Başarı olasılığı',
-                                style: TextStyle(
+                              Text(
+                                l10n.reportSuccessProbability,
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 14,
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
                               const SizedBox(height: 4),
-                              const Text(
-                                'Hedeflerine çok yakınsın!',
-                                style: TextStyle(
+                              Text(
+                                l10n.reportSuccessNearGoal,
+                                style: const TextStyle(
                                   color: Colors.white54,
                                   fontSize: 12,
                                 ),
@@ -710,7 +716,7 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
                               children: [
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  children: const [
+                                  children: [
                                     Icon(Icons.auto_awesome,
                                         color: Colors.white, size: 18),
                                     SizedBox(width: 8),
@@ -724,9 +730,9 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
                                       child: FittedBox(
                                         fit: BoxFit.scaleDown,
                                         child: Text(
-                                          'KİŞİSEL PLANIMI AL',
+                                          l10n.reportPrimaryCta,
                                           maxLines: 1,
-                                          style: TextStyle(
+                                          style: const TextStyle(
                                             color: Colors.white,
                                             fontWeight: FontWeight.w900,
                                             letterSpacing: 2.2,
@@ -739,7 +745,7 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
                                 ),
                                 const SizedBox(height: 3),
                                 Text(
-                                  'HEDEFİNE BİRLİKTE ULAŞALIM',
+                                  l10n.reportCtaSubtitle,
                                   style: TextStyle(
                                     color: Colors.white.withValues(alpha: 0.8),
                                     fontWeight: FontWeight.w700,
@@ -767,11 +773,11 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
 /// RC-1 P9 · BMI category label/tint for the metric card status line
 /// (reference shows "24.2 / Normal" in green). Standard WHO bands; the
 /// wording stays descriptive, not diagnostic.
-String _bmiCategory(double bmi) {
-  if (bmi < 18.5) return 'Düşük';
-  if (bmi < 25.0) return 'Normal';
-  if (bmi < 30.0) return 'Yüksek';
-  return 'Çok yüksek';
+String _bmiCategory(AppLocalizations l10n, double bmi) {
+  if (bmi < 18.5) return l10n.bmiLow;
+  if (bmi < 25.0) return l10n.bmiNormal;
+  if (bmi < 30.0) return l10n.bmiHigh;
+  return l10n.bmiVeryHigh;
 }
 
 Color _bmiTint(double bmi) {
@@ -1037,9 +1043,9 @@ class _ReportHeroCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 5),
-                const Text(
-                  'AI değerlendirmen hazır',
-                  style: TextStyle(color: Colors.white54, fontSize: 12),
+                Text(
+                  AppLocalizations.of(context).reportReadySubtitle,
+                  style: const TextStyle(color: Colors.white54, fontSize: 12),
                 ),
               ],
             ),
@@ -1164,6 +1170,7 @@ class _TransformationProjectionState extends State<_TransformationProjection>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
       decoration: BoxDecoration(
@@ -1192,7 +1199,7 @@ class _TransformationProjectionState extends State<_TransformationProjection>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            children: const [
+            children: [
               Icon(
                 Icons.show_chart_rounded,
                 color: AppColors.neonAccent,
@@ -1202,10 +1209,10 @@ class _TransformationProjectionState extends State<_TransformationProjection>
               // Third fixed-Text-in-a-Row on this screen; same give.
               Flexible(
                 child: Text(
-                  '12 HAFTALIK PROJEKSİYON',
+                  l10n.reportProjectionEyebrow,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: AppColors.neonAccent,
                     fontSize: 10,
                     fontWeight: FontWeight.w900,
@@ -1221,7 +1228,11 @@ class _TransformationProjectionState extends State<_TransformationProjection>
             builder: (context, _) => SizedBox(
               height: 110,
               child: CustomPaint(
-                painter: _TrajectoryPainter(progress: _draw.value),
+                painter: _TrajectoryPainter(
+                  progress: _draw.value,
+                  startLabel: l10n.reportTrajectoryStart,
+                  endLabel: l10n.reportTrajectoryEnd,
+                ),
                 size: const Size(double.infinity, 110),
               ),
             ),
@@ -1252,9 +1263,18 @@ class _TransformationProjectionState extends State<_TransformationProjection>
 /// under the line. Endpoint glow + label appear in the last 15 % of
 /// the draw so the user reads the line *landing* on its destination.
 class _TrajectoryPainter extends CustomPainter {
-  _TrajectoryPainter({required this.progress});
+  _TrajectoryPainter({
+    required this.progress,
+    required this.startLabel,
+    required this.endLabel,
+  });
 
   final double progress;
+
+  /// Drawn straight onto the canvas, so the copy has to be resolved by
+  /// the widget above and handed down — a painter has no context.
+  final String startLabel;
+  final String endLabel;
 
   static const double _padX = 28;
   static const double _padTop = 16;
@@ -1285,12 +1305,12 @@ class _TrajectoryPainter extends CustomPainter {
       _drawEndDot(canvas, end, reveal);
     }
 
-    _drawLabel(canvas, 'BUGÜN', Offset(start.dx - 2, start.dy + 8),
+    _drawLabel(canvas, startLabel, Offset(start.dx - 2, start.dy + 8),
         AppColors.neon.withValues(alpha: 0.70),
         align: _LabelAlign.left);
     if (progress > 0.92) {
       _drawLabel(
-          canvas, '12 HAFTA', Offset(end.dx + 2, end.dy - 16), AppColors.neon,
+          canvas, endLabel, Offset(end.dx + 2, end.dy - 16), AppColors.neon,
           align: _LabelAlign.right);
     }
   }
@@ -1389,7 +1409,10 @@ class _TrajectoryPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_TrajectoryPainter old) => old.progress != progress;
+  bool shouldRepaint(_TrajectoryPainter old) =>
+      old.progress != progress ||
+      old.startLabel != startLabel ||
+      old.endLabel != endLabel;
 }
 
 enum _LabelAlign { left, right }

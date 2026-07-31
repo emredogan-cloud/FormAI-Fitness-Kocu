@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/routing/app_router.dart';
+import '../../../l10n/app_localizations.dart';
 import '../providers/wizard_provider.dart';
 
 /// Post-onboarding "future self" hook. Dark neon palette, evolved to the
@@ -22,28 +24,13 @@ class _PredictionScreenState extends ConsumerState<PredictionScreen>
   static const Color _neonAccent = Color(0xFF4DA6FF);
   static const Color _surface = Color(0xFF141028);
 
-  static const List<String> _trMonths = [
-    'Ocak',
-    'Şubat',
-    'Mart',
-    'Nisan',
-    'Mayıs',
-    'Haziran',
-    'Temmuz',
-    'Ağustos',
-    'Eylül',
-    'Ekim',
-    'Kasım',
-    'Aralık',
-  ];
-
-  static const List<String> _planFeatures = [
-    'AI destekli egzersiz kılavuzları',
-    'Gerçek zamanlı form analizi',
-    'Sesli koç motivasyonu',
-    'İnteraktif 30 günlük takvim',
-    'Kişisel kalori ve ağırlık takibi',
-  ];
+  static List<String> _planFeatures(AppLocalizations l10n) => [
+        l10n.predictionFeatureGuides,
+        l10n.predictionFeatureFormAnalysis,
+        l10n.predictionFeatureVoiceCoach,
+        l10n.predictionFeatureCalendar,
+        l10n.predictionFeatureTracking,
+      ];
 
   late final AnimationController _pulse;
   late final DateTime _targetDate;
@@ -64,42 +51,50 @@ class _PredictionScreenState extends ConsumerState<PredictionScreen>
     super.dispose();
   }
 
-  String _formatDate(DateTime d) {
-    final month = _trMonths[(d.month - 1).clamp(0, 11)];
-    return '${d.day} $month ${d.year}';
+  /// The month name comes from `intl`, which already knows every
+  /// locale's spelling; only the field order is the translator's
+  /// business, so it lives in ARB.
+  String _formatDate(BuildContext context, AppLocalizations l10n, DateTime d) {
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    return l10n.predictionTargetDate(
+      d.day,
+      DateFormat.MMMM(locale).format(d),
+      d.year,
+    );
   }
 
-  String _goalLabel(GoalPhysique? goal) {
+  String _goalLabel(AppLocalizations l10n, GoalPhysique? goal) {
     switch (goal) {
       case GoalPhysique.tone:
-        return 'Sıkılaşmak';
+        return l10n.goalToneLabel;
       case GoalPhysique.bulk:
-        return 'Hacim Kazanmak';
+        return l10n.goalBulkLabel;
       case GoalPhysique.sixpack:
-        return 'Six-Pack';
+        return l10n.goalSixpackTitleCase;
       case null:
-        return 'Kişisel Hedef';
+        return l10n.predictionGoalFallback;
     }
   }
 
-  String _difficultyLabel(ActivityLevel? level) {
+  String _difficultyLabel(AppLocalizations l10n, ActivityLevel? level) {
     switch (level) {
       case ActivityLevel.sedentary:
-        return 'Yeni Başlayan';
+        return l10n.predictionDifficultyBeginner;
       case ActivityLevel.light:
-        return 'Orta Düzey';
+        return l10n.predictionDifficultyIntermediate;
       case ActivityLevel.active:
-        return 'İleri';
+        return l10n.difficultyAdvanced;
       case null:
-        return 'Kişiye Özel';
+        return l10n.predictionDifficultyCustom;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final wizard = ref.watch(wizardProvider);
-    final goal = _goalLabel(wizard.targetPhysique);
-    final difficulty = _difficultyLabel(wizard.activityLevel);
+    final l10n = AppLocalizations.of(context);
+    final goal = _goalLabel(l10n, wizard.targetPhysique);
+    final difficulty = _difficultyLabel(l10n, wizard.activityLevel);
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -124,7 +119,7 @@ class _PredictionScreenState extends ConsumerState<PredictionScreen>
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       _HeroCard(
-                        title: 'FormAI için Özel Plan',
+                        title: l10n.predictionPlanTitle,
                         goal: goal,
                         durationWeeks: 12,
                         difficulty: difficulty,
@@ -132,10 +127,10 @@ class _PredictionScreenState extends ConsumerState<PredictionScreen>
                       const SizedBox(height: 14),
                       Row(
                         children: [
-                          const Expanded(
+                          Expanded(
                             child: _StatPill(
                               value: '25-40',
-                              label: 'Egzersiz başına dakika',
+                              label: l10n.predictionMinutesPerWorkout,
                               icon: Icons.timer_outlined,
                             ),
                           ),
@@ -155,13 +150,14 @@ class _PredictionScreenState extends ConsumerState<PredictionScreen>
                       ),
                       const SizedBox(height: 20),
                       _DateCard(
-                        date: _formatDate(_targetDate),
+                        date: _formatDate(context, l10n, _targetDate),
+                        durationLabel: l10n.predictionDurationWeeksShort(12),
                         pulse: _pulse,
                       ),
                       const SizedBox(height: 22),
-                      const _SectionLabel(label: 'Plan'),
+                      _SectionLabel(label: l10n.predictionSectionPlan),
                       const SizedBox(height: 10),
-                      _PlanChecklist(items: _planFeatures),
+                      _PlanChecklist(items: _planFeatures(l10n)),
                       const SizedBox(height: 24),
                     ],
                   ),
@@ -176,10 +172,13 @@ class _PredictionScreenState extends ConsumerState<PredictionScreen>
                       onTap: () => context.go(AppRoutes.paywall),
                     ),
                     const SizedBox(height: 10),
-                    const Text(
-                      'Planın seni bekliyor — kaçırma.',
+                    Text(
+                      l10n.predictionUrgency,
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white38, fontSize: 12),
+                      style: const TextStyle(
+                        color: Colors.white38,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
@@ -218,11 +217,11 @@ class _Header extends StatelessWidget {
               ),
             ),
           ),
-          const Expanded(
+          Expanded(
             child: Center(
               child: Text(
-                'Planın hazır',
-                style: TextStyle(
+                AppLocalizations.of(context).predictionHeaderTitle,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.w900,
@@ -253,6 +252,7 @@ class _HeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 18, 12, 18),
       decoration: BoxDecoration(
@@ -300,19 +300,19 @@ class _HeroCard extends StatelessWidget {
                 const SizedBox(height: 14),
                 _HeroFactRow(
                   icon: Icons.track_changes,
-                  label: 'Hedef',
+                  label: l10n.predictionFactGoal,
                   value: goal,
                 ),
                 const SizedBox(height: 10),
                 _HeroFactRow(
                   icon: Icons.calendar_today_outlined,
-                  label: 'Süre',
-                  value: '$durationWeeks hafta',
+                  label: l10n.predictionFactDuration,
+                  value: l10n.predictionDurationWeeks(durationWeeks),
                 ),
                 const SizedBox(height: 10),
                 _HeroFactRow(
                   icon: Icons.bolt_outlined,
-                  label: 'Zorluk',
+                  label: l10n.predictionFactDifficulty,
                   value: difficulty,
                 ),
               ],
@@ -478,18 +478,20 @@ class _WeeklyTargetPill extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '4 Egzersiz',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context).predictionExerciseCount(
+              checks.where((c) => c).length,
+            ),
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 18,
               fontWeight: FontWeight.w900,
             ),
           ),
           const SizedBox(height: 2),
-          const Text(
-            'Hafta başına',
-            style: TextStyle(color: Colors.white54, fontSize: 12),
+          Text(
+            AppLocalizations.of(context).predictionWeeklyTarget,
+            style: const TextStyle(color: Colors.white54, fontSize: 12),
           ),
           const SizedBox(height: 8),
           Row(
@@ -514,8 +516,13 @@ class _WeeklyTargetPill extends StatelessWidget {
 }
 
 class _DateCard extends StatelessWidget {
-  const _DateCard({required this.date, required this.pulse});
+  const _DateCard({
+    required this.date,
+    required this.durationLabel,
+    required this.pulse,
+  });
   final String date;
+  final String durationLabel;
   final Animation<double> pulse;
 
   @override
@@ -557,9 +564,9 @@ class _DateCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'HEDEF TARİHİN',
-                      style: TextStyle(
+                    Text(
+                      AppLocalizations.of(context).predictionTargetDateEyebrow,
+                      style: const TextStyle(
                         color: Colors.white60,
                         fontSize: 11,
                         letterSpacing: 2.5,
@@ -590,9 +597,9 @@ class _DateCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const Text(
-                '12 hafta',
-                style: TextStyle(
+              Text(
+                durationLabel,
+                style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
@@ -724,22 +731,26 @@ class _PulsingCta extends StatelessWidget {
             child: InkWell(
               borderRadius: BorderRadius.circular(20),
               onTap: onTap,
-              child: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 20),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      'Planımı Göster',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.4,
+                    Flexible(
+                      child: Text(
+                        AppLocalizations.of(context).predictionCta,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.4,
+                        ),
                       ),
                     ),
-                    SizedBox(width: 10),
-                    Icon(
+                    const SizedBox(width: 10),
+                    const Icon(
                       Icons.arrow_forward_rounded,
                       color: Colors.white,
                       size: 22,

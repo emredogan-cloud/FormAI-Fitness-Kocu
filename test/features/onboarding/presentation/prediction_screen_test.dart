@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sixpack_ai/core/routing/app_router.dart';
 import 'package:sixpack_ai/features/onboarding/presentation/prediction_screen.dart';
 import 'package:sixpack_ai/features/onboarding/providers/wizard_provider.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// The post-onboarding "future self" hook — last step of the funnel
 /// before the paywall. Two things must hold:
@@ -45,6 +47,8 @@ Widget _hostPrediction({WizardState? seed}) {
       if (seed != null) wizardProvider.overrideWith(() => _SeededWizard(seed)),
     ],
     child: MaterialApp.router(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: const [Locale('tr')],
       routerConfig: router,
       debugShowCheckedModeBanner: false,
     ),
@@ -83,6 +87,31 @@ void main() {
       expect(find.text('Six-Pack'), findsOneWidget);
       expect(find.text('İleri'), findsOneWidget);
       expect(find.text('Kişisel Hedef'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'the target date renders with a Turkish month name and week count',
+    (tester) async {
+      await tester.pumpWidget(_hostPrediction());
+      await tester.pump();
+
+      // Phase 5 replaced a hand-written Turkish month array with
+      // `intl`. The screen targets 84 days out, so the month is
+      // whatever today + 12 weeks lands in — assert the shape rather
+      // than a fixed string, but insist it is the Turkish spelling
+      // and not the English fallback intl gives for an uninitialised
+      // locale.
+      final target = DateTime.now().add(const Duration(days: 84));
+      final month = DateFormat.MMMM('tr').format(target);
+      expect(month, isNot(DateFormat.MMMM('en').format(target)),
+          reason: 'pick a month whose Turkish and English names differ, '
+              'or this assertion proves nothing');
+      expect(
+        find.text('${target.day} $month ${target.year}'),
+        findsOneWidget,
+      );
+      expect(find.text('12 hafta'), findsWidgets);
     },
   );
 

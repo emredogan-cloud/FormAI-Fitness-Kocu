@@ -4846,5 +4846,207 @@
         "type": "int"
       }
     }
+  },
+  "predictionHeaderTitle": "Your plan is ready",
+  "@predictionHeaderTitle": {
+    "description": "App-bar title of the post-onboarding prediction screen."
+  },
+  "predictionPlanTitle": "A plan built for you by FormAI",
+  "@predictionPlanTitle": {
+    "description": "Hero card title on the prediction screen. FormAI is the brand name and is never translated."
+  },
+  "predictionTargetDate": "{month} {day}, {year}",
+  "@predictionTargetDate": {
+    "description": "Target date on the prediction screen. The month name is supplied already localised by intl; only the field order belongs to the translator.",
+    "placeholders": {
+      "day": {
+        "type": "int"
+      },
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "predictionTargetDateEyebrow": "YOUR TARGET DATE",
+  "@predictionTargetDateEyebrow": {
+    "description": "Eyebrow above the target date."
+  },
+  "predictionMinutesPerWorkout": "Minutes per workout",
+  "@predictionMinutesPerWorkout": {
+    "description": "Stat pill label on the prediction screen."
+  },
+  "predictionWeeklyTarget": "Per week",
+  "@predictionWeeklyTarget": {
+    "description": "Weekly-target pill sublabel on the prediction screen."
+  },
+  "predictionExerciseCount": "{count, plural, =1{1 Workout} other{{count} Workouts}}",
+  "@predictionExerciseCount": {
+    "description": "Weekly workout count on the prediction screen. Turkish has no plural agreement after a numeral, so the Turkish form is deliberately invariant.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "predictionDurationWeeks": "{count, plural, =1{1 week} other{{count} weeks}}",
+  "@predictionDurationWeeks": {
+    "description": "Program duration in weeks.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "predictionDurationWeeksShort": "{count, plural, =1{1 wk} other{{count} wks}}",
+  "@predictionDurationWeeksShort": {
+    "description": "Compact duration badge beside the target date, where space is tight.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "predictionSectionPlan": "Plan",
+  "@predictionSectionPlan": {
+    "description": "Section label above the plan feature checklist."
+  },
+  "predictionCta": "Show my plan",
+  "@predictionCta": {
+    "description": "Primary CTA on the prediction screen."
+  },
+  "predictionUrgency": "Your plan is waiting — don't miss it.",
+  "@predictionUrgency": {
+    "description": "Reassurance line under the prediction CTA."
+  },
+  "predictionFactGoal": "Goal",
+  "@predictionFactGoal": {
+    "description": "Hero fact row label."
+  },
+  "predictionFactDuration": "Duration",
+  "@predictionFactDuration": {
+    "description": "Hero fact row label."
+  },
+  "predictionFactDifficulty": "Difficulty",
+  "@predictionFactDifficulty": {
+    "description": "Hero fact row label."
+  },
+  "predictionFeatureGuides": "AI-guided exercise walkthroughs",
+  "@predictionFeatureGuides": {
+    "description": "Plan feature checklist item."
+  },
+  "predictionFeatureFormAnalysis": "Real-time form analysis",
+  "@predictionFeatureFormAnalysis": {
+    "description": "Plan feature checklist item."
+  },
+  "predictionFeatureVoiceCoach": "Voice coach motivation",
+  "@predictionFeatureVoiceCoach": {
+    "description": "Plan feature checklist item."
+  },
+  "predictionFeatureCalendar": "Interactive 30-day calendar",
+  "@predictionFeatureCalendar": {
+    "description": "Plan feature checklist item."
+  },
+  "predictionFeatureTracking": "Personal calorie and weight tracking",
+  "@predictionFeatureTracking": {
+    "description": "Plan feature checklist item."
+  },
+  "predictionGoalFallback": "Personal goal",
+  "@predictionGoalFallback": {
+    "description": "Goal shown when the wizard has no target physique."
+  },
+  "goalSixpackTitleCase": "Six-pack",
+  "@goalSixpackTitleCase": {
+    "description": "Six-pack goal in title case. A fitness term the Turkish copy keeps in English."
+  },
+  "predictionDifficultyBeginner": "Beginner",
+  "@predictionDifficultyBeginner": {
+    "description": "Difficulty derived from a sedentary activity level."
+  },
+  "predictionDifficultyIntermediate": "Intermediate",
+  "@predictionDifficultyIntermediate": {
+    "description": "Difficulty derived from a light activity level."
+  },
+  "predictionDifficultyCustom": "Tailored to you",
+  "@predictionDifficultyCustom": {
+    "description": "Difficulty shown when the wizard has no activity level."
+  },
+  "analysisPhraseBody": "Analysing your body…",
+  "@analysisPhraseBody": {
+    "description": "Rotating line in the analysis-illusion scene."
+  },
+  "analysisPhraseMetabolism": "Calculating metabolism…",
+  "@analysisPhraseMetabolism": {
+    "description": "Rotating line in the analysis-illusion scene."
+  },
+  "analysisPhraseMuscle": "Assessing your muscle potential…",
+  "@analysisPhraseMuscle": {
+    "description": "Rotating line in the analysis-illusion scene."
+  },
+  "analysisPhraseFat": "Estimating body-fat ratio…",
+  "@analysisPhraseFat": {
+    "description": "Rotating line in the analysis-illusion scene."
+  },
+  "analysisPhrasePlan": "Building your personal plan…",
+  "@analysisPhrasePlan": {
+    "description": "Final rotating line in the analysis-illusion scene."
+  },
+  "reportMetricDailyCalories": "DAILY CALORIES",
+  "@reportMetricDailyCalories": {
+    "description": "Metric card label on the AI report."
+  },
+  "reportAiAssessmentEyebrow": "AI ASSESSMENT",
+  "@reportAiAssessmentEyebrow": {
+    "description": "Eyebrow above the AI assessment paragraph."
+  },
+  "reportSuccessProbability": "Success probability",
+  "@reportSuccessProbability": {
+    "description": "Label of the confidence bar on the AI report."
+  },
+  "reportSuccessNearGoal": "You're very close to your goals!",
+  "@reportSuccessNearGoal": {
+    "description": "Sub-line under the confidence bar."
+  },
+  "reportPrimaryCta": "GET MY PERSONAL PLAN",
+  "@reportPrimaryCta": {
+    "description": "Primary CTA at the end of the AI report."
+  },
+  "reportCtaSubtitle": "LET'S REACH YOUR GOAL TOGETHER",
+  "@reportCtaSubtitle": {
+    "description": "Sub-line under the AI report CTA."
+  },
+  "reportReadySubtitle": "Your AI assessment is ready",
+  "@reportReadySubtitle": {
+    "description": "Sub-line in the AI report header."
+  },
+  "reportProjectionEyebrow": "12-WEEK PROJECTION",
+  "@reportProjectionEyebrow": {
+    "description": "Eyebrow above the trajectory chart."
+  },
+  "reportTrajectoryStart": "TODAY",
+  "@reportTrajectoryStart": {
+    "description": "Start-point label on the trajectory chart."
+  },
+  "reportTrajectoryEnd": "12 WEEKS",
+  "@reportTrajectoryEnd": {
+    "description": "End-point label on the trajectory chart."
+  },
+  "bmiLow": "Low",
+  "@bmiLow": {
+    "description": "BMI band, descriptive rather than diagnostic."
+  },
+  "bmiNormal": "Normal",
+  "@bmiNormal": {
+    "description": "BMI band, descriptive rather than diagnostic."
+  },
+  "bmiHigh": "High",
+  "@bmiHigh": {
+    "description": "BMI band, descriptive rather than diagnostic."
+  },
+  "bmiVeryHigh": "Very high",
+  "@bmiVeryHigh": {
+    "description": "BMI band, descriptive rather than diagnostic."
   }
 }
