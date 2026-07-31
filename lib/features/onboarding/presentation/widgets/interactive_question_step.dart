@@ -431,29 +431,38 @@ class _CardTextContent extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                option.label,
-                // 2 lines (was 1): image-backed goal cards left too little
-                // width, truncating "Daha fit görünmek" → "Daha fit görü…".
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-                  letterSpacing: 0.2,
+              // Both lines are Flexible: the card has a fixed height, so
+              // a longer language has to shorten the text rather than
+              // push it past the bottom edge. `maxLines` alone was not
+              // enough — label + helper together overran by 2 px under
+              // pseudo-localisation.
+              Flexible(
+                child: Text(
+                  option.label,
+                  // 2 lines (was 1): image-backed goal cards left too little
+                  // width, truncating "Daha fit görünmek" → "Daha fit görü…".
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                    letterSpacing: 0.2,
+                  ),
                 ),
               ),
               if (option.helper != null) ...[
                 const SizedBox(height: 4),
-                Text(
-                  option.helper!,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                    height: 1.35,
+                Flexible(
+                  child: Text(
+                    option.helper!,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                      height: 1.35,
+                    ),
                   ),
                 ),
               ],

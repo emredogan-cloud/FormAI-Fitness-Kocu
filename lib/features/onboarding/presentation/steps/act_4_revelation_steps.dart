@@ -1031,9 +1031,9 @@ class _ReportHeroCard extends StatelessWidget {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ).createShader(rect),
-                  child: const Text(
-                    'KİŞİSEL\nAI RAPORUN',
-                    style: TextStyle(
+                  child: Text(
+                    AppLocalizations.of(context).reportHeaderTitle,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 21,
                       fontWeight: FontWeight.w900,

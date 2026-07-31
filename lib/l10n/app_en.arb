@@ -5767,5 +5767,60 @@
         "type": "String"
       }
     }
+  },
+  "reportHeaderTitle": "YOUR PERSONAL\nAI REPORT",
+  "@reportHeaderTitle": {
+    "description": "Two-line title of the AI report header. The line break is the translator's to place."
+  },
+  "shareBrandHashtags": "#FormAI #30DayChange",
+  "@shareBrandHashtags": {
+    "description": "Hashtags appended to every share. #FormAI is the brand tag and never changes; the second is a campaign tag a translator should localise to something people in that language would actually search."
+  },
+  "shareRecipeIntro": "I found a great recipe on FormAI: {title}!",
+  "@shareRecipeIntro": {
+    "description": "Opening line of a shared recipe.",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "shareRecipeMacros": "Only {calories} kcal and {protein}g of protein.",
+  "@shareRecipeMacros": {
+    "description": "Macro summary of a shared recipe.",
+    "placeholders": {
+      "calories": {
+        "type": "int"
+      },
+      "protein": {
+        "type": "int"
+      }
+    }
+  },
+  "shareRecipeIngredientsHeading": "Ingredients:",
+  "@shareRecipeIngredientsHeading": {
+    "description": "Heading above the ingredient list in a shared recipe."
+  },
+  "shareRecipeMethodHeading": "Method:",
+  "@shareRecipeMethodHeading": {
+    "description": "Heading above the method in a shared recipe."
+  },
+  "shareRecipeReferralLine": "Download the app and use my code {code} to get your first month of Pro free: formai://r/{code}",
+  "@shareRecipeReferralLine": {
+    "description": "Referral invitation appended to a shared recipe. The deep link must stay intact.",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "shareRecipeSubject": "A great recipe on FormAI: {title}",
+  "@shareRecipeSubject": {
+    "description": "Subject line of a shared recipe, used by email-style share targets.",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
   }
 }

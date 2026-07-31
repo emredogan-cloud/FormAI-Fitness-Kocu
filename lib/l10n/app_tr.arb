@@ -1308,5 +1308,13 @@
   "paywallRenewalNoPrice": "Abonelik iptal edilmedikçe her dönem sonunda otomatik yenilenir ve ücret mağaza hesabına yansıtılır.",
   "paywallTrialCancelNote": "Deneme süresi içinde ayarlardan istediğin zaman iptal edebilirsin.",
   "paywallCancelAnytime": "İstediğin zaman mağaza aboneliklerinden iptal edebilirsin.",
-  "paywallLegalNotice": "Devam ederek {terms} ve {privacy}’nı kabul etmiş olursun."
+  "paywallLegalNotice": "Devam ederek {terms} ve {privacy}’nı kabul etmiş olursun.",
+  "reportHeaderTitle": "KİŞİSEL\nAI RAPORUN",
+  "shareBrandHashtags": "#FormAI #30GündeDeğişim",
+  "shareRecipeIntro": "FormAI’da harika bir tarif buldum: {title}!",
+  "shareRecipeMacros": "Sadece {calories} kcal ve {protein}g protein içeriyor.",
+  "shareRecipeIngredientsHeading": "Malzemeler:",
+  "shareRecipeMethodHeading": "Yapılışı:",
+  "shareRecipeReferralLine": "Sen de uygulamayı indir, {code} kodumla ilk ayını ücretsiz Pro yap: formai://r/{code}",
+  "shareRecipeSubject": "FormAI’da harika bir tarif: {title}"
 }

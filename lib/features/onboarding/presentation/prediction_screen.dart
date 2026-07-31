@@ -494,20 +494,27 @@ class _WeeklyTargetPill extends StatelessWidget {
             style: const TextStyle(color: Colors.white54, fontSize: 12),
           ),
           const SizedBox(height: 8),
-          Row(
-            children: [
-              for (final done in checks)
-                Padding(
-                  padding: const EdgeInsets.only(right: 4),
-                  child: Icon(
-                    done ? Icons.check_circle : Icons.cancel,
-                    color: done
-                        ? _PredictionScreenState._neonAccent
-                        : Colors.white24,
-                    size: 14,
+          // Seven dots at a fixed 14 px need 126 px, which is wider than
+          // this pill gets on a 320 px phone. Scaling down keeps all
+          // seven days visible instead of clipping the end of the week.
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Row(
+              children: [
+                for (final done in checks)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 4),
+                    child: Icon(
+                      done ? Icons.check_circle : Icons.cancel,
+                      color: done
+                          ? _PredictionScreenState._neonAccent
+                          : Colors.white24,
+                      size: 14,
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -597,12 +604,16 @@ class _DateCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Text(
-                durationLabel,
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
+              Flexible(
+                child: Text(
+                  durationLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ],

@@ -94,83 +94,97 @@ class _ConsentScreenState extends ConsumerState<ConsentScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 16),
-                Text(
-                  l10n.consentTitle,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.4,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  l10n.consentIntro,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                    height: 1.45,
-                  ),
-                ),
-                const SizedBox(height: 28),
-                _ConsentTile(
-                  title: l10n.consentAnalyticsTitle,
-                  description: l10n.consentAnalyticsBody,
-                  value: _analyticsChecked,
-                  onChanged: (v) => setState(() => _analyticsChecked = v),
-                ),
-                const SizedBox(height: 14),
-                _ConsentTile(
-                  title: l10n.consentCrashTitle,
-                  description: l10n.consentCrashBody,
-                  value: _crashChecked,
-                  onChanged: (v) => setState(() => _crashChecked = v),
-                ),
-                const SizedBox(height: 20),
-                // Phase 138 · H-5 health disclaimer. Surfaced once before
-                // any data collection so the Play Console "Health
-                // declaration" attestation ("Disclaimer shown in
-                // onboarding") is honestly answerable. Same copy is
-                // mirrored in the Play Store listing footer per the
-                // master plan §8.5.
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withValues(alpha: 0.10),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: Colors.orange.withValues(alpha: 0.35),
-                    ),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(
-                        Icons.info_outline,
-                        color: Colors.orange,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          l10n.consentHealthDisclaimer,
+                // The disclosures scroll; the three actions stay pinned
+                // below. A fixed column ran 549 px past the bottom once
+                // the legal copy got 40% longer — and this screen cannot
+                // be dismissed, so an unreachable CTA is a dead end.
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: 16),
+                        Text(
+                          l10n.consentTitle,
+                          textAlign: TextAlign.center,
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 12,
+                            fontSize: 28,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.4,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          l10n.consentIntro,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
                             height: 1.45,
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 28),
+                        _ConsentTile(
+                          title: l10n.consentAnalyticsTitle,
+                          description: l10n.consentAnalyticsBody,
+                          value: _analyticsChecked,
+                          onChanged: (v) =>
+                              setState(() => _analyticsChecked = v),
+                        ),
+                        const SizedBox(height: 14),
+                        _ConsentTile(
+                          title: l10n.consentCrashTitle,
+                          description: l10n.consentCrashBody,
+                          value: _crashChecked,
+                          onChanged: (v) => setState(() => _crashChecked = v),
+                        ),
+                        const SizedBox(height: 20),
+                        // Phase 138 · H-5 health disclaimer. Surfaced once before
+                        // any data collection so the Play Console "Health
+                        // declaration" attestation ("Disclaimer shown in
+                        // onboarding") is honestly answerable. Same copy is
+                        // mirrored in the Play Store listing footer per the
+                        // master plan §8.5.
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withValues(alpha: 0.10),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: Colors.orange.withValues(alpha: 0.35),
+                            ),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(
+                                Icons.info_outline,
+                                color: Colors.orange,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  l10n.consentHealthDisclaimer,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    height: 1.45,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(height: 12),
                 TextButton(
                   onPressed: _openPrivacyPolicy,
                   style: TextButton.styleFrom(

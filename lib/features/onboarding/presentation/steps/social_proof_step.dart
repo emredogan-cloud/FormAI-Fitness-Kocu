@@ -119,58 +119,74 @@ class _SocialProofStepState extends State<SocialProofStep> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const _HeroZone(),
-                const SizedBox(height: 4),
-                ShaderMask(
-                  shaderCallback: (rect) => const LinearGradient(
-                    colors: [AppColors.neon, AppColors.neonAccent],
-                  ).createShader(rect),
-                  child: Text(
-                    l10n.socialProofHeadline,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      height: 1.25,
-                      letterSpacing: 0.2,
+                // Everything above the CTA scrolls; the CTA and its
+                // caption stay pinned below. Same shape as the RC-18
+                // Başla fix and the Phase-3b report — a fixed column
+                // here overran the bottom by 202 px on a 320×640 phone
+                // once the copy got 40% longer.
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const _HeroZone(),
+                        const SizedBox(height: 4),
+                        ShaderMask(
+                          shaderCallback: (rect) => const LinearGradient(
+                            colors: [AppColors.neon, AppColors.neonAccent],
+                          ).createShader(rect),
+                          child: Text(
+                            l10n.socialProofHeadline,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              height: 1.25,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          l10n.earlyAccessBlurb,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.62),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 0.1,
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        Row(
+                          children: [
+                            _StatBadge(
+                              number: '130+',
+                              caption: '${l10n.act5StatExercises}\n'
+                                  '${l10n.liveFormAnalysisEyebrow}',
+                            ),
+                            const SizedBox(width: 10),
+                            _StatBadge(
+                              number: 'AI',
+                              caption: '${l10n.act5StatAiPowered}\n'
+                                  '${l10n.act5StatOnDevice(100)}',
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          height: 160,
+                          child: _HighlightCarousel(
+                            highlights: _highlightsFor(l10n),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const _EarlyAccessStrip(),
+                      ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  l10n.earlyAccessBlurb,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.62),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: 0.1,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  children: const [
-                    _StatBadge(
-                      number: '130+',
-                      caption: 'EGZERSİZ\nCANLI FORM ANALİZİ',
-                    ),
-                    SizedBox(width: 10),
-                    _StatBadge(
-                      number: 'AI',
-                      caption: 'DESTEKLİ\n%100 CİHAZINDA',
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  height: 160,
-                  child: _HighlightCarousel(
-                    highlights: _highlightsFor(l10n),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const _EarlyAccessStrip(),
                 const SizedBox(height: 18),
                 GlowPulse(
                   enabled: _readyForCommit,
@@ -239,7 +255,7 @@ class _HeroZone extends StatelessWidget {
       height: 200,
       child: Stack(
         alignment: Alignment.center,
-        children: const [
+        children: [
           SparkleBurst(
             color: AppColors.neon,
             particleCount: 12,
@@ -256,7 +272,9 @@ class _HeroZone extends StatelessWidget {
           Positioned(
             top: 6,
             right: 0,
-            child: _SpeechBubble(text: 'Her tekrarında\nyanındayım.'),
+            child: _SpeechBubble(
+              text: AppLocalizations.of(context).act5HeroBubble,
+            ),
           ),
         ],
       ),
@@ -552,14 +570,21 @@ class _HighlightCard extends StatelessWidget {
             child: Icon(highlight.icon, color: Colors.white, size: 18),
           ),
           const SizedBox(height: 8),
-          Text(
-            highlight.title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12.5,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.2,
+          // Flexible, because the card is a fixed 160 px tall inside a
+          // PageView: a longer title at a large text scale has to
+          // shorten rather than push the body out of the card.
+          Flexible(
+            child: Text(
+              highlight.title,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.2,
+              ),
             ),
           ),
           const SizedBox(height: 4),
@@ -602,13 +627,20 @@ class _EarlyAccessStrip extends StatelessWidget {
           color: AppColors.neon.withValues(alpha: 0.9),
         ),
         const SizedBox(width: 8),
-        Text(
-          AppLocalizations.of(context).earlyAccessBadge,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.15,
+        // Both labels are Flexible: the badge and its sub-line sit on
+        // one centred row, and a longer language ran 433 px past the
+        // right edge under pseudo-localisation.
+        Flexible(
+          child: Text(
+            AppLocalizations.of(context).earlyAccessBadge,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.15,
+            ),
           ),
         ),
         const SizedBox(width: 6),
@@ -621,13 +653,17 @@ class _EarlyAccessStrip extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 6),
-        Text(
-          AppLocalizations.of(context).earlyAccessSubline,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.72),
-            fontSize: 11.5,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.1,
+        Flexible(
+          child: Text(
+            AppLocalizations.of(context).earlyAccessSubline,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.72),
+              fontSize: 11.5,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.1,
+            ),
           ),
         ),
         const SizedBox(width: 5),

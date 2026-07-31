@@ -295,15 +295,19 @@ class _AiDestekliBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.auto_awesome, color: AppColors.neonAccent, size: 13),
-          SizedBox(width: 6),
-          Text(
-            AppLocalizations.of(context).act1AiBadge,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.2,
+          const Icon(Icons.auto_awesome, color: AppColors.neonAccent, size: 13),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              AppLocalizations.of(context).act1AiBadge,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.2,
+              ),
             ),
           ),
         ],
@@ -495,20 +499,28 @@ class _AnalysisCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Text(
-                      l10n.act1AnalysisTargetLabel,
-                      style: const TextStyle(
-                        color: Colors.white54,
-                        fontSize: 12,
+                    Flexible(
+                      child: Text(
+                        l10n.act1AnalysisTargetLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white54,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 4),
-                    Text(
-                      l10n.act1AnalysisTargetValue(94),
-                      style: const TextStyle(
-                        color: Color(0xFF39FF14),
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
+                    Flexible(
+                      child: Text(
+                        l10n.act1AnalysisTargetValue(94),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xFF39FF14),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
                     ),
                   ],

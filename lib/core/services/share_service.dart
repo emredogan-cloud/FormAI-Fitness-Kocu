@@ -34,7 +34,11 @@ class ShareService {
   ShareService._();
   static final ShareService instance = ShareService._();
 
-  static const String _brandHashtagSuffix = '\n\n#FormAI #30GündeDeğişim';
+  /// Two blank lines then the brand hashtags. `#FormAI` is the brand
+  /// tag and never changes; the campaign tag beside it is copy, so it
+  /// comes from ARB.
+  static String _brandHashtagSuffix(AppLocalizations l10n) =>
+      '\n\n${l10n.shareBrandHashtags}';
 
   /// Renders the "Progress" template (program completion %) and hands
   /// it to the OS share-sheet. Fires `share_initiated` immediately and
@@ -157,7 +161,7 @@ class ShareService {
     unawaited(analytics.shareInitiated(surface: 'referral'));
     try {
       final text = '${l10n.shareReferralText(code)}'
-          '\n\nformai://r/$code$_brandHashtagSuffix';
+          '\n\nformai://r/$code${_brandHashtagSuffix(l10n)}';
       final result = await SharePlus.instance.share(
         ShareParams(
           text: text,
@@ -190,31 +194,31 @@ class ShareService {
   /// Yapılışı block. The referral CTA stays at the tail so the link
   /// remains the prominent call-to-action.
   Future<void> shareRecipe({
+    required AppLocalizations l10n,
     required Recipe recipe,
     String? userCode,
   }) async {
     final analytics = AnalyticsService.instance;
     unawaited(analytics.shareInitiated(surface: 'recipe'));
     try {
-      final referralLine = userCode == null
-          ? ''
-          : 'Sen de uygulamayı indir, $userCode kodumla ilk ayını ücretsiz '
-              'Pro yap: formai://r/$userCode';
+      final referralLine =
+          userCode == null ? '' : l10n.shareRecipeReferralLine(userCode);
       final ingredients = _ingredientsFor(recipe);
       final method = _methodFor(recipe);
       final sections = <String>[
-        "FormAI'da harika bir tarif buldum: ${recipe.title}!",
-        'Sadece ${recipe.calories} kcal ve ${recipe.protein}g protein içeriyor.',
+        l10n.shareRecipeIntro(recipe.title),
+        l10n.shareRecipeMacros(recipe.calories, recipe.protein),
         if (ingredients.isNotEmpty)
-          'Malzemeler:\n${ingredients.map((e) => '- $e').join('\n')}',
-        if (method.isNotEmpty) 'Yapılışı:\n$method',
+          '${l10n.shareRecipeIngredientsHeading}\n'
+              '${ingredients.map((e) => '- $e').join('\n')}',
+        if (method.isNotEmpty) '${l10n.shareRecipeMethodHeading}\n$method',
         if (referralLine.isNotEmpty) referralLine,
       ];
-      final text = sections.join('\n\n') + _brandHashtagSuffix;
+      final text = sections.join('\n\n') + _brandHashtagSuffix(l10n);
       final result = await SharePlus.instance.share(
         ShareParams(
           text: text,
-          subject: "FormAI'da harika bir tarif: ${recipe.title}",
+          subject: l10n.shareRecipeSubject(recipe.title),
         ),
       );
       if (result.status == ShareResultStatus.success) {
@@ -382,7 +386,7 @@ class ShareService {
         ? ''
         : '\n\n${l10n.shareReferralTail}formai://r/$referralCode';
     return '${l10n.shareProgressText(percent)}'
-        '$referral$_brandHashtagSuffix';
+        '$referral${_brandHashtagSuffix(l10n)}';
   }
 
   /// Phase 54B · same upgrade arc as `shareProgress`. The trailing
@@ -398,6 +402,6 @@ class ShareService {
         ? ''
         : '\n\n${l10n.shareReferralTail}formai://r/$referralCode';
     return '${l10n.shareBadgeText(badgeName)}'
-        '$referral$_brandHashtagSuffix';
+        '$referral${_brandHashtagSuffix(l10n)}';
   }
 }

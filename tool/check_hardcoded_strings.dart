@@ -55,6 +55,10 @@ const _scannedRoots = <String>[
 /// allowlist material.
 const _allowlistedPrefixes = <String>[
   'lib/features/admin/',
+  // Developer CLI scripts. Their strings are console output for whoever
+  // runs `dart run lib/scripts/...` — they never reach a user, and the
+  // person reading them is the person who wrote them.
+  'lib/scripts/',
   // The seeded exercise and plan catalogue: names, descriptions and
   // cues that mirror rows in the `exercises` / `workout_plans` tables.
   // These are the one genuine case of the original "domain and data
@@ -127,10 +131,16 @@ bool _isTechnical(String value) {
   return false;
 }
 
-/// Matches single- and double-quoted Dart literals without escapes or
-/// interpolation braces. Deliberately simple: a literal this misses is
-/// a false negative, which is the direction we want to err in.
-final _literal = RegExp(r"'([^'\\\n$]{2,}?)'|" r'"([^"\\\n$]{2,}?)"');
+/// Matches single- and double-quoted Dart literals without interpolation.
+///
+/// Escape sequences ARE matched: the pattern used to reject any literal
+/// containing a backslash, which made every `'İKİ\nSATIR'` invisible to
+/// this gate. Three real strings were hiding behind that — a hero
+/// speech bubble, a report eyebrow, and a share hashtag — all of which
+/// looked extracted because nothing was counting them.
+final _literal = RegExp(
+  r"'((?:[^'\\\n$]|\\.){2,}?)'" r'|"((?:[^"\\\n$]|\\.){2,}?)"',
+);
 
 int _countViolations(String source) {
   var count = 0;

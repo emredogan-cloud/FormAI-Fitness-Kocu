@@ -68,6 +68,13 @@ jobs:
       - name: ARB coverage report
         run: dart run tool/arb_coverage.dart
 
+      # The pseudo-localisation wrapper is generated from the generated
+      # localisations class. If it goes stale, a new ARB key renders
+      # un-inflated and the pseudo-locale layout sweep silently stops
+      # testing it — a green suite that checks less than it claims.
+      - name: Pseudo-localisations wrapper is in step
+        run: dart run tool/gen_pseudo_localizations.dart --check
+
       - name: Run unit and widget tests (with coverage)
         run: flutter test --coverage
 

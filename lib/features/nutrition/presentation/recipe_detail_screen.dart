@@ -286,6 +286,7 @@ class _ShareRecipeButton extends ConsumerWidget {
           onTap: () {
             AppHaptics.secondaryTap();
             ShareService.instance.shareRecipe(
+              l10n: AppLocalizations.of(context),
               recipe: recipe,
               userCode: code,
             );
