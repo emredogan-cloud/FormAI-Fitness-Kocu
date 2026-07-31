@@ -36,6 +36,25 @@ const _scannedRoots = <String>[
   'lib/core/widgets',
 ];
 
+/// The documented allowlist the roadmap calls for: paths whose literals
+/// are genuinely not user-facing.
+///
+/// `features/admin/**` is the internal content-ops panel. It is
+/// reachable only by an account carrying the `admin` claim — the router
+/// redirects everyone else — and it exists so the team can edit the
+/// exercise and recipe catalogues. Its audience is the people who build
+/// FormAI, in the language they work in. Translating it would cost
+/// translator budget on strings no user can reach, and gating it would
+/// leave ~96 permanent violations sitting in the report training
+/// everyone to ignore the number.
+///
+/// Anything added here needs the same test: could a user, on any locale,
+/// on any path through the app, see this string? If yes, it is not
+/// allowlist material.
+const _allowlistedPrefixes = <String>[
+  'lib/features/admin/',
+];
+
 /// Only presentation-layer files are gated. Domain and data files hold
 /// content (exercise names, FAQ bodies) that Phase 7 localises through
 /// the database rather than ARB, and flagging them here would train
@@ -45,6 +64,9 @@ bool _isGatedPath(String path) {
   if (!p.endsWith('.dart')) return false;
   if (p.contains('/l10n/')) return false;
   if (p.endsWith('.g.dart') || p.endsWith('.freezed.dart')) return false;
+  for (final prefix in _allowlistedPrefixes) {
+    if (p.startsWith(prefix)) return false;
+  }
   if (p.startsWith('lib/core/widgets/')) return true;
   return p.contains('/presentation/');
 }
@@ -115,6 +137,24 @@ Map<String, int> _scan() {
   return counts;
 }
 
+/// How many literals the allowlist is suppressing, so the report can say
+/// so out loud rather than letting an exclusion masquerade as progress.
+int _allowlistedCount() {
+  var total = 0;
+  for (final prefix in _allowlistedPrefixes) {
+    final dir = Directory(prefix);
+    if (!dir.existsSync()) continue;
+    for (final entity in dir.listSync(recursive: true)) {
+      if (entity is! File) continue;
+      final path = entity.path.replaceAll(r'\', '/');
+      if (!path.endsWith('.dart')) continue;
+      if (!path.contains('/presentation/')) continue;
+      total += _countViolations(entity.readAsStringSync());
+    }
+  }
+  return total;
+}
+
 const _baselinePath = 'tool/hardcoded_strings_baseline.json';
 
 void main(List<String> args) {
@@ -153,6 +193,18 @@ void main(List<String> args) {
   stdout.writeln('Hardcoded user-facing strings in gated paths:');
   stdout.writeln('  now:      $total in ${counts.length} files');
   stdout.writeln('  baseline: $baselineTotal in ${baseline.length} files');
+
+  // Report what the allowlist is hiding, every run.
+  //
+  // Otherwise a path added to `_allowlistedPrefixes` looks identical to
+  // extraction work in the numbers, and "we got the count down" stops
+  // meaning anything. An allowlisted string is untranslated; it is just
+  // untranslated on purpose.
+  final allowlisted = _allowlistedCount();
+  if (allowlisted > 0) {
+    stdout.writeln('  (excluded by allowlist, NOT extracted: $allowlisted in '
+        '${_allowlistedPrefixes.join(", ")})');
+  }
 
   if (regressions.isEmpty) {
     final improved = baselineTotal - total;

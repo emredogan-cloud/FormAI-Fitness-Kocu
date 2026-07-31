@@ -1,7 +1,4 @@
 {
-  "lib/features/admin/presentation/admin_dashboard_screen.dart": 12,
-  "lib/features/admin/presentation/widgets/admin_exercise_form.dart": 53,
-  "lib/features/admin/presentation/widgets/admin_recipe_form.dart": 31,
   "lib/features/home/presentation/account_settings_screen.dart": 41,
   "lib/features/home/presentation/dashboard_screen.dart": 2,
   "lib/features/home/presentation/discovery_hub_screen.dart": 7,
