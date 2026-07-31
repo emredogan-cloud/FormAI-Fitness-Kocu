@@ -211,7 +211,7 @@ class _CoachSpeechBubble extends StatelessWidget {
     final scheme = context.colors;
     final isDark = context.isDarkMode;
     return Container(
-      padding: const EdgeInsets.fromLTRB(10, 10, 14, 10),
+      padding: const EdgeInsetsDirectional.fromSTEB(10, 10, 14, 10),
       decoration: BoxDecoration(
         color: isDark
             ? Colors.white.withValues(alpha: 0.05)

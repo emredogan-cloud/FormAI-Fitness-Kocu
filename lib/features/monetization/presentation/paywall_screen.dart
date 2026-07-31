@@ -1769,7 +1769,7 @@ class _GuaranteeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colors;
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+      padding: const EdgeInsetsDirectional.fromSTEB(16, 14, 12, 14),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
         color: scheme.onSurface.withValues(alpha: 0.05),

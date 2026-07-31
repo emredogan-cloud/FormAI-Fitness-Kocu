@@ -337,7 +337,7 @@ class _CardWithImage extends StatelessWidget {
         Expanded(
           flex: 11,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
+            padding: const EdgeInsetsDirectional.fromSTEB(16, 10, 8, 10),
             child: _CardTextContent(option: option, selected: selected),
           ),
         ),
@@ -520,7 +520,7 @@ class _SideImagePanel extends StatelessWidget {
           duration: const Duration(milliseconds: 220),
           opacity: selected ? 1.0 : 0.0,
           child: Align(
-            alignment: Alignment.topRight,
+            alignment: AlignmentDirectional.topEnd,
             child: Padding(
               padding: const EdgeInsets.all(8),
               child: Container(

@@ -239,7 +239,7 @@
       }
     }
   },
-  "retrospectiveWorkoutsValue": "{count} workouts",
+  "retrospectiveWorkoutsValue": "{count, plural, =1{1 workout} other{{count} workouts}}",
   "@retrospectiveWorkoutsValue": {
     "description": "Bolded workout-count fragment inside the retrospective sentence",
     "placeholders": {
@@ -248,7 +248,7 @@
       }
     }
   },
-  "retrospectiveMinutesValue": "{count} minutes",
+  "retrospectiveMinutesValue": "{count, plural, =1{1 minute} other{{count} minutes}}",
   "@retrospectiveMinutesValue": {
     "description": "Bolded minutes fragment inside the retrospective sentence",
     "placeholders": {
@@ -257,7 +257,7 @@
       }
     }
   },
-  "retrospectiveRepsValue": "{count} reps",
+  "retrospectiveRepsValue": "{count, plural, =1{1 rep} other{{count} reps}}",
   "@retrospectiveRepsValue": {
     "description": "Bolded rep-count fragment inside the retrospective sentence",
     "placeholders": {
@@ -2499,7 +2499,7 @@
   "@profileStatCompleted": {
     "description": "Profile stat tile label — days completed"
   },
-  "profileStreakDays": "{count} days",
+  "profileStreakDays": "{count, plural, =1{1 day} other{{count} days}}",
   "@profileStreakDays": {
     "description": "Streak value. {count} is the number of days.",
     "placeholders": {
@@ -3701,7 +3701,7 @@
       }
     }
   },
-  "coachGreetTodayPending": "You're on day {day} — {count} exercises are waiting. ",
+  "coachGreetTodayPending": "You're on day {day} — {count, plural, =1{1 exercise is waiting} other{{count} exercises are waiting}}. ",
   "@coachGreetTodayPending": {
     "description": "Offline coach greeting fragment when today's workout is still open. Trailing space is intentional.",
     "placeholders": {
@@ -3769,7 +3769,7 @@
   "@coachKeywordsThanks": {
     "description": "MATCH KEYWORDS, not display copy. See coachKeywordsToday."
   },
-  "coachStreakAlive": "You're on a {days}-day streak — don't break it! Even ten minutes today keeps it alive.",
+  "coachStreakAlive": "You're on a {days, plural, =1{1-day} other{{days}-day}} streak — don't break it! Even ten minutes today keeps it alive.",
   "@coachStreakAlive": {
     "description": "Offline coach reply about an active streak",
     "placeholders": {
@@ -3806,7 +3806,7 @@
   "@coachTodayEquipmentNote": {
     "description": "Optional fragment inside the offline coach's today reply. Trailing space is intentional."
   },
-  "coachTodayPlan": "Day {day}: {count} exercises. {equipment}Turn your camera on and I'll watch your form — doing each rep properly matters more than how many. Shall we start?",
+  "coachTodayPlan": "Day {day}: {count, plural, =1{1 exercise} other{{count} exercises}}. {equipment}Turn your camera on and I'll watch your form — doing each rep properly matters more than how many. Shall we start?",
   "@coachTodayPlan": {
     "description": "Offline coach reply describing today's workout. {equipment} is coachTodayEquipmentNote or empty.",
     "placeholders": {
@@ -3821,7 +3821,7 @@
       }
     }
   },
-  "coachStreakContinuing": "Your {days}-day streak is going. ",
+  "coachStreakContinuing": "Your {days, plural, =1{1-day} other{{days}-day}} streak is going. ",
   "@coachStreakContinuing": {
     "description": "Fragment inside the offline coach's progress reply. Trailing space is intentional.",
     "placeholders": {
@@ -3891,7 +3891,7 @@
       }
     }
   },
-  "coachMotivateStreak": "{name}you've been here {days} days — most people don't have that discipline. Show yourself what you can do again today. 🔥",
+  "coachMotivateStreak": "{name}you've been here {days, plural, =1{1 day} other{{days} days}} — most people don't have that discipline. Show yourself what you can do again today. 🔥",
   "@coachMotivateStreak": {
     "description": "Offline coach motivation for a user on a streak. {name} is 'Ada, ' or empty.",
     "placeholders": {
@@ -4818,7 +4818,7 @@
   "@onbPainInputHint": {
     "description": "Free-text hint on the pain-point step."
   },
-  "accountNameTooLong": "At most {max} characters",
+  "accountNameTooLong": "At most {max, plural, =1{1 character} other{{max} characters}}",
   "@accountNameTooLong": {
     "description": "Validation error when the display name exceeds the length limit.",
     "placeholders": {
@@ -5702,7 +5702,7 @@
       }
     }
   },
-  "paywallGuaranteeBody": "You have an unconditional refund right within the first {days} days.",
+  "paywallGuaranteeBody": "You have an unconditional refund right within the first {days, plural, =1{1 day} other{{days} days}}.",
   "@paywallGuaranteeBody": {
     "description": "Guarantee card body. {days} is the same constant the crest renders, so the two cannot drift apart.",
     "placeholders": {
@@ -5893,7 +5893,7 @@
       }
     }
   },
-  "setsByReps": "{sets} sets · {reps} reps",
+  "setsByReps": "{sets, plural, =1{1 set} other{{sets} sets}} · {reps, plural, =1{1 rep} other{{reps} reps}}",
   "@setsByReps": {
     "description": "Exercise prescription: sets by reps.",
     "placeholders": {
@@ -6112,7 +6112,7 @@
       }
     }
   },
-  "daysCompletedOf": "{done} of {total} days done",
+  "daysCompletedOf": "{done} of {total, plural, =1{1 day} other{{total} days}} done",
   "@daysCompletedOf": {
     "description": "Program progress.",
     "placeholders": {
@@ -6169,7 +6169,7 @@
       }
     }
   },
-  "restCue": "Great! Now rest for {seconds} seconds.",
+  "restCue": "Great! Now rest for {seconds, plural, =1{1 second} other{{seconds} seconds}}.",
   "@restCue": {
     "description": "Spoken cue at the start of a rest period.",
     "placeholders": {
@@ -6214,7 +6214,7 @@
       }
     }
   },
-  "targetRepsLabel": "Target: {reps} reps",
+  "targetRepsLabel": "Target: {reps, plural, =1{1 rep} other{{reps} reps}}",
   "@targetRepsLabel": {
     "description": "Target rep count on the manual workout surface.",
     "placeholders": {
@@ -6331,7 +6331,7 @@
       }
     }
   },
-  "hubUnlockedOf": "{unlocked} of {total} features unlocked",
+  "hubUnlockedOf": "{unlocked} of {total, plural, =1{1 feature} other{{total} features}} unlocked",
   "@hubUnlockedOf": {
     "description": "Discovery hub progress.",
     "placeholders": {
@@ -6343,7 +6343,7 @@
       }
     }
   },
-  "weeklyWorkoutsOf": "{done}/{target} workouts",
+  "weeklyWorkoutsOf": "{done}/{target, plural, =1{1 workout} other{{target} workouts}}",
   "@weeklyWorkoutsOf": {
     "description": "Weekly goal progress.",
     "placeholders": {
@@ -6406,7 +6406,7 @@
       }
     }
   },
-  "daysOfTotal": "{done}/{total} days",
+  "daysOfTotal": "{done}/{total, plural, =1{1 day} other{{total} days}}",
   "@daysOfTotal": {
     "description": "Challenge progress.",
     "placeholders": {
@@ -6418,7 +6418,7 @@
       }
     }
   },
-  "suggestionStreakLead": "Don't break your {count}-day streak — ",
+  "suggestionStreakLead": "Don't break your {count, plural, =1{1-day} other{{count}-day}} streak — ",
   "@suggestionStreakLead": {
     "description": "Opening clause of a suggestion, prefixed to the sentence that follows.",
     "placeholders": {

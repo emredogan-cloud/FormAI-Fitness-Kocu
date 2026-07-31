@@ -233,7 +233,7 @@ class ProgramCompleteCard extends StatelessWidget {
           if (onReplayJourney != null) ...[
             const SizedBox(height: 14),
             Align(
-              alignment: Alignment.centerLeft,
+              alignment: AlignmentDirectional.centerStart,
               child: Material(
                 color: Colors.transparent,
                 borderRadius: BorderRadius.circular(999),

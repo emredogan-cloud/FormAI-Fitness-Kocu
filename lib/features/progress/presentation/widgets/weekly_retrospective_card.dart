@@ -233,7 +233,7 @@ class _StatChip extends StatelessWidget {
             const SizedBox(height: 6),
             FittedBox(
               fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
+              alignment: AlignmentDirectional.centerStart,
               child: Text(
                 label,
                 style: const TextStyle(

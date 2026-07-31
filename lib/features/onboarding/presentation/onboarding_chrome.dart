@@ -72,7 +72,7 @@ class WizardHeader extends StatelessWidget {
                 width: 40,
                 child: Text(
                   '$step/$total',
-                  textAlign: TextAlign.right,
+                  textAlign: TextAlign.end,
                   style: const TextStyle(
                     color: Colors.white54,
                     fontSize: 12,

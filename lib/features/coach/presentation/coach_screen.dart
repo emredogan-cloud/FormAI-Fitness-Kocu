@@ -170,7 +170,9 @@ class _BubbleState extends State<_Bubble> {
           coach ? CrossAxisAlignment.start : CrossAxisAlignment.end,
       children: [
         Align(
-          alignment: coach ? Alignment.centerLeft : Alignment.centerRight,
+          alignment: coach
+              ? AlignmentDirectional.centerStart
+              : AlignmentDirectional.centerEnd,
           child: Container(
             margin: const EdgeInsets.only(bottom: 3),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -202,7 +204,8 @@ class _BubbleState extends State<_Bubble> {
         ),
         if (at != null)
           Padding(
-            padding: const EdgeInsets.only(bottom: 10, left: 4, right: 4),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 4).copyWith(bottom: 10),
             child: Text(
               '${at.hour.toString().padLeft(2, '0')}:'
               '${at.minute.toString().padLeft(2, '0')}',
@@ -327,7 +330,7 @@ class _RichCoachText extends StatelessWidget {
       }
       if (line.startsWith('• ') || line.startsWith('- ')) {
         children.add(Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 3),
+          padding: const EdgeInsetsDirectional.only(start: 4, bottom: 3),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -379,7 +382,7 @@ class _TypingBubbleState extends State<_TypingBubble>
   @override
   Widget build(BuildContext context) {
     return Align(
-      alignment: Alignment.centerLeft,
+      alignment: AlignmentDirectional.centerStart,
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -403,7 +406,7 @@ class _TypingBubbleState extends State<_TypingBubble>
                 final o =
                     (0.3 + 0.7 * (0.5 - (t - 0.5).abs()) * 2).clamp(0.3, 1.0);
                 return Padding(
-                  padding: const EdgeInsets.only(right: 5),
+                  padding: const EdgeInsetsDirectional.only(end: 5),
                   child: Opacity(
                     opacity: o,
                     child: Container(

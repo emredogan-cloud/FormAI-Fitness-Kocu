@@ -62,7 +62,9 @@ class CoachChatBubble extends StatelessWidget {
     final isForm = side == ChatBubbleSide.form;
     final maxWidth = MediaQuery.sizeOf(context).width * 0.78;
     return Align(
-      alignment: isForm ? Alignment.centerLeft : Alignment.centerRight,
+      alignment: isForm
+          ? AlignmentDirectional.centerStart
+          : AlignmentDirectional.centerEnd,
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: maxWidth),
         child: Container(

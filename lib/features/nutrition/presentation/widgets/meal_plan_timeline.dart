@@ -794,7 +794,7 @@ class _TertiaryRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Align(
-      alignment: Alignment.centerRight,
+      alignment: AlignmentDirectional.centerEnd,
       child: TextButton.icon(
         onPressed: () => context.push('/recipe', extra: recipe),
         icon: const Icon(Icons.open_in_new, size: 14),

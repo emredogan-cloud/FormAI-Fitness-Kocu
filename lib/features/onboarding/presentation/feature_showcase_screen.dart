@@ -93,9 +93,9 @@ class _FeatureShowcaseScreenState extends ConsumerState<FeatureShowcaseScreen> {
             // Skip is available from card one. Same principle as the
             // spotlight tour: an unskippable intro is a liability.
             Align(
-              alignment: Alignment.centerRight,
+              alignment: AlignmentDirectional.centerEnd,
               child: Padding(
-                padding: const EdgeInsets.only(right: 8, top: 4),
+                padding: const EdgeInsetsDirectional.only(end: 8, top: 4),
                 child: TextButton(
                   onPressed: _finish,
                   style: TextButton.styleFrom(

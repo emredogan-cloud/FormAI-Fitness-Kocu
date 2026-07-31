@@ -147,7 +147,7 @@ class _MultiSelectTile extends StatelessWidget {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 240),
             curve: Curves.easeOutCubic,
-            padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
+            padding: const EdgeInsetsDirectional.fromSTEB(16, 14, 14, 14),
             decoration: BoxDecoration(
               color: selected
                   ? AppColors.neon.withValues(alpha: 0.16)

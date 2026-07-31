@@ -579,7 +579,7 @@ class _StickyRemainingHeader extends SliverPersistentHeaderDelegate {
     return Container(
       color: Colors.black,
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 10),
-      alignment: Alignment.centerLeft,
+      alignment: AlignmentDirectional.centerStart,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.baseline,
         textBaseline: TextBaseline.alphabetic,
@@ -667,7 +667,7 @@ class _ActiveDayCard extends StatelessWidget {
     // "14% Tamamlandı" hint without lying about state we don't track yet.
     final percent = realDay == null ? 0 : 14;
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 18, 14, 16),
+      padding: const EdgeInsetsDirectional.fromSTEB(20, 18, 14, 16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         gradient: const LinearGradient(
@@ -1118,7 +1118,7 @@ class _StickyTextHeader extends SliverPersistentHeaderDelegate {
     return Container(
       color: Colors.black,
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 10),
-      alignment: Alignment.centerLeft,
+      alignment: AlignmentDirectional.centerStart,
       child: Text(
         text,
         style: const TextStyle(
@@ -1244,7 +1244,7 @@ class _ExerciseTile extends StatelessWidget {
     final scheme = context.colors;
     final isDark = context.isDarkMode;
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 14, 14, 14),
+      padding: const EdgeInsetsDirectional.fromSTEB(18, 14, 14, 14),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         color: isDark ? Colors.white.withValues(alpha: 0.04) : scheme.surface,

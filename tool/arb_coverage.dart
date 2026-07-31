@@ -138,6 +138,42 @@ void main(List<String> args) {
     }
   }
 
+  // 4 · plural readiness.
+  //
+  // A message that interpolates a count and then names the thing being
+  // counted needs an ICU `plural` block, or the English reads "1
+  // exercises". Turkish takes no plural agreement after a numeral, so
+  // its forms are invariant by design and this audit only looks at the
+  // template. It reports rather than fails: not every int is a count —
+  // "{value} kg" and "{done}/{total}" are invariant in every language —
+  // so the judgement stays with a person.
+  final plurallike = <String>[];
+  for (final key in templateKeys) {
+    final value = '${template[key]}';
+    if (value.contains('plural,')) continue;
+    final meta = template['@$key'];
+    final placeholders = meta is Map ? meta['placeholders'] : null;
+    if (placeholders is! Map) continue;
+    final ints = placeholders.entries
+        .where((e) => e.value is Map && e.value['type'] == 'int')
+        .map((e) => '${e.key}');
+    for (final name in ints) {
+      // "{count} exercises" — a number followed by a word. A number
+      // followed by a unit or punctuation is not a count.
+      if (RegExp('\\{$name\\}[ -][A-Za-z]{3,}').hasMatch(value)) {
+        plurallike.add(key);
+        break;
+      }
+    }
+  }
+  if (plurallike.isNotEmpty) {
+    plurallike.sort();
+    stdout.writeln('\n  counts without an ICU plural block '
+        '(${plurallike.length}) — review, do not assume:');
+    stdout.writeln('    ${plurallike.take(15).join(', ')}'
+        '${plurallike.length > 15 ? ', …' : ''}');
+  }
+
   // 2 · unused keys.
   final used = _usedKeys();
   final unused = templateKeys.difference(used).toList()..sort();

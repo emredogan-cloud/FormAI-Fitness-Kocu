@@ -517,7 +517,7 @@ class _StepDots extends StatelessWidget {
         children: List.generate(count, (i) {
           final active = i == index;
           return Padding(
-            padding: const EdgeInsets.only(right: 5),
+            padding: const EdgeInsetsDirectional.only(end: 5),
             child: Container(
               width: active ? 16 : 6,
               height: 6,

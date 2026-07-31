@@ -254,7 +254,7 @@ class _HeroCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 12, 18),
+      padding: const EdgeInsetsDirectional.fromSTEB(18, 18, 12, 18),
       decoration: BoxDecoration(
         color: _PredictionScreenState._surface,
         borderRadius: BorderRadius.circular(22),
@@ -422,7 +422,7 @@ class _StatPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+      padding: const EdgeInsetsDirectional.fromSTEB(14, 12, 12, 12),
       decoration: BoxDecoration(
         color: _PredictionScreenState._surface,
         borderRadius: BorderRadius.circular(18),
@@ -467,7 +467,7 @@ class _WeeklyTargetPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+      padding: const EdgeInsetsDirectional.fromSTEB(14, 12, 12, 12),
       decoration: BoxDecoration(
         color: _PredictionScreenState._surface,
         borderRadius: BorderRadius.circular(18),
@@ -499,12 +499,12 @@ class _WeeklyTargetPill extends StatelessWidget {
           // seven days visible instead of clipping the end of the week.
           FittedBox(
             fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
+            alignment: AlignmentDirectional.centerStart,
             child: Row(
               children: [
                 for (final done in checks)
                   Padding(
-                    padding: const EdgeInsets.only(right: 4),
+                    padding: const EdgeInsetsDirectional.only(end: 4),
                     child: Icon(
                       done ? Icons.check_circle : Icons.cancel,
                       color: done
@@ -583,7 +583,7 @@ class _DateCard extends StatelessWidget {
                     const SizedBox(height: 6),
                     FittedBox(
                       fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
+                      alignment: AlignmentDirectional.centerStart,
                       child: Text(
                         date,
                         style: const TextStyle(

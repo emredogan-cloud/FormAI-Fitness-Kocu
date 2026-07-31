@@ -26,6 +26,7 @@ Future<void> pumpPseudo(
   Widget child, {
   Size size = Viewports.phone,
   double textScale = 1.0,
+  TextDirection? textDirection,
   Duration settle = const Duration(milliseconds: 400),
 }) async {
   tester.view.physicalSize = size;
@@ -43,7 +44,12 @@ Future<void> pumpPseudo(
         ),
         child: inner!,
       ),
-      home: Scaffold(body: child),
+      home: textDirection == null
+          ? Scaffold(body: child)
+          : Directionality(
+              textDirection: textDirection,
+              child: Scaffold(body: child),
+            ),
     ),
   );
   await tester.pump(settle);
@@ -101,11 +107,53 @@ Future<void> sweepPseudoLayouts(
     );
   }
 
-  // Several onboarding screens schedule a one-shot `Future.delayed` in
-  // initState — a settle before the CTA arms, for instance. They are
-  // mounted-guarded, so they are harmless, but the test binding fails
-  // any test that ends with a timer outstanding. Tear the tree down and
-  // let them fire against nothing.
+  await _drainTimers(tester);
+}
+
+/// Renders [build] right-to-left at the reference viewport and fails on
+/// any layout error.
+///
+/// The app ships Turkish only today, so this is readiness rather than
+/// support: what it catches is a widget tree that assumes left-to-right
+/// in a way no amount of translation can fix — a hardcoded `left:`
+/// padding, a `TextAlign.right`, an `Alignment.centerLeft` where
+/// `AlignmentDirectional.centerStart` was meant. Those decisions are
+/// cheap to make correctly now and expensive to find later.
+Future<void> sweepRtlLayout(
+  WidgetTester tester,
+  String describe,
+  Widget Function() build, {
+  Duration settle = const Duration(milliseconds: 400),
+}) async {
+  await tester.pumpWidget(const SizedBox.shrink());
+  while (tester.takeException() != null) {}
+
+  await pumpPseudo(
+    tester,
+    build(),
+    textDirection: TextDirection.rtl,
+    settle: settle,
+  );
+  final errors = <Object>[];
+  for (var error = tester.takeException();
+      error != null;
+      error = tester.takeException()) {
+    errors.add(error);
+  }
+  expect(
+    errors,
+    isEmpty,
+    reason: '$describe failed to lay out right-to-left:\n${errors.join('\n')}',
+  );
+  await _drainTimers(tester);
+}
+
+/// Several onboarding screens schedule a one-shot `Future.delayed` in
+/// initState — a settle before the CTA arms, for instance. They are
+/// mounted-guarded, so they are harmless, but the test binding fails any
+/// test that ends with a timer outstanding. Tear the tree down and let
+/// them fire against nothing.
+Future<void> _drainTimers(WidgetTester tester) async {
   await tester.pumpWidget(const SizedBox.shrink());
   await tester.pump(const Duration(seconds: 5));
   while (tester.takeException() != null) {}

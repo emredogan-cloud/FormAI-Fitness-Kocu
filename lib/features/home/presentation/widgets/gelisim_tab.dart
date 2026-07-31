@@ -626,7 +626,7 @@ class _StreakCard extends StatelessWidget {
                   children: List.generate(5, (i) {
                     final isOn = i < filled;
                     return Padding(
-                      padding: const EdgeInsets.only(right: 6),
+                      padding: const EdgeInsetsDirectional.only(end: 6),
                       child: Container(
                         width: 22,
                         height: 22,
@@ -1518,7 +1518,7 @@ class _AiCoachCard extends ConsumerWidget {
           // /progress/suggestions screen which surfaces three tailored
           // mikro-aksiyonlar based on the user's current state.
           Align(
-            alignment: Alignment.centerLeft,
+            alignment: AlignmentDirectional.centerStart,
             child: _SectionLinkPill(
               label: AppLocalizations.of(context).progressGoToSuggestions,
               onTap: () => context.push(AppRoutes.progressSuggestions),

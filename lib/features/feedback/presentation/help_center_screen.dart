@@ -239,6 +239,7 @@ class _FaqTile extends StatelessWidget {
             initiallyExpanded: expandedByDefault,
             tilePadding: const EdgeInsets.symmetric(horizontal: 14),
             childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+            // ExpansionTile types this as Alignment, not AlignmentDirectional.
             expandedAlignment: Alignment.centerLeft,
             expandedCrossAxisAlignment: CrossAxisAlignment.start,
             iconColor: _neon,

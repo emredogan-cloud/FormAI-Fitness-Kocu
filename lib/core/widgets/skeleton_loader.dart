@@ -77,7 +77,7 @@ class SkeletonLine extends StatelessWidget {
   Widget build(BuildContext context) {
     return FractionallySizedBox(
       widthFactor: widthFactor,
-      alignment: Alignment.centerLeft,
+      alignment: AlignmentDirectional.centerStart,
       child: SkeletonBox(height: height, borderRadius: 6),
     );
   }

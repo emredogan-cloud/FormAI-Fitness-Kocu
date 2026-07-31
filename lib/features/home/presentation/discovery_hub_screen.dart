@@ -251,7 +251,7 @@ class _CapabilityCard extends StatelessWidget {
               (hint ?? const UnlockSoon()).text(l10n),
             ),
       child: Container(
-        padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
+        padding: const EdgeInsetsDirectional.fromSTEB(16, 14, 14, 14),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           color: Colors.white.withValues(alpha: unlocked ? 0.05 : 0.025),
@@ -295,7 +295,7 @@ class _CapabilityCard extends StatelessWidget {
             const SizedBox(height: 12),
             if (unlocked)
               Align(
-                alignment: Alignment.centerLeft,
+                alignment: AlignmentDirectional.centerStart,
                 child: TextButton(
                   onPressed: onOpen,
                   style: TextButton.styleFrom(

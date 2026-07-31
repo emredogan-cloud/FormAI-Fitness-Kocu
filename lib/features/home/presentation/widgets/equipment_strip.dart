@@ -188,7 +188,7 @@ class _EquipmentCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 10),
                       Align(
-                        alignment: Alignment.centerLeft,
+                        alignment: AlignmentDirectional.centerStart,
                         child: Material(
                           color: Colors.white,
                           shape: const StadiumBorder(),
