@@ -74,7 +74,7 @@ class DiscoveryTipCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      tip.body,
+                      tip.body(AppLocalizations.of(context)),
                       style: TextStyle(
                         color: scheme.onSurface.withValues(alpha: 0.86),
                         fontSize: 12.5,
@@ -95,7 +95,7 @@ class DiscoveryTipCard extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                tip.ctaLabel!,
+                                tip.ctaLabel!(AppLocalizations.of(context)),
                                 style: const TextStyle(
                                   color: AppColors.neon,
                                   fontSize: 12.5,

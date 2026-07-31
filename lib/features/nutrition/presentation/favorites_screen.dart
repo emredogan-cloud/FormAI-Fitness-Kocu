@@ -126,7 +126,7 @@ class FavoritesScreen extends ConsumerWidget {
       await SharePlus.instance.share(
         ShareParams(
           text: body,
-          subject: 'FormAI · Alışveriş Listem',
+          subject: AppLocalizations.of(context).shoppingListTitle,
         ),
       );
     } catch (e, st) {
@@ -164,10 +164,10 @@ class FavoritesScreen extends ConsumerWidget {
       final r = recipes[i];
       buf
         ..writeln('${i + 1}) ${r.title}')
-        ..writeln('Malzemeler:');
+        ..writeln(l10n.shoppingListRecipeIngredients);
       final items = _ingredientsFor(r);
       if (items.isEmpty) {
-        buf.writeln('- (malzeme listesi yakında — tarif: formai://)');
+        buf.writeln(l10n.shoppingListPlaceholder);
       } else {
         for (final ing in items) {
           buf.writeln('- $ing');

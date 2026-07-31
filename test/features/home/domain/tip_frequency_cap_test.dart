@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sixpack_ai/features/home/domain/discovery_tips.dart';
+import 'package:flutter/widgets.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// Roadmap Phase 4 (C28) · the tips engine's frequency cap and the new
 /// context-aware rules.
@@ -32,6 +34,12 @@ TipContext ctx({
 final _now = DateTime(2026, 7, 31, 12);
 
 void main() {
+  late AppLocalizations l10n;
+
+  setUpAll(() async {
+    l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+  });
+
   group('frequency cap', () {
     test('with no history, a matching tip surfaces immediately', () {
       final tip = selectTip(
@@ -204,7 +212,7 @@ void main() {
 
     test('every tip has non-empty copy', () {
       for (final tip in kDiscoveryTips) {
-        expect(tip.body.trim(), isNotEmpty, reason: tip.id);
+        expect(tip.body(l10n).trim(), isNotEmpty, reason: tip.id);
       }
     });
 

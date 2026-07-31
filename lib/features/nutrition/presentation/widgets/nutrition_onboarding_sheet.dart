@@ -8,6 +8,7 @@ import '../../../../core/services/app_preferences.dart';
 import '../../../../core/utils/app_haptics.dart';
 import '../../../onboarding/presentation/widgets/interactive_question_step.dart';
 import '../../../onboarding/providers/wizard_provider.dart';
+import '../../../../l10n/app_localizations.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonAccent = Color(0xFF4DA6FF);
@@ -300,13 +301,13 @@ class _AiIllusionScreenState extends State<_AiIllusionScreen>
   /// 5 phrases × 1.5s = 7.5s before the smooth fade-out kicks in.
   /// Spec'd by the PM in first-person voice so the loading reads as
   /// the AI doing real work rather than a generic spinner caption.
-  static const List<String> _phrases = [
-    'Beslenme alışkanlıkların analiz ediliyor...',
-    'Kalori ve makrolar hesaplanıyor...',
-    'En uygun tarifler seçiliyor...',
-    'Planın hazırlanıyor...',
-    'Hazır!',
-  ];
+  static List<String> _phrases(AppLocalizations l10n) => [
+        l10n.nutritionWizardStepAnalysing,
+        l10n.nutritionWizardStepCalculating,
+        l10n.nutritionWizardStepSelecting,
+        l10n.nutritionWizardStepPreparing,
+        l10n.nutritionWizardStepReady,
+      ];
   static const Duration _phraseDuration = Duration(milliseconds: 1500);
   static const Duration _fadeOutDuration = Duration(milliseconds: 520);
 
@@ -349,12 +350,12 @@ class _AiIllusionScreenState extends State<_AiIllusionScreen>
         timer.cancel();
         return;
       }
-      if (_phraseIndex >= _phrases.length - 1) {
+      if (_phraseIndex >= _phrases(AppLocalizations.of(context)).length - 1) {
         timer.cancel();
         return;
       }
       setState(() => _phraseIndex += 1);
-      if (_phraseIndex == _phrases.length - 1) {
+      if (_phraseIndex == _phrases(AppLocalizations.of(context)).length - 1) {
         _onReachReady();
       }
     });
@@ -393,8 +394,8 @@ class _AiIllusionScreenState extends State<_AiIllusionScreen>
         child: Column(
           children: [
             const SizedBox(height: 24),
-            const Text(
-              'Senin için en iyi plan hazırlanıyor',
+            Text(
+              AppLocalizations.of(context).nutritionWizardBuildingPlan,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.white,
@@ -428,11 +429,12 @@ class _AiIllusionScreenState extends State<_AiIllusionScreen>
                 );
               },
               child: Text(
-                _phrases[_phraseIndex],
+                _phrases(AppLocalizations.of(context))[_phraseIndex],
                 key: ValueKey<int>(_phraseIndex),
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: _phraseIndex == _phrases.length - 1
+                  color: _phraseIndex ==
+                          _phrases(AppLocalizations.of(context)).length - 1
                       ? _success
                       : Colors.white,
                   fontSize: 16,
@@ -445,7 +447,7 @@ class _AiIllusionScreenState extends State<_AiIllusionScreen>
             const SizedBox(height: 18),
             _IllusionProgressStrip(
               current: _phraseIndex + 1,
-              total: _phrases.length,
+              total: _phrases(AppLocalizations.of(context)).length,
             ),
             const Spacer(flex: 3),
           ],
@@ -836,29 +838,29 @@ class _NutritionGoalPage extends ConsumerWidget {
   const _NutritionGoalPage({required this.onSelected});
   final VoidCallback onSelected;
 
-  static const List<InteractiveOption> _options = [
-    InteractiveOption(
-      value: 'yag_yakimi',
-      label: 'Yağ Yakımı',
-      helper: 'Daha sıkı bir vücuda doğru.',
-      icon: Icons.local_fire_department_rounded,
-      imageAsset: 'photos/nutrition_goal_fat_loss.webp',
-    ),
-    InteractiveOption(
-      value: 'kas_kazanimi',
-      label: 'Kas Kazanımı',
-      helper: 'Hacim ve güç odaklı beslen.',
-      icon: Icons.fitness_center_rounded,
-      imageAsset: 'photos/nutrition_goal_muscle.webp',
-    ),
-    InteractiveOption(
-      value: 'dengeli',
-      label: 'Dengeli Beslenme',
-      helper: 'Sağlıklı ve sürdürülebilir bir düzen.',
-      icon: Icons.spa_rounded,
-      imageAsset: 'photos/nutrition_goal_balanced.webp',
-    ),
-  ];
+  static List<InteractiveOption> _options(AppLocalizations l10n) => [
+        InteractiveOption(
+          value: 'yag_yakimi',
+          label: l10n.nutritionGoalFatLoss,
+          helper: l10n.nutritionGoalFatLossBody,
+          icon: Icons.local_fire_department_rounded,
+          imageAsset: 'photos/nutrition_goal_fat_loss.webp',
+        ),
+        InteractiveOption(
+          value: 'kas_kazanimi',
+          label: l10n.nutritionGoalMuscleGain,
+          helper: l10n.nutritionGoalMuscleGainBody,
+          icon: Icons.fitness_center_rounded,
+          imageAsset: 'photos/nutrition_goal_muscle.webp',
+        ),
+        InteractiveOption(
+          value: 'dengeli',
+          label: l10n.nutritionGoalBalanced,
+          helper: l10n.nutritionGoalMaintainBody,
+          icon: Icons.spa_rounded,
+          imageAsset: 'photos/nutrition_goal_balanced.webp',
+        ),
+      ];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -870,14 +872,14 @@ class _NutritionGoalPage extends ConsumerWidget {
 
     return Column(
       children: [
-        const _PageTitle(
+        _PageTitle(
           title: 'Beslenme hedefin nedir?',
-          subtitle: 'Sana en uygun makro dengesini buradan kuracağım.',
+          subtitle: AppLocalizations.of(context).nutritionGoalCoachLine,
         ),
         const SizedBox(height: 12),
         Expanded(
           child: _nutritionOptionsList(
-            options: _options,
+            options: _options(AppLocalizations.of(context)),
             selectedValue: selected,
             onPicked: pick,
           ),
@@ -891,36 +893,36 @@ class _DietPreferencePage extends ConsumerWidget {
   const _DietPreferencePage({required this.onSelected});
   final VoidCallback onSelected;
 
-  static const List<InteractiveOption> _options = [
-    InteractiveOption(
-      value: 'standart',
-      label: 'Standart',
-      helper: 'Her şeyi yiyebilirim.',
-      icon: Icons.restaurant_menu_rounded,
-      imageAsset: 'photos/diet_standard.webp',
-    ),
-    InteractiveOption(
-      value: 'vejetaryen',
-      label: 'Vejetaryen',
-      helper: 'Et yemem, yumurta/süt olabilir.',
-      icon: Icons.grass_rounded,
-      imageAsset: 'photos/diet_vegetarian.webp',
-    ),
-    InteractiveOption(
-      value: 'vegan',
-      label: 'Vegan',
-      helper: 'Hiçbir hayvansal ürün tüketmem.',
-      icon: Icons.eco_rounded,
-      imageAsset: 'photos/diet_vegan.webp',
-    ),
-    InteractiveOption(
-      value: 'ketojenik',
-      label: 'Ketojenik',
-      helper: 'Düşük karbonhidrat, yüksek yağ.',
-      icon: Icons.local_fire_department_rounded,
-      imageAsset: 'photos/diet_keto.webp',
-    ),
-  ];
+  static List<InteractiveOption> _options(AppLocalizations l10n) => [
+        InteractiveOption(
+          value: 'standart',
+          label: l10n.nutritionDietStandard,
+          helper: l10n.nutritionDietOmnivoreBody,
+          icon: Icons.restaurant_menu_rounded,
+          imageAsset: 'photos/diet_standard.webp',
+        ),
+        InteractiveOption(
+          value: 'vejetaryen',
+          label: l10n.nutritionDietVegetarian,
+          helper: l10n.nutritionDietVegetarianBody,
+          icon: Icons.grass_rounded,
+          imageAsset: 'photos/diet_vegetarian.webp',
+        ),
+        InteractiveOption(
+          value: 'vegan',
+          label: l10n.nutritionDietVegan,
+          helper: l10n.nutritionDietVeganBody,
+          icon: Icons.eco_rounded,
+          imageAsset: 'photos/diet_vegan.webp',
+        ),
+        InteractiveOption(
+          value: 'ketojenik',
+          label: l10n.nutritionDietKeto,
+          helper: l10n.nutritionDietKetoBody,
+          icon: Icons.local_fire_department_rounded,
+          imageAsset: 'photos/diet_keto.webp',
+        ),
+      ];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -932,14 +934,14 @@ class _DietPreferencePage extends ConsumerWidget {
 
     return Column(
       children: [
-        const _PageTitle(
+        _PageTitle(
           title: 'Diyet tercihin nedir?',
-          subtitle: 'Senin yaşam tarzına uygun tarifleri seçeceğim.',
+          subtitle: AppLocalizations.of(context).nutritionDietCoachLine,
         ),
         const SizedBox(height: 12),
         Expanded(
           child: _nutritionOptionsList(
-            options: _options,
+            options: _options(AppLocalizations.of(context)),
             selectedValue: selected,
             onPicked: pick,
           ),
@@ -953,29 +955,29 @@ class _MealFrequencyPage extends ConsumerWidget {
   const _MealFrequencyPage({required this.onSelected});
   final VoidCallback onSelected;
 
-  static const List<InteractiveOption> _options = [
-    InteractiveOption(
-      value: '2_ogun',
-      label: '2 Öğün',
-      helper: 'Aralıklı oruç (16:8) tarzı beslenirim.',
-      icon: Icons.hourglass_top_rounded,
-      imageAsset: 'photos/meals_2.webp',
-    ),
-    InteractiveOption(
-      value: '3_ogun',
-      label: '3 Öğün',
-      helper: 'Standart — kahvaltı, öğle, akşam.',
-      icon: Icons.restaurant_rounded,
-      imageAsset: 'photos/meals_3.webp',
-    ),
-    InteractiveOption(
-      value: '4_ogun',
-      label: '4+ Öğün',
-      helper: 'Atıştırmalık severim.',
-      icon: Icons.lunch_dining_rounded,
-      imageAsset: 'photos/meals_4.webp',
-    ),
-  ];
+  static List<InteractiveOption> _options(AppLocalizations l10n) => [
+        InteractiveOption(
+          value: '2_ogun',
+          label: l10n.nutritionMeals2,
+          helper: l10n.nutritionMeals2Body,
+          icon: Icons.hourglass_top_rounded,
+          imageAsset: 'photos/meals_2.webp',
+        ),
+        InteractiveOption(
+          value: '3_ogun',
+          label: l10n.nutritionMeals3,
+          helper: l10n.nutritionMeals3Body,
+          icon: Icons.restaurant_rounded,
+          imageAsset: 'photos/meals_3.webp',
+        ),
+        InteractiveOption(
+          value: '4_ogun',
+          label: l10n.nutritionMeals4,
+          helper: l10n.nutritionMeals4Body,
+          icon: Icons.lunch_dining_rounded,
+          imageAsset: 'photos/meals_4.webp',
+        ),
+      ];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -987,14 +989,14 @@ class _MealFrequencyPage extends ConsumerWidget {
 
     return Column(
       children: [
-        const _PageTitle(
-          title: 'Günde kaç öğün yersin?',
-          subtitle: 'Günlük enerjini en verimli şekilde dağıtıyorum.',
+        _PageTitle(
+          title: AppLocalizations.of(context).nutritionMealsQuestion,
+          subtitle: AppLocalizations.of(context).nutritionMealsCoachLine,
         ),
         const SizedBox(height: 12),
         Expanded(
           child: _nutritionOptionsList(
-            options: _options,
+            options: _options(AppLocalizations.of(context)),
             selectedValue: selected,
             onPicked: pick,
           ),
@@ -1008,22 +1010,22 @@ class _PrepTimePage extends ConsumerWidget {
   const _PrepTimePage({required this.onSelected});
   final VoidCallback onSelected;
 
-  static const List<InteractiveOption> _options = [
-    InteractiveOption(
-      value: 'hizli',
-      label: 'Hızlı & Pratik',
-      helper: '10-15 dakika içinde hazırlanan tarifler.',
-      icon: Icons.timer_rounded,
-      imageAsset: 'photos/prep_quick.webp',
-    ),
-    InteractiveOption(
-      value: 'yavas',
-      label: 'Mutfakta Vakit',
-      helper: '30+ dakika. Pişirmekten keyif alırım.',
-      icon: Icons.soup_kitchen_rounded,
-      imageAsset: 'photos/prep_slow.webp',
-    ),
-  ];
+  static List<InteractiveOption> _options(AppLocalizations l10n) => [
+        InteractiveOption(
+          value: 'hizli',
+          label: l10n.nutritionTimeQuick,
+          helper: l10n.nutritionTimeQuickBody,
+          icon: Icons.timer_rounded,
+          imageAsset: 'photos/prep_quick.webp',
+        ),
+        InteractiveOption(
+          value: 'yavas',
+          label: l10n.nutritionTimeRelaxed,
+          helper: l10n.nutritionTimeRelaxedBody,
+          icon: Icons.soup_kitchen_rounded,
+          imageAsset: 'photos/prep_slow.webp',
+        ),
+      ];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1035,14 +1037,14 @@ class _PrepTimePage extends ConsumerWidget {
 
     return Column(
       children: [
-        const _PageTitle(
-          title: 'Yemek hazırlamak için ne kadar vaktin var?',
-          subtitle: 'Hayat temposuna uygun tarifler seçiyorum.',
+        _PageTitle(
+          title: AppLocalizations.of(context).nutritionTimeQuestion,
+          subtitle: AppLocalizations.of(context).nutritionTimeCoachLine,
         ),
         const SizedBox(height: 12),
         Expanded(
           child: _nutritionOptionsList(
-            options: _options,
+            options: _options(AppLocalizations.of(context)),
             selectedValue: selected,
             onPicked: pick,
           ),
@@ -1060,29 +1062,29 @@ class _TastePreferencePage extends ConsumerWidget {
   final VoidCallback onSelected;
   final bool busy;
 
-  static const List<InteractiveOption> _options = [
-    InteractiveOption(
-      value: 'tatli',
-      label: 'Tatlı seviyorum',
-      helper: 'Meyveli ve hafif tatlı tarifleri öne çıkar.',
-      icon: Icons.cake_rounded,
-      imageAsset: 'photos/taste_sweet.webp',
-    ),
-    InteractiveOption(
-      value: 'tuzlu',
-      label: 'Tuzlu seviyorum',
-      helper: 'Etli, baharatlı ve doyurucu tarifler.',
-      icon: Icons.kebab_dining_rounded,
-      imageAsset: 'photos/taste_savory.webp',
-    ),
-    InteractiveOption(
-      value: 'karisik',
-      label: 'Karışık',
-      helper: 'İkisini de dengeli şekilde severim.',
-      icon: Icons.swap_horiz_rounded,
-      imageAsset: 'photos/taste_mixed.webp',
-    ),
-  ];
+  static List<InteractiveOption> _options(AppLocalizations l10n) => [
+        InteractiveOption(
+          value: 'tatli',
+          label: l10n.nutritionTasteSweet,
+          helper: l10n.nutritionTasteSweetBody,
+          icon: Icons.cake_rounded,
+          imageAsset: 'photos/taste_sweet.webp',
+        ),
+        InteractiveOption(
+          value: 'tuzlu',
+          label: l10n.nutritionTasteSavoury,
+          helper: l10n.nutritionTasteSavouryBody,
+          icon: Icons.kebab_dining_rounded,
+          imageAsset: 'photos/taste_savory.webp',
+        ),
+        InteractiveOption(
+          value: 'karisik',
+          label: l10n.nutritionTasteMixed,
+          helper: l10n.nutritionTasteMixedBody,
+          icon: Icons.swap_horiz_rounded,
+          imageAsset: 'photos/taste_mixed.webp',
+        ),
+      ];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1094,14 +1096,14 @@ class _TastePreferencePage extends ConsumerWidget {
 
     return Column(
       children: [
-        const _PageTitle(
+        _PageTitle(
           title: 'Tat tercihin nedir?',
-          subtitle: 'Eşit puanlı tarifler arasında bunu önceliklendiriyorum.',
+          subtitle: AppLocalizations.of(context).nutritionTasteCoachLine,
         ),
         const SizedBox(height: 12),
         Expanded(
           child: _nutritionOptionsList(
-            options: _options,
+            options: _options(AppLocalizations.of(context)),
             selectedValue: selected,
             onPicked: pick,
             disabled: busy,

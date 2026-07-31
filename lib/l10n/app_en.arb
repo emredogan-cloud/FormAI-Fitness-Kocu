@@ -2852,10 +2852,6 @@
   "@accountReminderRowSubtitle": {
     "description": "Notification row subtitle"
   },
-  "accountEditProfileSheetTitle": "Edit profile",
-  "@accountEditProfileSheetTitle": {
-    "description": "Title of the account profile edit sheet"
-  },
   "accountFieldName": "Name",
   "@accountFieldName": {
     "description": "Text field label"
@@ -3275,5 +3271,418 @@
   "progressUnitReps": "reps",
   "@progressUnitReps": {
     "description": "Unit suffix under the weekly reps chart, lowercase"
+  },
+  "nutritionTodayMenu": "Today's menu",
+  "@nutritionTodayMenu": {
+    "description": "Section heading on the nutrition tab"
+  },
+  "nutritionMealCategories": "Meal categories",
+  "@nutritionMealCategories": {
+    "description": "Section heading on the nutrition tab"
+  },
+  "nutritionRecipesLoadFailed": "Recipes could not be loaded. Check your connection.",
+  "@nutritionRecipesLoadFailed": {
+    "description": "Error state on the nutrition tab"
+  },
+  "nutritionMedicalDisclaimer": "Nutrition suggestions are for information only and are not medical advice. Talk to a professional about decisions concerning your health.",
+  "@nutritionMedicalDisclaimer": {
+    "description": "Medical disclaimer under the nutrition targets. Store-compliance copy: the disclaimer must remain a disclaimer in every locale."
+  },
+  "macroFat": "Fat",
+  "@macroFat": {
+    "description": "Macro label on the nutrition ring"
+  },
+  "nutritionToday": "Today",
+  "@nutritionToday": {
+    "description": "Label marking the current day in the meal plan"
+  },
+  "nutritionTargetMet": "target met",
+  "@nutritionTargetMet": {
+    "description": "Lowercase status shown beside a macro that has hit its target"
+  },
+  "nutritionAdviceCarbs": "Cut evening carbs or take a 20-minute walk.",
+  "@nutritionAdviceCarbs": {
+    "description": "Coach advice on the nutrition tab"
+  },
+  "nutritionAdviceProteinShort": "You're falling short on protein.",
+  "@nutritionAdviceProteinShort": {
+    "description": "Coach advice headline on the nutrition tab"
+  },
+  "nutritionAdviceProteinFix": "Add a chicken- or fish-based main meal.",
+  "@nutritionAdviceProteinFix": {
+    "description": "Coach advice detail on the nutrition tab"
+  },
+  "nutritionAdviceLowCalories": "You have few calories left — go steady.",
+  "@nutritionAdviceLowCalories": {
+    "description": "Coach advice headline on the nutrition tab"
+  },
+  "nutritionAdviceLightSnack": "Pick a light snack.",
+  "@nutritionAdviceLightSnack": {
+    "description": "Coach advice detail on the nutrition tab"
+  },
+  "nutritionAdviceStayOnTrack": "Stay true to your targets.",
+  "@nutritionAdviceStayOnTrack": {
+    "description": "Default coach advice on the nutrition tab"
+  },
+  "nutritionProTitle": "A daily nutrition plan built for you",
+  "@nutritionProTitle": {
+    "description": "Pro upsell headline on the nutrition tab"
+  },
+  "nutritionProBody": "The target above is yours. Unlock the personal menu that fills it in every day, meal tracking and AI suggestions with Pro.",
+  "@nutritionProBody": {
+    "description": "Pro upsell body on the nutrition tab. Subscription copy — it must describe exactly what Pro provides."
+  },
+  "nutritionProFeatureMenu": "An automatic daily menu built around your target",
+  "@nutritionProFeatureMenu": {
+    "description": "Pro upsell feature bullet"
+  },
+  "nutritionProFeatureTracking": "Meal tracking plus a live calorie and macro ring",
+  "@nutritionProFeatureTracking": {
+    "description": "Pro upsell feature bullet"
+  },
+  "nutritionProFeatureAi": "An AI suggestion for your next best meal",
+  "@nutritionProFeatureAi": {
+    "description": "Pro upsell feature bullet"
+  },
+  "nutritionProCta": "Explore Pro",
+  "@nutritionProCta": {
+    "description": "Pro upsell call to action. 'Pro' is a brand term."
+  },
+  "nutritionQuickMealsSubtitle": "Fast, cheap and practical meals",
+  "@nutritionQuickMealsSubtitle": {
+    "description": "Subtitle of the quick-recipes section"
+  },
+  "nutritionDiscoverRecipes": "Discover recipes",
+  "@nutritionDiscoverRecipes": {
+    "description": "Action opening the recipe discovery screen"
+  },
+  "nutritionSeeAll": "See all",
+  "@nutritionSeeAll": {
+    "description": "Action expanding a recipe list"
+  },
+  "nutritionNoRecipesForFilter": "No recipes match this filter",
+  "@nutritionNoRecipesForFilter": {
+    "description": "Empty state heading in the recipe list"
+  },
+  "nutritionNoRecipesForFilterBody": "Try another tag, or browse the whole recipe library.",
+  "@nutritionNoRecipesForFilterBody": {
+    "description": "Empty state body in the recipe list"
+  },
+  "nutritionBrowseRecipes": "Browse recipes",
+  "@nutritionBrowseRecipes": {
+    "description": "Empty state action opening recipe discovery"
+  },
+  "mealSlotBreakfast": "Breakfast",
+  "@mealSlotBreakfast": {
+    "description": "Meal slot title"
+  },
+  "mealSlotLunch": "Lunch",
+  "@mealSlotLunch": {
+    "description": "Meal slot title"
+  },
+  "mealSlotDinner": "Dinner",
+  "@mealSlotDinner": {
+    "description": "Meal slot title"
+  },
+  "mealSlotSnack": "Snack",
+  "@mealSlotSnack": {
+    "description": "Meal slot title"
+  },
+  "mealCategoryAthleteDessert": "Athlete's dessert",
+  "@mealCategoryAthleteDessert": {
+    "description": "Recipe category title"
+  },
+  "mealCategoryDesserts": "Desserts",
+  "@mealCategoryDesserts": {
+    "description": "Recipe category title"
+  },
+  "mealCategorySnacks": "Snacks",
+  "@mealCategorySnacks": {
+    "description": "Recipe category title"
+  },
+  "nutritionDateFormat": "{weekday} {day} {month}",
+  "@nutritionDateFormat": {
+    "description": "Compact date in the nutrition hero, e.g. 'Wed 22 April'. {weekday} is a 3-letter abbreviation, {month} the full month name from intl. Reorder freely for the locale.",
+    "placeholders": {
+      "weekday": {
+        "type": "String"
+      },
+      "day": {
+        "type": "int"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "nutritionWizardStepAnalysing": "Analysing your eating habits...",
+  "@nutritionWizardStepAnalysing": {
+    "description": "Progress line in the nutrition wizard's loading sequence"
+  },
+  "nutritionWizardStepCalculating": "Calculating calories and macros...",
+  "@nutritionWizardStepCalculating": {
+    "description": "Progress line in the nutrition wizard's loading sequence"
+  },
+  "nutritionWizardStepSelecting": "Choosing the best recipes for you...",
+  "@nutritionWizardStepSelecting": {
+    "description": "Progress line in the nutrition wizard's loading sequence"
+  },
+  "nutritionWizardStepPreparing": "Building your plan...",
+  "@nutritionWizardStepPreparing": {
+    "description": "Progress line in the nutrition wizard's loading sequence"
+  },
+  "nutritionWizardStepReady": "Ready!",
+  "@nutritionWizardStepReady": {
+    "description": "Final line in the nutrition wizard's loading sequence"
+  },
+  "nutritionWizardBuildingPlan": "Building the best plan for you",
+  "@nutritionWizardBuildingPlan": {
+    "description": "Heading on the nutrition wizard's loading screen"
+  },
+  "nutritionGoalFatLoss": "Fat loss",
+  "@nutritionGoalFatLoss": {
+    "description": "Nutrition goal option title"
+  },
+  "nutritionGoalFatLossBody": "Towards a leaner body.",
+  "@nutritionGoalFatLossBody": {
+    "description": "Nutrition goal option subtitle"
+  },
+  "nutritionGoalMuscleGain": "Muscle gain",
+  "@nutritionGoalMuscleGain": {
+    "description": "Nutrition goal option title"
+  },
+  "nutritionGoalMuscleGainBody": "Eat for size and strength.",
+  "@nutritionGoalMuscleGainBody": {
+    "description": "Nutrition goal option subtitle"
+  },
+  "nutritionGoalMaintainBody": "A healthy, sustainable routine.",
+  "@nutritionGoalMaintainBody": {
+    "description": "Nutrition goal option subtitle"
+  },
+  "nutritionGoalCoachLine": "This is where I set the macro balance that suits you.",
+  "@nutritionGoalCoachLine": {
+    "description": "Coach line under the nutrition goal step"
+  },
+  "nutritionDietOmnivoreBody": "I eat everything.",
+  "@nutritionDietOmnivoreBody": {
+    "description": "Diet option subtitle"
+  },
+  "nutritionDietVegetarianBody": "No meat, but eggs and dairy are fine.",
+  "@nutritionDietVegetarianBody": {
+    "description": "Diet option subtitle"
+  },
+  "nutritionDietVeganBody": "No animal products at all.",
+  "@nutritionDietVeganBody": {
+    "description": "Diet option subtitle"
+  },
+  "nutritionDietKetoBody": "Low carb, high fat.",
+  "@nutritionDietKetoBody": {
+    "description": "Diet option subtitle"
+  },
+  "nutritionDietCoachLine": "I'll pick recipes that fit how you live.",
+  "@nutritionDietCoachLine": {
+    "description": "Coach line under the diet step"
+  },
+  "nutritionMeals2": "2 meals",
+  "@nutritionMeals2": {
+    "description": "Meal-count option title"
+  },
+  "nutritionMeals2Body": "I eat intermittent-fasting style (16:8).",
+  "@nutritionMeals2Body": {
+    "description": "Meal-count option subtitle"
+  },
+  "nutritionMeals3": "3 meals",
+  "@nutritionMeals3": {
+    "description": "Meal-count option title"
+  },
+  "nutritionMeals3Body": "Standard — breakfast, lunch, dinner.",
+  "@nutritionMeals3Body": {
+    "description": "Meal-count option subtitle"
+  },
+  "nutritionMeals4": "4+ meals",
+  "@nutritionMeals4": {
+    "description": "Meal-count option title"
+  },
+  "nutritionMeals4Body": "I like to snack.",
+  "@nutritionMeals4Body": {
+    "description": "Meal-count option subtitle"
+  },
+  "nutritionMealsQuestion": "How many meals a day do you eat?",
+  "@nutritionMealsQuestion": {
+    "description": "Nutrition wizard step question"
+  },
+  "nutritionMealsCoachLine": "I'll spread your daily energy as efficiently as possible.",
+  "@nutritionMealsCoachLine": {
+    "description": "Coach line under the meal-count step"
+  },
+  "nutritionTimeQuick": "Quick & practical",
+  "@nutritionTimeQuick": {
+    "description": "Cooking-time option title"
+  },
+  "nutritionTimeQuickBody": "Recipes ready in 10 to 15 minutes.",
+  "@nutritionTimeQuickBody": {
+    "description": "Cooking-time option subtitle"
+  },
+  "nutritionTimeRelaxedBody": "30 minutes or more. I enjoy cooking.",
+  "@nutritionTimeRelaxedBody": {
+    "description": "Cooking-time option subtitle"
+  },
+  "nutritionTimeQuestion": "How much time do you have to cook?",
+  "@nutritionTimeQuestion": {
+    "description": "Nutrition wizard step question"
+  },
+  "nutritionTimeCoachLine": "I'll choose recipes that match your pace of life.",
+  "@nutritionTimeCoachLine": {
+    "description": "Coach line under the cooking-time step"
+  },
+  "nutritionTasteSweet": "I like sweet",
+  "@nutritionTasteSweet": {
+    "description": "Taste option title"
+  },
+  "nutritionTasteSweetBody": "Fruity, lightly sweet recipes come first.",
+  "@nutritionTasteSweetBody": {
+    "description": "Taste option subtitle"
+  },
+  "nutritionTasteSavouryBody": "Meaty, spiced, filling recipes.",
+  "@nutritionTasteSavouryBody": {
+    "description": "Taste option subtitle"
+  },
+  "nutritionTasteMixed": "Mixed",
+  "@nutritionTasteMixed": {
+    "description": "Taste option title"
+  },
+  "nutritionTasteMixedBody": "I like both, in balance.",
+  "@nutritionTasteMixedBody": {
+    "description": "Taste option subtitle"
+  },
+  "nutritionTasteCoachLine": "When recipes score equally, this is what I favour.",
+  "@nutritionTasteCoachLine": {
+    "description": "Coach line under the taste step"
+  },
+  "mealReasonProtein": "Suggested to close your protein gap.",
+  "@mealReasonProtein": {
+    "description": "Why the next-best-meal service picked this recipe"
+  },
+  "mealReasonLight": "A light option that fits the calories you have left.",
+  "@mealReasonLight": {
+    "description": "Why the next-best-meal service picked this recipe"
+  },
+  "mealReasonBestMatch": "The best match for your remaining macros.",
+  "@mealReasonBestMatch": {
+    "description": "Why the next-best-meal service picked this recipe"
+  },
+  "shoppingListTitle": "FormAI · My shopping list",
+  "@shoppingListTitle": {
+    "description": "Heading of the exported shopping list. FormAI is a brand name."
+  },
+  "shoppingListPlaceholder": " - (ingredient list coming soon — recipe: formai://)",
+  "@shoppingListPlaceholder": {
+    "description": "Placeholder line in the exported shopping list while ingredient data is pending. The formai:// scheme is a deep link and stays as-is."
+  },
+  "mealCompletedSuffix": " (Completed)",
+  "@mealCompletedSuffix": {
+    "description": "Suffix appended to a meal name once it is logged. Leading space is intentional."
+  },
+  "mealSkippedSuffix": " (Skipped)",
+  "@mealSkippedSuffix": {
+    "description": "Suffix appended to a meal name once it is skipped. Leading space is intentional."
+  },
+  "nutritionSamplePlanSuffix": "{date} · Sample plan — complete your profile",
+  "@nutritionSamplePlanSuffix": {
+    "description": "Subheading shown when the user has no nutrition profile yet. {date} is the already-formatted short date.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "nutritionKcalRemaining": "{kcal} kcal left",
+  "@nutritionKcalRemaining": {
+    "description": "Remaining calories. {kcal} is a positive number.",
+    "placeholders": {
+      "kcal": {
+        "type": "int"
+      }
+    }
+  },
+  "nutritionKcalOver": "{kcal} kcal over",
+  "@nutritionKcalOver": {
+    "description": "Calories consumed beyond the target. {kcal} is a positive number.",
+    "placeholders": {
+      "kcal": {
+        "type": "int"
+      }
+    }
+  },
+  "nutritionKcalSurplus": "You're {kcal} kcal over.",
+  "@nutritionKcalSurplus": {
+    "description": "Coach advice headline when the calorie target is exceeded.",
+    "placeholders": {
+      "kcal": {
+        "type": "int"
+      }
+    }
+  },
+  "nutritionRecipeSuits": "{recipe} would suit you.",
+  "@nutritionRecipeSuits": {
+    "description": "Coach advice detail naming a specific recipe.",
+    "placeholders": {
+      "recipe": {
+        "type": "String"
+      }
+    }
+  },
+  "nutritionKeepBalance": "Keep the balance.",
+  "@nutritionKeepBalance": {
+    "description": "Coach advice headline when the day is on track"
+  },
+  "nutritionNextStep": "Next up: {recipe}.",
+  "@nutritionNextStep": {
+    "description": "Coach advice detail naming the suggested next meal.",
+    "placeholders": {
+      "recipe": {
+        "type": "String"
+      }
+    }
+  },
+  "nutritionDoingGreat": "You're doing great!",
+  "@nutritionDoingGreat": {
+    "description": "Coach advice headline when everything is on target"
+  },
+  "nutritionGoalBalanced": "Balanced eating",
+  "@nutritionGoalBalanced": {
+    "description": "Nutrition goal option title. Stored value 'dengeli'."
+  },
+  "nutritionDietStandard": "Standard",
+  "@nutritionDietStandard": {
+    "description": "Diet option title. Stored value 'standart'."
+  },
+  "nutritionDietVegetarian": "Vegetarian",
+  "@nutritionDietVegetarian": {
+    "description": "Diet option title. Stored value 'vejetaryen'."
+  },
+  "nutritionDietVegan": "Vegan",
+  "@nutritionDietVegan": {
+    "description": "Diet option title. Stored value 'vegan'."
+  },
+  "nutritionDietKeto": "Ketogenic",
+  "@nutritionDietKeto": {
+    "description": "Diet option title. Stored value 'ketojenik'."
+  },
+  "nutritionTimeRelaxed": "Time in the kitchen",
+  "@nutritionTimeRelaxed": {
+    "description": "Cooking-time option title. Stored value is separate."
+  },
+  "nutritionTasteSavoury": "I like savoury",
+  "@nutritionTasteSavoury": {
+    "description": "Taste option title. Stored value 'tuzlu'."
+  },
+  "tipReminderCta": "Set it up",
+  "@tipReminderCta": {
+    "description": "Action on the reminder tip, opening account settings"
+  },
+  "shoppingListRecipeIngredients": "Ingredients:",
+  "@shoppingListRecipeIngredients": {
+    "description": "Per-recipe heading inside the exported shopping list"
   }
 }

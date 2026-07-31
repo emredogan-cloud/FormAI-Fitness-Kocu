@@ -1139,7 +1139,8 @@ class _StatsCardsColumn extends StatelessWidget {
       children: [
         _StatChartCard(
           label: AppLocalizations.of(context).progressThisWeek,
-          value: '$weeklyCompleted / 7',
+          value: AppLocalizations.of(context)
+              .progressWeeklyCompleted(weeklyCompleted, 7),
           accent: _neon,
           chart: _MiniBars(
             values: completionBars,
@@ -1162,7 +1163,7 @@ class _StatsCardsColumn extends StatelessWidget {
         _StatChartCard(
           label: AppLocalizations.of(context).progressReps,
           value: '$totalReps',
-          unit: 'tekrar',
+          unit: AppLocalizations.of(context).progressUnitReps,
           accent: _success,
           chart: _MiniBars(
             values: _normalize(weeklyReps),

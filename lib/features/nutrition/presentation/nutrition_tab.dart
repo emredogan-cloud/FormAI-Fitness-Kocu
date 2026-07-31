@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/routing/app_router.dart';
 import '../../../core/services/app_preferences.dart';
@@ -20,6 +21,7 @@ import '../providers/daily_menu_provider.dart';
 import '../providers/nutrition_provider.dart';
 import 'widgets/meal_plan_timeline.dart';
 import 'widgets/recipe_tags.dart';
+import '../../../l10n/app_localizations.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonGreen = Color(0xFF39FF14);
@@ -86,19 +88,21 @@ class NutritionTab extends ConsumerWidget {
         slivers: [
           _DecisionPanelSliver(expandedHeight: _expandedHeight),
           if (isPro) ...[
-            const SliverPadding(
+            SliverPadding(
               padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
               sliver: SliverToBoxAdapter(
-                child: _SectionTitle(title: 'Günün Menüsü'),
+                child: _SectionTitle(
+                    title: AppLocalizations.of(context).nutritionTodayMenu),
               ),
             ),
             const MealPlanSliver(),
           ] else
             const SliverToBoxAdapter(child: _NutritionProUpsell()),
-          const SliverPadding(
+          SliverPadding(
             padding: EdgeInsets.fromLTRB(20, 22, 20, 8),
             sliver: SliverToBoxAdapter(
-              child: _SectionTitle(title: 'Öğün Kategorileri'),
+              child: _SectionTitle(
+                  title: AppLocalizations.of(context).nutritionMealCategories),
             ),
           ),
           const SliverToBoxAdapter(
@@ -137,7 +141,8 @@ class NutritionTab extends ConsumerWidget {
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
                 child: ErrorCard(
                   compact: true,
-                  message: 'Tarifler yüklenemedi. Bağlantını kontrol et.',
+                  message:
+                      AppLocalizations.of(context).nutritionRecipesLoadFailed,
                   onRetry: () => ref.invalidate(recipesProvider),
                 ),
               ),
@@ -152,9 +157,7 @@ class NutritionTab extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(28, 16, 28, 0),
               child: Text(
-                'Beslenme önerileri bilgilendirme amaçlıdır; tıbbi tavsiye '
-                'yerine geçmez. Sağlık durumunla ilgili kararlar için bir '
-                'uzmana danış.',
+                AppLocalizations.of(context).nutritionMedicalDisclaimer,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: context.colors.onSurface.withValues(alpha: 0.45),
@@ -340,7 +343,7 @@ class _MacroBarsRow extends StatelessWidget {
           AppHaptics.secondaryTap();
           context.push(AppRoutes.nutritionDiscover);
         },
-        child: const Padding(
+        child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -359,7 +362,7 @@ class _MacroBarsRow extends StatelessWidget {
               ),
               SizedBox(height: 6),
               _MacroBar(
-                label: 'Yağ',
+                label: AppLocalizations.of(context).macroFat,
                 color: _fatColor,
                 macro: _MacroField.fat,
               ),
@@ -481,6 +484,8 @@ class _DecisionHeaderRow extends ConsumerWidget {
     // 70 kg profile, and presenting that as "your plan" was theater.
     final hasProfile =
         ref.watch(appPreferencesProvider).userMetrics?.isNotEmpty ?? false;
+    final l10n = AppLocalizations.of(context);
+    final localeName = Localizations.localeOf(context).toLanguageTag();
     // Phase 53C · "Bugün" header + date were hardcoded white, leaving
     // them invisible on the light-mode panel. onSurface flips both.
     final scheme = context.colors;
@@ -493,7 +498,7 @@ class _DecisionHeaderRow extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Bugün',
+                AppLocalizations.of(context).nutritionToday,
                 style: TextStyle(
                   color: scheme.onSurface,
                   fontSize: 22,
@@ -504,9 +509,10 @@ class _DecisionHeaderRow extends ConsumerWidget {
               ),
               Text(
                 hasProfile
-                    ? _formatTurkishDate(DateTime.now())
-                    : '${_formatTurkishDate(DateTime.now())} · Örnek plan — '
-                        'profilini tamamla',
+                    ? _formatShortDate(l10n, localeName, DateTime.now())
+                    : l10n.nutritionSamplePlanSuffix(
+                        _formatShortDate(l10n, localeName, DateTime.now()),
+                      ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
@@ -674,7 +680,7 @@ class _CalorieRing extends ConsumerWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                _remainingLabel(remaining),
+                _remainingLabel(AppLocalizations.of(context), remaining),
                 style: TextStyle(
                   // Phase 53I · "X kcal kaldı" was painted in the live
                   // status tint (neon green / yellow / pink). On the
@@ -701,10 +707,10 @@ class _CalorieRing extends ConsumerWidget {
     return _statusOnTrack;
   }
 
-  static String _remainingLabel(int remaining) {
-    if (remaining > 0) return '$remaining kcal kaldı';
-    if (remaining < 0) return '${-remaining} kcal aşıldı';
-    return 'hedef tam';
+  static String _remainingLabel(AppLocalizations l10n, int remaining) {
+    if (remaining > 0) return l10n.nutritionKcalRemaining(remaining);
+    if (remaining < 0) return l10n.nutritionKcalOver(-remaining);
+    return l10n.nutritionTargetMet;
   }
 }
 
@@ -716,7 +722,8 @@ class _AiInsightRow extends ConsumerWidget {
     final target = ref.watch(macroTargetProvider);
     final consumed = ref.watch(consumedMacrosProvider);
     final suggestion = ref.watch(nextBestMealProvider);
-    final copy = _buildCopy(target, consumed, suggestion);
+    final copy =
+        _buildCopy(AppLocalizations.of(context), target, consumed, suggestion);
     // Phase 53E · "Protein hedefini kaçırıyorsun" warning + the fix
     // line below it both flip with the active theme.
     final scheme = context.colors;
@@ -779,6 +786,7 @@ class _AiInsightRow extends ConsumerWidget {
   /// local to the hero so the panel stays self-contained. Rules match
   /// the phase 25.2 spec verbatim.
   static ({String message, String fix}) _buildCopy(
+    AppLocalizations l10n,
     MacroTarget target,
     MacroTarget consumed,
     NextMealRecommendation? suggestion,
@@ -786,34 +794,34 @@ class _AiInsightRow extends ConsumerWidget {
     final overage = consumed.calories - target.calories;
     if (target.calories > 0 && overage > 0) {
       return (
-        message: '$overage kcal fazla aldın.',
-        fix: 'Akşam karbonhidratı azalt veya 20 dk yürüyüş yap.',
+        message: l10n.nutritionKcalSurplus(overage),
+        fix: l10n.nutritionAdviceCarbs,
       );
     }
     if (target.protein > 0 && consumed.protein < target.protein * 0.6) {
       return (
-        message: 'Protein hedefini kaçırıyorsun.',
-        fix: 'Tavuk/Balık bazlı bir ana öğün ekle.',
+        message: l10n.nutritionAdviceProteinShort,
+        fix: l10n.nutritionAdviceProteinFix,
       );
     }
     final remainingCalories = target.calories - consumed.calories;
     if (remainingCalories > 0 && remainingCalories < 400) {
       return (
-        message: 'Az kalorin kaldı, ölçülü devam.',
+        message: l10n.nutritionAdviceLowCalories,
         fix: suggestion != null
-            ? '${suggestion.recipe.title} senin için uygun.'
-            : 'Hafif bir ara öğün seç.',
+            ? l10n.nutritionRecipeSuits(suggestion.recipe.title)
+            : l10n.nutritionAdviceLightSnack,
       );
     }
     if (suggestion != null) {
       return (
-        message: 'Dengeyi koru.',
-        fix: 'Sonraki adım: ${suggestion.recipe.title}.',
+        message: l10n.nutritionKeepBalance,
+        fix: l10n.nutritionNextStep(suggestion.recipe.title),
       );
     }
-    return const (
-      message: 'Harika gidiyorsun!',
-      fix: 'Hedeflerine sadık kal.',
+    return (
+      message: l10n.nutritionDoingGreat,
+      fix: l10n.nutritionAdviceStayOnTrack,
     );
   }
 }
@@ -1182,7 +1190,7 @@ class _NutritionProUpsell extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Sana özel günlük beslenme planı',
+              AppLocalizations.of(context).nutritionProTitle,
               style: TextStyle(
                 color: scheme.onSurface,
                 fontSize: 18,
@@ -1192,8 +1200,7 @@ class _NutritionProUpsell extends ConsumerWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              'Yukarıdaki hedef senin. Onu her gün otomatik dolduran kişisel '
-              'menüyü, öğün takibini ve AI önerilerini Pro ile aç.',
+              AppLocalizations.of(context).nutritionProBody,
               style: TextStyle(
                 color: scheme.onSurface.withValues(alpha: 0.65),
                 fontSize: 13,
@@ -1201,10 +1208,12 @@ class _NutritionProUpsell extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 14),
-            const _UpsellBullet(text: 'Hedefine göre otomatik günlük menü'),
-            const _UpsellBullet(
-                text: 'Öğün takibi + canlı kalori/makro halkası'),
-            const _UpsellBullet(text: 'Sıradaki en iyi öğün için AI önerisi'),
+            _UpsellBullet(
+                text: AppLocalizations.of(context).nutritionProFeatureMenu),
+            _UpsellBullet(
+                text: AppLocalizations.of(context).nutritionProFeatureTracking),
+            _UpsellBullet(
+                text: AppLocalizations.of(context).nutritionProFeatureAi),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
@@ -1223,7 +1232,7 @@ class _NutritionProUpsell extends ConsumerWidget {
                     letterSpacing: 0.3,
                   ),
                 ),
-                child: const Text("Pro'yu Keşfet"),
+                child: Text(AppLocalizations.of(context).nutritionProCta),
               ),
             ),
           ],
@@ -1305,7 +1314,7 @@ class _BudgetSectionHeader extends StatelessWidget {
         const _SectionTitle(title: 'Pratik & Ekonomik'),
         const SizedBox(height: 4),
         Text(
-          'Hızlı, ucuz ve pratik öğünler',
+          AppLocalizations.of(context).nutritionQuickMealsSubtitle,
           style: TextStyle(
             color: scheme.onSurface.withValues(alpha: 0.6),
             fontSize: 13,
@@ -1340,7 +1349,8 @@ class _DiscoverySectionHeader extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const _SectionTitle(title: 'Tarif Keşfet'),
+          _SectionTitle(
+              title: AppLocalizations.of(context).nutritionDiscoverRecipes),
           _DiscoverAllPill(
             onTap: () => context.push('/nutrition/discover'),
           ),
@@ -1372,8 +1382,8 @@ class _DiscoverAllPill extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Tümünü Gör',
+              Text(
+                AppLocalizations.of(context).nutritionSeeAll,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 11,
@@ -1403,12 +1413,19 @@ class _DiscoverySection extends ConsumerWidget {
   const _DiscoverySection({required this.recipes});
   final List<Recipe> recipes;
 
+  /// DATA, not copy. These are compared against `recipe.tags`, which are
+  /// values in the Supabase `recipes` rows — `_apply` does
+  /// `r.tags.any((t) => t == activeTag)`. Localising them here would
+  /// filter every recipe out the moment the app ran in another
+  /// language. Content localisation is Phase 7, through the columns
+  /// migration 011 added; the same boundary `recipe_tags.dart`
+  /// documents.
   static const List<String> _filters = [
-    'Yüksek Protein',
-    'Düşük Kalori',
-    'Hacim',
-    'Sıkılaşma',
-    'Vegan',
+    'Yüksek Protein', // i18n-ignore
+    'Düşük Kalori', // i18n-ignore
+    'Hacim', // i18n-ignore
+    'Sıkılaşma', // i18n-ignore
+    'Vegan', // i18n-ignore
   ];
 
   /// Strict `==` against the raw selected tag — no `trim`, no
@@ -1466,10 +1483,10 @@ class _DiscoverySection extends ConsumerWidget {
             child: EmptyState(
               compact: true,
               icon: Icons.filter_alt_off_rounded,
-              title: 'Bu filtreye uygun tarif yok',
-              body: 'Farklı bir etiket seçebilir ya da tüm tarif '
-                  'kütüphanesine göz atabilirsin.',
-              ctaLabel: 'Tarifleri Keşfet',
+              title: AppLocalizations.of(context).nutritionNoRecipesForFilter,
+              body:
+                  AppLocalizations.of(context).nutritionNoRecipesForFilterBody,
+              ctaLabel: AppLocalizations.of(context).nutritionBrowseRecipes,
               onCta: () => context.push(AppRoutes.nutritionDiscover),
             ),
           )
@@ -1597,35 +1614,35 @@ class _MealCategoriesSection extends StatelessWidget {
 /// were tested at the same time and have stayed stable since.
 const List<_CategoryEntry> _mealCategoryEntries = [
   _CategoryEntry(
-    label: 'Kahvaltı',
+    label: _labelBreakfast,
     type: 'breakfast',
     tint: Color(0xFFFFB84D),
     imageUrl:
         'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?auto=format&fit=crop&w=600&q=80',
   ),
   _CategoryEntry(
-    label: 'Öğle Yemeği',
+    label: _labelLunch,
     type: 'lunch',
     tint: Color(0xFF4DA6FF),
     imageUrl:
         'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&q=80',
   ),
   _CategoryEntry(
-    label: 'Akşam Yemeği',
+    label: _labelDinner,
     type: 'dinner',
     tint: Color(0xFF8E5BFF),
     imageUrl:
         'https://images.unsplash.com/photo-1544025162-d76694265947?w=600&q=80',
   ),
   _CategoryEntry(
-    label: 'Ara Öğün',
+    label: _labelSnack,
     type: 'snack',
     tint: Color(0xFF39FF14),
     imageUrl:
         'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&q=80',
   ),
   _CategoryEntry(
-    label: 'Sporcu Tatlısı',
+    label: _labelAthleteDessert,
     type: 'dessert',
     tint: Color(0xFFFF4DDB),
     imageUrl:
@@ -1642,41 +1659,50 @@ const List<_CategoryEntry> _mealCategoryEntries = [
 /// distinct from the regular [_mealCategoryEntries] strip above.
 const List<_CategoryEntry> _budgetCategoryEntries = [
   _CategoryEntry(
-    label: 'Kahvaltı',
+    label: _labelBreakfast,
     type: 'budget',
     subType: 'breakfast',
     tint: Color(0xFFFFB84D),
     imageUrl: 'photos/meals/budget_cover_breakfast.webp',
   ),
   _CategoryEntry(
-    label: 'Öğle Yemeği',
+    label: _labelLunch,
     type: 'budget',
     subType: 'lunch',
     tint: Color(0xFF4DA6FF),
     imageUrl: 'photos/meals/budget_cover_lunch.webp',
   ),
   _CategoryEntry(
-    label: 'Akşam Yemeği',
+    label: _labelDinner,
     type: 'budget',
     subType: 'dinner',
     tint: Color(0xFF8E5BFF),
     imageUrl: 'photos/meals/budget_cover_dinner.webp',
   ),
   _CategoryEntry(
-    label: 'Tatlı Çeşitleri',
+    label: _labelDesserts,
     type: 'budget',
     subType: 'dessert',
     tint: Color(0xFFFF4DDB),
     imageUrl: 'photos/meals/budget_cover_dessert.webp',
   ),
   _CategoryEntry(
-    label: 'Atıştırmalıklar',
+    label: _labelSnacks,
     type: 'budget',
     subType: 'snack',
     tint: Color(0xFF39FF14),
     imageUrl: 'photos/meals/budget_cover_snack.webp',
   ),
 ];
+
+// Named lookups so the two category tables above stay `const`.
+String _labelBreakfast(AppLocalizations l) => l.mealSlotBreakfast;
+String _labelLunch(AppLocalizations l) => l.mealSlotLunch;
+String _labelDinner(AppLocalizations l) => l.mealSlotDinner;
+String _labelSnack(AppLocalizations l) => l.mealSlotSnack;
+String _labelAthleteDessert(AppLocalizations l) => l.mealCategoryAthleteDessert;
+String _labelDesserts(AppLocalizations l) => l.mealCategoryDesserts;
+String _labelSnacks(AppLocalizations l) => l.mealCategorySnacks;
 
 class _CategoryEntry {
   const _CategoryEntry({
@@ -1686,7 +1712,9 @@ class _CategoryEntry {
     required this.imageUrl,
     this.subType,
   });
-  final String label;
+
+  /// A lookup, not text: both catalogues above are `const`.
+  final String Function(AppLocalizations) label;
   final String type;
   final Color tint;
   final String imageUrl;
@@ -1785,7 +1813,7 @@ class _MealCategoryCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Text(
-                      entry.label,
+                      entry.label(AppLocalizations.of(context)),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -1898,23 +1926,29 @@ class _CompactDiscoveryCard extends StatelessWidget {
 // ============================================================================
 
 /// Formats as e.g. "Çar 22 Nisan" — short form to fit in the hero header row.
-String _formatTurkishDate(DateTime d) {
-  const days = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
-  const months = [
-    'Ocak',
-    'Şubat',
-    'Mart',
-    'Nisan',
-    'Mayıs',
-    'Haziran',
-    'Temmuz',
-    'Ağustos',
-    'Eylül',
-    'Ekim',
-    'Kasım',
-    'Aralık',
+///
+/// Roadmap Phase 5 (C12) · month names come from `intl`, which already
+/// knows every locale's and matched the Turkish array it replaces
+/// exactly. The 3-letter weekday stays in ARB for the reason the
+/// calendar header documents: it is a density choice this row makes,
+/// intl offers only "Pzt", and its narrow form throws outright. The
+/// order of the three parts is the ICU string's business, not this
+/// function's.
+String _formatShortDate(AppLocalizations l10n, String locale, DateTime d) {
+  const weekdayKeys = 7;
+  final weekdays = [
+    l10n.weekdayShortMon,
+    l10n.weekdayShortTue,
+    l10n.weekdayShortWed,
+    l10n.weekdayShortThu,
+    l10n.weekdayShortFri,
+    l10n.weekdayShortSat,
+    l10n.weekdayShortSun,
   ];
-  final day = days[d.weekday - 1];
-  final month = months[d.month - 1];
-  return '$day ${d.day} $month';
+  assert(weekdays.length == weekdayKeys);
+  return l10n.nutritionDateFormat(
+    weekdays[d.weekday - 1],
+    d.day,
+    DateFormat.MMMM(locale).format(d),
+  );
 }

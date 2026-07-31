@@ -74,7 +74,7 @@ void main() {
         'steak',
         reason: 'dessert-type recipes are excluded even when highest protein',
       );
-      expect(result.reason, contains('Protein'));
+      expect(result.reason, NextMealReason.proteinGap);
       expect(result.impactString, '+48g Protein | +520 kcal');
     });
 
@@ -97,7 +97,7 @@ void main() {
       expect(result, isNotNull);
       expect(
         result!.reason,
-        isNot(contains('Protein açığını')),
+        isNot(NextMealReason.proteinGap),
         reason: 'tier 1 must yield to tier 2 / tier 3 when no candidate '
             'matches the high-protein filter',
       );
@@ -126,7 +126,7 @@ void main() {
 
       expect(result, isNotNull);
       expect(result!.recipe.id, 'light_salad');
-      expect(result.reason, contains('hafif'));
+      expect(result.reason, NextMealReason.lowCalorie);
     });
 
     test(
@@ -150,7 +150,7 @@ void main() {
       expect(result, isNotNull);
       expect(
         result!.reason,
-        contains('Kalan makrolarına'),
+        NextMealReason.bestBalance,
         reason: 'tier 2 empty → tier 3 balance recommendation fires',
       );
     });
@@ -192,7 +192,7 @@ void main() {
 
       expect(result, isNotNull);
       expect(result!.recipe.id, 'balanced');
-      expect(result.reason, contains('Kalan makrolarına'));
+      expect(result.reason, NextMealReason.bestBalance);
     });
 
     test('distance metric treats each axis as equally weighted', () {

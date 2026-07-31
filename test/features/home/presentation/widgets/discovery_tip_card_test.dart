@@ -5,17 +5,24 @@ import 'package:sixpack_ai/features/home/presentation/widgets/discovery_tip_card
 import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// Roadmap Phase 2 (C28) · the tip card.
+///
+/// A DiscoveryTip holds copy as a lookup (the real catalogue is built
+/// before a locale exists), so these fixtures return the same sentences
+/// the assertions below always looked for.
+const _withCtaBody = 'Bir şeyler yapabilirsin ve bu ipucu bunu anlatıyor.';
+const _infoOnlyBody = 'Bu sadece bilgilendirme amaçlı bir ipucu metnidir.';
+
 final _withCta = DiscoveryTip(
   id: 'with_cta',
-  body: 'Bir şeyler yapabilirsin ve bu ipucu bunu anlatıyor.',
-  ctaLabel: 'Hemen Dene',
+  body: (_) => _withCtaBody,
+  ctaLabel: (_) => 'Hemen Dene',
   route: '/coach',
   matches: (_) => true,
 );
 
 final _infoOnly = DiscoveryTip(
   id: 'info_only',
-  body: 'Bu sadece bilgilendirme amaçlı bir ipucu metnidir.',
+  body: (_) => _infoOnlyBody,
   matches: (_) => true,
 );
 
@@ -55,7 +62,7 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('BİLİYOR MUYDUN?'), findsOneWidget);
-    expect(find.text(_withCta.body), findsOneWidget);
+    expect(find.text(_withCtaBody), findsOneWidget);
     expect(find.text('Hemen Dene'), findsOneWidget);
   });
 
@@ -63,7 +70,7 @@ void main() {
       'a tip with no route renders no CTA — a dead button is worse '
       'than none', (tester) async {
     await _pump(tester, _infoOnly);
-    expect(find.text(_infoOnly.body), findsOneWidget);
+    expect(find.text(_infoOnlyBody), findsOneWidget);
     expect(find.byIcon(Icons.arrow_forward_rounded), findsNothing);
   });
 

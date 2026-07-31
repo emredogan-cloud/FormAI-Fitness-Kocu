@@ -175,7 +175,7 @@ List<({String icon, String label, Color tint})> recipeTags(Recipe recipe) {
     case 'Düşük Kalori': // i18n-ignore
       return (
         icon: '🥗',
-        label: 'Düşük Kalori',
+        label: 'Düşük Kalori', // i18n-ignore
         tint: const Color(0xFF39FF14)
       ); // i18n-ignore
     case 'Hacim':
@@ -183,7 +183,7 @@ List<({String icon, String label, Color tint})> recipeTags(Recipe recipe) {
     case 'Sıkılaşma': // i18n-ignore
       return (
         icon: '✨',
-        label: 'Sıkılaşma',
+        label: 'Sıkılaşma', // i18n-ignore
         tint: const Color(0xFFEAFF00)
       ); // i18n-ignore
     case 'Vegan':

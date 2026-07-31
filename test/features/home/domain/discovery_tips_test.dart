@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sixpack_ai/features/home/domain/discovery_tips.dart';
+import 'package:flutter/widgets.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// Roadmap Phase 2 (C28) · the contextual-tip selection policy.
 TipContext ctx({
@@ -21,6 +23,12 @@ TipContext ctx({
 }
 
 void main() {
+  late AppLocalizations l10n;
+
+  setUpAll(() async {
+    l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+  });
+
   group('selection', () {
     test('a brand-new user with no workouts gets no tip', () {
       expect(
@@ -166,7 +174,7 @@ void main() {
 
     test('an explicit catalog overrides the shipped one', () {
       final custom = [
-        DiscoveryTip(id: 'x', body: 'b', matches: (_) => true),
+        DiscoveryTip(id: 'x', body: (_) => 'b', matches: (_) => true),
       ];
       final tip = selectTip(
         context: ctx(),
@@ -185,7 +193,7 @@ void main() {
 
     test('every tip has substantive body copy', () {
       for (final tip in kDiscoveryTips) {
-        expect(tip.body.length, greaterThan(30), reason: tip.id);
+        expect(tip.body(l10n).length, greaterThan(30), reason: tip.id);
       }
     });
 

@@ -51,12 +51,19 @@ class _DiscoverRecipesScreenState extends ConsumerState<DiscoverRecipesScreen> {
   /// "loading more" spinner unless their connection is genuinely slow.
   static const double _loadMoreThreshold = 600;
 
+  /// DATA, not copy. These are compared against `recipe.tags`, which are
+  /// values in the Supabase `recipes` rows — `_apply` does
+  /// `r.tags.any((t) => t == activeTag)`. Localising them here would
+  /// filter every recipe out the moment the app ran in another
+  /// language. Content localisation is Phase 7, through the columns
+  /// migration 011 added; the same boundary `recipe_tags.dart`
+  /// documents.
   static const List<String> _filters = [
-    'Yüksek Protein',
-    'Düşük Kalori',
-    'Hacim',
-    'Sıkılaşma',
-    'Vegan',
+    'Yüksek Protein', // i18n-ignore
+    'Düşük Kalori', // i18n-ignore
+    'Hacim', // i18n-ignore
+    'Sıkılaşma', // i18n-ignore
+    'Vegan', // i18n-ignore
   ];
 
   @override

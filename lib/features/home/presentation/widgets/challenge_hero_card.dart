@@ -62,7 +62,8 @@ class ChallengeHeroCard extends StatelessWidget {
                 // Layer 1 — full-bleed background image. Falls back to
                 // the gradient behind it if the asset fails to load.
                 Image.asset(
-                  'photos/günlükmeydanokumayenifoto.webp',
+                  // i18n-ignore below: asset path, not copy.
+                  'photos/günlükmeydanokumayenifoto.webp', // i18n-ignore
                   fit: BoxFit.cover,
                   alignment: Alignment.center,
                   errorBuilder: (_, __, ___) => const DecoratedBox(

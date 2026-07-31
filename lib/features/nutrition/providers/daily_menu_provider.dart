@@ -199,8 +199,9 @@ class DailyMenuNotifier extends AsyncNotifier<List<PlannedMeal>> {
       final tags = r.tags.map((t) => t.toLowerCase());
       final wantsSweet = taste == 'tatli';
       final wantsSavory = taste == 'tuzlu';
-      final isSweet =
-          tags.any((t) => t.contains('tatlı') || t.contains('tatli'));
+      final isSweet = tags.any((t) =>
+          t.contains('tatlı') ||
+          t.contains('tatli')); // i18n-ignore — DB tag value
       if ((wantsSweet && isSweet) || (wantsSavory && !isSweet)) {
         score -= 120;
       }
@@ -289,7 +290,9 @@ class DailyMenuNotifier extends AsyncNotifier<List<PlannedMeal>> {
   bool _matches(DailyMealSlot slot, String type) {
     switch (slot) {
       case DailyMealSlot.breakfast:
-        return type == 'breakfast' || type == 'kahvalti' || type == 'kahvaltı';
+        return type == 'breakfast' ||
+            type == 'kahvalti' ||
+            type == 'kahvaltı'; // i18n-ignore — DB meal_type value
       case DailyMealSlot.lunch:
       case DailyMealSlot.dinner:
         return type == 'main' || type == 'lunch' || type == 'dinner';

@@ -321,7 +321,7 @@ class _CollapsedCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final status = meal.status;
     final (icon, iconColor, borderColor, suffix, opacity, strike) =
-        _visualsFor(status);
+        _visualsFor(AppLocalizations.of(context), status);
 
     // Phase 53G · the collapsed meal row was painting recipe titles
     // (e.g. "Fıstık Ezmeli Protein Yulaf Ezmesi") in `Colors.white70`,
@@ -393,6 +393,7 @@ class _CollapsedCard extends StatelessWidget {
   }
 
   (IconData?, Color?, Color, String, double, bool) _visualsFor(
+    AppLocalizations l10n,
     MealStatus status,
   ) {
     switch (status) {
@@ -401,7 +402,7 @@ class _CollapsedCard extends StatelessWidget {
           Icons.check_circle,
           _neonGreen,
           _neonGreen.withValues(alpha: 0.35),
-          ' (Tamamlandı)',
+          l10n.mealCompletedSuffix,
           0.6,
           true,
         );
@@ -410,7 +411,7 @@ class _CollapsedCard extends StatelessWidget {
           Icons.cancel_outlined,
           _skippedColor,
           _skippedColor.withValues(alpha: 0.35),
-          ' (Atlandı)',
+          l10n.mealSkippedSuffix,
           0.55,
           true,
         );

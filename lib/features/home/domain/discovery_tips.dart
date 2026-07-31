@@ -17,6 +17,8 @@
 ///     dashboard tour is pending, so the two never compete.
 library;
 
+import '../../../l10n/app_localizations.dart';
+
 /// The signals a tip decision reads. A plain value object — no providers,
 /// no clock, no BuildContext — so [selectTip] is pure.
 class TipContext {
@@ -63,8 +65,11 @@ class DiscoveryTip {
   /// Stable id. Also the dismissal-ledger key — never rename one.
   final String id;
 
-  final String body;
-  final String? ctaLabel;
+  /// Copy as lookups — [kDiscoveryTips] is built before a locale
+  /// exists, and the `id` (the dismissal-ledger key) must never move
+  /// when the words change.
+  final String Function(AppLocalizations) body;
+  final String Function(AppLocalizations)? ctaLabel;
   final String? route;
 
   final bool Function(TipContext ctx) matches;
@@ -78,8 +83,7 @@ final List<DiscoveryTip> kDiscoveryTips = [
   // point. Declared first so it outranks everything below it.
   DiscoveryTip(
     id: 'paused_reassurance',
-    body: 'Ara vermek normal. Kaldığın yerden devam edebilirsin — '
-        'ilerlemen duruyor.',
+    body: _tipPaused,
     ctaLabel: null,
     route: null,
     matches: (c) => c.pausedMidWorkout,
@@ -89,9 +93,8 @@ final List<DiscoveryTip> kDiscoveryTips = [
   // walk past. Fires once the user has trained but never opened it.
   DiscoveryTip(
     id: 'coach_unused',
-    body: 'Antrenmanın hakkında bana soru sorabilirsin — '
-        'planını ve geçmişini biliyorum.',
-    ctaLabel: 'Form ile konuş',
+    body: _tipCoach,
+    ctaLabel: _tipCoachCta,
     route: '/coach',
     matches: (c) => c.completedDays >= 1 && !c.hasUsedCoach,
   ),
@@ -100,8 +103,7 @@ final List<DiscoveryTip> kDiscoveryTips = [
   // tab the user may never tap.
   DiscoveryTip(
     id: 'nutrition_unvisited',
-    body: 'Kalori ve makro hedefin hazır. '
-        'Beslenme sekmesinden tarifleri de görebilirsin.',
+    body: _tipNutrition,
     ctaLabel: null,
     route: null,
     matches: (c) => c.completedDays >= 1 && !c.visitedTabs.contains(1),
@@ -111,8 +113,7 @@ final List<DiscoveryTip> kDiscoveryTips = [
   // the badge/chart layer at this point converts effort into feedback.
   DiscoveryTip(
     id: 'progress_unvisited',
-    body: 'Serin büyüyor. Gelişim sekmesinde '
-        'rozetlerini ve haftalık grafiklerini görebilirsin.',
+    body: _tipProgress,
     ctaLabel: null,
     route: null,
     matches: (c) => c.currentStreak >= 2 && !c.visitedTabs.contains(2),
@@ -122,9 +123,8 @@ final List<DiscoveryTip> kDiscoveryTips = [
   // buried two levels deep.
   DiscoveryTip(
     id: 'reminder_setup',
-    body: 'Günlük hatırlatma saati seçersen '
-        'antrenmanı atlamak zorlaşır.',
-    ctaLabel: 'Ayarla',
+    body: _tipReminder,
+    ctaLabel: _tipReminderCta,
     route: '/account-settings',
     matches: (c) => c.completedDays >= 2 && c.daysSinceInstall >= 3,
   ),
@@ -136,8 +136,7 @@ final List<DiscoveryTip> kDiscoveryTips = [
   // for whom it is advice about a feature they turned off on purpose.
   DiscoveryTip(
     id: 'camera_framing',
-    body: 'Analizin en iyi çalışması için telefonu '
-        'yaklaşık 2 metre uzağa, dikey olarak yerleştir.',
+    body: _tipCamera,
     ctaLabel: null,
     route: null,
     matches: (c) =>
@@ -150,8 +149,7 @@ final List<DiscoveryTip> kDiscoveryTips = [
   // never having looked, and a different tip.
   DiscoveryTip(
     id: 'nutrition_wizard_incomplete',
-    body: 'Beslenme planın için birkaç soru kaldı. '
-        'Bir dakika sürer, sonrası sana özel.',
+    body: _tipWizard,
     ctaLabel: null,
     route: null,
     matches: (c) => c.visitedTabs.contains(1) && !c.nutritionOnboarded,
@@ -162,12 +160,25 @@ final List<DiscoveryTip> kDiscoveryTips = [
   // and the most permanent surface.
   DiscoveryTip(
     id: 'discovery_hub',
-    body: 'FormAI\'ın yapabildiği her şeyi tek listede görebilirsin.',
-    ctaLabel: 'Keşfet',
+    body: _tipHub,
+    ctaLabel: _tipHubCta,
     route: '/discover',
     matches: (c) => c.completedDays >= 2 && c.daysSinceInstall >= 2,
   ),
 ];
+
+// Named lookups so the catalogue stays a plain list of declarations.
+String _tipPaused(AppLocalizations l) => l.tipPausedSession;
+String _tipCoach(AppLocalizations l) => l.tipAskCoach;
+String _tipCoachCta(AppLocalizations l) => l.tipAskCoachCta;
+String _tipNutrition(AppLocalizations l) => l.tipNutritionReady;
+String _tipProgress(AppLocalizations l) => l.tipStreakGrowing;
+String _tipReminder(AppLocalizations l) => l.tipSetReminder;
+String _tipReminderCta(AppLocalizations l) => l.tipReminderCta;
+String _tipCamera(AppLocalizations l) => l.tipCameraFraming;
+String _tipWizard(AppLocalizations l) => l.tipNutritionWizard;
+String _tipHub(AppLocalizations l) => l.tipDiscoveryHub;
+String _tipHubCta(AppLocalizations l) => l.tipDiscoveryHubCta;
 
 /// Roadmap Phase 4 (C28) · minimum gap between two *different* tips.
 ///

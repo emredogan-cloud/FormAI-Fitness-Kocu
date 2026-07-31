@@ -1,3 +1,4 @@
+import '../../../../l10n/app_localizations.dart';
 import '../models/macro_target.dart';
 import '../models/recipe.dart';
 
@@ -10,6 +11,27 @@ import '../models/recipe.dart';
 ///     that fired (protein gap / light finish / balance).
 ///   • [impactString] — one-line macro impact preview, e.g.
 ///     "+25g Protein | +520 kcal".
+/// Why a recipe was picked.
+///
+/// Roadmap Phase 5 · this used to be a Turkish sentence built inside the
+/// service. The service sits behind a Riverpod provider with no
+/// BuildContext, so it had no locale to build a sentence in — the same
+/// shape the workout analyzers hit, and the same fix: return the
+/// VERDICT, resolve the words at the edge. The tier already existed
+/// internally ("future telemetry / A-B tests can re-use it cheaply");
+/// this promotes it to the type it always was.
+enum NextMealReason { proteinGap, lowCalorie, bestBalance }
+
+extension NextMealReasonCopy on NextMealReason {
+  /// Exhaustive by construction — no `default`, so adding a reason
+  /// fails the build until it has copy.
+  String label(AppLocalizations l10n) => switch (this) {
+        NextMealReason.proteinGap => l10n.mealReasonProtein,
+        NextMealReason.lowCalorie => l10n.mealReasonLight,
+        NextMealReason.bestBalance => l10n.mealReasonBestMatch,
+      };
+}
+
 class NextMealRecommendation {
   const NextMealRecommendation({
     required this.recipe,
@@ -18,7 +40,7 @@ class NextMealRecommendation {
   });
 
   final Recipe recipe;
-  final String reason;
+  final NextMealReason reason;
   final String impactString;
 }
 
@@ -57,9 +79,6 @@ class NextBestMealService {
   /// can branch on the reason without parsing the copy string.
   /// Internal because the UI only needs the human sentence today, but
   /// future telemetry / A-B tests can re-use it cheaply.
-  static const String _protein = 'protein';
-  static const String _lowCalorie = 'lowCalorie';
-  static const String _balance = 'balance';
 
   NextMealRecommendation? suggestNextMeal({
     required List<Recipe> recipes,
@@ -76,7 +95,7 @@ class NextBestMealService {
           .toList();
       if (picks.isNotEmpty) {
         picks.sort((a, b) => b.protein.compareTo(a.protein));
-        return _buildRecommendation(picks.first, _protein);
+        return _buildRecommendation(picks.first, NextMealReason.proteinGap);
       }
     }
 
@@ -86,7 +105,7 @@ class NextBestMealService {
           recipes.where((r) => r.calories < lowCalorieRecipeThreshold).toList();
       if (picks.isNotEmpty) {
         picks.sort((a, b) => a.calories.compareTo(b.calories));
-        return _buildRecommendation(picks.first, _lowCalorie);
+        return _buildRecommendation(picks.first, NextMealReason.lowCalorie);
       }
     }
 
@@ -106,26 +125,17 @@ class NextBestMealService {
       }
     }
     if (best == null) return null;
-    return _buildRecommendation(best, _balance);
+    return _buildRecommendation(best, NextMealReason.bestBalance);
   }
 
-  NextMealRecommendation _buildRecommendation(Recipe recipe, String tier) {
+  NextMealRecommendation _buildRecommendation(
+    Recipe recipe,
+    NextMealReason reason,
+  ) {
     return NextMealRecommendation(
       recipe: recipe,
-      reason: _reasonFor(tier),
+      reason: reason,
       impactString: '+${recipe.protein}g Protein | +${recipe.calories} kcal',
     );
-  }
-
-  String _reasonFor(String tier) {
-    switch (tier) {
-      case _protein:
-        return 'Protein açığını kapatmak için önerildi.';
-      case _lowCalorie:
-        return 'Kalan kalorine uygun hafif bir seçenek.';
-      case _balance:
-      default:
-        return 'Kalan makrolarına en iyi eşleşme.';
-    }
   }
 }

@@ -8,15 +8,15 @@ const Color _neon = Color(0xFF8E5BFF);
 const Color _neonAccent = Color(0xFF4DA6FF);
 const Color _surfaceDark = Color(0xFF111118);
 
-const List<String> _trDayLabels = [
-  'Pzt',
-  'Sal',
-  'Çar',
-  'Per',
-  'Cum',
-  'Cmt',
-  'Paz',
-];
+List<String> _dayLabels(AppLocalizations l10n) => [
+      l10n.weekdayShortMon,
+      l10n.weekdayShortTue,
+      l10n.weekdayShortWed,
+      l10n.weekdayShortThu,
+      l10n.weekdayShortFri,
+      l10n.weekdayShortSat,
+      l10n.weekdayShortSun,
+    ];
 
 class WeeklyGoalCard extends StatelessWidget {
   const WeeklyGoalCard({
@@ -94,7 +94,7 @@ class WeeklyGoalCard extends StatelessWidget {
               for (var i = 0; i < weekDates.length; i++)
                 _DateBubble(
                   date: weekDates[i],
-                  label: _trDayLabels[i],
+                  label: _dayLabels(AppLocalizations.of(context))[i],
                   isToday: _isSameDay(weekDates[i], today),
                   isPast: weekDates[i]
                       .isBefore(DateTime(today.year, today.month, today.day)),
