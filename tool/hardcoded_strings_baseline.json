@@ -68,12 +68,6 @@
   "lib/features/workout/domain/services/workout_generator_service.dart": 3,
   "lib/features/workout/presentation/plan_detail_screen.dart": 24,
   "lib/features/workout/presentation/workout_camera_screen.dart": 47,
-  "lib/features/workout/services/back_legs_analyzers.dart": 2,
-  "lib/features/workout/services/chest_analyzers.dart": 1,
   "lib/features/workout/services/coach_voice.dart": 44,
-  "lib/features/workout/services/core_analyzers.dart": 3,
-  "lib/features/workout/services/crunch_analyzer.dart": 3,
-  "lib/features/workout/services/pacing_tracker.dart": 6,
-  "lib/features/workout/services/shoulders_arms_cardio_analyzers.dart": 4,
   "lib/main.dart": 7
 }

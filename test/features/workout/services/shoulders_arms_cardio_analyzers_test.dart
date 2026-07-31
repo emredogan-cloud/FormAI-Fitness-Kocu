@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import 'package:sixpack_ai/features/workout/services/crunch_analyzer.dart';
 import 'package:sixpack_ai/features/workout/services/shoulders_arms_cardio_analyzers.dart';
+import 'package:sixpack_ai/features/workout/domain/coach_line.dart';
 
 PoseLandmark _lm(PoseLandmarkType t, double x, double y, [double like = 1.0]) =>
     PoseLandmark(type: t, x: x, y: y, z: 0, likelihood: like);
@@ -187,7 +188,7 @@ void main() {
       expect(a.analyze(shallowPress).state, CrunchState.up);
       final r = a.analyze(racked);
       expect(r.reps, 1);
-      expect(r.formWarning, 'Kolları tam yukarı uzat!');
+      expect(r.formWarning, CoachLine.armsFullyExtended);
     });
 
     test('returns empty when a wrist is missing', () {

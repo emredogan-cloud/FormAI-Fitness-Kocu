@@ -1,6 +1,7 @@
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 
 import '../../../core/utils/angle_calculator.dart';
+import '../domain/coach_line.dart';
 import 'pose_analyzer.dart';
 
 enum CrunchState { unknown, down, up }
@@ -21,19 +22,27 @@ class CrunchResult {
   final CrunchState state;
   final double? torsoAngle;
   final double? neckAngle;
-  final String? formWarning;
+
+  /// The form fault the analyzer saw this frame, or null.
+  ///
+  /// Roadmap Phase 5: this used to be the Turkish sentence itself. It is
+  /// now the *verdict*; `presentation/coach_line_copy.dart` owns the
+  /// words. Analyzers still throttle it internally, so a non-null value
+  /// means "say this now".
+  final CoachLine? formWarning;
+
   final bool repJustCompleted;
 
   /// Motivational coaching line emitted when the user's pacing is extreme
   /// (too fast or too slow). Null on most reps — only surfaces after the
   /// analyzer's cooldown has elapsed.
-  final String? pacingFeedback;
+  final CoachLine? pacingFeedback;
 
   /// Forward-looking instruction spoken at a specific phase of an exercise
-  /// (e.g. Burpee step-2 cue "Şimdi aşağı in ve plank pozisyonu al").
-  /// Null on most frames; analyzers throttle it internally so the camera
-  /// screen can speak it as-is when present.
-  final String? contextualCue;
+  /// (e.g. the burpee step-2 cue [CoachLine.burpeeGetDown]). Null on most
+  /// frames; analyzers throttle it internally so the camera screen can
+  /// speak it as-is when present.
+  final CoachLine? contextualCue;
 }
 
 /// State machine for crunches ("mekik"):
@@ -119,7 +128,7 @@ class CrunchAnalyzer implements PoseAnalyzer {
     final torsoAngle = AngleCalculator.between(shoulder, hip, knee);
     final previousState = _state;
     var repJustCompleted = false;
-    String? pacingFeedback;
+    CoachLine? pacingFeedback;
 
     if (torsoAngle > downThreshold) {
       _state = CrunchState.down;
@@ -144,10 +153,10 @@ class CrunchAnalyzer implements PoseAnalyzer {
                 lastFb == null || now.difference(lastFb) >= feedbackCooldown;
             if (cooldownElapsed) {
               if (repDuration < tooFastThreshold) {
-                pacingFeedback = 'Biraz yavaşla, kaslarını hisset.';
+                pacingFeedback = CoachLine.slowDownFeelIt;
                 _lastFeedbackTime = now;
               } else if (repDuration > strugglingThreshold) {
-                pacingFeedback = 'Hadi, pes etme! Çok iyi gidiyorsun.';
+                pacingFeedback = CoachLine.dontGiveUp;
                 _lastFeedbackTime = now;
               }
             }
@@ -158,7 +167,7 @@ class CrunchAnalyzer implements PoseAnalyzer {
     }
 
     double? neckAngle;
-    String? formWarning;
+    CoachLine? formWarning;
     if (ear != null) {
       neckAngle = AngleCalculator.between(ear, shoulder, hip);
       if (_state == CrunchState.up && neckAngle < neckWarningThreshold) {
@@ -168,7 +177,7 @@ class CrunchAnalyzer implements PoseAnalyzer {
         // a longer window keeps the cue useful without nagging.
         final now = DateTime.now();
         if (now.difference(_lastPostureWarning).inSeconds > 15) {
-          formWarning = 'Boynunu düz tut!';
+          formWarning = CoachLine.neckStraight;
           _lastPostureWarning = now;
         }
       }

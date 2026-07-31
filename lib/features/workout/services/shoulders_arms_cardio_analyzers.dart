@@ -7,6 +7,7 @@ import 'base_rep_counter_analyzer.dart';
 import 'crunch_analyzer.dart' show CrunchResult, CrunchState;
 import 'pacing_tracker.dart';
 import 'pose_analyzer.dart';
+import '../domain/coach_line.dart';
 
 // ============================================================================
 // Arms — biceps / hammer curl / triceps pushdown
@@ -64,7 +65,7 @@ class BicepsCurlAnalyzer extends BaseRepCounterAnalyzer {
   // Tier-S form check: elbow drift away from the torso during the UP phase.
   // Dominant side = the side the rep angle came from (recomputed here).
   @override
-  String? formWarning(Pose pose, double angle, CrunchState state) {
+  CoachLine? formWarning(Pose pose, double angle, CrunchState state) {
     if (state != CrunchState.up) return null;
     final dominantIsLeft = _armAngle(pose, PoseLandmarkType.leftShoulder,
             PoseLandmarkType.leftElbow, PoseLandmarkType.leftWrist) !=
@@ -86,7 +87,7 @@ class BicepsCurlAnalyzer extends BaseRepCounterAnalyzer {
       final now = DateTime.now();
       if (now.difference(_lastFormWarning) >= formWarningCooldown) {
         _lastFormWarning = now;
-        return 'Dirseğini gövdene yapışık tut!';
+        return CoachLine.elbowTucked;
       }
     }
     return null;
@@ -166,8 +167,8 @@ class ShoulderPressAnalyzer implements PoseAnalyzer {
 
     final previous = _state;
     var repJustCompleted = false;
-    String? formWarning;
-    String? pacingFeedback;
+    CoachLine? formWarning;
+    CoachLine? pacingFeedback;
 
     if (delta > upThreshold) {
       _state = CrunchState.up;
@@ -182,7 +183,7 @@ class ShoulderPressAnalyzer implements PoseAnalyzer {
           _lastRepTime = now;
           // Partial-rep nudge: rep counted but never reached full lockout.
           if (_maxDelta < upThreshold * partialRatio) {
-            formWarning = 'Kolları tam yukarı uzat!';
+            formWarning = CoachLine.armsFullyExtended;
           }
           // Pacing only emitted when no form warning to avoid same-frame
           // queue contention. Form warning is the higher-value signal.
@@ -269,7 +270,7 @@ class LateralRaiseAnalyzer extends BaseRepCounterAnalyzer {
 
   // Tier-S form check: wrist-above-shoulder during the UP phase.
   @override
-  String? formWarning(Pose pose, double angle, CrunchState state) {
+  CoachLine? formWarning(Pose pose, double angle, CrunchState state) {
     if (state != CrunchState.up) return null;
     final dominantIsLeft = _shoulderArmAngle(
             pose,
@@ -295,7 +296,7 @@ class LateralRaiseAnalyzer extends BaseRepCounterAnalyzer {
       final now = DateTime.now();
       if (now.difference(_lastFormWarning) >= formWarningCooldown) {
         _lastFormWarning = now;
-        return 'Kolları omuz hizasında tut, daha yukarı kaldırma.';
+        return CoachLine.armsShoulderHeight;
       }
     }
     return null;
@@ -484,7 +485,7 @@ class JumpingJackAnalyzer implements PoseAnalyzer {
 
     final previous = _state;
     var repJustCompleted = false;
-    String? pacingFeedback;
+    CoachLine? pacingFeedback;
 
     if (commitOpen) {
       if (previous == CrunchState.down) {
@@ -641,8 +642,8 @@ class BurpeeAnalyzer implements PoseAnalyzer {
     }
 
     var repJustCompleted = false;
-    String? contextualCue;
-    String? pacingFeedback;
+    CoachLine? contextualCue;
+    CoachLine? pacingFeedback;
 
     if (current != previous && previous != _BurpeePhase.unknown) {
       if (current == _BurpeePhase.standing && previous == _BurpeePhase.down) {
@@ -663,7 +664,7 @@ class BurpeeAnalyzer implements PoseAnalyzer {
         // so consecutive burpees don't say it on every rep.
         final last = _lastCueTime;
         if (last == null || now.difference(last) >= cueCooldown) {
-          contextualCue = 'Şimdi aşağı in ve plank pozisyonu al.';
+          contextualCue = CoachLine.burpeeGetDown;
           _lastCueTime = now;
         }
       }

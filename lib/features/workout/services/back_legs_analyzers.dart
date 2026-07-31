@@ -7,6 +7,7 @@ import 'base_rep_counter_analyzer.dart';
 import 'crunch_analyzer.dart' show CrunchResult, CrunchState;
 import 'pacing_tracker.dart';
 import 'pose_analyzer.dart';
+import '../domain/coach_line.dart';
 
 /// Squats / lunges / Bulgarian split squats / leg press all reduce to a
 /// knee-flexion cycle: hip-knee-ankle angle drops as the user descends and
@@ -58,7 +59,7 @@ class SquatAnalyzer extends BaseRepCounterAnalyzer {
   // Tier-S form check: torso lean while at squat-bottom. Skipped outside the
   // DOWN state so a user bending to tie a shoe between sets doesn't trip it.
   @override
-  String? formWarning(Pose pose, double angle, CrunchState state) {
+  CoachLine? formWarning(Pose pose, double angle, CrunchState state) {
     if (state != CrunchState.down) return null;
     final shoulder = _pickHigher(
         pose, PoseLandmarkType.leftShoulder, PoseLandmarkType.rightShoulder);
@@ -71,7 +72,7 @@ class SquatAnalyzer extends BaseRepCounterAnalyzer {
       final now = DateTime.now();
       if (now.difference(_lastFormWarning) >= formWarningCooldown) {
         _lastFormWarning = now;
-        return 'Göğsünü yukarı tut, geriye doğru otur!';
+        return CoachLine.squatChestUp;
       }
     }
     return null;
@@ -175,8 +176,8 @@ class HipHingeAnalyzer implements PoseAnalyzer {
 
     final previous = _state;
     var repJustCompleted = false;
-    String? formWarning;
-    String? pacingFeedback;
+    CoachLine? formWarning;
+    CoachLine? pacingFeedback;
 
     if (angle < downThreshold) {
       // Partial-ROM check happens HERE, on the descent that closes the
@@ -191,7 +192,7 @@ class HipHingeAnalyzer implements PoseAnalyzer {
         final now = DateTime.now();
         if (_peakAngle < 175.0 &&
             now.difference(_lastFormWarning) >= formWarningCooldown) {
-          formWarning = 'Kalçanı sonuna kadar yukarı sık!';
+          formWarning = CoachLine.gluteBridgeSqueeze;
           _lastFormWarning = now;
         }
       }

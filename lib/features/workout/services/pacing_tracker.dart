@@ -1,3 +1,5 @@
+import '../domain/coach_line.dart';
+
 /// Tier-A.7 audit closure · shared pacing tracker.
 ///
 /// CrunchAnalyzer historically owned the only "tempo coach" — it
@@ -28,8 +30,8 @@ class PacingTracker {
     this.tooFast = const Duration(milliseconds: 1500),
     this.tooSlow = const Duration(milliseconds: 4500),
     this.cooldown = const Duration(seconds: 7),
-    this.fastPhrase = 'Biraz yavaşla, kontrollü hareket et.',
-    this.slowPhrase = 'Hadi, pes etme! Çok iyi gidiyorsun.',
+    this.fastPhrase = CoachLine.slowDownControlled,
+    this.slowPhrase = CoachLine.dontGiveUp,
   });
 
   /// Rep durations shorter than this trigger the "slow down" line.
@@ -42,10 +44,10 @@ class PacingTracker {
   final Duration cooldown;
 
   /// The line to emit when [tooFast] fires.
-  final String fastPhrase;
+  final CoachLine fastPhrase;
 
   /// The line to emit when [tooSlow] fires.
-  final String slowPhrase;
+  final CoachLine slowPhrase;
 
   DateTime? _lastFeedbackTime;
 
@@ -53,7 +55,7 @@ class PacingTracker {
   /// is outside the expected tempo window AND the cooldown has elapsed.
   /// Returns null otherwise — caller passes the result straight through
   /// to `CrunchResult.pacingFeedback`.
-  String? evaluate(Duration repDuration, DateTime now) {
+  CoachLine? evaluate(Duration repDuration, DateTime now) {
     final last = _lastFeedbackTime;
     if (last != null && now.difference(last) < cooldown) return null;
     if (repDuration < tooFast) {
@@ -90,8 +92,8 @@ class PacingPresets {
   static PacingTracker cardio() => PacingTracker(
         tooFast: const Duration(milliseconds: 350),
         tooSlow: const Duration(milliseconds: 1500),
-        fastPhrase: 'Ritmini düşür, kontrollü kal.',
-        slowPhrase: 'Tempoyu yükselt, devam et!',
+        fastPhrase: CoachLine.dropTempoStayControlled,
+        slowPhrase: CoachLine.raiseTempo,
       );
 
   /// Compound / multi-phase movements (burpee, russian twist) sit
@@ -99,7 +101,7 @@ class PacingPresets {
   static PacingTracker compound() => PacingTracker(
         tooFast: const Duration(milliseconds: 1000),
         tooSlow: const Duration(milliseconds: 3000),
-        fastPhrase: 'Kontrolü kaybetme, kontrollü ilerle.',
-        slowPhrase: 'Hadi, ritmi düşürme, devam et!',
+        fastPhrase: CoachLine.dontLoseControl,
+        slowPhrase: CoachLine.keepTheRhythm,
       );
 }

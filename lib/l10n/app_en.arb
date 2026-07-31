@@ -1259,5 +1259,81 @@
   "framingHintReady": "I can see you. You're set.",
   "@framingHintReady": {
     "description": "Live framing hint: framing is good. Same words as tutorialVoiceSeeYou but a separate key on purpose — one is spoken aloud and one is read on screen, and they must be free to diverge per locale."
+  },
+  "coachNeckStraight": "Keep your neck straight!",
+  "@coachNeckStraight": {
+    "description": "Form correction, crunch/sit-up: chin tucked into the chest. All coach lines are spoken aloud mid-rep and shown on screen — keep them under ~6 words, address the movement and never the person, and avoid clauses a text-to-speech voice has to pause through."
+  },
+  "coachPlankHipsLevel": "Keep your hips level, hold the plank!",
+  "@coachPlankHipsLevel": {
+    "description": "Form correction, plank: hips sagging out of line"
+  },
+  "coachPushUpHipsUp": "Hips up, keep your body straight!",
+  "@coachPushUpHipsUp": {
+    "description": "Form correction, push-up: hips dropped below the line"
+  },
+  "coachSquatChestUp": "Chest up, sit back!",
+  "@coachSquatChestUp": {
+    "description": "Form correction, squat: torso pitching forward"
+  },
+  "coachGluteBridgeSqueeze": "Squeeze your hips all the way up!",
+  "@coachGluteBridgeSqueeze": {
+    "description": "Form correction, glute bridge: short of full hip extension"
+  },
+  "coachElbowTucked": "Keep your elbow tucked in!",
+  "@coachElbowTucked": {
+    "description": "Form correction, curl: elbow drifting from the torso"
+  },
+  "coachArmsFullyExtended": "Reach all the way up!",
+  "@coachArmsFullyExtended": {
+    "description": "Form correction, overhead press: no full lockout"
+  },
+  "coachArmsShoulderHeight": "Stop at shoulder height, no higher.",
+  "@coachArmsShoulderHeight": {
+    "description": "Form correction, lateral raise: lifting past shoulder height"
+  },
+  "coachSlowDownFeelIt": "Slow down a little, feel the muscle.",
+  "@coachSlowDownFeelIt": {
+    "description": "Pacing, strength tempo too fast"
+  },
+  "coachSlowDownControlled": "Slow down a little, stay controlled.",
+  "@coachSlowDownControlled": {
+    "description": "Pacing, strength tempo too fast (tracker preset wording)"
+  },
+  "coachDontGiveUp": "Come on, don't quit! You're doing great.",
+  "@coachDontGiveUp": {
+    "description": "Pacing, tempo too slow — the user is struggling and needs a push"
+  },
+  "coachDropTempoStayControlled": "Ease the tempo, stay controlled.",
+  "@coachDropTempoStayControlled": {
+    "description": "Pacing, cardio tempo too fast"
+  },
+  "coachRaiseTempo": "Pick up the pace, keep going!",
+  "@coachRaiseTempo": {
+    "description": "Pacing, cardio tempo too slow"
+  },
+  "coachDontLoseControl": "Don't lose control, stay steady.",
+  "@coachDontLoseControl": {
+    "description": "Pacing, compound tempo too fast"
+  },
+  "coachKeepTheRhythm": "Come on, hold the rhythm, keep going!",
+  "@coachKeepTheRhythm": {
+    "description": "Pacing, compound tempo too slow"
+  },
+  "coachDoingGreat": "You're doing great!",
+  "@coachDoingGreat": {
+    "description": "Silent-hold encouragement 1 of 3, rotated in order"
+  },
+  "coachHoldOn": "Hold on, don't drop!",
+  "@coachHoldOn": {
+    "description": "Silent-hold encouragement 2 of 3, rotated in order"
+  },
+  "coachGoodRhythm": "Good rhythm, just like that!",
+  "@coachGoodRhythm": {
+    "description": "Silent-hold encouragement 3 of 3, rotated in order"
+  },
+  "coachBurpeeGetDown": "Now get down into a plank.",
+  "@coachBurpeeGetDown": {
+    "description": "Contextual phase coaching, burpee: the user has begun descending"
   }
 }

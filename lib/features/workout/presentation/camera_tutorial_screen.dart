@@ -22,6 +22,7 @@ import '../services/back_legs_analyzers.dart';
 import '../services/camera_frame_converter.dart';
 import '../services/crunch_analyzer.dart' show CrunchState;
 import '../services/pose_detector_service.dart';
+import 'coach_line_copy.dart';
 import 'framing_hint.dart';
 import 'widgets/practice_rep_stage.dart';
 
@@ -410,12 +411,12 @@ class _CameraTutorialScreenState extends ConsumerState<CameraTutorialScreen>
       // Real form warnings win; otherwise mirror the live phase back so
       // the user sees the detector tracking them rather than a frozen
       // caption. Both are read off the pose — neither is scripted.
-      _practiceCue = result.formWarning ??
+      _practiceCue = result.formWarning?.text(_l10n) ??
           (result.state == CrunchState.down ? _l10n.tutorialCueStandUp : null);
     });
 
     if (result.formWarning != null) {
-      _say(result.formWarning!);
+      _say(result.formWarning!.text(_l10n));
     }
     if (result.repJustCompleted) {
       unawaited(_onPracticeRepCounted());

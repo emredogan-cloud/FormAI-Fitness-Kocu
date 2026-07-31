@@ -16,6 +16,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import 'package:sixpack_ai/features/workout/services/crunch_analyzer.dart';
+import 'package:sixpack_ai/features/workout/domain/coach_line.dart';
 
 PoseLandmark _lm(PoseLandmarkType t, double x, double y) =>
     PoseLandmark(type: t, x: x, y: y, z: 0, likelihood: 1.0);
@@ -67,6 +68,6 @@ void main() {
     // silently swallowed the first 5 seconds of bad form.
     final a = CrunchAnalyzer();
     a.analyze(_pose(downLandmarks));
-    expect(a.analyze(_pose(upLandmarks)).formWarning, 'Boynunu düz tut!');
+    expect(a.analyze(_pose(upLandmarks)).formWarning, CoachLine.neckStraight);
   });
 }

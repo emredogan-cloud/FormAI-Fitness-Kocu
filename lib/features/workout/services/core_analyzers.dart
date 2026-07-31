@@ -6,6 +6,7 @@ import '../../../core/utils/angle_calculator.dart';
 import 'crunch_analyzer.dart' show CrunchResult, CrunchState;
 import 'pacing_tracker.dart';
 import 'pose_analyzer.dart';
+import '../domain/coach_line.dart';
 
 /// Reps counted when the user lifts both legs from horizontal (~180°
 /// shoulder-hip-ankle) to vertical (~90°). Re-uses the same state-machine
@@ -58,7 +59,7 @@ class LegRaiseAnalyzer implements PoseAnalyzer {
     final hipAngle = AngleCalculator.between(shoulder, hip, ankle);
     final previousState = _state;
     var repJustCompleted = false;
-    String? pacingFeedback;
+    CoachLine? pacingFeedback;
 
     if (hipAngle > downThreshold) {
       _state = CrunchState.down;
@@ -176,7 +177,7 @@ class RussianTwistAnalyzer implements PoseAnalyzer {
     }
 
     var repJustCompleted = false;
-    String? pacingFeedback;
+    CoachLine? pacingFeedback;
     if (current != previous &&
         previous != _Side.unknown &&
         current != _Side.unknown) {
@@ -322,7 +323,7 @@ class MountainClimberAnalyzer implements PoseAnalyzer {
     if (rightActive && !leftActive) current = _Side.right;
 
     var repJustCompleted = false;
-    String? pacingFeedback;
+    CoachLine? pacingFeedback;
     if (current != _state &&
         _state != _Side.unknown &&
         current != _Side.unknown) {
@@ -422,7 +423,7 @@ class BicycleCrunchAnalyzer implements PoseAnalyzer {
     }
 
     var repJustCompleted = false;
-    String? pacingFeedback;
+    CoachLine? pacingFeedback;
     if (current != _state &&
         _state != _Side.unknown &&
         current != _Side.unknown) {
@@ -532,7 +533,7 @@ class FlutterKickAnalyzer implements PoseAnalyzer {
     }
 
     var repJustCompleted = false;
-    String? pacingFeedback;
+    CoachLine? pacingFeedback;
     if (current != _state &&
         _state != _Side.unknown &&
         current != _Side.unknown) {
@@ -636,13 +637,13 @@ class PlankAnalyzer implements PoseAnalyzer {
     }
 
     final lineAngle = AngleCalculator.between(shoulder, hip, ankle);
-    String? warning;
+    CoachLine? warning;
     if (lineAngle < minStraightAngle) {
       _violationStreak += 1;
       if (_violationStreak >= _violationStreakThreshold) {
         final now = DateTime.now();
         if (now.difference(_lastWarning) >= warningCooldown) {
-          warning = 'Kalçanı düz tut, plank pozisyonunu koru!';
+          warning = CoachLine.plankHipsLevel;
           _lastWarning = now;
         }
         // Reset the streak after a warning fires so the next sustained
@@ -685,10 +686,10 @@ class SilentHoldAnalyzer implements PoseAnalyzer {
 
   final Duration encouragementCooldown;
 
-  static const List<String> _encouragements = [
-    'Harika gidiyorsun!',
-    'Dayan, bırakma!',
-    'Güzel ritim, aynen böyle!',
+  static const List<CoachLine> _encouragements = [
+    CoachLine.doingGreat,
+    CoachLine.holdOn,
+    CoachLine.goodRhythm,
   ];
 
   int _index = 0;
@@ -703,7 +704,7 @@ class SilentHoldAnalyzer implements PoseAnalyzer {
   @override
   CrunchResult analyze(Pose pose) {
     final now = DateTime.now();
-    String? cue;
+    CoachLine? cue;
     if (now.difference(_lastCue) >= encouragementCooldown) {
       cue = _encouragements[_index % _encouragements.length];
       _index++;

@@ -7,6 +7,7 @@ import 'base_rep_counter_analyzer.dart';
 import 'crunch_analyzer.dart' show CrunchResult, CrunchState;
 import 'pacing_tracker.dart';
 import 'pose_analyzer.dart';
+import '../domain/coach_line.dart';
 
 /// Push-ups (and inclined / declined / dip variants) all reduce to elbow
 /// flexion: the shoulder-elbow-wrist angle drops as the user lowers and
@@ -64,7 +65,7 @@ class PushUpAnalyzer extends BaseRepCounterAnalyzer {
   // the interior angle. The 0.35 floor is looser than the 0.4 rep-angle
   // floor because a marginal ankle is still informative for the line check.
   @override
-  String? formWarning(Pose pose, double angle, CrunchState state) {
+  CoachLine? formWarning(Pose pose, double angle, CrunchState state) {
     final shoulder = _pickHigher(
         pose, PoseLandmarkType.leftShoulder, PoseLandmarkType.rightShoulder);
     final hip =
@@ -83,7 +84,7 @@ class PushUpAnalyzer extends BaseRepCounterAnalyzer {
       final now = DateTime.now();
       if (now.difference(_lastFormWarning) >= formWarningCooldown) {
         _lastFormWarning = now;
-        return 'Kalçanı yukarı tut, vücudunu düz tut!';
+        return CoachLine.pushUpHipsUp;
       }
     }
     return null;
@@ -168,7 +169,7 @@ class ChestFlyAnalyzer implements PoseAnalyzer {
 
     final previous = _state;
     var repJustCompleted = false;
-    String? pacingFeedback;
+    CoachLine? pacingFeedback;
 
     if (ratio > openFraction) {
       // OPEN ≈ "down" (start of the rep — arms wide).

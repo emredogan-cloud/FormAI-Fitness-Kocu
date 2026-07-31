@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import 'package:sixpack_ai/features/workout/services/back_legs_analyzers.dart';
 import 'package:sixpack_ai/features/workout/services/crunch_analyzer.dart';
+import 'package:sixpack_ai/features/workout/domain/coach_line.dart';
 
 PoseLandmark _lm(PoseLandmarkType t, double x, double y) =>
     PoseLandmark(type: t, x: x, y: y, z: 0, likelihood: 1.0);
@@ -89,7 +90,7 @@ void main() {
       expect(commit.formWarning, isNull);
       // Descent closes the cycle: the peak stayed shallow → cue fires.
       final descent = a.analyze(folded);
-      expect(descent.formWarning, 'Kalçanı sonuna kadar yukarı sık!');
+      expect(descent.formWarning, CoachLine.gluteBridgeSqueeze);
     });
 
     test(

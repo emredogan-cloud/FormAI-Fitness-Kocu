@@ -19,6 +19,8 @@ import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/audio_feedback.dart';
 import '../../../core/widgets/error_card.dart';
 import '../../../core/widgets/spotlight_tour.dart';
+import '../../../l10n/app_localizations.dart';
+import '../domain/coach_line.dart';
 import '../models/exercise_model.dart';
 import '../providers/workout_provider.dart';
 import '../services/analyzer_factory.dart';
@@ -27,6 +29,7 @@ import '../services/crunch_analyzer.dart';
 import '../services/pose_analyzer.dart';
 import '../services/camera_frame_converter.dart';
 import '../services/pose_detector_service.dart';
+import 'coach_line_copy.dart';
 import 'pose_painter.dart';
 import 'widgets/exercise_guide_player.dart';
 import 'widgets/preparation_overlay.dart';
@@ -83,12 +86,21 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
   int? _activeSet;
   bool _wasResting = false;
   bool _wasPreparing = false;
-  String? _formWarning;
-  // Phase 49 · last form-warning string we issued a haptic for. Used
-  // as a single-step debounce so a sustained "diz bükülü tut" warning
-  // (which can fire on every frame for several seconds) only buzzes
-  // the device once per occurrence instead of vibrating continuously.
-  String? _lastFormWarning;
+  CoachLine? _formWarning;
+  // Phase 49 · last form warning we issued a haptic for. Used as a
+  // single-step debounce so a sustained warning (which can fire on
+  // every frame for several seconds) only buzzes the device once per
+  // occurrence instead of vibrating continuously.
+  //
+  // Roadmap Phase 5 · now a CoachLine rather than the sentence. The
+  // debounce compares identity, which is what it always meant — two
+  // different faults that happen to share wording in one language must
+  // still buzz twice.
+  CoachLine? _lastFormWarning;
+
+  /// Read inside the image-analysis callback, which runs while the
+  /// widget is mounted and the camera stream is live.
+  AppLocalizations get _l10n => AppLocalizations.of(context);
   CrunchState _state = CrunchState.unknown;
 
   Timer? _workoutTimer;
@@ -602,7 +614,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
           // Tier-A: form warnings ride at SpeechPriority.warning so they
           // pre-empt any lower-priority utterance (ambient heartbeat,
           // milestone celebrations) and never get cut off themselves.
-          _audio.speak(warning, priority: SpeechPriority.warning);
+          _audio.speak(warning.text(_l10n), priority: SpeechPriority.warning);
           // Phase 49 · double light-tap when the analyzer flags broken
           // form. Distinct from the per-rep tap so the user can tell
           // "good rep" and "fix something" apart without looking at
@@ -625,7 +637,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
           // Tier-A: cues are below warning but above milestones — a phase
           // transition needs to land, but it shouldn't pre-empt a safety
           // correction.
-          _audio.speak(cue, priority: SpeechPriority.cue);
+          _audio.speak(cue.text(_l10n), priority: SpeechPriority.cue);
         }
 
         if (result.repJustCompleted) {
@@ -671,7 +683,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
               _audio.speak('Yarıladın! Aynen böyle devam et.',
                   priority: SpeechPriority.milestone);
             } else if (result.pacingFeedback != null) {
-              _audio.speak(result.pacingFeedback!,
+              _audio.speak(result.pacingFeedback!.text(_l10n),
                   priority: SpeechPriority.encouragement);
             }
 
@@ -1272,7 +1284,9 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 if (_formWarning != null) ...[
-                  _FormWarning(message: _formWarning!),
+                  _FormWarning(
+                      message:
+                          _formWarning!.text(AppLocalizations.of(context))),
                   const SizedBox(height: 8),
                 ],
                 // U6 · framing hint takes the tip slot while no pose has

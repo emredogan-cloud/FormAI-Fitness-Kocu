@@ -3,6 +3,7 @@ import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import 'crunch_analyzer.dart' show CrunchResult, CrunchState;
 import 'pacing_tracker.dart';
 import 'pose_analyzer.dart';
+import '../domain/coach_line.dart';
 
 /// Phase 2 (P-Risk) · shared rep-counting state machine.
 ///
@@ -65,7 +66,7 @@ abstract class BaseRepCounterAnalyzer implements PoseAnalyzer {
 
   /// Subclass hook: optional form-coaching line for this frame, evaluated
   /// after the state machine has advanced. Default: no warning.
-  String? formWarning(Pose pose, double angle, CrunchState state) => null;
+  CoachLine? formWarning(Pose pose, double angle, CrunchState state) => null;
 
   @override
   void reset() {
@@ -95,7 +96,7 @@ abstract class BaseRepCounterAnalyzer implements PoseAnalyzer {
 
     final previous = _state;
     var repJustCompleted = false;
-    String? pacingFeedback;
+    CoachLine? pacingFeedback;
 
     final bool isDown =
         countOnAngleAbove ? angle < downThreshold : angle > downThreshold;
