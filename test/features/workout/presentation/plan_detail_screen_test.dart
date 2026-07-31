@@ -6,6 +6,7 @@ import 'package:sixpack_ai/features/monetization/widgets/locked_overlay.dart';
 import 'package:sixpack_ai/features/workout/models/exercise_model.dart';
 import 'package:sixpack_ai/features/workout/models/workout_plan_model.dart';
 import 'package:sixpack_ai/features/workout/presentation/plan_detail_screen.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// A regional/ad-hoc [WorkoutPlan] opened from the dashboard. Passing a
 /// non-null plan takes the `_PlanView` branch, which renders the hero,
@@ -40,6 +41,8 @@ Widget _host({required bool isPro}) {
       isProProvider.overrideWithValue(isPro),
     ],
     child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: const [Locale('tr')],
       home: PlanDetailScreen(plan: _plan()),
       debugShowCheckedModeBanner: false,
     ),

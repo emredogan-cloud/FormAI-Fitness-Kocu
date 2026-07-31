@@ -16,6 +16,7 @@ import '../domain/coach_brain.dart';
 import '../domain/coach_context.dart';
 import '../domain/llm_coach_brain.dart';
 import '../domain/rule_based_coach_brain.dart';
+import '../../../core/utils/app_copy.dart';
 
 /// Long-term coach memory: a rolling summary of what past conversations
 /// revealed about the user (preferences, constraints, recurring struggles).
@@ -38,20 +39,26 @@ class CoachMemoryStore {
   }
 }
 
-const Map<String, String> _goalLabels = {
-  'belly_burn': 'Göbek eritmek',
-  'muscle_gain': 'Kas yapmak',
-  'fitness_look': 'Daha fit görünmek',
-  'strength': 'Güçlenmek',
-  'tone': 'Sıkılaşmak',
-  'bulk': 'Hacim kazanmak',
-  'sixpack': 'Six-pack',
-};
-const Map<String, String> _activityLabels = {
-  'sedentary': 'Masa başı',
-  'light': 'Hafif hareketli',
-  'active': 'Çok aktif',
-};
+/// Keys are the values stored in SharedPreferences; the labels are copy
+/// — they reach the user inside the coach's nutrition reply. Resolved
+/// through [AppCopy] because this provider has no widget tree.
+String? _goalLabel(String? key) => switch (key) {
+      'belly_burn' => AppCopy.strings.goalBellyBurnLower,
+      'muscle_gain' => AppCopy.strings.goalMuscleGainLower,
+      'fitness_look' => AppCopy.strings.goalFitnessLookLower,
+      'strength' => AppCopy.strings.goalStrengthLower,
+      'tone' => AppCopy.strings.goalToneLower,
+      'bulk' => AppCopy.strings.goalBulkLower,
+      'sixpack' => AppCopy.strings.goalSixpackLower,
+      _ => null,
+    };
+
+String? _activityLabel(String? key) => switch (key) {
+      'sedentary' => AppCopy.strings.activityDesk,
+      'light' => AppCopy.strings.activityLight,
+      'active' => AppCopy.strings.activityVeryActive,
+      _ => null,
+    };
 
 /// The brain behind the coach. When `COACH_LLM_ENABLED=true` in the `.env`
 /// (set it once the `coach-chat` Edge Function is deployed with an
@@ -137,8 +144,12 @@ Future<String?> onboardingCoachReply(String instruction) async {
   if (!_llmEnabled) return null;
   try {
     final reply = await _invokeCoachChat(
-      'Bağlam: uygulamanın tanışma (onboarding) sohbeti. Kullanıcı seni yeni '
-          'tanıyor. Tek mesajlık, kısa ve samimi bir yanıt ver.',
+      // Prompt scaffolding, not UI copy — it is never rendered. Per-locale
+      // prompts are Phase 7's job (the roadmap keeps persona blocks
+      // server-side, keyed by the `locale` parameter this call already
+      // threads).
+      'Bağlam: uygulamanın tanışma (onboarding) sohbeti. Kullanıcı seni yeni ' // i18n-ignore
+          'tanıyor. Tek mesajlık, kısa ve samimi bir yanıt ver.', // i18n-ignore
       const [],
       instruction,
       '',
@@ -230,11 +241,11 @@ final coachContextProvider = Provider<CoachContext>((ref) {
   return CoachContext(
     hour: DateTime.now().hour,
     name: metrics['name'] as String?,
-    goalLabel: goalKey == null ? null : (_goalLabels[goalKey] ?? goalKey),
+    goalLabel: goalKey == null ? null : (_goalLabel(goalKey) ?? goalKey),
     age: (metrics['age'] as num?)?.toInt(),
     heightCm: (metrics['heightCm'] as num?)?.toInt(),
     weightKg: (metrics['weightKg'] as num?)?.toInt(),
-    activityLabel: activityKey == null ? null : _activityLabels[activityKey],
+    activityLabel: activityKey == null ? null : _activityLabel(activityKey),
     hasEquipment: prefs.hasEquipment,
     streakDays: ref.watch(currentStreakProvider),
     level: ref.watch(currentLevelProvider),
@@ -298,7 +309,9 @@ class CoachChatNotifier extends Notifier<CoachChatState> {
     return CoachChatState(
       turns: [
         CoachTurn(
-            fromCoach: true, text: brain.greeting(ctx), at: DateTime.now()),
+            fromCoach: true,
+            text: brain.greeting(AppCopy.strings, ctx),
+            at: DateTime.now()),
       ],
     );
   }
@@ -342,7 +355,7 @@ class CoachChatNotifier extends Notifier<CoachChatState> {
 
   List<CoachSuggestion> get suggestions {
     final brain = ref.read(coachBrainProvider);
-    return brain.suggestions(ref.read(coachContextProvider));
+    return brain.suggestions(AppCopy.strings, ref.read(coachContextProvider));
   }
 
   /// User turns since the rolling memory was last refreshed.
@@ -363,7 +376,7 @@ class CoachChatNotifier extends Notifier<CoachChatState> {
       ],
       sending: true,
     );
-    final reply = await brain.respond(ctx, history, text);
+    final reply = await brain.respond(AppCopy.strings, ctx, history, text);
     // The screen may have been popped mid-flight; don't touch disposed state.
     if (_disposed) return;
     state = state.copyWith(

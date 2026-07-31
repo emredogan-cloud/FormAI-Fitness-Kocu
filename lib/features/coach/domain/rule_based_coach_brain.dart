@@ -1,3 +1,4 @@
+import '../../../l10n/app_localizations.dart';
 import 'coach_brain.dart';
 import 'coach_context.dart';
 
@@ -11,127 +12,133 @@ class RuleBasedCoachBrain implements CoachBrain {
   const RuleBasedCoachBrain();
 
   @override
-  String greeting(CoachContext ctx) {
+  String greeting(AppLocalizations l10n, CoachContext ctx) {
     final hi = ctx.hour < 12
-        ? 'Günaydın'
-        : (ctx.hour < 18 ? 'Merhaba' : 'İyi akşamlar');
+        ? l10n.coachGreetMorning
+        : (ctx.hour < 18 ? l10n.coachGreetDay : l10n.coachGreetEvening);
     final who = ctx.firstName.isNotEmpty ? ' ${ctx.firstName}' : '';
-    final b = StringBuffer('$hi$who! Ben Form, kişisel koçun. ');
+    final b = StringBuffer(l10n.coachGreetIntro(hi, who));
     if (ctx.todayDayNumber != null && !ctx.todayIsCompleted) {
-      b.write('Bugün ${ctx.todayDayNumber}. günündesin — '
-          '${ctx.todayExerciseCount} egzersiz seni bekliyor. ');
+      b.write(l10n.coachGreetTodayPending(
+        ctx.todayDayNumber!,
+        ctx.todayExerciseCount,
+      ));
     } else if (ctx.todayIsCompleted) {
-      b.write('Bugünkü antrenmanı çoktan bitirdin, tebrikler! ');
+      b.write(l10n.coachGreetTodayDone);
     }
-    b.write('Ne konuşmak istersin?');
+    b.write(l10n.coachGreetPrompt);
     return b.toString();
   }
 
   @override
-  List<CoachSuggestion> suggestions(CoachContext ctx) => const [
-        CoachSuggestion('Bugün ne yapmalıyım?', 'today'),
-        CoachSuggestion('Nasıl gidiyorum?', 'progress'),
-        CoachSuggestion('Beslenme', 'nutrition'),
-        CoachSuggestion('Motive et beni', 'motivate'),
+  List<CoachSuggestion> suggestions(AppLocalizations l10n, CoachContext ctx) =>
+      [
+        CoachSuggestion(l10n.coachSuggestToday, 'today'),
+        CoachSuggestion(l10n.coachSuggestProgress, 'progress'),
+        CoachSuggestion(l10n.coachSuggestNutrition, 'nutrition'),
+        CoachSuggestion(l10n.coachSuggestMotivate, 'motivate'),
       ];
 
   @override
   Future<String> respond(
+    AppLocalizations l10n,
     CoachContext ctx,
     List<CoachTurn> history,
     String message,
   ) async {
     final m = message.toLowerCase().trim();
-    if (_hits(m, ['today', 'bugün', 'ne yap', 'antrenman', 'workout'])) {
-      return _today(ctx);
+    if (_hits(m, l10n.coachKeywordsToday)) {
+      return _today(l10n, ctx);
     }
-    if (_hits(m, ['progress', 'nasıl gid', 'ilerle', 'gelişim', 'durum'])) {
-      return _progress(ctx);
+    if (_hits(m, l10n.coachKeywordsProgress)) {
+      return _progress(l10n, ctx);
     }
-    if (_hits(
-        m, ['nutrition', 'beslenme', 'yemek', 'diyet', 'kalori', 'öğün'])) {
-      return _nutrition(ctx);
+    if (_hits(m, l10n.coachKeywordsNutrition)) {
+      return _nutrition(l10n, ctx);
     }
-    if (_hits(
-        m, ['motiv', 'motive', 'isteksiz', 'yorgun', 'vazgeç', 'bırak'])) {
-      return _motivate(ctx);
+    if (_hits(m, l10n.coachKeywordsMotivate)) {
+      return _motivate(l10n, ctx);
     }
-    if (_hits(m, ['streak', 'seri'])) {
+    if (_hits(m, l10n.coachKeywordsStreak)) {
       return ctx.streakDays > 0
-          ? '${ctx.streakDays} günlük serin var — bunu bozma! '
-              'Bugün 10 dakikalık bir oturum bile seriyi korur.'
-          : 'Henüz bir serin yok. Bugün başla, yarın devam et — '
-              'seri iki günde kurulur.';
+          ? l10n.coachStreakAlive(ctx.streakDays)
+          : l10n.coachStreakNone;
     }
-    if (_hits(m, ['injury', 'sakat', 'ağrı', 'acı', 'incin'])) {
-      return 'Bir ağrın varsa o bölgeyi zorlama ve gerekirse bir sağlık '
-          'uzmanına danış. FormAI genel rehberlik sunar; tıbbi tavsiye '
-          'vermez. Ağrısız hareketlerle devam edebiliriz.';
+    if (_hits(m, l10n.coachKeywordsInjury)) {
+      return l10n.coachInjuryReply;
     }
-    if (_hits(m, ['merhaba', 'selam', 'hey', 'hi', 'hello', 'naber'])) {
-      return greeting(ctx);
+    if (_hits(m, l10n.coachKeywordsGreeting)) {
+      return greeting(l10n, ctx);
     }
-    if (_hits(m, ['teşekkür', 'sağol', 'thanks', 'eyvallah'])) {
-      return 'Ne demek! Her adımda buradayım. Hazır olduğunda başlayalım. 💪';
+    if (_hits(m, l10n.coachKeywordsThanks)) {
+      return l10n.coachThanksReply;
     }
     // Honest fallback — no fabricated intelligence.
-    return 'Şu an sana şu konularda yardımcı olabilirim: bugünkü antrenmanın, '
-        'ilerlemen, beslenme ve motivasyon. Hangisini konuşalım?';
+    return l10n.coachFallbackReply;
   }
 
-  bool _hits(String m, List<String> keys) => keys.any(m.contains);
+  /// Keyword sets arrive as one comma-separated ARB value rather than a
+  /// Dart list, because they are TRANSLATOR-OWNED: what an English
+  /// speaker types to ask "how am I doing" is not a translation of the
+  /// Turkish, it is a different set of substrings. A single string keeps
+  /// the whole set in one editable place, and blank entries are dropped
+  /// so a trailing comma cannot match everything.
+  bool _hits(String m, String csv) => csv
+      .split(',')
+      .map((k) => k.trim().toLowerCase())
+      .where((k) => k.isNotEmpty)
+      .any(m.contains);
 
-  String _today(CoachContext ctx) {
+  String _today(AppLocalizations l10n, CoachContext ctx) {
     if (ctx.todayDayNumber == null) {
-      return 'Planın hazırlanıyor. Bir bağlantı sorunun yoksa birazdan '
-          'bugünkü antrenmanın burada olacak.';
+      return l10n.coachTodayPlanPending;
     }
     if (ctx.todayIsCompleted) {
-      return 'Bugünü tamamladın — harikasın! Yarına enerji toplamak için '
-          'bol su iç ve iyi uyu. İstersen ekstra bir hareket de ekleyebiliriz.';
+      return l10n.coachTodayDone;
     }
-    final eq = ctx.hasEquipment == true
-        ? 'Ekipmanların olduğu için programına birkaç yüklü hareket de kattım. '
-        : '';
-    return '${ctx.todayDayNumber}. gün: ${ctx.todayExerciseCount} egzersiz. '
-        '${eq}Kameranı aç, ben formunu izleyeyim — her tekrarını doğru '
-        'yapman, sayısından daha önemli. Başlayalım mı?';
+    final eq = ctx.hasEquipment == true ? l10n.coachTodayEquipmentNote : '';
+    return l10n.coachTodayPlan(
+      ctx.todayDayNumber!,
+      ctx.todayExerciseCount,
+      eq,
+    );
   }
 
-  String _progress(CoachContext ctx) {
+  String _progress(AppLocalizations l10n, CoachContext ctx) {
     final pct = ctx.totalDays > 0
         ? (100 * ctx.completedDays / ctx.totalDays).round()
         : 0;
     final streak = ctx.streakDays > 0
-        ? '${ctx.streakDays} günlük serin sürüyor. '
-        : 'Seriyi bugün yeniden başlatabilirsin. ';
-    return '${ctx.completedDays}/${ctx.totalDays} gün tamamlandı (%$pct). '
-        '${streak}Seviye ${ctx.level}, ${ctx.xp} XP ve ${ctx.badgeCount} rozet. '
-        'İstikrar, hızdan daha önemli — bu tempoyu koru.';
+        ? l10n.coachStreakContinuing(ctx.streakDays)
+        : l10n.coachStreakRestart;
+    return l10n.coachProgressReply(
+      ctx.completedDays,
+      ctx.totalDays,
+      pct,
+      streak,
+      ctx.level,
+      ctx.xp,
+      ctx.badgeCount,
+    );
   }
 
-  String _nutrition(CoachContext ctx) {
+  String _nutrition(AppLocalizations l10n, CoachContext ctx) {
     final bmi = ctx.bmi;
     final bmiLine =
-        bmi != null ? 'BMI değerin ${bmi.toStringAsFixed(1)}. ' : '';
-    final goal = ctx.goalLabel != null ? '"${ctx.goalLabel}" ' : '';
-    return '$bmiLine${goal}hedefin için beslenme, antrenman kadar önemli. '
-        'Beslenme sekmesinde damak zevkine ve kalori ihtiyacına göre '
-        'seçilmiş tarifler var. Öğünlerini düzenli tutmak sonucu hızlandırır. '
-        '(Beslenme önerileri bilgilendirme amaçlıdır, tıbbi tavsiye değildir.)';
+        bmi != null ? l10n.coachBmiFragment(bmi.toStringAsFixed(1)) : '';
+    final goal =
+        ctx.goalLabel != null ? l10n.coachGoalFragment(ctx.goalLabel!) : '';
+    return l10n.coachNutritionReply(bmiLine, goal);
   }
 
-  String _motivate(CoachContext ctx) {
+  String _motivate(AppLocalizations l10n, CoachContext ctx) {
     final who = ctx.firstName.isNotEmpty ? '${ctx.firstName}, ' : '';
     if (ctx.streakDays >= 3) {
-      return '$who${ctx.streakDays} gündür buradasın — bu disiplin çoğu '
-          'kişide yok. Bugün de göster kendine neler yapabileceğini. 🔥';
+      return l10n.coachMotivateStreak(who, ctx.streakDays);
     }
     if (ctx.completedDays == 0) {
-      return '${who}en zor kısım başlamaktır, gerisi gelir. Sadece 10 '
-          'dakika ayır; bittiğinde bambaşka hissedeceksin. Hadi. 💪';
+      return l10n.coachMotivateStart(who);
     }
-    return '${who}sonuçlar görünür olmadan önce hissedilir. Bugün bir adım '
-        'daha at — gelecekteki sen bunun için teşekkür edecek.';
+    return l10n.coachMotivateKeepGoing(who);
   }
 }

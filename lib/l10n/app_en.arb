@@ -3684,5 +3684,546 @@
   "shoppingListRecipeIngredients": "Ingredients:",
   "@shoppingListRecipeIngredients": {
     "description": "Per-recipe heading inside the exported shopping list"
+  },
+  "coachGreetMorning": "Good morning",
+  "@coachGreetMorning": {
+    "description": "Time-of-day greeting used by the offline coach, before the user's name"
+  },
+  "coachGreetDay": "Hello",
+  "@coachGreetDay": {
+    "description": "Time-of-day greeting used by the offline coach, before the user's name"
+  },
+  "coachGreetEvening": "Good evening",
+  "@coachGreetEvening": {
+    "description": "Time-of-day greeting used by the offline coach, before the user's name"
+  },
+  "coachGreetIntro": "{greeting}{name}! I'm Form, your personal coach. ",
+  "@coachGreetIntro": {
+    "description": "Opening of the offline coach greeting. {greeting} is the time-of-day greeting, {name} is ' Ada' or empty. Trailing space is intentional — sentences are concatenated.",
+    "placeholders": {
+      "greeting": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "coachGreetTodayPending": "You're on day {day} — {count} exercises are waiting. ",
+  "@coachGreetTodayPending": {
+    "description": "Offline coach greeting fragment when today's workout is still open. Trailing space is intentional.",
+    "placeholders": {
+      "day": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "coachGreetTodayDone": "You've already finished today's workout — well done! ",
+  "@coachGreetTodayDone": {
+    "description": "Offline coach greeting fragment when today is complete. Trailing space is intentional."
+  },
+  "coachGreetPrompt": "What would you like to talk about?",
+  "@coachGreetPrompt": {
+    "description": "Closing question of the offline coach greeting"
+  },
+  "coachSuggestToday": "What should I do today?",
+  "@coachSuggestToday": {
+    "description": "Coach quick-reply chip. The intent token stays 'today'."
+  },
+  "coachSuggestProgress": "How am I doing?",
+  "@coachSuggestProgress": {
+    "description": "Coach quick-reply chip. Token 'progress'."
+  },
+  "coachSuggestNutrition": "Nutrition",
+  "@coachSuggestNutrition": {
+    "description": "Coach quick-reply chip. Token 'nutrition'."
+  },
+  "coachSuggestMotivate": "Motivate me",
+  "@coachSuggestMotivate": {
+    "description": "Coach quick-reply chip. Token 'motivate'."
+  },
+  "coachKeywordsToday": "today,what should i,workout,training",
+  "@coachKeywordsToday": {
+    "description": "MATCH KEYWORDS, not display copy. Comma-separated, lower-cased substrings matched against what the user TYPES. Translate to what a speaker of this locale would actually type, not a literal translation of the Turkish. English terms are kept in every locale because users mix languages."
+  },
+  "coachKeywordsProgress": "progress,how am i,how is it going,doing",
+  "@coachKeywordsProgress": {
+    "description": "MATCH KEYWORDS, not display copy. See coachKeywordsToday."
+  },
+  "coachKeywordsNutrition": "nutrition,food,diet,calorie,meal,eat",
+  "@coachKeywordsNutrition": {
+    "description": "MATCH KEYWORDS, not display copy. See coachKeywordsToday."
+  },
+  "coachKeywordsMotivate": "motiv,tired,give up,quit,can't be bothered",
+  "@coachKeywordsMotivate": {
+    "description": "MATCH KEYWORDS, not display copy. See coachKeywordsToday."
+  },
+  "coachKeywordsStreak": "streak",
+  "@coachKeywordsStreak": {
+    "description": "MATCH KEYWORDS, not display copy. See coachKeywordsToday."
+  },
+  "coachKeywordsInjury": "injury,pain,hurt,sore,ache",
+  "@coachKeywordsInjury": {
+    "description": "MATCH KEYWORDS, not display copy. See coachKeywordsToday. This one routes to medical-disclaimer copy, so under-matching has a real cost."
+  },
+  "coachKeywordsGreeting": "hey,hi,hello,good morning,good evening",
+  "@coachKeywordsGreeting": {
+    "description": "MATCH KEYWORDS, not display copy. See coachKeywordsToday."
+  },
+  "coachKeywordsThanks": "thanks,thank you,cheers",
+  "@coachKeywordsThanks": {
+    "description": "MATCH KEYWORDS, not display copy. See coachKeywordsToday."
+  },
+  "coachStreakAlive": "You're on a {days}-day streak — don't break it! Even ten minutes today keeps it alive.",
+  "@coachStreakAlive": {
+    "description": "Offline coach reply about an active streak",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "coachStreakNone": "You don't have a streak yet. Start today, carry on tomorrow — two days is all it takes.",
+  "@coachStreakNone": {
+    "description": "Offline coach reply when there is no streak"
+  },
+  "coachInjuryReply": "If something hurts, don't push that area, and see a health professional if you need to. FormAI offers general guidance, not medical advice. We can carry on with pain-free movements.",
+  "@coachInjuryReply": {
+    "description": "Offline coach reply about pain or injury. The medical disclaimer must survive translation intact — it is the app's standing position, not a stylistic choice."
+  },
+  "coachThanksReply": "Any time! I'm here at every step. Let's start whenever you're ready. 💪",
+  "@coachThanksReply": {
+    "description": "Offline coach reply to thanks"
+  },
+  "coachFallbackReply": "Right now I can help with: today's workout, your progress, nutrition and motivation. Which shall we talk about?",
+  "@coachFallbackReply": {
+    "description": "Offline coach fallback when nothing matched. Deliberately honest about its limits — do not translate it into a claim of broader ability."
+  },
+  "coachTodayPlanPending": "Your plan is being built. If your connection is fine, today's workout will be here shortly.",
+  "@coachTodayPlanPending": {
+    "description": "Offline coach reply while the plan is still generating"
+  },
+  "coachTodayDone": "You've finished today — brilliant! Drink plenty of water and sleep well to refuel for tomorrow. We can add an extra movement if you'd like.",
+  "@coachTodayDone": {
+    "description": "Offline coach reply when today's workout is complete"
+  },
+  "coachTodayEquipmentNote": "Since you have equipment, I've added a few loaded movements to your programme. ",
+  "@coachTodayEquipmentNote": {
+    "description": "Optional fragment inside the offline coach's today reply. Trailing space is intentional."
+  },
+  "coachTodayPlan": "Day {day}: {count} exercises. {equipment}Turn your camera on and I'll watch your form — doing each rep properly matters more than how many. Shall we start?",
+  "@coachTodayPlan": {
+    "description": "Offline coach reply describing today's workout. {equipment} is coachTodayEquipmentNote or empty.",
+    "placeholders": {
+      "day": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      },
+      "equipment": {
+        "type": "String"
+      }
+    }
+  },
+  "coachStreakContinuing": "Your {days}-day streak is going. ",
+  "@coachStreakContinuing": {
+    "description": "Fragment inside the offline coach's progress reply. Trailing space is intentional.",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "coachStreakRestart": "You can restart your streak today. ",
+  "@coachStreakRestart": {
+    "description": "Fragment inside the offline coach's progress reply. Trailing space is intentional."
+  },
+  "coachProgressReply": "{done}/{total} days done ({percent}%). {streak}Level {level}, {xp} XP and {badges} badges. Consistency beats speed — keep this pace.",
+  "@coachProgressReply": {
+    "description": "Offline coach progress reply. {streak} is one of the two streak fragments.",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "percent": {
+        "type": "int"
+      },
+      "streak": {
+        "type": "String"
+      },
+      "level": {
+        "type": "int"
+      },
+      "xp": {
+        "type": "int"
+      },
+      "badges": {
+        "type": "int"
+      }
+    }
+  },
+  "coachBmiFragment": "Your BMI is {bmi}. ",
+  "@coachBmiFragment": {
+    "description": "Optional fragment inside the offline coach's nutrition reply. Trailing space is intentional.",
+    "placeholders": {
+      "bmi": {
+        "type": "String"
+      }
+    }
+  },
+  "coachGoalFragment": "\"{goal}\" ",
+  "@coachGoalFragment": {
+    "description": "Optional fragment naming the user's goal inside the nutrition reply. Trailing space is intentional.",
+    "placeholders": {
+      "goal": {
+        "type": "String"
+      }
+    }
+  },
+  "coachNutritionReply": "{bmi}{goal}For your goal, nutrition matters as much as training. The Nutrition tab has recipes chosen for your taste and calorie needs. Keeping meals regular speeds up results. (Nutrition suggestions are for information only, not medical advice.)",
+  "@coachNutritionReply": {
+    "description": "Offline coach nutrition reply. The parenthetical disclaimer must be preserved.",
+    "placeholders": {
+      "bmi": {
+        "type": "String"
+      },
+      "goal": {
+        "type": "String"
+      }
+    }
+  },
+  "coachMotivateStreak": "{name}you've been here {days} days — most people don't have that discipline. Show yourself what you can do again today. 🔥",
+  "@coachMotivateStreak": {
+    "description": "Offline coach motivation for a user on a streak. {name} is 'Ada, ' or empty.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "coachMotivateStart": "{name}starting is the hard part; the rest follows. Give it ten minutes — you'll feel completely different afterwards. Come on. 💪",
+  "@coachMotivateStart": {
+    "description": "Offline coach motivation for a user who hasn't started. {name} is 'Ada, ' or empty.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "coachMotivateKeepGoing": "{name}results are felt before they're seen. Take one more step today — your future self will thank you.",
+  "@coachMotivateKeepGoing": {
+    "description": "Offline coach motivation for a user in progress. {name} is 'Ada, ' or empty.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "coachCtxProfileHeading": "User profile:",
+  "@coachCtxProfileHeading": {
+    "description": "Heading inside the context block sent to the coach model. Localized so the model receives context in the same language it is asked to reply in."
+  },
+  "coachCtxProgressHeading": "Progress:",
+  "@coachCtxProgressHeading": {
+    "description": "Heading inside the context block sent to the coach model"
+  },
+  "coachCtxDone": "completed",
+  "@coachCtxDone": {
+    "description": "Status word inside the coach context block"
+  },
+  "coachCtxNotDone": "not done yet",
+  "@coachCtxNotDone": {
+    "description": "Status word inside the coach context block"
+  },
+  "coachCtxManualMode": "- Workout mode: camera-free (the user counts reps; no form analysis)",
+  "@coachCtxManualMode": {
+    "description": "Line inside the coach context block telling the model the user trains without the camera"
+  },
+  "coachCtxFirstSession": "- Just finished camera setup; hasn't done a first session yet.",
+  "@coachCtxFirstSession": {
+    "description": "Line inside the coach context block"
+  },
+  "coachOnboardingPrompt": "Context: the app's onboarding conversation. The user is meeting you for the first time. Reply once, briefly and warmly.",
+  "@coachOnboardingPrompt": {
+    "description": "Instruction prefix sent to the coach model during onboarding"
+  },
+  "goalBellyBurnLower": "Burn belly fat",
+  "@goalBellyBurnLower": {
+    "description": "Goal label used inside a coach context sentence. Stored value 'belly_burn'."
+  },
+  "goalFitnessLookLower": "Look fitter",
+  "@goalFitnessLookLower": {
+    "description": "Goal label used inside a coach context sentence. Stored value 'fitness_look'."
+  },
+  "activityDesk": "Desk-based",
+  "@activityDesk": {
+    "description": "Activity-level label. Stored value is separate."
+  },
+  "activityVeryActive": "Very active",
+  "@activityVeryActive": {
+    "description": "Activity-level label. Stored value is separate."
+  },
+  "goalMuscleGainLower": "Build muscle",
+  "@goalMuscleGainLower": {
+    "description": "Goal label used inside a coach sentence. Stored value 'muscle_gain'."
+  },
+  "goalStrengthLower": "Get stronger",
+  "@goalStrengthLower": {
+    "description": "Goal label used inside a coach sentence. Stored value 'strength'."
+  },
+  "goalToneLower": "Tone up",
+  "@goalToneLower": {
+    "description": "Goal label used inside a coach sentence. Stored value 'tone'."
+  },
+  "goalBulkLower": "Build mass",
+  "@goalBulkLower": {
+    "description": "Goal label used inside a coach sentence. Stored value 'bulk'."
+  },
+  "goalSixpackLower": "Six-pack",
+  "@goalSixpackLower": {
+    "description": "Goal label used inside a coach sentence. Stored value 'sixpack'."
+  },
+  "activityLight": "Lightly active",
+  "@activityLight": {
+    "description": "Activity-level label. Stored value 'light'."
+  },
+  "cameraNoMlSupport": "This device can't run the AI layer form analysis needs. To keep training camera-free, use the manual exercises on the home screen.",
+  "@cameraNoMlSupport": {
+    "description": "Shown when ML Kit is unavailable on the device"
+  },
+  "cameraPermissionNeeded": "Camera permission is required. Grant it to start the workout.",
+  "@cameraPermissionNeeded": {
+    "description": "Shown when camera permission has not been granted"
+  },
+  "cameraNoneAvailable": "No usable camera was found on this device.",
+  "@cameraNoneAvailable": {
+    "description": "Shown when the device reports no cameras"
+  },
+  "cameraInUse": "Another app is using the camera right now. Close it and try again.",
+  "@cameraInUse": {
+    "description": "Shown when the camera handle is held by another app"
+  },
+  "cameraOnDeviceTitle": "On-device analysis",
+  "@cameraOnDeviceTitle": {
+    "description": "Heading of the on-device privacy note above the camera"
+  },
+  "cameraOnDeviceBody": "FormAI analyses your form on your device with Google ML Kit. Images are never recorded and never sent to any server.",
+  "@cameraOnDeviceBody": {
+    "description": "Privacy note above the camera. A legal representation — it must stay true and must not be softened in translation."
+  },
+  "tourRepCounterTitle": "Your reps live here",
+  "@tourRepCounterTitle": {
+    "description": "In-session tour step — the rep counter"
+  },
+  "tourRepCounterBody": "I write every completed rep here. You don't count — you just move.",
+  "@tourRepCounterBody": {
+    "description": "In-session tour step body"
+  },
+  "tourFormChipTitle": "Form indicator",
+  "@tourFormChipTitle": {
+    "description": "In-session tour step — the detector chip"
+  },
+  "tourFormChipBody": "This is where I track which phase of the movement you're in. If your form slips, I'll warn you on screen and out loud.",
+  "@tourFormChipBody": {
+    "description": "In-session tour step body"
+  },
+  "tourPauseTitle": "If you want a break",
+  "@tourPauseTitle": {
+    "description": "In-session tour step — the pause control"
+  },
+  "tourPauseBody": "Pause here. Analysis stops, your progress doesn't — you carry on from where you left off.",
+  "@tourPauseBody": {
+    "description": "In-session tour step body"
+  },
+  "tourVoiceTitle": "Voice coach",
+  "@tourVoiceTitle": {
+    "description": "In-session tour step — the voice toggle"
+  },
+  "tourVoiceBody": "Turn voice guidance off here. One tap is enough if you're somewhere busy.",
+  "@tourVoiceBody": {
+    "description": "In-session tour step body"
+  },
+  "tourNextTitle": "Move to the next exercise",
+  "@tourNextTitle": {
+    "description": "In-session tour step — the next control"
+  },
+  "tourNextBody": "Move on here if you want to finish an exercise early. After the last one you complete the session.",
+  "@tourNextBody": {
+    "description": "In-session tour step body"
+  },
+  "workoutLastTwoReps": "Two reps left — grit your teeth!",
+  "@workoutLastTwoReps": {
+    "description": "Spoken and on-screen encouragement near the end of a set"
+  },
+  "workoutHalfway": "You're halfway! Keep going exactly like that.",
+  "@workoutHalfway": {
+    "description": "Spoken and on-screen encouragement at the halfway point"
+  },
+  "workoutTimeUp": "Time's up — brilliant!",
+  "@workoutTimeUp": {
+    "description": "Spoken and on-screen line when a timed exercise ends"
+  },
+  "workoutSessionComplete": "Workout complete! You did a great job.",
+  "@workoutSessionComplete": {
+    "description": "Spoken and on-screen line when the session finishes"
+  },
+  "workoutBegin": "Begin!",
+  "@workoutBegin": {
+    "description": "Spoken and on-screen line when a set starts"
+  },
+  "workoutSideViewTip": "Tip: place the phone so it sees you from the side and the posture warnings get far more accurate.",
+  "@workoutSideViewTip": {
+    "description": "One-off tip for exercises that need a side view"
+  },
+  "cameraPermissionOffTitle": "Camera permission is off",
+  "@cameraPermissionOffTitle": {
+    "description": "Blocking screen title when camera permission is denied"
+  },
+  "cameraPermissionOffBody": "We need camera permission to analyse your form. Open Settings, turn the camera permission on for FormAI, then come back here.",
+  "@cameraPermissionOffBody": {
+    "description": "Blocking screen body when camera permission is denied"
+  },
+  "openSettings": "OPEN SETTINGS",
+  "@openSettings": {
+    "description": "Action opening the OS settings app. Rendered uppercase."
+  },
+  "cameraSetupFailedTitle": "The camera couldn't start",
+  "@cameraSetupFailedTitle": {
+    "description": "Blocking screen title when camera initialisation fails"
+  },
+  "workoutLoadProblem": "Something went wrong loading the workout.",
+  "@workoutLoadProblem": {
+    "description": "Error state on the camera workout screen"
+  },
+  "framingStepIntoFrame": "Step into frame — your whole body must be visible for analysis",
+  "@framingStepIntoFrame": {
+    "description": "Live guidance under the camera preview when the user is out of frame"
+  },
+  "workoutQuitTitle": "Do you want to leave the workout?",
+  "@workoutQuitTitle": {
+    "description": "Confirmation dialog title when leaving mid-session"
+  },
+  "workoutQuitBody": "Your progress is saved. If you go back to the home screen you can't resume this same session.",
+  "@workoutQuitBody": {
+    "description": "Confirmation dialog body when leaving mid-session"
+  },
+  "workoutQuitConfirm": "Leave",
+  "@workoutQuitConfirm": {
+    "description": "Confirm action in the leave-workout dialog"
+  },
+  "voiceCoachOff": "Turn the voice coach off",
+  "@voiceCoachOff": {
+    "description": "Accessibility label on the voice toggle when the coach is on"
+  },
+  "voiceCoachOn": "Turn the voice coach on",
+  "@voiceCoachOn": {
+    "description": "Accessibility label on the voice toggle when the coach is off"
+  },
+  "workoutOptions": "Workout options",
+  "@workoutOptions": {
+    "description": "Accessibility label and menu title for the workout overflow menu"
+  },
+  "workoutReplaySetupGuide": "Show the camera setup guide again",
+  "@workoutReplaySetupGuide": {
+    "description": "Overflow menu item that replays the camera setup guide"
+  },
+  "sampleBadge": "SAMPLE",
+  "@sampleBadge": {
+    "description": "Badge marking placeholder content. Rendered uppercase."
+  },
+  "planRestDay": "Rest day",
+  "@planRestDay": {
+    "description": "Plan detail row title for a rest day"
+  },
+  "planLoadProblem": "Something went wrong loading the plan.",
+  "@planLoadProblem": {
+    "description": "Error state on the plan detail screen"
+  },
+  "planOfflineNote": "You're offline — exercise videos may not load, but rep counting and voice coaching keep working.",
+  "@planOfflineNote": {
+    "description": "Offline notice on the plan detail screen"
+  },
+  "planTailoredNote": "Built specifically for your goal and level.",
+  "@planTailoredNote": {
+    "description": "Subtitle under the plan title"
+  },
+  "difficultyIntermediateLong": "Intermediate",
+  "@difficultyIntermediateLong": {
+    "description": "Difficulty label on the plan detail screen"
+  },
+  "planDaysLeft": "{days} days left",
+  "@planDaysLeft": {
+    "description": "Remaining programme days.",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "planRequestedAbbrev": "Req.",
+  "@planRequestedAbbrev": {
+    "description": "Abbreviation for 'requested' on the exercise row — space is very tight, keep it to ~4 characters."
+  },
+  "planUnlockWithPremium": "Unlock with Premium",
+  "@planUnlockWithPremium": {
+    "description": "Label on a Premium-gated plan card"
+  },
+  "planComingSoon": "Coming soon",
+  "@planComingSoon": {
+    "description": "Label on a plan that is not published yet"
+  },
+  "planNeedsConnection": "An internet connection is required to open this content.",
+  "@planNeedsConnection": {
+    "description": "Shown when offline content is unavailable"
+  },
+  "planUnlockWithProUpper": "UNLOCK WITH PRO",
+  "@planUnlockWithProUpper": {
+    "description": "Primary call to action on a locked plan. Rendered uppercase. 'Pro' is a brand term."
+  },
+  "planStartUpper": "START THE PLAN",
+  "@planStartUpper": {
+    "description": "Primary call to action on an unlocked plan. Rendered uppercase."
+  },
+  "planAreaComingSoon": "Workouts for this area are on the way. Subscribe to reach the other Premium plans meanwhile.",
+  "@planAreaComingSoon": {
+    "description": "Empty state for a body area with no published plans. Subscription copy — keep the offer accurate."
+  },
+  "muscleFullBody": "Full body",
+  "@muscleFullBody": {
+    "description": "Body-area label on the plan detail screen"
+  },
+  "planDaysLeftSuffix": "days left",
+  "@planDaysLeftSuffix": {
+    "description": "Suffix rendered beside a separately-styled day count on the plan header"
+  },
+  "planHeroDefault": "Rock-Solid\nAbs",
+  "@planHeroDefault": {
+    "description": "Plan hero headline, default. The \\n is a deliberate line break in the design — keep two short lines."
+  },
+  "planHeroCore": "Solid\nCore",
+  "@planHeroCore": {
+    "description": "Plan hero headline when core dominates. Two short lines."
+  },
+  "planHeroUpper": "Upper-Body\nStrength",
+  "@planHeroUpper": {
+    "description": "Plan hero headline when upper body dominates. Two short lines."
+  },
+  "planHeroLower": "Legs and\nGlutes Burn",
+  "@planHeroLower": {
+    "description": "Plan hero headline when lower body dominates. Two short lines."
+  },
+  "planHeroFullBody": "Full-Body\nConditioning",
+  "@planHeroFullBody": {
+    "description": "Plan hero headline for cardio or full-body days. Two short lines."
   }
 }

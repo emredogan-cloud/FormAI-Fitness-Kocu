@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sixpack_ai/features/workout/domain/services/workout_generator_service.dart';
 import 'package:sixpack_ai/features/workout/models/exercise_model.dart';
+import 'package:flutter/widgets.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// Fixture pool sized to every dimension the generator exercises:
 ///   • core / upper_body / lower_body / cardio / full_body coverage so
@@ -215,11 +217,18 @@ const _fixturePool = <Exercise>[
 ];
 
 void main() {
+  late AppLocalizations l10n;
+
+  setUpAll(() async {
+    l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+  });
+
   const service = WorkoutGeneratorService();
 
   group('generate30DayPlan — schedule shape', () {
     test('returns exactly 30 days for any supported goal', () {
       final plan = service.generate30DayPlan(
+        l10n: l10n,
         userGoal: 'sixpack',
         fitnessLevel: 'beginner',
         pool: _fixturePool,
@@ -232,6 +241,7 @@ void main() {
 
     test('every 4th day is a rest day with the canonical label', () {
       final plan = service.generate30DayPlan(
+        l10n: l10n,
         userGoal: 'sixpack',
         fitnessLevel: 'beginner',
         pool: _fixturePool,
@@ -245,7 +255,7 @@ void main() {
             isEmpty,
             reason: 'rest days render with an empty exercise list',
           );
-          expect(day.title, WorkoutGeneratorService.restDayTitle);
+          expect(day.title, WorkoutGeneratorService.restDayTitle(l10n));
           expect(day.isRestDay, isTrue);
         } else {
           expect(day.exercises, isNotEmpty);
@@ -256,6 +266,7 @@ void main() {
 
     test('active days carry 5–7 exercises per the daily bounds', () {
       final plan = service.generate30DayPlan(
+        l10n: l10n,
         userGoal: 'sixpack',
         fitnessLevel: 'intermediate',
         pool: _fixturePool,
@@ -274,11 +285,13 @@ void main() {
 
     test('is deterministic — same inputs produce the same schedule', () {
       final a = service.generate30DayPlan(
+        l10n: l10n,
         userGoal: 'bulk',
         fitnessLevel: 'advanced',
         pool: _fixturePool,
       );
       final b = service.generate30DayPlan(
+        l10n: l10n,
         userGoal: 'bulk',
         fitnessLevel: 'advanced',
         pool: _fixturePool,
@@ -293,6 +306,7 @@ void main() {
       // null-safety wrappers; the repository skips caching it so the
       // next launch retries the fetch.
       final plan = service.generate30DayPlan(
+        l10n: l10n,
         userGoal: 'sixpack',
         fitnessLevel: 'beginner',
         pool: const [],
@@ -301,7 +315,7 @@ void main() {
       expect(plan, hasLength(30));
       for (final day in plan) {
         expect(day.exercises, isEmpty);
-        expect(day.title, WorkoutGeneratorService.restDayTitle);
+        expect(day.title, WorkoutGeneratorService.restDayTitle(l10n));
       }
     });
   });
@@ -318,6 +332,7 @@ void main() {
       // sixpack lead — the bucket head order still places core first,
       // so day 1's first exercise is always a core movement.
       final plan = service.generate30DayPlan(
+        l10n: l10n,
         userGoal: 'sixpack',
         fitnessLevel: 'beginner',
         pool: _fixturePool,
@@ -357,6 +372,7 @@ void main() {
       // instead of front-loading nine upper-body movements before
       // touching legs. The day still leads on strength (upper/lower).
       final plan = service.generate30DayPlan(
+        l10n: l10n,
         userGoal: 'bulk',
         fitnessLevel: 'intermediate',
         pool: _fixturePool,
@@ -390,6 +406,7 @@ void main() {
 
     test('tone plan day 1 leads with cardio / full-body movements', () {
       final plan = service.generate30DayPlan(
+        l10n: l10n,
         userGoal: 'tone',
         fitnessLevel: 'intermediate',
         pool: _fixturePool,
@@ -427,11 +444,13 @@ void main() {
       // _normaliseGoal so the empty-payload case is debuggable from
       // production telemetry.
       final unknown = service.generate30DayPlan(
+        l10n: l10n,
         userGoal: 'totally-made-up-goal',
         fitnessLevel: 'beginner',
         pool: _fixturePool,
       );
       final tone = service.generate30DayPlan(
+        l10n: l10n,
         userGoal: 'tone',
         fitnessLevel: 'beginner',
         pool: _fixturePool,
@@ -442,11 +461,13 @@ void main() {
 
     test('Turkish goal aliases map to their English equivalents', () {
       final turkish = service.generate30DayPlan(
+        l10n: l10n,
         userGoal: 'sıkılaşmak',
         fitnessLevel: 'beginner',
         pool: _fixturePool,
       );
       final english = service.generate30DayPlan(
+        l10n: l10n,
         userGoal: 'tone',
         fitnessLevel: 'beginner',
         pool: _fixturePool,
@@ -459,6 +480,7 @@ void main() {
   group('fitness-level filtering', () {
     test('beginners see no advanced moves in the first 2 weeks', () {
       final plan = service.generate30DayPlan(
+        l10n: l10n,
         userGoal: 'sixpack',
         fitnessLevel: 'beginner',
         pool: _fixturePool,
@@ -478,6 +500,7 @@ void main() {
 
     test('beginners unlock advanced work from week 3 onward', () {
       final plan = service.generate30DayPlan(
+        l10n: l10n,
         userGoal: 'bulk',
         fitnessLevel: 'beginner',
         pool: _fixturePool,
@@ -497,6 +520,7 @@ void main() {
 
     test('intermediate level surfaces advanced work immediately', () {
       final plan = service.generate30DayPlan(
+        l10n: l10n,
         userGoal: 'bulk',
         fitnessLevel: 'intermediate',
         pool: _fixturePool,
@@ -521,6 +545,7 @@ void main() {
       // shows up in both week 1 and week 2 and assert the multiplier
       // applied — a stronger invariant that survives pool resizing.
       final plan = service.generate30DayPlan(
+        l10n: l10n,
         userGoal: 'sixpack',
         fitnessLevel: 'beginner',
         pool: _fixturePool,
@@ -559,6 +584,7 @@ void main() {
 
     test('week-2 time-based moves scale up vs week-1', () {
       final plan = service.generate30DayPlan(
+        l10n: l10n,
         userGoal: 'sixpack',
         fitnessLevel: 'beginner',
         pool: _fixturePool,

@@ -23,6 +23,7 @@ import '../models/exercise_model.dart';
 import '../models/workout_day_model.dart';
 import '../models/workout_plan_model.dart';
 import '../providers/workout_provider.dart';
+import '../../../l10n/app_localizations.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _success = Color(0xFF39FF14);
@@ -36,19 +37,29 @@ const int _programLength = AppConstants.programLength;
 /// strip so the two surfaces feel like the same product.
 class _HeroCopy {
   const _HeroCopy({required this.title, required this.imageUrl});
-  final String title;
+
+  /// A lookup, not text — every hero below is a `const`.
+  final String Function(AppLocalizations) title;
   final String imageUrl;
 }
 
+String _heroDefaultTitle(AppLocalizations l) => l.planHeroDefault;
+String _heroCoreTitle(AppLocalizations l) => l.planHeroCore;
+String _heroUpperTitle(AppLocalizations l) => l.planHeroUpper;
+String _heroLowerTitle(AppLocalizations l) => l.planHeroLower;
+String _heroFullBodyTitle(AppLocalizations l) => l.planHeroFullBody;
+
 const _HeroCopy _heroCopyDefault = _HeroCopy(
-  title: 'Taş Gibi Sert\nKarın Kasları',
+  title: _heroDefaultTitle,
   imageUrl: defaultMuscularPhotoUrl,
 );
 
 const _HeroCopy _heroCopyRest = _HeroCopy(
-  title: 'Dinlenme Günü',
+  title: _restDayTitle,
   imageUrl: defaultLeanPhotoUrl,
 );
+
+String _restDayTitle(AppLocalizations l) => l.planRestDay;
 
 /// Picks the hero strings for the active day by tallying its exercises'
 /// `targetMuscle` and handing back the dominant region's copy. Mirrors
@@ -70,24 +81,24 @@ _HeroCopy _heroCopyFor(WorkoutDay? day) {
   switch (dominant) {
     case 'core':
       return const _HeroCopy(
-        title: 'Sert Karın\nKasları',
+        title: _heroCoreTitle,
         imageUrl: defaultLeanPhotoUrl,
       );
     case 'upper_body':
       return const _HeroCopy(
-        title: 'Üst Vücut\nGücü',
+        title: _heroUpperTitle,
         imageUrl: defaultMuscularPhotoUrl,
       );
     case 'lower_body':
       return const _HeroCopy(
-        title: 'Bacak ve\nKalça Ateşi',
+        title: _heroLowerTitle,
         imageUrl:
             'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=800&q=80',
       );
     case 'cardio':
     case 'full_body':
       return const _HeroCopy(
-        title: 'Tüm Vücut\nKondisyonu',
+        title: _heroFullBodyTitle,
         imageUrl:
             'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=800&q=80',
       );
@@ -100,11 +111,15 @@ _HeroCopy _heroCopyFor(WorkoutDay? day) {
 /// Mirrors the map in `profile_tab.dart`; duplicated rather than shared
 /// because the profile-tab copy is private and this is the second UI
 /// surface that needs to render the same labels.
-const Map<String, String> _goalLabels = {
-  'tone': 'Sıkılaşmak',
-  'bulk': 'Hacim Kazanmak',
-  'sixpack': 'Sadece Six-Pack',
+const Map<String, String Function(AppLocalizations)> _goalLabels = {
+  'tone': _goalTone,
+  'bulk': _goalBulk,
+  'sixpack': _goalSixpack,
 };
+
+String _goalTone(AppLocalizations l) => l.goalToneLabel;
+String _goalBulk(AppLocalizations l) => l.goalBulkLabel;
+String _goalSixpack(AppLocalizations l) => l.goalSixpackLabel;
 
 /// Freemium split — the first N days of the 30-day program are free
 /// for everyone, so a non-paying user can experience the coaching loop
@@ -222,7 +237,7 @@ class _PlanDetailScreenState extends ConsumerState<PlanDetailScreen> {
             category: 'workout',
           );
           return ErrorCard(
-            message: 'Plan yüklenirken bir sorun oluştu.',
+            message: AppLocalizations.of(context).planLoadProblem,
             onRetry: () => ref.invalidate(workoutSessionProvider),
           );
         },
@@ -245,7 +260,9 @@ class _PlanDetailScreenState extends ConsumerState<PlanDetailScreen> {
     final goalKey = ref
         .watch(appPreferencesProvider)
         .userMetrics?['targetPhysique'] as String?;
-    final goalLabel = goalKey == null ? null : _goalLabels[goalKey];
+    final goalLabel = goalKey == null
+        ? null
+        : _goalLabels[goalKey]?.call(AppLocalizations.of(context));
     final heroCopy = _heroCopyFor(activeDay);
 
     return CustomScrollView(
@@ -342,10 +359,9 @@ class _PlanDetailScreenState extends ConsumerState<PlanDetailScreen> {
     final online = await ref.read(connectivityServiceProvider).isOnline();
     if (online || !context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
         content: Text(
-          'Çevrimdışısın — egzersiz videoları yüklenmeyebilir, '
-          'tekrar sayımı ve sesli koçluk çalışmaya devam eder.',
+          AppLocalizations.of(context).planOfflineNote,
         ),
         duration: Duration(seconds: 3),
       ),
@@ -386,7 +402,7 @@ class _PersonalizedSubtitle extends StatelessWidget {
     // read awkwardly when the goal was unset.
     final text = goalLabel != null
         ? "'$goalLabel' hedefine ve seviyene özel olarak oluşturuldu."
-        : 'Hedefine ve seviyene özel olarak oluşturuldu.';
+        : AppLocalizations.of(context).planTailoredNote;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
       child: Container(
@@ -501,13 +517,13 @@ class _HeroHeader extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Row(
-                  children: const [
+                  children: [
                     Icon(Icons.bolt, color: Colors.white, size: 18),
                     Icon(Icons.bolt, color: Colors.white, size: 18),
                     Icon(Icons.bolt, color: Colors.white70, size: 18),
                     SizedBox(width: 6),
                     Text(
-                      'Orta düzey',
+                      AppLocalizations.of(context).difficultyIntermediateLong,
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 14,
@@ -518,7 +534,7 @@ class _HeroHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  copy.title,
+                  copy.title(AppLocalizations.of(context)),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 30,
@@ -579,10 +595,10 @@ class _StickyRemainingHeader extends SliverPersistentHeaderDelegate {
             ),
           ),
           const SizedBox(width: 6),
-          const Padding(
+          Padding(
             padding: EdgeInsets.only(bottom: 2),
             child: Text(
-              'gün kaldı',
+              AppLocalizations.of(context).planDaysLeftSuffix,
               style: TextStyle(
                 color: Colors.white70,
                 fontSize: 14,
@@ -763,11 +779,13 @@ class _StandardDayCard extends StatelessWidget {
 
     final String subtitle;
     if (isRest) {
-      subtitle = 'İst.';
+      subtitle = AppLocalizations.of(context).planRequestedAbbrev;
     } else if (lockedWorkoutDay) {
-      subtitle = 'Premium ile aç';
+      subtitle = AppLocalizations.of(context).planUnlockWithPremium;
     } else {
-      subtitle = realDay == null ? 'Yakında' : '$exerciseCount Egzersiz';
+      subtitle = realDay == null
+          ? AppLocalizations.of(context).planComingSoon
+          : '$exerciseCount Egzersiz';
     }
 
     // Phase 53D · the per-day card was painting card surface + day-number
@@ -1153,10 +1171,9 @@ class _PlanStartCta extends ConsumerWidget {
               if (!online) {
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
+                  SnackBar(
                     content: Text(
-                      'Bu içeriğe erişmek için internet bağlantısı '
-                      'gereklidir.',
+                      AppLocalizations.of(context).planNeedsConnection,
                     ),
                     duration: Duration(seconds: 3),
                   ),
@@ -1183,7 +1200,9 @@ class _PlanStartCta extends ConsumerWidget {
                     const SizedBox(width: 10),
                   ],
                   Text(
-                    locked ? 'PRO İLE KİLİDİ AÇ' : 'PLANI BAŞLAT',
+                    locked
+                        ? AppLocalizations.of(context).planUnlockWithProUpper
+                        : AppLocalizations.of(context).planStartUpper,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 14,
@@ -1358,9 +1377,8 @@ class _ComingSoonNote extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          const Text(
-            'Bu bölge için antrenmanlar hazırlanıyor. Abonelik alarak '
-            'diğer Premium planlara erişebilirsin.',
+          Text(
+            AppLocalizations.of(context).planAreaComingSoon,
             style: TextStyle(
               color: Colors.white,
               fontSize: 14,
@@ -1395,7 +1413,7 @@ class _ComingSoonNote extends StatelessWidget {
                   child: InkWell(
                     borderRadius: BorderRadius.circular(14),
                     onTap: () => context.push(AppRoutes.paywall),
-                    child: const Padding(
+                    child: Padding(
                       padding: EdgeInsets.symmetric(vertical: 14),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -1407,7 +1425,7 @@ class _ComingSoonNote extends StatelessWidget {
                           ),
                           SizedBox(width: 8),
                           Text(
-                            'PRO İLE KİLİDİ AÇ',
+                            AppLocalizations.of(context).planUnlockWithProUpper,
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 14,
@@ -1575,8 +1593,8 @@ class _TierLaunchButton extends ConsumerWidget {
                     Icon(_icon, color: Colors.white, size: 18),
                     const SizedBox(height: 6),
                   ],
-                  const Text(
-                    'PLANI BAŞLAT',
+                  Text(
+                    AppLocalizations.of(context).planStartUpper,
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 13,
@@ -1619,10 +1637,9 @@ class _TierLaunchButton extends ConsumerWidget {
     if (!online) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Çevrimdışısın — egzersiz videoları yüklenmeyebilir, '
-            'tekrar sayımı ve sesli koçluk çalışmaya devam eder.',
+            AppLocalizations.of(context).planOfflineNote,
           ),
           duration: Duration(seconds: 3),
         ),
@@ -1652,22 +1669,22 @@ class _PremiumExercisesSection extends ConsumerWidget {
   final WorkoutPlan plan;
   final bool locked;
 
-  String get _categoryLabel {
+  String _categoryLabel(AppLocalizations l10n) {
     switch (plan.category) {
       case ExerciseCategory.core:
-        return 'Core';
+        return l10n.muscleCore;
       case ExerciseCategory.chest:
-        return 'Göğüs';
+        return l10n.muscleChest;
       case ExerciseCategory.back:
-        return 'Sırt';
+        return l10n.muscleBack;
       case ExerciseCategory.shoulders:
-        return 'Omuz';
+        return l10n.muscleShoulders;
       case ExerciseCategory.arms:
-        return 'Kol';
+        return l10n.muscleArms;
       case ExerciseCategory.legs:
-        return 'Bacak';
+        return l10n.muscleLegs;
       case ExerciseCategory.fullBody:
-        return 'Tüm Vücut';
+        return l10n.muscleFullBody;
     }
   }
 
@@ -1726,7 +1743,7 @@ class _PremiumExercisesSection extends ConsumerWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'İleri Seviye $_categoryLabel Antrenmanları',
+                  'İleri Seviye $_categoryLabel(AppLocalizations.of(context)) Antrenmanları',
                   style: const TextStyle(
                     color: _premiumGold,
                     fontSize: 16,
@@ -1750,7 +1767,7 @@ class _PremiumExercisesSection extends ConsumerWidget {
               padding: const EdgeInsets.only(bottom: 10),
               child: LockedOverlay(
                 locked: locked,
-                hint: 'Premium ile aç',
+                hint: AppLocalizations.of(context).planUnlockWithPremium,
                 onTap: () => gate.handleLockedTap(
                   context,
                   LockedFeatureType.equipmentExercise,

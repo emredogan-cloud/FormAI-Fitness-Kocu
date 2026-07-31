@@ -207,9 +207,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         category: 'workout',
       );
       setState(() {
-        _error = 'Bu cihaz form analizi için gereken yapay zeka katmanını '
-            'çalıştıramıyor. Antrenmana camera-free modda devam etmek için '
-            'ana ekrandaki manuel egzersizleri kullanabilirsin.';
+        _error = AppLocalizations.of(context).cameraNoMlSupport;
       });
       return;
     }
@@ -221,8 +219,8 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       return;
     }
     if (!status.isGranted) {
-      setState(() =>
-          _error = 'Kamera izni gerekli. Antrenmanı başlatmak için izin ver.');
+      setState(
+          () => _error = AppLocalizations.of(context).cameraPermissionNeeded);
       return;
     }
 
@@ -230,7 +228,8 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       final cameras = await availableCameras();
       if (cameras.isEmpty) {
         if (!mounted) return;
-        setState(() => _error = 'Bu cihazda kullanılabilir kamera bulunamadı.');
+        setState(
+            () => _error = AppLocalizations.of(context).cameraNoneAvailable);
         return;
       }
       final front = cameras.firstWhere(
@@ -260,8 +259,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
           description.contains('in use by another');
       setState(() {
         _error = inUse
-            ? 'Kamera şu an başka bir uygulama tarafından kullanılıyor. '
-                'O uygulamayı kapatıp tekrar dene.'
+            ? AppLocalizations.of(context).cameraInUse
             : 'Kamera başlatılamadı: ${e.code}';
       });
     } catch (e) {
@@ -285,13 +283,13 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
           borderRadius: BorderRadius.circular(18),
           side: BorderSide(color: _neon.withValues(alpha: 0.5)),
         ),
-        title: const Row(
+        title: Row(
           children: [
             Icon(Icons.shield_outlined, color: _neon),
             SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Cihazında Analiz',
+                AppLocalizations.of(context).cameraOnDeviceTitle,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 17,
@@ -301,9 +299,8 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
             ),
           ],
         ),
-        content: const Text(
-          'FormAI, formunu cihazında Google ML Kit ile analiz eder. '
-          'Görüntüler kaydedilmez ve hiçbir sunucuya gönderilmez.',
+        content: Text(
+          AppLocalizations.of(context).cameraOnDeviceBody,
           style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.4),
         ),
         actions: [
@@ -483,33 +480,28 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         context,
         steps: [
           SpotlightStep(
-            title: 'Tekrarların burada',
-            body: 'Her tamamlanan tekrarı buraya yazıyorum. Sen saymıyorsun '
-                '— sadece hareketi yap.',
+            title: AppLocalizations.of(context).tourRepCounterTitle,
+            body: AppLocalizations.of(context).tourRepCounterBody,
             rect: () => TourTargets.rectOf(targets.workoutRepCounter),
           ),
           SpotlightStep(
-            title: 'Form göstergesi',
-            body: 'Hareketin hangi aşamasında olduğunu buradan takip '
-                'ediyorum. Formun bozulursa ekranda ve sesle uyarırım.',
+            title: AppLocalizations.of(context).tourFormChipTitle,
+            body: AppLocalizations.of(context).tourFormChipBody,
             rect: () => TourTargets.rectOf(targets.workoutFormIndicator),
           ),
           SpotlightStep(
-            title: 'Ara vermek istersen',
-            body: 'Buradan duraklat. Analiz durur, ilerlemen kaybolmaz — '
-                'kaldığın yerden devam edersin.',
+            title: AppLocalizations.of(context).tourPauseTitle,
+            body: AppLocalizations.of(context).tourPauseBody,
             rect: () => TourTargets.rectOf(targets.workoutPauseControl),
           ),
           SpotlightStep(
-            title: 'Sesli koç',
-            body: 'Sesli yönlendirmeyi buradan kapatabilirsin. Kalabalık '
-                'bir yerdeysen tek dokunuş yeter.',
+            title: AppLocalizations.of(context).tourVoiceTitle,
+            body: AppLocalizations.of(context).tourVoiceBody,
             rect: () => TourTargets.rectOf(targets.workoutVoiceToggle),
           ),
           SpotlightStep(
-            title: 'Sıradaki harekete geç',
-            body: 'Bir hareketi erken bitirmek istersen buradan ilerle. '
-                'Son hareketten sonra seansı tamamlarsın.',
+            title: AppLocalizations.of(context).tourNextTitle,
+            body: AppLocalizations.of(context).tourNextBody,
             rect: () => TourTargets.rectOf(targets.workoutNextControl),
           ),
         ],
@@ -678,12 +670,12 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
             // the analyzer's 7s pacing throttle prevent overlap.
             final reps = result.reps;
             if (target != null && target > 1 && reps == target - 2) {
-              _audio.speak('Son iki tekrar, sık dişini!',
+              _audio.speak(AppLocalizations.of(context).workoutLastTwoReps,
                   priority: SpeechPriority.milestone);
             } else if (target != null &&
                 target >= 4 &&
                 reps == (target / 2).floor()) {
-              _audio.speak('Yarıladın! Aynen böyle devam et.',
+              _audio.speak(AppLocalizations.of(context).workoutHalfway,
                   priority: SpeechPriority.milestone);
             } else if (result.pacingFeedback != null) {
               _audio.speak(result.pacingFeedback!.text(_l10n),
@@ -845,7 +837,8 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     // path, so this is the equivalent "set done" thump. Routed through
     // `AppHaptics.milestone()` to match the rep-based completion above.
     AppHaptics.milestone();
-    _audio.speak('Süre doldu, harika!', priority: SpeechPriority.milestone);
+    _audio.speak(AppLocalizations.of(context).workoutTimeUp,
+        priority: SpeechPriority.milestone);
     if (!mounted) return;
     await ref.read(workoutSessionProvider.notifier).completeCurrentExercise();
   }
@@ -946,7 +939,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         // Phase 49 · celebratory milestone thump to pair with the
         // TTS finale.
         AppHaptics.milestone();
-        _audio.speak('Antrenman tamamlandı! Harika bir iş çıkardın.',
+        _audio.speak(AppLocalizations.of(context).workoutSessionComplete,
             priority: SpeechPriority.milestone);
       } else if (justStartedRest && exercise != null) {
         _audio.speak(
@@ -955,11 +948,11 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         );
       } else if (justStartedPrep && exercise != null) {
         // Every shipped exercise has a non-empty `description` (Phase 26).
-        // `'Başlayın!'` is a last-resort fallback for any future Exercise
+        // `AppLocalizations.of(context).workoutBegin` is a last-resort fallback for any future Exercise
         // instance that forgets to populate it.
         final desc = exercise.description.isNotEmpty
             ? exercise.description
-            : 'Başlayın!';
+            : AppLocalizations.of(context).workoutBegin;
         _audio.speak('Sıradaki hareket: ${exercise.name}. $desc',
             priority: SpeechPriority.milestone);
       }
@@ -987,8 +980,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
           if (sagittalMarkers.any(slug.contains)) {
             _spokeSideViewHint = true;
             _audio.speak(
-              'İpucu: telefonu seni yandan görecek şekilde yerleştirirsen '
-              'duruş uyarıları çok daha isabetli olur.',
+              AppLocalizations.of(context).workoutSideViewTip,
               priority: SpeechPriority.milestone,
             );
           }
@@ -1078,15 +1070,13 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     if (_permissionPermanentlyDenied) {
       return _PermissionCard(
         icon: Icons.lock_outline,
-        title: 'Kamera İzni Kapalı',
-        message: 'Formunu analiz edebilmek için kamera iznine ihtiyacımız var. '
-            'Ayarlara giderek FormAI için kamera iznini aç, ardından buraya '
-            'geri dön.',
-        primaryLabel: 'AYARLARA GİT',
+        title: AppLocalizations.of(context).cameraPermissionOffTitle,
+        message: AppLocalizations.of(context).cameraPermissionOffBody,
+        primaryLabel: AppLocalizations.of(context).openSettings,
         onPrimary: () async {
           await openAppSettings();
         },
-        secondaryLabel: 'TEKRAR DENE',
+        secondaryLabel: AppLocalizations.of(context).commonRetryUpper,
         onSecondary: _bootstrap,
         onExit: () => _exit(context),
       );
@@ -1094,9 +1084,9 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     if (_error != null) {
       return _PermissionCard(
         icon: Icons.videocam_off_outlined,
-        title: 'Kamera Hazırlanamadı',
+        title: AppLocalizations.of(context).cameraSetupFailedTitle,
         message: _error!,
-        primaryLabel: 'TEKRAR DENE',
+        primaryLabel: AppLocalizations.of(context).commonRetryUpper,
         onPrimary: _bootstrap,
         onExit: () => _exit(context),
       );
@@ -1121,7 +1111,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
           category: 'workout',
         );
         return ErrorCard(
-          message: 'Antrenman yüklenirken bir sorun oluştu.',
+          message: AppLocalizations.of(context).workoutLoadProblem,
           onRetry: () => ref.invalidate(workoutSessionProvider),
         );
       },
@@ -1297,8 +1287,8 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
                 // invisible on muted phones); frames keep arriving, so
                 // the per-frame setState re-evaluates this continuously.
                 if (_showNoPoseHint)
-                  const _LiveTipPill(
-                    tip: 'Kadraja gir — analiz için tüm vücudun görünmeli',
+                  _LiveTipPill(
+                    tip: AppLocalizations.of(context).framingStepIntoFrame,
                   )
                 else if (!_isPaused &&
                     exercise != null &&
@@ -1420,17 +1410,16 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
           borderRadius: BorderRadius.circular(18),
           side: BorderSide(color: _neon.withValues(alpha: 0.45)),
         ),
-        title: const Text(
-          'Antrenmanı bırakmak istiyor musun?',
+        title: Text(
+          AppLocalizations.of(context).workoutQuitTitle,
           style: TextStyle(
             color: Colors.white,
             fontSize: 17,
             fontWeight: FontWeight.w900,
           ),
         ),
-        content: const Text(
-          'İlerlemen kaydedildi. Ana ekrana dönersen aynı seanstan '
-          'devam edemezsin.',
+        content: Text(
+          AppLocalizations.of(context).workoutQuitBody,
           style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.45),
         ),
         actions: [
@@ -1447,7 +1436,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
               backgroundColor: Colors.redAccent,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Bırak'),
+            child: Text(AppLocalizations.of(context).workoutQuitConfirm),
           ),
         ],
       ),
@@ -1481,7 +1470,9 @@ class _VoiceToggleButton extends StatelessWidget {
     return Semantics(
       button: true,
       toggled: enabled,
-      label: enabled ? 'Sesli koçu kapat' : 'Sesli koçu aç',
+      label: enabled
+          ? AppLocalizations.of(context).voiceCoachOff
+          : AppLocalizations.of(context).voiceCoachOn,
       child: Material(
         color: Colors.black.withValues(alpha: 0.42),
         shape: const CircleBorder(
@@ -1520,14 +1511,14 @@ class _WorkoutOverflowMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: 'Antrenman seçenekleri',
+      label: AppLocalizations.of(context).workoutOptions,
       child: Material(
         color: Colors.black.withValues(alpha: 0.42),
         shape: const CircleBorder(
           side: BorderSide(color: Colors.white24, width: 1),
         ),
         child: PopupMenuButton<String>(
-          tooltip: 'Antrenman seçenekleri',
+          tooltip: AppLocalizations.of(context).workoutOptions,
           color: const Color(0xFF160C26),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
@@ -1543,7 +1534,7 @@ class _WorkoutOverflowMenu extends StatelessWidget {
           onSelected: (value) {
             if (value == 'guide') onReplayGuide();
           },
-          itemBuilder: (context) => const [
+          itemBuilder: (context) => [
             PopupMenuItem<String>(
               value: 'guide',
               child: Row(
@@ -1553,7 +1544,7 @@ class _WorkoutOverflowMenu extends StatelessWidget {
                   SizedBox(width: 11),
                   Flexible(
                     child: Text(
-                      'Kamera kurulumunu tekrar göster',
+                      AppLocalizations.of(context).workoutReplaySetupGuide,
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 13.5,
@@ -1627,8 +1618,8 @@ class _PipPanel extends StatelessWidget {
                     width: 0.6,
                   ),
                 ),
-                child: const Text(
-                  'ÖRNEK',
+                child: Text(
+                  AppLocalizations.of(context).sampleBadge,
                   style: TextStyle(
                     color: _neon,
                     fontSize: 9,

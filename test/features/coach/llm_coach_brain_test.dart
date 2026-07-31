@@ -2,11 +2,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sixpack_ai/features/coach/domain/coach_brain.dart';
 import 'package:sixpack_ai/features/coach/domain/coach_context.dart';
 import 'package:sixpack_ai/features/coach/domain/llm_coach_brain.dart';
+import 'package:flutter/widgets.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// The LLM brain must ALWAYS produce a real answer: use the model when it
 /// works, and degrade to the honest rule brain on any failure. These pin that
 /// contract so the coach can never go blank or hang forever.
 void main() {
+  late AppLocalizations l10n;
+
+  setUpAll(() async {
+    l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+  });
+
   CoachContext ctx() => const CoachContext(
         hour: 10,
         name: 'Deniz',
@@ -25,7 +33,7 @@ void main() {
     final brain = LlmCoachBrain(
       transport: (_, __, ___) async => '  Harika gidiyorsun Deniz! ',
     );
-    final r = await brain.respond(ctx(), const [], 'selam');
+    final r = await brain.respond(l10n, ctx(), const [], 'selam');
     expect(r, 'Harika gidiyorsun Deniz!'); // trimmed
   });
 
@@ -33,7 +41,7 @@ void main() {
     final brain = LlmCoachBrain(
       transport: (_, __, ___) async => throw Exception('offline'),
     );
-    final r = await brain.respond(ctx(), const [], 'nasıl gidiyorum?');
+    final r = await brain.respond(l10n, ctx(), const [], 'nasıl gidiyorum?');
     // Rule brain's progress answer carries real numbers.
     expect(r, contains('4/30'));
   });
@@ -41,9 +49,9 @@ void main() {
   test('falls back when the transport returns null or empty', () async {
     final nullBrain = LlmCoachBrain(transport: (_, __, ___) async => null);
     final emptyBrain = LlmCoachBrain(transport: (_, __, ___) async => '   ');
-    expect(await nullBrain.respond(ctx(), const [], 'beslenme'),
+    expect(await nullBrain.respond(l10n, ctx(), const [], 'beslenme'),
         contains('tıbbi tavsiye değildir'));
-    expect(await emptyBrain.respond(ctx(), const [], 'beslenme'),
+    expect(await emptyBrain.respond(l10n, ctx(), const [], 'beslenme'),
         contains('tıbbi tavsiye değildir'));
   });
 
@@ -55,7 +63,7 @@ void main() {
         return 'too late';
       },
     );
-    final r = await brain.respond(ctx(), const [], 'dizimde ağrı var');
+    final r = await brain.respond(l10n, ctx(), const [], 'dizimde ağrı var');
     // The rule brain's injury guardrail wins.
     expect(r.toLowerCase(), contains('uzman'));
   });
@@ -74,7 +82,7 @@ void main() {
       10,
       (i) => CoachTurn(fromCoach: i.isEven, text: 'turn $i'),
     );
-    await brain.respond(ctx(), history, 'yeni mesaj');
+    await brain.respond(l10n, ctx(), history, 'yeni mesaj');
     expect(sentCount, 4); // capped, not 10
   });
 
@@ -86,9 +94,9 @@ void main() {
         return 'x';
       },
     );
-    final g = brain.greeting(ctx());
+    final g = brain.greeting(l10n, ctx());
     expect(g, contains('Deniz'));
-    expect(brain.suggestions(ctx()), isNotEmpty);
+    expect(brain.suggestions(l10n, ctx()), isNotEmpty);
     expect(called, isFalse);
   });
 }

@@ -1,7 +1,4 @@
 {
-  "lib/features/coach/domain/coach_context.dart": 8,
-  "lib/features/coach/domain/rule_based_coach_brain.dart": 39,
-  "lib/features/coach/providers/coach_providers.dart": 8,
   "lib/features/monetization/presentation/paywall_screen.dart": 50,
   "lib/features/monetization/presentation/premium_welcome_sheet.dart": 1,
   "lib/features/monetization/services/conversion_moment_service.dart": 13,
@@ -26,7 +23,5 @@
   "lib/features/onboarding/presentation/steps/name_capture_step.dart": 17,
   "lib/features/onboarding/presentation/steps/setup_thinking_step.dart": 5,
   "lib/features/onboarding/presentation/steps/social_proof_step.dart": 13,
-  "lib/features/workout/domain/services/workout_generator_service.dart": 3,
-  "lib/features/workout/presentation/plan_detail_screen.dart": 24,
-  "lib/features/workout/presentation/workout_camera_screen.dart": 47
+  "lib/features/workout/domain/services/workout_generator_service.dart": 1
 }

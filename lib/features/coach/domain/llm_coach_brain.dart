@@ -1,6 +1,7 @@
 import 'coach_brain.dart';
 import 'coach_context.dart';
 import 'rule_based_coach_brain.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Transport for one coach turn. Returns the model's reply, or `null` on ANY
 /// failure (offline, timeout, function not deployed, model error) so the brain
@@ -38,14 +39,16 @@ class LlmCoachBrain implements CoachBrain {
   final int maxTurnsSent;
 
   @override
-  String greeting(CoachContext ctx) => fallback.greeting(ctx);
+  String greeting(AppLocalizations l10n, CoachContext ctx) =>
+      fallback.greeting(l10n, ctx);
 
   @override
-  List<CoachSuggestion> suggestions(CoachContext ctx) =>
-      fallback.suggestions(ctx);
+  List<CoachSuggestion> suggestions(AppLocalizations l10n, CoachContext ctx) =>
+      fallback.suggestions(l10n, ctx);
 
   @override
   Future<String> respond(
+    AppLocalizations l10n,
     CoachContext ctx,
     List<CoachTurn> history,
     String message,
@@ -64,6 +67,6 @@ class LlmCoachBrain implements CoachBrain {
       // Any failure (offline, timeout, function 404, model error) drops to the
       // honest rule brain below — the user always gets a real answer.
     }
-    return fallback.respond(ctx, history, message);
+    return fallback.respond(l10n, ctx, history, message);
   }
 }

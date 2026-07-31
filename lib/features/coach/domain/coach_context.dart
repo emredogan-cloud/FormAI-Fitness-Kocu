@@ -85,13 +85,18 @@ class CoachContext {
     return w / (m * m);
   }
 
-  /// The system-prompt context a future LLM coach is handed verbatim. It is
-  /// deliberately plain Turkish prose so the same string is human-auditable
-  /// and model-ready. Building it now (even though the rule-based brain
-  /// doesn't need it) keeps the LLM swap a one-line change.
+  /// The system-prompt context the LLM coach is handed verbatim.
+  ///
+  /// PROMPT SCAFFOLDING, not UI copy — none of it is ever rendered, and
+  /// the literals below are marked `// i18n-ignore` for that reason. Per
+  /// the roadmap, per-locale prompting is Phase 7's job: the persona
+  /// blocks live server-side keyed by the `locale` parameter the
+  /// coach-chat request already threads, and the context block follows
+  /// the persona rather than the UI. Localising it here would split that
+  /// decision across two layers.
   String toPromptContext() {
     final b = StringBuffer();
-    b.writeln('Kullanıcı profili:');
+    b.writeln('Kullanıcı profili:'); // i18n-ignore
     if (firstName.isNotEmpty) b.writeln('- İsim: $firstName');
     if (goalLabel != null) b.writeln('- Hedef: $goalLabel');
     if (age != null) b.writeln('- Yaş: $age');
@@ -103,26 +108,28 @@ class CoachContext {
     if (hasEquipment != null) {
       b.writeln('- Ekipman: ${hasEquipment! ? 'var' : 'yok'}');
     }
-    b.writeln('İlerleme:');
+    b.writeln('İlerleme:'); // i18n-ignore
     b.writeln('- Seri: $streakDays gün');
     b.writeln('- Tamamlanan: $completedDays/$totalDays gün');
     b.writeln('- Seviye: $level ($xp XP), Rozet: $badgeCount');
     if (todayDayNumber != null) {
       b.writeln('- Bugünkü gün: $todayDayNumber '
-          '(${todayIsCompleted ? 'tamamlandı' : '$todayExerciseCount egzersiz, '
-              'henüz yapılmadı'})');
+          '(${todayIsCompleted ? 'tamamlandı' : '$todayExerciseCount egzersiz, ' // i18n-ignore
+              'henüz yapılmadı'})'); // i18n-ignore
     }
     if (todayExerciseNames.isNotEmpty) {
       b.writeln('- Bugünkü egzersizler: ${todayExerciseNames.join(', ')}');
     }
     if (lastSessionLine != null) b.writeln('- $lastSessionLine');
     if (workoutMode == 'manual') {
-      b.writeln('- Antrenman modu: kamerasız (tekrarları kullanıcı sayıyor; '
-          'form analizi yapılmıyor)');
+      b.writeln(
+          '- Antrenman modu: kamerasız (tekrarları kullanıcı sayıyor; ' // i18n-ignore
+          'form analizi yapılmıyor)'); // i18n-ignore
     }
     if (firstCameraSession) {
-      b.writeln('- Kamera kurulumunu az önce tamamladı; henüz ilk seansını '
-          'yapmadı.');
+      b.writeln(
+          '- Kamera kurulumunu az önce tamamladı; henüz ilk seansını ' // i18n-ignore
+          'yapmadı.'); // i18n-ignore
     }
     return b.toString().trim();
   }

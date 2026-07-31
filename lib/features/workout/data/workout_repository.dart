@@ -17,6 +17,7 @@ import 'session_log_repository.dart';
 import '../models/exercise_model.dart';
 import '../models/workout_day_model.dart';
 import '../models/workout_plan_model.dart';
+import '../../../core/utils/app_copy.dart';
 
 class WorkoutRepository {
   WorkoutRepository(this._prefs, {SupabaseClient? client})
@@ -1186,6 +1187,7 @@ class WorkoutRepository {
       // "Tebrikler, tamamlandı".
       isStub = pool.isEmpty;
       plan = generator.generate30DayPlan(
+        l10n: AppCopy.strings,
         userGoal: userGoal ?? 'sixpack',
         fitnessLevel: fitnessLevel ?? 'beginner',
         pool: pool,

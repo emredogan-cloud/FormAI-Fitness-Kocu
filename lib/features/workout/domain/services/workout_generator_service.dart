@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../models/exercise_model.dart';
 import '../../models/workout_day_model.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Rule-based 30-day plan generator. Consumes a flat [Exercise] pool
 /// (passed in from `WorkoutRepository.getAllExercises()` since Phase 50A)
@@ -27,9 +28,11 @@ import '../../models/workout_day_model.dart';
 class WorkoutGeneratorService {
   const WorkoutGeneratorService();
 
-  /// Base rest-day label. Kept as a single constant so localisation later
-  /// is a one-line change.
-  static const String restDayTitle = 'Dinlenme Günü';
+  /// Base rest-day label.
+  ///
+  /// Roadmap Phase 5 · it was a single constant precisely so localising
+  /// it would be a one-line change; this is that line.
+  static String restDayTitle(AppLocalizations l10n) => l10n.planRestDay;
 
   /// RC-1 P4 (coach audit) · LINEAR weekly overload increment. The previous
   /// implementation COMPOUNDED 1.2× per week (`pow(1.2, weekIndex)`), which
@@ -49,6 +52,7 @@ class WorkoutGeneratorService {
   static const int maxDailyExercises = 7;
 
   List<WorkoutDay> generate30DayPlan({
+    required AppLocalizations l10n,
     required String userGoal,
     required String fitnessLevel,
     required List<Exercise> pool,
@@ -73,7 +77,7 @@ class WorkoutGeneratorService {
         (i) => WorkoutDay(
           dayNumber: i + 1,
           exercises: const [],
-          title: restDayTitle,
+          title: restDayTitle(l10n),
         ),
         growable: false,
       );
@@ -112,7 +116,7 @@ class WorkoutGeneratorService {
         days.add(WorkoutDay(
           dayNumber: dayNumber,
           exercises: const [],
-          title: restDayTitle,
+          title: restDayTitle(l10n),
         ));
         continue;
       }
@@ -179,7 +183,7 @@ class WorkoutGeneratorService {
       return _Goal.bulk;
     }
     if (v == 'tone' ||
-        v == 'sıkılaşmak' ||
+        v == 'sıkılaşmak' || // i18n-ignore — stored value
         v == 'sikilasmak' ||
         v == 'toning' ||
         v == 'cut') {
@@ -217,6 +221,7 @@ class WorkoutGeneratorService {
         v == 'sedentary' ||
         v == 'baslangic' ||
         v == 'başlangıç') {
+      // i18n-ignore — stored value
       return _Level.beginner;
     }
     // Phase 86 · default fell through. Beginner stays the safe default

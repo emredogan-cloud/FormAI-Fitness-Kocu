@@ -1,4 +1,5 @@
 import 'coach_context.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// One line in a coach conversation.
 class CoachTurn {
@@ -42,15 +43,20 @@ abstract class CoachBrain {
   /// The proactive opener shown when the coach screen is first opened. Kept
   /// synchronous and rule-based even for the LLM brain: it's instant, free,
   /// and personalised from local state, so the user never waits to be greeted.
-  String greeting(CoachContext ctx);
+  /// Roadmap Phase 5 · the brain composes user-facing sentences, so it
+  /// needs the locale. Passed rather than looked up: the brains are
+  /// pure and testable, and the LLM brain runs its fallback far from a
+  /// widget tree.
+  String greeting(AppLocalizations l10n, CoachContext ctx);
 
   /// The quick-reply chips offered alongside the greeting.
-  List<CoachSuggestion> suggestions(CoachContext ctx);
+  List<CoachSuggestion> suggestions(AppLocalizations l10n, CoachContext ctx);
 
   /// Answer [message] given the full context and prior [history]. Async because
   /// the LLM brain performs a network round-trip; the rule brain returns an
   /// already-completed future.
   Future<String> respond(
+    AppLocalizations l10n,
     CoachContext ctx,
     List<CoachTurn> history,
     String message,

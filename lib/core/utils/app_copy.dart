@@ -36,11 +36,19 @@ abstract final class AppCopy {
   /// working before the first frame and in tests.
   static Locale locale = const Locale('tr');
 
-  /// Loads copy with no widget tree.
+  /// Copy for [locale], with no widget tree and no await.
+  ///
+  /// The generated `lookupAppLocalizations` is a plain switch over
+  /// compiled-in classes — no I/O, nothing to wait for. That matters for
+  /// callers that genuinely cannot await: a Riverpod `Notifier.build()`
+  /// is synchronous, and the coach's opening line is composed there.
+  static AppLocalizations get strings => lookupAppLocalizations(locale);
+
+  /// The same copy as a future, for call sites already in async code.
   ///
   /// [AppLocalizations.delegate] resolves synchronously in practice (its
   /// `load` returns a `SynchronousFuture`), so awaiting this does not
-  /// cost a frame — but it is typed as a future and must be awaited.
+  /// cost a frame.
   static Future<AppLocalizations> load() =>
       AppLocalizations.delegate.load(locale);
 }
