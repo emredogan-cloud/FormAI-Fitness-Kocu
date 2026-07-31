@@ -77,4 +77,84 @@ enum CoachLine {
   // ── Contextual phase coaching ──────────────────────────────────────
   /// Burpee: the user has begun descending; coach the next phase.
   burpeeGetDown,
+
+  // ── Calibration verdicts, spoken during a live set ─────────────────
+  /// Mean landmark confidence too low to analyse.
+  calibrateAdjustPosition,
+
+  /// Shoulder span too small in frame — the user is too far away.
+  calibrateComeCloser,
+
+  // ── Timed-set beats ────────────────────────────────────────────────
+  /// Halfway through a timed hold. Only on sets of 10 s or more, where
+  /// "halfway" is a milestone rather than a distraction.
+  timerHalfway,
+
+  /// Ten seconds left in a timed hold.
+  timerFinalTen,
+
+  /// Five seconds left in a timed hold.
+  timerFinalFive,
+
+  // ── Rest-window beats ──────────────────────────────────────────────
+  /// Halfway through a rest window of 30 s or more.
+  restHalfway,
+
+  /// Ten seconds until the next set begins.
+  restFinalTen,
+
+  // ── Mid-set coaching rotation ──────────────────────────────────────
+  /// One pool per exercise category, rotated in order.
+  ///
+  /// Pools are 4 lines each so the user hears any given line at most
+  /// once per ~72s of work — long enough to feel like coaching rather
+  /// than a recorded loop.
+  midSetCardioKeepRhythm,
+  midSetCardioSteadyTempo,
+  midSetCardioSoftKnees,
+  midSetCardioBreatheSteady,
+  midSetLegsControlDescent,
+  midSetLegsHeelsDown,
+  midSetLegsBraceCore,
+  midSetLegsExhaleUp,
+  midSetChestDontRush,
+  midSetChestBreathePattern,
+  midSetChestScapulaTight,
+  midSetChestBodyStraight,
+  midSetBackSqueezeScapula,
+  midSetBackFullRange,
+  midSetBackPullWithElbows,
+  midSetBackArchShouldersBack,
+  midSetShouldersNoSwing,
+  midSetShouldersRelaxTraps,
+  midSetShouldersProtectLowBack,
+  midSetShouldersPauseAtTop,
+  midSetArmsFixElbow,
+  midSetArmsLowerSlowly,
+  midSetArmsRelaxWrist,
+  midSetArmsHoldAtTop,
+  midSetCoreBraceAndBreathe,
+  midSetCoreLowBackDown,
+  midSetCoreSlowUp,
+  midSetCoreExhaleOnCrunch,
+  midSetFullBodyUseEverything,
+  midSetFullBodyKeepBreathing,
+  midSetFullBodyYoureInControl,
+  midSetFullBodyStayLoose,
+
+  // ── Rest-window rotation ───────────────────────────────────────────
+  /// Recovery-flavoured lines for the rest window. Four entries so a
+  /// 90 s inter-exercise rest lands three of them without repeating.
+  /// Never a push — the user is supposed to be recovering.
+  restBreatheDeep,
+  restDropShoulders,
+  restDrinkWater,
+  restNextSetSoon,
+
+  // ── Tracking guidance rotation ─────────────────────────────────────
+  /// Rotated so a user with persistent camera trouble hears actionable
+  /// variety rather than the same nag three times.
+  trackingStepCloser,
+  trackingAdjustPosition,
+  trackingStepBack,
 }

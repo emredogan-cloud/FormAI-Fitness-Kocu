@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 
 import '../../../core/utils/audio_feedback.dart';
+import '../domain/coach_line.dart';
 import '../models/exercise_model.dart';
 
 /// Tier-A coaching coordinator. Sits between the camera screen's
@@ -26,9 +27,19 @@ import '../models/exercise_model.dart';
 /// cancelled in [dispose] / [endSet] / [endRest] so a navigation pop
 /// during an active set doesn't leak callbacks.
 class CoachVoice {
-  CoachVoice(this._audio);
+  CoachVoice(this._audio, this._copy);
 
   final AudioFeedback _audio;
+
+  /// Resolves a [CoachLine] to the words for the active locale.
+  ///
+  /// Roadmap Phase 5 · this class used to hold 46 Turkish sentences
+  /// inline. It now owns only WHEN to speak and WHICH line; the words
+  /// come from `presentation/coach_line_copy.dart`. Injected as a
+  /// function rather than an AppLocalizations so the resolution happens
+  /// per utterance — a locale change mid-session takes effect on the
+  /// next line rather than being frozen at construction.
+  final String Function(CoachLine) _copy;
 
   // Mid-set heartbeat state ──────────────────────────────────────────
   Timer? _midSetTimer;
@@ -286,7 +297,7 @@ class CoachVoice {
           // can't see them) but below form warnings (a form warning
           // landed means the pose IS being read — different problem).
           _audio.speak(
-            phrase,
+            _copy(phrase),
             priority: SpeechPriority.cue,
             cooldown: const Duration(seconds: 30),
           );
@@ -315,7 +326,7 @@ class CoachVoice {
     // the body, no amount of camera-distance adjustment will help.
     if (meanLikelihood < _calibrationMinLikelihood) {
       _audio.speak(
-        'Pozisyonunu ayarla, tüm vücudun görünmeli.',
+        _copy(CoachLine.calibrateAdjustPosition),
         priority: SpeechPriority.cue,
         cooldown: const Duration(seconds: 25),
       );
@@ -331,7 +342,7 @@ class CoachVoice {
         meanShoulderRatio < _calibrationMinShoulderRatio &&
         _calibrationFrameWidth > 0) {
       _audio.speak(
-        'Kameraya biraz daha yaklaş, vücudun daha net görünsün.',
+        _copy(CoachLine.calibrateComeCloser),
         priority: SpeechPriority.cue,
         cooldown: const Duration(seconds: 25),
       );
@@ -352,19 +363,19 @@ class CoachVoice {
     // Halfway — only fires for sets long enough that "halfway" reads
     // as a real milestone (< 10 s holds skip the halfway beat).
     if (total >= 10 && remainingSeconds == (total / 2).floor()) {
-      _fireOnce('halfway', 'Yarıladın, sık dişini ve dayan!',
+      _fireOnce('halfway', CoachLine.timerHalfway,
           priority: SpeechPriority.encouragement);
     }
     // Final 10 s — only for sets long enough that 10 s left isn't the
     // first half. Avoids a "Son on saniye!" on a 12-second hold.
     if (total >= 20 && remainingSeconds == 10) {
-      _fireOnce('final-10', 'Son on saniye, bırakma!',
+      _fireOnce('final-10', CoachLine.timerFinalTen,
           priority: SpeechPriority.encouragement);
     }
     // Final 5 s — always announce when applicable, even on shorter sets,
     // because the home stretch is where the user most needs voice support.
     if (total >= 8 && remainingSeconds == 5) {
-      _fireOnce('final-5', 'Beş saniye, dayan!',
+      _fireOnce('final-5', CoachLine.timerFinalFive,
           priority: SpeechPriority.encouragement);
     }
   }
@@ -431,7 +442,7 @@ class CoachVoice {
     // "halfway" reads as a real waypoint. 30 s rests get one;
     // shorter rests skip straight to the rotating cue + final 10s.
     if (total >= 30 && elapsed == (total / 2).floor()) {
-      _fireOnce('rest-halfway', 'Nefesini topla, yarısı geçti.',
+      _fireOnce('rest-halfway', CoachLine.restHalfway,
           priority: SpeechPriority.ambient, firedSet: _firedRestCheckpoints);
     }
 
@@ -439,7 +450,7 @@ class CoachVoice {
     // isn't the first half (avoids talking over the rest-start
     // announcement on short windows).
     if (total >= 20 && remaining == 10) {
-      _fireOnce('rest-final-10', 'On saniye sonra başlıyoruz, hazırlan.',
+      _fireOnce('rest-final-10', CoachLine.restFinalTen,
           priority: SpeechPriority.encouragement,
           firedSet: _firedRestCheckpoints);
     }
@@ -452,7 +463,7 @@ class CoachVoice {
       final line = pool[_restGenericIndex % pool.length];
       _restGenericIndex += 1;
       _audio.speak(
-        line,
+        _copy(line),
         priority: SpeechPriority.ambient,
         cooldown: const Duration(seconds: 20),
       );
@@ -499,7 +510,7 @@ class CoachVoice {
     // back-to-back even if a category has a very short rotation pool;
     // different lines bypass dedupe and play normally.
     _audio.speak(
-      line,
+      _copy(line),
       priority: SpeechPriority.ambient,
       cooldown: const Duration(seconds: 14),
     );
@@ -512,67 +523,67 @@ class CoachVoice {
   ///
   /// Cardio overrides apply when [isCardio] is true regardless of the
   /// nominal category (e.g. burpee is `fullBody` but cardio-tagged).
-  static List<String> _midSetLines(
+  static List<CoachLine> _midSetLines(
     ExerciseCategory category, {
     required bool isCardio,
   }) {
     if (isCardio) {
       return const [
-        'Ritmini koru, nefesini tutma.',
-        'Tempoyu sabit tut, patlama anı geliyor.',
-        'Hafif diz, esnek omuz — devam!',
-        'Nefesi düzenli al, vücudun hazır.',
+        CoachLine.midSetCardioKeepRhythm,
+        CoachLine.midSetCardioSteadyTempo,
+        CoachLine.midSetCardioSoftKnees,
+        CoachLine.midSetCardioBreatheSteady,
       ];
     }
     switch (category) {
       case ExerciseCategory.legs:
         return const [
-          'Kontrollü in, patlayarak kalk.',
-          'Topuğuna bas, dizlerin hizada kalsın.',
-          'Karnını sık, gövdeni dik tut.',
-          'Nefesini boşalt yukarı kalkarken.',
+          CoachLine.midSetLegsControlDescent,
+          CoachLine.midSetLegsHeelsDown,
+          CoachLine.midSetLegsBraceCore,
+          CoachLine.midSetLegsExhaleUp,
         ];
       case ExerciseCategory.chest:
         return const [
-          'Hareketi aceleye getirme, kasları hisset.',
-          'Aşağı inerken nefes al, yukarı iterken ver.',
-          'Omuz bıçaklarını sıkı tut, kontrolü kaybetme.',
-          'Gövdeni düz tut, kalçayı düşürme.',
+          CoachLine.midSetChestDontRush,
+          CoachLine.midSetChestBreathePattern,
+          CoachLine.midSetChestScapulaTight,
+          CoachLine.midSetChestBodyStraight,
         ];
       case ExerciseCategory.back:
         return const [
-          'Kürek kemiklerini sıkıştır, sırtla çek.',
-          'Hareketi sonuna kadar götür, kontrolünü kaybetme.',
-          'Bilekten değil dirsekten çek.',
-          'Sırtını hafif kavislendir, omuzları geride tut.',
+          CoachLine.midSetBackSqueezeScapula,
+          CoachLine.midSetBackFullRange,
+          CoachLine.midSetBackPullWithElbows,
+          CoachLine.midSetBackArchShouldersBack,
         ];
       case ExerciseCategory.shoulders:
         return const [
-          'Yavaş ve kontrollü kaldır, sallama.',
-          'Omuzlarını kulağına çekme, gevşet.',
-          'Karnını sık, beli koru.',
-          'Tepe noktada bir an dur.',
+          CoachLine.midSetShouldersNoSwing,
+          CoachLine.midSetShouldersRelaxTraps,
+          CoachLine.midSetShouldersProtectLowBack,
+          CoachLine.midSetShouldersPauseAtTop,
         ];
       case ExerciseCategory.arms:
         return const [
-          'Dirseğini sabit tut, hareketi izole et.',
-          'Yavaş indir, kontrolünü hissedin.',
-          'Bileği gevşek tut, kası çalıştır.',
-          'Tepe noktada bir saniye bekle.',
+          CoachLine.midSetArmsFixElbow,
+          CoachLine.midSetArmsLowerSlowly,
+          CoachLine.midSetArmsRelaxWrist,
+          CoachLine.midSetArmsHoldAtTop,
         ];
       case ExerciseCategory.core:
         return const [
-          'Karnını sık, nefesin akıyor olsun.',
-          'Beli yere yapışık tut, hareketi yüklenme.',
-          'Yavaş gel, çabuk inme.',
-          'Karın kaslarını kasarken nefes ver.',
+          CoachLine.midSetCoreBraceAndBreathe,
+          CoachLine.midSetCoreLowBackDown,
+          CoachLine.midSetCoreSlowUp,
+          CoachLine.midSetCoreExhaleOnCrunch,
         ];
       case ExerciseCategory.fullBody:
         return const [
-          'Bütün vücudu kullan, ritmi düşürme.',
-          'Nefesini bırakma, tempoyu koru.',
-          'Kontrol senin elinde, devam!',
-          'Hafif diz, gevşek omuz.',
+          CoachLine.midSetFullBodyUseEverything,
+          CoachLine.midSetFullBodyKeepBreathing,
+          CoachLine.midSetFullBodyYoureInControl,
+          CoachLine.midSetFullBodyStayLoose,
         ];
     }
   }
@@ -583,35 +594,35 @@ class CoachVoice {
   /// non-strenuous — the user should breathe and reset, not be pushed.
   /// Four entries so a 90 s inter-exercise rest can land three of them
   /// (at 18 s, 36 s, 54 s) without repeating.
-  static const List<String> _restRotation = [
-    'Derin nefes al, kasları gevşet.',
-    'Omuzlarını indir, posturanı topla.',
-    'Su iç, vücudunu hazırla.',
-    'Toparlan, sıradaki set yaklaşıyor.',
+  static const List<CoachLine> _restRotation = [
+    CoachLine.restBreatheDeep,
+    CoachLine.restDropShoulders,
+    CoachLine.restDrinkWater,
+    CoachLine.restNextSetSoon,
   ];
 
   /// Tracking-guidance lines. Rotated so a user with persistent camera
   /// issues hears actionable variety rather than the same nag. Strict
   /// 45 s cooldown enforced by `_lastTrackingCue` keeps these from
   /// stacking up.
-  static const List<String> _trackingCueRotation = [
-    'Kameraya biraz daha yaklaş, tüm vücudun görünmeli.',
-    'Pozisyonunu ayarla, kamera vücudunu net görsün.',
-    'Bir adım geri çekil, vücudun çerçeveye sığsın.',
+  static const List<CoachLine> _trackingCueRotation = [
+    CoachLine.trackingStepCloser,
+    CoachLine.trackingAdjustPosition,
+    CoachLine.trackingStepBack,
   ];
 
   // ─── Fired-once helper ─────────────────────────────────────────────
 
   void _fireOnce(
     String key,
-    String phrase, {
+    CoachLine line, {
     required SpeechPriority priority,
     Set<String>? firedSet,
   }) {
     final ledger = firedSet ?? _firedTimedCheckpoints;
     if (ledger.contains(key)) return;
     ledger.add(key);
-    _audio.speak(phrase,
+    _audio.speak(_copy(line),
         priority: priority, cooldown: const Duration(seconds: 4));
   }
 }

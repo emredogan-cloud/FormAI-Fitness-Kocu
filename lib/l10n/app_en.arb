@@ -1335,5 +1335,189 @@
   "coachBurpeeGetDown": "Now get down into a plank.",
   "@coachBurpeeGetDown": {
     "description": "Contextual phase coaching, burpee: the user has begun descending"
+  },
+  "coachCalibrateAdjustPosition": "Adjust your position so all of you shows.",
+  "@coachCalibrateAdjustPosition": {
+    "description": "Calibration verdict: mean landmark confidence too low"
+  },
+  "coachCalibrateComeCloser": "Move closer so your body reads more clearly.",
+  "@coachCalibrateComeCloser": {
+    "description": "Calibration verdict: shoulder span too small, user is too far away"
+  },
+  "coachTimerHalfway": "You're halfway — grit your teeth and hold!",
+  "@coachTimerHalfway": {
+    "description": "Timed set: halfway beat, only on sets of 10s or more"
+  },
+  "coachTimerFinalTen": "Final ten seconds, don't let go!",
+  "@coachTimerFinalTen": {
+    "description": "Timed set: ten seconds remaining"
+  },
+  "coachTimerFinalFive": "Five seconds, hold on!",
+  "@coachTimerFinalFive": {
+    "description": "Timed set: five seconds remaining"
+  },
+  "coachRestHalfway": "Catch your breath, you're halfway through.",
+  "@coachRestHalfway": {
+    "description": "Rest window: halfway beat, only on rests of 30s or more"
+  },
+  "coachRestFinalTen": "We start in ten seconds — get ready.",
+  "@coachRestFinalTen": {
+    "description": "Rest window: ten seconds remaining"
+  },
+  "coachMidSetCardioKeepRhythm": "Hold your rhythm, don't hold your breath.",
+  "@coachMidSetCardioKeepRhythm": {
+    "description": "Mid-set coaching, cardio 1 of 4. Rotated in order, one per ~18s."
+  },
+  "coachMidSetCardioSteadyTempo": "Keep the tempo steady, the push is coming.",
+  "@coachMidSetCardioSteadyTempo": {
+    "description": "Mid-set coaching, cardio 2 of 4"
+  },
+  "coachMidSetCardioSoftKnees": "Soft knees, loose shoulders — keep going!",
+  "@coachMidSetCardioSoftKnees": {
+    "description": "Mid-set coaching, cardio 3 of 4"
+  },
+  "coachMidSetCardioBreatheSteady": "Breathe steadily, your body's ready.",
+  "@coachMidSetCardioBreatheSteady": {
+    "description": "Mid-set coaching, cardio 4 of 4"
+  },
+  "coachMidSetLegsControlDescent": "Lower with control, drive up hard.",
+  "@coachMidSetLegsControlDescent": {
+    "description": "Mid-set coaching, legs 1 of 4"
+  },
+  "coachMidSetLegsHeelsDown": "Push through your heels, keep your knees tracking.",
+  "@coachMidSetLegsHeelsDown": {
+    "description": "Mid-set coaching, legs 2 of 4"
+  },
+  "coachMidSetLegsBraceCore": "Brace your core, keep your torso upright.",
+  "@coachMidSetLegsBraceCore": {
+    "description": "Mid-set coaching, legs 3 of 4"
+  },
+  "coachMidSetLegsExhaleUp": "Breathe out on the way up.",
+  "@coachMidSetLegsExhaleUp": {
+    "description": "Mid-set coaching, legs 4 of 4"
+  },
+  "coachMidSetChestDontRush": "Don't rush the movement, feel the muscle.",
+  "@coachMidSetChestDontRush": {
+    "description": "Mid-set coaching, chest 1 of 4"
+  },
+  "coachMidSetChestBreathePattern": "Breathe in going down, out as you press.",
+  "@coachMidSetChestBreathePattern": {
+    "description": "Mid-set coaching, chest 2 of 4"
+  },
+  "coachMidSetChestScapulaTight": "Keep your shoulder blades tight, don't lose control.",
+  "@coachMidSetChestScapulaTight": {
+    "description": "Mid-set coaching, chest 3 of 4"
+  },
+  "coachMidSetChestBodyStraight": "Keep your body straight, don't drop your hips.",
+  "@coachMidSetChestBodyStraight": {
+    "description": "Mid-set coaching, chest 4 of 4"
+  },
+  "coachMidSetBackSqueezeScapula": "Squeeze your shoulder blades, pull with your back.",
+  "@coachMidSetBackSqueezeScapula": {
+    "description": "Mid-set coaching, back 1 of 4"
+  },
+  "coachMidSetBackFullRange": "Take it through the full range, don't lose control.",
+  "@coachMidSetBackFullRange": {
+    "description": "Mid-set coaching, back 2 of 4"
+  },
+  "coachMidSetBackPullWithElbows": "Pull from the elbows, not the wrists.",
+  "@coachMidSetBackPullWithElbows": {
+    "description": "Mid-set coaching, back 3 of 4"
+  },
+  "coachMidSetBackArchShouldersBack": "Slight arch in your back, shoulders held back.",
+  "@coachMidSetBackArchShouldersBack": {
+    "description": "Mid-set coaching, back 4 of 4"
+  },
+  "coachMidSetShouldersNoSwing": "Lift slow and controlled, don't swing.",
+  "@coachMidSetShouldersNoSwing": {
+    "description": "Mid-set coaching, shoulders 1 of 4"
+  },
+  "coachMidSetShouldersRelaxTraps": "Don't shrug toward your ears, relax them.",
+  "@coachMidSetShouldersRelaxTraps": {
+    "description": "Mid-set coaching, shoulders 2 of 4"
+  },
+  "coachMidSetShouldersProtectLowBack": "Brace your core, protect your lower back.",
+  "@coachMidSetShouldersProtectLowBack": {
+    "description": "Mid-set coaching, shoulders 3 of 4"
+  },
+  "coachMidSetShouldersPauseAtTop": "Pause for a beat at the top.",
+  "@coachMidSetShouldersPauseAtTop": {
+    "description": "Mid-set coaching, shoulders 4 of 4"
+  },
+  "coachMidSetArmsFixElbow": "Keep your elbow fixed, isolate the movement.",
+  "@coachMidSetArmsFixElbow": {
+    "description": "Mid-set coaching, arms 1 of 4"
+  },
+  "coachMidSetArmsLowerSlowly": "Lower it slowly, feel the control.",
+  "@coachMidSetArmsLowerSlowly": {
+    "description": "Mid-set coaching, arms 2 of 4"
+  },
+  "coachMidSetArmsRelaxWrist": "Keep your wrist loose, work the muscle.",
+  "@coachMidSetArmsRelaxWrist": {
+    "description": "Mid-set coaching, arms 3 of 4"
+  },
+  "coachMidSetArmsHoldAtTop": "Hold a second at the top.",
+  "@coachMidSetArmsHoldAtTop": {
+    "description": "Mid-set coaching, arms 4 of 4"
+  },
+  "coachMidSetCoreBraceAndBreathe": "Brace your core, keep the breath flowing.",
+  "@coachMidSetCoreBraceAndBreathe": {
+    "description": "Mid-set coaching, core 1 of 4"
+  },
+  "coachMidSetCoreLowBackDown": "Keep your lower back pinned, don't strain into it.",
+  "@coachMidSetCoreLowBackDown": {
+    "description": "Mid-set coaching, core 2 of 4"
+  },
+  "coachMidSetCoreSlowUp": "Come up slowly, don't drop down.",
+  "@coachMidSetCoreSlowUp": {
+    "description": "Mid-set coaching, core 3 of 4"
+  },
+  "coachMidSetCoreExhaleOnCrunch": "Breathe out as you contract.",
+  "@coachMidSetCoreExhaleOnCrunch": {
+    "description": "Mid-set coaching, core 4 of 4"
+  },
+  "coachMidSetFullBodyUseEverything": "Use your whole body, don't drop the rhythm.",
+  "@coachMidSetFullBodyUseEverything": {
+    "description": "Mid-set coaching, full body 1 of 4"
+  },
+  "coachMidSetFullBodyKeepBreathing": "Keep breathing, hold the tempo.",
+  "@coachMidSetFullBodyKeepBreathing": {
+    "description": "Mid-set coaching, full body 2 of 4"
+  },
+  "coachMidSetFullBodyYoureInControl": "You're in control — keep going!",
+  "@coachMidSetFullBodyYoureInControl": {
+    "description": "Mid-set coaching, full body 3 of 4"
+  },
+  "coachMidSetFullBodyStayLoose": "Soft knees, loose shoulders.",
+  "@coachMidSetFullBodyStayLoose": {
+    "description": "Mid-set coaching, full body 4 of 4"
+  },
+  "coachRestBreatheDeep": "Breathe deep, let the muscles relax.",
+  "@coachRestBreatheDeep": {
+    "description": "Rest-window rotation 1 of 4. Recovery-flavoured, never a push."
+  },
+  "coachRestDropShoulders": "Drop your shoulders, gather your posture.",
+  "@coachRestDropShoulders": {
+    "description": "Rest-window rotation 2 of 4"
+  },
+  "coachRestDrinkWater": "Drink some water, get your body ready.",
+  "@coachRestDrinkWater": {
+    "description": "Rest-window rotation 3 of 4"
+  },
+  "coachRestNextSetSoon": "Pull it together, the next set is coming.",
+  "@coachRestNextSetSoon": {
+    "description": "Rest-window rotation 4 of 4"
+  },
+  "coachTrackingStepCloser": "Move closer, all of you needs to show.",
+  "@coachTrackingStepCloser": {
+    "description": "Tracking guidance 1 of 3. Rotated so a user with persistent camera trouble hears variety rather than the same nag."
+  },
+  "coachTrackingAdjustPosition": "Adjust your position so the camera reads you.",
+  "@coachTrackingAdjustPosition": {
+    "description": "Tracking guidance 2 of 3"
+  },
+  "coachTrackingStepBack": "Step back so your body fits the frame.",
+  "@coachTrackingStepBack": {
+    "description": "Tracking guidance 3 of 3"
   }
 }

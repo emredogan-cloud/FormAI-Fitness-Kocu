@@ -51,7 +51,10 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
   final PoseDetectorService _poseService = PoseDetectorService();
   PoseAnalyzer _analyzer = CrunchAnalyzer();
   final AudioFeedback _audio = AudioFeedback();
-  late final CoachVoice _coach = CoachVoice(_audio);
+  // The resolver runs per utterance, not once here, so the coach picks
+  // up a locale change on its next line rather than for the rest of the
+  // session.
+  late final CoachVoice _coach = CoachVoice(_audio, (line) => line.text(_l10n));
 
   static const Color _neon = Color(0xFF00F0FF);
 
