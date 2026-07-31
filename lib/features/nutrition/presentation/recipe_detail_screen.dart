@@ -18,6 +18,7 @@ import '../domain/models/recipe.dart';
 import '../providers/daily_menu_provider.dart';
 import '../providers/favorite_recipes_provider.dart';
 import 'widgets/recipe_tags.dart';
+import '../../../l10n/app_localizations.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonGreen = Color(0xFF39FF14);
@@ -244,7 +245,9 @@ class _FavoriteRecipeButton extends ConsumerWidget {
             if (!context.mounted) return;
             TopToast.show(
               context,
-              message: added ? 'Favorilere eklendi' : 'Favorilerden çıkarıldı',
+              message: added
+                  ? AppLocalizations.of(context).recipeFavoriteAdded
+                  : AppLocalizations.of(context).recipeFavoriteRemoved,
               icon: added ? Icons.favorite : Icons.favorite_border,
             );
           },
@@ -364,7 +367,7 @@ class _MacroTilesRow extends StatelessWidget {
       children: [
         Expanded(
           child: _MacroTile(
-            label: 'KALORİ',
+            label: AppLocalizations.of(context).recipeCalories,
             value: '${recipe.calories}',
             unit: 'kcal',
             // Phase 53D · pull text colour from the active theme so
@@ -379,7 +382,7 @@ class _MacroTilesRow extends StatelessWidget {
         const SizedBox(width: 8),
         Expanded(
           child: _MacroTile(
-            label: 'PROTEİN',
+            label: AppLocalizations.of(context).recipeProtein,
             value: '${recipe.protein}',
             unit: 'g',
             color: _proteinColor,
@@ -399,7 +402,7 @@ class _MacroTilesRow extends StatelessWidget {
         const SizedBox(width: 8),
         Expanded(
           child: _MacroTile(
-            label: 'YAĞ',
+            label: AppLocalizations.of(context).recipeFat,
             value: '${recipe.fat}',
             unit: 'g',
             color: _fatColor,
@@ -491,7 +494,17 @@ class _InstructionsSection extends StatelessWidget {
   const _InstructionsSection({required this.text});
   final String text;
 
-  static const List<String> _sectionHeaders = ['MALZEMELER:', 'HAZIRLANIŞI:'];
+  /// Parse markers embedded in the stored recipe text, NOT UI copy.
+  ///
+  /// The instruction body arrives from Supabase with these literal
+  /// headers in it and is split on them. Localising the marker would
+  /// stop it matching the row it is parsing. The *display* heading is
+  /// localised in [_headingFor]; the marker that finds it is data, and
+  /// moves with the content in Phase 7.
+  static const List<String> _sectionHeaders = [
+    'MALZEMELER:', // i18n-ignore
+    'HAZIRLANIŞI:', // i18n-ignore
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -504,12 +517,13 @@ class _InstructionsSection extends StatelessWidget {
       fontSize: 14,
       height: 1.5,
     );
-    final sections = _split(text);
+    final sections = _split(context, text);
     if (sections.isEmpty) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _SectionHeading(label: 'Hazırlanışı'),
+          _SectionHeading(
+              label: AppLocalizations.of(context).recipeInstructions),
           const SizedBox(height: 10),
           Text(text, style: bodyStyle),
         ],
@@ -534,7 +548,7 @@ class _InstructionsSection extends StatelessWidget {
   /// rendered heading. Returns an empty list when no recognised header
   /// is present — the caller then falls back to a plain single-block
   /// render so unstructured legacy instructions still work.
-  List<_InstructionBlock> _split(String source) {
+  List<_InstructionBlock> _split(BuildContext context, String source) {
     final matches = <({int index, String header})>[];
     for (final header in _sectionHeaders) {
       final idx = source.indexOf(header);
@@ -549,19 +563,19 @@ class _InstructionsSection extends StatelessWidget {
       final end = i + 1 < matches.length ? matches[i + 1].index : source.length;
       final body = source.substring(start, end).trim();
       blocks.add(_InstructionBlock(
-        heading: _headingFor(matches[i].header),
+        heading: _headingFor(context, matches[i].header),
         body: body,
       ));
     }
     return blocks;
   }
 
-  String _headingFor(String raw) {
+  String _headingFor(BuildContext context, String raw) {
     switch (raw) {
-      case 'MALZEMELER:':
-        return 'Malzemeler';
-      case 'HAZIRLANIŞI:':
-        return 'Hazırlanışı';
+      case 'MALZEMELER:': // i18n-ignore
+        return AppLocalizations.of(context).recipeIngredients;
+      case 'HAZIRLANIŞI:': // i18n-ignore
+        return AppLocalizations.of(context).recipeInstructions;
       default:
         return raw;
     }
@@ -666,7 +680,8 @@ Future<void> _handleAddToPlan(
     ..hideCurrentSnackBar()
     ..showSnackBar(
       SnackBar(
-        content: Text('${recipe.title} "${_slotLabel(slot)}" öğününe eklendi.'),
+        content: Text(
+            '${recipe.title} "${_slotLabel(AppLocalizations.of(context), slot)}" öğününe eklendi.'),
         backgroundColor: _neonGreen.withValues(alpha: 0.9),
         behavior: SnackBarBehavior.floating,
       ),
@@ -726,7 +741,7 @@ class _SlotPickerSheet extends StatelessWidget {
             ),
             const SizedBox(height: 18),
             Text(
-              'Hangi öğüne eklemek istersin?',
+              AppLocalizations.of(context).recipeAddToWhichMeal,
               style: TextStyle(
                 color: scheme.onSurface,
                 fontSize: 17,
@@ -788,7 +803,7 @@ class _SlotOption extends StatelessWidget {
               const SizedBox(width: 14),
               Expanded(
                 child: Text(
-                  _slotLabel(slot),
+                  _slotLabel(AppLocalizations.of(context), slot),
                   style: TextStyle(
                     color: scheme.onSurface,
                     fontSize: 15,
@@ -821,15 +836,15 @@ class _SlotOption extends StatelessWidget {
   }
 }
 
-String _slotLabel(DailyMealSlot slot) {
+String _slotLabel(AppLocalizations l10n, DailyMealSlot slot) {
   switch (slot) {
     case DailyMealSlot.breakfast:
-      return 'Kahvaltı';
+      return l10n.mealBreakfast;
     case DailyMealSlot.lunch:
-      return 'Öğle Yemeği';
+      return l10n.mealLunch;
     case DailyMealSlot.dinner:
-      return 'Akşam Yemeği';
+      return l10n.mealDinner;
     case DailyMealSlot.snack:
-      return 'Atıştırmalık';
+      return l10n.mealSnack;
   }
 }

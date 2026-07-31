@@ -12,6 +12,7 @@ import '../../domain/models/planned_meal.dart';
 import '../../domain/models/recipe.dart';
 import '../../providers/daily_menu_provider.dart';
 import '../../providers/nutrition_provider.dart';
+import '../../../../l10n/app_localizations.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonGreen = Color(0xFF39FF14);
@@ -63,18 +64,18 @@ class MealPlanSliver extends ConsumerWidget {
         );
         return SliverToBoxAdapter(
           child: ErrorCard(
-            message: 'Günün menüsü yüklenemedi.',
+            message: AppLocalizations.of(context).menuLoadError,
             onRetry: () => ref.invalidate(dailyMenuProvider),
           ),
         );
       },
       data: (meals) {
         if (meals.isEmpty) {
-          return const SliverToBoxAdapter(
+          return SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: _EmptyPlaceholder(
-                message: 'Günün menüsü için tercih bulunamadı.',
+                message: AppLocalizations.of(context).menuNoPreferences,
               ),
             ),
           );
@@ -355,7 +356,7 @@ class _CollapsedCard extends StatelessWidget {
                   const SizedBox(width: 10),
                 ],
                 Text(
-                  _slotLabel(meal.slot),
+                  _slotLabel(AppLocalizations.of(context), meal.slot),
                   style: const TextStyle(
                     color: _neon,
                     fontSize: 10,
@@ -552,7 +553,7 @@ class _HeaderRow extends StatelessWidget {
     return Row(
       children: [
         Text(
-          _slotLabel(slot),
+          _slotLabel(AppLocalizations.of(context), slot),
           style: const TextStyle(
             color: _neon,
             fontSize: 10,
@@ -600,12 +601,12 @@ class _CurrentNowPill extends StatelessWidget {
         color: _neon.withValues(alpha: 0.28),
         border: Border.all(color: _neon),
       ),
-      child: const Row(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text('⏳ ', style: TextStyle(fontSize: 9)),
           Text(
-            'ŞU AN',
+            AppLocalizations.of(context).mealNow,
             style: TextStyle(
               color: Colors.white,
               fontSize: 9,
@@ -651,7 +652,7 @@ class _PrimaryActionRow extends StatelessWidget {
                   notifier.markAsSkipped(meal.id);
                 },
                 icon: const Icon(Icons.sync, size: 16),
-                label: const Text('Değiştir'),
+                label: Text(AppLocalizations.of(context).mealSwap),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: scheme.onSurface,
                   side: BorderSide(
@@ -697,7 +698,7 @@ class _PrimaryActionRow extends StatelessWidget {
               notifier.resetMeal(meal.id);
             },
             icon: const Icon(Icons.undo, size: 16),
-            label: const Text('Geri Al'),
+            label: Text(AppLocalizations.of(context).mealUndo),
             style: FilledButton.styleFrom(
               backgroundColor: scheme.onSurface.withValues(alpha: 0.12),
               foregroundColor: scheme.onSurface,
@@ -725,7 +726,7 @@ class _YedimButton extends StatelessWidget {
     return FilledButton.icon(
       onPressed: onPressed,
       icon: const Icon(Icons.check, size: 16),
-      label: const Text('Yedim'),
+      label: Text(AppLocalizations.of(context).mealAte),
       style: FilledButton.styleFrom(
         backgroundColor: _neonGreen,
         foregroundColor: Colors.black,
@@ -760,8 +761,8 @@ class _LighterAlternativeButton extends StatelessWidget {
             }
           : null,
       icon: const Icon(Icons.cancel_outlined, size: 16),
-      label: const Text(
-        'Daha Hafif Alternatif',
+      label: Text(
+        AppLocalizations.of(context).mealLighterAlternative,
         overflow: TextOverflow.ellipsis,
       ),
       style: OutlinedButton.styleFrom(
@@ -821,8 +822,14 @@ class _StatusPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, color) = switch (status) {
-      MealStatus.completed => ('YENDİ', _neonGreen),
-      MealStatus.skipped => ('ATLANDI', _skippedColor),
+      MealStatus.completed => (
+          AppLocalizations.of(context).mealEatenBadge,
+          _neonGreen
+        ),
+      MealStatus.skipped => (
+          AppLocalizations.of(context).mealSkippedBadge,
+          _skippedColor
+        ),
       MealStatus.planned => ('', Colors.transparent),
     };
     if (label.isEmpty) return const SizedBox.shrink();
@@ -1049,15 +1056,15 @@ class _EmptyPlaceholder extends StatelessWidget {
   }
 }
 
-String _slotLabel(DailyMealSlot slot) {
+String _slotLabel(AppLocalizations l10n, DailyMealSlot slot) {
   switch (slot) {
     case DailyMealSlot.breakfast:
-      return 'KAHVALTI';
+      return l10n.mealBreakfastUpper;
     case DailyMealSlot.lunch:
-      return 'ÖĞLE YEMEĞİ';
+      return l10n.mealLunchUpper;
     case DailyMealSlot.dinner:
-      return 'AKŞAM YEMEĞİ';
+      return l10n.mealDinnerUpper;
     case DailyMealSlot.snack:
-      return 'ARA ÖĞÜN';
+      return l10n.mealSnackUpper;
   }
 }

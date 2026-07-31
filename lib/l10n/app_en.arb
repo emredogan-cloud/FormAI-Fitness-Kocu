@@ -859,5 +859,93 @@
   "recipeCategoryEmpty": "No recipes in this category yet.",
   "@recipeCategoryEmpty": {
     "description": "Empty category state"
+  },
+  "mealSnack": "Snack",
+  "@mealSnack": {
+    "description": "Meal slot, singular"
+  },
+  "mealBreakfastUpper": "BREAKFAST",
+  "@mealBreakfastUpper": {
+    "description": "Meal slot, uppercase timeline label"
+  },
+  "mealLunchUpper": "LUNCH",
+  "@mealLunchUpper": {
+    "description": "Meal slot, uppercase timeline label"
+  },
+  "mealDinnerUpper": "DINNER",
+  "@mealDinnerUpper": {
+    "description": "Meal slot, uppercase timeline label"
+  },
+  "mealSnackUpper": "SNACK",
+  "@mealSnackUpper": {
+    "description": "Meal slot, uppercase timeline label"
+  },
+  "menuLoadError": "Today's menu could not be loaded.",
+  "@menuLoadError": {
+    "description": "Meal plan load failure"
+  },
+  "menuNoPreferences": "No preferences found for today's menu.",
+  "@menuNoPreferences": {
+    "description": "Meal plan missing prefs"
+  },
+  "mealNow": "NOW",
+  "@mealNow": {
+    "description": "Current meal marker"
+  },
+  "mealSwap": "Swap",
+  "@mealSwap": {
+    "description": "Meal swap action"
+  },
+  "mealUndo": "Undo",
+  "@mealUndo": {
+    "description": "Meal undo action"
+  },
+  "mealAte": "I ate this",
+  "@mealAte": {
+    "description": "Meal eaten action"
+  },
+  "mealLighterAlternative": "Lighter alternative",
+  "@mealLighterAlternative": {
+    "description": "Meal swap option"
+  },
+  "mealEatenBadge": "EATEN",
+  "@mealEatenBadge": {
+    "description": "Meal state badge"
+  },
+  "mealSkippedBadge": "SKIPPED",
+  "@mealSkippedBadge": {
+    "description": "Meal state badge"
+  },
+  "recipeFavoriteAdded": "Added to favourites",
+  "@recipeFavoriteAdded": {
+    "description": "Favourite toggle toast"
+  },
+  "recipeFavoriteRemoved": "Removed from favourites",
+  "@recipeFavoriteRemoved": {
+    "description": "Favourite toggle toast"
+  },
+  "recipeCalories": "CALORIES",
+  "@recipeCalories": {
+    "description": "Recipe macro label"
+  },
+  "recipeProtein": "PROTEIN",
+  "@recipeProtein": {
+    "description": "Recipe macro label"
+  },
+  "recipeFat": "FAT",
+  "@recipeFat": {
+    "description": "Recipe macro label"
+  },
+  "recipeInstructions": "How to make it",
+  "@recipeInstructions": {
+    "description": "Recipe instructions heading"
+  },
+  "recipeAddToWhichMeal": "Which meal would you like to add it to?",
+  "@recipeAddToWhichMeal": {
+    "description": "Add-to-plan sheet title"
+  },
+  "recipeIngredients": "Ingredients",
+  "@recipeIngredients": {
+    "description": "Recipe ingredients section heading"
   }
 }
