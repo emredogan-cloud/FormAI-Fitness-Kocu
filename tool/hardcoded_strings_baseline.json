@@ -1,11 +1,4 @@
 {
-  "lib/core/routing/app_router.dart": 4,
-  "lib/core/services/first_time_ai_scenes.dart": 9,
-  "lib/core/services/share_service.dart": 3,
-  "lib/core/services/tour_service.dart": 15,
-  "lib/core/services/widget_sync_service.dart": 2,
-  "lib/core/theme/theme_mode_provider.dart": 1,
-  "lib/core/utils/audio_feedback.dart": 1,
   "lib/features/auth/auth_error_messages.dart": 6,
   "lib/features/auth/providers/auth_provider.dart": 5,
   "lib/features/coach/domain/coach_context.dart": 8,
@@ -63,6 +56,5 @@
   "lib/features/referral/services/referral_service.dart": 7,
   "lib/features/workout/domain/services/workout_generator_service.dart": 3,
   "lib/features/workout/presentation/plan_detail_screen.dart": 24,
-  "lib/features/workout/presentation/workout_camera_screen.dart": 47,
-  "lib/main.dart": 7
+  "lib/features/workout/presentation/workout_camera_screen.dart": 47
 }

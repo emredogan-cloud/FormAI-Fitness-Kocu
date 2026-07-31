@@ -17,6 +17,7 @@ import '../../../../core/theme/theme_extension.dart';
 import '../../../../core/theme/theme_mode_provider.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/audio_feedback.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../feedback/presentation/feedback_sheet.dart';
 import '../../../feedback/services/feedback_service.dart';
@@ -1235,7 +1236,9 @@ class _ThemeModeTile extends ConsumerWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Şu an: ${themeModeLabelTr(mode)}',
+                      AppLocalizations.of(context).themeModeCurrent(
+                        themeModeLabel(AppLocalizations.of(context), mode),
+                      ),
                       style: TextStyle(
                         color: scheme.onSurface.withValues(alpha: 0.55),
                         fontSize: 12,
@@ -1884,7 +1887,10 @@ class _ReferralCodeRow extends StatelessWidget {
         FilledButton.icon(
           onPressed: () {
             HapticFeedback.lightImpact();
-            ShareService.instance.shareReferralCode(code: code);
+            ShareService.instance.shareReferralCode(
+              l10n: AppLocalizations.of(context),
+              code: code,
+            );
           },
           icon: const Icon(Icons.ios_share_rounded, size: 16),
           label: const Text('Paylaş'),

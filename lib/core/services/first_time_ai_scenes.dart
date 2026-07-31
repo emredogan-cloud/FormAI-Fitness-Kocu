@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/onboarding/presentation/widgets/coach_mood.dart';
+import '../../l10n/app_localizations.dart';
 import '../utils/app_haptics.dart';
 import '../utils/app_logger.dart';
 import '../widgets/cinematic_ai_presence.dart';
@@ -84,6 +85,7 @@ class FirstTimeAiScenes {
     if (!context.mounted) return;
 
     final config = _configs[scene]!;
+    final l10n = AppLocalizations.of(context);
     final navigator = Navigator.of(context, rootNavigator: true);
 
     late final PageRouteBuilder<void> route;
@@ -95,10 +97,10 @@ class FirstTimeAiScenes {
       pageBuilder: (_, __, ___) {
         return Builder(
           builder: (innerContext) => CinematicAiPresence(
-            title: config.title,
-            subtitle: config.subtitle,
+            title: config.title(l10n),
+            subtitle: config.subtitle(l10n),
             subtitleTypewriter: true,
-            composingPlaceholder: config.composingPlaceholder,
+            composingPlaceholder: config.composingPlaceholder(l10n),
             mood: config.mood,
             autoCloseAfter: config.autoCloseAfter,
             onComplete: () {
@@ -182,9 +184,16 @@ class _SceneConfig {
     required this.autoCloseAfter,
   });
 
-  final String title;
-  final String subtitle;
-  final String composingPlaceholder;
+  /// Copy is held as a LOOKUP rather than a string.
+  ///
+  /// Roadmap Phase 5 · [_configs] is a top-level `const` map built long
+  /// before any `BuildContext` exists, so it cannot hold resolved text.
+  /// Storing the getter keeps the table exactly where it was — one place
+  /// to read all three scenes and their timings — while the words
+  /// resolve at push time, in the locale the app is actually running in.
+  final String Function(AppLocalizations) title;
+  final String Function(AppLocalizations) subtitle;
+  final String Function(AppLocalizations) composingPlaceholder;
   final CoachMood mood;
   final Duration autoCloseAfter;
 }
@@ -195,12 +204,9 @@ const Map<FirstTimeAiScene, _SceneConfig> _configs = {
   // ONCE: the first-day line, a one-breath tour of the surfaces, and
   // where to find Form again — then disappears for good (seen-flag).
   FirstTimeAiScene.dashboardWelcome: _SceneConfig(
-    title: 'Bugün dönüşümünün ilk günü.',
-    subtitle: 'Antrenmanın burada. Beslenme, Gelişim ve Profil '
-        'aşağıdaki sekmelerde.\n'
-        'Bana ihtiyacın olduğunda üstteki avatarımdan yaz — '
-        'her zaman buradayım. 💜',
-    composingPlaceholder: 'Sana özel bir şey hazırlıyorum...',
+    title: _dashboardWelcomeTitle,
+    subtitle: _dashboardWelcomeSubtitle,
+    composingPlaceholder: _dashboardWelcomeComposing,
     mood: CoachMood.proud,
     autoCloseAfter: Duration(milliseconds: 8000),
   ),
@@ -209,10 +215,9 @@ const Map<FirstTimeAiScene, _SceneConfig> _configs = {
   // supportive, guiding. Surfaces *before* the existing deferred
   // nutrition wizard so the user feels prepared, not interrogated.
   FirstTimeAiScene.nutritionIntro: _SceneConfig(
-    title: 'Beslenme...',
-    subtitle: 'Dönüşümünün en güçlü parçalarından biri.\n'
-        'Sana doğru bir yol haritası çizeceğim.',
-    composingPlaceholder: 'Beslenmeni öğreniyorum...',
+    title: _nutritionIntroTitle,
+    subtitle: _nutritionIntroSubtitle,
+    composingPlaceholder: _nutritionIntroComposing,
     mood: CoachMood.thinking,
     autoCloseAfter: Duration(milliseconds: 6500),
   ),
@@ -222,11 +227,30 @@ const Map<FirstTimeAiScene, _SceneConfig> _configs = {
   // rewarding. NOT gamified celebration spam — calm
   // acknowledgment of the identity shift.
   FirstTimeAiScene.workoutCompleteCelebration: _SceneConfig(
-    title: 'Harika iş çıkardın.',
-    subtitle: 'İlk adımı attın. Şimdi gerçekten başladın.\n'
-        'Bu hissi unutma.',
-    composingPlaceholder: 'Seninle gurur duyuyorum...',
+    title: _workoutCompleteTitle,
+    subtitle: _workoutCompleteSubtitle,
+    composingPlaceholder: _workoutCompleteComposing,
     mood: CoachMood.celebratory,
     autoCloseAfter: Duration(milliseconds: 7000),
   ),
 };
+
+// Named top-level functions rather than closures: a `const` map entry
+// cannot hold a closure, and naming them keeps the table above readable
+// as a table.
+String _dashboardWelcomeTitle(AppLocalizations l) =>
+    l.sceneDashboardWelcomeTitle;
+String _dashboardWelcomeSubtitle(AppLocalizations l) =>
+    l.sceneDashboardWelcomeSubtitle;
+String _dashboardWelcomeComposing(AppLocalizations l) =>
+    l.sceneDashboardWelcomeComposing;
+String _nutritionIntroTitle(AppLocalizations l) => l.sceneNutritionIntroTitle;
+String _nutritionIntroSubtitle(AppLocalizations l) =>
+    l.sceneNutritionIntroSubtitle;
+String _nutritionIntroComposing(AppLocalizations l) =>
+    l.sceneNutritionIntroComposing;
+String _workoutCompleteTitle(AppLocalizations l) => l.sceneWorkoutCompleteTitle;
+String _workoutCompleteSubtitle(AppLocalizations l) =>
+    l.sceneWorkoutCompleteSubtitle;
+String _workoutCompleteComposing(AppLocalizations l) =>
+    l.sceneWorkoutCompleteComposing;

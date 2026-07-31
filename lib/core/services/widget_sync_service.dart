@@ -6,6 +6,8 @@ import 'package:home_widget/home_widget.dart';
 import '../../features/progress/providers/streak_provider.dart';
 import '../../features/workout/models/workout_day_model.dart';
 import '../../features/workout/providers/workout_provider.dart';
+import '../../l10n/app_localizations.dart';
+import '../utils/app_copy.dart';
 import '../utils/app_logger.dart';
 import 'app_preferences.dart';
 
@@ -150,21 +152,32 @@ final widgetSyncListenerProvider = Provider<void>((ref) {
           ? activeDay.exercises[activeIndex]
           : null;
 
-      final taskName = activeDay == null
-          ? 'Hazır mısın?'
-          : 'Gün ${activeDay.dayNumber} · ${_dayLabel(activeDay)}';
-      final subtitle = exercise == null
-          ? '%$percent · $streak gün seri'
-          : '${activeIndex + 1}/${activeDay!.exercises.length} · ${exercise.name}';
+      // The home widget outlives the app process, so its copy is loaded
+      // from [AppCopy] rather than a widget tree — there is none here,
+      // and there is none when Android re-renders the widget later.
+      unawaited(() async {
+        final l10n = await AppCopy.load();
+        final taskName = activeDay == null
+            ? l10n.widgetReadyPrompt
+            : l10n.widgetDayTask(
+                activeDay.dayNumber, _dayLabel(l10n, activeDay));
+        final subtitle = exercise == null
+            ? l10n.widgetProgressSubtitle(percent, streak)
+            : l10n.widgetExerciseSubtitle(
+                activeIndex + 1,
+                activeDay!.exercises.length,
+                exercise.name,
+              );
 
-      WidgetSyncService.instance.push(
-        taskName: taskName,
-        subtitle: subtitle,
-        progressPercent: percent,
-        streakCount: streak,
-        completedDays: completed,
-        totalDays: totalDays,
-      );
+        WidgetSyncService.instance.push(
+          taskName: taskName,
+          subtitle: subtitle,
+          progressPercent: percent,
+          streakCount: streak,
+          completedDays: completed,
+          totalDays: totalDays,
+        );
+      }());
     },
     fireImmediately: true,
   );
@@ -177,8 +190,8 @@ final widgetSyncListenerProvider = Provider<void>((ref) {
   ref.watch(appPreferencesProvider);
 });
 
-String _dayLabel(WorkoutDay day) {
-  if (day.isRestDay) return 'Dinlenme';
-  if (day.exercises.isEmpty) return 'Antrenman';
+String _dayLabel(AppLocalizations l10n, WorkoutDay day) {
+  if (day.isRestDay) return l10n.widgetRestDay;
+  if (day.exercises.isEmpty) return l10n.widgetWorkoutLabel;
   return day.exercises.first.targetMuscle.replaceAll('_', ' ');
 }

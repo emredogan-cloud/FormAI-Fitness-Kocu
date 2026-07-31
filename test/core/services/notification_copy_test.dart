@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sixpack_ai/core/services/notification_service.dart';
+import 'package:sixpack_ai/core/utils/app_copy.dart';
 import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// Roadmap Phase 5 · notification copy moved to ARB.
@@ -8,10 +8,10 @@ import 'package:sixpack_ai/l10n/app_localizations.dart';
 /// Notifications are the one surface composed with no widget tree: the
 /// workout repository and the smart-reminder scheduler both schedule
 /// from far outside any BuildContext. The service therefore loads its
-/// own [AppLocalizations] from [NotificationService.copyLocale], and
-/// these tests pin the two things that can silently break as a result —
-/// that loading works without a tree at all, and that the locale the
-/// app resolves is the locale the service is actually told.
+/// own [AppLocalizations] through [AppCopy], and these tests pin the two
+/// things that can silently break as a result — that loading works
+/// without a tree at all, and that the locale the app resolves is the
+/// locale those surfaces are actually told.
 void main() {
   test('copy loads with no widget tree, in every supported locale', () async {
     // If this ever throws, every scheduled notification silently stops:
@@ -54,9 +54,23 @@ void main() {
     });
   });
 
-  test('copyLocale defaults to Turkish', () {
+  test('AppCopy.locale defaults to Turkish', () {
     // The default matters: it is what a notification scheduled before
     // the first frame is written in.
-    expect(NotificationService.copyLocale, const Locale('tr'));
+    expect(AppCopy.locale, const Locale('tr'));
+  });
+
+  test('AppCopy.load resolves copy for the locale it is set to', () async {
+    // The whole point of the indirection: main.dart assigns this once
+    // and every tree-less surface follows. If load() ignored it, the
+    // home widget and notifications would silently keep speaking the
+    // previous language.
+    final original = AppCopy.locale;
+    addTearDown(() => AppCopy.locale = original);
+    for (final locale in AppLocalizations.supportedLocales) {
+      AppCopy.locale = locale;
+      final copy = await AppCopy.load();
+      expect(copy.localeName, locale.languageCode);
+    }
   });
 }

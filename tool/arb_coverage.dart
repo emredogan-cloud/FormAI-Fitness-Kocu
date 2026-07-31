@@ -38,20 +38,28 @@ Set<String> _keysOf(Map<String, dynamic> arb) =>
 Set<String> _placeholdersOf(String value) =>
     _placeholder.allMatches(value).map((m) => m.group(1)!).toSet();
 
-/// Every `AppLocalizations.of(context).key` / `l10n.key` / `_l10n.key`
-/// reference in lib/, so unused keys can be reported.
+/// Every member access in lib/, so unused ARB keys can be reported.
 ///
-/// The `_?` is load-bearing: a State class that reads localizations in
-/// several async methods naturally caches them behind a private
-/// `_l10n` getter, and `\bl10n` never matches inside `_l10n` because
-/// `_` is a word character. Without it the report calls live keys dead,
-/// which is the one failure mode that makes a coverage tool worse than
-/// no tool — it invites deleting a key that is actually on screen.
+/// This used to enumerate the RECEIVER — `AppLocalizations.of(ctx).key`,
+/// `l10n.key`, `_l10n.key`, `strings.key` — and that approach kept
+/// failing in the same direction. First it missed `_l10n` (`\bl10n`
+/// cannot match inside it, because `_` is a word character) and called
+/// nine live keys dead. Then it missed a table of lookup functions
+/// written as `String f(AppLocalizations l) => l.someKey` and a service
+/// that named its local `copy`, and called ten more dead.
+///
+/// The pattern was wrong, not the list: there is no closed set of names
+/// a localizations object can be bound to. So the receiver is no longer
+/// matched at all — every `.identifier` in lib/ is collected and
+/// intersected with the ARB keys.
+///
+/// That admits false POSITIVES (a key named `title` would be considered
+/// used by any `widget.title`), and that is the correct bias. A key
+/// wrongly called used costs a few bytes; a key wrongly called dead
+/// invites deleting copy that is on screen right now.
 Set<String> _usedKeys() {
   final used = <String>{};
-  final pattern = RegExp(
-    r'(?:AppLocalizations\.of\([^)]*\)|\b_?l10n|\bstrings)\s*\.\s*([a-zA-Z_]\w*)',
-  );
+  final pattern = RegExp(r'\.\s*([a-zA-Z_]\w*)');
   final dir = Directory('lib');
   if (!dir.existsSync()) return used;
   for (final entity in dir.listSync(recursive: true)) {

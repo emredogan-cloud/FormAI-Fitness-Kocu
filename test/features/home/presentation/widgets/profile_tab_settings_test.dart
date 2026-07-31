@@ -7,6 +7,7 @@ import 'package:sixpack_ai/features/auth/providers/auth_provider.dart';
 import 'package:sixpack_ai/features/home/presentation/widgets/profile_tab.dart';
 import 'package:sixpack_ai/features/monetization/providers/monetization_provider.dart';
 import 'package:sixpack_ai/features/workout/providers/workout_provider.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// Roadmap Phase 1 (R2.1 · C30) · the AYARLAR section of the Profile tab.
 ///
@@ -33,8 +34,10 @@ Widget _host(SharedPreferences prefs, {required bool isPro}) {
       isProProvider.overrideWithValue(isPro),
       workoutSessionProvider.overrideWith(_StubWorkoutSessionNotifier.new),
     ],
-    child: const MaterialApp(
-      home: Scaffold(body: ProfileTab()),
+    child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: const [Locale('tr')],
+      home: const Scaffold(body: ProfileTab()),
       debugShowCheckedModeBanner: false,
     ),
   );
@@ -122,10 +125,12 @@ void main() {
           isProProvider.overrideWithValue(false),
           workoutSessionProvider.overrideWith(_StubWorkoutSessionNotifier.new),
         ],
-        child: const MediaQuery(
-          data: MediaQueryData(textScaler: TextScaler.linear(1.3)),
+        child: MediaQuery(
+          data: const MediaQueryData(textScaler: TextScaler.linear(1.3)),
           child: MaterialApp(
-            home: Scaffold(body: ProfileTab()),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: const [Locale('tr')],
+            home: const Scaffold(body: ProfileTab()),
             debugShowCheckedModeBanner: false,
           ),
         ),

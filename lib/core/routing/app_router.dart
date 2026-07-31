@@ -33,6 +33,7 @@ import '../../features/workout/presentation/camera_tutorial_screen.dart';
 import '../../features/workout/presentation/manual_workout_screen.dart';
 import '../../features/workout/presentation/plan_detail_screen.dart';
 import '../../features/workout/presentation/workout_camera_screen.dart';
+import '../../l10n/app_localizations.dart';
 import '../services/app_preferences.dart';
 
 class AppRoutes {
@@ -565,13 +566,13 @@ class _MissingReferralCode extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                'Davet bağlantısı eksik.',
+                AppLocalizations.of(context).routeInviteLinkMissing,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 20),
               FilledButton(
                 onPressed: () => context.go(AppRoutes.dashboard),
-                child: const Text('Ana ekrana dön'),
+                child: Text(AppLocalizations.of(context).routeBackToHome),
               ),
             ],
           ),
@@ -599,9 +600,9 @@ class _MissingRecipe extends StatelessWidget {
             children: [
               const Icon(Icons.restaurant, color: Colors.white38, size: 56),
               const SizedBox(height: 12),
-              const Text(
-                'Tarif bulunamadı.',
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context).routeRecipeNotFound,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
@@ -610,7 +611,7 @@ class _MissingRecipe extends StatelessWidget {
               const SizedBox(height: 20),
               FilledButton(
                 onPressed: () => context.go(AppRoutes.dashboard),
-                child: const Text('Ana ekrana dön'),
+                child: Text(AppLocalizations.of(context).routeBackToHome),
               ),
             ],
           ),

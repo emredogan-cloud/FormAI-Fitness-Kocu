@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../features/nutrition/domain/models/recipe.dart';
+import '../../l10n/app_localizations.dart';
 import '../utils/app_logger.dart';
 import '../widgets/share_templates.dart';
 import 'analytics_service.dart';
@@ -50,6 +51,10 @@ class ShareService {
     ShareFormat format = ShareFormat.story,
   }) async {
     final analytics = AnalyticsService.instance;
+    // Read before the first await: everything below crosses an async
+    // gap, and reading localizations off a context after one is exactly
+    // what `use_build_context_synchronously` is warning about.
+    final l10n = AppLocalizations.of(context);
     unawaited(analytics.shareInitiated(surface: 'progress'));
     try {
       final widget = ShareProgressTemplate(
@@ -66,12 +71,12 @@ class ShareService {
       );
       if (!context.mounted) return;
       final file = await _persistTemp(bytes, prefix: 'formai_progress');
-      final text = _composeProgressText(percent, referralCode);
+      final text = _composeProgressText(l10n, percent, referralCode);
       final result = await SharePlus.instance.share(
         ShareParams(
           files: [XFile(file.path)],
           text: text,
-          subject: 'FormAI ile %$percent tamamladım!',
+          subject: l10n.shareProgressSubject(percent),
         ),
       );
       if (result.status == ShareResultStatus.success) {
@@ -98,6 +103,7 @@ class ShareService {
     ShareFormat format = ShareFormat.story,
   }) async {
     final analytics = AnalyticsService.instance;
+    final l10n = AppLocalizations.of(context);
     unawaited(analytics.shareInitiated(surface: 'badge'));
     try {
       final widget = ShareBadgeTemplate(
@@ -113,12 +119,12 @@ class ShareService {
       );
       if (!context.mounted) return;
       final file = await _persistTemp(bytes, prefix: 'formai_badge');
-      final text = _composeBadgeText(badgeName, referralCode);
+      final text = _composeBadgeText(l10n, badgeName, referralCode);
       final result = await SharePlus.instance.share(
         ShareParams(
           files: [XFile(file.path)],
           text: text,
-          subject: "FormAI'da $badgeName rozetini kazandım!",
+          subject: l10n.shareBadgeSubject(badgeName),
         ),
       );
       if (result.status == ShareResultStatus.success) {
@@ -144,18 +150,18 @@ class ShareService {
   /// shape so the deep link sits on its own line — most chat clients
   /// auto-linkify the trailing URL when it isn't glued to copy.
   Future<void> shareReferralCode({
+    required AppLocalizations l10n,
     required String code,
   }) async {
     final analytics = AnalyticsService.instance;
     unawaited(analytics.shareInitiated(surface: 'referral'));
     try {
-      final text = 'Spor ve beslenme rutinimi yapay zeka ile yönetiyorum. '
-          "FormAI'a katıl, $code davet kodunu kullanarak ilk ayını "
-          'ücretsiz Pro yapalım! 💪\n\nformai://r/$code$_brandHashtagSuffix';
+      final text = '${l10n.shareReferralText(code)}'
+          '\n\nformai://r/$code$_brandHashtagSuffix';
       final result = await SharePlus.instance.share(
         ShareParams(
           text: text,
-          subject: 'FormAI davet kodum',
+          subject: l10n.shareReferralSubject,
         ),
       );
       if (result.status == ShareResultStatus.success) {
@@ -367,13 +373,15 @@ class ShareService {
   /// the PM saw landing best in user interviews — and the referral
   /// line is rephrased so the deep link reads as a peer invitation
   /// rather than a coupon offer.
-  String _composeProgressText(int percent, String? referralCode) {
+  String _composeProgressText(
+    AppLocalizations l10n,
+    int percent,
+    String? referralCode,
+  ) {
     final referral = referralCode == null
         ? ''
-        : '\n\nSen de bana katıl, ilk ayımız Pro olsun: '
-            'formai://r/$referralCode';
-    return 'Yapay zeka fitness koçumla hedeflerime bir adım daha yaklaştım! 🚀 '
-        "FormAI ile programımın %$percent'ini tamamladım."
+        : '\n\n${l10n.shareReferralTail}formai://r/$referralCode';
+    return '${l10n.shareProgressText(percent)}'
         '$referral$_brandHashtagSuffix';
   }
 
@@ -381,13 +389,15 @@ class ShareService {
   /// referral line keeps the "1 ay birlikte Pro" phrasing because the
   /// PM tested it specifically against the badge surface and saw
   /// higher tap-through than the generic "katıl" copy.
-  String _composeBadgeText(String badgeName, String? referralCode) {
+  String _composeBadgeText(
+    AppLocalizations l10n,
+    String badgeName,
+    String? referralCode,
+  ) {
     final referral = referralCode == null
         ? ''
-        : '\n\nSen de bana katıl, ilk ayımız Pro olsun: '
-            'formai://r/$referralCode';
-    return 'Yapay zeka fitness koçumla bir hedefi daha tutturdum! 🏆 '
-        "FormAI'da '$badgeName' rozetini kazandım."
+        : '\n\n${l10n.shareReferralTail}formai://r/$referralCode';
+    return '${l10n.shareBadgeText(badgeName)}'
         '$referral$_brandHashtagSuffix';
   }
 }

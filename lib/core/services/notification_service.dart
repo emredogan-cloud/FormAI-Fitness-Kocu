@@ -6,6 +6,7 @@ import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
 import '../../l10n/app_localizations.dart';
+import '../utils/app_copy.dart';
 import '../utils/app_logger.dart';
 
 /// Phase 58 · the three states the smart-reminder scheduler picks
@@ -48,22 +49,17 @@ class NotificationService {
   // ("FormAI is reminding me to train").
   static const String _streakChannelId = 'formai_streak_warning';
 
-  /// The locale scheduled notification copy is written in.
-  ///
-  /// Roadmap Phase 5 · notifications are composed at SCHEDULE time and
-  /// fired later by the OS with no app process running, so their words
-  /// are frozen the moment they are scheduled. A locale change takes
-  /// effect on the next reschedule, not on an already-pending
-  /// notification — which is why this is a locale rather than a live
-  /// AppLocalizations, and why `main.dart` assigns it where the app
-  /// resolves its own locale.
-  static Locale copyLocale = const Locale('tr');
-
   /// Loads copy without a widget tree — two of the three schedulers
   /// (the workout repository and the smart-reminder scheduler) run far
   /// from any BuildContext.
-  static Future<AppLocalizations> _copy() =>
-      AppLocalizations.delegate.load(copyLocale);
+  ///
+  /// The locale lives in [AppCopy], shared with the other tree-less
+  /// surfaces (home widget, TTS) so `main.dart` assigns it once.
+  /// Notifications are composed at SCHEDULE time and fired later by the
+  /// OS with no app process running, so their words are frozen the
+  /// moment they are scheduled: a locale change takes effect on the next
+  /// reschedule, not on an already-pending notification.
+  static Future<AppLocalizations> _copy() => AppCopy.load();
 
   // Phase 58 · smart-reminder variant pools, keyed by the
   // [SmartReminderCondition] the user is in at scheduling time.

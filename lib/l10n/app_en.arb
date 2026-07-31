@@ -1812,5 +1812,230 @@
         "type": "int"
       }
     }
+  },
+  "routeInviteLinkMissing": "The invite link is incomplete.",
+  "@routeInviteLinkMissing": {
+    "description": "Fallback screen shown when a referral deep link carries no code"
+  },
+  "routeRecipeNotFound": "Recipe not found.",
+  "@routeRecipeNotFound": {
+    "description": "Fallback screen shown when a recipe deep link has no recipe attached"
+  },
+  "routeBackToHome": "Back to home",
+  "@routeBackToHome": {
+    "description": "Action returning to the dashboard from a broken deep-link screen"
+  },
+  "bootErrorConfigBody": "Please install the latest version from the Play Store, and contact support if the problem persists.",
+  "@bootErrorConfigBody": {
+    "description": "Boot error screen — recovery guidance for a ship-time misconfiguration, which retrying cannot fix"
+  },
+  "bootErrorNetworkBody": "Please check your internet connection.",
+  "@bootErrorNetworkBody": {
+    "description": "Boot error screen — recovery guidance for a transient network failure"
+  },
+  "sceneDashboardWelcomeTitle": "Today is day one of your transformation.",
+  "@sceneDashboardWelcomeTitle": {
+    "description": "First-time coach scene on the dashboard — title"
+  },
+  "sceneDashboardWelcomeSubtitle": "Your workout lives here. Nutrition, Progress and Profile are in the tabs below.\nWhen you need me, tap my avatar at the top — I am always here. 💜",
+  "@sceneDashboardWelcomeSubtitle": {
+    "description": "First-time coach scene on the dashboard — body: where things are, and how to reach the coach"
+  },
+  "sceneDashboardWelcomeComposing": "Putting something together for you...",
+  "@sceneDashboardWelcomeComposing": {
+    "description": "First-time coach scene on the dashboard — placeholder shown while the coach 'types'"
+  },
+  "sceneNutritionIntroTitle": "Nutrition...",
+  "@sceneNutritionIntroTitle": {
+    "description": "First-time coach scene on the nutrition tab — title"
+  },
+  "sceneNutritionIntroSubtitle": "One of the strongest parts of your transformation.\nI will map out the right route for you.",
+  "@sceneNutritionIntroSubtitle": {
+    "description": "First-time coach scene on the nutrition tab — body"
+  },
+  "sceneNutritionIntroComposing": "Learning how you eat...",
+  "@sceneNutritionIntroComposing": {
+    "description": "First-time coach scene on the nutrition tab — placeholder shown while the coach 'types'"
+  },
+  "sceneWorkoutCompleteTitle": "You did great work.",
+  "@sceneWorkoutCompleteTitle": {
+    "description": "First-time coach scene after the first completed workout — title"
+  },
+  "sceneWorkoutCompleteSubtitle": "You took the first step. Now you have really started.\nRemember this feeling.",
+  "@sceneWorkoutCompleteSubtitle": {
+    "description": "First-time coach scene after the first completed workout — body"
+  },
+  "sceneWorkoutCompleteComposing": "I am proud of you...",
+  "@sceneWorkoutCompleteComposing": {
+    "description": "First-time coach scene after the first completed workout — placeholder shown while the coach 'types'"
+  },
+  "shareReferralText": "I run my training and nutrition with AI. Join FormAI and use invite code {code} to make your first month Pro, free! 💪",
+  "@shareReferralText": {
+    "description": "Referral share message. {code} is the user's invite code. FormAI is a brand name and stays untranslated.",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "shareReferralSubject": "My FormAI invite code",
+  "@shareReferralSubject": {
+    "description": "Subject line for the referral share sheet (used by email clients)"
+  },
+  "shareReferralTail": "Join me and let's both go Pro for a month: ",
+  "@shareReferralTail": {
+    "description": "Trailing referral invitation appended to progress and badge shares, immediately followed by the deep link"
+  },
+  "shareProgressText": "One step closer to my goals with my AI fitness coach! 🚀 I have completed {percent}% of my FormAI programme.",
+  "@shareProgressText": {
+    "description": "Progress share message. {percent} is whole-number programme completion.",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "shareBadgeText": "Another goal hit with my AI fitness coach! 🏆 I earned the '{badge}' badge on FormAI.",
+  "@shareBadgeText": {
+    "description": "Badge share message. {badge} is the badge's display name.",
+    "placeholders": {
+      "badge": {
+        "type": "String"
+      }
+    }
+  },
+  "tourPlanTitle": "Today's workout lives here.",
+  "@tourPlanTitle": {
+    "description": "Dashboard tour step 1 — the plan card. Coach voice: second person, calm, one idea, no exclamation marks."
+  },
+  "tourPlanBody": "There is exactly one task waiting for you each day. Just say start — I track the rest.",
+  "@tourPlanBody": {
+    "description": "Dashboard tour step 1 body"
+  },
+  "tourCoachTitle": "I am here whenever you need me.",
+  "@tourCoachTitle": {
+    "description": "Dashboard tour step 2 — the coach card"
+  },
+  "tourCoachBody": "Message me whenever a question comes up. I know your plan, your history and your goal.",
+  "@tourCoachBody": {
+    "description": "Dashboard tour step 2 body"
+  },
+  "tourNutritionTitle": "Nutrition is the other half of the job.",
+  "@tourNutritionTitle": {
+    "description": "Dashboard tour step 3 — the nutrition tab"
+  },
+  "tourNutritionBody": "Your calorie and macro targets, recipes that suit you and your daily plan are all in this tab.",
+  "@tourNutritionBody": {
+    "description": "Dashboard tour step 3 body"
+  },
+  "tourProgressTitle": "This is where you see your progress.",
+  "@tourProgressTitle": {
+    "description": "Dashboard tour step 4 — the progress tab"
+  },
+  "tourProgressBody": "Your streak, the days you finished, your badges and your weekly charts — all on one screen.",
+  "@tourProgressBody": {
+    "description": "Dashboard tour step 4 body"
+  },
+  "tourProfileTitle": "Profile is your control panel.",
+  "@tourProfileTitle": {
+    "description": "Dashboard tour step 5 — the profile tab"
+  },
+  "tourProfileBody": "Update your details, pick your reminder time, get help or send me feedback.",
+  "@tourProfileBody": {
+    "description": "Dashboard tour step 5 body"
+  },
+  "widgetReadyPrompt": "Ready?",
+  "@widgetReadyPrompt": {
+    "description": "Home-screen widget task line when no workout day is active"
+  },
+  "widgetDayTask": "Day {day} · {label}",
+  "@widgetDayTask": {
+    "description": "Home-screen widget task line. {day} is the programme day number, {label} the muscle group or rest label.",
+    "placeholders": {
+      "day": {
+        "type": "int"
+      },
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "widgetRestDay": "Rest",
+  "@widgetRestDay": {
+    "description": "Home-screen widget label for a rest day"
+  },
+  "widgetWorkoutLabel": "Workout",
+  "@widgetWorkoutLabel": {
+    "description": "Home-screen widget label for a training day with no exercise list yet"
+  },
+  "widgetProgressSubtitle": "{percent}% · {streak}-day streak",
+  "@widgetProgressSubtitle": {
+    "description": "Home-screen widget subtitle when no exercise is in progress. {percent} is programme completion, {streak} the calendar-day streak.",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      },
+      "streak": {
+        "type": "int"
+      }
+    }
+  },
+  "widgetExerciseSubtitle": "{index}/{total} · {name}",
+  "@widgetExerciseSubtitle": {
+    "description": "Home-screen widget subtitle during a session. {index} is the 1-based exercise position, {total} the day's exercise count, {name} the exercise.",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "themeModeLight": "Light",
+  "@themeModeLight": {
+    "description": "Theme mode label — light"
+  },
+  "themeModeDark": "Dark",
+  "@themeModeDark": {
+    "description": "Theme mode label — dark"
+  },
+  "themeModeSystem": "System",
+  "@themeModeSystem": {
+    "description": "Theme mode label — follow the OS setting"
+  },
+  "ttsSmokeTestUtterance": "Sound test successful, the system is working.",
+  "@ttsSmokeTestUtterance": {
+    "description": "Sentence spoken aloud by the text-to-speech smoke test in settings. Must be natural speech in the target language, not a literal translation."
+  },
+  "themeModeCurrent": "Currently: {mode}",
+  "@themeModeCurrent": {
+    "description": "Helper line under the theme segmented button. {mode} is the localized theme mode label.",
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "shareProgressSubject": "I completed {percent}% with FormAI!",
+  "@shareProgressSubject": {
+    "description": "Subject line for the progress share sheet. {percent} is whole-number programme completion.",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "shareBadgeSubject": "I earned the {badge} badge on FormAI!",
+  "@shareBadgeSubject": {
+    "description": "Subject line for the badge share sheet. {badge} is the badge's display name.",
+    "placeholders": {
+      "badge": {
+        "type": "String"
+      }
+    }
   }
 }

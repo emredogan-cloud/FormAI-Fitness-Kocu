@@ -18,11 +18,11 @@ import 'core/services/disclosure_providers.dart';
 import 'core/services/experiments.dart';
 import 'core/services/feature_flags.dart';
 import 'core/services/live_activity_service.dart';
-import 'core/services/notification_service.dart';
 import 'core/services/smart_reminder_scheduler.dart';
 import 'core/services/widget_sync_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_mode_provider.dart';
+import 'core/utils/app_copy.dart';
 import 'core/utils/app_logger.dart';
 import 'core/utils/audio_feedback.dart';
 import 'l10n/app_localizations.dart';
@@ -431,6 +431,13 @@ class _BootGateState extends State<_BootGate> {
           final isConfigError = snapshot.error is _MissingConfigurationError;
           return MaterialApp(
             debugShowCheckedModeBanner: false,
+            // Roadmap Phase 5 · this shell is the app for anyone whose
+            // boot failed, so it needs the delegates too. Without them
+            // `AppLocalizations.of` throws here — and the one screen
+            // that must never fail is the one that explains a failure.
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: _supportedLocales,
+            localeResolutionCallback: _onLocaleResolved,
             home: _BootErrorScreen(
               onRetry: _retry,
               isConfigError: isConfigError,
@@ -511,6 +518,7 @@ class _BootErrorScreenState extends State<_BootErrorScreen> {
   @override
   Widget build(BuildContext context) {
     final isConfig = widget.isConfigError;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
@@ -538,9 +546,7 @@ class _BootErrorScreenState extends State<_BootErrorScreen> {
                 ),
                 const SizedBox(height: 18),
                 Text(
-                  isConfig
-                      ? 'Uygulama yapılandırılamadı.'
-                      : 'Bağlantı kurulamadı.',
+                  isConfig ? l10n.configurationFailed : l10n.connectionFailed,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: Colors.white,
@@ -551,10 +557,8 @@ class _BootErrorScreenState extends State<_BootErrorScreen> {
                 const SizedBox(height: 8),
                 Text(
                   isConfig
-                      ? 'Lütfen Play Store üzerinden son sürümü yükleyin '
-                          've sorun devam ederse destek ekibiyle iletişime '
-                          'geçin.'
-                      : 'Lütfen internetinizi kontrol edin.',
+                      ? l10n.bootErrorConfigBody
+                      : l10n.bootErrorNetworkBody,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: Colors.white70,
@@ -589,7 +593,7 @@ class _BootErrorScreenState extends State<_BootErrorScreen> {
                               color: Colors.black,
                             ),
                           )
-                        : const Text('TEKRAR DENE'),
+                        : Text(l10n.commonRetryUpper),
                   ),
                 ),
               ],
@@ -679,39 +683,12 @@ class _FormAIAppState extends ConsumerState<FormAIApp> {
       title: 'FormAI',
       debugShowCheckedModeBanner: false,
       // Phase 2 (P-Risk) · localization foundation. Delegates wired from
-      // the generated AppLocalizations; string migration from hard-coded
-      // Turkish is incremental from here.
-      //
-      // Store honesty · ships TR-ONLY for launch. ~1,300 strings are
-      // still hard-coded Turkish, so declaring `en` (which the generated
-      // supportedLocales would) put a broken 6-EN/1,300-TR hybrid on
-      // English devices and an untrue language claim on the listing.
-      // Re-add Locale('en') only when the extraction track completes.
+      // the generated AppLocalizations. See [_supportedLocales] for why
+      // this build declares Turkish only, and [_onLocaleResolved] for
+      // the resolution policy.
       localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: const [Locale('tr')],
-      // Roadmap Phase 5 (C11) · locale-resolution scaffolding.
-      //
-      // Deliberately still resolves to Turkish for everyone: the
-      // extraction is in progress and adding `en` to `supportedLocales`
-      // is Phase 6's job, not this one. What this callback buys now is
-      // that the resolution POLICY has a single home and is already
-      // exercised, so Phase 6 changes one list rather than discovering
-      // where the decision lives.
-      //
-      // The policy: honour the device locale when we genuinely support
-      // it, otherwise fall back to Turkish — never to the framework
-      // default, which would hand an unsupported-locale user a screen
-      // of untranslated keys.
-      localeResolutionCallback: (deviceLocale, supported) {
-        final resolved = _resolveLocale(deviceLocale, supported);
-        // Scheduled notifications are composed with no widget tree —
-        // the workout repository and the smart-reminder scheduler both
-        // run far from a BuildContext. This is the point where the app
-        // decides what language it speaks, so it is also where the
-        // notification service is told.
-        NotificationService.copyLocale = resolved;
-        return resolved;
-      },
+      supportedLocales: _supportedLocales,
+      localeResolutionCallback: _onLocaleResolved,
       // Phase 49 · the dark builder layers floating, neon-bordered
       // SnackBars on top of the seed-based ColorScheme so toasts read
       // as part of the brand. Phase 53 added [AppTheme.light] so
@@ -737,6 +714,31 @@ class _FormAIAppState extends ConsumerState<FormAIApp> {
       routerConfig: router,
     );
   }
+}
+
+/// The locales this build actually ships.
+///
+/// Store honesty · TR-ONLY for launch. The generated
+/// `AppLocalizations.supportedLocales` also lists `en`, and declaring it
+/// before the English copy is reviewed would put a part-translated
+/// hybrid on English devices and an untrue language claim on the store
+/// listing. Phase 6 adds `en` here — one list, one edit.
+const List<Locale> _supportedLocales = [Locale('tr')];
+
+/// Applied wherever the app hands a `MaterialApp` its locale policy:
+/// resolve, tell the tree-less surfaces, return.
+///
+/// Shared between the running app and the boot-error shell so a user
+/// whose launch failed reads the failure in the same language as
+/// everything else.
+Locale _onLocaleResolved(Locale? deviceLocale, Iterable<Locale> supported) {
+  final resolved = _resolveLocale(deviceLocale, supported);
+  // Scheduled notifications, the home-screen widget and the TTS smoke
+  // test are all composed with no widget tree to read from. This is the
+  // point where the app decides what language it speaks, so it is also
+  // the one place that tells them.
+  AppCopy.locale = resolved;
+  return resolved;
 }
 
 /// Roadmap Phase 5 (C11) · device locale → a locale we actually ship.

@@ -3,6 +3,7 @@ import 'dart:io' show Platform;
 
 import 'package:flutter_tts/flutter_tts.dart';
 
+import 'app_copy.dart';
 import 'app_logger.dart';
 
 /// Speech priority — used by [AudioFeedback.speak] to order pending
@@ -350,7 +351,8 @@ class AudioFeedback {
       // utterance regardless of pending coaching state.
       await _tts.stop();
       await _tts.setVolume(1.0);
-      final result = await _tts.speak('Ses testi başarılı, sistem çalışıyor.');
+      final copy = await AppCopy.load();
+      final result = await _tts.speak(copy.ttsSmokeTestUtterance);
       AppLogger.info(
         'TTS smoke test: speak() returned $result',
         category: 'tts',

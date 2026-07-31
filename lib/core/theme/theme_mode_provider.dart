@@ -2,6 +2,7 @@ import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../services/app_preferences.dart';
 
 /// Phase 53 · user-selectable theme mode (System / Light / Dark) backed
@@ -83,16 +84,16 @@ class _ThemeModeNotifier extends Notifier<ThemeMode> {
   }
 }
 
-/// Stable Turkish label for the active mode. Used by the Profile tab's
+/// Localized label for the active mode. Used by the Profile tab's
 /// helper copy under the segmented button.
-String themeModeLabelTr(ThemeMode mode) {
+String themeModeLabel(AppLocalizations l10n, ThemeMode mode) {
   switch (mode) {
     case ThemeMode.light:
-      return 'Açık';
+      return l10n.themeModeLight;
     case ThemeMode.dark:
-      return 'Koyu';
+      return l10n.themeModeDark;
     case ThemeMode.system:
-      return 'Sistem';
+      return l10n.themeModeSystem;
   }
 }
 

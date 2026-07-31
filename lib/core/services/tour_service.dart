@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../widgets/spotlight_tour.dart';
 import 'analytics_service.dart';
 import 'app_preferences.dart';
@@ -59,7 +60,7 @@ class TourService {
 
     final completed = await showSpotlightTour(
       context,
-      steps: _dashboardSteps(targets),
+      steps: _dashboardSteps(targets, AppLocalizations.of(context)),
       onStepShown: (index) => AnalyticsService.instance.tourStepViewed(
         tour: _kDashboardTour,
         stepIndex: index,
@@ -81,42 +82,37 @@ class TourService {
   /// Copy follows the Form coach voice established in
   /// `first_time_ai_scenes.dart`: second person, calm, one idea per step,
   /// no exclamation marks, no hype.
-  List<SpotlightStep> _dashboardSteps(TourTargets t) {
+  List<SpotlightStep> _dashboardSteps(TourTargets t, AppLocalizations l10n) {
     return [
       SpotlightStep(
-        title: 'Bugünün antrenmanı burada.',
-        body: 'Her gün seni bekleyen tek bir görev var. '
-            'Başla demen yeterli — gerisini ben takip ediyorum.',
+        title: l10n.tourPlanTitle,
+        body: l10n.tourPlanBody,
         rect: () => t.clampAboveNav(TourTargets.rectOf(t.planCard)),
         radius: 20,
       ),
       SpotlightStep(
-        title: 'Ben her an buradayım.',
-        body: 'Aklına bir soru geldiğinde bana yaz. '
-            'Planını, geçmişini ve hedefini biliyorum.',
+        title: l10n.tourCoachTitle,
+        body: l10n.tourCoachBody,
         rect: () => t.clampAboveNav(TourTargets.rectOf(t.coachCard)),
         radius: 18,
       ),
       SpotlightStep(
-        title: 'Beslenme, işin diğer yarısı.',
-        body: 'Kalori ve makro hedefin, sana uygun tarifler '
-            've günlük planın bu sekmede.',
+        title: l10n.tourNutritionTitle,
+        body: l10n.tourNutritionBody,
         rect: () => t.navItemRect(1),
         radius: 14,
         padding: 6,
       ),
       SpotlightStep(
-        title: 'Gelişimini burada görürsün.',
-        body: 'Serin, tamamladığın günler, rozetlerin ve '
-            'haftalık grafiklerin — hepsi tek ekranda.',
+        title: l10n.tourProgressTitle,
+        body: l10n.tourProgressBody,
         rect: () => t.navItemRect(2),
         radius: 14,
         padding: 6,
       ),
       SpotlightStep(
-        title: 'Profil senin kontrol paneli.',
-        body: 'Bilgilerini güncelle, hatırlatma saatini seç, '
-            'yardım al ya da bana geri bildirim gönder.',
+        title: l10n.tourProfileTitle,
+        body: l10n.tourProfileBody,
         rect: () => t.navItemRect(3),
         radius: 14,
         padding: 6,
