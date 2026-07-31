@@ -16,7 +16,9 @@ import '../../../core/services/connectivity_service.dart';
 import '../../../core/theme/theme_extension.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/legal_urls.dart';
+import '../../../core/utils/text_span_split.dart';
 import '../../../core/widgets/skeleton_loader.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../auth/presentation/auth_modal_bottom_sheet.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/monetization_provider.dart';
@@ -45,16 +47,16 @@ IntroductoryPrice? _freeTrialOf(Package? package) {
 /// Human Turkish label for a trial length, e.g. "7 gün", "1 hafta".
 /// Falls back to a unitless "ücretsiz deneme" phrasing when the store
 /// reports an unknown period unit.
-String _trialLengthLabel(IntroductoryPrice intro) {
-  final unit = switch (intro.periodUnit) {
-    PeriodUnit.day => 'gün',
-    PeriodUnit.week => 'hafta',
-    PeriodUnit.month => 'ay',
-    PeriodUnit.year => 'yıl',
-    _ => null,
+String _trialLengthLabel(AppLocalizations l10n, IntroductoryPrice intro) {
+  final n = intro.periodNumberOfUnits;
+  return switch (intro.periodUnit) {
+    PeriodUnit.day => l10n.trialLengthDays(n),
+    PeriodUnit.week => l10n.trialLengthWeeks(n),
+    PeriodUnit.month => l10n.trialLengthMonths(n),
+    PeriodUnit.year => l10n.trialLengthYears(n),
+    // An unrecognised unit must never become a duration promise.
+    _ => l10n.trialFreeGeneric,
   };
-  if (unit == null) return 'ücretsiz deneme';
-  return '${intro.periodNumberOfUnits} $unit';
 }
 
 /// Scales a store-formatted price string to [total] while preserving its
@@ -81,11 +83,16 @@ String? _scalePriceString(String? source, double total) {
 }
 
 /// Billing-period label for the renewal disclosure line.
-String _periodLabelOf(_Plan plan) => switch (plan) {
-      _Plan.monthly => 'ay',
-      _Plan.yearly => 'yıl',
-      _Plan.quarterly => '3 ay',
+String _periodLabelOf(AppLocalizations l10n, _Plan plan) => switch (plan) {
+      _Plan.monthly => l10n.billingPeriodMonth,
+      _Plan.yearly => l10n.billingPeriodYear,
+      _Plan.quarterly => l10n.billingPeriodQuarter,
     };
+
+/// The refund window the guarantee card promises. Rendered twice — as
+/// the crest numeral and inside the sentence — so it lives in one place
+/// and the two cannot drift apart.
+const int _kGuaranteeDays = 7;
 
 class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   static const Color _neon = Color(0xFF8E5BFF);
@@ -500,7 +507,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   _LegalFooter(
                     trial: selectedTrial,
                     priceString: selectedPackage?.storeProduct.priceString,
-                    periodLabel: _periodLabelOf(_selected),
+                    periodLabel: _periodLabelOf(
+                      AppLocalizations.of(context),
+                      _selected,
+                    ),
                   ),
                   // Phase 40: Sandbox override button is strictly a
                   // debug-only affordance now. The `_kDevProOverrideKey`
@@ -581,7 +591,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'Fiyatlar yüklenemedi.',
+                  AppLocalizations.of(context).paywallPricesUnavailable,
                   style: TextStyle(
                     fontSize: 13,
                     color: context.colors.onSurface.withValues(alpha: 0.7),
@@ -592,7 +602,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                     ref.read(subscriptionProvider.notifier).refresh();
                     _refreshSdkReady();
                   },
-                  child: const Text('Tekrar dene'),
+                  child: Text(AppLocalizations.of(context).paywallRetry),
                 ),
               ],
             ),
@@ -670,7 +680,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       key: const ValueKey('paywall_primary_cta'),
       button: true,
       enabled: !waiting,
-      label: waiting ? 'Yükleniyor' : 'Aboneliğe devam et',
+      label: waiting
+          ? AppLocalizations.of(context).paywallCtaLoading
+          : AppLocalizations.of(context).paywallCtaSubscribe,
       child: ExcludeSemantics(
         child: DecoratedBox(
           decoration: BoxDecoration(
@@ -725,8 +737,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                           Flexible(
                             child: Text(
                               trial != null
-                                  ? '₺0,00 karşılığında dene'
-                                  : "Premium'a Geç",
+                                  ? AppLocalizations.of(context)
+                                      .paywallTrialCta(trial.priceString)
+                                  : AppLocalizations.of(context)
+                                      .paywallSubscribeCta,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               textAlign: TextAlign.center,
@@ -767,7 +781,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
             letterSpacing: 0.4,
           ),
         ),
-        child: const Text("[DEV] Premium'u Aç (Sandbox)"),
+        // Debug affordance, never shipped to a user.
+        child: const Text('[DEV] Premium\'u Aç (Sandbox)'), // i18n-ignore
       ),
     );
   }
@@ -820,7 +835,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   color: restoreColor,
                 ),
               )
-            : const Text('Satın Alımları Geri Yükle'),
+            : Text(AppLocalizations.of(context).paywallRestore),
       ),
     );
   }
@@ -844,7 +859,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       // No RevenueCat offering available (dev builds / missing config).
       // Surface a clear error instead of silently opening a broken purchase
       // sheet — Apple reviewers hit this path when testing without sandbox.
-      _toast('Satın alma şu anda kullanılamıyor. Lütfen daha sonra dene.',
+      _toast(AppLocalizations.of(context).paywallPurchaseUnavailable,
           error: true);
       return;
     }
@@ -857,7 +872,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
     switch (outcome) {
       case PurchaseOutcome.success:
-        _toast('Premium aktif edildi!');
+        _toast(AppLocalizations.of(context).paywallPremiumActivated);
         // Closed-test polish (Task 2) · one-time premium welcome tour on the
         // user's FIRST successful purchase. The seen-flag is written BEFORE the
         // sheet so a mid-sheet backgrounding can't replay it.
@@ -881,18 +896,14 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         // upgrade the entitlement once it clears; in the meantime
         // we tell the user the purchase is in flight rather than
         // showing the generic error toast.
-        _toast(
-          'Satın alman onay bekliyor. Onaylanınca Premium otomatik '
-          'açılacak.',
-        );
+        _toast(AppLocalizations.of(context).paywallPurchasePending);
       case PurchaseOutcome.notEntitled:
         _toast(
-          'Ödeme tamamlandı ama Premium henüz aktifleşmedi. '
-          'Satın alımları geri yüklemeyi dene.',
+          AppLocalizations.of(context).paywallNotEntitled,
           error: true,
         );
       case PurchaseOutcome.error:
-        _toast('Satın alma başarısız oldu. Lütfen tekrar dene.', error: true);
+        _toast(AppLocalizations.of(context).paywallPurchaseFailed, error: true);
     }
   }
 
@@ -905,21 +916,21 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
     switch (outcome) {
       case RestoreOutcome.restored:
-        _toast('Satın alımlar geri yüklendi');
+        _toast(AppLocalizations.of(context).paywallRestored);
         await Future<void>.delayed(const Duration(milliseconds: 600));
         if (!mounted) return;
         _close(context);
       case RestoreOutcome.nothingToRestore:
-        _toast('Geri yüklenecek bir abonelik bulunamadı');
+        _toast(AppLocalizations.of(context).paywallNothingToRestore);
       case RestoreOutcome.error:
-        _toast('Geri yükleme başarısız oldu. Lütfen tekrar dene.', error: true);
+        _toast(AppLocalizations.of(context).paywallRestoreFailed, error: true);
     }
   }
 
   Future<void> _unlockAsDeveloper() async {
     await ref.read(subscriptionProvider.notifier).unlockPremiumAsDeveloper();
     if (!mounted) return;
-    _toast('Geliştirici modu: Premium aktif edildi!');
+    _toast('Geliştirici modu: Premium aktif edildi!'); // i18n-ignore
     await Future<void>.delayed(const Duration(milliseconds: 400));
     if (!mounted) return;
     _close(context);
@@ -994,6 +1005,7 @@ class _HeroSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1014,31 +1026,27 @@ class _HeroSection extends StatelessWidget {
                     const _AiDestekliBadge(),
                     const SizedBox(height: 16),
                     RichText(
-                      text: const TextSpan(
-                        style: TextStyle(
+                      text: TextSpan(
+                        style: const TextStyle(
                           fontSize: 29,
                           fontWeight: FontWeight.w900,
                           height: 1.12,
                           letterSpacing: 0.2,
+                          color: Colors.white,
                         ),
-                        children: [
-                          TextSpan(
-                            text: 'Kişiselleştirilmiş\n',
-                            style: TextStyle(color: Colors.white),
+                        children: splitHighlighted(
+                          l10n.paywallHeroTitle(
+                            l10n.paywallHeroTitleHighlight,
                           ),
-                          TextSpan(
-                            text: 'planınızı alın!',
-                            style: TextStyle(color: _neon),
-                          ),
-                        ],
+                          l10n.paywallHeroTitleHighlight,
+                          const TextStyle(color: _neon),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 12),
-                    const Text(
-                      'Yapay zeka her tekrarını izlesin, formunu düzeltsin '
-                      've 30 günlük programla hedefine her gün biraz daha '
-                      'yaklaşsın.',
-                      style: TextStyle(
+                    Text(
+                      l10n.paywallHeroBlurb,
+                      style: const TextStyle(
                         color: Colors.white60,
                         fontSize: 12.5,
                         height: 1.45,
@@ -1097,27 +1105,28 @@ class _HeroFeatureRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    final l10n = AppLocalizations.of(context);
+    return Row(
       children: [
         Expanded(
           child: _HeroFeature(
             icon: Icons.bar_chart_rounded,
             title: '130+',
-            body: 'egzersizde\ncanlı analiz',
+            body: l10n.paywallHeroExercisesBody,
           ),
         ),
         Expanded(
           child: _HeroFeature(
             icon: Icons.track_changes_rounded,
-            title: 'Kişisel',
-            body: 'hedeflere\nözel plan',
+            title: l10n.paywallHeroPersonalTitle,
+            body: l10n.paywallHeroPersonalBody,
           ),
         ),
         Expanded(
           child: _HeroFeature(
             icon: Icons.trending_up_rounded,
-            title: 'İlerlemeni',
-            body: 'takip et,\ngelişimini gör',
+            title: l10n.paywallHeroProgressTitle,
+            body: l10n.paywallHeroProgressBody,
           ),
         ),
       ],
@@ -1138,14 +1147,14 @@ class _AiDestekliBadge extends StatelessWidget {
         color: _HeroSection._neon.withValues(alpha: 0.14),
         border: Border.all(color: _HeroSection._neon.withValues(alpha: 0.6)),
       ),
-      child: const Row(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.auto_awesome, color: _HeroSection._neon, size: 13),
-          SizedBox(width: 6),
+          const Icon(Icons.auto_awesome, color: _HeroSection._neon, size: 13),
+          const SizedBox(width: 6),
           Text(
-            'AI DESTEKLİ',
-            style: TextStyle(
+            AppLocalizations.of(context).act1AiBadge,
+            style: const TextStyle(
               color: _HeroSection._neon,
               fontSize: 11,
               fontWeight: FontWeight.w900,
@@ -1221,12 +1230,12 @@ class _HeroFeature extends StatelessWidget {
 class _AiFeaturesCard extends StatelessWidget {
   const _AiFeaturesCard();
 
-  static const List<String> _items = [
-    'Vücudunu analiz eden AI koç',
-    'Gerçek zamanlı form düzeltme',
-    'Bilimsel ve etkili antrenman planları',
-    '30 günlük adım adım gelişim',
-  ];
+  static List<String> _itemsFor(AppLocalizations l10n) => [
+        l10n.paywallFeatureAiCoach,
+        l10n.paywallFeatureFormCorrection,
+        l10n.paywallFeatureSciencePlans,
+        l10n.paywallFeature30Days,
+      ];
 
   @override
   Widget build(BuildContext context) {
@@ -1279,7 +1288,7 @@ class _AiFeaturesCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                for (final item in _items)
+                for (final item in _itemsFor(AppLocalizations.of(context)))
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 3),
                     child: Row(
@@ -1430,17 +1439,14 @@ class _PlanCard extends StatelessWidget {
 
   bool get _isHighlighted => plan == _Plan.yearly;
 
-  String get _title => switch (plan) {
-        _Plan.monthly => '1 Ay',
-        _Plan.yearly => '12 Ay',
-        _Plan.quarterly => '3 Ay',
+  String _title(AppLocalizations l10n) => switch (plan) {
+        _Plan.monthly => l10n.planDurationMonths(1),
+        _Plan.yearly => l10n.planDurationMonths(12),
+        _Plan.quarterly => l10n.planDurationMonths(3),
       };
 
-  String get _per => switch (plan) {
-        _Plan.monthly => '/ ay',
-        _Plan.yearly => '/ yıl',
-        _Plan.quarterly => '/ 3 ay',
-      };
+  String _per(AppLocalizations l10n) =>
+      l10n.paywallPerPeriod(_periodLabelOf(l10n, plan));
 
   /// Phase 95 · resolves the price slot to one of three widgets, in
   /// priority order:
@@ -1546,7 +1552,7 @@ class _PlanCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    _title,
+                    _title(AppLocalizations.of(context)),
                     style: TextStyle(
                       color: isSelected
                           ? _PaywallScreenState._neon
@@ -1579,7 +1585,7 @@ class _PlanCard extends StatelessWidget {
                       _buildPriceSlot(scheme),
                       const SizedBox(height: 2),
                       Text(
-                        _per,
+                        _per(AppLocalizations.of(context)),
                         style: TextStyle(
                           color: scheme.onSurface.withValues(alpha: 0.55),
                           fontSize: 11,
@@ -1648,9 +1654,9 @@ class _PlanCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: const Text(
-                    '🔥 EN POPÜLER',
-                    style: TextStyle(
+                  child: Text(
+                    AppLocalizations.of(context).paywallMostPopular,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 10,
                       fontWeight: FontWeight.w900,
@@ -1711,6 +1717,7 @@ class _InlineTrialBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.colors;
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       decoration: BoxDecoration(
@@ -1725,7 +1732,7 @@ class _InlineTrialBadge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            '${_trialLengthLabel(trial)} ücretsiz dene',
+            l10n.paywallTrialFreeCta(_trialLengthLabel(l10n, trial)),
             textAlign: TextAlign.center,
             style: TextStyle(
               color: scheme.onSurface,
@@ -1736,7 +1743,7 @@ class _InlineTrialBadge extends StatelessWidget {
             ),
           ),
           Text(
-            'şimdi ödeme yok',
+            l10n.paywallNoPaymentNow,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: scheme.onSurface.withValues(alpha: 0.7),
@@ -1789,7 +1796,7 @@ class _GuaranteeCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '%100 Memnuniyet Garantisi',
+                  AppLocalizations.of(context).paywallGuaranteeTitle(100),
                   style: TextStyle(
                     color: scheme.onSurface,
                     fontSize: 15,
@@ -1798,7 +1805,8 @@ class _GuaranteeCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  'İlk 7 gün içinde koşulsuz iade hakkın var.',
+                  AppLocalizations.of(context)
+                      .paywallGuaranteeBody(_kGuaranteeDays),
                   style: TextStyle(
                     color: scheme.onSurface.withValues(alpha: 0.6),
                     fontSize: 12.5,
@@ -1828,12 +1836,12 @@ class _GuaranteeCard extends StatelessWidget {
                 color: _PaywallScreenState._neon.withValues(alpha: 0.7),
               ),
             ),
-            child: const Column(
+            child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  '7',
-                  style: TextStyle(
+                  '$_kGuaranteeDays',
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
@@ -1841,8 +1849,8 @@ class _GuaranteeCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'GÜN',
-                  style: TextStyle(
+                  AppLocalizations.of(context).paywallGuaranteeDaysUnit,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 10,
                     fontWeight: FontWeight.w900,
@@ -1910,7 +1918,7 @@ class _NoPaymentBadge extends StatelessWidget {
             // highlighted yearly _PlanCard, where the user is
             // evaluating price.
             Text(
-              'Şimdi ödeme yok!',
+              AppLocalizations.of(context).paywallNoPaymentNowBadge,
               style: TextStyle(
                 color: scheme.onSurface,
                 fontSize: 14,
@@ -1993,41 +2001,38 @@ class _LegalFooterState extends State<_LegalFooter> {
     // duration, and (b) always carries the explicit auto-renewal +
     // store-billing disclosure Apple 3.1.2 / Play subscriptions
     // require.
+    final l10n = AppLocalizations.of(context);
     final trial = widget.trial;
     final price = widget.priceString;
+    // Every part of this block is a WHOLE sentence in ARB. The
+    // disclosure is a store requirement, so a translator must be able
+    // to re-order and re-phrase each statement without a clause of it
+    // being welded into Dart.
     final renewal = price != null
-        ? 'Abonelik ($price / ${widget.periodLabel}) iptal edilmedikçe '
-            'her dönem sonunda otomatik yenilenir ve ücret mağaza '
-            'hesabına yansıtılır.'
-        : 'Abonelik iptal edilmedikçe her dönem sonunda otomatik '
-            'yenilenir ve ücret mağaza hesabına yansıtılır.';
-    final opening = trial != null
-        ? '${_trialLengthLabel(trial)} süren ücretsiz denemenin sonunda '
-            'seçtiğin abonelik otomatik başlar. $renewal Deneme süresi '
-            'içinde ayarlardan istediğin zaman iptal edebilirsin. '
-            'Devam ederek '
-        : '$renewal İstediğin zaman mağaza aboneliklerinden iptal '
-            'edebilirsin. Devam ederek ';
+        ? l10n.paywallRenewalWithPrice(price, widget.periodLabel)
+        : l10n.paywallRenewalNoPrice;
+    final terms = l10n.legalTermsLabel;
+    final privacy = l10n.legalPrivacyLabel;
+    final sentences = <String>[
+      if (trial != null)
+        l10n.paywallTrialOpening(_trialLengthLabel(l10n, trial)),
+      renewal,
+      if (trial != null)
+        l10n.paywallTrialCancelNote
+      else
+        l10n.paywallCancelAnytime,
+      l10n.paywallLegalNotice(terms, privacy),
+    ];
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Text.rich(
         TextSpan(
           style: baseStyle,
-          children: [
-            TextSpan(text: opening),
-            TextSpan(
-              text: 'Kullanım Şartları',
-              style: linkStyle,
-              recognizer: _termsTap,
-            ),
-            const TextSpan(text: ' ve '),
-            TextSpan(
-              text: 'Gizlilik Politikası',
-              style: linkStyle,
-              recognizer: _privacyTap,
-            ),
-            const TextSpan(text: '’nı kabul etmiş olursun.'),
-          ],
+          children: splitLinked(
+            sentences.join(' '),
+            {terms: _termsTap, privacy: _privacyTap},
+            linkStyle,
+          ),
         ),
         textAlign: TextAlign.center,
       ),
@@ -2184,14 +2189,14 @@ class _PaywallCinematicBackdropState extends State<_PaywallCinematicBackdrop>
               fit: StackFit.expand,
               children: [
                 _BackdropImage(
-                  asset: 'photos/cinsiyetseçimierkek.webp',
+                  asset: 'photos/cinsiyetseçimierkek.webp', // i18n-ignore
                   alignment: Alignment(-0.78 + 0.05 * t, -0.55 + 0.04 * t),
                   widthFraction: 0.42,
                   opacity: 0.18,
                   rotationDegrees: -3,
                 ),
                 _BackdropImage(
-                  asset: 'photos/hedefinneSıkılaşmak.webp',
+                  asset: 'photos/hedefinneSıkılaşmak.webp', // i18n-ignore
                   alignment: Alignment(0.65 - 0.05 * t, -0.62 + 0.03 * t),
                   widthFraction: 0.36,
                   opacity: 0.16,
@@ -2212,7 +2217,7 @@ class _PaywallCinematicBackdropState extends State<_PaywallCinematicBackdrop>
                   rotationDegrees: 5,
                 ),
                 _BackdropImage(
-                  asset: 'photos/günlükaktivitenmasabaşı.webp',
+                  asset: 'photos/günlükaktivitenmasabaşı.webp', // i18n-ignore
                   alignment: Alignment(0.0, 0.85 - 0.04 * t),
                   widthFraction: 0.34,
                   opacity: 0.13,

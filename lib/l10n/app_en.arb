@@ -5491,5 +5491,281 @@
   "socialProofPrivacyBody": "Your video never leaves your device — the analysis runs entirely on your phone.",
   "@socialProofPrivacyBody": {
     "description": "Capability highlight body. A factual privacy claim; it must stay accurate in every language."
+  },
+  "trialLengthDays": "{count, plural, =1{1 day} other{{count} days}}",
+  "@trialLengthDays": {
+    "description": "Free-trial length in days, as reported by the store SKU. Turkish takes no plural agreement after a numeral.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trialLengthWeeks": "{count, plural, =1{1 week} other{{count} weeks}}",
+  "@trialLengthWeeks": {
+    "description": "Free-trial length in weeks.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trialLengthMonths": "{count, plural, =1{1 month} other{{count} months}}",
+  "@trialLengthMonths": {
+    "description": "Free-trial length in months.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trialLengthYears": "{count, plural, =1{1 year} other{{count} years}}",
+  "@trialLengthYears": {
+    "description": "Free-trial length in years.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trialFreeGeneric": "free trial",
+  "@trialFreeGeneric": {
+    "description": "Unitless trial phrasing, used when the store reports a period unit the app does not recognise. Never promise a duration here."
+  },
+  "billingPeriodMonth": "month",
+  "@billingPeriodMonth": {
+    "description": "Billing period used inside the auto-renewal disclosure."
+  },
+  "billingPeriodYear": "year",
+  "@billingPeriodYear": {
+    "description": "Billing period used inside the auto-renewal disclosure."
+  },
+  "billingPeriodQuarter": "3 months",
+  "@billingPeriodQuarter": {
+    "description": "Billing period used inside the auto-renewal disclosure."
+  },
+  "planDurationMonths": "{count, plural, =1{1 Month} other{{count} Months}}",
+  "@planDurationMonths": {
+    "description": "Plan card title, e.g. 1 / 3 / 12 months.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "paywallPerPeriod": "/ {period}",
+  "@paywallPerPeriod": {
+    "description": "Price suffix on a plan card, e.g. '/ year'.",
+    "placeholders": {
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallPricesUnavailable": "Prices couldn't be loaded.",
+  "@paywallPricesUnavailable": {
+    "description": "Shown when the store offerings fail to resolve."
+  },
+  "paywallRetry": "Try again",
+  "@paywallRetry": {
+    "description": "Retries loading the store offerings."
+  },
+  "paywallCtaLoading": "Loading",
+  "@paywallCtaLoading": {
+    "description": "Accessibility label for the primary CTA while the store is still resolving."
+  },
+  "paywallCtaSubscribe": "Continue to subscribe",
+  "@paywallCtaSubscribe": {
+    "description": "Accessibility label for the primary CTA."
+  },
+  "paywallTrialCta": "Try it for {price}",
+  "@paywallTrialCta": {
+    "description": "Primary CTA shown ONLY when the selected SKU really carries a free trial. {price} is the store's own formatted zero price, so it stays correct in every storefront.",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallSubscribeCta": "Go Premium",
+  "@paywallSubscribeCta": {
+    "description": "Primary CTA when the selected SKU has no trial."
+  },
+  "paywallRestore": "Restore purchases",
+  "@paywallRestore": {
+    "description": "Restore-purchases action. Store policy requires this to be reachable."
+  },
+  "paywallPurchaseUnavailable": "Purchases aren't available right now. Please try again later.",
+  "@paywallPurchaseUnavailable": {
+    "description": "Shown when no store package resolved."
+  },
+  "paywallPremiumActivated": "Premium is active!",
+  "@paywallPremiumActivated": {
+    "description": "Confirmation after a successful purchase."
+  },
+  "paywallPurchasePending": "Your purchase is awaiting approval. Premium will unlock automatically once it clears.",
+  "@paywallPurchasePending": {
+    "description": "Shown when the store accepted the purchase but the charge has not resolved (parental approval, slow card review)."
+  },
+  "paywallNotEntitled": "Payment went through but Premium isn't active yet. Try restoring your purchases.",
+  "@paywallNotEntitled": {
+    "description": "Shown when payment succeeded but the entitlement has not arrived."
+  },
+  "paywallPurchaseFailed": "The purchase failed. Please try again.",
+  "@paywallPurchaseFailed": {
+    "description": "Generic purchase error."
+  },
+  "paywallRestored": "Purchases restored",
+  "@paywallRestored": {
+    "description": "Confirmation after a successful restore."
+  },
+  "paywallNothingToRestore": "No subscription found to restore",
+  "@paywallNothingToRestore": {
+    "description": "Shown when restore finds nothing."
+  },
+  "paywallRestoreFailed": "Restore failed. Please try again.",
+  "@paywallRestoreFailed": {
+    "description": "Generic restore error."
+  },
+  "paywallHeroTitle": "Get your\n{plan}",
+  "@paywallHeroTitle": {
+    "description": "Paywall hero title. {plan} is painted in the accent colour, so the translator controls the emphasis and the line break.",
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallHeroTitleHighlight": "personalised plan!",
+  "@paywallHeroTitleHighlight": {
+    "description": "The accent-painted fragment inside the paywall hero title."
+  },
+  "paywallHeroBlurb": "Let AI watch every rep, correct your form, and with a 30-day program bring you a little closer to your goal each day.",
+  "@paywallHeroBlurb": {
+    "description": "Paywall hero paragraph."
+  },
+  "paywallHeroExercisesBody": "exercises with\nlive analysis",
+  "@paywallHeroExercisesBody": {
+    "description": "Hero feature body under the exercise count. Three features share one row; the line break keeps them balanced."
+  },
+  "paywallHeroPersonalTitle": "Personal",
+  "@paywallHeroPersonalTitle": {
+    "description": "Hero feature title."
+  },
+  "paywallHeroPersonalBody": "a plan for\nyour goals",
+  "@paywallHeroPersonalBody": {
+    "description": "Hero feature body."
+  },
+  "paywallHeroProgressTitle": "Progress",
+  "@paywallHeroProgressTitle": {
+    "description": "Hero feature title."
+  },
+  "paywallHeroProgressBody": "tracked, so you\nsee it happen",
+  "@paywallHeroProgressBody": {
+    "description": "Hero feature body."
+  },
+  "paywallFeatureAiCoach": "An AI coach that analyses your body",
+  "@paywallFeatureAiCoach": {
+    "description": "AI-features checklist item."
+  },
+  "paywallFeatureFormCorrection": "Real-time form correction",
+  "@paywallFeatureFormCorrection": {
+    "description": "AI-features checklist item."
+  },
+  "paywallFeatureSciencePlans": "Evidence-based, effective training plans",
+  "@paywallFeatureSciencePlans": {
+    "description": "AI-features checklist item."
+  },
+  "paywallFeature30Days": "30 days of step-by-step progress",
+  "@paywallFeature30Days": {
+    "description": "AI-features checklist item."
+  },
+  "paywallMostPopular": "🔥 MOST POPULAR",
+  "@paywallMostPopular": {
+    "description": "Badge on the highlighted plan card."
+  },
+  "paywallTrialFreeCta": "Try {length} free",
+  "@paywallTrialFreeCta": {
+    "description": "Trial callout inside the highlighted plan card. {length} comes from the store SKU, never from copy.",
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallNoPaymentNow": "no payment now",
+  "@paywallNoPaymentNow": {
+    "description": "Sub-line of the trial callout."
+  },
+  "paywallNoPaymentNowBadge": "No payment now!",
+  "@paywallNoPaymentNowBadge": {
+    "description": "Standalone trial badge."
+  },
+  "paywallGuaranteeTitle": "{percent}% Satisfaction Guarantee",
+  "@paywallGuaranteeTitle": {
+    "description": "Guarantee card title. The percent sign leads the number in Turkish and trails it in English.",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "paywallGuaranteeBody": "You have an unconditional refund right within the first {days} days.",
+  "@paywallGuaranteeBody": {
+    "description": "Guarantee card body. {days} is the same constant the crest renders, so the two cannot drift apart.",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "paywallGuaranteeDaysUnit": "DAYS",
+  "@paywallGuaranteeDaysUnit": {
+    "description": "Unit under the number on the guarantee crest."
+  },
+  "paywallTrialOpening": "When your {length} free trial ends, the subscription you chose starts automatically.",
+  "@paywallTrialOpening": {
+    "description": "First sentence of the subscription disclosure, shown only when the SKU carries a trial. Required by Apple 3.1.2 and Play subscription policy — the meaning must not soften.",
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallRenewalWithPrice": "Unless cancelled, the subscription ({price} / {period}) renews automatically at the end of each period and your store account is charged.",
+  "@paywallRenewalWithPrice": {
+    "description": "Auto-renewal disclosure with the real store price. Required by Apple 3.1.2 and Play subscription policy.",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      },
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallRenewalNoPrice": "Unless cancelled, the subscription renews automatically at the end of each period and your store account is charged.",
+  "@paywallRenewalNoPrice": {
+    "description": "Auto-renewal disclosure used when the store price is unavailable. Required disclosure — never drop it."
+  },
+  "paywallTrialCancelNote": "You can cancel any time from Settings during the trial.",
+  "@paywallTrialCancelNote": {
+    "description": "Cancellation note shown with a trial."
+  },
+  "paywallCancelAnytime": "You can cancel any time from your store subscriptions.",
+  "@paywallCancelAnytime": {
+    "description": "Cancellation note shown without a trial."
+  },
+  "paywallLegalNotice": "By continuing you accept the {terms} and the {privacy}.",
+  "@paywallLegalNotice": {
+    "description": "Closing sentence of the paywall disclosure. Both placeholders render as tappable links, so the sentence must stay whole.",
+    "placeholders": {
+      "terms": {
+        "type": "String"
+      },
+      "privacy": {
+        "type": "String"
+      }
+    }
   }
 }

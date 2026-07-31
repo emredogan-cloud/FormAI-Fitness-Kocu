@@ -73,15 +73,19 @@ Widget _wrapPaywall({required SubscriptionState seededState}) {
 /// annual package — optionally with an introductory price — so the
 /// paywall's trial-copy derivation runs against genuine RevenueCat
 /// model objects instead of stubs.
-Offerings _offeringsWithAnnual({IntroductoryPrice? intro}) {
+Offerings _offeringsWithAnnual({
+  IntroductoryPrice? intro,
+  String priceString = '₺999,99',
+  String currency = 'TRY',
+}) {
   const ctx = PresentedOfferingContext('default', null, null);
   final product = StoreProduct(
     'formai_pro_yearly',
     'FormAI Pro yıllık abonelik',
     'FormAI Pro (Yıllık)',
     999.99,
-    '₺999,99',
-    'TRY',
+    priceString,
+    currency,
     introductoryPrice: intro,
   );
   final annual = Package(
@@ -334,4 +338,89 @@ void main() {
       );
     },
   );
+  testWidgets(
+    'a non-Turkish storefront renders no lira sign anywhere on the paywall',
+    (tester) async {
+      // Phase 5 · the trial CTA read "₺0,00 karşılığında dene" with the
+      // lira sign and the Turkish decimal comma baked into Dart; it now
+      // renders the store's own introductory price string. The CTA copy
+      // itself only mounts once the billing SDK reports ready, which a
+      // widget test cannot reach — so what is asserted here is the
+      // property that mattered: on a USD storefront every price the
+      // paywall DOES render comes from the store, and no lira leaks
+      // through from hardcoded copy.
+      await tester.pumpWidget(_wrapPaywall(
+        seededState: SubscriptionState(
+          isPro: false,
+          offerings: _offeringsWithAnnual(
+            priceString: r'$29.99',
+            currency: 'USD',
+            intro: const IntroductoryPrice(
+              0,
+              r'$0.00',
+              'P1W',
+              1,
+              PeriodUnit.day,
+              7,
+            ),
+          ),
+        ),
+      ));
+      await tester.pump();
+
+      expect(find.textContaining(r'$29.99', findRichText: true), findsWidgets);
+      expect(find.textContaining('₺', findRichText: true), findsNothing);
+      // The trial length still comes from the SKU, in the user's language.
+      expect(find.text('7 gün ücretsiz dene'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'the subscription disclosure keeps both legal links tappable',
+    (tester) async {
+      await tester.pumpWidget(_wrapPaywall(
+        seededState: SubscriptionState(
+          isPro: false,
+          offerings: _offeringsWithAnnual(intro: null),
+        ),
+      ));
+      await tester.pump();
+
+      // The disclosure is assembled from whole ARB sentences and the
+      // links are attached by splitting the result. Store policy needs
+      // the terms and privacy documents reachable from here, so the
+      // recognisers are asserted, not just the words.
+      final footer = tester.widget<RichText>(
+        find.byWidgetPredicate(
+          (w) =>
+              w is RichText &&
+              w.text.toPlainText().contains('otomatik yenilenir'),
+        ),
+      );
+      final tappable = _flattenSpans(footer.text as TextSpan)
+          .where((s) => s.recognizer != null)
+          .toList();
+      expect(tappable, hasLength(2));
+      expect(
+        tappable.map((s) => s.text),
+        containsAll(<String>['Kullanım Şartları', 'Gizlilik Politikası']),
+      );
+      // Sentence order: renewal terms, then how to cancel, then consent.
+      final plain = footer.text.toPlainText();
+      expect(
+        plain.indexOf('otomatik yenilenir'),
+        lessThan(plain.indexOf('Devam ederek')),
+      );
+      expect(plain, endsWith('kabul etmiş olursun.'));
+    },
+  );
+}
+
+/// `Text.rich` wraps the caller's span in one of its own, so the linked
+/// fragments are never direct children.
+Iterable<TextSpan> _flattenSpans(TextSpan root) sync* {
+  yield root;
+  for (final child in root.children ?? const <InlineSpan>[]) {
+    if (child is TextSpan) yield* _flattenSpans(child);
+  }
 }
