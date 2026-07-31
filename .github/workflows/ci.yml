@@ -52,6 +52,22 @@ jobs:
       - name: Analyze source
         run: flutter analyze
 
+      # Roadmap Phase 5 (C11) · hardcoded-string ratchet.
+      #
+      # Fails only when a gated presentation file gains user-facing
+      # Turkish literals versus the committed baseline. Extraction
+      # lowers the baseline; nothing can raise it. A gate that failed on
+      # all ~1,100 pre-existing literals from day one would have been
+      # disabled in week one.
+      - name: Guard against new hardcoded user-facing strings
+        run: dart run tool/check_hardcoded_strings.dart
+
+      # Reports missing keys, unused keys and — the one that matters —
+      # placeholder mismatches between locales. A translation that drops
+      # {count} still compiles; it just renders a sentence with a hole.
+      - name: ARB coverage report
+        run: dart run tool/arb_coverage.dart
+
       - name: Run unit and widget tests (with coverage)
         run: flutter test --coverage
 

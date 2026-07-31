@@ -79,6 +79,17 @@ bool get _llmEnabled {
   }
 }
 
+/// Roadmap Phase 5 (AI work) · the locale sent with every coach request.
+///
+/// Hardcoded to Turkish for now — the app has exactly one supported
+/// locale until Phase 6 — but sent as data rather than assumed, so the
+/// server owns persona selection and Phase 7 can add languages with no
+/// app release. It is deliberately a constant rather than a read of the
+/// device locale: the persona must follow the app's language, not the
+/// phone's, or a Turkish user on an English handset gets an English
+/// coach inside a Turkish app.
+const String coachLocale = 'tr';
+
 /// Calls the `coach-chat` Supabase Edge Function (which holds the model key
 /// server-side). Returns the reply text, or `null` on any non-2xx / shape
 /// mismatch so [LlmCoachBrain] falls back. Errors bubble as exceptions from
@@ -102,6 +113,12 @@ Future<String?> _invokeCoachChat(
           .toList(),
       'message': message,
       if (memory.isNotEmpty) 'summary': memory,
+      // Roadmap Phase 5 (AI work) · thread the locale now so the server
+      // can select a per-locale persona in Phase 7 without an app
+      // release. Sending it before it is used is the point: by the time
+      // non-Turkish personas exist, every client already in the wild is
+      // telling the server which one to use.
+      'locale': coachLocale,
     },
   );
   final data = res.data;

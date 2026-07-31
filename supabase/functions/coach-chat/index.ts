@@ -75,6 +75,23 @@ GÜVENLİK (çok önemli):
 
 Amacın: kullanıcıyı bugünkü doğru adıma yönlendirmek ve onu yolda tutmak.`;
 
+// Roadmap Phase 5 (AI work) · per-locale persona registry.
+//
+// One entry today. Phase 7 adds `en`, `es`, `fr`, `de` here — each a
+// hand-written persona, NOT a machine translation of the Turkish one.
+// Form's voice is a brand asset and raw MT flattens exactly the things
+// that make it a voice: the directness, the second-person warmth, the
+// refusal to sound like an assistant. A translated persona would still
+// read as a translation, and the coach is the one surface where that
+// would be obvious to every user.
+//
+// Selection happens server-side so a new language ships without an app
+// release — the whole reason the client threads `locale` a phase before
+// anything reads it.
+const PERSONAS: Record<string, string> = {
+  tr: PERSONA,
+};
+
 // Minimal instruction for the rolling-summary mode. Deliberately persona-free
 // and tiny: the output is machine-consumed (stored client-side and fed back as
 // "ÖNCEKİ KONUŞMALARDAN NOTLAR"), so every token counts.
@@ -121,12 +138,24 @@ serve(async (req) => {
     message?: string;
     summary?: string;
     mode?: string;
+    // Roadmap Phase 5 (AI work) · the app's locale, not the device's.
+    // Accepted and recorded now so per-locale personas can land in
+    // Phase 7 without an app release; until then every value resolves
+    // to the Turkish persona below.
+    locale?: string;
   };
   try {
     payload = await req.json();
   } catch {
     return json({ error: "bad_request" }, 400);
   }
+
+  // Roadmap Phase 5 · persona selection seam. One locale today; adding
+  // a language in Phase 7 is a new entry in this map plus its persona
+  // block, with no client change — which is the entire reason the
+  // parameter is threaded a phase early.
+  const locale = (payload.locale ?? "tr").toString().slice(0, 8);
+  const personaLocale = locale.startsWith("tr") ? "tr" : "tr";
 
   const contextBlock = (payload.context ?? "").toString().slice(0, 4000);
   const history = Array.isArray(payload.turns) ? payload.turns : [];
@@ -174,7 +203,11 @@ serve(async (req) => {
   // identical on every call so Anthropic caches it; the context changes only
   // when the user's state changes.
   const system = [
-    { type: "text", text: PERSONA, cache_control: { type: "ephemeral" } },
+    {
+      type: "text",
+      text: PERSONAS[personaLocale] ?? PERSONA,
+      cache_control: { type: "ephemeral" },
+    },
     {
       type: "text",
       text: [

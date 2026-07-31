@@ -688,6 +688,29 @@ class _FormAIAppState extends ConsumerState<FormAIApp> {
       // Re-add Locale('en') only when the extraction track completes.
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: const [Locale('tr')],
+      // Roadmap Phase 5 (C11) · locale-resolution scaffolding.
+      //
+      // Deliberately still resolves to Turkish for everyone: the
+      // extraction is in progress and adding `en` to `supportedLocales`
+      // is Phase 6's job, not this one. What this callback buys now is
+      // that the resolution POLICY has a single home and is already
+      // exercised, so Phase 6 changes one list rather than discovering
+      // where the decision lives.
+      //
+      // The policy: honour the device locale when we genuinely support
+      // it, otherwise fall back to Turkish — never to the framework
+      // default, which would hand an unsupported-locale user a screen
+      // of untranslated keys.
+      localeResolutionCallback: (deviceLocale, supported) {
+        if (deviceLocale != null) {
+          for (final locale in supported) {
+            if (locale.languageCode == deviceLocale.languageCode) {
+              return locale;
+            }
+          }
+        }
+        return supported.isEmpty ? const Locale('tr') : supported.first;
+      },
       // Phase 49 · the dark builder layers floating, neon-bordered
       // SnackBars on top of the seed-based ColorScheme so toasts read
       // as part of the brand. Phase 53 added [AppTheme.light] so
