@@ -221,7 +221,7 @@ class _ActiveView extends StatelessWidget {
                 if (targetReps != null) ...[
                   const SizedBox(height: 6),
                   Text(
-                    'Hedef: $targetReps tekrar',
+                    AppLocalizations.of(context).targetRepsLabel(targetReps!),
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.6),
                       fontSize: 14,
@@ -281,7 +281,7 @@ class _RepCounter extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       container: true,
-      label: 'Tamamlanan tekrar: $reps',
+      label: AppLocalizations.of(context).completedRepsLabel(reps),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

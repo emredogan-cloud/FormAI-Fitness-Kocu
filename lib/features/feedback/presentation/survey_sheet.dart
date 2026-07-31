@@ -226,7 +226,7 @@ class _NpsScale extends StatelessWidget {
           children: List.generate(11, (i) {
             return Semantics(
               button: true,
-              label: '$i puan',
+              label: AppLocalizations.of(context).ratingPointsLabel(i),
               child: SizedBox(
                 width: 48,
                 height: 48,

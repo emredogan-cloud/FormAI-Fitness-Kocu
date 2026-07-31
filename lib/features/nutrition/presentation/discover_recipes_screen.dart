@@ -344,7 +344,7 @@ class _ResultCount extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(18, 14, 18, 4),
       child: Text(
-        '$count tarif bulundu$suffix',
+        '${AppLocalizations.of(context).recipesFound(count)}$suffix',
         style: TextStyle(
           color: context.colors.onSurface.withValues(alpha: 0.60),
           fontSize: 12,
@@ -452,7 +452,8 @@ class _DiscoverRecipeCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 3),
                           Text(
-                            '${recipe.protein}g',
+                            AppLocalizations.of(context)
+                                .macroProteinGrams(recipe.protein),
                             style: TextStyle(
                               color: scheme.onSurface,
                               fontSize: 11,

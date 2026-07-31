@@ -182,7 +182,8 @@ class _HubHeader extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Semantics(
-            label: '$totalCount özellikten $unlockedCount tanesi açık',
+            label: AppLocalizations.of(context)
+                .hubUnlockedOf(unlockedCount, totalCount),
             child: ExcludeSemantics(
               child: Row(
                 children: [

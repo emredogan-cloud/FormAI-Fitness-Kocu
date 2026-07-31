@@ -28,11 +28,11 @@ class InterludeBeforePainPointStep extends ConsumerWidget {
     final wizard = ref.watch(wizardProvider);
     final name = _capitaliseFirst(wizard.name);
     final opener = name != null
-        ? '$name, şimdi en zorlandığın şeyi bilmem gerekiyor.'
+        ? AppLocalizations.of(context).interludePainOpener(name)
         : AppLocalizations.of(context).interludePainPointTitle;
     return CinematicAiPresence(
       title: AppLocalizations.of(context).interludePainPointBeat,
-      subtitle: '$opener\nYargılamak için değil — birlikte çözmek için.',
+      subtitle: AppLocalizations.of(context).interludePainBody(opener),
       subtitleTypewriter: true,
       composingPlaceholder:
           AppLocalizations.of(context).interludePainPointComposing,

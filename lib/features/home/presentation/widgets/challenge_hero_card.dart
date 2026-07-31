@@ -126,7 +126,7 @@ class ChallengeHeroCard extends StatelessWidget {
                       ),
                       const Spacer(),
                       Text(
-                        '$dayNumber. Gün',
+                        AppLocalizations.of(context).dayOrdinalTitle(dayNumber),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 36,
@@ -140,7 +140,8 @@ class ChallengeHeroCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        '$completed/$total Gün',
+                        AppLocalizations.of(context)
+                            .daysOfTotal(completed, total),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 13,

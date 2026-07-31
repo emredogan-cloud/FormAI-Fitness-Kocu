@@ -203,7 +203,7 @@ class _PracticeHeader extends StatelessWidget {
           // gets from the digit changing.
           Semantics(
             liveRegion: true,
-            label: 'Sayılan tekrar: $reps',
+            label: AppLocalizations.of(context).countedRepsLabel(reps),
             child: ExcludeSemantics(
               child: Text(
                 '$reps',

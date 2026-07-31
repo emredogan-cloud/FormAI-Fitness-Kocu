@@ -55,7 +55,9 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen> {
     ScaffoldMessenger.maybeOf(context)?.showSnackBar(
       SnackBar(
         content: Text(
-          reward == null ? base : '$base +${reward.xp} XP kazandın.',
+          reward == null
+              ? base
+              : AppLocalizations.of(context).xpEarnedSuffix(base, reward.xp),
         ),
       ),
     );
@@ -287,7 +289,7 @@ class _NoResults extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            '"$query" için sonuç yok',
+            AppLocalizations.of(context).searchNoResults(query),
             textAlign: TextAlign.center,
             style: TextStyle(
               color: scheme.onSurface,

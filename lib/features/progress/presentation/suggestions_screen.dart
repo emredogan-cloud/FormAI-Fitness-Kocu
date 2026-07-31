@@ -140,12 +140,12 @@ class SuggestionsScreen extends ConsumerWidget {
     }
     final focus = _focusLabel(l10n, activeDay);
     final dayNumber = activeDay.dayNumber;
-    final streakHeadline = streak >= 3 ? '$streak günlük serini bozma — ' : '';
+    final streakHeadline = streak >= 3 ? l10n.suggestionStreakLead(streak) : '';
     return _SuggestionData(
       accent: _workoutColor,
       icon: Icons.fitness_center_rounded,
-      title: 'Bugün $focus çalış',
-      description: "${streakHeadline}Gün $dayNumber'ün hedefi: $focus. "
+      title: l10n.suggestionTodayFocus(focus),
+      description: '${l10n.suggestionDayGoal(streakHeadline, dayNumber, focus)}'
           '${l10n.suggestionStartWorkoutBody}',
       ctaLabel: l10n.suggestionStartWorkoutCta,
       ctaRoute: AppRoutes.planDetail,

@@ -88,9 +88,9 @@ class FeedbackService {
     String body,
     _DeviceContext ctx,
   ) async {
-    final composed = '$body\n\n— Cihaz —\n'
-        'Uygulama: ${ctx.appVersion}\n'
-        'Platform: ${ctx.platform} ${ctx.osVersion}';
+    final composed = '$body\n\n${l10n.feedbackDeviceHeading}\n'
+        '${l10n.feedbackAppVersionLabel(ctx.appVersion)}\n'
+        '${l10n.feedbackPlatformLabel(ctx.platform, ctx.osVersion)}';
     final uri = Uri(
       scheme: 'mailto',
       path: LegalUrls.supportEmail,

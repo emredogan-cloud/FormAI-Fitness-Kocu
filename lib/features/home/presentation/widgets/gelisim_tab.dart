@@ -327,7 +327,7 @@ class _TopHeader extends ConsumerWidget {
               const Text('🔥', style: TextStyle(fontSize: 13)),
               const SizedBox(width: 6),
               Text(
-                '$streak Günlük Seri',
+                AppLocalizations.of(context).streakDailyLabel(streak),
                 style: TextStyle(
                   color: scheme.onSurface,
                   fontSize: 12,
@@ -473,7 +473,8 @@ class _ProgramProgressCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '$completedCount / $_programLength gün tamamlandı',
+                  AppLocalizations.of(context)
+                      .daysCompletedOf(completedCount, _programLength),
                   style: TextStyle(
                     color: context.colors.onSurface.withValues(alpha: 0.55),
                     fontSize: 12,
@@ -597,7 +598,7 @@ class _StreakCard extends StatelessWidget {
                     text: AppLocalizations.of(context).progressStreakLabel),
                 const SizedBox(height: 8),
                 Text(
-                  '$streak gün',
+                  AppLocalizations.of(context).streakDaysLower(streak),
                   style: TextStyle(
                     color: context.colors.onSurface,
                     fontSize: 34,
@@ -948,7 +949,8 @@ class _CompletedCell extends StatelessWidget {
             ..hideCurrentSnackBar()
             ..showSnackBar(
               SnackBar(
-                content: Text('Gün $dayNumber tamamlandı!'),
+                content: Text(
+                    AppLocalizations.of(context).dayCompletedBang(dayNumber)),
                 backgroundColor: _success.withValues(alpha: 0.9),
                 behavior: SnackBarBehavior.floating,
                 duration: const Duration(seconds: 2),
@@ -1658,9 +1660,12 @@ class _DailySummaryButtonState extends ConsumerState<_DailySummaryButton> {
     final mealAsync = ref.read(dailyMenuProvider);
     final mealName = _firstMealName(l10n, mealAsync.value);
 
-    return 'Günaydın $name. Bugün ${macroTarget.calories} kalori hedefin '
-        'var. Antrenman programında $muscleLabel günü. Sana harika bir '
-        '$mealName önerim var, menüden inceleyebilirsin.';
+    return l10n.coachMorningBrief(
+      name,
+      macroTarget.calories,
+      muscleLabel,
+      mealName,
+    );
   }
 
   /// Falls back through every signal we have, in priority order, to

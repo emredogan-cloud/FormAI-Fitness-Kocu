@@ -227,11 +227,12 @@ final coachContextProvider = Provider<CoachContext>((ref) {
         (a, b) => a.completedAtIso.compareTo(b.completedAtIso) >= 0 ? a : b);
     final mins = (latest.durationSeconds / 60).round();
     final names = latest.exerciseLogs
-        .map((e) => '${e.exerciseName} ${e.actualReps} tekrar')
+        .map((e) => '${e.exerciseName} ${e.actualReps} tekrar') // i18n-ignore
         .take(6)
         .join(', ');
-    lastSession = 'Son kaydedilen antrenman: ${latest.dayNumber}. gün — '
-        'toplam ${latest.totalReps} tekrar, $mins dk ($names)';
+    lastSession =
+        'Son kaydedilen antrenman: ${latest.dayNumber}. gün — ' // i18n-ignore
+        'toplam ${latest.totalReps} tekrar, $mins dk ($names)'; // i18n-ignore
   }
 
   final goalKey =

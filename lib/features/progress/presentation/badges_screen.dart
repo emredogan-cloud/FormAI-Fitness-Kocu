@@ -343,7 +343,7 @@ class _BadgeSummaryCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  '$unlocked / $total kazanıldı',
+                  AppLocalizations.of(context).badgesEarnedOf(unlocked, total),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 17,

@@ -97,9 +97,9 @@ class CoachContext {
   String toPromptContext() {
     final b = StringBuffer();
     b.writeln('Kullanıcı profili:'); // i18n-ignore
-    if (firstName.isNotEmpty) b.writeln('- İsim: $firstName');
-    if (goalLabel != null) b.writeln('- Hedef: $goalLabel');
-    if (age != null) b.writeln('- Yaş: $age');
+    if (firstName.isNotEmpty) b.writeln('- İsim: $firstName'); // i18n-ignore
+    if (goalLabel != null) b.writeln('- Hedef: $goalLabel'); // i18n-ignore
+    if (age != null) b.writeln('- Yaş: $age'); // i18n-ignore
     if (heightCm != null) b.writeln('- Boy: $heightCm cm');
     if (weightKg != null) b.writeln('- Kilo: $weightKg kg');
     final bmiV = bmi;
@@ -109,16 +109,17 @@ class CoachContext {
       b.writeln('- Ekipman: ${hasEquipment! ? 'var' : 'yok'}');
     }
     b.writeln('İlerleme:'); // i18n-ignore
-    b.writeln('- Seri: $streakDays gün');
-    b.writeln('- Tamamlanan: $completedDays/$totalDays gün');
+    b.writeln('- Seri: $streakDays gün'); // i18n-ignore
+    b.writeln('- Tamamlanan: $completedDays/$totalDays gün'); // i18n-ignore
     b.writeln('- Seviye: $level ($xp XP), Rozet: $badgeCount');
     if (todayDayNumber != null) {
-      b.writeln('- Bugünkü gün: $todayDayNumber '
+      b.writeln('- Bugünkü gün: $todayDayNumber ' // i18n-ignore
           '(${todayIsCompleted ? 'tamamlandı' : '$todayExerciseCount egzersiz, ' // i18n-ignore
               'henüz yapılmadı'})'); // i18n-ignore
     }
     if (todayExerciseNames.isNotEmpty) {
-      b.writeln('- Bugünkü egzersizler: ${todayExerciseNames.join(', ')}');
+      b.writeln(
+          '- Bugünkü egzersizler: ${todayExerciseNames.join(', ')}'); // i18n-ignore
     }
     if (lastSessionLine != null) b.writeln('- $lastSessionLine');
     if (workoutMode == 'manual') {

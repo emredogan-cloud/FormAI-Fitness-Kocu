@@ -105,7 +105,8 @@ class RecipeDetailScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        '${recipe.prepTimeMinutes} dk',
+                        AppLocalizations.of(context)
+                            .minutesShort(recipe.prepTimeMinutes),
                         style: TextStyle(
                           color: scheme.onSurface,
                           fontSize: 14,
@@ -681,8 +682,10 @@ Future<void> _handleAddToPlan(
     ..hideCurrentSnackBar()
     ..showSnackBar(
       SnackBar(
-        content: Text(
-            '${recipe.title} "${_slotLabel(AppLocalizations.of(context), slot)}" öğününe eklendi.'),
+        content: Text(AppLocalizations.of(context).recipeAddedToSlot(
+          recipe.title,
+          _slotLabel(AppLocalizations.of(context), slot),
+        )),
         backgroundColor: _neonGreen.withValues(alpha: 0.9),
         behavior: SnackBarBehavior.floating,
       ),

@@ -4,14 +4,6 @@
   "@appTitle": {
     "description": "Application title"
   },
-  "retry": "Retry",
-  "@retry": {
-    "description": "Retry button on the boot error screen"
-  },
-  "settings": "Settings",
-  "@settings": {
-    "description": "Account settings screen title"
-  },
   "deleteAccount": "Delete my account",
   "@deleteAccount": {
     "description": "Account deletion button label"
@@ -5822,5 +5814,701 @@
         "type": "String"
       }
     }
+  },
+  "planBuiltForGoal": "Built for your '{goal}' goal and your level.",
+  "@planBuiltForGoal": {
+    "description": "Plan detail subtitle.",
+    "placeholders": {
+      "goal": {
+        "type": "String"
+      }
+    }
+  },
+  "dayOrdinalLower": "day {day}",
+  "@dayOrdinalLower": {
+    "description": "Ordinal day reference in running text.",
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "dayOrdinalTitle": "Day {day}",
+  "@dayOrdinalTitle": {
+    "description": "Ordinal day used as a title.",
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "percentCompleted": "{percent}% complete",
+  "@percentCompleted": {
+    "description": "Completion percentage. The percent sign leads the number in Turkish.",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "exerciseCountTitle": "{count, plural, =1{1 Exercise} other{{count} Exercises}}",
+  "@exerciseCountTitle": {
+    "description": "Exercise count as a heading.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "exerciseCountLower": "{count, plural, =1{1 exercise} other{{count} exercises}}",
+  "@exerciseCountLower": {
+    "description": "Exercise count in running text.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "planMinutesLevel": "{minutes} min · {level}",
+  "@planMinutesLevel": {
+    "description": "Plan summary: duration and level.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "level": {
+        "type": "String"
+      }
+    }
+  },
+  "setsBySeconds": "{sets} × {seconds} s",
+  "@setsBySeconds": {
+    "description": "Exercise prescription: sets by duration.",
+    "placeholders": {
+      "sets": {
+        "type": "int"
+      },
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "setsByReps": "{sets} sets · {reps} reps",
+  "@setsByReps": {
+    "description": "Exercise prescription: sets by reps.",
+    "placeholders": {
+      "sets": {
+        "type": "int"
+      },
+      "reps": {
+        "type": "int"
+      }
+    }
+  },
+  "advancedCategoryWorkouts": "Advanced {category} workouts",
+  "@advancedCategoryWorkouts": {
+    "description": "Heading above the premium exercise list for a category.",
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "streakDaysTitle": "{count, plural, =1{1 Day} other{{count} Days}}",
+  "@streakDaysTitle": {
+    "description": "Streak length as a heading.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "streakDaysLower": "{count, plural, =1{1 day} other{{count} days}}",
+  "@streakDaysLower": {
+    "description": "Streak length in running text.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "streakDailyLabel": "{count, plural, =1{1-Day Streak} other{{count}-Day Streak}}",
+  "@streakDailyLabel": {
+    "description": "Streak card label.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "calorieTargetSuffix": "/ {target} kcal",
+  "@calorieTargetSuffix": {
+    "description": "Daily calorie target shown after the consumed figure.",
+    "placeholders": {
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "recipeAddedToPlan": "{title} added to your plan!",
+  "@recipeAddedToPlan": {
+    "description": "Confirmation after adding a recipe to the day plan.",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "caloriesRemaining": "{count} kcal left",
+  "@caloriesRemaining": {
+    "description": "Calories left for the day.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "caloriesExceeded": "{count} kcal over",
+  "@caloriesExceeded": {
+    "description": "Calories over the daily target.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "proteinPercentChip": "P {percent}%",
+  "@proteinPercentChip": {
+    "description": "Protein share of the day's macros.",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "recipeKcalProtein": "{calories} kcal · {protein}g P",
+  "@recipeKcalProtein": {
+    "description": "Compact recipe macro line.",
+    "placeholders": {
+      "calories": {
+        "type": "int"
+      },
+      "protein": {
+        "type": "int"
+      }
+    }
+  },
+  "macroKcal": "{value} kcal",
+  "@macroKcal": {
+    "description": "Calorie chip.",
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "macroProtein": "{value}g P",
+  "@macroProtein": {
+    "description": "Protein chip. The letter is the Turkish initial of protein; translators should use their own.",
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "macroCarbs": "{value}g C",
+  "@macroCarbs": {
+    "description": "Carbohydrate chip. The letter is the Turkish initial of karbonhidrat.",
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "macroProteinGrams": "{value}g",
+  "@macroProteinGrams": {
+    "description": "Protein value with its unit only.",
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "minutesShort": "{minutes} min",
+  "@minutesShort": {
+    "description": "Duration in minutes, abbreviated.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "recipeMacroLine": "{protein}g protein · {calories} kcal · {minutes} min",
+  "@recipeMacroLine": {
+    "description": "Recipe summary line under a suggestion.",
+    "placeholders": {
+      "protein": {
+        "type": "int"
+      },
+      "calories": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "recipeMacroTimeLine": "{calories} kcal · {protein}g P · {minutes} min",
+  "@recipeMacroTimeLine": {
+    "description": "Recipe summary line in the favourites list.",
+    "placeholders": {
+      "calories": {
+        "type": "int"
+      },
+      "protein": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "recipesFound": "{count, plural, =1{1 recipe found} other{{count} recipes found}}",
+  "@recipesFound": {
+    "description": "Result count in recipe discovery.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "categoryNoRecipes": "No recipes match this category ({category}).",
+  "@categoryNoRecipes": {
+    "description": "Empty state in a recipe category.",
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "recipeAddedToSlot": "{title} added to \"{slot}\".",
+  "@recipeAddedToSlot": {
+    "description": "Confirmation after adding a recipe to a meal slot.",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "slot": {
+        "type": "String"
+      }
+    }
+  },
+  "stepsRemaining": "{count, plural, =1{Last step} other{Last {count} steps}}",
+  "@stepsRemaining": {
+    "description": "Progress hint in the nutrition onboarding sheet.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daysCompletedOf": "{done} of {total} days done",
+  "@daysCompletedOf": {
+    "description": "Program progress.",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "dayCompletedBang": "Day {day} complete!",
+  "@dayCompletedBang": {
+    "description": "Celebration after finishing a day.",
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "dayDoneTitle": "Day {day} done!",
+  "@dayDoneTitle": {
+    "description": "Session-complete overlay title.",
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "coachMorningBrief": "Good morning {name}. Your target today is {calories} calories. Your program has {muscle} scheduled. I have a great {meal} for you — take a look in the menu.",
+  "@coachMorningBrief": {
+    "description": "The coach's spoken morning brief.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "calories": {
+        "type": "int"
+      },
+      "muscle": {
+        "type": "String"
+      },
+      "meal": {
+        "type": "String"
+      }
+    }
+  },
+  "cameraStartFailed": "Couldn't start the camera: {detail}",
+  "@cameraStartFailed": {
+    "description": "Shown when the camera fails to open.",
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "restCue": "Great! Now rest for {seconds} seconds.",
+  "@restCue": {
+    "description": "Spoken cue at the start of a rest period.",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "nextExerciseCue": "Next up: {name}. {description}",
+  "@nextExerciseCue": {
+    "description": "Spoken cue announcing the next exercise.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "description": {
+        "type": "String"
+      }
+    }
+  },
+  "exerciseProgress": "EXERCISE {current} / {total}",
+  "@exerciseProgress": {
+    "description": "Position within the session.",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "setProgress": "Set {current} / {total}",
+  "@setProgress": {
+    "description": "Position within an exercise.",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "targetRepsLabel": "Target: {reps} reps",
+  "@targetRepsLabel": {
+    "description": "Target rep count on the manual workout surface.",
+    "placeholders": {
+      "reps": {
+        "type": "int"
+      }
+    }
+  },
+  "completedRepsLabel": "Reps completed: {reps}",
+  "@completedRepsLabel": {
+    "description": "Completed rep count on the manual workout surface.",
+    "placeholders": {
+      "reps": {
+        "type": "int"
+      }
+    }
+  },
+  "countedRepsLabel": "Reps counted: {reps}",
+  "@countedRepsLabel": {
+    "description": "Live rep count during the guided practice rep.",
+    "placeholders": {
+      "reps": {
+        "type": "int"
+      }
+    }
+  },
+  "generatedDayTitle": "Day {day}",
+  "@generatedDayTitle": {
+    "description": "Title of a generated workout day.",
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationSetFailed": "Couldn't set the reminder: {detail}",
+  "@notificationSetFailed": {
+    "description": "Shown when scheduling a reminder fails.",
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationTimeSet": "Reminder set for {time}.",
+  "@notificationTimeSet": {
+    "description": "Confirmation after changing the reminder time.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "xpEarnedSuffix": "{message} You earned +{xp} XP.",
+  "@xpEarnedSuffix": {
+    "description": "Appends an XP reward to a confirmation message.",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      },
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
+  "tierXpLine": "{tier} · {xp} XP",
+  "@tierXpLine": {
+    "description": "Level tier and XP total in the profile.",
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      },
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
+  "searchNoResults": "No results for \"{query}\"",
+  "@searchNoResults": {
+    "description": "Empty state in the help-centre search.",
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "badgesEarnedOf": "{unlocked} of {total} earned",
+  "@badgesEarnedOf": {
+    "description": "Badge gallery progress.",
+    "placeholders": {
+      "unlocked": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "questionsRemaining": "{count, plural, =1{1 question left} other{{count} questions left}}",
+  "@questionsRemaining": {
+    "description": "Onboarding progress.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteConfirmPrompt": "Type \"{phrase}\" to confirm",
+  "@deleteConfirmPrompt": {
+    "description": "Account-deletion confirmation prompt. The phrase itself is supplied separately.",
+    "placeholders": {
+      "phrase": {
+        "type": "String"
+      }
+    }
+  },
+  "hubUnlockedOf": "{unlocked} of {total} features unlocked",
+  "@hubUnlockedOf": {
+    "description": "Discovery hub progress.",
+    "placeholders": {
+      "unlocked": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "weeklyWorkoutsOf": "{done}/{target} workouts",
+  "@weeklyWorkoutsOf": {
+    "description": "Weekly goal progress.",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "starsLabel": "{count, plural, =1{1 star} other{{count} stars}}",
+  "@starsLabel": {
+    "description": "Accessibility label for a star in the rating prompt.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ratingPointsLabel": "{count, plural, =1{1 point} other{{count} points}}",
+  "@ratingPointsLabel": {
+    "description": "Accessibility label for an NPS score button.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "paywallDiscountBadge": "{percent}% OFF",
+  "@paywallDiscountBadge": {
+    "description": "Discount badge on a plan card. The percent sign leads the number in Turkish.",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "dayFocusLine": "Day {day} – {focus}",
+  "@dayFocusLine": {
+    "description": "Today's task headline.",
+    "placeholders": {
+      "day": {
+        "type": "int"
+      },
+      "focus": {
+        "type": "String"
+      }
+    }
+  },
+  "minutesLevelLine": "{minutes} min · {level}",
+  "@minutesLevelLine": {
+    "description": "Duration and level under a workout card.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "level": {
+        "type": "String"
+      }
+    }
+  },
+  "daysOfTotal": "{done}/{total} days",
+  "@daysOfTotal": {
+    "description": "Challenge progress.",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "suggestionStreakLead": "Don't break your {count}-day streak — ",
+  "@suggestionStreakLead": {
+    "description": "Opening clause of a suggestion, prefixed to the sentence that follows.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "suggestionTodayFocus": "Train {focus} today",
+  "@suggestionTodayFocus": {
+    "description": "Suggestion headline naming today's muscle focus.",
+    "placeholders": {
+      "focus": {
+        "type": "String"
+      }
+    }
+  },
+  "suggestionDayGoal": "{lead}Day {day}'s goal: {focus}. ",
+  "@suggestionDayGoal": {
+    "description": "Suggestion body. {lead} is an optional streak clause.",
+    "placeholders": {
+      "lead": {
+        "type": "String"
+      },
+      "day": {
+        "type": "int"
+      },
+      "focus": {
+        "type": "String"
+      }
+    }
+  },
+  "interludePainOpener": "{name}, now I need to know what you struggle with most.",
+  "@interludePainOpener": {
+    "description": "Interlude line before the pain-point question.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "interludePainBody": "{opener}\nNot to judge — to solve it together.",
+  "@interludePainBody": {
+    "description": "Interlude body. {opener} is the sentence above.",
+    "placeholders": {
+      "opener": {
+        "type": "String"
+      }
+    }
+  },
+  "feedbackDeviceHeading": "— Device —",
+  "@feedbackDeviceHeading": {
+    "description": "Heading of the diagnostic block appended to a feedback email."
+  },
+  "feedbackAppVersionLabel": "App: {version}",
+  "@feedbackAppVersionLabel": {
+    "description": "App version line in the feedback diagnostic block.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "feedbackPlatformLabel": "Platform: {platform} {osVersion}",
+  "@feedbackPlatformLabel": {
+    "description": "Platform line in the feedback diagnostic block.",
+    "placeholders": {
+      "platform": {
+        "type": "String"
+      },
+      "osVersion": {
+        "type": "String"
+      }
+    }
+  },
+  "macroFatChip": "{value}g F",
+  "@macroFatChip": {
+    "description": "Fat chip. The letter is the Turkish initial of yağ.",
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "onboardingAlmostDone": "Almost done!",
+  "@onboardingAlmostDone": {
+    "description": "Progress hint on the last onboarding steps."
+  },
+  "nutritionOnboardingLastStep": "Last step",
+  "@nutritionOnboardingLastStep": {
+    "description": "Progress hint on the final nutrition-onboarding step."
   }
 }

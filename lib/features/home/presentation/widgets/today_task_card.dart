@@ -66,7 +66,8 @@ class TodayTaskCard extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Gün ${activeDay.dayNumber} – $focus',
+                      AppLocalizations.of(context)
+                          .dayFocusLine(activeDay.dayNumber, focus),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -79,7 +80,8 @@ class TodayTaskCard extends ConsumerWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '$minutes dk · $level',
+                      AppLocalizations.of(context)
+                          .minutesLevelLine(minutes, level),
                       style: const TextStyle(
                         color: Colors.white54,
                         fontSize: 12.5,

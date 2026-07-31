@@ -110,7 +110,10 @@ class RestOverlay extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  totalSets > 0 ? 'Set $upcomingSet / $totalSets' : '',
+                  totalSets > 0
+                      ? AppLocalizations.of(context)
+                          .setProgress(upcomingSet, totalSets)
+                      : '',
                   style: const TextStyle(
                     color: Colors.white60,
                     fontSize: 14,

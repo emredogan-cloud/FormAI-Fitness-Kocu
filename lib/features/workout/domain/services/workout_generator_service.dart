@@ -159,7 +159,7 @@ class WorkoutGeneratorService {
       days.add(WorkoutDay(
         dayNumber: dayNumber,
         exercises: dayExercises,
-        title: 'Gün $dayNumber',
+        title: l10n.generatedDayTitle(dayNumber),
       ));
     }
 

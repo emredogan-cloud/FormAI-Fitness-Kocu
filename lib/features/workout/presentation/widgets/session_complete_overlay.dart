@@ -98,7 +98,8 @@ class _SessionCompleteOverlayState
                 Text(
                   widget.day == null
                       ? 'Program Tamam!'
-                      : 'Gün ${widget.day!.dayNumber} Tamam!',
+                      : AppLocalizations.of(context)
+                          .dayDoneTitle(widget.day!.dayNumber),
                   style: const TextStyle(
                     color: _neon,
                     fontSize: 32,
@@ -284,9 +285,11 @@ class _RecoverySuggestionCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${recipe.protein}g protein · '
-                      '${recipe.calories} kcal · '
-                      '${recipe.prepTimeMinutes} dk',
+                      AppLocalizations.of(context).recipeMacroLine(
+                        recipe.protein,
+                        recipe.calories,
+                        recipe.prepTimeMinutes,
+                      ),
                       style: const TextStyle(
                         color: Colors.white60,
                         fontSize: 12,

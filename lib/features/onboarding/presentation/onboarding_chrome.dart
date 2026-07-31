@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/app_haptics.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Wizard chrome (header + step title + primary button) shared by every
 /// onboarding step. Extracted out of the original monolith so each step
@@ -23,10 +24,10 @@ class WizardHeader extends StatelessWidget {
   final int total;
   final VoidCallback? onBack;
 
-  String _progressCopy() {
+  String _progressCopy(AppLocalizations l10n) {
     final remaining = total - step;
-    if (remaining <= 1) return 'Neredeyse bitti!';
-    return '$remaining soru kaldı';
+    if (remaining <= 1) return l10n.onboardingAlmostDone;
+    return l10n.questionsRemaining(remaining);
   }
 
   @override
@@ -93,7 +94,7 @@ class WizardHeader extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            _progressCopy(),
+            _progressCopy(AppLocalizations.of(context)),
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Colors.white70,

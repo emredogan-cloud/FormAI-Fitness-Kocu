@@ -1692,7 +1692,7 @@ class _DiscountBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
-        '%$percent İNDİRİM',
+        AppLocalizations.of(context).paywallDiscountBadge(percent),
         style: const TextStyle(
           color: Colors.white,
           fontSize: 10.5,

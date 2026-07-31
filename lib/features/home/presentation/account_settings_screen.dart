@@ -1021,7 +1021,7 @@ class _DangerCard extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           Text(
-            'Onaylamak için "$confirmPhrase" yazın',
+            AppLocalizations.of(context).deleteConfirmPrompt(confirmPhrase),
             style: TextStyle(
               color: context.colors.onSurface.withValues(alpha: 0.60),
               fontSize: 12,

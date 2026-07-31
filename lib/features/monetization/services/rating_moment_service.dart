@@ -434,7 +434,7 @@ class _GlowingStar extends StatelessWidget {
         MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     return Semantics(
       button: true,
-      label: '$stars yıldız',
+      label: AppLocalizations.of(context).starsLabel(stars),
       selected: filled,
       child: Material(
         color: Colors.transparent,

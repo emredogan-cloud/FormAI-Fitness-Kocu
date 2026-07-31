@@ -490,12 +490,15 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     try {
       await NotificationService.instance.scheduleDailyReminder(picked);
     } catch (e) {
-      if (context.mounted) _toast(context, 'Bildirim ayarlanamadı: $e');
+      if (context.mounted) {
+        _toast(
+            context, AppLocalizations.of(context).notificationSetFailed('$e'));
+      }
       return;
     }
     if (!context.mounted) return;
     final label = picked.format(context);
-    _toast(context, 'Bildirim saati $label olarak ayarlandı.');
+    _toast(context, AppLocalizations.of(context).notificationTimeSet(label));
   }
 
   Future<void> _openPrivacySheet(BuildContext context) async {
@@ -562,7 +565,9 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     final reward = result.reward;
     _toast(
       context,
-      reward == null ? base : '$base +${reward.xp} XP kazandın.',
+      reward == null
+          ? base
+          : AppLocalizations.of(context).xpEarnedSuffix(base, reward.xp),
     );
   }
 
@@ -1044,7 +1049,8 @@ class _ProfileHeader extends ConsumerWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                '${tier.title} · ${lp.xp} XP',
+                AppLocalizations.of(context).tierXpLine(
+                    tier.title(AppLocalizations.of(context)), lp.xp),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(

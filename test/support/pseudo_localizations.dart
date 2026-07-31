@@ -8,7 +8,7 @@
 //   2. a layout that only fits Turkish overflows here instead of in a
 //      German store review.
 //
-// 1317 members covered.
+// 1385 members covered.
 
 import 'package:flutter/widgets.dart';
 import 'package:sixpack_ai/core/utils/pseudo_locale.dart';
@@ -46,12 +46,6 @@ class PseudoAppLocalizations extends AppLocalizations {
 
   @override
   String get appTitle => pseudoLocalize(_inner.appTitle);
-
-  @override
-  String get retry => pseudoLocalize(_inner.retry);
-
-  @override
-  String get settings => pseudoLocalize(_inner.settings);
 
   @override
   String get deleteAccount => pseudoLocalize(_inner.deleteAccount);
@@ -4302,6 +4296,18 @@ class PseudoAppLocalizations extends AppLocalizations {
       pseudoLocalize(_inner.shareRecipeMethodHeading);
 
   @override
+  String get feedbackDeviceHeading =>
+      pseudoLocalize(_inner.feedbackDeviceHeading);
+
+  @override
+  String get onboardingAlmostDone =>
+      pseudoLocalize(_inner.onboardingAlmostDone);
+
+  @override
+  String get nutritionOnboardingLastStep =>
+      pseudoLocalize(_inner.nutritionOnboardingLastStep);
+
+  @override
   String retrospectiveSummary(String workouts, String minutes, String reps) =>
       pseudoLocalize(_inner.retrospectiveSummary(workouts, minutes, reps));
 
@@ -4662,8 +4668,269 @@ class PseudoAppLocalizations extends AppLocalizations {
   String shareRecipeSubject(String title) =>
       pseudoLocalize(_inner.shareRecipeSubject(title));
 
+  @override
+  String planBuiltForGoal(String goal) =>
+      pseudoLocalize(_inner.planBuiltForGoal(goal));
+
+  @override
+  String dayOrdinalLower(int day) =>
+      pseudoLocalize(_inner.dayOrdinalLower(day));
+
+  @override
+  String dayOrdinalTitle(int day) =>
+      pseudoLocalize(_inner.dayOrdinalTitle(day));
+
+  @override
+  String percentCompleted(int percent) =>
+      pseudoLocalize(_inner.percentCompleted(percent));
+
+  @override
+  String exerciseCountTitle(int count) =>
+      pseudoLocalize(_inner.exerciseCountTitle(count));
+
+  @override
+  String exerciseCountLower(int count) =>
+      pseudoLocalize(_inner.exerciseCountLower(count));
+
+  @override
+  String planMinutesLevel(int minutes, String level) =>
+      pseudoLocalize(_inner.planMinutesLevel(minutes, level));
+
+  @override
+  String setsBySeconds(int sets, int seconds) =>
+      pseudoLocalize(_inner.setsBySeconds(sets, seconds));
+
+  @override
+  String setsByReps(int sets, int reps) =>
+      pseudoLocalize(_inner.setsByReps(sets, reps));
+
+  @override
+  String advancedCategoryWorkouts(String category) =>
+      pseudoLocalize(_inner.advancedCategoryWorkouts(category));
+
+  @override
+  String streakDaysTitle(int count) =>
+      pseudoLocalize(_inner.streakDaysTitle(count));
+
+  @override
+  String streakDaysLower(int count) =>
+      pseudoLocalize(_inner.streakDaysLower(count));
+
+  @override
+  String streakDailyLabel(int count) =>
+      pseudoLocalize(_inner.streakDailyLabel(count));
+
+  @override
+  String calorieTargetSuffix(int target) =>
+      pseudoLocalize(_inner.calorieTargetSuffix(target));
+
+  @override
+  String recipeAddedToPlan(String title) =>
+      pseudoLocalize(_inner.recipeAddedToPlan(title));
+
+  @override
+  String caloriesRemaining(int count) =>
+      pseudoLocalize(_inner.caloriesRemaining(count));
+
+  @override
+  String caloriesExceeded(int count) =>
+      pseudoLocalize(_inner.caloriesExceeded(count));
+
+  @override
+  String proteinPercentChip(int percent) =>
+      pseudoLocalize(_inner.proteinPercentChip(percent));
+
+  @override
+  String recipeKcalProtein(int calories, int protein) =>
+      pseudoLocalize(_inner.recipeKcalProtein(calories, protein));
+
+  @override
+  String macroKcal(int value) => pseudoLocalize(_inner.macroKcal(value));
+
+  @override
+  String macroProtein(int value) => pseudoLocalize(_inner.macroProtein(value));
+
+  @override
+  String macroCarbs(int value) => pseudoLocalize(_inner.macroCarbs(value));
+
+  @override
+  String macroProteinGrams(int value) =>
+      pseudoLocalize(_inner.macroProteinGrams(value));
+
+  @override
+  String minutesShort(int minutes) =>
+      pseudoLocalize(_inner.minutesShort(minutes));
+
+  @override
+  String recipeMacroLine(int protein, int calories, int minutes) =>
+      pseudoLocalize(_inner.recipeMacroLine(protein, calories, minutes));
+
+  @override
+  String recipeMacroTimeLine(int calories, int protein, int minutes) =>
+      pseudoLocalize(_inner.recipeMacroTimeLine(calories, protein, minutes));
+
+  @override
+  String recipesFound(int count) => pseudoLocalize(_inner.recipesFound(count));
+
+  @override
+  String categoryNoRecipes(String category) =>
+      pseudoLocalize(_inner.categoryNoRecipes(category));
+
+  @override
+  String recipeAddedToSlot(String title, String slot) =>
+      pseudoLocalize(_inner.recipeAddedToSlot(title, slot));
+
+  @override
+  String stepsRemaining(int count) =>
+      pseudoLocalize(_inner.stepsRemaining(count));
+
+  @override
+  String daysCompletedOf(int done, int total) =>
+      pseudoLocalize(_inner.daysCompletedOf(done, total));
+
+  @override
+  String dayCompletedBang(int day) =>
+      pseudoLocalize(_inner.dayCompletedBang(day));
+
+  @override
+  String dayDoneTitle(int day) => pseudoLocalize(_inner.dayDoneTitle(day));
+
+  @override
+  String coachMorningBrief(
+          String name, int calories, String muscle, String meal) =>
+      pseudoLocalize(_inner.coachMorningBrief(name, calories, muscle, meal));
+
+  @override
+  String cameraStartFailed(String detail) =>
+      pseudoLocalize(_inner.cameraStartFailed(detail));
+
+  @override
+  String restCue(int seconds) => pseudoLocalize(_inner.restCue(seconds));
+
+  @override
+  String nextExerciseCue(String name, String description) =>
+      pseudoLocalize(_inner.nextExerciseCue(name, description));
+
+  @override
+  String exerciseProgress(int current, int total) =>
+      pseudoLocalize(_inner.exerciseProgress(current, total));
+
+  @override
+  String setProgress(int current, int total) =>
+      pseudoLocalize(_inner.setProgress(current, total));
+
+  @override
+  String targetRepsLabel(int reps) =>
+      pseudoLocalize(_inner.targetRepsLabel(reps));
+
+  @override
+  String completedRepsLabel(int reps) =>
+      pseudoLocalize(_inner.completedRepsLabel(reps));
+
+  @override
+  String countedRepsLabel(int reps) =>
+      pseudoLocalize(_inner.countedRepsLabel(reps));
+
+  @override
+  String generatedDayTitle(int day) =>
+      pseudoLocalize(_inner.generatedDayTitle(day));
+
+  @override
+  String notificationSetFailed(String detail) =>
+      pseudoLocalize(_inner.notificationSetFailed(detail));
+
+  @override
+  String notificationTimeSet(String time) =>
+      pseudoLocalize(_inner.notificationTimeSet(time));
+
+  @override
+  String xpEarnedSuffix(String message, int xp) =>
+      pseudoLocalize(_inner.xpEarnedSuffix(message, xp));
+
+  @override
+  String tierXpLine(String tier, int xp) =>
+      pseudoLocalize(_inner.tierXpLine(tier, xp));
+
+  @override
+  String searchNoResults(String query) =>
+      pseudoLocalize(_inner.searchNoResults(query));
+
+  @override
+  String badgesEarnedOf(int unlocked, int total) =>
+      pseudoLocalize(_inner.badgesEarnedOf(unlocked, total));
+
+  @override
+  String questionsRemaining(int count) =>
+      pseudoLocalize(_inner.questionsRemaining(count));
+
+  @override
+  String deleteConfirmPrompt(String phrase) =>
+      pseudoLocalize(_inner.deleteConfirmPrompt(phrase));
+
+  @override
+  String hubUnlockedOf(int unlocked, int total) =>
+      pseudoLocalize(_inner.hubUnlockedOf(unlocked, total));
+
+  @override
+  String weeklyWorkoutsOf(int done, int target) =>
+      pseudoLocalize(_inner.weeklyWorkoutsOf(done, target));
+
+  @override
+  String starsLabel(int count) => pseudoLocalize(_inner.starsLabel(count));
+
+  @override
+  String ratingPointsLabel(int count) =>
+      pseudoLocalize(_inner.ratingPointsLabel(count));
+
+  @override
+  String paywallDiscountBadge(int percent) =>
+      pseudoLocalize(_inner.paywallDiscountBadge(percent));
+
+  @override
+  String dayFocusLine(int day, String focus) =>
+      pseudoLocalize(_inner.dayFocusLine(day, focus));
+
+  @override
+  String minutesLevelLine(int minutes, String level) =>
+      pseudoLocalize(_inner.minutesLevelLine(minutes, level));
+
+  @override
+  String daysOfTotal(int done, int total) =>
+      pseudoLocalize(_inner.daysOfTotal(done, total));
+
+  @override
+  String suggestionStreakLead(int count) =>
+      pseudoLocalize(_inner.suggestionStreakLead(count));
+
+  @override
+  String suggestionTodayFocus(String focus) =>
+      pseudoLocalize(_inner.suggestionTodayFocus(focus));
+
+  @override
+  String suggestionDayGoal(String lead, int day, String focus) =>
+      pseudoLocalize(_inner.suggestionDayGoal(lead, day, focus));
+
+  @override
+  String interludePainOpener(String name) =>
+      pseudoLocalize(_inner.interludePainOpener(name));
+
+  @override
+  String interludePainBody(String opener) =>
+      pseudoLocalize(_inner.interludePainBody(opener));
+
+  @override
+  String feedbackAppVersionLabel(String version) =>
+      pseudoLocalize(_inner.feedbackAppVersionLabel(version));
+
+  @override
+  String feedbackPlatformLabel(String platform, String osVersion) =>
+      pseudoLocalize(_inner.feedbackPlatformLabel(platform, osVersion));
+
+  @override
+  String macroFatChip(int value) => pseudoLocalize(_inner.macroFatChip(value));
+
   /// Number of members this wrapper covers. The test suite asserts
   /// it still matches the generated class, so a new ARB key cannot
   /// slip past pseudo mode unnoticed.
-  static const int coveredMembers = 1317;
+  static const int coveredMembers = 1385;
 }

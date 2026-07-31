@@ -282,7 +282,10 @@ class _FavoriteRow extends ConsumerWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${recipe.calories} kcal · ${recipe.protein}g P · ${recipe.prepTimeMinutes} dk',
+                      AppLocalizations.of(context).recipeMacroTimeLine(
+                          recipe.calories,
+                          recipe.protein,
+                          recipe.prepTimeMinutes),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(

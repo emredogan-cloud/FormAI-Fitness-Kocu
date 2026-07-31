@@ -20,7 +20,9 @@ class PreparationOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final countdownText = secondsRemaining > 0 ? '$secondsRemaining' : 'BAŞLA';
+    final countdownText = secondsRemaining > 0
+        ? '$secondsRemaining'
+        : AppLocalizations.of(context).act1Cta;
     return DecoratedBox(
       decoration: const BoxDecoration(
         gradient: RadialGradient(

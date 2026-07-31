@@ -620,7 +620,9 @@ class _SheetHeader extends StatelessWidget {
     // Phase 61B / 62 · "Son N adım" countdown reads as a finish-line
     // ladder ("last 3 steps") rather than the older assignment-counter
     // framing.
-    final copy = remaining > 0 ? 'Son $remaining adım' : 'Son adım';
+    final copy = remaining > 0
+        ? AppLocalizations.of(context).stepsRemaining(remaining)
+        : AppLocalizations.of(context).nutritionOnboardingLastStep;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Column(

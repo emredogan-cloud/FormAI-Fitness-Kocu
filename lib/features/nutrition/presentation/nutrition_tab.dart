@@ -535,7 +535,7 @@ class _DecisionHeaderRow extends ConsumerWidget {
         if (streak > 0) ...[
           const SizedBox(width: 6),
           _InlinePill(
-            label: '$streak Gün',
+            label: AppLocalizations.of(context).streakDaysTitle(streak),
             leadingEmoji: '🔥',
             tint: const Color(0xFFFF8A00),
           ),
@@ -671,7 +671,8 @@ class _CalorieRing extends ConsumerWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                '/ $targetCalories kcal',
+                AppLocalizations.of(context)
+                    .calorieTargetSuffix(targetCalories),
                 style: TextStyle(
                   color: context.colors.onSurface.withValues(alpha: 0.70),
                   fontSize: 11,
@@ -944,7 +945,9 @@ class _NextMealPreview extends ConsumerWidget {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        SnackBar(content: Text('${recipe.title} plana eklendi!')),
+        SnackBar(
+            content: Text(
+                AppLocalizations.of(context).recipeAddedToPlan(recipe.title))),
       );
   }
 }
@@ -1052,8 +1055,9 @@ class _CompactDecisionHeader extends ConsumerWidget {
     final consumedProtein =
         ref.watch(consumedMacrosProvider.select((m) => m.protein));
     final remaining = targetCalories - consumedCalories;
-    final remainingLabel =
-        remaining >= 0 ? '$remaining kcal kaldı' : '${-remaining} kcal aşıldı';
+    final remainingLabel = remaining >= 0
+        ? AppLocalizations.of(context).caloriesRemaining(remaining)
+        : AppLocalizations.of(context).caloriesExceeded(-remaining);
     final proteinRatio = targetProtein > 0
         ? (consumedProtein / targetProtein).clamp(0.0, 1.0)
         : 0.0;
@@ -1089,7 +1093,7 @@ class _CompactDecisionHeader extends ConsumerWidget {
           ),
           const SizedBox(width: 12),
           Text(
-            'P %$proteinPct',
+            AppLocalizations.of(context).proteinPercentChip(proteinPct),
             style: TextStyle(
               color: scheme.onSurface.withValues(alpha: 0.70),
               fontSize: 12,
@@ -1903,7 +1907,8 @@ class _CompactDiscoveryCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      '${recipe.calories} kcal · ${recipe.protein}g P',
+                      AppLocalizations.of(context)
+                          .recipeKcalProtein(recipe.calories, recipe.protein),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 11,

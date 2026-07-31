@@ -680,7 +680,10 @@ class _FormAIAppState extends ConsumerState<FormAIApp> {
     // builders below wins; explicit Light/Dark overrides force-select.
     final themeMode = ref.watch(themeModeProvider);
     return MaterialApp.router(
-      title: 'FormAI',
+      // `onGenerateTitle` rather than `title`: the task-switcher label
+      // should follow the resolved locale, and it is the one place the
+      // app name is allowed to be copy rather than a brand constant.
+      onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       debugShowCheckedModeBanner: false,
       // Phase 2 (P-Risk) · localization foundation. Delegates wired from
       // the generated AppLocalizations. See [_supportedLocales] for why

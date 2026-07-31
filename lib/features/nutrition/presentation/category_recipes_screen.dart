@@ -262,7 +262,8 @@ class _CategoryRecipeCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '${recipe.calories} kcal',
+                            AppLocalizations.of(context)
+                                .macroKcal(recipe.calories),
                             style: TextStyle(
                               color: scheme.onSurface,
                               fontSize: 12,
@@ -277,7 +278,8 @@ class _CategoryRecipeCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '${recipe.protein}g P',
+                            AppLocalizations.of(context)
+                                .macroProtein(recipe.protein),
                             style: TextStyle(
                               color: scheme.onSurface,
                               fontSize: 12,
@@ -368,7 +370,7 @@ class _EmptyCategoryState extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Bu kategoriye uygun tarif bulunamadı ($category).',
+            AppLocalizations.of(context).categoryNoRecipes(category),
             style: TextStyle(
               color: scheme.onSurface.withValues(alpha: 0.55),
               fontSize: 13,

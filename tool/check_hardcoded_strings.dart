@@ -131,26 +131,62 @@ bool _isTechnical(String value) {
   return false;
 }
 
-/// Matches single- and double-quoted Dart literals without interpolation.
+/// A line that is producing a diagnostic rather than user-facing copy.
+///
+/// Log messages, assertion reasons and regex sources are the bulk of
+/// what an interpolation-aware scan turns up, and none of them is
+/// translatable. Checking the two lines above the literal as well
+/// catches the common shape where the call opens on one line and the
+/// message wraps onto the next.
+final _diagnostic = RegExp(
+  r'AppLogger\.|debugPrint\(|stderr\.|stdout\.|RegExp\(|assert\(|'
+  r'throw \w*(Exception|Error)|reason:|toString\(\) =>',
+);
+
+/// A literal made of nothing but interpolations and punctuation.
+///
+/// `'$a · $b'` is composition of values that are already localised, not
+/// copy. Flagging it would push people toward wrapping every join in a
+/// pointless ARB key.
+final _onlyInterpolation = RegExp(r'[A-Za-zÇĞİÖŞÜçğıöşü]');
+final _interpolation = RegExp(r'\$\{[^}]*\}|\$\w+');
+
+bool _isPureComposition(String value) =>
+    !_onlyInterpolation.hasMatch(value.replaceAll(_interpolation, ''));
+
+/// Matches single- and double-quoted Dart literals, INCLUDING ones that
+/// interpolate a value.
 ///
 /// Escape sequences ARE matched: the pattern used to reject any literal
 /// containing a backslash, which made every `'İKİ\nSATIR'` invisible to
 /// this gate. Three real strings were hiding behind that — a hero
 /// speech bubble, a report eyebrow, and a share hashtag — all of which
 /// looked extracted because nothing was counting them.
+///
+/// Interpolation used to be excluded, which hid a class of string this
+/// project had a lot of: `'Gün $dayNumber tamamlandı!'`. Sixty of those
+/// were sitting in shipped screens while the gate reported zero — one
+/// of them a live rendering bug, `'İleri Seviye $_categoryLabel(...)'`,
+/// which interpolated a method tear-off and printed `Closure: ...` on
+/// the plan screen.
 final _literal = RegExp(
-  r"'((?:[^'\\\n$]|\\.){2,}?)'" r'|"((?:[^"\\\n$]|\\.){2,}?)"',
+  r"'((?:[^'\\\n]|\\.){2,}?)'" r'|"((?:[^"\\\n]|\\.){2,}?)"',
 );
 
 int _countViolations(String source) {
   var count = 0;
-  for (final rawLine in const LineSplitter().convert(source)) {
+  final lines = const LineSplitter().convert(source);
+  for (var i = 0; i < lines.length; i++) {
+    final rawLine = lines[i];
     final line = rawLine.trim();
     if (line.startsWith('//')) continue;
     if (line.contains('i18n-ignore')) continue;
+    final context = lines.sublist(i < 2 ? 0 : i - 2, i + 1).join('\n');
+    if (_diagnostic.hasMatch(context)) continue;
     for (final match in _literal.allMatches(rawLine)) {
       final value = match.group(1) ?? match.group(2) ?? '';
       if (_isTechnical(value)) continue;
+      if (_isPureComposition(value)) continue;
       if (!_turkishSignal.hasMatch(value)) continue;
       count++;
     }

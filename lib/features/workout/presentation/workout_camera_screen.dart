@@ -260,11 +260,12 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       setState(() {
         _error = inUse
             ? AppLocalizations.of(context).cameraInUse
-            : 'Kamera başlatılamadı: ${e.code}';
+            : AppLocalizations.of(context).cameraStartFailed(e.code);
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = 'Kamera başlatılamadı: $e');
+      setState(
+          () => _error = AppLocalizations.of(context).cameraStartFailed('$e'));
     }
   }
 
@@ -943,7 +944,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
             priority: SpeechPriority.milestone);
       } else if (justStartedRest && exercise != null) {
         _audio.speak(
-          'Harika! Şimdi ${exercise.restDurationInSeconds} saniye dinlenme.',
+          AppLocalizations.of(context).restCue(exercise.restDurationInSeconds),
           priority: SpeechPriority.milestone,
         );
       } else if (justStartedPrep && exercise != null) {
@@ -953,7 +954,8 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         final desc = exercise.description.isNotEmpty
             ? exercise.description
             : AppLocalizations.of(context).workoutBegin;
-        _audio.speak('Sıradaki hareket: ${exercise.name}. $desc',
+        _audio.speak(
+            AppLocalizations.of(context).nextExerciseCue(exercise.name, desc),
             priority: SpeechPriority.milestone);
       }
 
@@ -1715,7 +1717,8 @@ class _ExerciseProgressBar extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  'EGZERSİZ ${currentIndex + 1} / $total',
+                  AppLocalizations.of(context)
+                      .exerciseProgress(currentIndex + 1, total),
                   style: const TextStyle(
                     color: _neon,
                     fontSize: 10,

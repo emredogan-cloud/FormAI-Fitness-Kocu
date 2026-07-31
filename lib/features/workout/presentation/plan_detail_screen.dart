@@ -401,7 +401,7 @@ class _PersonalizedSubtitle extends StatelessWidget {
     // "Senin hedefine (sana özel) ve seviyene özel…" doubled "özel" and
     // read awkwardly when the goal was unset.
     final text = goalLabel != null
-        ? "'$goalLabel' hedefine ve seviyene özel olarak oluşturuldu."
+        ? AppLocalizations.of(context).planBuiltForGoal(goalLabel!)
         : AppLocalizations.of(context).planTailoredNote;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
@@ -690,7 +690,7 @@ class _ActiveDayCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '$dayNumber. gün',
+                  AppLocalizations.of(context).dayOrdinalLower(dayNumber),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 24,
@@ -711,7 +711,7 @@ class _ActiveDayCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '$percent% Tamamlandı',
+                      AppLocalizations.of(context).percentCompleted(percent),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 13,
@@ -785,7 +785,7 @@ class _StandardDayCard extends StatelessWidget {
     } else {
       subtitle = realDay == null
           ? AppLocalizations.of(context).planComingSoon
-          : '$exerciseCount Egzersiz';
+          : AppLocalizations.of(context).exerciseCountTitle(exerciseCount);
     }
 
     // Phase 53D · the per-day card was painting card surface + day-number
@@ -825,7 +825,7 @@ class _StandardDayCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '$dayNumber. gün',
+                      AppLocalizations.of(context).dayOrdinalLower(dayNumber),
                       style: TextStyle(
                         color: dimmed
                             ? scheme.onSurface.withValues(alpha: 0.55)
@@ -919,8 +919,12 @@ class _PlanView extends ConsumerWidget {
           SliverPersistentHeader(
             pinned: true,
             delegate: _StickyTextHeader(
-              text: '${exercises.length} egzersiz · '
-                  '${plan.durationMinutes} Dk · ${plan.level}',
+              text: '${AppLocalizations.of(context).exerciseCountLower(
+                exercises.length,
+              )} · ${AppLocalizations.of(context).planMinutesLevel(
+                plan.durationMinutes,
+                plan.level,
+              )}',
             ),
           ),
           if (exercises.isEmpty)
@@ -1227,8 +1231,10 @@ class _ExerciseTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final subtitle = exercise.isTimeBased
-        ? '${exercise.sets} × ${exercise.targetDurationInSeconds ?? 0} sn'
-        : '${exercise.sets} set · ${exercise.targetReps ?? 0} tekrar';
+        ? AppLocalizations.of(context)
+            .setsBySeconds(exercise.sets, exercise.targetDurationInSeconds ?? 0)
+        : AppLocalizations.of(context)
+            .setsByReps(exercise.sets, exercise.targetReps ?? 0);
 
     // Phase 53C · the entire exercise tile (surface, border, name,
     // subtitle, chevron) was hardcoded for dark mode. All five of
@@ -1743,7 +1749,9 @@ class _PremiumExercisesSection extends ConsumerWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'İleri Seviye $_categoryLabel(AppLocalizations.of(context)) Antrenmanları',
+                  AppLocalizations.of(context).advancedCategoryWorkouts(
+                    _categoryLabel(AppLocalizations.of(context)),
+                  ),
                   style: const TextStyle(
                     color: _premiumGold,
                     fontSize: 16,

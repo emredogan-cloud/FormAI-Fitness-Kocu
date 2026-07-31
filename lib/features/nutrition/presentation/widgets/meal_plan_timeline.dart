@@ -932,19 +932,19 @@ class _MacroStrip extends StatelessWidget {
       children: [
         _Chip(
           icon: Icons.local_fire_department,
-          label: '${recipe.calories} kcal',
+          label: AppLocalizations.of(context).macroKcal(recipe.calories),
           iconColor: Colors.white70,
         ),
         _Chip(
-          label: '${recipe.protein}g P',
+          label: AppLocalizations.of(context).macroProtein(recipe.protein),
           labelColor: _proteinColor,
         ),
         _Chip(
-          label: '${recipe.carbs}g K',
+          label: AppLocalizations.of(context).macroCarbs(recipe.carbs),
           labelColor: _carbsColor,
         ),
         _Chip(
-          label: '${recipe.fat}g Y',
+          label: AppLocalizations.of(context).macroFatChip(recipe.fat),
           labelColor: _fatColor,
         ),
       ],

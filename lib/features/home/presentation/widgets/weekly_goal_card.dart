@@ -78,7 +78,8 @@ class WeeklyGoalCard extends StatelessWidget {
                 ),
               ),
               Text(
-                '$weeklyCompleted/$weeklyTarget egzersiz',
+                AppLocalizations.of(context)
+                    .weeklyWorkoutsOf(weeklyCompleted, weeklyTarget),
                 style: const TextStyle(
                   color: _neonAccent,
                   fontSize: 13,
