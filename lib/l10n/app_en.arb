@@ -301,5 +301,121 @@
   "calendarWeekdaySun": "Su",
   "@calendarWeekdaySun": {
     "description": "Two-letter Sun label in the calendar header row"
+  },
+  "badgeFirstStepTitle": "First Step",
+  "@badgeFirstStepTitle": {
+    "description": "First Step badge name"
+  },
+  "badgeFirstStepDesc": "Finish your first day",
+  "@badgeFirstStepDesc": {
+    "description": "First Step badge unlock condition"
+  },
+  "badgeDisciplinedTitle": "Disciplined",
+  "@badgeDisciplinedTitle": {
+    "description": "Disciplined badge name"
+  },
+  "badgeDisciplinedDesc": "A 3-day streak",
+  "@badgeDisciplinedDesc": {
+    "description": "Disciplined badge unlock condition"
+  },
+  "badgeFirstWeekTitle": "First Week",
+  "@badgeFirstWeekTitle": {
+    "description": "First Week badge name"
+  },
+  "badgeFirstWeekDesc": "Complete 7 days",
+  "@badgeFirstWeekDesc": {
+    "description": "First Week badge unlock condition"
+  },
+  "badgeSteadyTitle": "Steady",
+  "@badgeSteadyTitle": {
+    "description": "Steady badge name"
+  },
+  "badgeSteadyDesc": "A 7-day streak",
+  "@badgeSteadyDesc": {
+    "description": "Steady badge unlock condition"
+  },
+  "badgeHalfwayTitle": "Halfway",
+  "@badgeHalfwayTitle": {
+    "description": "Halfway badge name"
+  },
+  "badgeHalfwayDesc": "Complete 14 days",
+  "@badgeHalfwayDesc": {
+    "description": "Halfway badge unlock condition"
+  },
+  "badgeCalorieHunterTitle": "Calorie Hunter",
+  "@badgeCalorieHunterTitle": {
+    "description": "Calorie Hunter badge name"
+  },
+  "badgeCalorieHunterDesc": "1,500 kcal total",
+  "@badgeCalorieHunterDesc": {
+    "description": "Calorie Hunter badge unlock condition"
+  },
+  "badgeHiitMasterTitle": "HIIT Master",
+  "@badgeHiitMasterTitle": {
+    "description": "HIIT Master badge name"
+  },
+  "badgeHiitMasterDesc": "5 cardio days",
+  "@badgeHiitMasterDesc": {
+    "description": "HIIT Master badge unlock condition"
+  },
+  "badgeCoreMasterTitle": "Core Master",
+  "@badgeCoreMasterTitle": {
+    "description": "Core Master badge name"
+  },
+  "badgeCoreMasterDesc": "5 core-focused days",
+  "@badgeCoreMasterDesc": {
+    "description": "Core Master badge unlock condition"
+  },
+  "badgePowerStoneTitle": "Power Stone",
+  "@badgePowerStoneTitle": {
+    "description": "Power Stone badge name"
+  },
+  "badgePowerStoneDesc": "Finish 5 strength days",
+  "@badgePowerStoneDesc": {
+    "description": "Power Stone badge unlock condition"
+  },
+  "badgeNutritionHeroTitle": "Nutrition Hero",
+  "@badgeNutritionHeroTitle": {
+    "description": "Nutrition Hero badge name"
+  },
+  "badgeNutritionHeroDesc": "A 7-day nutrition streak",
+  "@badgeNutritionHeroDesc": {
+    "description": "Nutrition Hero badge unlock condition"
+  },
+  "badgeThirtyDayChampTitle": "30-Day Champion",
+  "@badgeThirtyDayChampTitle": {
+    "description": "30-Day Champion badge name"
+  },
+  "badgeThirtyDayChampDesc": "Finish the whole programme",
+  "@badgeThirtyDayChampDesc": {
+    "description": "30-Day Champion badge unlock condition"
+  },
+  "badgeFormLegendTitle": "Form Legend",
+  "@badgeFormLegendTitle": {
+    "description": "Form Legend badge name"
+  },
+  "badgeFormLegendDesc": "30 days + 30 nutrition days",
+  "@badgeFormLegendDesc": {
+    "description": "Form Legend badge unlock condition"
+  },
+  "badgeVoiceHeardTitle": "Voice Heard",
+  "@badgeVoiceHeardTitle": {
+    "description": "Voice Heard badge name"
+  },
+  "badgeVoiceHeardDesc": "Send us feedback",
+  "@badgeVoiceHeardDesc": {
+    "description": "Voice Heard badge unlock condition"
+  },
+  "badgesAllCollected": "You've collected every badge — legend!",
+  "@badgesAllCollected": {
+    "description": "Badges screen — all unlocked message"
+  },
+  "badgesKeepGoing": "Keep going for the next badge.",
+  "@badgesKeepGoing": {
+    "description": "Badges screen — progress encouragement"
+  },
+  "badgesUnlockedLabel": "Unlocked",
+  "@badgesUnlockedLabel": {
+    "description": "Badge card unlocked state label"
   }
 }

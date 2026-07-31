@@ -6,6 +6,7 @@ import 'package:sixpack_ai/core/services/app_preferences.dart';
 import 'package:sixpack_ai/features/progress/presentation/badges_screen.dart';
 import 'package:sixpack_ai/features/progress/providers/badge_unlocks_provider.dart';
 import 'package:sixpack_ai/features/workout/providers/workout_provider.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// Roadmap Phase 1 (R2.3) · the `voice_heard` badge.
 ///
@@ -116,7 +117,9 @@ void main() {
             workoutSessionProvider
                 .overrideWith(_StubWorkoutSessionNotifier.new),
           ],
-          child: const MaterialApp(
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: [Locale('tr')],
             home: BadgesScreen(),
             debugShowCheckedModeBanner: false,
           ),
@@ -146,7 +149,9 @@ void main() {
             workoutSessionProvider
                 .overrideWith(_StubWorkoutSessionNotifier.new),
           ],
-          child: const MaterialApp(
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: [Locale('tr')],
             home: BadgesScreen(),
             debugShowCheckedModeBanner: false,
           ),

@@ -7,6 +7,7 @@ import '../../../core/theme/theme_extension.dart';
 import '../../workout/models/workout_day_model.dart';
 import '../../workout/providers/workout_provider.dart';
 import '../providers/streak_provider.dart';
+import '../../../l10n/app_localizations.dart';
 
 const Color _neon = Color(0xFF8B5CF6);
 const Color _neonAccent = Color(0xFF4DA6FF);
@@ -58,96 +59,96 @@ class BadgesScreen extends ConsumerWidget {
 
     final badges = <_BadgeData>[
       _BadgeData(
-        label: 'İlk Adım',
-        subtitle: 'İlk gününü bitir',
+        label: AppLocalizations.of(context).badgeFirstStepTitle,
+        subtitle: AppLocalizations.of(context).badgeFirstStepDesc,
         icon: Icons.flag_rounded,
         accent: _amber,
         unlocked: completedCount >= 1,
         progress: (completedCount / 1).clamp(0.0, 1.0),
       ),
       _BadgeData(
-        label: 'Disiplinli',
-        subtitle: '3 günlük seri',
+        label: AppLocalizations.of(context).badgeDisciplinedTitle,
+        subtitle: AppLocalizations.of(context).badgeDisciplinedDesc,
         icon: Icons.shield_rounded,
         accent: _neon,
         unlocked: streak >= 3,
         progress: (streak / 3).clamp(0.0, 1.0),
       ),
       _BadgeData(
-        label: 'İlk Hafta',
-        subtitle: '7 günü tamamla',
+        label: AppLocalizations.of(context).badgeFirstWeekTitle,
+        subtitle: AppLocalizations.of(context).badgeFirstWeekDesc,
         icon: Icons.calendar_view_week_rounded,
         accent: _success,
         unlocked: completedCount >= 7,
         progress: (completedCount / 7).clamp(0.0, 1.0),
       ),
       _BadgeData(
-        label: 'Sabit',
-        subtitle: '7 günlük seri',
+        label: AppLocalizations.of(context).badgeSteadyTitle,
+        subtitle: AppLocalizations.of(context).badgeSteadyDesc,
         icon: Icons.verified_rounded,
         accent: _orange,
         unlocked: streak >= 7,
         progress: (streak / 7).clamp(0.0, 1.0),
       ),
       _BadgeData(
-        label: 'Yarıyol',
-        subtitle: '14 günü tamamla',
+        label: AppLocalizations.of(context).badgeHalfwayTitle,
+        subtitle: AppLocalizations.of(context).badgeHalfwayDesc,
         icon: Icons.hiking_rounded,
         accent: _neonAccent,
         unlocked: completedCount >= 14,
         progress: (completedCount / 14).clamp(0.0, 1.0),
       ),
       _BadgeData(
-        label: 'Kalori Avcısı',
-        subtitle: 'Toplam 1500 kcal',
+        label: AppLocalizations.of(context).badgeCalorieHunterTitle,
+        subtitle: AppLocalizations.of(context).badgeCalorieHunterDesc,
         icon: Icons.local_fire_department,
         accent: _orange,
         unlocked: totalKcal >= 1500,
         progress: (totalKcal / 1500).clamp(0.0, 1.0),
       ),
       _BadgeData(
-        label: 'HIIT Ustası',
-        subtitle: '5 kardiyo günü',
+        label: AppLocalizations.of(context).badgeHiitMasterTitle,
+        subtitle: AppLocalizations.of(context).badgeHiitMasterDesc,
         icon: Icons.bolt_rounded,
         accent: _pink,
         unlocked: cardioDaysCompleted >= 5,
         progress: (cardioDaysCompleted / 5).clamp(0.0, 1.0),
       ),
       _BadgeData(
-        label: 'Core Master',
-        subtitle: '5 karın odaklı gün',
+        label: AppLocalizations.of(context).badgeCoreMasterTitle,
+        subtitle: AppLocalizations.of(context).badgeCoreMasterDesc,
         icon: Icons.center_focus_strong_rounded,
         accent: _proteinBlue,
         unlocked: coreDaysCompleted >= 5,
         progress: (coreDaysCompleted / 5).clamp(0.0, 1.0),
       ),
       _BadgeData(
-        label: 'Güç Taşı',
-        subtitle: '5 güç günü bitir',
+        label: AppLocalizations.of(context).badgePowerStoneTitle,
+        subtitle: AppLocalizations.of(context).badgePowerStoneDesc,
         icon: Icons.fitness_center_rounded,
         accent: _neon,
         unlocked: strengthDaysCompleted >= 5,
         progress: (strengthDaysCompleted / 5).clamp(0.0, 1.0),
       ),
       _BadgeData(
-        label: 'Beslenme Kahramanı',
-        subtitle: '7 günlük beslenme serisi',
+        label: AppLocalizations.of(context).badgeNutritionHeroTitle,
+        subtitle: AppLocalizations.of(context).badgeNutritionHeroDesc,
         icon: Icons.restaurant_rounded,
         accent: _success,
         unlocked: nutritionStreak >= 7,
         progress: (nutritionStreak / 7).clamp(0.0, 1.0),
       ),
       _BadgeData(
-        label: '30 Gün Şampiyonu',
-        subtitle: 'Tüm programı bitir',
+        label: AppLocalizations.of(context).badgeThirtyDayChampTitle,
+        subtitle: AppLocalizations.of(context).badgeThirtyDayChampDesc,
         icon: Icons.emoji_events_rounded,
         accent: _amber,
         unlocked: completedCount >= 30,
         progress: (completedCount / 30).clamp(0.0, 1.0),
       ),
       _BadgeData(
-        label: 'Formun Efsanesi',
-        subtitle: '30 gün + 30 beslenme',
+        label: AppLocalizations.of(context).badgeFormLegendTitle,
+        subtitle: AppLocalizations.of(context).badgeFormLegendDesc,
         icon: Icons.workspace_premium_rounded,
         accent: _neon,
         unlocked: completedCount >= 30 && nutritionStreak >= 30,
@@ -161,8 +162,8 @@ class BadgesScreen extends ConsumerWidget {
       // invisibly — the celebration fires but the user can never find
       // the badge afterwards.
       _BadgeData(
-        label: 'Sesini Duyduk',
-        subtitle: 'Geri bildirim gönder',
+        label: AppLocalizations.of(context).badgeVoiceHeardTitle,
+        subtitle: AppLocalizations.of(context).badgeVoiceHeardDesc,
         icon: Icons.forum_rounded,
         accent: _neonAccent,
         unlocked: feedbackCount >= 1,
@@ -363,8 +364,8 @@ class _BadgeSummaryCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   unlocked == total
-                      ? 'Tüm rozetleri topladın — efsane!'
-                      : 'Bir sonraki rozet için çalışmaya devam et.',
+                      ? AppLocalizations.of(context).badgesAllCollected
+                      : AppLocalizations.of(context).badgesKeepGoing,
                   style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 12,
@@ -525,7 +526,7 @@ class _BadgeStatusPill extends StatelessWidget {
             Icon(Icons.check_rounded, color: data.accent, size: 12),
             const SizedBox(width: 3),
             Text(
-              'Açıldı',
+              AppLocalizations.of(context).badgesUnlockedLabel,
               style: TextStyle(
                 color: data.accent,
                 fontSize: 10.5,
