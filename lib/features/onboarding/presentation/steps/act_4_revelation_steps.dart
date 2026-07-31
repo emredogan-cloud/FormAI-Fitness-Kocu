@@ -471,168 +471,201 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
             child: Column(
               children: [
-                _staggered(
-                  reveal: _heroReveal,
-                  child: const _ReportHeroCard(),
-                ),
-                const SizedBox(height: 14),
-                _staggered(
-                  reveal: _metricsReveal,
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _ReportMetricCard(
-                          label: 'BMI',
-                          morphingValue: bmi,
-                          formatter: (v) => v.toStringAsFixed(1),
-                          startDelay: const Duration(milliseconds: 200),
-                          icon: Icons.monitor_weight_outlined,
-                          gaugeFraction: ((bmi - 14.0) / 22.0).clamp(0.05, 1.0),
-                          statusLabel: _bmiCategory(bmi),
-                          statusColor: _bmiTint(bmi),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _ReportMetricCard(
-                          label: 'GÜNLÜK KALORİ',
-                          morphingValue: calories.toDouble(),
-                          formatter: (v) => v.round().toString(),
-                          startDelay: const Duration(milliseconds: 350),
-                          icon: Icons.local_fire_department_rounded,
-                          gaugeFraction: (calories / 3200.0).clamp(0.05, 1.0),
-                          statusLabel: 'kcal',
-                          statusColor: AppColors.neonAccent,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 14),
-                _staggered(
-                  reveal: _projectionReveal,
-                  child: _TransformationProjection(
-                    outcome: report.estimatedResults,
-                  ),
-                ),
-                const SizedBox(height: 14),
+                // Everything above the CTA scrolls; the CTA itself is
+                // pinned below it.
+                //
+                // Device QA (Huawei ANE-LX1, 1080×2280) found the report's
+                // fixed-height children overflowing a shorter viewport,
+                // which clipped "KİŞİSEL PLANIMI AL" and left it
+                // untappable — onboarding could not be finished at all on
+                // that phone. This is the third time a fixed-height
+                // onboarding layout has pushed its primary CTA out of
+                // reach (RC-17 paywall, RC-18 Başla), and it is fixed the
+                // same proven way: a scroll area that can absorb any
+                // shortfall, and a CTA that is structurally outside it so
+                // no screen size can ever hide it.
                 Expanded(
-                  child: _staggered(
-                    reveal: _assessmentReveal,
-                    child: SingleChildScrollView(
-                      child: BreathingBox(
-                        minAlpha: 0.96,
-                        maxAlpha: 1.0,
-                        duration: const Duration(milliseconds: 5200),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.04),
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(
-                              color: AppColors.neon.withValues(alpha: 0.35),
-                              width: 1,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.neon.withValues(alpha: 0.15),
-                                blurRadius: 24,
-                                spreadRadius: -4,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        _staggered(
+                          reveal: _heroReveal,
+                          child: const _ReportHeroCard(),
+                        ),
+                        const SizedBox(height: 14),
+                        _staggered(
+                          reveal: _metricsReveal,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: _ReportMetricCard(
+                                  label: 'BMI',
+                                  morphingValue: bmi,
+                                  formatter: (v) => v.toStringAsFixed(1),
+                                  startDelay: const Duration(milliseconds: 200),
+                                  icon: Icons.monitor_weight_outlined,
+                                  gaugeFraction:
+                                      ((bmi - 14.0) / 22.0).clamp(0.05, 1.0),
+                                  statusLabel: _bmiCategory(bmi),
+                                  statusColor: _bmiTint(bmi),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _ReportMetricCard(
+                                  label: 'GÜNLÜK KALORİ',
+                                  morphingValue: calories.toDouble(),
+                                  formatter: (v) => v.round().toString(),
+                                  startDelay: const Duration(milliseconds: 350),
+                                  icon: Icons.local_fire_department_rounded,
+                                  gaugeFraction:
+                                      (calories / 3200.0).clamp(0.05, 1.0),
+                                  statusLabel: 'kcal',
+                                  statusColor: AppColors.neonAccent,
+                                ),
                               ),
                             ],
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: const [
-                                  Icon(
-                                    Icons.psychology_outlined,
-                                    color: AppColors.neonAccent,
-                                    size: 18,
+                        ),
+                        const SizedBox(height: 14),
+                        _staggered(
+                          reveal: _projectionReveal,
+                          child: _TransformationProjection(
+                            outcome: report.estimatedResults,
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        _staggered(
+                          reveal: _assessmentReveal,
+                          child: BreathingBox(
+                            minAlpha: 0.96,
+                            maxAlpha: 1.0,
+                            duration: const Duration(milliseconds: 5200),
+                            child: Container(
+                              width: double.infinity,
+                              padding:
+                                  const EdgeInsets.fromLTRB(18, 16, 18, 18),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.04),
+                                borderRadius: BorderRadius.circular(18),
+                                border: Border.all(
+                                  color: AppColors.neon.withValues(alpha: 0.35),
+                                  width: 1,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color:
+                                        AppColors.neon.withValues(alpha: 0.15),
+                                    blurRadius: 24,
+                                    spreadRadius: -4,
                                   ),
-                                  SizedBox(width: 8),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: const [
+                                      Icon(
+                                        Icons.psychology_outlined,
+                                        color: AppColors.neonAccent,
+                                        size: 18,
+                                      ),
+                                      SizedBox(width: 8),
+                                      // Same reason as the CTA row: a
+                                      // fixed Text in a Row has no give,
+                                      // and this eyebrow is long enough
+                                      // to overflow a narrow phone at an
+                                      // accessibility text scale.
+                                      Flexible(
+                                          child: Text(
+                                        'AI DEĞERLENDİRMESİ',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          color: AppColors.neonAccent,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w900,
+                                          letterSpacing: 1.6,
+                                        ),
+                                      )),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
                                   Text(
-                                    'AI DEĞERLENDİRMESİ',
-                                    style: TextStyle(
-                                      color: AppColors.neonAccent,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: 1.6,
+                                    assessment,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      height: 1.55,
                                     ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 12),
-                              Text(
-                                assessment,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  height: 1.55,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                         ),
-                      ),
+                        const SizedBox(height: 14),
+                        // RC-1 P9 · success probability as a RING + copy row
+                        // (reference layout) instead of a bare linear bar.
+                        AnimatedBuilder(
+                          animation: _confidence,
+                          builder: (context, _) {
+                            // Clamp display: easeOutBack overshoots, but we
+                            // don't want to show 95 % en route to 92 %.
+                            final shown = _confidence.value.clamp(0.0, 1.0);
+                            return Row(
+                              children: [
+                                _SuccessRing(fraction: shown),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Başarı olasılığı',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      const Text(
+                                        'Hedeflerine çok yakınsın!',
+                                        style: TextStyle(
+                                          color: Colors.white54,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(4),
+                                        child: LinearProgressIndicator(
+                                          value: shown,
+                                          minHeight: 5,
+                                          backgroundColor: Colors.white12,
+                                          valueColor:
+                                              const AlwaysStoppedAnimation(
+                                            AppColors.neon,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 14),
-                // RC-1 P9 · success probability as a RING + copy row
-                // (reference layout) instead of a bare linear bar.
-                AnimatedBuilder(
-                  animation: _confidence,
-                  builder: (context, _) {
-                    // Clamp display: easeOutBack overshoots, but we
-                    // don't want to show 95 % en route to 92 %.
-                    final shown = _confidence.value.clamp(0.0, 1.0);
-                    return Row(
-                      children: [
-                        _SuccessRing(fraction: shown),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Başarı olasılığı',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              const Text(
-                                'Hedeflerine çok yakınsın!',
-                                style: TextStyle(
-                                  color: Colors.white54,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(4),
-                                child: LinearProgressIndicator(
-                                  value: shown,
-                                  minHeight: 5,
-                                  backgroundColor: Colors.white12,
-                                  valueColor: const AlwaysStoppedAnimation(
-                                    AppColors.neon,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
                 const SizedBox(height: 16),
+                // Pinned footer — structurally outside the scroll area,
+                // so it is on screen at every viewport height.
                 _staggered(
                   reveal: _ctaReveal,
                   child: GlowPulse(
@@ -679,13 +712,25 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
                                     Icon(Icons.auto_awesome,
                                         color: Colors.white, size: 18),
                                     SizedBox(width: 8),
-                                    Text(
-                                      'KİŞİSEL PLANIMI AL',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w900,
-                                        letterSpacing: 2.2,
-                                        fontSize: 15,
+                                    // Scales down rather than ellipsising:
+                                    // a primary CTA reading "KİŞİSEL PLA…"
+                                    // is worse than one a point smaller.
+                                    // Wide letter-spacing plus a 1.3 text
+                                    // scale overflows a 360dp phone
+                                    // otherwise.
+                                    Flexible(
+                                      child: FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          'KİŞİSEL PLANIMI AL',
+                                          maxLines: 1,
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w900,
+                                            letterSpacing: 2.2,
+                                            fontSize: 15,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -1152,13 +1197,18 @@ class _TransformationProjectionState extends State<_TransformationProjection>
                 size: 14,
               ),
               SizedBox(width: 6),
-              Text(
-                '12 HAFTALIK PROJEKSİYON',
-                style: TextStyle(
-                  color: AppColors.neonAccent,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.6,
+              // Third fixed-Text-in-a-Row on this screen; same give.
+              Flexible(
+                child: Text(
+                  '12 HAFTALIK PROJEKSİYON',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: AppColors.neonAccent,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.6,
+                  ),
                 ),
               ),
             ],

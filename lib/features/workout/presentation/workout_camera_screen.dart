@@ -1110,7 +1110,21 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
           onRetry: () => ref.invalidate(workoutSessionProvider),
         );
       },
-      data: (session) => _buildSession(controller, session),
+      data: (session) {
+        // Roadmap Phase 3b · second, mount-side trigger for the
+        // coach-mark layer.
+        //
+        // The `ref.listen` below only fires on session *transitions*.
+        // Device QA found the gap: entering the camera screen on an
+        // ALREADY-active session — switching over from camera-free mode
+        // mid-workout — produces no transition after mount, so the tour
+        // never ran and the user silently never learned the controls.
+        // `_tutorialFired` makes this attempt free once one has landed.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          unawaited(_maybeShowInSessionTutorial());
+        });
+        return _buildSession(controller, session);
+      },
     );
   }
 
