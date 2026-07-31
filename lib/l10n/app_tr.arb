@@ -162,5 +162,20 @@
   "authEmailRequired": "E-posta gerekli",
   "authPasswordLabel": "Şifre",
   "authPasswordRequired": "Şifre gerekli",
-  "authPasswordMinLength": "En az 6 karakter"
+  "authPasswordMinLength": "En az 6 karakter",
+  "surveyShapesFormai": "Cevabın FormAI'ı şekillendiriyor.",
+  "focusActiveRest": "aktif dinlenme",
+  "focusCore": "karın",
+  "focusUpperBody": "üst vücut",
+  "focusLowerBody": "bacak",
+  "focusCardio": "kardiyo",
+  "focusFullBody": "tüm vücut",
+  "focusGeneric": "antrenman",
+  "referralJoinPitch": "FormAI'a bu davet koduyla katıl — kodun hesabına kaydedilir ve ödül programı açıldığında ikiniz de kazanırsınız.",
+  "shareProgramOf": "PROGRAMIMIN",
+  "shareCompleted": "'INI TAMAMLADIM!",
+  "shareDayUnit": "GÜN",
+  "shareStreakUnit": "SERİ",
+  "shareNewBadge": "YENİ ROZET",
+  "shareFooter": "30 günde değişimi yakala — formai.app"
 }

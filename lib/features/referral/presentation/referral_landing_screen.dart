@@ -86,9 +86,7 @@ class _ReferralLandingScreenState extends ConsumerState<ReferralLandingScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                "FormAI'a bu davet koduyla katıl — kodun hesabına "
-                'kaydedilir ve ödül programı açıldığında ikiniz de '
-                'kazanırsınız.',
+                AppLocalizations.of(context).referralJoinPitch,
                 style: TextStyle(
                   color: scheme.onSurface.withValues(alpha: 0.65),
                   fontSize: 15,
@@ -100,8 +98,7 @@ class _ReferralLandingScreenState extends ConsumerState<ReferralLandingScreen> {
               const SizedBox(height: 24),
               if (_redeemed)
                 _SuccessBanner(
-                  message: 'Davet kodun kaydedildi! Ödüller dağıtılmaya '
-                      'başladığında hesabına yansıyacak.',
+                  message: AppLocalizations.of(context).referralSavedNotice,
                 )
               else if (_error != null)
                 _ErrorBanner(message: _error!),

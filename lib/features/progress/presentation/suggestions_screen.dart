@@ -138,7 +138,7 @@ class SuggestionsScreen extends ConsumerWidget {
         ctaRoute: AppRoutes.dashboard,
       );
     }
-    final focus = _focusLabel(activeDay);
+    final focus = _focusLabel(l10n, activeDay);
     final dayNumber = activeDay.dayNumber;
     final streakHeadline = streak >= 3 ? '$streak günlük serini bozma — ' : '';
     return _SuggestionData(
@@ -204,28 +204,28 @@ class SuggestionsScreen extends ConsumerWidget {
     return null;
   }
 
-  String _focusLabel(WorkoutDay day) {
-    if (day.isRestDay) return 'aktif dinlenme';
+  String _focusLabel(AppLocalizations l10n, WorkoutDay day) {
+    if (day.isRestDay) return l10n.focusActiveRest;
     final counts = <String, int>{};
     for (final exercise in day.exercises) {
       counts[exercise.targetMuscle] = (counts[exercise.targetMuscle] ?? 0) + 1;
     }
-    if (counts.isEmpty) return 'antrenman';
+    if (counts.isEmpty) return l10n.focusGeneric;
     final dominant =
         counts.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
     switch (dominant) {
       case 'core':
-        return 'karın';
+        return l10n.focusCore;
       case 'upper_body':
-        return 'üst vücut';
+        return l10n.focusUpperBody;
       case 'lower_body':
-        return 'bacak';
+        return l10n.focusLowerBody;
       case 'cardio':
-        return 'kardiyo';
+        return l10n.focusCardio;
       case 'full_body':
-        return 'tüm vücut';
+        return l10n.focusFullBody;
       default:
-        return 'antrenman';
+        return l10n.focusGeneric;
     }
   }
 }

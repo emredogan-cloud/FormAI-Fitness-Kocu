@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
+
 /// Phase 54 · off-screen rendering templates for the viral loop.
 ///
 /// These widgets are NEVER mounted in the visible tree; `ShareService`
@@ -65,8 +67,8 @@ class ShareProgressTemplate extends StatelessWidget {
           children: [
             const _BrandHeader(),
             const Spacer(),
-            const Text(
-              'PROGRAMIMIN',
+            Text(
+              AppLocalizations.of(context).shareProgramOf,
               style: TextStyle(
                 color: _brandSubtext,
                 fontSize: 36,
@@ -77,8 +79,8 @@ class ShareProgressTemplate extends StatelessWidget {
             const SizedBox(height: 24),
             _PercentRing(percent: percent, size: size),
             const SizedBox(height: 36),
-            const Text(
-              "'INI TAMAMLADIM!",
+            Text(
+              AppLocalizations.of(context).shareCompleted,
               style: TextStyle(
                 color: _brandText,
                 fontSize: 56,
@@ -88,8 +90,14 @@ class ShareProgressTemplate extends StatelessWidget {
             ),
             const SizedBox(height: 48),
             _StatRow(
-              left: ('GÜN', '$completedDays / $totalDays'),
-              right: ('SERİ', '$streak 🔥'),
+              left: (
+                AppLocalizations.of(context).shareDayUnit,
+                '$completedDays / $totalDays'
+              ),
+              right: (
+                AppLocalizations.of(context).shareStreakUnit,
+                '$streak 🔥'
+              ),
             ),
             const Spacer(),
             const _BrandFooter(),
@@ -131,8 +139,8 @@ class ShareBadgeTemplate extends StatelessWidget {
             const Spacer(),
             _BadgeCircle(emoji: badgeEmoji),
             const SizedBox(height: 56),
-            const Text(
-              'YENİ ROZET',
+            Text(
+              AppLocalizations.of(context).shareNewBadge,
               style: TextStyle(
                 color: _brandAccent,
                 fontSize: 32,
@@ -293,8 +301,8 @@ class _BrandFooter extends StatelessWidget {
         color: _brandText.withValues(alpha: 0.08),
         border: Border.all(color: _brandText.withValues(alpha: 0.30), width: 2),
       ),
-      child: const Text(
-        '30 günde değişimi yakala — formai.app',
+      child: Text(
+        AppLocalizations.of(context).shareFooter,
         style: TextStyle(
           color: _brandText,
           fontSize: 28,

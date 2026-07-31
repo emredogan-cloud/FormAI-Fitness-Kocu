@@ -190,7 +190,7 @@ class _ThankYou extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Cevabın FormAI\'ı şekillendiriyor.',
+            AppLocalizations.of(context).surveyShapesFormai,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: scheme.onSurface.withValues(alpha: 0.65),

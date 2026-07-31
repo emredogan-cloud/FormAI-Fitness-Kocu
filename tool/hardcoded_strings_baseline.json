@@ -1,9 +1,7 @@
 {
-  "lib/core/widgets/share_templates.dart": 4,
   "lib/features/admin/presentation/admin_dashboard_screen.dart": 12,
   "lib/features/admin/presentation/widgets/admin_exercise_form.dart": 53,
   "lib/features/admin/presentation/widgets/admin_recipe_form.dart": 31,
-  "lib/features/feedback/presentation/survey_sheet.dart": 1,
   "lib/features/home/presentation/account_settings_screen.dart": 41,
   "lib/features/home/presentation/dashboard_screen.dart": 2,
   "lib/features/home/presentation/discovery_hub_screen.dart": 7,
@@ -42,8 +40,6 @@
   "lib/features/onboarding/presentation/steps/name_capture_step.dart": 17,
   "lib/features/onboarding/presentation/steps/setup_thinking_step.dart": 5,
   "lib/features/onboarding/presentation/steps/social_proof_step.dart": 13,
-  "lib/features/progress/presentation/suggestions_screen.dart": 3,
-  "lib/features/referral/presentation/referral_landing_screen.dart": 5,
   "lib/features/workout/presentation/camera_tutorial_screen.dart": 38,
   "lib/features/workout/presentation/manual_workout_screen.dart": 16,
   "lib/features/workout/presentation/plan_detail_screen.dart": 24,

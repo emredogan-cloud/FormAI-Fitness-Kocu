@@ -687,5 +687,65 @@
   "authPasswordMinLength": "At least 6 characters",
   "@authPasswordMinLength": {
     "description": "Password length validation message"
+  },
+  "surveyShapesFormai": "Your answer shapes FormAI.",
+  "@surveyShapesFormai": {
+    "description": "Survey completion subtitle"
+  },
+  "focusActiveRest": "active rest",
+  "@focusActiveRest": {
+    "description": "Workout focus label — rest day"
+  },
+  "focusCore": "core",
+  "@focusCore": {
+    "description": "Workout focus label"
+  },
+  "focusUpperBody": "upper body",
+  "@focusUpperBody": {
+    "description": "Workout focus label"
+  },
+  "focusLowerBody": "legs",
+  "@focusLowerBody": {
+    "description": "Workout focus label"
+  },
+  "focusCardio": "cardio",
+  "@focusCardio": {
+    "description": "Workout focus label"
+  },
+  "focusFullBody": "full body",
+  "@focusFullBody": {
+    "description": "Workout focus label"
+  },
+  "focusGeneric": "training",
+  "@focusGeneric": {
+    "description": "Workout focus label — fallback"
+  },
+  "referralJoinPitch": "Join FormAI with this invite code — it's saved to your account and you both win when the reward programme opens.",
+  "@referralJoinPitch": {
+    "description": "Referral landing pitch"
+  },
+  "shareProgramOf": "OF MY PROGRAMME",
+  "@shareProgramOf": {
+    "description": "Share template — programme label"
+  },
+  "shareCompleted": "COMPLETE!",
+  "@shareCompleted": {
+    "description": "Share template — completion label"
+  },
+  "shareDayUnit": "DAY",
+  "@shareDayUnit": {
+    "description": "Share template — day unit"
+  },
+  "shareStreakUnit": "STREAK",
+  "@shareStreakUnit": {
+    "description": "Share template — streak unit"
+  },
+  "shareNewBadge": "NEW BADGE",
+  "@shareNewBadge": {
+    "description": "Share template — badge eyebrow"
+  },
+  "shareFooter": "Change in 30 days — formai.app",
+  "@shareFooter": {
+    "description": "Share template footer"
   }
 }
