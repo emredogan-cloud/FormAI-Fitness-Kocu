@@ -9,6 +9,7 @@ import '../../../core/services/app_preferences.dart';
 import '../../../core/services/consent_state.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/utils/legal_urls.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Phase 138 · H-2 · KVKK / GDPR consent screen.
 ///
@@ -82,6 +83,7 @@ class _ConsentScreenState extends ConsumerState<ConsentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return PopScope(
       canPop: false,
       child: Scaffold(
@@ -93,10 +95,10 @@ class _ConsentScreenState extends ConsumerState<ConsentScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 16),
-                const Text(
-                  'Gizlilik Tercihlerin',
+                Text(
+                  l10n.consentTitle,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 28,
                     fontWeight: FontWeight.w900,
@@ -104,12 +106,10 @@ class _ConsentScreenState extends ConsumerState<ConsentScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  'FormAI deneyimini iyileştirmek için anonim kullanım '
-                  'verileri toplayabilir. Her ikisi de kapalı başlar — '
-                  'istediğin zaman ayarlardan değiştirebilirsin.',
+                Text(
+                  l10n.consentIntro,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 14,
                     height: 1.45,
@@ -117,19 +117,15 @@ class _ConsentScreenState extends ConsumerState<ConsentScreen> {
                 ),
                 const SizedBox(height: 28),
                 _ConsentTile(
-                  title: 'Anonim Kullanım Verileri',
-                  description:
-                      'Hangi ekranların ne sıklıkla kullanıldığını ölçer. '
-                      'İsim, e-posta veya hassas bilgiler gönderilmez.',
+                  title: l10n.consentAnalyticsTitle,
+                  description: l10n.consentAnalyticsBody,
                   value: _analyticsChecked,
                   onChanged: (v) => setState(() => _analyticsChecked = v),
                 ),
                 const SizedBox(height: 14),
                 _ConsentTile(
-                  title: 'Anonim Çökme Raporları',
-                  description:
-                      'Uygulama çökerse hata izini gönderir. Kişisel veri '
-                      'gönderilmez — sadece teknik stack trace.',
+                  title: l10n.consentCrashTitle,
+                  description: l10n.consentCrashBody,
                   value: _crashChecked,
                   onChanged: (v) => setState(() => _crashChecked = v),
                 ),
@@ -152,22 +148,19 @@ class _ConsentScreenState extends ConsumerState<ConsentScreen> {
                       color: Colors.orange.withValues(alpha: 0.35),
                     ),
                   ),
-                  child: const Row(
+                  child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.info_outline,
                         color: Colors.orange,
                         size: 18,
                       ),
-                      SizedBox(width: 10),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          'FormAI genel fitness rehberliği sunar; tıbbi '
-                          'tavsiye değildir. Kalp, sırt, omurga ya da '
-                          'gebelik gibi bir sağlık durumun varsa '
-                          'antrenmana başlamadan önce doktoruna danış.',
-                          style: TextStyle(
+                          l10n.consentHealthDisclaimer,
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
                             height: 1.45,
@@ -183,9 +176,9 @@ class _ConsentScreenState extends ConsumerState<ConsentScreen> {
                   style: TextButton.styleFrom(
                     foregroundColor: Colors.white70,
                   ),
-                  child: const Text(
-                    'Gizlilik Politikasını Oku',
-                    style: TextStyle(
+                  child: Text(
+                    l10n.consentReadPrivacy,
+                    style: const TextStyle(
                       fontSize: 13,
                       decoration: TextDecoration.underline,
                     ),
@@ -209,8 +202,8 @@ class _ConsentScreenState extends ConsumerState<ConsentScreen> {
                   ),
                   child: Text(
                     _analyticsChecked || _crashChecked
-                        ? 'Tercihlerimi Kaydet'
-                        : 'Sadece Zorunlu — Devam Et',
+                        ? l10n.consentSavePrefs
+                        : l10n.consentEssentialOnly,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
@@ -228,9 +221,9 @@ class _ConsentScreenState extends ConsumerState<ConsentScreen> {
                     // U4 · 48dp minimum touch target (was 40).
                     minimumSize: const Size.fromHeight(48),
                   ),
-                  child: const Text(
-                    'Hepsini Kabul Et',
-                    style: TextStyle(
+                  child: Text(
+                    l10n.consentAcceptAll,
+                    style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                     ),

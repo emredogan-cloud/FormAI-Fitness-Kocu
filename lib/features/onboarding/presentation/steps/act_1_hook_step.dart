@@ -5,6 +5,7 @@ import '../../../../core/motion/glow_pulse.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_haptics.dart';
 import '../../../../core/utils/legal_urls.dart';
+import '../../../../core/utils/text_span_split.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// Act 1 · Emotional hook — the "Başla" entry screen.
@@ -222,11 +223,12 @@ class _Hero extends StatelessWidget {
                       letterSpacing: 0.3,
                       color: Colors.white,
                     ),
-                    children: _highlighted(
+                    children: splitHighlighted(
                       AppLocalizations.of(context).act1HeroTitle(
                         AppLocalizations.of(context).act1HeroTitleHighlight,
                       ),
                       AppLocalizations.of(context).act1HeroTitleHighlight,
+                      const TextStyle(color: AppColors.neon),
                     ),
                   ),
                 ),
@@ -662,7 +664,7 @@ class _WelcomeLegalLineState extends State<_WelcomeLegalLine> {
     return Text.rich(
       TextSpan(
         style: baseStyle,
-        children: _linked(
+        children: splitLinked(
           l10n.act1LegalNotice(terms, privacy),
           {terms: _termsTap, privacy: _privacyTap},
           linkStyle,
@@ -671,55 +673,4 @@ class _WelcomeLegalLineState extends State<_WelcomeLegalLine> {
       textAlign: TextAlign.center,
     );
   }
-}
-
-/// Splits [sentence] around [fragment] and paints that one fragment in
-/// the neon accent. A translator who drops the fragment simply gets an
-/// unhighlighted title — the sentence still renders, which is the right
-/// failure mode for a purely visual concern.
-List<TextSpan> _highlighted(String sentence, String fragment) {
-  final index = fragment.isEmpty ? -1 : sentence.indexOf(fragment);
-  if (index < 0) return [TextSpan(text: sentence)];
-  return [
-    if (index > 0) TextSpan(text: sentence.substring(0, index)),
-    TextSpan(
-      text: fragment,
-      style: const TextStyle(color: AppColors.neon),
-    ),
-    if (index + fragment.length < sentence.length)
-      TextSpan(text: sentence.substring(index + fragment.length)),
-  ];
-}
-
-/// Splits [sentence] around each key of [links] and attaches that key's
-/// tap recogniser to the matching fragment. A fragment the translation
-/// dropped is simply not linked — the legal text still reads correctly
-/// and the reader can reach both documents from Settings, so a
-/// translation slip degrades rather than breaks compliance.
-List<TextSpan> _linked(
-  String sentence,
-  Map<String, GestureRecognizer> links,
-  TextStyle linkStyle,
-) {
-  var spans = <TextSpan>[TextSpan(text: sentence)];
-  links.forEach((fragment, recognizer) {
-    if (fragment.isEmpty) return;
-    final next = <TextSpan>[];
-    for (final span in spans) {
-      final text = span.text;
-      if (text == null || span.recognizer != null || !text.contains(fragment)) {
-        next.add(span);
-        continue;
-      }
-      final index = text.indexOf(fragment);
-      if (index > 0) next.add(TextSpan(text: text.substring(0, index)));
-      next.add(
-        TextSpan(text: fragment, style: linkStyle, recognizer: recognizer),
-      );
-      final rest = text.substring(index + fragment.length);
-      if (rest.isNotEmpty) next.add(TextSpan(text: rest));
-    }
-    spans = next;
-  });
-  return spans;
 }

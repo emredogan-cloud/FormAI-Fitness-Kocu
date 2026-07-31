@@ -1,8 +1,3 @@
 {
-  "lib/features/monetization/presentation/paywall_screen.dart": 50,
-  "lib/features/nutrition/providers/daily_menu_provider.dart": 1,
-  "lib/features/onboarding/presentation/consent_screen.dart": 14,
-  "lib/features/onboarding/presentation/steps/act_5_commitment_step.dart": 14,
-  "lib/features/onboarding/presentation/steps/social_proof_step.dart": 13,
-  "lib/features/workout/domain/services/workout_generator_service.dart": 1
+  "lib/features/monetization/presentation/paywall_screen.dart": 50
 }

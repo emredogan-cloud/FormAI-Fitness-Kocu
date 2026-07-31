@@ -6,6 +6,8 @@ import '../../../../core/motion/breathing_box.dart';
 import '../../../../core/motion/glow_pulse.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_haptics.dart';
+import '../../../../core/utils/text_span_split.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Act 5 · Commitment.
 ///
@@ -109,6 +111,7 @@ class _PrePaywallSummaryStepState extends ConsumerState<PrePaywallSummaryStep>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return SafeArea(
       child: Stack(
         fit: StackFit.expand,
@@ -157,32 +160,30 @@ class _PrePaywallSummaryStepState extends ConsumerState<PrePaywallSummaryStep>
                                   height: 1.22,
                                   letterSpacing: 0.3,
                                 ),
-                                children: [
-                                  const TextSpan(text: 'Gerçek zamanlı\n'),
-                                  TextSpan(
-                                    text: 'form koçun',
-                                    style: TextStyle(
-                                      foreground: Paint()
-                                        ..shader = const LinearGradient(
-                                          colors: [
-                                            AppColors.neon,
-                                            AppColors.neonAccent,
-                                          ],
-                                        ).createShader(
-                                          const Rect.fromLTWH(0, 0, 220, 40),
-                                        ),
-                                    ),
+                                children: splitHighlighted(
+                                  l10n.act5Headline(
+                                    l10n.act5HeadlineHighlight,
                                   ),
-                                  const TextSpan(text: ' ilk günden yanında.'),
-                                ],
+                                  l10n.act5HeadlineHighlight,
+                                  TextStyle(
+                                    foreground: Paint()
+                                      ..shader = const LinearGradient(
+                                        colors: [
+                                          AppColors.neon,
+                                          AppColors.neonAccent,
+                                        ],
+                                      ).createShader(
+                                        const Rect.fromLTWH(0, 0, 220, 40),
+                                      ),
+                                  ),
+                                ),
                               ),
                             ),
                             const SizedBox(height: 8),
-                            const Text(
-                              'Erken erişim dönemi — FormAI\'i ilk '
-                              'deneyenlerden birisin.',
+                            Text(
+                              l10n.earlyAccessBlurb,
                               textAlign: TextAlign.center,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: Colors.white54,
                                 fontSize: 13,
                                 height: 1.4,
@@ -190,22 +191,22 @@ class _PrePaywallSummaryStepState extends ConsumerState<PrePaywallSummaryStep>
                             ),
                             const SizedBox(height: 18),
                             Row(
-                              children: const [
+                              children: [
                                 Expanded(
                                   child: _StatMiniCard(
                                     icon: Icons.monitor_heart_outlined,
                                     big: '130+',
-                                    line1: 'EGZERSİZ',
-                                    line2: 'CANLI FORM ANALİZİ',
+                                    line1: l10n.act5StatExercises,
+                                    line2: l10n.liveFormAnalysisEyebrow,
                                   ),
                                 ),
-                                SizedBox(width: 12),
+                                const SizedBox(width: 12),
                                 Expanded(
                                   child: _StatMiniCard(
                                     icon: Icons.memory_rounded,
                                     big: 'AI',
-                                    line1: 'DESTEKLİ',
-                                    line2: '%100 CİHAZINDA',
+                                    line1: l10n.act5StatAiPowered,
+                                    line2: l10n.act5StatOnDevice(100),
                                   ),
                                 ),
                               ],
@@ -217,23 +218,32 @@ class _PrePaywallSummaryStepState extends ConsumerState<PrePaywallSummaryStep>
                             const SizedBox(height: 14),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
-                              children: const [
-                                Icon(Icons.rocket_launch_rounded,
+                              children: [
+                                const Icon(Icons.rocket_launch_rounded,
                                     color: AppColors.neon, size: 15),
-                                SizedBox(width: 6),
+                                const SizedBox(width: 6),
                                 Text(
-                                  'Erken erişim',
-                                  style: TextStyle(
+                                  l10n.earlyAccessBadge,
+                                  style: const TextStyle(
                                     color: AppColors.neon,
                                     fontSize: 12,
                                     fontWeight: FontWeight.w800,
                                   ),
                                 ),
-                                Text(
-                                  '  ·  İlk kullanıcılardan biri ol',
+                                const Text(
+                                  '  ·  ',
                                   style: TextStyle(
                                     color: Colors.white54,
                                     fontSize: 12,
+                                  ),
+                                ),
+                                Flexible(
+                                  child: Text(
+                                    l10n.earlyAccessSubline,
+                                    style: const TextStyle(
+                                      color: Colors.white54,
+                                      fontSize: 12,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -300,11 +310,11 @@ class _PrePaywallSummaryStepState extends ConsumerState<PrePaywallSummaryStep>
                                 child: const Icon(Icons.arrow_forward_rounded,
                                     color: Colors.white, size: 22),
                               ),
-                              const Expanded(
+                              Expanded(
                                 child: Text(
-                                  'PLANIMA GEÇ',
+                                  l10n.commitCta,
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w900,
                                     letterSpacing: 3,
@@ -321,9 +331,9 @@ class _PrePaywallSummaryStepState extends ConsumerState<PrePaywallSummaryStep>
                   ),
                 ),
                 const SizedBox(height: 10),
-                const Text(
-                  'Planına geçmeden önce son adım',
-                  style: TextStyle(color: Colors.white38, fontSize: 12),
+                Text(
+                  l10n.commitLastStep,
+                  style: const TextStyle(color: Colors.white38, fontSize: 12),
                 ),
               ],
             ),
@@ -390,11 +400,11 @@ class _FormHeroWithBubble extends StatelessWidget {
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
-                children: const [
+                children: [
                   Icon(Icons.bolt_rounded, color: AppColors.neon, size: 14),
                   SizedBox(width: 4),
                   Text(
-                    'Her tekrarında\nyanındayım.',
+                    AppLocalizations.of(context).act5HeroBubble,
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 11.5,
@@ -502,6 +512,7 @@ class _VoiceCoachCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -523,29 +534,23 @@ class _VoiceCoachCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 RichText(
-                  text: const TextSpan(
+                  text: TextSpan(
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w900,
                       letterSpacing: 0.6,
                     ),
-                    children: [
-                      TextSpan(
-                        text: 'SESLİ ',
-                        style: TextStyle(color: AppColors.neon),
-                      ),
-                      TextSpan(
-                        text: 'FORM KOÇLUĞU',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ],
+                    children: splitHighlighted(
+                      l10n.act5VoiceCoachTitle(l10n.act5VoiceCoachHighlight),
+                      l10n.act5VoiceCoachHighlight,
+                      const TextStyle(color: AppColors.neon),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 6),
-                const Text(
-                  'Formun bozulduğunda sesli uyarı ve düzeltme '
-                  'önerisi alırsın.',
-                  style: TextStyle(
+                Text(
+                  l10n.act5VoiceCoachBody,
+                  style: const TextStyle(
                     color: Colors.white60,
                     fontSize: 12.5,
                     height: 1.4,
@@ -585,15 +590,16 @@ class _VoiceCoachCard extends StatelessWidget {
 class _BenefitIconRow extends StatelessWidget {
   const _BenefitIconRow();
 
-  static const List<(IconData, String)> _items = [
-    (Icons.track_changes_rounded, 'Kişisel\nhedeflerine odaklan'),
-    (Icons.bar_chart_rounded, 'İlerlemeni\nanlık takip et'),
-    (Icons.military_tech_rounded, 'Motivasyonun\nhiç düşmesin'),
-    (Icons.shield_outlined, 'Verilerin\ngüvende'),
-  ];
+  static List<(IconData, String)> _itemsFor(AppLocalizations l10n) => [
+        (Icons.track_changes_rounded, l10n.act5BenefitGoals),
+        (Icons.bar_chart_rounded, l10n.act5BenefitProgress),
+        (Icons.military_tech_rounded, l10n.act5BenefitMotivation),
+        (Icons.shield_outlined, l10n.act5BenefitPrivacy),
+      ];
 
   @override
   Widget build(BuildContext context) {
+    final items = _itemsFor(AppLocalizations.of(context));
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 14),
       decoration: BoxDecoration(
@@ -603,7 +609,7 @@ class _BenefitIconRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          for (var i = 0; i < _items.length; i++) ...[
+          for (var i = 0; i < items.length; i++) ...[
             if (i > 0)
               Container(
                 width: 1,
@@ -613,10 +619,10 @@ class _BenefitIconRow extends StatelessWidget {
             Expanded(
               child: Column(
                 children: [
-                  Icon(_items[i].$1, color: AppColors.neonAccent, size: 22),
+                  Icon(items[i].$1, color: AppColors.neonAccent, size: 22),
                   const SizedBox(height: 6),
                   Text(
-                    _items[i].$2,
+                    items[i].$2,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: Colors.white70,

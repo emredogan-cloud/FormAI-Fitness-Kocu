@@ -200,7 +200,7 @@ class DailyMenuNotifier extends AsyncNotifier<List<PlannedMeal>> {
       final wantsSweet = taste == 'tatli'; // i18n-ignore — stored value
       final wantsSavory = taste == 'tuzlu';
       final isSweet = tags.any((t) =>
-          t.contains('tatlı') ||
+          t.contains('tatlı') || // i18n-ignore — DB tag value
           t.contains('tatli')); // i18n-ignore — DB tag value
       if ((wantsSweet && isSweet) || (wantsSavory && !isSweet)) {
         score -= 120;

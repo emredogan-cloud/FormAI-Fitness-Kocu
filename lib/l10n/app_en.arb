@@ -5324,5 +5324,172 @@
         "type": "String"
       }
     }
+  },
+  "consentTitle": "Your privacy choices",
+  "@consentTitle": {
+    "description": "Consent screen title."
+  },
+  "consentIntro": "FormAI can collect anonymous usage data to improve the experience. Both start switched off — you can change them in Settings at any time.",
+  "@consentIntro": {
+    "description": "Consent screen intro. The 'both start off' promise is a KVKK/GDPR commitment and must survive translation."
+  },
+  "consentAnalyticsTitle": "Anonymous usage data",
+  "@consentAnalyticsTitle": {
+    "description": "Consent toggle title: analytics."
+  },
+  "consentAnalyticsBody": "Measures which screens are used and how often. No name, email or sensitive information is sent.",
+  "@consentAnalyticsBody": {
+    "description": "Consent toggle description: analytics."
+  },
+  "consentCrashTitle": "Anonymous crash reports",
+  "@consentCrashTitle": {
+    "description": "Consent toggle title: crash reporting."
+  },
+  "consentCrashBody": "Sends the error trace if the app crashes. No personal data is sent — only the technical stack trace.",
+  "@consentCrashBody": {
+    "description": "Consent toggle description: crash reporting."
+  },
+  "consentHealthDisclaimer": "FormAI offers general fitness guidance; it is not medical advice. If you have a health condition such as a heart, back or spine problem, or you are pregnant, talk to your doctor before you start training.",
+  "@consentHealthDisclaimer": {
+    "description": "Health disclaimer shown once during onboarding. The Play Console health declaration attests that this is shown, so the meaning must not soften in translation."
+  },
+  "consentReadPrivacy": "Read the Privacy Policy",
+  "@consentReadPrivacy": {
+    "description": "Link to the privacy policy on the consent screen."
+  },
+  "consentSavePrefs": "Save my choices",
+  "@consentSavePrefs": {
+    "description": "Consent CTA when at least one toggle is on."
+  },
+  "consentEssentialOnly": "Essential only — continue",
+  "@consentEssentialOnly": {
+    "description": "Consent CTA when both toggles are off."
+  },
+  "consentAcceptAll": "Accept all",
+  "@consentAcceptAll": {
+    "description": "Secondary consent action that switches both toggles on."
+  },
+  "earlyAccessBlurb": "Early access — you're one of the first to try FormAI.",
+  "@earlyAccessBlurb": {
+    "description": "Early-access line shared by the social-proof and commitment steps."
+  },
+  "earlyAccessBadge": "Early access",
+  "@earlyAccessBadge": {
+    "description": "Early-access badge."
+  },
+  "earlyAccessSubline": "Be one of the first users",
+  "@earlyAccessSubline": {
+    "description": "Sub-line beside the early-access badge."
+  },
+  "commitCta": "GO TO MY PLAN",
+  "@commitCta": {
+    "description": "CTA that closes onboarding and opens the plan."
+  },
+  "commitLastStep": "One last step before your plan",
+  "@commitLastStep": {
+    "description": "Reassurance under the commitment CTA."
+  },
+  "act5Headline": "A real-time\n{coach} with you from day one.",
+  "@act5Headline": {
+    "description": "Commitment-step headline. {coach} is painted with the neon gradient, so the translator decides where the accent falls and where the line breaks.",
+    "placeholders": {
+      "coach": {
+        "type": "String"
+      }
+    }
+  },
+  "act5HeadlineHighlight": "form coach",
+  "@act5HeadlineHighlight": {
+    "description": "The gradient-painted fragment inside the commitment headline."
+  },
+  "act5HeroBubble": "I'm with you\non every rep.",
+  "@act5HeroBubble": {
+    "description": "Speech bubble beside the coach portrait."
+  },
+  "act5StatExercises": "EXERCISES",
+  "@act5StatExercises": {
+    "description": "Stat card label under the exercise count."
+  },
+  "act5StatAiPowered": "POWERED",
+  "@act5StatAiPowered": {
+    "description": "Stat card label completing 'AI ___'."
+  },
+  "act5StatOnDevice": "{percent}% ON DEVICE",
+  "@act5StatOnDevice": {
+    "description": "Stat card sub-label. The percent sign leads the number in Turkish and trails it in English.",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "act5VoiceCoachTitle": "{voice} FORM COACHING",
+  "@act5VoiceCoachTitle": {
+    "description": "Voice-coaching card title. {voice} is painted in the accent colour.",
+    "placeholders": {
+      "voice": {
+        "type": "String"
+      }
+    }
+  },
+  "act5VoiceCoachHighlight": "VOICE",
+  "@act5VoiceCoachHighlight": {
+    "description": "The accent-painted fragment inside the voice-coaching title."
+  },
+  "act5VoiceCoachBody": "You get a spoken warning and a correction cue the moment your form slips.",
+  "@act5VoiceCoachBody": {
+    "description": "Voice-coaching card body."
+  },
+  "act5BenefitGoals": "Focus on your\nown goals",
+  "@act5BenefitGoals": {
+    "description": "Benefit row item. The line break keeps four items balanced across one row."
+  },
+  "act5BenefitProgress": "Track progress\nas it happens",
+  "@act5BenefitProgress": {
+    "description": "Benefit row item."
+  },
+  "act5BenefitMotivation": "Keep your\nmotivation up",
+  "@act5BenefitMotivation": {
+    "description": "Benefit row item."
+  },
+  "act5BenefitPrivacy": "Your data\nstays safe",
+  "@act5BenefitPrivacy": {
+    "description": "Benefit row item."
+  },
+  "socialProofHeadline": "A real-time form coach\nwith you from day one.",
+  "@socialProofHeadline": {
+    "description": "Social-proof step headline, painted with a gradient shader as a whole."
+  },
+  "socialProofRepCountTitle": "Rep counting with your camera",
+  "@socialProofRepCountTitle": {
+    "description": "Capability highlight title."
+  },
+  "socialProofRepCountBody": "Your phone's camera watches your movement and counts every rep in real time.",
+  "@socialProofRepCountBody": {
+    "description": "Capability highlight body."
+  },
+  "socialProofVoiceTitle": "Voice form coaching",
+  "@socialProofVoiceTitle": {
+    "description": "Capability highlight title."
+  },
+  "socialProofVoiceBody": "The moment your form slips you get a spoken warning and a correction cue.",
+  "@socialProofVoiceBody": {
+    "description": "Capability highlight body."
+  },
+  "socialProofPlanTitle": "A plan built on your goal",
+  "@socialProofPlanTitle": {
+    "description": "Capability highlight title."
+  },
+  "socialProofPlanBody": "Your program is built around your goal, your level and your pace.",
+  "@socialProofPlanBody": {
+    "description": "Capability highlight body."
+  },
+  "socialProofPrivacyTitle": "Privacy first",
+  "@socialProofPrivacyTitle": {
+    "description": "Capability highlight title."
+  },
+  "socialProofPrivacyBody": "Your video never leaves your device — the analysis runs entirely on your phone.",
+  "@socialProofPrivacyBody": {
+    "description": "Capability highlight body. A factual privacy claim; it must stay accurate in every language."
   }
 }

@@ -7,6 +7,7 @@ import '../../../../core/motion/glow_pulse.dart';
 import '../../../../core/motion/sparkle_burst.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_haptics.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../widgets/coach_mood.dart';
 import '../widgets/living_coach_avatar.dart';
 
@@ -45,30 +46,28 @@ class _Highlight {
   final String body;
 }
 
-const List<_Highlight> _kHighlights = [
-  _Highlight(
-    icon: Icons.videocam_rounded,
-    title: 'Kameranla tekrar sayımı',
-    body:
-        'Telefonunun kamerası hareketini izler, her tekrarı gerçek zamanlı sayar.',
-  ),
-  _Highlight(
-    icon: Icons.record_voice_over_rounded,
-    title: 'Sesli form koçluğu',
-    body: 'Formun bozulduğu anda sesli uyarı ve düzeltme önerisi alırsın.',
-  ),
-  _Highlight(
-    icon: Icons.tune_rounded,
-    title: 'Hedefine göre plan',
-    body: 'Programın hedefine, seviyene ve tempona göre kurulur.',
-  ),
-  _Highlight(
-    icon: Icons.lock_rounded,
-    title: 'Gizlilik önce',
-    body:
-        'Görüntülerin cihazından çıkmaz — analiz tamamen telefonunda çalışır.',
-  ),
-];
+List<_Highlight> _highlightsFor(AppLocalizations l10n) => [
+      _Highlight(
+        icon: Icons.videocam_rounded,
+        title: l10n.socialProofRepCountTitle,
+        body: l10n.socialProofRepCountBody,
+      ),
+      _Highlight(
+        icon: Icons.record_voice_over_rounded,
+        title: l10n.socialProofVoiceTitle,
+        body: l10n.socialProofVoiceBody,
+      ),
+      _Highlight(
+        icon: Icons.tune_rounded,
+        title: l10n.socialProofPlanTitle,
+        body: l10n.socialProofPlanBody,
+      ),
+      _Highlight(
+        icon: Icons.lock_rounded,
+        title: l10n.socialProofPrivacyTitle,
+        body: l10n.socialProofPrivacyBody,
+      ),
+    ];
 
 class SocialProofStep extends StatefulWidget {
   const SocialProofStep({super.key, required this.onContinue});
@@ -99,6 +98,7 @@ class _SocialProofStepState extends State<SocialProofStep> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -125,10 +125,10 @@ class _SocialProofStepState extends State<SocialProofStep> {
                   shaderCallback: (rect) => const LinearGradient(
                     colors: [AppColors.neon, AppColors.neonAccent],
                   ).createShader(rect),
-                  child: const Text(
-                    'Gerçek zamanlı form koçun\nilk günden yanında.',
+                  child: Text(
+                    l10n.socialProofHeadline,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.w900,
@@ -139,7 +139,7 @@ class _SocialProofStepState extends State<SocialProofStep> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Erken erişim dönemi — FormAI\'ı ilk deneyenlerden birisin.',
+                  l10n.earlyAccessBlurb,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.62),
@@ -163,9 +163,11 @@ class _SocialProofStepState extends State<SocialProofStep> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                const SizedBox(
+                SizedBox(
                   height: 160,
-                  child: _HighlightCarousel(highlights: _kHighlights),
+                  child: _HighlightCarousel(
+                    highlights: _highlightsFor(l10n),
+                  ),
                 ),
                 const SizedBox(height: 8),
                 const _EarlyAccessStrip(),
@@ -186,7 +188,7 @@ class _SocialProofStepState extends State<SocialProofStep> {
                     child: FilledButton.icon(
                       onPressed: _readyForCommit ? _commit : null,
                       icon: const Icon(Icons.arrow_forward_rounded),
-                      label: const Text('PLANIMA GEÇ'),
+                      label: Text(l10n.commitCta),
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.neon,
                         foregroundColor: Colors.white,
@@ -208,7 +210,7 @@ class _SocialProofStepState extends State<SocialProofStep> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Planına geçmeden önce son adım',
+                  l10n.commitLastStep,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.45),
@@ -600,9 +602,9 @@ class _EarlyAccessStrip extends StatelessWidget {
           color: AppColors.neon.withValues(alpha: 0.9),
         ),
         const SizedBox(width: 8),
-        const Text(
-          'Erken erişim',
-          style: TextStyle(
+        Text(
+          AppLocalizations.of(context).earlyAccessBadge,
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 12,
             fontWeight: FontWeight.w800,
@@ -620,7 +622,7 @@ class _EarlyAccessStrip extends StatelessWidget {
         ),
         const SizedBox(width: 6),
         Text(
-          'İlk kullanıcılardan biri ol',
+          AppLocalizations.of(context).earlyAccessSubline,
           style: TextStyle(
             color: Colors.white.withValues(alpha: 0.72),
             fontSize: 11.5,
