@@ -519,5 +519,73 @@
         "type": "int"
       }
     }
+  },
+  "churnReasonTooExpensive": "Too expensive",
+  "@churnReasonTooExpensive": {
+    "description": "Churn survey reason"
+  },
+  "churnReasonGoalReached": "I reached my goal",
+  "@churnReasonGoalReached": {
+    "description": "Churn survey reason"
+  },
+  "churnReasonNotUsing": "I'm not using the app",
+  "@churnReasonNotUsing": {
+    "description": "Churn survey reason"
+  },
+  "churnReasonOther": "Other",
+  "@churnReasonOther": {
+    "description": "Churn survey reason"
+  },
+  "churnTitle": "Don't go!",
+  "@churnTitle": {
+    "description": "Churn survey sheet title"
+  },
+  "churnSubtitle": "Why are you cancelling? Whatever your answer, it shapes what we do next.",
+  "@churnSubtitle": {
+    "description": "Churn survey sheet subtitle"
+  },
+  "churnStay": "Never mind, I'll stay",
+  "@churnStay": {
+    "description": "Churn survey stay action"
+  },
+  "premiumWelcomeIntro": "Thanks for trusting us. From today your full potential is unlocked — here's what's waiting:",
+  "@premiumWelcomeIntro": {
+    "description": "Premium welcome sheet intro"
+  },
+  "premiumWelcomeCoachTitle": "Your AI coach, always there",
+  "@premiumWelcomeCoachTitle": {
+    "description": "Premium welcome feature"
+  },
+  "premiumWelcomeCoachBody": "Form now answers your questions and guides you on training, nutrition and motivation.",
+  "@premiumWelcomeCoachBody": {
+    "description": "Premium welcome feature body"
+  },
+  "premiumWelcomeWorkoutTitle": "Your personal training programme",
+  "@premiumWelcomeWorkoutTitle": {
+    "description": "Premium welcome feature"
+  },
+  "premiumWelcomeWorkoutBody": "Live camera form analysis and real-time rep counting across 130+ exercises.",
+  "@premiumWelcomeWorkoutBody": {
+    "description": "Premium welcome feature body"
+  },
+  "premiumWelcomeNutritionTitle": "Nutrition made for you",
+  "@premiumWelcomeNutritionTitle": {
+    "description": "Premium welcome feature"
+  },
+  "premiumWelcomeNutritionBody": "An automatic daily menu for your goal, meal tracking and AI meal suggestions.",
+  "@premiumWelcomeNutritionBody": {
+    "description": "Premium welcome feature body"
+  },
+  "premiumWelcomeProgressTitle": "Track your progress",
+  "@premiumWelcomeProgressTitle": {
+    "description": "Premium welcome feature"
+  },
+  "premiumWelcomeProgressBody": "See your progress every day through streaks, XP, badges and charts.",
+  "@premiumWelcomeProgressBody": {
+    "description": "Premium welcome feature body"
+  },
+  "premiumWelcomeCta": "Let's go",
+  "@premiumWelcomeCta": {
+    "description": "Premium welcome primary CTA"
   }
 }

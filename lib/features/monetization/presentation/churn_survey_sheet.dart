@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/services/analytics_service.dart';
 import '../../../core/theme/theme_extension.dart';
+import '../../../l10n/app_localizations.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 
@@ -40,29 +41,40 @@ class _ChurnReason {
     required this.icon,
   });
   final String token;
-  final String label;
+
+  /// Roadmap Phase 5 · resolved at render time rather than stored.
+  ///
+  /// The catalogue is a top-level `const`, so it cannot hold a
+  /// localized string — there is no `BuildContext` where it is
+  /// declared. Holding the lookup instead keeps the list const, keeps
+  /// the analytics `token` decoupled from the copy, and means the label
+  /// follows a locale change without rebuilding the catalogue.
+  final String Function(AppLocalizations) label;
+
   final IconData icon;
 }
 
-const List<_ChurnReason> _reasons = [
+// Not const: the label is a closure, and closures are not constants.
+// The catalogue is still immutable and still built once.
+final List<_ChurnReason> _reasons = [
   _ChurnReason(
     token: 'too_expensive',
-    label: 'Çok pahalı',
+    label: (l10n) => l10n.churnReasonTooExpensive,
     icon: Icons.attach_money,
   ),
   _ChurnReason(
     token: 'reached_goal',
-    label: 'Hedefime ulaştım',
+    label: (l10n) => l10n.churnReasonGoalReached,
     icon: Icons.emoji_events_outlined,
   ),
   _ChurnReason(
     token: 'not_using',
-    label: 'Uygulamayı kullanmıyorum',
+    label: (l10n) => l10n.churnReasonNotUsing,
     icon: Icons.hourglass_empty,
   ),
   _ChurnReason(
     token: 'other',
-    label: 'Diğer',
+    label: (l10n) => l10n.churnReasonOther,
     icon: Icons.more_horiz,
   ),
 ];
@@ -91,7 +103,7 @@ class _ChurnSurveySheet extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            'Bizi Bırakma!',
+            AppLocalizations.of(context).churnTitle,
             style: TextStyle(
               color: scheme.onSurface,
               fontSize: 22,
@@ -100,8 +112,7 @@ class _ChurnSurveySheet extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Neden iptal ediyorsun? Cevabın ne olursa olsun, bir dahaki '
-            'hareketimize yön veriyor.',
+            AppLocalizations.of(context).churnSubtitle,
             style: TextStyle(
               color: scheme.onSurface.withValues(alpha: 0.65),
               fontSize: 13,
@@ -117,7 +128,7 @@ class _ChurnSurveySheet extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: Text(
-              'Vazgeçtim, kalmaya devam et',
+              AppLocalizations.of(context).churnStay,
               style: TextStyle(
                 color: scheme.onSurface.withValues(alpha: 0.75),
                 fontWeight: FontWeight.w700,
@@ -158,7 +169,7 @@ class _ReasonTile extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  reason.label,
+                  reason.label(AppLocalizations.of(context)),
                   style: TextStyle(
                     color: scheme.onSurface,
                     fontSize: 14,

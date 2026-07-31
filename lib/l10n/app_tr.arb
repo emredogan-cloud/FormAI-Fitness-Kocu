@@ -120,5 +120,22 @@
   "suggestionBalancedBody": "Makro dağılımın bugün dengeli. Bir sonraki öğün için kompozit bir tarif seç — protein, sebze ve karmaşık karbonhidrat üçlüsünden.",
   "suggestionBalancedCta": "Tarifleri keşfet",
   "suggestionProteinBody": "{grams}g protein açığın var. Öğlen veya akşam için hızlıca tavuk, yumurta ya da baklagil bazlı bir tarif seç — günün hedefine tam oturur.",
-  "suggestionLightMealBody": "{kcal} kcal için salata veya yoğurtlu bir snack ideal. Düşük kalorili tariflerden seç."
+  "suggestionLightMealBody": "{kcal} kcal için salata veya yoğurtlu bir snack ideal. Düşük kalorili tariflerden seç.",
+  "churnReasonTooExpensive": "Çok pahalı",
+  "churnReasonGoalReached": "Hedefime ulaştım",
+  "churnReasonNotUsing": "Uygulamayı kullanmıyorum",
+  "churnReasonOther": "Diğer",
+  "churnTitle": "Bizi Bırakma!",
+  "churnSubtitle": "Neden iptal ediyorsun? Cevabın ne olursa olsun, bir dahaki hareketimize yön veriyor.",
+  "churnStay": "Vazgeçtim, kalmaya devam et",
+  "premiumWelcomeIntro": "Bize güvendiğin için teşekkürler. Bugünden itibaren tüm potansiyelin açık — işte seni neler bekliyor:",
+  "premiumWelcomeCoachTitle": "AI Koçun her an yanında",
+  "premiumWelcomeCoachBody": "Form artık sorularını yanıtlar; antrenman, beslenme ve motivasyonda sana özel rehberlik eder.",
+  "premiumWelcomeWorkoutTitle": "Kişisel antrenman programın",
+  "premiumWelcomeWorkoutBody": "130+ egzersizde kamerayla canlı form analizi ve gerçek zamanlı tekrar sayımı.",
+  "premiumWelcomeNutritionTitle": "Sana özel beslenme",
+  "premiumWelcomeNutritionBody": "Hedefine göre otomatik günlük menü, öğün takibi ve AI öğün önerileri.",
+  "premiumWelcomeProgressTitle": "İlerlemeni takip et",
+  "premiumWelcomeProgressBody": "Seri, XP, rozetler ve grafiklerle gelişimini her gün gör.",
+  "premiumWelcomeCta": "Hadi Başlayalım"
 }

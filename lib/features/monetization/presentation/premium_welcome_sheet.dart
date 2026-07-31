@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Closed-test polish · the one-time premium welcome shown right after the
 /// user's FIRST successful purchase. Congratulates + thanks them, then gives a
@@ -96,9 +97,8 @@ class PremiumWelcomeSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            const Text(
-              'Bize güvendiğin için teşekkürler. Bugünden itibaren tüm '
-              'potansiyelin açık — işte seni neler bekliyor:',
+            Text(
+              AppLocalizations.of(context).premiumWelcomeIntro,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.white70,
@@ -107,28 +107,25 @@ class PremiumWelcomeSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            const _FeatureRow(
+            _FeatureRow(
               icon: Icons.auto_awesome,
-              title: 'AI Koçun her an yanında',
-              body: 'Form artık sorularını yanıtlar; antrenman, beslenme ve '
-                  'motivasyonda sana özel rehberlik eder.',
+              title: AppLocalizations.of(context).premiumWelcomeCoachTitle,
+              body: AppLocalizations.of(context).premiumWelcomeCoachBody,
             ),
-            const _FeatureRow(
+            _FeatureRow(
               icon: Icons.fitness_center_rounded,
-              title: 'Kişisel antrenman programın',
-              body: '130+ egzersizde kamerayla canlı form analizi ve gerçek '
-                  'zamanlı tekrar sayımı.',
+              title: AppLocalizations.of(context).premiumWelcomeWorkoutTitle,
+              body: AppLocalizations.of(context).premiumWelcomeWorkoutBody,
             ),
-            const _FeatureRow(
+            _FeatureRow(
               icon: Icons.restaurant_rounded,
-              title: 'Sana özel beslenme',
-              body: 'Hedefine göre otomatik günlük menü, öğün takibi ve AI '
-                  'öğün önerileri.',
+              title: AppLocalizations.of(context).premiumWelcomeNutritionTitle,
+              body: AppLocalizations.of(context).premiumWelcomeNutritionBody,
             ),
-            const _FeatureRow(
+            _FeatureRow(
               icon: Icons.insights_rounded,
-              title: 'İlerlemeni takip et',
-              body: 'Seri, XP, rozetler ve grafiklerle gelişimini her gün gör.',
+              title: AppLocalizations.of(context).premiumWelcomeProgressTitle,
+              body: AppLocalizations.of(context).premiumWelcomeProgressBody,
               isLast: true,
             ),
             const SizedBox(height: 26),
@@ -149,7 +146,7 @@ class PremiumWelcomeSheet extends StatelessWidget {
                     letterSpacing: 0.5,
                   ),
                 ),
-                child: const Text('Hadi Başlayalım'),
+                child: Text(AppLocalizations.of(context).premiumWelcomeCta),
               ),
             ),
           ],
