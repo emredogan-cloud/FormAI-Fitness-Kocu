@@ -1015,11 +1015,11 @@
   "setupThinkingSubtitleNamed": "{name}, senden birkaç şey öğrenmem gerekiyor. Plan tamamen sana özel olacak.",
   "setupThinkingTitle": "Düşünüyorum...",
   "setupThinkingComposing": "Sana bir şey yazıyor...",
-  "equipmentQuestion": "Evinde veya salonda spor ekipmanın var mı?",
+  "equipmentQuestion": "30 günlük antrenmanını sana göre ayarlayacağım.\nEvinde veya salonda spor ekipmanın var mı?",
   "equipmentOneMoreThing": "Son bir şey...",
   "equipmentYes": "Evet, birkaç dambıl ve lastiğim var",
   "equipmentNo": "Hayır, hiçbir ekipmanım yok",
-  "bondingPromise": "12 haftada vücudunu nasıl değiştireceğini sana göstereceğim. Önce seni tanıyalım — bu 90 saniye sürüyor.",
+  "bondingPromise": "Merhaba, ben Form. 12 haftada vücudunu nasıl değiştireceğini sana göstereceğim. Önce seni tanıyalım — bu 90 saniye sürüyor.",
   "tapToSkip": "Geçmek için ekrana dokun",
   "interludePainPointTitle": "Şimdi en zorlandığın şeyi bilmem gerekiyor.",
   "interludePainPointBeat": "Bir an...",
@@ -1046,5 +1046,6 @@
   "reportResultMuscleGain": "12 haftalık kas gelişimi odaklı program",
   "reportResultFitnessLook": "12 haftalık form ve estetik odaklı program",
   "reportResultStrength": "12 haftalık güç gelişimi odaklı program",
-  "reportResultDefault": "12 haftalık form dönüşümü odaklı program"
+  "reportResultDefault": "12 haftalık form dönüşümü odaklı program",
+  "equipmentQuestionNamed": "{name}, 30 günlük antrenmanını sana göre ayarlayacağım.\nEvinde veya salonda spor ekipmanın var mı?"
 }

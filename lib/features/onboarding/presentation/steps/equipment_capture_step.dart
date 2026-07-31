@@ -53,11 +53,11 @@ class _EquipmentCaptureStepState extends ConsumerState<EquipmentCaptureStep> {
     });
   }
 
-  String _composeSubtitle(WizardState s) {
+  String _composeSubtitle(AppLocalizations l10n, WizardState s) {
     final name = _capitaliseFirst(s.name);
-    final prefix = name != null ? '$name, ' : '';
-    return '${prefix}30 günlük antrenmanını sana göre ayarlayacağım.\n'
-        'Evinde veya salonda spor ekipmanın var mı?';
+    return name != null
+        ? l10n.equipmentQuestionNamed(name)
+        : l10n.equipmentQuestion;
   }
 
   String? _capitaliseFirst(String? raw) {
@@ -74,7 +74,7 @@ class _EquipmentCaptureStepState extends ConsumerState<EquipmentCaptureStep> {
     final currentValue = wizard.hasEquipment;
     return CinematicAiPresence(
       title: AppLocalizations.of(context).equipmentOneMoreThing,
-      subtitle: _composeSubtitle(wizard),
+      subtitle: _composeSubtitle(AppLocalizations.of(context), wizard),
       subtitleTypewriter: true,
       composingPlaceholder: '',
       mood: CoachMood.thinking,

@@ -54,9 +54,7 @@ class _CoachIntroStepState extends State<CoachIntroStep>
   // effort-transparency. The "90 saniye" line sets a time-budget
   // expectation so the user mentally commits before the wizard starts —
   // norm-of-reciprocity + time-boxing psychology.
-  static const String _coachLine = 'Merhaba, ben Form. '
-      '12 haftada vücudunu nasıl değiştireceğini sana göstereceğim. '
-      'Önce seni tanıyalım — bu 90 saniye sürüyor.';
+  static String _coachLine(AppLocalizations l10n) => l10n.bondingPromise;
 
   // Phase 108 · Form arrival choreography.
   //
@@ -227,7 +225,7 @@ class _CoachIntroStepState extends State<CoachIntroStep>
                           duration: const Duration(milliseconds: 5000),
                           child: _CoachBubble(
                             controller: _reveal,
-                            text: _coachLine,
+                            text: _coachLine(AppLocalizations.of(context)),
                             onComplete: _onTypingComplete,
                             // Phase 108 · hold the typewriter until
                             // Form's arrival has settled, so the user

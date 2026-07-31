@@ -4399,7 +4399,7 @@
   "@setupThinkingComposing": {
     "description": "Placeholder while the coach 'types'"
   },
-  "equipmentQuestion": "Do you have any equipment at home or at the gym?",
+  "equipmentQuestion": "I'll tune your 30-day training to you.\nDo you have any equipment at home or at the gym?",
   "@equipmentQuestion": {
     "description": "Onboarding step question"
   },
@@ -4415,7 +4415,7 @@
   "@equipmentNo": {
     "description": "Equipment option — no"
   },
-  "bondingPromise": "I'll show you how to change your body in 12 weeks. First let me get to know you — it takes 90 seconds.",
+  "bondingPromise": "Hello, I'm Form. I'll show you how to change your body in 12 weeks. First let me get to know you — it takes 90 seconds.",
   "@bondingPromise": {
     "description": "Coach promise at the start of onboarding. The 90-second claim sets an expectation the flow must keep."
   },
@@ -4536,5 +4536,14 @@
   "reportResultDefault": "A 12-week transformation programme",
   "@reportResultDefault": {
     "description": "AI report outcome label. Never quantify the result."
+  },
+  "equipmentQuestionNamed": "{name}, I'll tune your 30-day training to you.\nDo you have any equipment at home or at the gym?",
+  "@equipmentQuestionNamed": {
+    "description": "Equipment step question, addressing the user by name.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }
