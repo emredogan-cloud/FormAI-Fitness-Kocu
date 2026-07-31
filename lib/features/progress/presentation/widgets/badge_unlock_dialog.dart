@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/share_service.dart';
 import '../../../referral/providers/referral_provider.dart';
 import '../../providers/badge_unlocks_provider.dart';
+import '../badge_copy.dart';
 import '../../../../l10n/app_localizations.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
@@ -120,7 +121,7 @@ class _BadgeUnlockDialogState extends State<_BadgeUnlockDialog>
             ),
             const SizedBox(height: 18),
             Text(
-              widget.badge.label,
+              widget.badge.title(AppLocalizations.of(context)),
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: Colors.white,
@@ -131,7 +132,7 @@ class _BadgeUnlockDialogState extends State<_BadgeUnlockDialog>
             ),
             const SizedBox(height: 8),
             Text(
-              widget.badge.subtitle,
+              widget.badge.unlockMessage(AppLocalizations.of(context)),
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: Colors.white70,
@@ -195,8 +196,8 @@ class _SharePillButton extends ConsumerWidget {
         HapticFeedback.lightImpact();
         ShareService.instance.shareBadge(
           context: context,
-          badgeName: badge.label,
-          badgeSubtitle: badge.subtitle,
+          badgeName: badge.title(AppLocalizations.of(context)),
+          badgeSubtitle: badge.unlockMessage(AppLocalizations.of(context)),
           badgeEmoji: badge.emoji,
           referralCode: referralCode,
         );

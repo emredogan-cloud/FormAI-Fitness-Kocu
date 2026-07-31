@@ -22,38 +22,31 @@ import 'streak_provider.dart';
 /// Turkish labels — those would shift if we ever localise). Subscribers
 /// diff `previous` vs `next` to detect first-time unlocks.
 
-/// Catalogue of every badge the app awards. Keep IDs short and stable;
-/// the celebration dialog uses [label] + [subtitle] for the user-facing
-/// copy so this list can grow without a localisation rotation.
+/// Catalogue of every badge the app awards. Keep IDs short and stable —
+/// they are persisted and keyed on by the XP calculator.
+///
+/// Roadmap Phase 5 · this list holds no copy. The name and the
+/// celebration line come from `presentation/badge_copy.dart`; the
+/// gallery's goal text lives in ARB alongside them.
 const List<BadgeDefinition> kBadgeCatalog = [
   BadgeDefinition(
     id: 'first_step',
-    label: 'İlk Adım',
-    subtitle: 'İlk gününü tamamladın!',
     emoji: '🎯',
   ),
   BadgeDefinition(
     id: 'disciplined',
-    label: 'Disiplinli',
-    subtitle: '3 günlük seri yakaladın!',
     emoji: '🛡️',
   ),
   BadgeDefinition(
     id: 'first_week',
-    label: 'İlk Hafta',
-    subtitle: '7 günü tamamladın!',
     emoji: '📅',
   ),
   BadgeDefinition(
     id: 'steady',
-    label: 'Sabit',
-    subtitle: '7 günlük seriyi yakaladın!',
     emoji: '🔥',
   ),
   BadgeDefinition(
     id: 'halfway',
-    label: 'Yarıyol',
-    subtitle: '14 gün — yarıya geldin!',
     emoji: '⛰️',
   ),
   // Roadmap Phase 1 (R2.3) · awarded for participating in feedback.
@@ -61,65 +54,46 @@ const List<BadgeDefinition> kBadgeCatalog = [
   // review — see [FeedbackRewardService] for the policy rationale.
   BadgeDefinition(
     id: 'voice_heard',
-    label: 'Sesini Duyduk',
-    subtitle: 'Geri bildirim gönderdin — FormAI\'ı şekillendirdin!',
     emoji: '💬',
   ),
   BadgeDefinition(
     id: 'calorie_hunter',
-    label: 'Kalori Avcısı',
-    subtitle: 'Toplam 1500 kcal yaktın!',
     emoji: '⚡',
   ),
   BadgeDefinition(
     id: 'hiit_master',
-    label: 'HIIT Ustası',
-    subtitle: '5 kardiyo gününü tamamladın!',
     emoji: '⚡',
   ),
   BadgeDefinition(
     id: 'core_master',
-    label: 'Core Master',
-    subtitle: '5 karın odaklı günü bitirdin!',
     emoji: '🎯',
   ),
   BadgeDefinition(
     id: 'strength_stone',
-    label: 'Güç Taşı',
-    subtitle: '5 güç gününü tamamladın!',
     emoji: '🏋️',
   ),
   BadgeDefinition(
     id: 'nutrition_hero',
-    label: 'Beslenme Kahramanı',
-    subtitle: '7 günlük beslenme serisi!',
     emoji: '🥗',
   ),
   BadgeDefinition(
     id: 'thirty_day_champion',
-    label: '30 Gün Şampiyonu',
-    subtitle: 'Tüm 30 günlük programı bitirdin!',
     emoji: '🏆',
   ),
   BadgeDefinition(
     id: 'form_legend',
-    label: 'Formun Efsanesi',
-    subtitle: '30 gün antrenman + 30 gün beslenme!',
     emoji: '👑',
   ),
 ];
 
 class BadgeDefinition {
-  const BadgeDefinition({
-    required this.id,
-    required this.label,
-    required this.subtitle,
-    required this.emoji,
-  });
+  const BadgeDefinition({required this.id, required this.emoji});
 
+  /// Stable, persisted identifier. Written to storage, read back by
+  /// `unlockedBadgesProvider`, and keyed on by `xpForBadge` — never
+  /// change one of these for an existing badge.
   final String id;
-  final String label;
-  final String subtitle;
+
   final String emoji;
 }
 

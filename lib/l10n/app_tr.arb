@@ -370,5 +370,18 @@
   "coachRestNextSetSoon": "Toparlan, sıradaki set yaklaşıyor.",
   "coachTrackingStepCloser": "Kameraya biraz daha yaklaş, tüm vücudun görünmeli.",
   "coachTrackingAdjustPosition": "Pozisyonunu ayarla, kamera vücudunu net görsün.",
-  "coachTrackingStepBack": "Bir adım geri çekil, vücudun çerçeveye sığsın."
+  "coachTrackingStepBack": "Bir adım geri çekil, vücudun çerçeveye sığsın.",
+  "badgeFirstStepUnlocked": "İlk gününü tamamladın!",
+  "badgeDisciplinedUnlocked": "3 günlük seri yakaladın!",
+  "badgeFirstWeekUnlocked": "7 günü tamamladın!",
+  "badgeSteadyUnlocked": "7 günlük seriyi yakaladın!",
+  "badgeHalfwayUnlocked": "14 gün — yarıya geldin!",
+  "badgeVoiceHeardUnlocked": "Geri bildirim gönderdin — FormAI'ı şekillendirdin!",
+  "badgeCalorieHunterUnlocked": "Toplam 1500 kcal yaktın!",
+  "badgeHiitMasterUnlocked": "5 kardiyo gününü tamamladın!",
+  "badgeCoreMasterUnlocked": "5 karın odaklı günü bitirdin!",
+  "badgePowerStoneUnlocked": "5 güç gününü tamamladın!",
+  "badgeNutritionHeroUnlocked": "7 günlük beslenme serisi!",
+  "badgeThirtyDayChampUnlocked": "Tüm 30 günlük programı bitirdin!",
+  "badgeFormLegendUnlocked": "30 gün antrenman + 30 gün beslenme!"
 }

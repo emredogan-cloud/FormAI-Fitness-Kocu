@@ -65,12 +65,13 @@ void main() {
   });
 
   group('catalogue', () {
-    test('the badge exists in kBadgeCatalog with copy for the dialog', () {
+    test('the badge exists in kBadgeCatalog with an emoji', () {
+      // Roadmap Phase 5 · label/subtitle moved to ARB; the copy half of
+      // this assertion now lives in badge_copy_test.dart, which checks
+      // every badge in every locale rather than this one in Turkish.
       final badge = badgeById('voice_heard');
       expect(badge, isNotNull);
-      expect(badge!.label, 'Sesini Duyduk');
-      expect(badge.subtitle, isNotEmpty);
-      expect(badge.emoji, isNotEmpty);
+      expect(badge!.emoji, isNotEmpty);
     });
 
     test('badge ids across the catalogue are unique', () {

@@ -63,7 +63,6 @@
   "lib/features/onboarding/presentation/steps/setup_thinking_step.dart": 5,
   "lib/features/onboarding/presentation/steps/social_proof_step.dart": 13,
   "lib/features/progress/data/level_titles.dart": 2,
-  "lib/features/progress/providers/badge_unlocks_provider.dart": 21,
   "lib/features/referral/services/referral_service.dart": 7,
   "lib/features/workout/domain/services/workout_generator_service.dart": 3,
   "lib/features/workout/presentation/plan_detail_screen.dart": 24,

@@ -1519,5 +1519,57 @@
   "coachTrackingStepBack": "Step back so your body fits the frame.",
   "@coachTrackingStepBack": {
     "description": "Tracking guidance 3 of 3"
+  },
+  "badgeFirstStepUnlocked": "You finished your first day!",
+  "@badgeFirstStepUnlocked": {
+    "description": "Celebration line shown the moment the first_step badge unlocks. Past tense on purpose — the gallery's badgeFirstStepDesc states the GOAL, this states the ACHIEVEMENT, and they are shown at different moments."
+  },
+  "badgeDisciplinedUnlocked": "You hit a 3-day streak!",
+  "@badgeDisciplinedUnlocked": {
+    "description": "Celebration line shown the moment the disciplined badge unlocks. Past tense on purpose — the gallery's badgeDisciplinedDesc states the GOAL, this states the ACHIEVEMENT, and they are shown at different moments."
+  },
+  "badgeFirstWeekUnlocked": "You completed 7 days!",
+  "@badgeFirstWeekUnlocked": {
+    "description": "Celebration line shown the moment the first_week badge unlocks. Past tense on purpose — the gallery's badgeFirstWeekDesc states the GOAL, this states the ACHIEVEMENT, and they are shown at different moments."
+  },
+  "badgeSteadyUnlocked": "You hit a 7-day streak!",
+  "@badgeSteadyUnlocked": {
+    "description": "Celebration line shown the moment the steady badge unlocks. Past tense on purpose — the gallery's badgeSteadyDesc states the GOAL, this states the ACHIEVEMENT, and they are shown at different moments."
+  },
+  "badgeHalfwayUnlocked": "14 days — you are halfway!",
+  "@badgeHalfwayUnlocked": {
+    "description": "Celebration line shown the moment the halfway badge unlocks. Past tense on purpose — the gallery's badgeHalfwayDesc states the GOAL, this states the ACHIEVEMENT, and they are shown at different moments."
+  },
+  "badgeVoiceHeardUnlocked": "You sent feedback — you shaped FormAI!",
+  "@badgeVoiceHeardUnlocked": {
+    "description": "Celebration line shown the moment the voice_heard badge unlocks. Past tense on purpose — the gallery's badgeVoiceHeardDesc states the GOAL, this states the ACHIEVEMENT, and they are shown at different moments."
+  },
+  "badgeCalorieHunterUnlocked": "You burned 1500 kcal in total!",
+  "@badgeCalorieHunterUnlocked": {
+    "description": "Celebration line shown the moment the calorie_hunter badge unlocks. Past tense on purpose — the gallery's badgeCalorieHunterDesc states the GOAL, this states the ACHIEVEMENT, and they are shown at different moments."
+  },
+  "badgeHiitMasterUnlocked": "You completed 5 cardio days!",
+  "@badgeHiitMasterUnlocked": {
+    "description": "Celebration line shown the moment the hiit_master badge unlocks. Past tense on purpose — the gallery's badgeHiitMasterDesc states the GOAL, this states the ACHIEVEMENT, and they are shown at different moments."
+  },
+  "badgeCoreMasterUnlocked": "You finished 5 core-focused days!",
+  "@badgeCoreMasterUnlocked": {
+    "description": "Celebration line shown the moment the core_master badge unlocks. Past tense on purpose — the gallery's badgeCoreMasterDesc states the GOAL, this states the ACHIEVEMENT, and they are shown at different moments."
+  },
+  "badgePowerStoneUnlocked": "You completed 5 strength days!",
+  "@badgePowerStoneUnlocked": {
+    "description": "Celebration line shown the moment the strength_stone badge unlocks. Past tense on purpose — the gallery's badgePowerStoneDesc states the GOAL, this states the ACHIEVEMENT, and they are shown at different moments."
+  },
+  "badgeNutritionHeroUnlocked": "A 7-day nutrition streak!",
+  "@badgeNutritionHeroUnlocked": {
+    "description": "Celebration line shown the moment the nutrition_hero badge unlocks. Past tense on purpose — the gallery's badgeNutritionHeroDesc states the GOAL, this states the ACHIEVEMENT, and they are shown at different moments."
+  },
+  "badgeThirtyDayChampUnlocked": "You finished the whole 30-day program!",
+  "@badgeThirtyDayChampUnlocked": {
+    "description": "Celebration line shown the moment the thirty_day_champion badge unlocks. Past tense on purpose — the gallery's badgeThirtyDayChampDesc states the GOAL, this states the ACHIEVEMENT, and they are shown at different moments."
+  },
+  "badgeFormLegendUnlocked": "30 days of training + 30 days of nutrition!",
+  "@badgeFormLegendUnlocked": {
+    "description": "Celebration line shown the moment the form_legend badge unlocks. Past tense on purpose — the gallery's badgeFormLegendDesc states the GOAL, this states the ACHIEVEMENT, and they are shown at different moments."
   }
 }
