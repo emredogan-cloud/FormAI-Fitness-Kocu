@@ -521,7 +521,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
       );
     } on ReferralException catch (e) {
       if (!context.mounted) return;
-      _toast(context, e.localizedMessage());
+      _toast(context, e.localizedMessage(AppLocalizations.of(context)));
     } catch (e, st) {
       AppLogger.error(
         'manual referral redeem failed',

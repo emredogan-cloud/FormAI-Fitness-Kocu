@@ -146,7 +146,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         }
       }
     } on AuthException catch (e) {
-      if (mounted) _toast(_authErrTr(e));
+      if (mounted) _toast(_authErr(e));
     } catch (e) {
       debugPrint('[auth] unexpected: $e');
       if (mounted) {
@@ -157,12 +157,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     }
   }
 
-  /// Store-submission AC3 · maps Supabase's English `AuthException` to
-  /// Turkish (pure logic lives in [authErrorToTr] so it can be unit-
-  /// tested); the raw message still goes to the debug log here.
-  String _authErrTr(AuthException e) {
+  /// Store-submission AC3 · maps Supabase's English `AuthException` onto
+  /// our own copy (pure logic lives in [authErrorMessage] so it can be
+  /// unit-tested); the raw message still goes to the debug log here.
+  String _authErr(AuthException e) {
     debugPrint('[auth] AuthException: ${e.message}');
-    return authErrorToTr(e);
+    return authErrorMessage(AppLocalizations.of(context), e);
   }
 
   Future<void> _continueAsGuest() async {
@@ -180,7 +180,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       // a Pro-locked feature), and that gate now has a dashboard escape.
       if (mounted) context.go(AppRoutes.dashboard);
     } on AuthException catch (e) {
-      if (mounted) _toast(_authErrTr(e));
+      if (mounted) _toast(_authErr(e));
     } catch (e) {
       debugPrint('[auth] guest sign-in failed: $e');
       if (mounted) {
@@ -193,14 +193,18 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   Future<void> _signInWithGoogle() => _runSocial(
         _SocialProvider.google,
-        () => ref.read(authControllerProvider).signInWithGoogle(),
+        () => ref
+            .read(authControllerProvider)
+            .signInWithGoogle(AppLocalizations.of(context)),
         errorMessage: AppLocalizations.of(context).authGoogleFailed,
         offlineMessage: AppLocalizations.of(context).authGoogleNeedsInternet,
       );
 
   Future<void> _signInWithApple() => _runSocial(
         _SocialProvider.apple,
-        () => ref.read(authControllerProvider).signInWithApple(),
+        () => ref
+            .read(authControllerProvider)
+            .signInWithApple(AppLocalizations.of(context)),
         errorMessage: AppLocalizations.of(context).authAppleFailed,
         offlineMessage: AppLocalizations.of(context).authAppleNeedsInternet,
       );
@@ -237,7 +241,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     );
     controller.dispose();
     if (email == null || email.isEmpty || !mounted) return;
-    final error = await ref.read(authControllerProvider).resetPassword(email);
+    final error = await ref
+        .read(authControllerProvider)
+        .resetPassword(AppLocalizations.of(context), email);
     if (!mounted) return;
     _toast(error ?? AppLocalizations.of(context).authResetLinkSent);
   }

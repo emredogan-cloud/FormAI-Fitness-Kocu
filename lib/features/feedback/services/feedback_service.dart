@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/services/analytics_service.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/legal_urls.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Phase 56 Lite · in-app feedback transport.
 ///
@@ -27,6 +28,7 @@ class FeedbackService {
   static const String _table = 'feedback';
 
   Future<FeedbackTransport> submit({
+    required AppLocalizations l10n,
     required FeedbackSubject subject,
     required String message,
   }) async {
@@ -36,7 +38,7 @@ class FeedbackService {
     }
     final ctx = await _DeviceContext.collect();
     final transport = await _trySupabase(subject, body, ctx) ??
-        await _tryMailto(subject, body, ctx);
+        await _tryMailto(l10n, subject, body, ctx);
 
     if (transport != null) {
       AnalyticsService.instance.feedbackSubmitted(
@@ -45,7 +47,7 @@ class FeedbackService {
       );
       return transport;
     }
-    throw const FeedbackException('Geri bildirim gönderilemedi.');
+    throw const FeedbackException();
   }
 
   Future<FeedbackTransport?> _trySupabase(
@@ -81,6 +83,7 @@ class FeedbackService {
   }
 
   Future<FeedbackTransport?> _tryMailto(
+    AppLocalizations l10n,
     FeedbackSubject subject,
     String body,
     _DeviceContext ctx,
@@ -91,7 +94,7 @@ class FeedbackService {
     final uri = Uri(
       scheme: 'mailto',
       path: LegalUrls.supportEmail,
-      query: 'subject=${Uri.encodeQueryComponent(subject.localized)}'
+      query: 'subject=${Uri.encodeQueryComponent(subject.label(l10n))}'
           '&body=${Uri.encodeQueryComponent(composed)}',
     );
     try {
@@ -111,25 +114,36 @@ class FeedbackService {
 enum FeedbackTransport { supabase, mailto }
 
 enum FeedbackSubject {
-  bug('bug', 'Hata Bildirimi'),
-  suggestion('suggestion', 'Öneri'),
-  question('question', 'Soru');
+  bug('bug'),
+  suggestion('suggestion'),
+  question('question');
 
-  const FeedbackSubject(this.token, this.localized);
+  const FeedbackSubject(this.token);
 
-  /// Stable English identifier used in analytics + DB. Never localised.
+  /// Stable English identifier used in analytics + DB. Never localised —
+  /// it is also the value the `feedback_subject_check` constraint in
+  /// migration 008 enforces.
   final String token;
 
-  /// Turkish UI label. Surfaced by the dropdown.
-  final String localized;
+  /// UI label surfaced by the dropdown.
+  String label(AppLocalizations l10n) => switch (this) {
+        FeedbackSubject.bug => l10n.feedbackSubjectBug,
+        FeedbackSubject.suggestion => l10n.feedbackSubjectSuggestion,
+        FeedbackSubject.question => l10n.feedbackSubjectQuestion,
+      };
 }
 
+/// Raised when BOTH transports failed.
+///
+/// Deliberately carries no user-facing copy. It used to hold a Turkish
+/// sentence that the sheet rendered verbatim, which put presentation
+/// text in a service that has no locale. The sheet maps this to
+/// `feedbackSendFailed`; [toString] is a diagnostic for logs, not copy.
 class FeedbackException implements Exception {
-  const FeedbackException(this.message);
-  final String message;
+  const FeedbackException();
 
   @override
-  String toString() => message;
+  String toString() => 'FeedbackException: all transports failed';
 }
 
 class _DeviceContext {

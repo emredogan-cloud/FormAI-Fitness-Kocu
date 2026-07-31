@@ -144,7 +144,7 @@ class _LevelUpScreenState extends State<LevelUpScreen>
                         ),
                       ),
                       const SizedBox(height: 26),
-                      _label(t),
+                      _label(context, t),
                       const SizedBox(height: 10),
                       _subtitle(t),
                       const SizedBox(height: 34),
@@ -219,14 +219,17 @@ class _LevelUpScreenState extends State<LevelUpScreen>
     );
   }
 
-  Widget _label(double t) {
+  Widget _label(BuildContext context, double t) {
     final segT = ((t - 0.61) / 0.18).clamp(0.0, 1.0);
     return Opacity(
       opacity: segT,
       child: Transform.translate(
         offset: Offset(0, 14 * (1 - segT)),
         child: Text(
-          'Lv ${widget.level} · ${widget.tier.title}',
+          AppLocalizations.of(context).levelUpLabel(
+            widget.level,
+            widget.tier.title(AppLocalizations.of(context)),
+          ),
           textAlign: TextAlign.center,
           style: const TextStyle(
             color: Colors.white,

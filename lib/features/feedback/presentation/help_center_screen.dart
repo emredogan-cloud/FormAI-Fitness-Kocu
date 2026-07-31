@@ -65,7 +65,7 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen> {
   Widget build(BuildContext context) {
     final scheme = context.colors;
     final isDark = context.isDarkMode;
-    final categories = searchFaq(_query);
+    final categories = searchFaq(AppLocalizations.of(context), _query);
 
     return Scaffold(
       appBar: AppBar(

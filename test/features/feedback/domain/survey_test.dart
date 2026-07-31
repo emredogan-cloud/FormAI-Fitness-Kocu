@@ -1,6 +1,15 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sixpack_ai/features/feedback/domain/survey.dart';
 import 'package:sixpack_ai/features/feedback/domain/survey_definitions.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
+
+// Copy in a SurveyDefinition is a lookup, not a string (the catalogue is
+// `const` and built before any locale exists). These fixtures exercise
+// scheduling, which never reads the copy — so they return the same
+// placeholders the assertions below always used.
+String _q(AppLocalizations l) => 'q';
+String _q2(AppLocalizations l) => 'q2';
+String _a(AppLocalizations l) => 'A';
 
 /// Roadmap Phase 1 (C8 · P4) · survey scheduling policy + NPS bucketing.
 void main() {
@@ -10,17 +19,17 @@ void main() {
   const npsSurvey = SurveyDefinition(
     id: 'test_nps',
     kind: SurveyKind.nps,
-    question: 'q',
+    question: _q,
     minCompletedDays: 3,
     minDaysSinceInstall: 14,
   );
   const laterSurvey = SurveyDefinition(
     id: 'test_later',
     kind: SurveyKind.choice,
-    question: 'q2',
+    question: _q2,
     minCompletedDays: 5,
     minDaysSinceInstall: 21,
-    options: [SurveyOption(token: 'a', label: 'A')],
+    options: [SurveyOption(token: 'a', label: _a)],
   );
 
   SurveyDefinition? select({

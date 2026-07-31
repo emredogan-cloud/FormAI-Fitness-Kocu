@@ -23,18 +23,33 @@ Future<Widget> _host() async {
 }
 
 void main() {
+  // The catalogue is a function of AppLocalizations now (its search
+  // index needs resolved text, not lookups). Loading tr here keeps every
+  // assertion below on exactly the strings it always asserted.
+  late AppLocalizations l10n;
+  late List<FaqCategory> catalogue;
+
+  setUpAll(() async {
+    l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+    catalogue = faqCategories(l10n);
+  });
+
   group('search index', () {
     test('an empty query returns the full catalogue', () {
-      expect(searchFaq(''), kFaqCategories);
-      expect(searchFaq('   '), kFaqCategories);
+      // Compare shape, not identity: the catalogue is rebuilt per call
+      // now, so `same instance` is no longer the right question.
+      expect(searchFaq(l10n, '').map((c) => c.title),
+          catalogue.map((c) => c.title));
+      expect(searchFaq(l10n, '   ').map((c) => c.title),
+          catalogue.map((c) => c.title));
     });
 
     test('search is case-insensitive and matches answer text too', () {
-      final byQuestion = searchFaq('KAMERA');
+      final byQuestion = searchFaq(l10n, 'KAMERA');
       expect(byQuestion, isNotEmpty);
       // "google play" only appears in answer bodies, never in a question,
       // so a hit proves the answer text is indexed.
-      final byAnswer = searchFaq('google play');
+      final byAnswer = searchFaq(l10n, 'google play');
       expect(byAnswer, isNotEmpty);
     });
 
@@ -45,32 +60,30 @@ void main() {
       // Documents the known limitation rather than pretending it away.
       // Roadmap Phase 5 (i18n) is where a proper locale-aware collation
       // would replace this substring match.
-      expect(searchFaq('abonelik'), isEmpty);
-      expect(searchFaq('abonel'), isNotEmpty);
+      expect(searchFaq(l10n, 'abonelik'), isEmpty);
+      expect(searchFaq(l10n, 'abonel'), isNotEmpty);
     });
 
     test('matching categories are pruned to only their matching entries', () {
-      final results = searchFaq('hesabımı nasıl silerim');
+      final results = searchFaq(l10n, 'hesabımı nasıl silerim');
       expect(results, hasLength(1));
       expect(results.first.entries, hasLength(1));
     });
 
     test('a query with no matches returns an empty list', () {
-      expect(searchFaq('zzzzz-not-a-real-question'), isEmpty);
+      expect(searchFaq(l10n, 'zzzzz-not-a-real-question'), isEmpty);
     });
   });
 
   group('content quality', () {
     test('no duplicate questions across the whole catalogue', () {
-      final questions = kFaqCategories
-          .expand((c) => c.entries)
-          .map((e) => e.question)
-          .toList();
+      final questions =
+          catalogue.expand((c) => c.entries).map((e) => e.question).toList();
       expect(questions.toSet().length, questions.length);
     });
 
     test('every entry has a substantive answer', () {
-      for (final category in kFaqCategories) {
+      for (final category in catalogue) {
         for (final entry in category.entries) {
           expect(
             entry.answer.length,
@@ -84,7 +97,7 @@ void main() {
     test(
         'the camera and subscription categories exist — they are the two '
         'highest-volume support topics for this product shape', () {
-      final titles = kFaqCategories.map((c) => c.title).toList();
+      final titles = catalogue.map((c) => c.title).toList();
       expect(titles, contains('ANTRENMAN & KAMERA'));
       expect(titles, contains('ABONELİK'));
     });

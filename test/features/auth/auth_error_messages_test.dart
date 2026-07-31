@@ -1,5 +1,7 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sixpack_ai/features/auth/auth_error_messages.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Store-submission AC3 · the mapper must (a) never return English for a
@@ -7,7 +9,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// unmapped message. A regression here leaks English into a TR-only
 /// review screenshot.
 void main() {
-  String tr(String message) => authErrorToTr(AuthException(message));
+  late AppLocalizations l10n;
+
+  setUpAll(() async {
+    l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+  });
+
+  String tr(String message) => authErrorMessage(l10n, AuthException(message));
 
   test('invalid credentials -> Turkish', () {
     expect(tr('Invalid login credentials'), 'E-posta veya şifre hatalı.');

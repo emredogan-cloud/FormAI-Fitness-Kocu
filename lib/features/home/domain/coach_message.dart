@@ -12,25 +12,28 @@
 /// the widget never has to change when the brain behind it does.
 library;
 
+import '../../../l10n/app_localizations.dart';
+
 String weeklyCoachLine({
+  required AppLocalizations l10n,
   required int completed,
   required int target,
   required int hour, // 0–23, local
 }) {
   if (target > 0 && completed >= target) {
-    return 'Bu haftanın hedefini tamamladın! Harikasın 🔥';
+    return l10n.coachWeeklyGoalDone;
   }
   if (target > 0 && target - completed == 1) {
-    return 'Bir antrenman kaldı — haftayı tam gaz bitir!';
+    return l10n.coachWeeklyOneLeft;
   }
   if (completed == 0) {
     if (hour < 12) {
-      return 'Güne güçlü başla — ilk antrenman seni bekliyor.';
+      return l10n.coachWeeklyMorningStart;
     }
     if (hour >= 18) {
-      return 'Gün bitmeden bir antrenman sığdır, momentum önemli.';
+      return l10n.coachWeeklyEveningStart;
     }
-    return 'Bugün ilk hareketi yap — başlamak en zor kısmı.';
+    return l10n.coachWeeklyDaytimeStart;
   }
-  return 'İyi gidiyorsun: $completed/$target. Bir antrenman daha ekle!';
+  return l10n.coachWeeklyProgress(completed, target);
 }

@@ -21,6 +21,7 @@ import '../../nutrition/providers/nutrition_provider.dart';
 import '../../onboarding/providers/wizard_provider.dart';
 import '../../progress/providers/badge_unlocks_provider.dart';
 import '../../workout/providers/workout_provider.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Streams Supabase auth state changes (login, logout, refresh).
 final authStateProvider = StreamProvider<AuthState>((ref) {
@@ -191,7 +192,7 @@ class AuthController {
 
   final Ref _ref;
 
-  Future<SocialAuthResult> signInWithGoogle() async {
+  Future<SocialAuthResult> signInWithGoogle(AppLocalizations l10n) async {
     try {
       final signIn = GoogleSignIn.instance;
       // `initialize` is idempotent on the plugin side but the public API
@@ -217,7 +218,7 @@ class AuthController {
         );
         return (
           outcome: SocialAuthOutcome.error,
-          errorMessage: 'Google id token alınamadı.',
+          errorMessage: l10n.authErrorGoogleNoIdToken,
         );
       }
       // Access token is best-effort — Supabase only strictly requires the
@@ -298,7 +299,7 @@ class AuthController {
     }
   }
 
-  Future<SocialAuthResult> signInWithApple() async {
+  Future<SocialAuthResult> signInWithApple(AppLocalizations l10n) async {
     try {
       // Nonce pattern from Supabase docs: send the SHA-256 hash to Apple
       // (embedded in the returned id token) and the raw value to Supabase
@@ -320,7 +321,7 @@ class AuthController {
         );
         return (
           outcome: SocialAuthOutcome.error,
-          errorMessage: 'Apple identity token alınamadı.',
+          errorMessage: l10n.authErrorAppleNoIdentityToken,
         );
       }
       await Supabase.instance.client.auth.signInWithIdToken(
@@ -512,7 +513,7 @@ class AuthController {
   /// the raw English Supabase string. An email/password user who
   /// forgets their password was previously locked out permanently
   /// (nothing in the app called `resetPasswordForEmail`).
-  Future<String?> resetPassword(String email) async {
+  Future<String?> resetPassword(AppLocalizations l10n, String email) async {
     try {
       await Supabase.instance.client.auth.resetPasswordForEmail(email);
       return null;
@@ -523,8 +524,7 @@ class AuthController {
         stackTrace: st,
         category: 'auth',
       );
-      return 'Sıfırlama e-postası gönderilemedi. Adresi kontrol edip '
-          'tekrar dene.';
+      return l10n.authResetEmailFailedCheckAddress;
     } catch (e, st) {
       AppLogger.error(
         'resetPassword failed',
@@ -532,7 +532,7 @@ class AuthController {
         stackTrace: st,
         category: 'auth',
       );
-      return 'Sıfırlama e-postası gönderilemedi. Lütfen tekrar dene.';
+      return l10n.authResetEmailFailedGeneric;
     }
   }
 

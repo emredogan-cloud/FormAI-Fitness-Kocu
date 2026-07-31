@@ -108,7 +108,7 @@ class _SurveySheetState extends ConsumerState<_SurveySheet> {
                 children: [
                   Expanded(
                     child: Text(
-                      widget.survey.question,
+                      widget.survey.question(AppLocalizations.of(context)),
                       style: TextStyle(
                         color: scheme.onSurface,
                         fontSize: 18,
@@ -140,7 +140,7 @@ class _SurveySheetState extends ConsumerState<_SurveySheet> {
               if (widget.survey.subtitle != null) ...[
                 const SizedBox(height: 6),
                 Text(
-                  widget.survey.subtitle!,
+                  widget.survey.subtitle!(AppLocalizations.of(context)),
                   style: TextStyle(
                     color: scheme.onSurface.withValues(alpha: 0.62),
                     fontSize: 12.5,
@@ -331,7 +331,7 @@ class _ChoiceList extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        option.label,
+                        option.label(AppLocalizations.of(context)),
                         style: TextStyle(
                           color: scheme.onSurface,
                           fontSize: 14.5,

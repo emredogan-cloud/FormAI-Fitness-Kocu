@@ -51,7 +51,7 @@ class _ReferralLandingScreenState extends ConsumerState<ReferralLandingScreen> {
       setState(() => _redeemed = true);
     } on ReferralException catch (e) {
       if (!mounted) return;
-      setState(() => _error = e.localizedMessage());
+      setState(() => _error = e.localizedMessage(AppLocalizations.of(context)));
     } finally {
       if (mounted) setState(() => _redeeming = false);
     }

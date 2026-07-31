@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../l10n/app_localizations.dart';
+
 import '../../../core/utils/app_logger.dart';
 
 /// Phase 54 · referral code generator + redeemer.
@@ -187,22 +189,22 @@ class ReferralException implements Exception {
   const ReferralException(this.code);
   final ReferralErrorCode code;
 
-  String localizedMessage() {
+  String localizedMessage(AppLocalizations l10n) {
     switch (code) {
       case ReferralErrorCode.invalidFormat:
-        return 'Davet kodu 6 karakter olmalı.';
+        return l10n.referralErrorInvalidFormat;
       case ReferralErrorCode.invalidCode:
-        return 'Bu davet kodu bulunamadı.';
+        return l10n.referralErrorInvalidCode;
       case ReferralErrorCode.selfReferral:
-        return 'Kendi kodunu kullanamazsın.';
+        return l10n.referralErrorSelfReferral;
       case ReferralErrorCode.alreadyRedeemed:
-        return 'Zaten bir davet kodu kullandın.';
+        return l10n.referralErrorAlreadyRedeemed;
       case ReferralErrorCode.notAuthenticated:
-        return 'Önce hesabını oluştur veya giriş yap.';
+        return l10n.referralErrorNotAuthenticated;
       case ReferralErrorCode.network:
-        return 'İnternet bağlantısı yok.';
+        return l10n.referralErrorNetwork;
       case ReferralErrorCode.unknown:
-        return 'Davet alınırken bir hata oluştu.';
+        return l10n.referralErrorUnknown;
     }
   }
 }

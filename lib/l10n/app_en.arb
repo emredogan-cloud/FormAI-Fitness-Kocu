@@ -2037,5 +2037,372 @@
         "type": "String"
       }
     }
+  },
+  "faqCategoryWorkoutCamera": "TRAINING & CAMERA",
+  "@faqCategoryWorkoutCamera": {
+    "description": "Help-centre category heading. Rendered uppercase in the design."
+  },
+  "faqCategoryAiCoach": "AI COACH",
+  "@faqCategoryAiCoach": {
+    "description": "Help-centre category heading"
+  },
+  "faqCategorySubscription": "SUBSCRIPTION",
+  "@faqCategorySubscription": {
+    "description": "Help-centre category heading"
+  },
+  "faqCategoryAccountData": "ACCOUNT & DATA",
+  "@faqCategoryAccountData": {
+    "description": "Help-centre category heading"
+  },
+  "faqCategoryNotificationsOther": "NOTIFICATIONS & OTHER",
+  "@faqCategoryNotificationsOther": {
+    "description": "Help-centre category heading"
+  },
+  "faqCameraNotSeeingQ": "Why can't the camera see my movements?",
+  "@faqCameraNotSeeingQ": {
+    "description": "FAQ question — camera framing"
+  },
+  "faqCameraNotSeeingA": "Analysis needs your whole body in frame. Put the phone on the floor or another stable spot about 2 metres away, hold it in portrait and make sure the room is well lit. If you see the \"Step into frame\" warning, move back a little.",
+  "@faqCameraNotSeeingA": {
+    "description": "FAQ answer — camera framing"
+  },
+  "faqPhoneSideQ": "Do I need to put the phone to the side for some exercises?",
+  "@faqPhoneSideQ": {
+    "description": "FAQ question — camera placement per exercise"
+  },
+  "faqPhoneSideA": "Yes. For exercises that need a side view — push-ups, planks, hip movements — place the phone to your side. Form reminds you out loud once on those exercises.",
+  "@faqPhoneSideA": {
+    "description": "FAQ answer — camera placement per exercise. 'Form' is the coach's name and stays untranslated."
+  },
+  "faqNoCameraQ": "Can I train without the camera?",
+  "@faqNoCameraQ": {
+    "description": "FAQ question — camera-free mode"
+  },
+  "faqNoCameraA": "Yes. You can complete a workout without the camera and count reps yourself. Form analysis only runs while the camera is on.",
+  "@faqNoCameraA": {
+    "description": "FAQ answer — camera-free mode"
+  },
+  "faqPhoneRingsQ": "What happens if my phone rings during a workout?",
+  "@faqPhoneRingsQ": {
+    "description": "FAQ question — interruption handling"
+  },
+  "faqPhoneRingsA": "The workout pauses automatically and the camera shuts down safely. When you come back you can carry on where you left off — nothing is lost.",
+  "@faqPhoneRingsA": {
+    "description": "FAQ answer — interruption handling"
+  },
+  "faqOfflineQ": "Can I train without an internet connection?",
+  "@faqOfflineQ": {
+    "description": "FAQ question — offline use"
+  },
+  "faqOfflineA": "Yes. Workouts and form analysis run entirely on your device. Completed days sync automatically once you are back online.",
+  "@faqOfflineA": {
+    "description": "FAQ answer — offline use"
+  },
+  "faqWhoIsFormQ": "Who is Form?",
+  "@faqWhoIsFormQ": {
+    "description": "FAQ question — the AI coach's identity. 'Form' is the coach's name, never translated."
+  },
+  "faqWhoIsFormA": "Form is FormAI's AI coach. Form knows your training history, your plan and your goal, and you can ask about anything. Tap the avatar at the top to open the chat.",
+  "@faqWhoIsFormA": {
+    "description": "FAQ answer — the AI coach's identity"
+  },
+  "faqShortAnswersQ": "Why does Form sometimes give a short answer?",
+  "@faqShortAnswersQ": {
+    "description": "FAQ question — coach answer length"
+  },
+  "faqShortAnswersA": "Form only says what it actually knows. Rather than guessing on something it has no data for, it gives a short, honest answer.",
+  "@faqShortAnswersA": {
+    "description": "FAQ answer — coach answer length"
+  },
+  "faqHealthAdviceQ": "Can Form give health advice?",
+  "@faqHealthAdviceQ": {
+    "description": "FAQ question — medical disclaimer"
+  },
+  "faqHealthAdviceA": "No. FormAI is a training and nutrition assistant, not a medical device. If you have a health problem, pain or a chronic condition, always consult a doctor.",
+  "@faqHealthAdviceA": {
+    "description": "FAQ answer — medical disclaimer. Store-compliance copy: the meaning must be preserved exactly in every locale."
+  },
+  "faqCancelSubQ": "How do I cancel my subscription?",
+  "@faqCancelSubQ": {
+    "description": "FAQ question — subscription cancellation"
+  },
+  "faqCancelSubA": "Go to Profile → Settings → \"Cancel subscription\". Cancellation completes through your Google Play account. After cancelling you keep Premium features until the end of the current period.",
+  "@faqCancelSubA": {
+    "description": "FAQ answer — subscription cancellation. Store-compliance copy; the navigation path must match the actual UI labels in each locale."
+  },
+  "faqTransferPurchaseQ": "How do I move my purchase to a new phone?",
+  "@faqTransferPurchaseQ": {
+    "description": "FAQ question — restoring purchases"
+  },
+  "faqTransferPurchaseA": "Sign in with the same Google account and tap \"Restore purchases\" on the payment screen. Your subscription belongs to your account, not to a device.",
+  "@faqTransferPurchaseA": {
+    "description": "FAQ answer — restoring purchases"
+  },
+  "faqFreeFeaturesQ": "What can I use without Premium?",
+  "@faqFreeFeaturesQ": {
+    "description": "FAQ question — free vs paid features"
+  },
+  "faqFreeFeaturesA": "The 30-day training programme, real-time form analysis, the AI coach, your calorie and macro targets and the recipe library are all free. Premium unlocks your personalised daily nutrition plan and meal tracking.",
+  "@faqFreeFeaturesA": {
+    "description": "FAQ answer — free vs paid features. Store-compliance copy: this must stay an accurate description of what money buys."
+  },
+  "faqDataStorageQ": "Where is my data stored?",
+  "@faqDataStorageQ": {
+    "description": "FAQ question — data storage and privacy"
+  },
+  "faqDataStorageA": "Camera footage never leaves your device — form analysis runs entirely on your phone and no image is ever recorded or sent. Your training progress and profile details are stored on secure servers, tied to your account.",
+  "@faqDataStorageA": {
+    "description": "FAQ answer — data storage and privacy. Privacy-policy-adjacent copy: the claims must remain literally true in every locale."
+  },
+  "faqDeleteAccountQ": "How do I delete my account?",
+  "@faqDeleteAccountQ": {
+    "description": "FAQ question — account deletion"
+  },
+  "faqDeleteAccountA": "Profile → Account settings → \"Delete account\". This is permanent: your training history, profile details and all your data are removed.",
+  "@faqDeleteAccountA": {
+    "description": "FAQ answer — account deletion"
+  },
+  "faqGuestProgressQ": "I'm using it as a guest — will I lose my progress?",
+  "@faqGuestProgressQ": {
+    "description": "FAQ question — guest progress"
+  },
+  "faqGuestProgressA": "Guest progress is kept only on this device. Create an account from the Profile screen to keep it — your existing progress moves across with you.",
+  "@faqGuestProgressA": {
+    "description": "FAQ answer — guest progress"
+  },
+  "faqNoRemindersQ": "I'm not getting reminder notifications.",
+  "@faqNoRemindersQ": {
+    "description": "FAQ question — notifications not arriving"
+  },
+  "faqNoRemindersA": "Make sure you have picked a time under Profile → Account settings → \"Notifications\". Also check that notification permission is granted for FormAI in your phone's settings, and that battery optimisation is not restricting the app.",
+  "@faqNoRemindersA": {
+    "description": "FAQ answer — notifications not arriving"
+  },
+  "faqStreakResetQ": "Why did my streak reset?",
+  "@faqStreakResetQ": {
+    "description": "FAQ question — streak rules"
+  },
+  "faqStreakResetA": "Your streak is counted in calendar days and allows one rest day. If you take more than two days off in a row, the streak starts again.",
+  "@faqStreakResetA": {
+    "description": "FAQ answer — streak rules"
+  },
+  "faqReportBugQ": "I found a bug — how do I report it?",
+  "@faqReportBugQ": {
+    "description": "FAQ question — reporting a bug"
+  },
+  "faqReportBugA": "Write to us directly through Profile → Settings → \"Support & feedback\". Every message is read and answered — your feedback shapes FormAI.",
+  "@faqReportBugA": {
+    "description": "FAQ answer — reporting a bug"
+  },
+  "surveyNpsQuestion": "Would you recommend FormAI to a friend?",
+  "@surveyNpsQuestion": {
+    "description": "NPS survey question"
+  },
+  "surveyNpsSubtitle": "0 = definitely not, 10 = definitely yes",
+  "@surveyNpsSubtitle": {
+    "description": "NPS survey scale legend"
+  },
+  "surveyValueDriverQuestion": "What is most useful to you in FormAI?",
+  "@surveyValueDriverQuestion": {
+    "description": "Value-driver survey question"
+  },
+  "surveyValueDriverFormAnalysis": "Real-time form analysis",
+  "@surveyValueDriverFormAnalysis": {
+    "description": "Value-driver survey option label. The analytics token stays 'form_analysis' regardless of locale."
+  },
+  "surveyValueDriverAiCoach": "Form, the AI coach",
+  "@surveyValueDriverAiCoach": {
+    "description": "Value-driver survey option label. 'Form' is the coach's name."
+  },
+  "surveyValueDriverPlan": "A personal training plan",
+  "@surveyValueDriverPlan": {
+    "description": "Value-driver survey option label"
+  },
+  "surveyValueDriverNutrition": "Nutrition",
+  "@surveyValueDriverNutrition": {
+    "description": "Value-driver survey option label"
+  },
+  "surveyValueDriverProgress": "Progress tracking",
+  "@surveyValueDriverProgress": {
+    "description": "Value-driver survey option label"
+  },
+  "feedbackSendFailed": "Your feedback could not be sent.",
+  "@feedbackSendFailed": {
+    "description": "Error shown when both the Supabase and mailto feedback transports fail"
+  },
+  "feedbackSubjectBug": "Bug report",
+  "@feedbackSubjectBug": {
+    "description": "Feedback subject option. The stored token stays 'bug' in every locale."
+  },
+  "feedbackSubjectSuggestion": "Suggestion",
+  "@feedbackSubjectSuggestion": {
+    "description": "Feedback subject option. The stored token stays 'suggestion'."
+  },
+  "feedbackSubjectQuestion": "Question",
+  "@feedbackSubjectQuestion": {
+    "description": "Feedback subject option. The stored token stays 'question'."
+  },
+  "authErrorInvalidCredentials": "That email or password is incorrect.",
+  "@authErrorInvalidCredentials": {
+    "description": "Sign-in error — wrong credentials"
+  },
+  "authErrorEmailNotConfirmed": "You need to confirm your email first — check your inbox.",
+  "@authErrorEmailNotConfirmed": {
+    "description": "Sign-in error — unverified email"
+  },
+  "authErrorAlreadyRegistered": "That email is already registered. Try signing in.",
+  "@authErrorAlreadyRegistered": {
+    "description": "Sign-up error — email already in use"
+  },
+  "authErrorRateLimited": "Too many attempts. Please try again in a little while.",
+  "@authErrorRateLimited": {
+    "description": "Auth error — rate limited"
+  },
+  "authErrorWeakPassword": "Your password must be at least 6 characters.",
+  "@authErrorWeakPassword": {
+    "description": "Sign-up error — password too short or too weak"
+  },
+  "authErrorGeneric": "Sign-in failed. Please try again.",
+  "@authErrorGeneric": {
+    "description": "Auth error — fallback for an unmapped provider message"
+  },
+  "authErrorGoogleNoIdToken": "Could not obtain a Google ID token.",
+  "@authErrorGoogleNoIdToken": {
+    "description": "Google sign-in error — the provider returned no ID token"
+  },
+  "authErrorAppleNoIdentityToken": "Could not obtain an Apple identity token.",
+  "@authErrorAppleNoIdentityToken": {
+    "description": "Apple sign-in error — the provider returned no identity token"
+  },
+  "authResetEmailFailedCheckAddress": "The reset email could not be sent. Check the address and try again.",
+  "@authResetEmailFailedCheckAddress": {
+    "description": "Password reset error — likely a bad address"
+  },
+  "authResetEmailFailedGeneric": "The reset email could not be sent. Please try again.",
+  "@authResetEmailFailedGeneric": {
+    "description": "Password reset error — unexpected failure"
+  },
+  "referralErrorInvalidFormat": "An invite code is 6 characters long.",
+  "@referralErrorInvalidFormat": {
+    "description": "Referral redemption error — wrong code length"
+  },
+  "referralErrorInvalidCode": "That invite code was not found.",
+  "@referralErrorInvalidCode": {
+    "description": "Referral redemption error — unknown code"
+  },
+  "referralErrorSelfReferral": "You can't use your own code.",
+  "@referralErrorSelfReferral": {
+    "description": "Referral redemption error — user entered their own code"
+  },
+  "referralErrorAlreadyRedeemed": "You have already used an invite code.",
+  "@referralErrorAlreadyRedeemed": {
+    "description": "Referral redemption error — one redemption per account"
+  },
+  "referralErrorNotAuthenticated": "Create an account or sign in first.",
+  "@referralErrorNotAuthenticated": {
+    "description": "Referral redemption error — redemption requires an account"
+  },
+  "referralErrorNetwork": "No internet connection.",
+  "@referralErrorNetwork": {
+    "description": "Referral redemption error — offline"
+  },
+  "referralErrorUnknown": "Something went wrong redeeming the invite.",
+  "@referralErrorUnknown": {
+    "description": "Referral redemption error — unexpected failure"
+  },
+  "levelTitleNovice": "Novice",
+  "@levelTitleNovice": {
+    "description": "XP level tier title (level 1+). Short — it renders inside a level chip."
+  },
+  "levelTitleBeginner": "Beginner",
+  "@levelTitleBeginner": {
+    "description": "XP level tier title (level 5+)"
+  },
+  "levelTitleDisciplined": "Disciplined",
+  "@levelTitleDisciplined": {
+    "description": "XP level tier title (level 10+)"
+  },
+  "levelTitleSteady": "Steady",
+  "@levelTitleSteady": {
+    "description": "XP level tier title (level 15+)"
+  },
+  "levelTitleAthlete": "Athlete",
+  "@levelTitleAthlete": {
+    "description": "XP level tier title (level 20+) — first aspirational tier"
+  },
+  "levelTitleChampion": "Champion",
+  "@levelTitleChampion": {
+    "description": "XP level tier title (level 25+)"
+  },
+  "levelTitleMaster": "Master",
+  "@levelTitleMaster": {
+    "description": "XP level tier title (level 30+)"
+  },
+  "levelTitleLegend": "Legend",
+  "@levelTitleLegend": {
+    "description": "XP level tier title (level 40+)"
+  },
+  "levelTitleMyth": "Myth",
+  "@levelTitleMyth": {
+    "description": "XP level tier title (level 50+) — the top tier"
+  },
+  "coachWeeklyGoalDone": "You hit this week's goal! Brilliant 🔥",
+  "@coachWeeklyGoalDone": {
+    "description": "Dashboard coach line — weekly target reached"
+  },
+  "coachWeeklyOneLeft": "One workout to go — finish the week strong!",
+  "@coachWeeklyOneLeft": {
+    "description": "Dashboard coach line — exactly one workout short of the weekly target"
+  },
+  "coachWeeklyMorningStart": "Start the day strong — your first workout is waiting.",
+  "@coachWeeklyMorningStart": {
+    "description": "Dashboard coach line — nothing done yet, morning"
+  },
+  "coachWeeklyEveningStart": "Fit a workout in before the day ends — momentum matters.",
+  "@coachWeeklyEveningStart": {
+    "description": "Dashboard coach line — nothing done yet, evening"
+  },
+  "coachWeeklyDaytimeStart": "Make the first move today — starting is the hard part.",
+  "@coachWeeklyDaytimeStart": {
+    "description": "Dashboard coach line — nothing done yet, daytime"
+  },
+  "coachWeeklyProgress": "You're doing well: {completed}/{target}. Add one more workout!",
+  "@coachWeeklyProgress": {
+    "description": "Dashboard coach line — partway through the weekly target. {completed} and {target} are workout counts.",
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "levelUpLabel": "Lv {level} · {title}",
+  "@levelUpLabel": {
+    "description": "Level-up celebration headline. {level} is the numeric level, {title} the tier title.",
+    "placeholders": {
+      "level": {
+        "type": "int"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "progressIdentityLine": "Lv {level} · {title} · {xp} XP",
+  "@progressIdentityLine": {
+    "description": "Progress tab identity line. {level} is the level, {title} the tier title, {xp} lifetime XP. Renders on one line and ellipsises — keep it short.",
+    "placeholders": {
+      "level": {
+        "type": "int"
+      },
+      "title": {
+        "type": "String"
+      },
+      "xp": {
+        "type": "int"
+      }
+    }
   }
 }

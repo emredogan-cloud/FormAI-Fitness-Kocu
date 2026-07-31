@@ -24,6 +24,8 @@
 /// push toward the cartoonish territory we're explicitly avoiding.
 library;
 
+import '../../../l10n/app_localizations.dart';
+
 class LevelTier {
   const LevelTier({
     required this.minLevel,
@@ -32,7 +34,11 @@ class LevelTier {
   });
 
   final int minLevel;
-  final String title;
+
+  /// Held as a LOOKUP, not text: [kLevelTiers] is a top-level `const`
+  /// list built before any locale is known. Same shape the badge
+  /// catalogue and the first-time coach scenes use.
+  final String Function(AppLocalizations) title;
 
   /// True for tiers in the upper half of the ladder (Atlet onward) — the
   /// hero level chip flips to a gold-tinted accent for these so the
@@ -41,16 +47,26 @@ class LevelTier {
 }
 
 const List<LevelTier> kLevelTiers = [
-  LevelTier(minLevel: 1, title: 'Acemi', isAspirational: false),
-  LevelTier(minLevel: 5, title: 'Başlangıç', isAspirational: false),
-  LevelTier(minLevel: 10, title: 'Disiplinli', isAspirational: false),
-  LevelTier(minLevel: 15, title: 'Sabit', isAspirational: false),
-  LevelTier(minLevel: 20, title: 'Atlet', isAspirational: true),
-  LevelTier(minLevel: 25, title: 'Şampiyon', isAspirational: true),
-  LevelTier(minLevel: 30, title: 'Usta', isAspirational: true),
-  LevelTier(minLevel: 40, title: 'Efsane', isAspirational: true),
-  LevelTier(minLevel: 50, title: 'Mit', isAspirational: true),
+  LevelTier(minLevel: 1, title: _novice, isAspirational: false),
+  LevelTier(minLevel: 5, title: _beginner, isAspirational: false),
+  LevelTier(minLevel: 10, title: _disciplined, isAspirational: false),
+  LevelTier(minLevel: 15, title: _steady, isAspirational: false),
+  LevelTier(minLevel: 20, title: _athlete, isAspirational: true),
+  LevelTier(minLevel: 25, title: _champion, isAspirational: true),
+  LevelTier(minLevel: 30, title: _master, isAspirational: true),
+  LevelTier(minLevel: 40, title: _legend, isAspirational: true),
+  LevelTier(minLevel: 50, title: _myth, isAspirational: true),
 ];
+
+String _novice(AppLocalizations l) => l.levelTitleNovice;
+String _beginner(AppLocalizations l) => l.levelTitleBeginner;
+String _disciplined(AppLocalizations l) => l.levelTitleDisciplined;
+String _steady(AppLocalizations l) => l.levelTitleSteady;
+String _athlete(AppLocalizations l) => l.levelTitleAthlete;
+String _champion(AppLocalizations l) => l.levelTitleChampion;
+String _master(AppLocalizations l) => l.levelTitleMaster;
+String _legend(AppLocalizations l) => l.levelTitleLegend;
+String _myth(AppLocalizations l) => l.levelTitleMyth;
 
 /// Resolves the title for a level by walking the tier table backward —
 /// returns the title of the highest tier whose `minLevel` is ≤ [level].

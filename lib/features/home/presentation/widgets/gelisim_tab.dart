@@ -28,6 +28,7 @@ import '../../../workout/models/workout_day_model.dart';
 import '../../../workout/providers/workout_provider.dart';
 import 'today_task_card.dart';
 import '../../../progress/providers/streak_provider.dart';
+import '../../../../l10n/app_localizations.dart';
 
 const Color _neon = Color(0xFF8B5CF6);
 const Color _neonDeep = Color(0xFF6A3DFF);
@@ -293,9 +294,13 @@ class _TopHeader extends ConsumerWidget {
                   const SizedBox(width: 6),
                   Flexible(
                     child: Text(
-                      'Sv ${ref.watch(levelProgressProvider).level} · '
-                      '${ref.watch(currentTitleProvider).title} · '
-                      '${ref.watch(lifetimeXpProvider)} XP',
+                      AppLocalizations.of(context).progressIdentityLine(
+                        ref.watch(levelProgressProvider).level,
+                        ref
+                            .watch(currentTitleProvider)
+                            .title(AppLocalizations.of(context)),
+                        ref.watch(lifetimeXpProvider),
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(

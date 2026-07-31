@@ -1,3 +1,4 @@
+import '../../../l10n/app_localizations.dart';
 import 'survey.dart';
 
 /// Roadmap Phase 1 (C8) · the survey catalogue.
@@ -17,8 +18,8 @@ const List<SurveyDefinition> kSurveyCatalog = [
   SurveyDefinition(
     id: 'nps_v1',
     kind: SurveyKind.nps,
-    question: 'FormAI\'ı bir arkadaşına önerir miydin?',
-    subtitle: '0 = kesinlikle hayır, 10 = kesinlikle evet',
+    question: _npsQuestion,
+    subtitle: _npsSubtitle,
     minCompletedDays: 3,
     minDaysSinceInstall: 14,
   ),
@@ -29,16 +30,28 @@ const List<SurveyDefinition> kSurveyCatalog = [
   SurveyDefinition(
     id: 'value_driver_v1',
     kind: SurveyKind.choice,
-    question: 'FormAI\'da en çok işine yarayan şey ne?',
+    question: _valueDriverQuestion,
     minCompletedDays: 5,
     minDaysSinceInstall: 21,
     options: [
-      SurveyOption(
-          token: 'form_analysis', label: 'Gerçek zamanlı form analizi'),
-      SurveyOption(token: 'ai_coach', label: 'AI koç Form'),
-      SurveyOption(token: 'plan', label: 'Kişisel antrenman planı'),
-      SurveyOption(token: 'nutrition', label: 'Beslenme'),
-      SurveyOption(token: 'progress', label: 'Gelişim takibi'),
+      SurveyOption(token: 'form_analysis', label: _optionFormAnalysis),
+      SurveyOption(token: 'ai_coach', label: _optionAiCoach),
+      SurveyOption(token: 'plan', label: _optionPlan),
+      SurveyOption(token: 'nutrition', label: _optionNutrition),
+      SurveyOption(token: 'progress', label: _optionProgress),
     ],
   ),
 ];
+
+// Copy is held as a lookup so the catalogue stays `const` and the
+// analytics `token` stays decoupled from the words — the funnel joins
+// on the token, so rewording an option must never move a number.
+String _npsQuestion(AppLocalizations l) => l.surveyNpsQuestion;
+String _npsSubtitle(AppLocalizations l) => l.surveyNpsSubtitle;
+String _valueDriverQuestion(AppLocalizations l) => l.surveyValueDriverQuestion;
+String _optionFormAnalysis(AppLocalizations l) =>
+    l.surveyValueDriverFormAnalysis;
+String _optionAiCoach(AppLocalizations l) => l.surveyValueDriverAiCoach;
+String _optionPlan(AppLocalizations l) => l.surveyValueDriverPlan;
+String _optionNutrition(AppLocalizations l) => l.surveyValueDriverNutrition;
+String _optionProgress(AppLocalizations l) => l.surveyValueDriverProgress;

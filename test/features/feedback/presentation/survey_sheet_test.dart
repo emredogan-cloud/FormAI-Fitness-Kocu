@@ -8,20 +8,30 @@ import 'package:sixpack_ai/features/feedback/presentation/survey_sheet.dart';
 import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// Roadmap Phase 1 (C8) · the micro-survey sheet.
+// A SurveyDefinition holds lookups rather than strings (the real
+// catalogue is `const`, built before a locale exists). These fixtures
+// return the same words the assertions below always looked for, so the
+// sheet renders exactly what it rendered before.
+String _npsQuestion(AppLocalizations l) => 'Önerir miydin?';
+String _npsSubtitle(AppLocalizations l) => '0 = hayır, 10 = evet';
+String _choiceQuestion(AppLocalizations l) => 'En çok ne işine yarıyor?';
+String _optionCoach(AppLocalizations l) => 'AI koç';
+String _optionPlan(AppLocalizations l) => 'Plan';
+
 const _nps = SurveyDefinition(
   id: 'test_nps',
   kind: SurveyKind.nps,
-  question: 'Önerir miydin?',
-  subtitle: '0 = hayır, 10 = evet',
+  question: _npsQuestion,
+  subtitle: _npsSubtitle,
 );
 
 const _choice = SurveyDefinition(
   id: 'test_choice',
   kind: SurveyKind.choice,
-  question: 'En çok ne işine yarıyor?',
+  question: _choiceQuestion,
   options: [
-    SurveyOption(token: 'coach', label: 'AI koç'),
-    SurveyOption(token: 'plan', label: 'Plan'),
+    SurveyOption(token: 'coach', label: _optionCoach),
+    SurveyOption(token: 'plan', label: _optionPlan),
   ],
 );
 

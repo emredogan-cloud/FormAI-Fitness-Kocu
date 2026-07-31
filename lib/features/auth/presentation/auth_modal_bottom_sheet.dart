@@ -443,14 +443,18 @@ class _AuthModalBottomSheetState extends ConsumerState<AuthModalBottomSheet>
 
   Future<void> _onGooglePressed() => _runOAuth(
         _Provider.google,
-        () => ref.read(authControllerProvider).signInWithGoogle(),
+        () => ref
+            .read(authControllerProvider)
+            .signInWithGoogle(AppLocalizations.of(context)),
         offlineMessage: AppLocalizations.of(context).authGoogleNeedsInternet,
         fallbackError: AppLocalizations.of(context).authGoogleFailed,
       );
 
   Future<void> _onApplePressed() => _runOAuth(
         _Provider.apple,
-        () => ref.read(authControllerProvider).signInWithApple(),
+        () => ref
+            .read(authControllerProvider)
+            .signInWithApple(AppLocalizations.of(context)),
         offlineMessage: AppLocalizations.of(context).authAppleNeedsInternet,
         fallbackError: AppLocalizations.of(context).authAppleFailed,
       );

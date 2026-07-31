@@ -18,6 +18,8 @@
 ///     survey is never re-asked.
 library;
 
+import '../../../l10n/app_localizations.dart';
+
 /// How a survey renders its answer affordance.
 enum SurveyKind {
   /// 0–10 scale, Net Promoter Score semantics.
@@ -30,11 +32,12 @@ enum SurveyKind {
 class SurveyOption {
   const SurveyOption({required this.token, required this.label});
 
-  /// Stable English identifier persisted and sent to analytics.
+  /// Stable English identifier persisted and sent to analytics. Never
+  /// localized — the funnel joins on it.
   final String token;
 
-  /// Turkish UI label.
-  final String label;
+  /// UI label, as a lookup so the catalogue stays `const`.
+  final String Function(AppLocalizations) label;
 }
 
 class SurveyDefinition {
@@ -53,8 +56,10 @@ class SurveyDefinition {
   final String id;
 
   final SurveyKind kind;
-  final String question;
-  final String? subtitle;
+
+  /// Copy as a lookup — see [kSurveyCatalog], which is `const`.
+  final String Function(AppLocalizations) question;
+  final String Function(AppLocalizations)? subtitle;
 
   /// Only meaningful for [SurveyKind.choice].
   final List<SurveyOption> options;

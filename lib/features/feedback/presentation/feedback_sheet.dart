@@ -91,6 +91,7 @@ class _FeedbackSheetState extends ConsumerState<_FeedbackSheet> {
     });
     try {
       final transport = await FeedbackService.instance.submit(
+        l10n: AppLocalizations.of(context),
         subject: _subject,
         message: body,
       );
@@ -101,9 +102,9 @@ class _FeedbackSheetState extends ConsumerState<_FeedbackSheet> {
       final reward = await ref.read(feedbackRewardProvider).grantIfEligible();
       if (!mounted) return;
       Navigator.of(context).pop(FeedbackResult(transport, reward: reward));
-    } on FeedbackException catch (e) {
+    } on FeedbackException {
       if (!mounted) return;
-      setState(() => _error = e.message);
+      setState(() => _error = AppLocalizations.of(context).feedbackSendFailed);
     } catch (e) {
       if (!mounted) return;
       setState(
@@ -171,7 +172,7 @@ class _FeedbackSheetState extends ConsumerState<_FeedbackSheet> {
                   .map(
                     (s) => DropdownMenuItem(
                       value: s,
-                      child: Text(s.localized),
+                      child: Text(s.label(AppLocalizations.of(context))),
                     ),
                   )
                   .toList(growable: false),

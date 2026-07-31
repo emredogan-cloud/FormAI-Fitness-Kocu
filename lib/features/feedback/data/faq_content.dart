@@ -7,9 +7,18 @@
 /// lead.
 ///
 /// Kept as data (not widgets) so the whole set is one ARB extraction
-/// away from being localisable in roadmap Phase 5, and so the search
-/// index in [HelpCenterScreen] can be built generically.
+/// away from being localisable, and so the search index in
+/// [HelpCenterScreen] can be built generically.
+///
+/// Roadmap Phase 5 · that extraction happened, and it turned the
+/// catalogue from a `const` list into a function of [AppLocalizations].
+/// It could not stay `const`: [FaqEntry.searchIndex] lower-cases the
+/// question and answer TOGETHER, so entries need resolved text rather
+/// than lookups. Rebuilding the list per call is cheap — 17 entries, no
+/// I/O — and it only happens while the help centre is open.
 library;
+
+import '../../../l10n/app_localizations.dart';
 
 class FaqCategory {
   const FaqCategory({required this.title, required this.entries});
@@ -28,149 +37,112 @@ class FaqEntry {
   String get searchIndex => '$question $answer'.toLowerCase();
 }
 
-const List<FaqCategory> kFaqCategories = [
-  FaqCategory(
-    title: 'ANTRENMAN & KAMERA',
-    entries: [
-      FaqEntry(
-        question: 'Kamera hareketlerimi neden görmüyor?',
-        answer: 'Analiz için tüm vücudunun kadraja girmesi gerekir. '
-            'Telefonu yere ya da sabit bir yere yaklaşık 2 metre uzağa '
-            'koy, kamerayı dikey tut ve ortamın aydınlık olduğundan emin '
-            'ol. Ekranda "Kadraja gir" uyarısı varsa biraz geriye git.',
+/// The full catalogue, in the caller's locale.
+List<FaqCategory> faqCategories(AppLocalizations l10n) => [
+      FaqCategory(
+        title: l10n.faqCategoryWorkoutCamera,
+        entries: [
+          FaqEntry(
+            question: l10n.faqCameraNotSeeingQ,
+            answer: l10n.faqCameraNotSeeingA,
+          ),
+          FaqEntry(
+            question: l10n.faqPhoneSideQ,
+            answer: l10n.faqPhoneSideA,
+          ),
+          FaqEntry(
+            question: l10n.faqNoCameraQ,
+            answer: l10n.faqNoCameraA,
+          ),
+          FaqEntry(
+            question: l10n.faqPhoneRingsQ,
+            answer: l10n.faqPhoneRingsA,
+          ),
+          FaqEntry(
+            question: l10n.faqOfflineQ,
+            answer: l10n.faqOfflineA,
+          ),
+        ],
       ),
-      FaqEntry(
-        question: 'Bazı egzersizlerde telefonu yana koymam mı gerekiyor?',
-        answer: 'Evet. Şınav, plank ve kalça hareketi gibi yandan '
-            'görülmesi gereken egzersizlerde telefonu yan tarafına '
-            'yerleştir. Form koçu bu egzersizlerde sana bir kez sesli '
-            'olarak hatırlatır.',
+      FaqCategory(
+        title: l10n.faqCategoryAiCoach,
+        entries: [
+          FaqEntry(
+            question: l10n.faqWhoIsFormQ,
+            answer: l10n.faqWhoIsFormA,
+          ),
+          FaqEntry(
+            question: l10n.faqShortAnswersQ,
+            answer: l10n.faqShortAnswersA,
+          ),
+          FaqEntry(
+            question: l10n.faqHealthAdviceQ,
+            answer: l10n.faqHealthAdviceA,
+          ),
+        ],
       ),
-      FaqEntry(
-        question: 'Kamera olmadan antrenman yapabilir miyim?',
-        answer: 'Evet. Antrenmanı kamerasız da tamamlayabilirsin; '
-            'tekrarları kendin takip edersin. Form analizi yalnızca '
-            'kamera açıkken çalışır.',
+      FaqCategory(
+        title: l10n.faqCategorySubscription,
+        entries: [
+          FaqEntry(
+            question: l10n.faqCancelSubQ,
+            answer: l10n.faqCancelSubA,
+          ),
+          FaqEntry(
+            question: l10n.faqTransferPurchaseQ,
+            answer: l10n.faqTransferPurchaseA,
+          ),
+          FaqEntry(
+            question: l10n.faqFreeFeaturesQ,
+            answer: l10n.faqFreeFeaturesA,
+          ),
+        ],
       ),
-      FaqEntry(
-        question: 'Antrenman sırasında telefonum çalarsa ne olur?',
-        answer: 'Antrenman otomatik olarak duraklar ve kamera güvenli '
-            'şekilde kapanır. Uygulamaya döndüğünde kaldığın yerden '
-            'devam edebilirsin — ilerlemen kaybolmaz.',
+      FaqCategory(
+        title: l10n.faqCategoryAccountData,
+        entries: [
+          FaqEntry(
+            question: l10n.faqDataStorageQ,
+            answer: l10n.faqDataStorageA,
+          ),
+          FaqEntry(
+            question: l10n.faqDeleteAccountQ,
+            answer: l10n.faqDeleteAccountA,
+          ),
+          FaqEntry(
+            question: l10n.faqGuestProgressQ,
+            answer: l10n.faqGuestProgressA,
+          ),
+        ],
       ),
-      FaqEntry(
-        question: 'İnternet olmadan antrenman yapabilir miyim?',
-        answer: 'Evet. Antrenman ve form analizi tamamen cihazında '
-            'çalışır. Bağlantı geri geldiğinde tamamladığın günler '
-            'otomatik olarak senkronize edilir.',
+      FaqCategory(
+        title: l10n.faqCategoryNotificationsOther,
+        entries: [
+          FaqEntry(
+            question: l10n.faqNoRemindersQ,
+            answer: l10n.faqNoRemindersA,
+          ),
+          FaqEntry(
+            question: l10n.faqStreakResetQ,
+            answer: l10n.faqStreakResetA,
+          ),
+          FaqEntry(
+            question: l10n.faqReportBugQ,
+            answer: l10n.faqReportBugA,
+          ),
+        ],
       ),
-    ],
-  ),
-  FaqCategory(
-    title: 'AI KOÇ',
-    entries: [
-      FaqEntry(
-        question: 'Form kimdir?',
-        answer: 'Form, FormAI\'ın yapay zekâ koçu. Antrenman geçmişini, '
-            'planını ve hedefini bilir; ona her konuda soru '
-            'sorabilirsin. Üstteki avatarına dokunarak sohbeti açabilirsin.',
-      ),
-      FaqEntry(
-        question: 'Form neden bazen kısa cevap veriyor?',
-        answer: 'Form yalnızca gerçekten bildiği şeyleri söyler. '
-            'Elinde veri olmayan bir konuda tahmin yürütmek yerine kısa '
-            've dürüst bir cevap verir.',
-      ),
-      FaqEntry(
-        question: 'Form sağlık tavsiyesi verebilir mi?',
-        answer: 'Hayır. FormAI bir antrenman ve beslenme asistanıdır, '
-            'tıbbi cihaz değildir. Bir sağlık sorunun, ağrın ya da '
-            'kronik rahatsızlığın varsa mutlaka bir hekime danış.',
-      ),
-    ],
-  ),
-  FaqCategory(
-    title: 'ABONELİK',
-    entries: [
-      FaqEntry(
-        question: 'Aboneliğimi nasıl iptal ederim?',
-        answer: 'Profil → Ayarlar → "Aboneliği İptal Et" adımını izle. '
-            'İptal işlemi Google Play hesabın üzerinden tamamlanır. '
-            'İptal ettikten sonra dönem sonuna kadar Premium '
-            'özelliklerini kullanmaya devam edersin.',
-      ),
-      FaqEntry(
-        question: 'Satın alımımı yeni telefonuma nasıl taşırım?',
-        answer: 'Aynı Google hesabıyla giriş yap ve ödeme ekranındaki '
-            '"Satın alımları geri yükle" bağlantısına dokun. '
-            'Aboneliğin hesabına bağlıdır, cihaza değil.',
-      ),
-      FaqEntry(
-        question: 'Premium olmadan neleri kullanabilirim?',
-        answer: '30 günlük antrenman programı, gerçek zamanlı form '
-            'analizi, AI koç, kalori ve makro hedefin ve tarif '
-            'kütüphanesi ücretsizdir. Premium; kişiselleştirilmiş günlük '
-            'beslenme planı ve öğün takibi gibi özellikleri açar.',
-      ),
-    ],
-  ),
-  FaqCategory(
-    title: 'HESAP & VERİ',
-    entries: [
-      FaqEntry(
-        question: 'Verilerim nerede tutuluyor?',
-        answer: 'Kamera görüntüleri cihazından hiç çıkmaz — form analizi '
-            'tamamen telefonunda yapılır ve hiçbir görüntü kaydedilmez '
-            'veya gönderilmez. Antrenman ilerlemen ve profil bilgin '
-            'hesabına bağlı olarak güvenli sunucularda saklanır.',
-      ),
-      FaqEntry(
-        question: 'Hesabımı nasıl silerim?',
-        answer: 'Profil → Hesap Ayarları → "Hesabı Sil". İşlem kalıcıdır: '
-            'antrenman geçmişin, profil bilgin ve tüm verilerin silinir.',
-      ),
-      FaqEntry(
-        question: 'Misafir olarak kullanıyorum, ilerlemem kaybolur mu?',
-        answer: 'Misafir ilerlemesi yalnızca bu cihazda tutulur. '
-            'Kaybetmemek için Profil ekranından bir hesap oluştur — '
-            'mevcut ilerlemen hesabına taşınır.',
-      ),
-    ],
-  ),
-  FaqCategory(
-    title: 'BİLDİRİM & DİĞER',
-    entries: [
-      FaqEntry(
-        question: 'Hatırlatma bildirimleri gelmiyor.',
-        answer: 'Profil → Hesap Ayarları → "Bildirimler" bölümünden bir '
-            'saat seçtiğinden emin ol. Ayrıca telefonunun ayarlarında '
-            'FormAI için bildirim izninin açık olduğunu ve pil '
-            'optimizasyonunun uygulamayı kısıtlamadığını kontrol et.',
-      ),
-      FaqEntry(
-        question: 'Serim (streak) neden sıfırlandı?',
-        answer: 'Seri, takvim günlerine göre hesaplanır ve bir dinlenme '
-            'gününe tolerans tanır. Üst üste iki günden fazla ara '
-            'verirsen seri yeniden başlar.',
-      ),
-      FaqEntry(
-        question: 'Bir hata buldum, nasıl bildirebilirim?',
-        answer: 'Profil → Ayarlar → "Destek & Geri Bildirim" ile bize '
-            'doğrudan yaz. Her mesaj okunur ve yanıtlanır — '
-            'geri bildirimin FormAI\'ı şekillendiriyor.',
-      ),
-    ],
-  ),
-];
+    ];
 
 /// Flat, lower-cased search over every entry in every category.
 /// Returns categories containing at least one match, each pruned to
 /// only its matching entries, so the grouped layout survives filtering.
-List<FaqCategory> searchFaq(String rawQuery) {
+List<FaqCategory> searchFaq(AppLocalizations l10n, String rawQuery) {
+  final categories = faqCategories(l10n);
   final query = rawQuery.trim().toLowerCase();
-  if (query.isEmpty) return kFaqCategories;
+  if (query.isEmpty) return categories;
   final results = <FaqCategory>[];
-  for (final category in kFaqCategories) {
+  for (final category in categories) {
     final matches = category.entries
         .where((e) => e.searchIndex.contains(query))
         .toList(growable: false);

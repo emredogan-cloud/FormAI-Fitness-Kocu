@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/theme_extension.dart';
 import '../../domain/coach_message.dart';
+import '../../../../l10n/app_localizations.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonAccent = Color(0xFF4DA6FF);
@@ -105,6 +106,7 @@ class WeeklyGoalCard extends StatelessWidget {
             // Contextual now (was a fixed string): reflects real weekly
             // progress + time of day. Pure fn = future LLM swap-in point.
             text: weeklyCoachLine(
+              l10n: AppLocalizations.of(context),
               completed: weeklyCompleted,
               target: weeklyTarget,
               hour: DateTime.now().hour,

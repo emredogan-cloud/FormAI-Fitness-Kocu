@@ -1,13 +1,7 @@
 {
-  "lib/features/auth/auth_error_messages.dart": 6,
-  "lib/features/auth/providers/auth_provider.dart": 5,
   "lib/features/coach/domain/coach_context.dart": 8,
   "lib/features/coach/domain/rule_based_coach_brain.dart": 39,
   "lib/features/coach/providers/coach_providers.dart": 8,
-  "lib/features/feedback/data/faq_content.dart": 73,
-  "lib/features/feedback/domain/survey_definitions.dart": 7,
-  "lib/features/feedback/services/feedback_service.dart": 2,
-  "lib/features/home/domain/coach_message.dart": 5,
   "lib/features/home/domain/discovery_tips.dart": 16,
   "lib/features/home/presentation/account_settings_screen.dart": 41,
   "lib/features/home/presentation/dashboard_screen.dart": 2,
@@ -52,8 +46,6 @@
   "lib/features/onboarding/presentation/steps/name_capture_step.dart": 17,
   "lib/features/onboarding/presentation/steps/setup_thinking_step.dart": 5,
   "lib/features/onboarding/presentation/steps/social_proof_step.dart": 13,
-  "lib/features/progress/data/level_titles.dart": 2,
-  "lib/features/referral/services/referral_service.dart": 7,
   "lib/features/workout/domain/services/workout_generator_service.dart": 3,
   "lib/features/workout/presentation/plan_detail_screen.dart": 24,
   "lib/features/workout/presentation/workout_camera_screen.dart": 47
