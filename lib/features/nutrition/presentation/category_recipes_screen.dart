@@ -9,6 +9,7 @@ import 'widgets/recipe_image.dart';
 import '../domain/models/recipe.dart';
 import '../providers/nutrition_provider.dart';
 import 'widgets/recipe_tags.dart';
+import '../../../l10n/app_localizations.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _proteinColor = Color(0xFF4DA6FF);
@@ -89,7 +90,7 @@ class CategoryRecipesScreen extends ConsumerWidget {
             },
           );
           return ErrorCard(
-            message: 'Tarifler yüklenirken bir sorun oluştu.',
+            message: AppLocalizations.of(context).recipesLoadError,
             onRetry: () => ref.invalidate(
               categoryRecipesProvider(
                 (token: categoryType, mealType: mealTypeSubFilter),
@@ -349,7 +350,7 @@ class _EmptyCategoryState extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           Text(
-            'Bu kategoride henüz tarif yok.',
+            AppLocalizations.of(context).recipeCategoryEmpty,
             style: TextStyle(
               color: scheme.onSurface,
               fontSize: 16,

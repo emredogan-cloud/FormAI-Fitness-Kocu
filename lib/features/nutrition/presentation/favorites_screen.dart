@@ -13,6 +13,7 @@ import '../domain/models/recipe.dart';
 import 'widgets/recipe_image.dart';
 import '../providers/favorite_recipes_provider.dart';
 import '../providers/nutrition_provider.dart';
+import '../../../l10n/app_localizations.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _heartRed = Color(0xFFFF4D6D);
@@ -43,7 +44,7 @@ class FavoritesScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Favorilerim'),
+        title: Text(AppLocalizations.of(context).favoritesTitle),
         backgroundColor: scheme.surface,
         elevation: 0,
       ),
@@ -64,11 +65,9 @@ class FavoritesScreen extends ConsumerWidget {
             // just a description of emptiness.
             return EmptyState(
               icon: Icons.favorite_border_rounded,
-              title: 'Henüz favori tarifin yok',
-              body: 'Bir tarif aç ve kalp simgesine dokun. Burada '
-                  'listelenir; sonra alışveriş listesini tek tıkla '
-                  'paylaşabilirsin.',
-              ctaLabel: 'Tarifleri Keşfet',
+              title: AppLocalizations.of(context).favoritesEmptyTitle,
+              body: AppLocalizations.of(context).favoritesEmptyBody,
+              ctaLabel: AppLocalizations.of(context).favoritesDiscoverCta,
               onCta: () => context.push(AppRoutes.nutritionDiscover),
             );
           }
@@ -89,9 +88,10 @@ class FavoritesScreen extends ConsumerWidget {
                   child: SizedBox(
                     width: double.infinity,
                     child: FilledButton.icon(
-                      onPressed: () => _exportShoppingList(saved),
+                      onPressed: () => _exportShoppingList(context, saved),
                       icon: const Icon(Icons.shopping_cart_outlined, size: 18),
-                      label: const Text('Alışveriş Listesi Oluştur'),
+                      label: Text(AppLocalizations.of(context)
+                          .favoritesBuildShoppingList),
                       style: FilledButton.styleFrom(
                         backgroundColor: _neon,
                         foregroundColor: Colors.white,
@@ -115,9 +115,12 @@ class FavoritesScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _exportShoppingList(List<Recipe> recipes) async {
+  Future<void> _exportShoppingList(
+    BuildContext context,
+    List<Recipe> recipes,
+  ) async {
     AppHaptics.primaryCta();
-    final body = _buildShoppingListBody(recipes);
+    final body = _buildShoppingListBody(AppLocalizations.of(context), recipes);
     AnalyticsService.instance.shoppingListExported(recipeCount: recipes.length);
     try {
       await SharePlus.instance.share(
@@ -154,9 +157,9 @@ class FavoritesScreen extends ConsumerWidget {
   ///   3. A polite fallback line so the recipient sees the recipe
   ///      title + a "malzeme listesi yakında" placeholder rather than
   ///      an empty section.
-  String _buildShoppingListBody(List<Recipe> recipes) {
-    if (recipes.isEmpty) return 'Alışveriş listen boş.';
-    final buf = StringBuffer()..writeln('FormAI Öğün Malzemeleri');
+  String _buildShoppingListBody(AppLocalizations l10n, List<Recipe> recipes) {
+    if (recipes.isEmpty) return l10n.favoritesShoppingListEmpty;
+    final buf = StringBuffer()..writeln(l10n.favoritesIngredientsHeading);
     for (var i = 0; i < recipes.length; i++) {
       final r = recipes[i];
       buf
@@ -293,7 +296,7 @@ class _FavoriteRow extends ConsumerWidget {
               ),
               IconButton(
                 icon: const Icon(Icons.favorite, color: _heartRed, size: 22),
-                tooltip: 'Favoriden Çıkar',
+                tooltip: AppLocalizations.of(context).favoritesRemove,
                 onPressed: () async {
                   AppHaptics.secondaryTap();
                   await ref
@@ -342,11 +345,13 @@ class _ErrorState extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Tarif kataloğu yüklenemedi.',
+            AppLocalizations.of(context).recipesCatalogueLoadError,
             style: TextStyle(color: context.colors.onSurface),
           ),
           const SizedBox(height: 12),
-          OutlinedButton(onPressed: onRetry, child: const Text('Yeniden Dene')),
+          OutlinedButton(
+              onPressed: onRetry,
+              child: Text(AppLocalizations.of(context).commonTryAgain)),
         ],
       ),
     );

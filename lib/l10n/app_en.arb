@@ -747,5 +747,141 @@
   "shareFooter": "Change in 30 days — formai.app",
   "@shareFooter": {
     "description": "Share template footer"
+  },
+  "recipeTagHighProtein": "High protein",
+  "@recipeTagHighProtein": {
+    "description": "Recipe tag"
+  },
+  "recipeTagLowCalorie": "Low calorie",
+  "@recipeTagLowCalorie": {
+    "description": "Recipe tag"
+  },
+  "recipeTagBulk": "Bulking",
+  "@recipeTagBulk": {
+    "description": "Recipe tag"
+  },
+  "recipeTagQuick": "Quick",
+  "@recipeTagQuick": {
+    "description": "Recipe tag"
+  },
+  "recipeTagToning": "Toning",
+  "@recipeTagToning": {
+    "description": "Recipe tag"
+  },
+  "recipesAll": "All recipes",
+  "@recipesAll": {
+    "description": "Discover screen — unfiltered title"
+  },
+  "recipesLoadError": "Something went wrong loading recipes.",
+  "@recipesLoadError": {
+    "description": "Recipe list error"
+  },
+  "recipesNoneForFilter": "No recipes match this filter",
+  "@recipesNoneForFilter": {
+    "description": "Empty filtered result"
+  },
+  "recipesTryAnotherTag": "Try a different tag, or clear the filter.",
+  "@recipesTryAnotherTag": {
+    "description": "Empty filtered result body"
+  },
+  "recipesClearFilter": "Clear filter",
+  "@recipesClearFilter": {
+    "description": "Clear-filter action"
+  },
+  "favoritesTitle": "My favourites",
+  "@favoritesTitle": {
+    "description": "Favourites screen title"
+  },
+  "favoritesEmptyTitle": "No favourite recipes yet",
+  "@favoritesEmptyTitle": {
+    "description": "Favourites empty state"
+  },
+  "favoritesEmptyBody": "Open a recipe and tap the heart. It shows up here, and you can share the shopping list in one tap.",
+  "@favoritesEmptyBody": {
+    "description": "Favourites empty state body"
+  },
+  "favoritesDiscoverCta": "Explore recipes",
+  "@favoritesDiscoverCta": {
+    "description": "Favourites empty state CTA"
+  },
+  "favoritesBuildShoppingList": "Build shopping list",
+  "@favoritesBuildShoppingList": {
+    "description": "Favourites action"
+  },
+  "favoritesShoppingListTitle": "FormAI · My shopping list",
+  "@favoritesShoppingListTitle": {
+    "description": "Shared shopping-list heading"
+  },
+  "favoritesShoppingListEmpty": "Your shopping list is empty.",
+  "@favoritesShoppingListEmpty": {
+    "description": "Empty shopping list message"
+  },
+  "favoritesIngredientsHeading": "FormAI meal ingredients",
+  "@favoritesIngredientsHeading": {
+    "description": "Shopping list section heading"
+  },
+  "favoritesRemove": "Remove from favourites",
+  "@favoritesRemove": {
+    "description": "Favourite removal action"
+  },
+  "recipesCatalogueLoadError": "The recipe catalogue could not be loaded.",
+  "@recipesCatalogueLoadError": {
+    "description": "Catalogue load failure"
+  },
+  "commonTryAgain": "Try again",
+  "@commonTryAgain": {
+    "description": "Generic retry action"
+  },
+  "recipeCategoryBreakfastTitle": "Breakfast recipes",
+  "@recipeCategoryBreakfastTitle": {
+    "description": "Category screen title"
+  },
+  "recipeCategoryLunchTitle": "Lunch recipes",
+  "@recipeCategoryLunchTitle": {
+    "description": "Category screen title"
+  },
+  "recipeCategoryDinnerTitle": "Dinner recipes",
+  "@recipeCategoryDinnerTitle": {
+    "description": "Category screen title"
+  },
+  "recipeCategorySnackTitle": "Snack recipes",
+  "@recipeCategorySnackTitle": {
+    "description": "Category screen title"
+  },
+  "recipeCategoryDessertTitle": "Athlete desserts",
+  "@recipeCategoryDessertTitle": {
+    "description": "Category screen title"
+  },
+  "recipeCategoryPracticalTitle": "Quick & budget",
+  "@recipeCategoryPracticalTitle": {
+    "description": "Category screen title"
+  },
+  "recipeCategoryGenericTitle": "Recipes",
+  "@recipeCategoryGenericTitle": {
+    "description": "Category screen fallback title"
+  },
+  "mealBreakfast": "Breakfast",
+  "@mealBreakfast": {
+    "description": "Meal slot"
+  },
+  "mealLunch": "Lunch",
+  "@mealLunch": {
+    "description": "Meal slot"
+  },
+  "mealDinner": "Dinner",
+  "@mealDinner": {
+    "description": "Meal slot"
+  },
+  "mealSnacks": "Snacks",
+  "@mealSnacks": {
+    "description": "Meal slot"
+  },
+  "mealDesserts": "Desserts",
+  "@mealDesserts": {
+    "description": "Meal slot"
+  },
+  "recipeCategoryEmpty": "No recipes in this category yet.",
+  "@recipeCategoryEmpty": {
+    "description": "Empty category state"
   }
 }

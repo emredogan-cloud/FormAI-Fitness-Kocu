@@ -12,6 +12,7 @@ import 'widgets/recipe_image.dart';
 import '../domain/models/recipe.dart';
 import '../providers/nutrition_provider.dart';
 import 'widgets/recipe_tags.dart';
+import '../../../l10n/app_localizations.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _proteinColor = Color(0xFF4DA6FF);
@@ -100,7 +101,7 @@ class _DiscoverRecipesScreenState extends ConsumerState<DiscoverRecipesScreen> {
         elevation: 0,
         foregroundColor: scheme.onSurface,
         title: Text(
-          'Tüm Tarifler',
+          AppLocalizations.of(context).recipesAll,
           style: TextStyle(
             color: scheme.onSurface,
             fontWeight: FontWeight.w900,
@@ -120,7 +121,7 @@ class _DiscoverRecipesScreenState extends ConsumerState<DiscoverRecipesScreen> {
             category: 'nutrition',
           );
           return ErrorCard(
-            message: 'Tarifler yüklenirken bir sorun oluştu.',
+            message: AppLocalizations.of(context).recipesLoadError,
             onRetry: () => ref.invalidate(recipesProvider),
           );
         },
@@ -156,10 +157,11 @@ class _DiscoverRecipesScreenState extends ConsumerState<DiscoverRecipesScreen> {
                   // user actually wants.
                   child: EmptyState(
                     icon: Icons.restaurant_menu_rounded,
-                    title: 'Bu filtreye uygun tarif bulunamadı',
-                    body: 'Farklı bir etiket deneyebilir veya filtreyi '
-                        'kaldırabilirsin.',
-                    ctaLabel: activeFilter == null ? null : 'Filtreyi Kaldır',
+                    title: AppLocalizations.of(context).recipesNoneForFilter,
+                    body: AppLocalizations.of(context).recipesTryAnotherTag,
+                    ctaLabel: activeFilter == null
+                        ? null
+                        : AppLocalizations.of(context).recipesClearFilter,
                     // `toggle` on the active chip is already the clear
                     // operation (see FilterChipsNotifier) — no need for a
                     // second method that does the same thing.

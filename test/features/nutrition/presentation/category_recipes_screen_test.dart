@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sixpack_ai/features/nutrition/domain/models/recipe.dart';
 import 'package:sixpack_ai/features/nutrition/presentation/category_recipes_screen.dart';
 import 'package:sixpack_ai/features/nutrition/providers/nutrition_provider.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// The per-category recipe list. Two behaviours are worth protecting:
 ///
@@ -38,6 +39,8 @@ Widget _host({
       categoryRecipesProvider.overrideWith((ref, key) async => recipes),
     ],
     child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: [Locale('tr')],
       home: CategoryRecipesScreen(categoryType: type, mealTypeSubFilter: sub),
       debugShowCheckedModeBanner: false,
     ),

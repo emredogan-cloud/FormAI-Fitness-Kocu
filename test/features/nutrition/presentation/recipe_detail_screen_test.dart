@@ -6,6 +6,7 @@ import 'package:sixpack_ai/core/services/app_preferences.dart';
 import 'package:sixpack_ai/features/nutrition/domain/models/recipe.dart';
 import 'package:sixpack_ai/features/nutrition/presentation/recipe_detail_screen.dart';
 import 'package:sixpack_ai/features/referral/providers/referral_provider.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// The full recipe view. It takes a [Recipe] directly, so the tests
 /// exercise its rendering (title / meal pill / macros / instructions /
@@ -45,6 +46,8 @@ Widget _host(Recipe recipe, SharedPreferences prefs) {
       referralCodeProvider.overrideWith((ref) async => 'TESTCODE'),
     ],
     child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: [Locale('tr')],
       home: RecipeDetailScreen(recipe: recipe),
       debugShowCheckedModeBanner: false,
     ),

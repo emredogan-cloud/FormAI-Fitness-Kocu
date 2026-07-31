@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sixpack_ai/features/nutrition/domain/models/recipe.dart';
 import 'package:sixpack_ai/features/nutrition/presentation/discover_recipes_screen.dart';
 import 'package:sixpack_ai/features/nutrition/providers/nutrition_provider.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// Phase 48 · `recipesProvider` switched from a `FutureProvider` to an
 /// `AsyncNotifierProvider`, so tests can no longer override it with a
@@ -23,7 +24,9 @@ Widget _host(List<Recipe> recipes) {
     overrides: [
       recipesProvider.overrideWith(() => _StubRecipesNotifier(recipes)),
     ],
-    child: const MaterialApp(
+    child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: [Locale('tr')],
       home: DiscoverRecipesScreen(),
       debugShowCheckedModeBanner: false,
     ),

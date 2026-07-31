@@ -123,12 +123,12 @@ List<({String icon, String label, Color tint})> recipeTags(Recipe recipe) {
   // Macro-heuristic fallback for legacy rows with no `tags` value.
   const highProtein = (
     icon: '🔥',
-    label: 'Yüksek Protein',
+    label: 'Yüksek Protein', // i18n-ignore
     tint: Color(0xFF4DA6FF),
   );
   const lowCalorie = (
     icon: '🥗',
-    label: 'Düşük Kalori',
+    label: 'Düşük Kalori', // i18n-ignore
     tint: Color(0xFF39FF14),
   );
   const bulk = (
@@ -138,7 +138,7 @@ List<({String icon, String label, Color tint})> recipeTags(Recipe recipe) {
   );
   const fast = (
     icon: '⚡',
-    label: 'Hızlı',
+    label: 'Hızlı', // i18n-ignore
     tint: Color(0xFFEAFF00),
   );
 
@@ -150,20 +150,42 @@ List<({String icon, String label, Color tint})> recipeTags(Recipe recipe) {
   return tags;
 }
 
+// Roadmap Phase 5 · these strings are CONTENT, not UI chrome, and are
+// deliberately not extracted to ARB.
+//
+// The switch keys on `recipe.tags` — values stored in the Supabase
+// `recipes` rows — so the case labels are data identities, not copy. The
+// returned `label` is the same value echoed back for display. Localising
+// it here would mean the app showed an English tag for a row the
+// database still calls "Yüksek Protein", and the two would drift the
+// moment a new tag shipped.
+//
+// Content localisation is Phase 7's job, through the per-locale columns
+// migration 011 added. Until then the display value follows the stored
+// value, which is the only self-consistent option.
 ({String icon, String label, Color tint}) _badgeForCuratedTag(String tag) {
   switch (tag) {
-    case 'Yüksek Protein':
+    // i18n-ignore
+    case 'Yüksek Protein': // i18n-ignore
       return (
         icon: '🔥',
-        label: 'Yüksek Protein',
+        label: 'Yüksek Protein', // i18n-ignore
         tint: const Color(0xFF4DA6FF)
       );
-    case 'Düşük Kalori':
-      return (icon: '🥗', label: 'Düşük Kalori', tint: const Color(0xFF39FF14));
+    case 'Düşük Kalori': // i18n-ignore
+      return (
+        icon: '🥗',
+        label: 'Düşük Kalori',
+        tint: const Color(0xFF39FF14)
+      ); // i18n-ignore
     case 'Hacim':
       return (icon: '💪', label: 'Hacim', tint: const Color(0xFFFF4DDB));
-    case 'Sıkılaşma':
-      return (icon: '✨', label: 'Sıkılaşma', tint: const Color(0xFFEAFF00));
+    case 'Sıkılaşma': // i18n-ignore
+      return (
+        icon: '✨',
+        label: 'Sıkılaşma',
+        tint: const Color(0xFFEAFF00)
+      ); // i18n-ignore
     case 'Vegan':
       return (icon: '🌱', label: 'Vegan', tint: const Color(0xFF39C46B));
     default:

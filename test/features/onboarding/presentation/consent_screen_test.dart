@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sixpack_ai/core/routing/app_router.dart';
 import 'package:sixpack_ai/core/services/app_preferences.dart';
 import 'package:sixpack_ai/features/onboarding/presentation/consent_screen.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// The KVKK / GDPR consent screen. Two invariants matter for
 /// compliance and must not regress:
@@ -40,6 +41,8 @@ Widget _hostConsent(SharedPreferences prefs) {
       sharedPreferencesProvider.overrideWithValue(prefs),
     ],
     child: MaterialApp.router(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: [Locale('tr')],
       routerConfig: router,
       debugShowCheckedModeBanner: false,
     ),

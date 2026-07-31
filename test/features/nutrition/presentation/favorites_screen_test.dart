@@ -7,6 +7,7 @@ import 'package:sixpack_ai/features/nutrition/domain/models/recipe.dart';
 import 'package:sixpack_ai/features/nutrition/presentation/favorites_screen.dart';
 import 'package:sixpack_ai/features/nutrition/providers/favorite_recipes_provider.dart';
 import 'package:sixpack_ai/features/nutrition/providers/nutrition_provider.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// "Favorilerim" filters the full recipe catalogue down to the ids the
 /// user has hearted (persisted in SharedPreferences). The tests seed
@@ -43,7 +44,9 @@ Widget _host(List<Recipe> recipes, SharedPreferences prefs) {
       recipesProvider.overrideWith(() => _StubRecipesNotifier(recipes)),
       sharedPreferencesProvider.overrideWithValue(prefs),
     ],
-    child: const MaterialApp(
+    child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: [Locale('tr')],
       home: FavoritesScreen(),
       debugShowCheckedModeBanner: false,
     ),
