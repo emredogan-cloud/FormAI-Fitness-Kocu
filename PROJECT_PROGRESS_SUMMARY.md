@@ -1,7 +1,7 @@
 # FormAI — Project Progress Summary
 
 **Spec:** `TESTERS_COMMUNITY_PRODUCT_ROADMAP.md` (18 phases / 5 waves)
-**As of:** 2026-08-01 · commit `483b664` · build **1.0.0+24**
+**As of:** 2026-08-01 · commit `12ab365` · build **1.0.0+25**
 
 ---
 
@@ -46,7 +46,7 @@
 - Migrations `009`, `010` — **not applied to prod**.
 
 ### Phase 5 — Internationalization Infrastructure 🔄 *engineering complete, device sweep ~1/3*
-*Build 1.0.0+24 · 849 tests · CI green · `PHASE_05_COMPLETION_REPORT.md`*
+*Build 1.0.0+25 · 850 tests · CI green · `PHASE_05_COMPLETION_REPORT.md`*
 - Hardcoded-string gate at **0 in 0 files**; ARB **1390 keys, 100% referenced and 100% resolved**.
 - Pseudo-locale sweep (18 surfaces × 3 viewports) and RTL sweep (16 surfaces) in CI; the pseudo sweep found six real overflows on its first run.
 - `docs/i18n/` — pipeline runbook, glossary, text-in-images inventory, adding-a-locale.
@@ -93,20 +93,22 @@ only reason this phase is not closed.
 | ICU plural audit | ✅ 19 English messages converted; audit reports the rest |
 | Translation pipeline docs | ✅ `docs/i18n/` |
 | `PHASE_05_COMPLETION_REPORT.md` | ✅ |
-| **Device walk of phases 1–5** | 🔄 **~1/3.** Done: dashboard, plan detail, live camera workout, rest overlay, exit dialog, nutrition onboarding sheet. Not done: nutrition tab, progress, profile, discovery hub, help centre, badges, paywall, clean-install onboarding. |
+| **Device walk of phases 1–5** | 🔄 **all but two surfaces.** Done: dashboard, plan detail, live camera workout, rest overlay, exit dialog, nutrition tab, nutrition onboarding sheet, progress, profile, discovery hub (incl. a live manual unlock), help centre (incl. search + empty state), badges, paywall auth gate, auth screen. Remaining: the paywall **interior** (auth-gated; adb sign-in taps do not register) and a **clean-install onboarding** (needs `adb uninstall`, which destroys the session). |
 | ARB → TMS round trip | deferred to Phase 6 — there is no second locale to round-trip yet |
 | Image goldens | **deliberately not done.** The pseudo + RTL sweeps cover the same failure class; goldens add font-rendering fragility between CI and a workstation. Reasoning in `docs/i18n/README.md`. |
 
-The device blocker is mechanical: the nutrition-preferences sheet is
-modal and covers the tab bar until completed, so scripted taps cannot
-reach the other tabs.
-
-**Three defects found this phase that no test could have caught:**
-a plan-screen heading rendering `Closure: (AppLocalizations) => String`
+**Four defects found this phase that no test could have caught:** a
+plan-screen heading rendering `Closure: (AppLocalizations) => String`
 (an interpolation that called a tear-off); the live workout HUD showing
-`UNKNOWN` beside the rep counter (a raw enum name); and a selected
-nutrition card overlapping its own subtitle. The first came from
-widening the scanner, the other two from a real screen.
+`UNKNOWN` beside the rep counter (a raw enum name); a selected nutrition
+card overlapping its own subtitle; and the badge strip clipping
+"30 Gün Şampiyonu" to "30 Gün Şampiy". The first came from widening the
+scanner, the other three from a real screen.
+
+Two of those share a root cause worth remembering: **`FittedBox` does
+not make text fit.** It lays its child out unbounded, so the text never
+wraps, and if the natural width already exceeds the slot the scale does
+not save it — the result is a mid-word clip with no ellipsis.
 
 ### Two deviations to flag
 
@@ -149,7 +151,7 @@ Wave 4 — Community & Content Engine      ⏳ Not Started (Phases 12–14)
 Wave 5 — Scale, Depth & Platform         ⏳ Not Started (Phases 15–17)
 ```
 
-**Phases complete:** 6 of 18 (0, 1, 2, 3, 3b, 4) · Phase 5 engineering complete, device sweep ~1/3
+**Phases complete:** 6 of 18 (0, 1, 2, 3, 3b, 4) · Phase 5 engineering complete, device sweep done except the paywall interior and a clean-install onboarding
 
 ### Current quality state
 

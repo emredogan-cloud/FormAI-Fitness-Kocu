@@ -1,8 +1,9 @@
 # Phase 5 — Internationalisation
 
-**Status: engineering complete. Device validation partial — see §7.**
+**Status: engineering complete. Device validation substantially done —
+see §7 for the two surfaces that remain and why.**
 
-Build `1.0.0+24` · analyze 0 · 849 tests · hardcoded-string gate **0 in 0
+Build `1.0.0+25` · analyze 0 · 850 tests · hardcoded-string gate **0 in 0
 files** · ARB **1390 keys, 100 % referenced and 100 % resolved**.
 
 Roadmap: `TESTERS_COMMUNITY_PRODUCT_ROADMAP.md`, Wave 2.
@@ -207,53 +208,78 @@ work. Worth keeping true; the rule that keeps it true is one line.
 
 ---
 
-## 7. Device validation — partial
+## 7. Device validation
 
-Build `1.0.0+24` installed on the Redmi (`AYXSUKIVJVPZ7HPZ`,
-1080×2340). Verified live:
+Redmi `AYXSUKIVJVPZ7HPZ` (1080×2340), builds `1.0.0+24` and `+25`.
 
-- **dashboard** — weekly goal `0/3 egzersiz`, `1. Gün`, `0/30 Gün`, tips,
-  coach card. All localised, no bracket artefacts, no `Closure:`.
-- **plan detail** — `1. gün` … `30. gün`, `%14 Tamamlandı`,
-  `7 Egzersiz`, `Premium ile aç` on the locked days.
-- **live workout** — set indicator, framing hint, rest overlay
-  (`DİNLENME ZAMANI`, `Set 1 / 3`, `SIRADAKİ`), exit dialog.
-- **nutrition onboarding sheet** — `Son 4 adım`.
+### Verified live
 
-**Two defects found on the device, both fixed:**
+| surface | what was exercised |
+| --- | --- |
+| dashboard | weekly goal `0/3 egzersiz`, `1. Gün`, `0/30 Gün`, coach card, tips |
+| plan detail | `1. gün`…`30. gün`, `%14 Tamamlandı`, `7 Egzersiz`, `Premium ile aç` on locked days |
+| live camera workout | set indicator, detector chip, framing hint, rest overlay (`DİNLENME ZAMANI`, `Set 1 / 3`, `SIRADAKİ`), exit dialog |
+| nutrition tab | calorie ring, `1272 kcal kaldı`, `/ 1272 kcal`, macro rows, sticky header `P %0`, category carousels, recipe cards `420 kcal · 32g P`, health disclaimer |
+| nutrition onboarding sheet | `Son 4 adım`, goal cards |
+| progress (Gelişim) | `Sv 1 · Acemi · 0 XP`, `0 Günlük Seri`, `%0`, `0 / 30 gün tamamlandı`, `Gün 1 – Göğüs & Core`, `25 dk · Orta Seviye`, weekday rails, badge strip |
+| profile | `Acemi · 0 XP`, `70 kg`, `170 cm`, `Göbek Eritmek`, `0 gün`, `0 / 30`, all account rows |
+| **discovery hub** (Phase 4) | **manual unlock live: `1 / 6` → `2 / 6`, the row flipped from locked to `Aç` instantly** — the phase's key invariant |
+| **help centre** (Phase 1) | categories, FAQ expansion with full answers, search results, and the empty state `"zxqv" için sonuç yok` |
+| badges | `0 / 13 kazanıldı`, all 13 names and criteria |
+| **paywall auth gate** (Phase 94) | fires for guests, fully localised — no anonymous purchase |
+| auth screen | sign-in, register, guest, Google, all localised |
 
-1. **`UNKNOWN` beside the rep counter** (§3). Now
-   `BEKLİYOR` / `AŞAĞI` / `YUKARI`, with a test that asserts the enum
-   name can never render again.
-2. **Selected nutrition goal card overlapped its own subtitle.** With a
-   photo the text column is ~55 % of the card, so a wrapping label plus a
-   two-line helper exactly fills the fixed height — and the 1.02
-   selected-state scale pushes it into a collision. The helper drops to
-   one line on photo cards.
+Dark mode throughout; no bracket artefacts, no `Closure:`, no overflow,
+no clipped CTA on any screen walked.
 
-**Not yet walked on a device**: nutrition tab, progress tab, profile,
-discovery hub, help centre, badges, paywall, and the full 19-step
-onboarding from a clean install. The nutrition-preferences sheet is
-modal and gates the other tabs; completing it needs a real interactive
-pass rather than scripted taps.
+### Three defects found on the device, all fixed and re-verified
 
-That is the honest state. The engineering gates (analyze, 849 tests,
-the string gate, ARB parity, both layout sweeps) are green and CI is
-green; the device sweep is roughly a third done and is the first task
-for the next session. `RESUME_GUIDE.md` says so and says where to start.
+1. **`UNKNOWN` beside the live rep counter.** The workout HUD rendered
+   `CrunchState.name.toUpperCase()`. Now `BEKLİYOR` / `AŞAĞI` /
+   `YUKARI`. Verified on `+25`. A test asserts the raw enum name can
+   never render again.
+2. **The badge strip clipped its longest label mid-word** —
+   "30 Gün Şampiyonu" became "30 Gün Şampiy". A `FittedBox` lays its
+   child out unbounded, so the text neither wrapped nor shrank; it was
+   simply cut by the column edge with no ellipsis. Now wraps, and the
+   chip is 100 px rather than 82 — a test measures every label against
+   the chip width and is what caught `maxLines: 2` at 82 px still being
+   one line short. Verified on `+25`.
+3. **The selected nutrition goal card overlapped its own subtitle.**
+   With a photo the text column is ~55 % of the card, so a wrapping
+   label plus a two-line helper exactly fills the fixed height and the
+   1.02 selected-state scale pushes it into a collision. The helper
+   drops to one line on photo cards. **Fixed and shipped in `+25`, but
+   not re-verified visually** — the nutrition-preferences sheet is
+   one-shot and has been completed on this device.
 
-Also still open, carried from Phase 3 and unchanged by this phase: the
-guided practice rep and the "Seni görüyorum" success stage have never
-been seen on a device, because both need a person standing two metres
-back doing a squat. Not drivable over adb.
+### Two surfaces still unverified visually
 
----
+**The paywall interior.** It is auth-gated, and signing in over adb did
+not work: the credentials enter correctly but the GİRİŞ YAP tap does not
+register — the same flakiness recorded during the RC-17 pass. Two
+attempts, then stopped rather than burn the session.
+
+What that leaves: the gate itself is verified live, and the interior is
+covered by 27 widget tests including the 393×852 fold test, the
+USD-storefront test and the disclosure-link test. What is missing is a
+visual confirmation, not a functional one. It needs either a working
+sign-in or a founder with the device in hand.
+
+**A clean-install onboarding.** Re-walking all 19 steps means
+`adb uninstall`, which destroys the session this sweep depends on.
+Worth doing as its own pass.
+
+Also unchanged from Phase 3: the guided practice rep and the
+"Seni görüyorum" success stage have never been seen on a device. Both
+need a person standing two metres back doing a squat, which is not
+drivable over adb.
 
 ## 8. Numbers
 
 ```
 analyze                     0 issues
-tests                       849  (was 791 at the start of this session)
+tests                       850  (was 791 at the start of this session)
 hardcoded-string gate       0 in 0 files   (was 283 in 14)
 ARB keys                    1390           (was 1028)
   referenced in lib/        1390 / 1390
@@ -262,7 +288,7 @@ ARB keys                    1390           (was 1028)
 pseudo-locale sweep         18 surfaces × 3 viewports
 RTL sweep                   16 surfaces
 CI                          green
-build                       1.0.0+24, APK 133.7 MB
+build                       1.0.0+25, APK 133.7 MB
 ```
 
 ## 9. What Phase 6 inherits

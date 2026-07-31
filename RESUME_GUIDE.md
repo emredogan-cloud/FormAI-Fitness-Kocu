@@ -3,7 +3,7 @@
 Read this first. It is written so a session with no memory of the
 previous one can continue without re-analysing the repository.
 
-**Last updated:** 2026-08-01, end of the Phase 5 engineering session.
+**Last updated:** 2026-08-01, end of the Phase 5 device-sweep session.
 
 ---
 
@@ -21,37 +21,39 @@ one `PHASE_NN_COMPLETION_REPORT.md`. Final deliverable at the very end:
 | 3 · First-workout tutorial | done | `PHASE_03_COMPLETION_REPORT.md` |
 | 3b · Phase-3 leftovers | done | `PHASE_3B_COMPLETION_REPORT.md` |
 | 4 · Feature flags + disclosure | done | `PHASE_04_COMPLETION_REPORT.md` |
-| **5 · i18n** | **engineering complete, device sweep ~1/3** | `PHASE_05_COMPLETION_REPORT.md` |
+| **5 · i18n** | **engineering complete, device sweep done except 2 surfaces** | `PHASE_05_COMPLETION_REPORT.md` |
 | 6 · next | **not started** | — |
 
-**Branch:** `main`. **Build:** `1.0.0+24`.
+**Branch:** `main`. **Build:** `1.0.0+25`.
 
 ---
 
 ## 2. Start here
 
-### 2.1 Finish the Phase 5 device sweep
+### 2.1 Two Phase 5 surfaces still need eyes on them
 
-This is the only Phase 5 work left, and it is the reason Phase 5 is not
-marked closed.
+Everything else in the sweep is done — see `PHASE_05_COMPLETION_REPORT.md`
+§7 for the full list of what was walked and the three defects it found.
 
-Verified on the Redmi at `1.0.0+24`: dashboard, plan detail, a live
-camera workout (incl. rest overlay and exit dialog), nutrition
-onboarding sheet.
+**The paywall interior.** Auth-gated, and signing in over adb does not
+work: credentials type in fine, the GİRİŞ YAP tap does not register.
+This is the same flakiness recorded during the RC-17 pass — two attempts
+were made and then abandoned rather than burn a session. The gate itself
+IS verified live; the interior has 27 widget tests including the fold,
+USD-storefront and disclosure-link tests. What is missing is visual
+confirmation. Options: get sign-in working (try a slower tap, or a
+`am start` deep link to `/paywall` with a signed-in session), or hand it
+to the founder with the device.
 
-**Not yet walked:** nutrition tab, progress (Gelişim) tab, profile,
-discovery hub `/discover`, help centre `/help`, badges, the paywall, and
-a full 19-step onboarding from a clean install.
+**A clean-install onboarding.** All 19 steps from scratch. Needs
+`adb uninstall`, which destroys the session everything else depends on —
+so do it last, or on the Huawei (which has no network, so it only covers
+the offline-fallback path).
 
-The blocker is mechanical, not technical: the **nutrition-preferences
-sheet is modal** and sits over the tab bar until it is completed, so
-scripted taps cannot reach the other tabs. Complete that sheet first
-(4 steps), then the tabs are reachable.
-
-Two defects were found on the device this session and are already fixed
-(detector chip rendering `UNKNOWN`; nutrition goal card overlapping its
-own subtitle). Expect more of that class — the ones that survive tests
-are the ones only a real screen shows.
+One fix shipped in `+25` is also unverified visually: the nutrition goal
+card helper now drops to one line on photo cards. The sheet is one-shot
+and has already been completed on the Redmi, so it will only be seen on
+a clean install.
 
 ### 2.2 Then Phase 6
 
@@ -66,13 +68,13 @@ a US user reading `178 cm` looks like a bug rather than a gap.
 
 ```
 analyze                     0 issues
-tests                       849
+tests                       850
 hardcoded-string gate       0 in 0 files  (allowlist 204, printed per entry)
 ARB                         1390 keys · tr 100% · 1390/1390 referenced
 pseudo-locale sweep         18 surfaces × 3 viewports
 RTL sweep                   16 surfaces
-CI                          green through part 35
-build                       1.0.0+24 · APK 133.7 MB
+CI                          green
+build                       1.0.0+25 · APK 133.7 MB
 working tree                clean except pre-existing untracked founder files
 ```
 
