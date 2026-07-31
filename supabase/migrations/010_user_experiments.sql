@@ -38,16 +38,22 @@ alter table public.user_experiments enable row level security;
 -- A user may read and write only their own assignment. Reading someone
 -- else's bucket is not sensitive in itself, but user-scoped RLS is this
 -- project's default and there is no reason to make an exception.
+-- Scoped `to authenticated` rather than left role-less. An anon caller
+-- can never satisfy `auth.uid() = user_id`, so this changes no
+-- behaviour — but a role-less policy reads as "anon is in scope here",
+-- and every other user-scoped table in this schema says `authenticated`.
 drop policy if exists "user_experiments_select_own" on public.user_experiments;
 create policy "user_experiments_select_own"
   on public.user_experiments
   for select
+  to authenticated
   using (auth.uid() = user_id);
 
 drop policy if exists "user_experiments_insert_own" on public.user_experiments;
 create policy "user_experiments_insert_own"
   on public.user_experiments
   for insert
+  to authenticated
   with check (auth.uid() = user_id);
 
 -- Deliberately NO update policy.

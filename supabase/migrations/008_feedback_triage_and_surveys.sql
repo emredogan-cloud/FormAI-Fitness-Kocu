@@ -35,15 +35,34 @@
 
 -- ─── 1 · feedback ───────────────────────────────────────────────────
 
+-- This block is a TRANSCRIPTION of the table as it already exists in
+-- production, not a fresh design. `feedback` was created ad hoc before
+-- the migration history was formalised, so on the production database
+-- this `create` is skipped entirely and only the `alter`s below run.
+--
+-- It therefore has exactly one job: make a database built from scratch
+-- (local `db reset`, CI, a future environment) end up with the SAME
+-- table production has. A `create if not exists` that describes a
+-- different shape is worse than no create at all — it produces a schema
+-- that silently depends on whether the table happened to pre-exist.
+--
+-- Verified against production 2026-07-31: bigserial pk (NOT uuid), and
+-- both check constraints below.
 create table if not exists public.feedback (
-  id          uuid primary key default gen_random_uuid(),
+  id          bigserial primary key,
   user_id     uuid not null references auth.users(id) on delete cascade,
   subject     text not null,
   message     text not null,
   app_version text,
   platform    text,
   os_version  text,
-  created_at  timestamptz not null default now()
+  created_at  timestamptz not null default now(),
+  -- The client offers exactly these three categories.
+  constraint feedback_subject_check
+    check (subject in ('bug', 'suggestion', 'question')),
+  -- Long enough to be actionable, short enough not to be an upload.
+  constraint feedback_message_check
+    check (length(message) >= 4 and length(message) <= 4000)
 );
 
 -- Triage columns. Added separately from the create so an existing
@@ -75,31 +94,27 @@ create index if not exists feedback_status_created_idx
 
 alter table public.feedback enable row level security;
 
-do $$
-begin
-  if not exists (
-    select 1 from pg_policies
-    where tablename = 'feedback' and policyname = 'feedback_self_insert'
-  ) then
-    create policy "feedback_self_insert"
-      on public.feedback
-      for insert
-      to authenticated
-      with check (auth.uid() = user_id);
-  end if;
+-- Production already carries an INSERT policy under the older name
+-- `feedback_insert_self`, with a check identical to the one below. Left
+-- alone, this migration would add a second permissive INSERT policy
+-- saying the same thing — two rules to keep in sync forever, for no
+-- gain. Dropping the legacy name and creating the canonical one is
+-- behaviour-preserving (same predicate, same role) and leaves exactly
+-- one policy per verb.
+drop policy if exists "feedback_insert_self" on public.feedback;
+drop policy if exists "feedback_self_insert" on public.feedback;
+create policy "feedback_self_insert"
+  on public.feedback
+  for insert
+  to authenticated
+  with check (auth.uid() = user_id);
 
-  if not exists (
-    select 1 from pg_policies
-    where tablename = 'feedback' and policyname = 'feedback_self_read'
-  ) then
-    create policy "feedback_self_read"
-      on public.feedback
-      for select
-      to authenticated
-      using (auth.uid() = user_id);
-  end if;
-end
-$$;
+drop policy if exists "feedback_self_read" on public.feedback;
+create policy "feedback_self_read"
+  on public.feedback
+  for select
+  to authenticated
+  using (auth.uid() = user_id);
 
 -- ─── 2 · survey_responses ───────────────────────────────────────────
 
@@ -130,30 +145,16 @@ create index if not exists survey_responses_survey_idx
 
 alter table public.survey_responses enable row level security;
 
-do $$
-begin
-  if not exists (
-    select 1 from pg_policies
-    where tablename = 'survey_responses'
-      and policyname = 'survey_responses_self_insert'
-  ) then
-    create policy "survey_responses_self_insert"
-      on public.survey_responses
-      for insert
-      to authenticated
-      with check (auth.uid() = user_id);
-  end if;
+drop policy if exists "survey_responses_self_insert" on public.survey_responses;
+create policy "survey_responses_self_insert"
+  on public.survey_responses
+  for insert
+  to authenticated
+  with check (auth.uid() = user_id);
 
-  if not exists (
-    select 1 from pg_policies
-    where tablename = 'survey_responses'
-      and policyname = 'survey_responses_self_read'
-  ) then
-    create policy "survey_responses_self_read"
-      on public.survey_responses
-      for select
-      to authenticated
-      using (auth.uid() = user_id);
-  end if;
-end
-$$;
+drop policy if exists "survey_responses_self_read" on public.survey_responses;
+create policy "survey_responses_self_read"
+  on public.survey_responses
+  for select
+  to authenticated
+  using (auth.uid() = user_id);

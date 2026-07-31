@@ -39,13 +39,19 @@ drop policy if exists "feature_flags_read_all" on public.feature_flags;
 create policy "feature_flags_read_all"
   on public.feature_flags
   for select
+  to anon, authenticated
   using (true);
 
 -- Keep `updated_at` honest — it is the only way to tell, from the
 -- dashboard, when a flag was last touched.
+-- `search_path` is pinned empty: the body resolves nothing by name, so
+-- there is nothing to look up, and an unpinned search_path on a function
+-- that fires on write is a standing invitation to schema-shadowing
+-- (Supabase's own linter flags it as `function_search_path_mutable`).
 create or replace function public.touch_feature_flags_updated_at()
 returns trigger
 language plpgsql
+set search_path = ''
 as $$
 begin
   new.updated_at = now();
