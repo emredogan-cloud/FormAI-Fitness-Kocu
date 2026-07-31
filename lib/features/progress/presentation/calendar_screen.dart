@@ -465,7 +465,9 @@ class _Legend extends StatelessWidget {
           _LegendItem(color: _success, label: 'Tamamlanan'),
           _LegendItem(
               color: _neon, label: AppLocalizations.of(context).calendarToday),
-          _LegendItem(color: _restAmber, label: 'Dinlenme'),
+          _LegendItem(
+              color: _restAmber,
+              label: AppLocalizations.of(context).calendarRest),
           _LegendItem(color: Color(0xFF2A2A36), label: 'Bekleyen'),
         ],
       ),
@@ -578,7 +580,7 @@ class _MonthSummaryCard extends StatelessWidget {
                 accent: _neon,
               ),
               _SummaryTile(
-                label: 'Dinlenme',
+                label: AppLocalizations.of(context).calendarRest,
                 value: '$rest',
                 accent: _restAmber,
               ),

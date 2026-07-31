@@ -66,7 +66,8 @@ class CategoryRecipesScreen extends ConsumerWidget {
         elevation: 0,
         foregroundColor: scheme.onSurface,
         title: Text(
-          _titleFor(categoryType, mealTypeSubFilter),
+          _titleFor(
+              AppLocalizations.of(context), categoryType, mealTypeSubFilter),
           style: TextStyle(
             color: scheme.onSurface,
             fontWeight: FontWeight.w900,
@@ -123,15 +124,22 @@ class CategoryRecipesScreen extends ConsumerWidget {
   /// both (e.g. "Pratik & Ekonomik · Kahvaltı") so the user sees what
   /// they actually filtered on instead of a generic "Pratik & Ekonomik"
   /// that hides the sub-bucket.
-  static String _titleFor(String type, String? subFilter) {
+  static String _titleFor(
+    AppLocalizations l10n,
+    String type,
+    String? subFilter,
+  ) {
+    // The switch keys are English route tokens, not stored content —
+    // unlike `recipe_tags.dart`, where the cases match database values.
+    // So the tokens stay and only the labels are localised.
     final base = switch (type.toLowerCase()) {
-      'breakfast' => 'Kahvaltı Tarifleri',
-      'lunch' => 'Öğle Yemeği Tarifleri',
-      'dinner' => 'Akşam Yemeği Tarifleri',
-      'snack' => 'Ara Öğün Tarifleri',
-      'dessert' => 'Sporcu Tatlıları',
-      'budget' => 'Pratik & Ekonomik',
-      _ => 'Tarifler',
+      'breakfast' => l10n.recipeCategoryBreakfastTitle,
+      'lunch' => l10n.recipeCategoryLunchTitle,
+      'dinner' => l10n.recipeCategoryDinnerTitle,
+      'snack' => l10n.recipeCategorySnackTitle,
+      'dessert' => l10n.recipeCategoryDessertTitle,
+      'budget' => l10n.recipeCategoryPracticalTitle,
+      _ => l10n.recipeCategoryGenericTitle,
     };
     if (type.toLowerCase() != 'budget' ||
         subFilter == null ||
@@ -139,11 +147,11 @@ class CategoryRecipesScreen extends ConsumerWidget {
       return base;
     }
     final subLabel = switch (subFilter.toLowerCase()) {
-      'breakfast' => 'Kahvaltı',
-      'lunch' => 'Öğle Yemeği',
-      'dinner' => 'Akşam Yemeği',
-      'snack' => 'Atıştırmalıklar',
-      'dessert' => 'Tatlı Çeşitleri',
+      'breakfast' => l10n.mealBreakfast,
+      'lunch' => l10n.mealLunch,
+      'dinner' => l10n.mealDinner,
+      'snack' => l10n.mealSnacks,
+      'dessert' => l10n.mealDesserts,
       _ => null,
     };
     return subLabel == null ? base : '$base · $subLabel';

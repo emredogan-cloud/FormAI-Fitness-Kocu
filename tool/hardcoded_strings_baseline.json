@@ -12,7 +12,6 @@
   "lib/features/home/presentation/widgets/weekly_goal_card.dart": 2,
   "lib/features/monetization/presentation/paywall_screen.dart": 50,
   "lib/features/monetization/presentation/premium_welcome_sheet.dart": 1,
-  "lib/features/nutrition/presentation/category_recipes_screen.dart": 10,
   "lib/features/nutrition/presentation/discover_recipes_screen.dart": 3,
   "lib/features/nutrition/presentation/favorites_screen.dart": 2,
   "lib/features/nutrition/presentation/nutrition_tab.dart": 49,

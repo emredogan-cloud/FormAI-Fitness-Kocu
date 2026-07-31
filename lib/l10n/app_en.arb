@@ -748,26 +748,6 @@
   "@shareFooter": {
     "description": "Share template footer"
   },
-  "recipeTagHighProtein": "High protein",
-  "@recipeTagHighProtein": {
-    "description": "Recipe tag"
-  },
-  "recipeTagLowCalorie": "Low calorie",
-  "@recipeTagLowCalorie": {
-    "description": "Recipe tag"
-  },
-  "recipeTagBulk": "Bulking",
-  "@recipeTagBulk": {
-    "description": "Recipe tag"
-  },
-  "recipeTagQuick": "Quick",
-  "@recipeTagQuick": {
-    "description": "Recipe tag"
-  },
-  "recipeTagToning": "Toning",
-  "@recipeTagToning": {
-    "description": "Recipe tag"
-  },
   "recipesAll": "All recipes",
   "@recipesAll": {
     "description": "Discover screen — unfiltered title"
@@ -807,10 +787,6 @@
   "favoritesBuildShoppingList": "Build shopping list",
   "@favoritesBuildShoppingList": {
     "description": "Favourites action"
-  },
-  "favoritesShoppingListTitle": "FormAI · My shopping list",
-  "@favoritesShoppingListTitle": {
-    "description": "Shared shopping-list heading"
   },
   "favoritesShoppingListEmpty": "Your shopping list is empty.",
   "@favoritesShoppingListEmpty": {
