@@ -87,8 +87,8 @@ class _DiscoveryHubScreenState extends ConsumerState<DiscoveryHubScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: Colors.white,
-        title: const Text(
-          'Keşfet',
+        title: Text(
+          AppLocalizations.of(context).discoveryHubTitle,
           style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 0.4),
         ),
       ),
@@ -173,8 +173,7 @@ class _HubHeader extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Hepsi burada. Bazıları ilerledikçe kendiliğinden açılıyor — '
-            'ama beklemek zorunda değilsin, istediğini şimdi açabilirsin.',
+            AppLocalizations.of(context).discoveryHubIntro,
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.68),
               fontSize: 13.5,
@@ -303,8 +302,8 @@ class _CapabilityCard extends StatelessWidget {
                     minimumSize: const Size(88, 44),
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                   ),
-                  child: const Text(
-                    'Aç',
+                  child: Text(
+                    AppLocalizations.of(context).discoveryHubOpen,
                     style:
                         TextStyle(fontSize: 13.5, fontWeight: FontWeight.w900),
                   ),
@@ -332,8 +331,8 @@ class _CapabilityCard extends StatelessWidget {
                       minimumSize: const Size(88, 44),
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                     ),
-                    child: const Text(
-                      'Şimdi aç',
+                    child: Text(
+                      AppLocalizations.of(context).discoveryHubUnlockNow,
                       style: TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w900,

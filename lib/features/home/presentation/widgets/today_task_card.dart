@@ -9,6 +9,7 @@ import '../../../monetization/models/locked_feature_type.dart';
 import '../../../monetization/providers/monetization_provider.dart';
 import '../../../monetization/services/premium_gate_service.dart';
 import '../../../workout/models/workout_day_model.dart';
+import '../../../../l10n/app_localizations.dart';
 
 const Color _neon = Color(0xFF8B5CF6);
 const Color _neonDeep = Color(0xFF6A3DFF);
@@ -29,9 +30,9 @@ class TodayTaskCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final focus = _focusLabel(activeDay);
+    final focus = _focusLabel(AppLocalizations.of(context), activeDay);
     final minutes = _estimateMinutes(activeDay);
-    final level = _levelLabel(activeDay);
+    final level = _levelLabel(AppLocalizations.of(context), activeDay);
     return _SoftCard(
       accent: _neon,
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
@@ -39,7 +40,7 @@ class TodayTaskCard extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const _CardLabel(text: 'BUGÜNKÜ GÖREV'),
+          _CardLabel(text: AppLocalizations.of(context).todayTaskHeading),
           const SizedBox(height: 12),
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -115,28 +116,28 @@ class TodayTaskCard extends ConsumerWidget {
     context.push(AppRoutes.planDetail);
   }
 
-  String _focusLabel(WorkoutDay day) {
+  String _focusLabel(AppLocalizations l10n, WorkoutDay day) {
     if (day.isRestDay) return 'Aktif Dinlenme';
     final counts = <String, int>{};
     for (final exercise in day.exercises) {
       counts[exercise.targetMuscle] = (counts[exercise.targetMuscle] ?? 0) + 1;
     }
-    if (counts.isEmpty) return 'Antrenman';
+    if (counts.isEmpty) return l10n.todayTaskGenericWorkout;
     final dominant =
         counts.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
     switch (dominant) {
       case 'core':
-        return 'Göğüs & Core';
+        return l10n.todayTaskCoreTitle;
       case 'upper_body':
-        return 'Göğüs & Kol';
+        return l10n.todayTaskUpperTitle;
       case 'lower_body':
-        return 'Bacak Gücü';
+        return l10n.todayTaskLowerTitle;
       case 'cardio':
-        return 'Yağ Yakıcı Kardiyo';
+        return l10n.todayTaskCardioTitle;
       case 'full_body':
-        return 'Tüm Vücut HIIT';
+        return l10n.todayTaskFullBodyTitle;
       default:
-        return 'Antrenman';
+        return l10n.todayTaskGenericWorkout;
     }
   }
 
@@ -154,21 +155,21 @@ class TodayTaskCard extends ConsumerWidget {
     return bucketed;
   }
 
-  String _levelLabel(WorkoutDay day) {
+  String _levelLabel(AppLocalizations l10n, WorkoutDay day) {
     final counts = <String, int>{};
     for (final ex in day.exercises) {
       counts[ex.difficulty] = (counts[ex.difficulty] ?? 0) + 1;
     }
-    if (counts.isEmpty) return 'Başlangıç';
+    if (counts.isEmpty) return l10n.difficultyBeginner;
     final dominant =
         counts.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
     switch (dominant) {
       case 'advanced':
-        return 'İleri';
+        return l10n.difficultyAdvanced;
       case 'intermediate':
-        return 'Orta Seviye';
+        return l10n.difficultyIntermediate;
       default:
-        return 'Başlangıç';
+        return l10n.difficultyBeginner;
     }
   }
 }
@@ -215,7 +216,7 @@ class ProgramCompleteCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '30 günlük programı tamamladın.',
+                      AppLocalizations.of(context).programCompleted,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.8),
                         fontSize: 13,
@@ -247,11 +248,11 @@ class ProgramCompleteCard extends StatelessWidget {
                       color: _gold.withValues(alpha: 0.14),
                       border: Border.all(color: _gold.withValues(alpha: 0.55)),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'Yolculuğunu Gör',
+                          AppLocalizations.of(context).seeYourJourney,
                           style: TextStyle(
                             color: _gold,
                             fontSize: 12,
@@ -345,7 +346,7 @@ class _PrimaryCta extends StatelessWidget {
     return Semantics(
       button: true,
       enabled: true,
-      label: 'Antrenmana başla',
+      label: AppLocalizations.of(context).startWorkoutShort,
       // Hide the inner Text from the a11y tree so the synthesized label
       // above is the only thing announced — otherwise screen readers
       // read both, producing "Antrenmana başla. ANTRENMANA BAŞLA".
@@ -378,13 +379,13 @@ class _PrimaryCta extends StatelessWidget {
                 child: InkWell(
                   borderRadius: _radius,
                   onTap: onTap,
-                  child: const Padding(
+                  child: Padding(
                     padding: EdgeInsets.symmetric(vertical: 14),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'ANTRENMANA BAŞLA',
+                          AppLocalizations.of(context).startWorkoutUpper,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(

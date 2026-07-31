@@ -182,8 +182,7 @@ class GelisimTab extends ConsumerWidget {
             if (isStub)
               ErrorCard(
                 compact: true,
-                message: 'Programın senkronize ediliyor — bağlantı '
-                    'kurulunca otomatik oluşturulacak.',
+                message: AppLocalizations.of(context).programSyncing,
                 icon: Icons.cloud_sync_rounded,
                 onRetry: () => ref.invalidate(workoutSessionProvider),
               )
@@ -268,7 +267,7 @@ class _TopHeader extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Gelişim',
+                AppLocalizations.of(context).progressTabTitle,
                 style: TextStyle(
                   color: scheme.onSurface,
                   fontSize: 26,
@@ -594,7 +593,8 @@ class _StreakCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                const _CardLabel(text: 'SERİ'),
+                _CardLabel(
+                    text: AppLocalizations.of(context).progressStreakLabel),
                 const SizedBox(height: 8),
                 Text(
                   '$streak gün',
@@ -734,9 +734,10 @@ class _DayGridSection extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const _SectionLabel(title: '30 GÜNLÜK PROGRAM'),
+            _SectionLabel(
+                title: AppLocalizations.of(context).progressProgramHeading),
             _SectionLinkPill(
-              label: 'Takvimi Gör',
+              label: AppLocalizations.of(context).progressSeeCalendar,
               onTap: () => context.push(AppRoutes.progressCalendar),
             ),
           ],
@@ -1105,15 +1106,15 @@ class _StatsCardsColumn extends StatelessWidget {
   /// Measured completed reps per weekday slot (0 = no session logged).
   final List<double> weeklyReps;
 
-  static const List<String> _dayLabels = [
-    'Pzt',
-    'Sal',
-    'Çar',
-    'Per',
-    'Cum',
-    'Cmt',
-    'Paz',
-  ];
+  static List<String> dayLabels(AppLocalizations l10n) => [
+        l10n.weekdayShortMon,
+        l10n.weekdayShortTue,
+        l10n.weekdayShortWed,
+        l10n.weekdayShortThu,
+        l10n.weekdayShortFri,
+        l10n.weekdayShortSat,
+        l10n.weekdayShortSun,
+      ];
 
   /// Normalizes a measured series into 0..1 bar heights. Zero stays a
   /// hairline (0.03) so an empty day *looks* empty; non-zero values get
@@ -1137,18 +1138,18 @@ class _StatsCardsColumn extends StatelessWidget {
     return Column(
       children: [
         _StatChartCard(
-          label: 'BU HAFTA',
+          label: AppLocalizations.of(context).progressThisWeek,
           value: '$weeklyCompleted / 7',
           accent: _neon,
           chart: _MiniBars(
             values: completionBars,
-            labels: _dayLabels,
+            labels: dayLabels(AppLocalizations.of(context)),
             gradientColors: const [_neonDeep, _neon],
           ),
         ),
         const SizedBox(height: 12),
         _StatChartCard(
-          label: 'ANTRENMAN SÜRESİ',
+          label: AppLocalizations.of(context).progressWorkoutDuration,
           value: '$totalMinutes',
           unit: 'dk',
           accent: _orange,
@@ -1159,13 +1160,13 @@ class _StatsCardsColumn extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         _StatChartCard(
-          label: 'TEKRAR',
+          label: AppLocalizations.of(context).progressReps,
           value: '$totalReps',
           unit: 'tekrar',
           accent: _success,
           chart: _MiniBars(
             values: _normalize(weeklyReps),
-            labels: _dayLabels,
+            labels: dayLabels(AppLocalizations.of(context)),
             gradientColors: [
               _success.withValues(alpha: 0.9),
               _success.withValues(alpha: 0.35),
@@ -1469,7 +1470,8 @@ class _AiCoachCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final maxStreak = ref.watch(appPreferencesProvider).maxStreak;
-    final copy = _copyFor(streak: streak, maxStreak: maxStreak);
+    final copy = _copyFor(AppLocalizations.of(context),
+        streak: streak, maxStreak: maxStreak);
     return _SoftCard(
       accent: _neon,
       child: Column(
@@ -1479,7 +1481,8 @@ class _AiCoachCard extends ConsumerWidget {
             children: [
               const _CoachAvatar(),
               const SizedBox(width: 12),
-              const _CardLabel(text: 'AI KOÇ'),
+              _CardLabel(
+                  text: AppLocalizations.of(context).progressAiCoachHeading),
               const Spacer(),
               _DailySummaryButton(streak: streak),
             ],
@@ -1514,7 +1517,7 @@ class _AiCoachCard extends ConsumerWidget {
           Align(
             alignment: Alignment.centerLeft,
             child: _SectionLinkPill(
-              label: 'Önerilere Git',
+              label: AppLocalizations.of(context).progressGoToSuggestions,
               onTap: () => context.push(AppRoutes.progressSuggestions),
             ),
           ),
@@ -1523,14 +1526,18 @@ class _AiCoachCard extends ConsumerWidget {
     );
   }
 
-  String _copyFor({required int streak, required int maxStreak}) {
+  String _copyFor(
+    AppLocalizations l10n, {
+    required int streak,
+    required int maxStreak,
+  }) {
     if (streak >= 7) {
-      return 'Şampiyon serisi devam ediyor! Böyle kal.';
+      return l10n.progressCoachStreakStrong;
     }
     if (streak == 0 && maxStreak > 0) {
-      return 'Geri dönüş zamanı. 10 dakika yeterli.';
+      return l10n.progressCoachComeback;
     }
-    return 'Bugün hedeflerimize bir adım daha yaklaşıyoruz.';
+    return l10n.progressCoachSteady;
   }
 
   /// Phase 53 · accessibility text scaling. The OS-level scaler can
@@ -1580,7 +1587,9 @@ class _DailySummaryButtonState extends ConsumerState<_DailySummaryButton> {
     return Semantics(
       button: true,
       enabled: !_isSpeaking,
-      label: _isSpeaking ? 'Özet okunuyor' : 'Günlük özetimi dinle',
+      label: _isSpeaking
+          ? AppLocalizations.of(context).progressSummaryReading
+          : AppLocalizations.of(context).progressSummaryListen,
       child: ExcludeSemantics(
         child: Material(
           color: _neon.withValues(alpha: 0.18),
@@ -1614,7 +1623,7 @@ class _DailySummaryButtonState extends ConsumerState<_DailySummaryButton> {
     AppHaptics.secondaryTap();
     setState(() => _isSpeaking = true);
     try {
-      final phrase = _composeSummary(ref);
+      final phrase = _composeSummary(AppLocalizations.of(context), ref);
       final audio = AudioFeedback();
       await audio.init();
       // `speak` blocks until the platform reports completion (the
@@ -1634,19 +1643,19 @@ class _DailySummaryButtonState extends ConsumerState<_DailySummaryButton> {
     }
   }
 
-  String _composeSummary(WidgetRef ref) {
+  String _composeSummary(AppLocalizations l10n, WidgetRef ref) {
     final user = ref.read(currentUserProvider);
     final prefs = ref.read(appPreferencesProvider);
     final metrics = prefs.userMetrics ?? const <String, dynamic>{};
-    final name = _resolveName(user?.email, metrics);
+    final name = _resolveName(l10n, user?.email, metrics);
 
     final macroTarget = ref.read(macroTargetProvider);
     final session = ref.read(workoutSessionProvider).value;
     final activeDay = session == null ? null : _firstActiveDay(session.days);
-    final muscleLabel = _muscleLabel(activeDay);
+    final muscleLabel = _muscleLabel(l10n, activeDay);
 
     final mealAsync = ref.read(dailyMenuProvider);
-    final mealName = _firstMealName(mealAsync.value);
+    final mealName = _firstMealName(l10n, mealAsync.value);
 
     return 'Günaydın $name. Bugün ${macroTarget.calories} kalori hedefin '
         'var. Antrenman programında $muscleLabel günü. Sana harika bir '
@@ -1657,7 +1666,11 @@ class _DailySummaryButtonState extends ConsumerState<_DailySummaryButton> {
   /// produce a friendly first name. The wizard never asks for a name,
   /// so this is intentionally lossy — if nothing usable exists we use
   /// "Şampiyon" so the phrase still reads like a coach greeting.
-  String _resolveName(String? email, Map<String, dynamic> metrics) {
+  String _resolveName(
+    AppLocalizations l10n,
+    String? email,
+    Map<String, dynamic> metrics,
+  ) {
     final fromMetrics = metrics['firstName'] as String?;
     if (fromMetrics != null && fromMetrics.trim().isNotEmpty) {
       return fromMetrics.trim();
@@ -1671,7 +1684,7 @@ class _DailySummaryButtonState extends ConsumerState<_DailySummaryButton> {
         return cleaned[0].toUpperCase() + cleaned.substring(1).toLowerCase();
       }
     }
-    return 'Şampiyon';
+    return l10n.progressDefaultChampion;
   }
 
   WorkoutDay? _firstActiveDay(List<WorkoutDay> days) {
@@ -1682,8 +1695,8 @@ class _DailySummaryButtonState extends ConsumerState<_DailySummaryButton> {
     return null;
   }
 
-  String _muscleLabel(WorkoutDay? day) {
-    if (day == null || day.exercises.isEmpty) return 'tüm vücut';
+  String _muscleLabel(AppLocalizations l10n, WorkoutDay? day) {
+    if (day == null || day.exercises.isEmpty) return l10n.muscleGroupFullBody;
     final counts = <String, int>{};
     for (final exercise in day.exercises) {
       counts[exercise.targetMuscle] = (counts[exercise.targetMuscle] ?? 0) + 1;
@@ -1692,27 +1705,27 @@ class _DailySummaryButtonState extends ConsumerState<_DailySummaryButton> {
         counts.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
     switch (dominant) {
       case 'core':
-        return 'karın';
+        return l10n.muscleGroupCore;
       case 'upper_body':
-        return 'üst vücut';
+        return l10n.muscleGroupUpperBody;
       case 'lower_body':
-        return 'alt vücut';
+        return l10n.muscleGroupLowerBody;
       case 'cardio':
-        return 'kardiyo';
+        return l10n.muscleGroupCardio;
       case 'full_body':
-        return 'tüm vücut';
+        return l10n.muscleGroupFullBody;
       default:
-        return 'tüm vücut';
+        return l10n.muscleGroupFullBody;
     }
   }
 
-  String _firstMealName(List<PlannedMeal>? meals) {
+  String _firstMealName(AppLocalizations l10n, List<PlannedMeal>? meals) {
     if (meals == null || meals.isEmpty) {
-      return 'sağlıklı bir yemek';
+      return l10n.mealFallbackName;
     }
     final first = meals.first;
     final title = first.recipe.title.trim();
-    return title.isEmpty ? 'sağlıklı bir yemek' : title;
+    return title.isEmpty ? l10n.mealFallbackName : title;
   }
 }
 
@@ -1823,35 +1836,35 @@ class _BadgesSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final badges = <_BadgeData>[
       _BadgeData(
-        label: 'İlk 7 Gün',
+        label: AppLocalizations.of(context).badgeStripFirstWeek,
         icon: Icons.flag_rounded,
         accent: _orange,
         unlocked: completedCount >= 1,
         progress: (completedCount / 7).clamp(0.0, 1.0),
       ),
       _BadgeData(
-        label: 'Disiplinli',
+        label: AppLocalizations.of(context).badgeStripDisciplined,
         icon: Icons.shield_rounded,
         accent: _neon,
         unlocked: streak >= 3,
         progress: (streak / 3).clamp(0.0, 1.0),
       ),
       _BadgeData(
-        label: 'Kalori Avcısı',
+        label: AppLocalizations.of(context).badgeStripCalorieHunter,
         icon: Icons.local_fire_department,
         accent: _success,
         unlocked: totalKcal >= 1500,
         progress: (totalKcal / 1500).clamp(0.0, 1.0),
       ),
-      const _BadgeData(
-        label: '30 Gün Şampiyonu',
+      _BadgeData(
+        label: AppLocalizations.of(context).badgeStripThirtyDayChampion,
         icon: Icons.emoji_events_rounded,
         accent: _neon,
         unlocked: false,
         progress: 0,
       ),
-      const _BadgeData(
-        label: 'HIIT Ustası',
+      _BadgeData(
+        label: AppLocalizations.of(context).badgeStripHiitMaster,
         icon: Icons.bolt_rounded,
         accent: _orange,
         unlocked: false,
@@ -1868,10 +1881,11 @@ class _BadgesSection extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const _SectionLabel(title: 'ROZETLERİN'),
+            _SectionLabel(
+                title: AppLocalizations.of(context).badgeGalleryHeading),
             Builder(
               builder: (context) => _SectionLinkPill(
-                label: 'Tümünü Gör',
+                label: AppLocalizations.of(context).badgeGallerySeeAll,
                 onTap: () => context.push(AppRoutes.progressBadges),
               ),
             ),

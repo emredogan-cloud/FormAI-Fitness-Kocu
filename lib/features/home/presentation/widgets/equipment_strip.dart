@@ -7,6 +7,7 @@ import '../../../../core/widgets/cached_image.dart';
 import '../../../../core/widgets/error_card.dart';
 import '../../../workout/models/workout_plan_model.dart';
 import '../../../workout/providers/workout_provider.dart';
+import '../../../../l10n/app_localizations.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonAccent = Color(0xFF4DA6FF);
@@ -65,7 +66,7 @@ class EquipmentStrip extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: ErrorCard(
             compact: true,
-            message: 'Ekipman planları yüklenemedi.',
+            message: AppLocalizations.of(context).equipmentPlansFailed,
             onRetry: () => ref.invalidate(equipmentPlansProvider),
           ),
         ),
@@ -200,7 +201,7 @@ class _EquipmentCard extends StatelessWidget {
                                 vertical: 9,
                               ),
                               child: Text(
-                                'BAŞLA',
+                                AppLocalizations.of(context).challengeStart,
                                 style: TextStyle(
                                   color: tint,
                                   fontSize: 12,

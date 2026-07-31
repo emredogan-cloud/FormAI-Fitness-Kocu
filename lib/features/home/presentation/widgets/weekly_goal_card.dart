@@ -61,7 +61,7 @@ class WeeklyGoalCard extends StatelessWidget {
                 child: Row(
                   children: [
                     Text(
-                      'Haftalık Hedef',
+                      AppLocalizations.of(context).weeklyGoalTitle,
                       style: TextStyle(
                         color: scheme.onSurface,
                         fontSize: 15,

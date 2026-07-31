@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme_extension.dart';
 import '../../domain/discovery_tips.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Roadmap Phase 2 (C28) · the dashboard tip slot.
 ///
@@ -63,7 +64,7 @@ class DiscoveryTipCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'BİLİYOR MUYDUN?',
+                      AppLocalizations.of(context).tipCardHeading,
                       style: TextStyle(
                         color: AppColors.neon.withValues(alpha: 0.9),
                         fontSize: 9.5,
@@ -117,7 +118,7 @@ class DiscoveryTipCard extends StatelessWidget {
               ),
               Semantics(
                 button: true,
-                label: 'İpucunu kapat',
+                label: AppLocalizations.of(context).tipCardDismiss,
                 child: IconButton(
                   onPressed: onDismiss,
                   icon: const Icon(Icons.close_rounded, size: 16),

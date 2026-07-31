@@ -23,6 +23,7 @@ import 'challenge_hero_card.dart';
 import 'equipment_strip.dart';
 import 'weekly_goal_card.dart';
 import '../../../progress/providers/streak_provider.dart';
+import '../../../../l10n/app_localizations.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonAccent = Color(0xFF4DA6FF);
@@ -56,20 +57,27 @@ class AntrenmanTab extends ConsumerStatefulWidget {
 }
 
 class _AntrenmanTabState extends ConsumerState<AntrenmanTab> {
-  static const List<({String label, ExerciseCategory category})> _chipDefs = [
-    (label: 'Core', category: ExerciseCategory.core),
-    (label: 'Göğüs', category: ExerciseCategory.chest),
-    (label: 'Sırt', category: ExerciseCategory.back),
-    (label: 'Omuz', category: ExerciseCategory.shoulders),
-    (label: 'Kol', category: ExerciseCategory.arms),
-    (label: 'Bacak', category: ExerciseCategory.legs),
-    (label: 'Kardiyo', category: ExerciseCategory.fullBody),
-  ];
+  /// Body-area chips. A function rather than a `const` table because
+  /// the labels are copy; the [ExerciseCategory] is the identity.
+  static List<({String label, ExerciseCategory category})> _chipDefs(
+    AppLocalizations l10n,
+  ) =>
+      [
+        (label: l10n.muscleCore, category: ExerciseCategory.core),
+        (label: l10n.muscleChest, category: ExerciseCategory.chest),
+        (label: l10n.muscleBack, category: ExerciseCategory.back),
+        (label: l10n.muscleShoulders, category: ExerciseCategory.shoulders),
+        (label: l10n.muscleArms, category: ExerciseCategory.arms),
+        (label: l10n.muscleLegs, category: ExerciseCategory.legs),
+        (label: l10n.muscleCardio, category: ExerciseCategory.fullBody),
+      ];
 
+  // Asset paths, not copy — the Turkish characters are in the FILENAMES
+  // on disk, which is why the gate's heuristic flags them.
   static const List<String> _precacheAssets = [
-    'photos/günlükmeydanokumayenifoto.webp',
-    'photos/sınırlarınızorlabelirginkarınkarınkaslarıHIITnewfoto.webp',
-    'photos/sınırlarınızorlademiraltıpaketgücünewfoto.webp',
+    'photos/günlükmeydanokumayenifoto.webp', // i18n-ignore
+    'photos/sınırlarınızorlabelirginkarınkarınkaslarıHIITnewfoto.webp', // i18n-ignore
+    'photos/sınırlarınızorlademiraltıpaketgücünewfoto.webp', // i18n-ignore
   ];
 
   ExerciseCategory _selectedCategory = ExerciseCategory.core;
@@ -117,13 +125,13 @@ class _AntrenmanTabState extends ConsumerState<AntrenmanTab> {
           const Center(child: CircularProgressIndicator(color: _neon)),
       error: (err, st) {
         AppLogger.error(
-          'antrenman workoutSession error',
+          'antrenman workoutSession error', // i18n-ignore — log line
           err,
           stackTrace: st,
           category: 'workout',
         );
         return ErrorCard(
-          message: 'Programın yüklenirken bir sorun oluştu.',
+          message: AppLocalizations.of(context).workoutProgramLoadFailed,
           onRetry: () => ref.invalidate(workoutSessionProvider),
         );
       },
@@ -186,8 +194,7 @@ class _AntrenmanTabState extends ConsumerState<AntrenmanTab> {
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
             child: ErrorCard(
               compact: true,
-              message: 'Programın senkronize ediliyor — bağlantı '
-                  'kurulunca otomatik oluşturulacak.',
+              message: AppLocalizations.of(context).programSyncing,
               icon: Icons.cloud_sync_rounded,
               onRetry: () => ref.invalidate(workoutSessionProvider),
             ),
@@ -212,8 +219,8 @@ class _AntrenmanTabState extends ConsumerState<AntrenmanTab> {
           ),
         ),
         const SizedBox(height: 26),
-        const _SectionTitle(
-          title: 'Kişisel Antrenman Programın',
+        _SectionTitle(
+          title: AppLocalizations.of(context).workoutTabHeading,
           trailingIcon: Icons.tune,
         ),
         const SizedBox(height: 12),
@@ -233,17 +240,18 @@ class _AntrenmanTabState extends ConsumerState<AntrenmanTab> {
           ),
         ),
         const SizedBox(height: 28),
-        const _SectionTitle(title: 'Ekipmanlı Egzersizler'),
+        _SectionTitle(
+            title: AppLocalizations.of(context).workoutEquipmentHeading),
         const SizedBox(height: 12),
         const EquipmentStrip(),
         const SizedBox(height: 28),
-        const _SectionTitle(
-          title: 'Bölgeler',
+        _SectionTitle(
+          title: AppLocalizations.of(context).workoutAreasHeading,
           trailingIcon: Icons.search_rounded,
         ),
         const SizedBox(height: 12),
         _CategoryChipsRow(
-          chips: _chipDefs,
+          chips: _chipDefs(AppLocalizations.of(context)),
           selected: _selectedCategory,
           onSelect: (c) => setState(() => _selectedCategory = c),
         ),
@@ -266,29 +274,30 @@ class _AntrenmanTabState extends ConsumerState<AntrenmanTab> {
   /// a core-heavy day and a cardio-heavy day don't both read as
   /// "Karın Kasları".
   String _challengeTitleFor(WorkoutDay? day) {
-    if (day == null) return 'Kişisel Antrenman';
-    if (day.isRestDay) return 'Dinlenme Günü';
+    if (day == null) return AppLocalizations.of(context).workoutPersonalSession;
+    if (day.isRestDay) return AppLocalizations.of(context).workoutRestDay;
 
     final counts = <String, int>{};
     for (final exercise in day.exercises) {
       counts[exercise.targetMuscle] = (counts[exercise.targetMuscle] ?? 0) + 1;
     }
-    if (counts.isEmpty) return 'Kişisel Antrenman';
+    if (counts.isEmpty)
+      return AppLocalizations.of(context).workoutPersonalSession;
 
     final dominant =
         counts.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
     switch (dominant) {
       case 'core':
-        return 'Sert Karın Kasları';
+        return AppLocalizations.of(context).workoutDayCoreTitle;
       case 'upper_body':
-        return 'Üst Vücut Gücü';
+        return AppLocalizations.of(context).workoutDayUpperTitle;
       case 'lower_body':
-        return 'Bacak ve Kalça Ateşi';
+        return AppLocalizations.of(context).workoutDayLowerTitle;
       case 'cardio':
       case 'full_body':
-        return 'Tüm Vücut Kondisyon';
+        return AppLocalizations.of(context).workoutDayFullBodyTitle;
       default:
-        return 'Kişisel Antrenman';
+        return AppLocalizations.of(context).workoutPersonalSession;
     }
   }
 }
@@ -432,8 +441,7 @@ class _RegionalPlansList extends StatelessWidget {
               const SizedBox(width: 14),
               Expanded(
                 child: Text(
-                  'Bu bölge için plan bulunmuyor — diğer kategorileri '
-                  'keşfedebilirsin.',
+                  AppLocalizations.of(context).workoutNoPlansForArea,
                   style: TextStyle(
                     color: scheme.onSurface.withValues(alpha: 0.75),
                     fontSize: 13,
@@ -597,7 +605,7 @@ class _CoachButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: 'AI koçunla konuş',
+      label: AppLocalizations.of(context).coachTalkShort,
       child: Material(
         color: Colors.transparent,
         shape: const CircleBorder(),
@@ -642,7 +650,7 @@ class _CoachEntryCard extends StatelessWidget {
     final isDark = context.isDarkMode;
     return Semantics(
       button: true,
-      label: 'AI koçun Form ile konuş',
+      label: AppLocalizations.of(context).coachTalkLong,
       child: Material(
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(18),
@@ -704,7 +712,7 @@ class _CoachEntryCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            'çevrimiçi',
+                            AppLocalizations.of(context).coachOnline,
                             style: TextStyle(
                               color: scheme.onSurface.withValues(alpha: 0.55),
                               fontSize: 11,
@@ -715,7 +723,7 @@ class _CoachEntryCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        'AI koçun. Bugün sana nasıl yardımcı olabilirim?',
+                        AppLocalizations.of(context).coachGreeting,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(

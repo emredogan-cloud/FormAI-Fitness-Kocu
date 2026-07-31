@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sixpack_ai/features/home/domain/discovery_tips.dart';
 import 'package:sixpack_ai/features/home/presentation/widgets/discovery_tip_card.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// Roadmap Phase 2 (C28) · the tip card.
 final _withCta = DiscoveryTip(
@@ -29,6 +30,8 @@ Future<void> _pump(
     MediaQuery(
       data: MediaQueryData(textScaler: TextScaler.linear(textScale)),
       child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: const [Locale('tr')],
         debugShowCheckedModeBanner: false,
         home: Scaffold(
           body: Align(

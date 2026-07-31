@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../l10n/app_localizations.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 
@@ -165,11 +166,11 @@ class ChallengeHeroCard extends StatelessWidget {
                           child: InkWell(
                             customBorder: const StadiumBorder(),
                             onTap: onTap,
-                            child: const Padding(
+                            child: Padding(
                               padding: EdgeInsets.symmetric(vertical: 14),
                               child: Center(
                                 child: Text(
-                                  'BAŞLA',
+                                  AppLocalizations.of(context).challengeStart,
                                   style: TextStyle(
                                     color: _neon,
                                     fontSize: 14,

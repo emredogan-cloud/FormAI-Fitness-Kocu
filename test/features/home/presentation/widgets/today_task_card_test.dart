@@ -10,6 +10,7 @@ import 'package:sixpack_ai/features/monetization/providers/monetization_provider
 import 'package:sixpack_ai/features/monetization/services/premium_gate_service.dart';
 import 'package:sixpack_ai/features/workout/models/exercise_model.dart';
 import 'package:sixpack_ai/features/workout/models/workout_day_model.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// AsyncNotifier stub — the CTA's `_launch` handler reads `isProProvider`
 /// via the subscription snapshot, so we pin a non-Pro state instead of
@@ -92,6 +93,8 @@ Widget _host(Widget child) {
     ],
     child: MaterialApp.router(
       routerConfig: router,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: const [Locale('tr')],
       debugShowCheckedModeBanner: false,
     ),
   );

@@ -43,6 +43,7 @@ import 'widgets/antrenman_tab.dart';
 import 'widgets/discovery_tip_card.dart';
 import 'widgets/gelisim_tab.dart';
 import 'widgets/profile_tab.dart';
+import '../../../l10n/app_localizations.dart';
 
 // Phase 53B · `_neon` no longer needed locally; the bottom nav now
 // reads its accent colour from the centralised `BottomNavigationBarTheme`
@@ -786,7 +787,7 @@ class _BottomNav extends StatelessWidget {
           BottomNavigationBarItem(
             icon: _item(const Icon(Icons.fitness_center_outlined), 0),
             activeIcon: const Icon(Icons.fitness_center),
-            label: 'Antrenman',
+            label: AppLocalizations.of(context).navWorkout,
           ),
           BottomNavigationBarItem(
             icon: _item(const Icon(Icons.restaurant_outlined), 1),
@@ -796,7 +797,7 @@ class _BottomNav extends StatelessWidget {
           BottomNavigationBarItem(
             icon: _item(const Icon(Icons.insights_outlined), 2),
             activeIcon: const Icon(Icons.insights),
-            label: 'Gelişim',
+            label: AppLocalizations.of(context).navProgress,
           ),
           BottomNavigationBarItem(
             icon: _item(const Icon(Icons.person_outline), 3),

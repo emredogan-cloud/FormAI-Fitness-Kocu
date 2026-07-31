@@ -2887,5 +2887,393 @@
   "accountLeaveReasonHint": "e.g. The plan prices felt too high",
   "@accountLeaveReasonHint": {
     "description": "Placeholder in the optional churn-reason field"
+  },
+  "weekdayShortMon": "Mon",
+  "@weekdayShortMon": {
+    "description": "Three-letter weekday abbreviation used on the weekly bar chart and goal card. A density choice, not the locale's own abbreviation — keep it to ~3 characters."
+  },
+  "weekdayShortTue": "Tue",
+  "@weekdayShortTue": {
+    "description": "Three-letter weekday abbreviation"
+  },
+  "weekdayShortWed": "Wed",
+  "@weekdayShortWed": {
+    "description": "Three-letter weekday abbreviation"
+  },
+  "weekdayShortThu": "Thu",
+  "@weekdayShortThu": {
+    "description": "Three-letter weekday abbreviation"
+  },
+  "weekdayShortFri": "Fri",
+  "@weekdayShortFri": {
+    "description": "Three-letter weekday abbreviation"
+  },
+  "weekdayShortSat": "Sat",
+  "@weekdayShortSat": {
+    "description": "Three-letter weekday abbreviation"
+  },
+  "weekdayShortSun": "Sun",
+  "@weekdayShortSun": {
+    "description": "Three-letter weekday abbreviation"
+  },
+  "programSyncing": "Your programme is syncing — it will be created automatically once you're back online.",
+  "@programSyncing": {
+    "description": "Empty-state shown when the workout programme has not reached the device yet"
+  },
+  "progressTabTitle": "Progress",
+  "@progressTabTitle": {
+    "description": "Progress tab title"
+  },
+  "progressStreakLabel": "STREAK",
+  "@progressStreakLabel": {
+    "description": "Streak label on the progress hero. Rendered uppercase."
+  },
+  "progressProgramHeading": "30-DAY PROGRAMME",
+  "@progressProgramHeading": {
+    "description": "Section heading above the programme calendar"
+  },
+  "progressSeeCalendar": "See calendar",
+  "@progressSeeCalendar": {
+    "description": "Action opening the full programme calendar"
+  },
+  "progressThisWeek": "THIS WEEK",
+  "@progressThisWeek": {
+    "description": "Section heading above the weekly chart"
+  },
+  "progressWorkoutDuration": "WORKOUT TIME",
+  "@progressWorkoutDuration": {
+    "description": "Weekly chart metric label"
+  },
+  "progressReps": "REPS",
+  "@progressReps": {
+    "description": "Weekly chart metric label"
+  },
+  "progressAiCoachHeading": "AI COACH",
+  "@progressAiCoachHeading": {
+    "description": "Section heading above the coach summary card"
+  },
+  "progressGoToSuggestions": "Go to suggestions",
+  "@progressGoToSuggestions": {
+    "description": "Action opening the suggestions screen"
+  },
+  "progressCoachStreakStrong": "Your champion streak is alive. Keep it going.",
+  "@progressCoachStreakStrong": {
+    "description": "Coach summary line for a user on a strong streak"
+  },
+  "progressCoachComeback": "Time for a comeback. Ten minutes is enough.",
+  "@progressCoachComeback": {
+    "description": "Coach summary line for a user who has lapsed"
+  },
+  "progressCoachSteady": "Today we get one step closer to your goals.",
+  "@progressCoachSteady": {
+    "description": "Coach summary line for a steady user"
+  },
+  "progressSummaryReading": "Reading the summary",
+  "@progressSummaryReading": {
+    "description": "State label while the daily summary is being spoken aloud"
+  },
+  "progressSummaryListen": "Listen to my daily summary",
+  "@progressSummaryListen": {
+    "description": "Action that reads the daily summary aloud"
+  },
+  "progressDefaultChampion": "Champion",
+  "@progressDefaultChampion": {
+    "description": "Fallback display name when the user has not given one"
+  },
+  "muscleGroupFullBody": "full body",
+  "@muscleGroupFullBody": {
+    "description": "Muscle-group label in a sentence, so lowercase. The switch matches on the English token 'full_body'."
+  },
+  "muscleGroupCore": "core",
+  "@muscleGroupCore": {
+    "description": "Muscle-group label in a sentence, lowercase. Token 'core'."
+  },
+  "muscleGroupUpperBody": "upper body",
+  "@muscleGroupUpperBody": {
+    "description": "Muscle-group label in a sentence, lowercase. Token 'upper_body'."
+  },
+  "muscleGroupLowerBody": "lower body",
+  "@muscleGroupLowerBody": {
+    "description": "Muscle-group label in a sentence, lowercase. Token 'lower_body'."
+  },
+  "muscleGroupCardio": "cardio",
+  "@muscleGroupCardio": {
+    "description": "Muscle-group label in a sentence, lowercase. Token 'cardio'."
+  },
+  "mealFallbackName": "a healthy meal",
+  "@mealFallbackName": {
+    "description": "Stands in for a meal name inside a sentence when no plan exists yet. Lowercase."
+  },
+  "badgeGalleryHeading": "YOUR BADGES",
+  "@badgeGalleryHeading": {
+    "description": "Section heading above the badge strip"
+  },
+  "badgeGallerySeeAll": "See all",
+  "@badgeGallerySeeAll": {
+    "description": "Action opening the full badge gallery"
+  },
+  "muscleChest": "Chest",
+  "@muscleChest": {
+    "description": "Body-area filter chip"
+  },
+  "muscleBack": "Back",
+  "@muscleBack": {
+    "description": "Body-area filter chip"
+  },
+  "workoutTabHeading": "Your personal training programme",
+  "@workoutTabHeading": {
+    "description": "Training tab heading"
+  },
+  "workoutEquipmentHeading": "Equipment exercises",
+  "@workoutEquipmentHeading": {
+    "description": "Section heading on the training tab"
+  },
+  "workoutAreasHeading": "Body areas",
+  "@workoutAreasHeading": {
+    "description": "Section heading on the training tab"
+  },
+  "workoutPersonalSession": "Personal workout",
+  "@workoutPersonalSession": {
+    "description": "Generic day title when no muscle group dominates"
+  },
+  "workoutRestDay": "Rest day",
+  "@workoutRestDay": {
+    "description": "Day title for a rest day"
+  },
+  "workoutDayCoreTitle": "Solid core",
+  "@workoutDayCoreTitle": {
+    "description": "Day title when core dominates. Token 'core'."
+  },
+  "workoutDayUpperTitle": "Upper-body strength",
+  "@workoutDayUpperTitle": {
+    "description": "Day title when upper body dominates. Token 'upper_body'."
+  },
+  "workoutDayLowerTitle": "Legs and glutes burn",
+  "@workoutDayLowerTitle": {
+    "description": "Day title when lower body dominates. Token 'lower_body'."
+  },
+  "workoutDayFullBodyTitle": "Full-body conditioning",
+  "@workoutDayFullBodyTitle": {
+    "description": "Day title when the day is full body. Token 'full_body'."
+  },
+  "workoutNoPlansForArea": "No plans for this area yet — have a look at the other categories.",
+  "@workoutNoPlansForArea": {
+    "description": "Empty state when a body-area filter matches nothing"
+  },
+  "coachTalkShort": "Talk to your AI coach",
+  "@coachTalkShort": {
+    "description": "Compact call to action opening the coach chat"
+  },
+  "coachTalkLong": "Talk to Form, your AI coach",
+  "@coachTalkLong": {
+    "description": "Call to action opening the coach chat. 'Form' is the coach's name."
+  },
+  "coachOnline": "online",
+  "@coachOnline": {
+    "description": "Coach presence indicator, lowercase — it follows the coach name in a line"
+  },
+  "coachGreeting": "Your AI coach. How can I help you today?",
+  "@coachGreeting": {
+    "description": "Coach card greeting"
+  },
+  "todayTaskHeading": "TODAY'S TASK",
+  "@todayTaskHeading": {
+    "description": "Heading of the dashboard task card. Rendered uppercase."
+  },
+  "todayTaskGenericWorkout": "Workout",
+  "@todayTaskGenericWorkout": {
+    "description": "Generic task title when no muscle group dominates"
+  },
+  "todayTaskCoreTitle": "Chest & core",
+  "@todayTaskCoreTitle": {
+    "description": "Task title when core dominates. Token 'core'."
+  },
+  "todayTaskUpperTitle": "Chest & arms",
+  "@todayTaskUpperTitle": {
+    "description": "Task title when upper body dominates. Token 'upper_body'."
+  },
+  "todayTaskLowerTitle": "Leg strength",
+  "@todayTaskLowerTitle": {
+    "description": "Task title when lower body dominates. Token 'lower_body'."
+  },
+  "todayTaskCardioTitle": "Fat-burning cardio",
+  "@todayTaskCardioTitle": {
+    "description": "Task title when cardio dominates. Token 'cardio'."
+  },
+  "todayTaskFullBodyTitle": "Full-body HIIT",
+  "@todayTaskFullBodyTitle": {
+    "description": "Task title when the day is full body. HIIT is a training term kept as-is."
+  },
+  "difficultyBeginner": "Beginner",
+  "@difficultyBeginner": {
+    "description": "Difficulty chip. Token 'beginner'."
+  },
+  "difficultyIntermediate": "Intermediate",
+  "@difficultyIntermediate": {
+    "description": "Difficulty chip. Token 'intermediate'."
+  },
+  "difficultyAdvanced": "Advanced",
+  "@difficultyAdvanced": {
+    "description": "Difficulty chip. Token 'advanced'."
+  },
+  "programCompleted": "You finished the 30-day programme.",
+  "@programCompleted": {
+    "description": "Task card state once every day is done"
+  },
+  "seeYourJourney": "See your journey",
+  "@seeYourJourney": {
+    "description": "Action shown after the programme is complete"
+  },
+  "startWorkoutShort": "Start the workout",
+  "@startWorkoutShort": {
+    "description": "Secondary call to action on the task card"
+  },
+  "startWorkoutUpper": "START THE WORKOUT",
+  "@startWorkoutUpper": {
+    "description": "Primary call to action on the task card. Rendered uppercase."
+  },
+  "tipPausedSession": "Taking a break is fine. You can pick up where you left off — your progress is safe.",
+  "@tipPausedSession": {
+    "description": "Contextual tip for a user with a paused session"
+  },
+  "tipAskCoach": "You can ask me about your training — I know your plan and your history.",
+  "@tipAskCoach": {
+    "description": "Contextual tip introducing the coach"
+  },
+  "tipAskCoachCta": "Talk to Form",
+  "@tipAskCoachCta": {
+    "description": "Action on the coach tip. 'Form' is the coach's name."
+  },
+  "tipNutritionReady": "Your calorie and macro targets are ready. The Nutrition tab has recipes too.",
+  "@tipNutritionReady": {
+    "description": "Contextual tip pointing at nutrition"
+  },
+  "tipStreakGrowing": "Your streak is growing. The Progress tab has your badges and weekly charts.",
+  "@tipStreakGrowing": {
+    "description": "Contextual tip pointing at progress"
+  },
+  "tipSetReminder": "Pick a daily reminder time and skipping gets harder.",
+  "@tipSetReminder": {
+    "description": "Contextual tip about reminders"
+  },
+  "tipCameraFraming": "For the best analysis, place your phone about 2 metres away, in portrait.",
+  "@tipCameraFraming": {
+    "description": "Contextual tip about camera setup. Suppressed for camera-free users."
+  },
+  "tipNutritionWizard": "A few questions left for your nutrition plan. One minute, and it's yours.",
+  "@tipNutritionWizard": {
+    "description": "Contextual tip nudging the nutrition wizard"
+  },
+  "tipDiscoveryHub": "Everything FormAI can do, in one list.",
+  "@tipDiscoveryHub": {
+    "description": "Contextual tip pointing at the discovery hub"
+  },
+  "tipDiscoveryHubCta": "Discover",
+  "@tipDiscoveryHubCta": {
+    "description": "Action on the discovery-hub tip"
+  },
+  "discoveryHubTitle": "Discover",
+  "@discoveryHubTitle": {
+    "description": "Discovery hub screen title"
+  },
+  "discoveryHubIntro": "It's all here. Some of it opens up as you go — but you don't have to wait; you can unlock anything now.",
+  "@discoveryHubIntro": {
+    "description": "Explanatory intro on the discovery hub. The promise that nothing is gated behind waiting must survive translation."
+  },
+  "discoveryHubOpen": "Open",
+  "@discoveryHubOpen": {
+    "description": "Action on an already-unlocked capability row"
+  },
+  "discoveryHubUnlockNow": "Unlock now",
+  "@discoveryHubUnlockNow": {
+    "description": "Action that manually unlocks a still-locked capability"
+  },
+  "navWorkout": "Training",
+  "@navWorkout": {
+    "description": "Bottom navigation label"
+  },
+  "navProgress": "Progress",
+  "@navProgress": {
+    "description": "Bottom navigation label"
+  },
+  "challengeStart": "START",
+  "@challengeStart": {
+    "description": "Call to action on the daily-challenge hero. Rendered uppercase."
+  },
+  "tipCardHeading": "DID YOU KNOW?",
+  "@tipCardHeading": {
+    "description": "Heading of the contextual tip card. Rendered uppercase."
+  },
+  "tipCardDismiss": "Dismiss tip",
+  "@tipCardDismiss": {
+    "description": "Accessibility label on the tip card's close button"
+  },
+  "equipmentPlansFailed": "Equipment plans could not be loaded.",
+  "@equipmentPlansFailed": {
+    "description": "Error state on the equipment strip"
+  },
+  "weeklyGoalTitle": "Weekly goal",
+  "@weeklyGoalTitle": {
+    "description": "Title of the weekly goal card"
+  },
+  "workoutProgramLoadFailed": "Something went wrong loading your programme.",
+  "@workoutProgramLoadFailed": {
+    "description": "Error state on the training tab when the programme fails to load. Distinct from workoutLoadFailed, which covers a single workout."
+  },
+  "badgeStripFirstWeek": "First 7 days",
+  "@badgeStripFirstWeek": {
+    "description": "Badge label in the progress-tab preview strip. Short — it sits under a small icon."
+  },
+  "badgeStripDisciplined": "Disciplined",
+  "@badgeStripDisciplined": {
+    "description": "Badge label in the progress-tab preview strip"
+  },
+  "badgeStripCalorieHunter": "Calorie hunter",
+  "@badgeStripCalorieHunter": {
+    "description": "Badge label in the progress-tab preview strip"
+  },
+  "badgeStripThirtyDayChampion": "30-day champion",
+  "@badgeStripThirtyDayChampion": {
+    "description": "Badge label in the progress-tab preview strip"
+  },
+  "badgeStripHiitMaster": "HIIT master",
+  "@badgeStripHiitMaster": {
+    "description": "Badge label in the progress-tab preview strip. HIIT is a training term kept as-is."
+  },
+  "muscleCore": "Core",
+  "@muscleCore": {
+    "description": "Body-area filter chip. 'Core' is used untranslated in Turkish gym language."
+  },
+  "muscleShoulders": "Shoulders",
+  "@muscleShoulders": {
+    "description": "Body-area filter chip"
+  },
+  "muscleArms": "Arms",
+  "@muscleArms": {
+    "description": "Body-area filter chip"
+  },
+  "muscleLegs": "Legs",
+  "@muscleLegs": {
+    "description": "Body-area filter chip"
+  },
+  "muscleCardio": "Cardio",
+  "@muscleCardio": {
+    "description": "Body-area filter chip"
+  },
+  "progressWeeklyCompleted": "{done} / {total}",
+  "@progressWeeklyCompleted": {
+    "description": "Weekly completion value. {done} sessions of {total}.",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "progressUnitReps": "reps",
+  "@progressUnitReps": {
+    "description": "Unit suffix under the weekly reps chart, lowercase"
   }
 }
