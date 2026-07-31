@@ -417,5 +417,107 @@
   "badgesUnlockedLabel": "Unlocked",
   "@badgesUnlockedLabel": {
     "description": "Badge card unlocked state label"
+  },
+  "suggestionsTitle": "Suggestions",
+  "@suggestionsTitle": {
+    "description": "Suggestions screen title"
+  },
+  "suggestionsTodayEyebrow": "TODAY'S SUGGESTIONS",
+  "@suggestionsTodayEyebrow": {
+    "description": "Suggestions list eyebrow"
+  },
+  "suggestionsCoachSays": "Your AI coach says",
+  "@suggestionsCoachSays": {
+    "description": "Suggestions coach card heading"
+  },
+  "suggestionsCoachIntro": "Below are three micro-actions I picked for today.",
+  "@suggestionsCoachIntro": {
+    "description": "Suggestions coach card body"
+  },
+  "suggestionHydrateTitle": "Don't forget to hydrate",
+  "@suggestionHydrateTitle": {
+    "description": "Hydration suggestion title"
+  },
+  "suggestionHydrateBody": "At least 2.5 litres a day directly affects your energy and muscle recovery. Have another glass within the hour.",
+  "@suggestionHydrateBody": {
+    "description": "Hydration suggestion body"
+  },
+  "suggestionHydrateCta": "Target: 2.5 L",
+  "@suggestionHydrateCta": {
+    "description": "Hydration suggestion CTA"
+  },
+  "suggestionProgramDoneTitle": "You finished all 30 days!",
+  "@suggestionProgramDoneTitle": {
+    "description": "Programme-complete suggestion title"
+  },
+  "suggestionProgramDoneBody": "The 30-day arc is done — plan a light mobility day and reward yourself. Check the Progress tab to set a new goal.",
+  "@suggestionProgramDoneBody": {
+    "description": "Programme-complete suggestion body"
+  },
+  "suggestionProgramDoneCta": "Go to Progress",
+  "@suggestionProgramDoneCta": {
+    "description": "Programme-complete suggestion CTA"
+  },
+  "suggestionStartWorkoutBody": "Start your workout and carry your streak into today.",
+  "@suggestionStartWorkoutBody": {
+    "description": "Start-workout suggestion body"
+  },
+  "suggestionStartWorkoutCta": "Start workout",
+  "@suggestionStartWorkoutCta": {
+    "description": "Start-workout suggestion CTA"
+  },
+  "suggestionProteinTitle": "Try a high-protein recipe",
+  "@suggestionProteinTitle": {
+    "description": "Protein-deficit suggestion title"
+  },
+  "suggestionProteinCta": "Filter high protein",
+  "@suggestionProteinCta": {
+    "description": "Protein-deficit suggestion CTA"
+  },
+  "suggestionLightMealTitle": "Close the day with a light meal",
+  "@suggestionLightMealTitle": {
+    "description": "Light-meal suggestion title"
+  },
+  "suggestionLightMealCta": "Low-calorie recipe",
+  "@suggestionLightMealCta": {
+    "description": "Light-meal suggestion CTA"
+  },
+  "suggestionGoalMetTitle": "You hit today's target",
+  "@suggestionGoalMetTitle": {
+    "description": "Goal-met suggestion title"
+  },
+  "suggestionGoalMetBody": "You hit your macro targets. Water and herbal tea are enough for the rest of the day — save your energy for tomorrow.",
+  "@suggestionGoalMetBody": {
+    "description": "Goal-met suggestion body"
+  },
+  "suggestionBalancedTitle": "Plan a balanced meal",
+  "@suggestionBalancedTitle": {
+    "description": "Balanced-meal suggestion title"
+  },
+  "suggestionBalancedBody": "Your macros are balanced today. Pick a composite recipe for your next meal — protein, vegetables and complex carbs.",
+  "@suggestionBalancedBody": {
+    "description": "Balanced-meal suggestion body"
+  },
+  "suggestionBalancedCta": "Explore recipes",
+  "@suggestionBalancedCta": {
+    "description": "Balanced-meal suggestion CTA"
+  },
+  "suggestionProteinBody": "You're {grams}g of protein short. Pick a quick chicken, egg or legume recipe for lunch or dinner — it fits today's target exactly.",
+  "@suggestionProteinBody": {
+    "description": "Protein-deficit suggestion body",
+    "placeholders": {
+      "grams": {
+        "type": "int"
+      }
+    }
+  },
+  "suggestionLightMealBody": "A salad or a yoghurt snack is ideal for {kcal} kcal. Pick from the low-calorie recipes.",
+  "@suggestionLightMealBody": {
+    "description": "Light-meal suggestion body",
+    "placeholders": {
+      "kcal": {
+        "type": "int"
+      }
+    }
   }
 }

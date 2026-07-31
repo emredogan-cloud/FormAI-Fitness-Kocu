@@ -9,6 +9,7 @@ import '../../nutrition/providers/nutrition_provider.dart';
 import '../../workout/models/workout_day_model.dart';
 import '../../workout/providers/workout_provider.dart';
 import '../providers/streak_provider.dart';
+import '../../../l10n/app_localizations.dart';
 
 const Color _neon = Color(0xFF8B5CF6);
 const Color _neonAccent = Color(0xFF4DA6FF);
@@ -46,18 +47,17 @@ class SuggestionsScreen extends ConsumerWidget {
     final activeDay = _firstIncomplete(days);
     final streak = ref.watch(currentStreakProvider);
     final remaining = ref.watch(remainingMacrosProvider);
+    final l10n = AppLocalizations.of(context);
 
     final suggestions = <_SuggestionData>[
-      _buildWorkoutSuggestion(activeDay: activeDay, streak: streak),
-      _buildNutritionSuggestion(remaining: remaining),
-      const _SuggestionData(
+      _buildWorkoutSuggestion(l10n: l10n, activeDay: activeDay, streak: streak),
+      _buildNutritionSuggestion(l10n: l10n, remaining: remaining),
+      _SuggestionData(
         accent: _hydrateColor,
         icon: Icons.water_drop_rounded,
-        title: 'Su içmeyi unutma',
-        description:
-            'Günde en az 2.5 litre su, enerji seviyeni ve kas toparlanmasını '
-            'doğrudan etkiler. Sonraki saatte bir bardak daha iç.',
-        ctaLabel: 'Hedef: 2.5 L',
+        title: l10n.suggestionHydrateTitle,
+        description: l10n.suggestionHydrateBody,
+        ctaLabel: l10n.suggestionHydrateCta,
         ctaRoute: null,
       ),
     ];
@@ -73,7 +73,7 @@ class SuggestionsScreen extends ConsumerWidget {
         elevation: 0,
         foregroundColor: scheme.onSurface,
         title: Text(
-          'Öneriler',
+          l10n.suggestionsTitle,
           style: TextStyle(
             color: scheme.onSurface,
             fontWeight: FontWeight.w900,
@@ -98,7 +98,7 @@ class SuggestionsScreen extends ConsumerWidget {
             const _CoachHero(),
             const SizedBox(height: 22),
             Text(
-              'BUGÜNÜN ÖNERİLERİ',
+              l10n.suggestionsTodayEyebrow,
               style: TextStyle(
                 color: scheme.onSurface.withValues(alpha: 0.70),
                 fontSize: 11,
@@ -124,19 +124,17 @@ class SuggestionsScreen extends ConsumerWidget {
   // ==========================================================================
 
   _SuggestionData _buildWorkoutSuggestion({
+    required AppLocalizations l10n,
     required WorkoutDay? activeDay,
     required int streak,
   }) {
     if (activeDay == null) {
-      return const _SuggestionData(
+      return _SuggestionData(
         accent: _success,
         icon: Icons.emoji_events_rounded,
-        title: '30 günü tamamladın!',
-        description:
-            '30 günlük arc bitti — bugün hafif bir mobility günü planla '
-            've kendini ödüllendir. Yeni bir hedef belirlemek için '
-            'Gelişim sekmesine göz at.',
-        ctaLabel: 'Gelişime git',
+        title: l10n.suggestionProgramDoneTitle,
+        description: l10n.suggestionProgramDoneBody,
+        ctaLabel: l10n.suggestionProgramDoneCta,
         ctaRoute: AppRoutes.dashboard,
       );
     }
@@ -148,23 +146,23 @@ class SuggestionsScreen extends ConsumerWidget {
       icon: Icons.fitness_center_rounded,
       title: 'Bugün $focus çalış',
       description: "${streakHeadline}Gün $dayNumber'ün hedefi: $focus. "
-          'Antrenmanı başlatıp serini bugüne taşı.',
-      ctaLabel: 'Antrenmana başla',
+          '${l10n.suggestionStartWorkoutBody}',
+      ctaLabel: l10n.suggestionStartWorkoutCta,
       ctaRoute: AppRoutes.planDetail,
     );
   }
 
-  _SuggestionData _buildNutritionSuggestion({required MacroTarget remaining}) {
+  _SuggestionData _buildNutritionSuggestion({
+    required AppLocalizations l10n,
+    required MacroTarget remaining,
+  }) {
     if (remaining.protein > 30) {
       return _SuggestionData(
         accent: _proteinColor,
         icon: Icons.restaurant_rounded,
-        title: 'Yüksek proteinli bir tarif dene',
-        description:
-            '${remaining.protein}g protein açığın var. Öğlen veya akşam '
-            'için hızlıca tavuk, yumurta ya da baklagil bazlı bir tarif '
-            'seç — günün hedefine tam oturur.',
-        ctaLabel: 'Yüksek Protein filtrele',
+        title: l10n.suggestionProteinTitle,
+        description: l10n.suggestionProteinBody(remaining.protein.round()),
+        ctaLabel: l10n.suggestionProteinCta,
         ctaRoute: AppRoutes.nutritionDiscover,
       );
     }
@@ -172,34 +170,28 @@ class SuggestionsScreen extends ConsumerWidget {
       return _SuggestionData(
         accent: _success,
         icon: Icons.spa_rounded,
-        title: 'Hafif bir öğünle gününü kapat',
-        description:
-            'Günün neredeyse tamamlandı — kalan ${remaining.calories} kcal '
-            'için salata veya yoğurtlu bir snack ideal. Düşük kalorili '
-            'tariflerden seç.',
-        ctaLabel: 'Düşük kalorili tarif',
+        title: l10n.suggestionLightMealTitle,
+        description: l10n.suggestionLightMealBody(remaining.calories.round()),
+        ctaLabel: l10n.suggestionLightMealCta,
         ctaRoute: AppRoutes.nutritionDiscover,
       );
     }
     if (remaining.calories <= 0) {
-      return const _SuggestionData(
+      return _SuggestionData(
         accent: _neon,
         icon: Icons.verified_rounded,
-        title: 'Günlük hedefini tamamladın',
-        description: 'Makro hedeflerini tutturdun. Kalan zamanda sadece su ve '
-            'ılık bitki çayı yeterli — yarın için enerjini topla.',
+        title: l10n.suggestionGoalMetTitle,
+        description: l10n.suggestionGoalMetBody,
         ctaLabel: null,
         ctaRoute: null,
       );
     }
-    return const _SuggestionData(
+    return _SuggestionData(
       accent: _proteinColor,
       icon: Icons.eco_rounded,
-      title: 'Dengeli bir öğün planla',
-      description: 'Makro dağılımın bugün dengeli. Bir sonraki öğün için '
-          'kompozit bir tarif seç — protein, sebze ve karmaşık '
-          'karbonhidrat üçlüsünden.',
-      ctaLabel: 'Tarifleri keşfet',
+      title: l10n.suggestionBalancedTitle,
+      description: l10n.suggestionBalancedBody,
+      ctaLabel: l10n.suggestionBalancedCta,
       ctaRoute: AppRoutes.nutritionDiscover,
     );
   }
@@ -314,13 +306,13 @@ class _CoachHero extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 14),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'AI Koçun diyor ki',
+                  AppLocalizations.of(context).suggestionsCoachSays,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 17,
@@ -330,8 +322,7 @@ class _CoachHero extends StatelessWidget {
                 ),
                 SizedBox(height: 4),
                 Text(
-                  'Bugünün durumuna göre hazırladığım üç '
-                  'mikro-aksiyonu aşağıda bulacaksın.',
+                  AppLocalizations.of(context).suggestionsCoachIntro,
                   style: TextStyle(
                     color: Colors.white70,
                     fontSize: 13,
