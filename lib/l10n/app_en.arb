@@ -587,5 +587,105 @@
   "premiumWelcomeCta": "Let's go",
   "@premiumWelcomeCta": {
     "description": "Premium welcome primary CTA"
+  },
+  "authVerifyEmailSentLong": "We sent a verification link to your email — once you confirm it you can sign in with this address. Your progress is kept.",
+  "@authVerifyEmailSentLong": {
+    "description": "Sign-up verification message, guest-upgrade variant"
+  },
+  "authVerifyEmailSent": "We sent a verification link to your email.",
+  "@authVerifyEmailSent": {
+    "description": "Sign-up verification message"
+  },
+  "authUnexpectedError": "Something unexpected happened. Please try again.",
+  "@authUnexpectedError": {
+    "description": "Generic auth failure"
+  },
+  "authGuestFailed": "Guest sign-in failed. Please try again.",
+  "@authGuestFailed": {
+    "description": "Guest sign-in failure"
+  },
+  "authResetTitle": "Reset your password",
+  "@authResetTitle": {
+    "description": "Password reset dialog title"
+  },
+  "authEmailLabel": "Your email address",
+  "@authEmailLabel": {
+    "description": "Email field label in the reset dialog"
+  },
+  "authCancel": "Cancel",
+  "@authCancel": {
+    "description": "Dismiss action in the reset dialog"
+  },
+  "authSendLink": "Send link",
+  "@authSendLink": {
+    "description": "Password reset confirm action"
+  },
+  "authResetLinkSent": "A reset link was sent to your email.",
+  "@authResetLinkSent": {
+    "description": "Password reset success message"
+  },
+  "authWelcomeBack": "Welcome back.",
+  "@authWelcomeBack": {
+    "description": "Sign-in mode headline"
+  },
+  "authCreateAccount": "Create account",
+  "@authCreateAccount": {
+    "description": "Sign-up mode headline"
+  },
+  "authKeepProgressSafe": "Keep your progress safe in the cloud.",
+  "@authKeepProgressSafe": {
+    "description": "Sign-in mode subtitle"
+  },
+  "authOpenAccountSubtitle": "Open an account so your progress stays with you.",
+  "@authOpenAccountSubtitle": {
+    "description": "Sign-up mode subtitle"
+  },
+  "authSignIn": "SIGN IN",
+  "@authSignIn": {
+    "description": "Sign-in submit button"
+  },
+  "authSignUp": "SIGN UP",
+  "@authSignUp": {
+    "description": "Sign-up submit button"
+  },
+  "authForgotPassword": "Forgot my password",
+  "@authForgotPassword": {
+    "description": "Password reset link"
+  },
+  "authNoAccountSignUp": "No account? Sign up",
+  "@authNoAccountSignUp": {
+    "description": "Switch to sign-up"
+  },
+  "authHaveAccountSignIn": "Already have an account? Sign in",
+  "@authHaveAccountSignIn": {
+    "description": "Switch to sign-in"
+  },
+  "authContinueAsGuest": "Continue as guest",
+  "@authContinueAsGuest": {
+    "description": "Guest entry button"
+  },
+  "authOrSignInWith": "Or sign in with",
+  "@authOrSignInWith": {
+    "description": "Social sign-in divider"
+  },
+  "authTagline": "AI-POWERED FORM COACH",
+  "@authTagline": {
+    "description": "App tagline under the wordmark"
+  },
+  "authEmailRequired": "Email is required",
+  "@authEmailRequired": {
+    "description": "Email field validation"
+  },
+  "authPasswordLabel": "Password",
+  "@authPasswordLabel": {
+    "description": "Password field label"
+  },
+  "authPasswordRequired": "Password is required",
+  "@authPasswordRequired": {
+    "description": "Password field validation"
+  },
+  "authPasswordMinLength": "At least 6 characters",
+  "@authPasswordMinLength": {
+    "description": "Password length validation message"
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sixpack_ai/core/services/app_preferences.dart';
 import 'package:sixpack_ai/features/auth/presentation/auth_screen.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// The auth screen's build is pure `_mode`-driven UI — Supabase is only
 /// touched inside the submit / social handlers, and `_submit` runs the
@@ -16,7 +17,9 @@ Widget _host(SharedPreferences prefs) {
     overrides: [
       sharedPreferencesProvider.overrideWithValue(prefs),
     ],
-    child: const MaterialApp(
+    child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: [Locale('tr')],
       home: AuthScreen(),
       debugShowCheckedModeBanner: false,
     ),

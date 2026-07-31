@@ -12,6 +12,7 @@ import '../auth_error_messages.dart';
 import '../../monetization/providers/monetization_provider.dart';
 import '../../onboarding/providers/wizard_provider.dart';
 import '../providers/auth_provider.dart';
+import '../../../l10n/app_localizations.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
@@ -126,11 +127,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             // Honest copy: the email isn't attached until the user
             // clicks the confirmation link — don't declare the upgrade
             // done before it is.
-            _toast(
-              'E-posta adresine doğrulama bağlantısı gönderildi — '
-              'onayladıktan sonra bu e-postayla giriş yapabilirsin. '
-              'İlerlemen korunuyor.',
-            );
+            _toast(AppLocalizations.of(context).authVerifyEmailSentLong);
           }
           await _routePostAuth();
         } else {
@@ -138,7 +135,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               await _client.auth.signUp(email: email, password: password);
           await _persistWizardMetrics();
           if (res.session == null && mounted) {
-            _toast('E-posta adresine doğrulama bağlantısı gönderildi.');
+            _toast(AppLocalizations.of(context).authVerifyEmailSent);
           } else {
             await ref
                 .read(authControllerProvider)
@@ -153,7 +150,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     } catch (e) {
       debugPrint('[auth] unexpected: $e');
       if (mounted) {
-        _toast('Beklenmedik bir hata oluştu. Lütfen tekrar dene.');
+        _toast(AppLocalizations.of(context).authUnexpectedError);
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -187,7 +184,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     } catch (e) {
       debugPrint('[auth] guest sign-in failed: $e');
       if (mounted) {
-        _toast('Misafir girişi başarısız oldu. Lütfen tekrar dene.');
+        _toast(AppLocalizations.of(context).authGuestFailed);
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -197,17 +194,15 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   Future<void> _signInWithGoogle() => _runSocial(
         _SocialProvider.google,
         () => ref.read(authControllerProvider).signInWithGoogle(),
-        errorMessage: 'Google ile giriş başarısız oldu. Lütfen tekrar dene.',
-        offlineMessage:
-            'Google ile giriş yapmak için internet bağlantısı gereklidir.',
+        errorMessage: AppLocalizations.of(context).authGoogleFailed,
+        offlineMessage: AppLocalizations.of(context).authGoogleNeedsInternet,
       );
 
   Future<void> _signInWithApple() => _runSocial(
         _SocialProvider.apple,
         () => ref.read(authControllerProvider).signInWithApple(),
-        errorMessage: 'Apple ile giriş başarısız oldu. Lütfen tekrar dene.',
-        offlineMessage:
-            'Apple ile giriş yapmak için internet bağlantısı gereklidir.',
+        errorMessage: AppLocalizations.of(context).authAppleFailed,
+        offlineMessage: AppLocalizations.of(context).authAppleNeedsInternet,
       );
 
   /// "Şifremi unuttum" — asks for the address (prefilled from the email
@@ -219,23 +214,23 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     final email = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Şifreni sıfırla'),
+        title: Text(AppLocalizations.of(context).authResetTitle),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.emailAddress,
           autofocus: true,
-          decoration: const InputDecoration(
-            hintText: 'E-posta adresin',
+          decoration: InputDecoration(
+            hintText: AppLocalizations.of(context).authEmailLabel,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Vazgeç'),
+            child: Text(AppLocalizations.of(context).authCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
-            child: const Text('Bağlantı Gönder'),
+            child: Text(AppLocalizations.of(context).authSendLink),
           ),
         ],
       ),
@@ -244,7 +239,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     if (email == null || email.isEmpty || !mounted) return;
     final error = await ref.read(authControllerProvider).resetPassword(email);
     if (!mounted) return;
-    _toast(error ?? 'Sıfırlama bağlantısı e-postana gönderildi.');
+    _toast(error ?? AppLocalizations.of(context).authResetLinkSent);
   }
 
   Future<void> _runSocial(
@@ -319,7 +314,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   _buildLogo(),
                   const SizedBox(height: 32),
                   Text(
-                    isSignIn ? 'Tekrar hoşgeldin.' : 'Hesap Oluştur',
+                    isSignIn
+                        ? AppLocalizations.of(context).authWelcomeBack
+                        : AppLocalizations.of(context).authCreateAccount,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: Colors.white,
@@ -330,8 +327,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   const SizedBox(height: 6),
                   Text(
                     isSignIn
-                        ? 'İlerlemeni bulutta güvende tut.'
-                        : 'Hesap aç, ilerlemen senden ayrılmasın.',
+                        ? AppLocalizations.of(context).authKeepProgressSafe
+                        : AppLocalizations.of(context).authOpenAccountSubtitle,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: Colors.white54,
@@ -364,7 +361,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                               color: Colors.black,
                             ),
                           )
-                        : Text(isSignIn ? 'GİRİŞ YAP' : 'KAYIT OL'),
+                        : Text(isSignIn
+                            ? AppLocalizations.of(context).authSignIn
+                            : AppLocalizations.of(context).authSignUp),
                   ),
                   // Forgot-password affordance — sign-in mode only. An
                   // email/password user who forgot was previously locked
@@ -372,8 +371,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   if (isSignIn)
                     TextButton(
                       onPressed: _busy ? null : _forgotPassword,
-                      child: const Text(
-                        'Şifremi unuttum',
+                      child: Text(
+                        AppLocalizations.of(context).authForgotPassword,
                         style: TextStyle(color: Colors.white54),
                       ),
                     ),
@@ -387,8 +386,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                             ),
                     child: Text(
                       isSignIn
-                          ? 'Hesabın yok mu? Kayıt ol'
-                          : 'Zaten hesabın var mı? Giriş yap',
+                          ? AppLocalizations.of(context).authNoAccountSignUp
+                          : AppLocalizations.of(context).authHaveAccountSignIn,
                       style: const TextStyle(color: _neon),
                     ),
                   ),
@@ -399,8 +398,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     onPressed:
                         (_busy || _social != null) ? null : _continueAsGuest,
                     icon: const Icon(Icons.person_outline, color: _neon),
-                    label: const Text(
-                      'Misafir Olarak Devam Et',
+                    label: Text(
+                      AppLocalizations.of(context).authContinueAsGuest,
                       style: TextStyle(color: _neon),
                     ),
                     style: OutlinedButton.styleFrom(
@@ -413,7 +412,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  const _Divider(label: 'Veya şununla giriş yap'),
+                  _Divider(
+                      label: AppLocalizations.of(context).authOrSignInWith),
                   const SizedBox(height: 18),
                   _GoogleButton(
                     busy: _social == _SocialProvider.google,
@@ -443,9 +443,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   Widget _buildLogo() {
     return Column(
-      children: const [
-        Text(
-          'FormAI',
+      children: [
+        // Brand wordmark — never translated.
+        const Text(
+          'FormAI', // i18n-ignore
           textAlign: TextAlign.center,
           style: TextStyle(
             color: _neon,
@@ -455,9 +456,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             shadows: [Shadow(blurRadius: 24, color: _neon)],
           ),
         ),
-        SizedBox(height: 6),
+        const SizedBox(height: 6),
         Text(
-          'AI DESTEKLİ FORM KOÇU',
+          AppLocalizations.of(context).authTagline,
           textAlign: TextAlign.center,
           style: TextStyle(
             color: Colors.white54,
@@ -482,7 +483,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       ),
       validator: (value) {
         final v = value?.trim() ?? '';
-        if (v.isEmpty) return 'E-posta gerekli';
+        if (v.isEmpty) return AppLocalizations.of(context).authEmailRequired;
         if (!v.contains('@') || !v.contains('.')) return 'Geçersiz e-posta';
         return null;
       },
@@ -496,10 +497,16 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       autofillHints: const [AutofillHints.password],
       enabled: !_busy,
       style: const TextStyle(color: Colors.white),
-      decoration: _inputDecoration(label: 'Şifre', icon: Icons.lock_outline),
+      decoration: _inputDecoration(
+          label: AppLocalizations.of(context).authPasswordLabel,
+          icon: Icons.lock_outline),
       validator: (value) {
-        if (value == null || value.isEmpty) return 'Şifre gerekli';
-        if (value.length < 6) return 'En az 6 karakter';
+        if (value == null || value.isEmpty) {
+          return AppLocalizations.of(context).authPasswordRequired;
+        }
+        if (value.length < 6) {
+          return AppLocalizations.of(context).authPasswordMinLength;
+        }
         return null;
       },
     );
@@ -602,10 +609,10 @@ class _GoogleButton extends StatelessWidget {
             )
           : Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
+              children: [
                 _GoogleLogo(size: 18),
                 SizedBox(width: 10),
-                Text('Google ile Devam Et'),
+                Text(AppLocalizations.of(context).authContinueWithGoogle),
               ],
             ),
     );
@@ -708,10 +715,10 @@ class _AppleButton extends StatelessWidget {
             )
           : Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
+              children: [
                 Icon(Icons.apple, size: 22, color: Colors.white),
                 SizedBox(width: 8),
-                Text('Apple ile Devam Et'),
+                Text(AppLocalizations.of(context).authContinueWithApple),
               ],
             ),
     );
