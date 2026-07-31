@@ -605,63 +605,61 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
                             ),
                           ),
                         ),
-                        const SizedBox(height: 14),
-                        // RC-1 P9 · success probability as a RING + copy row
-                        // (reference layout) instead of a bare linear bar.
-                        AnimatedBuilder(
-                          animation: _confidence,
-                          builder: (context, _) {
-                            // Clamp display: easeOutBack overshoots, but we
-                            // don't want to show 95 % en route to 92 %.
-                            final shown = _confidence.value.clamp(0.0, 1.0);
-                            return Row(
-                              children: [
-                                _SuccessRing(fraction: shown),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      const Text(
-                                        'Başarı olasılığı',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      const Text(
-                                        'Hedeflerine çok yakınsın!',
-                                        style: TextStyle(
-                                          color: Colors.white54,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(4),
-                                        child: LinearProgressIndicator(
-                                          value: shown,
-                                          minHeight: 5,
-                                          backgroundColor: Colors.white12,
-                                          valueColor:
-                                              const AlwaysStoppedAnimation(
-                                            AppColors.neon,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
                       ],
                     ),
                   ),
+                ),
+                const SizedBox(height: 14),
+                // RC-1 P9 · success probability as a RING + copy row
+                // (reference layout) instead of a bare linear bar.
+                AnimatedBuilder(
+                  animation: _confidence,
+                  builder: (context, _) {
+                    // Clamp display: easeOutBack overshoots, but we
+                    // don't want to show 95 % en route to 92 %.
+                    final shown = _confidence.value.clamp(0.0, 1.0);
+                    return Row(
+                      children: [
+                        _SuccessRing(fraction: shown),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Başarı olasılığı',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                'Hedeflerine çok yakınsın!',
+                                style: TextStyle(
+                                  color: Colors.white54,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: LinearProgressIndicator(
+                                  value: shown,
+                                  minHeight: 5,
+                                  backgroundColor: Colors.white12,
+                                  valueColor: const AlwaysStoppedAnimation(
+                                    AppColors.neon,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
                 const SizedBox(height: 16),
                 // Pinned footer — structurally outside the scroll area,

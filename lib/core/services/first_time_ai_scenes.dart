@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/onboarding/presentation/widgets/coach_mood.dart';
 import '../utils/app_haptics.dart';
+import '../utils/app_logger.dart';
 import '../widgets/cinematic_ai_presence.dart';
 import 'app_preferences.dart';
 
@@ -54,6 +57,13 @@ enum FirstTimeAiScene {
 class FirstTimeAiScenes {
   const FirstTimeAiScenes._();
 
+  /// How long past a scene's own `autoCloseAfter` the watchdog waits
+  /// before removing the route itself. Generous enough that it never
+  /// races the intended close (which also has to run a 500 ms reverse
+  /// transition), short enough that a stuck scene is a blip rather than
+  /// a dead end.
+  static const Duration _watchdogGrace = Duration(seconds: 3);
+
   static Future<void> showIfNeeded(
     BuildContext context,
     WidgetRef ref,
@@ -74,36 +84,67 @@ class FirstTimeAiScenes {
     if (!context.mounted) return;
 
     final config = _configs[scene]!;
+    final navigator = Navigator.of(context, rootNavigator: true);
 
-    await Navigator.of(context, rootNavigator: true).push<void>(
-      PageRouteBuilder<void>(
-        opaque: true,
-        barrierDismissible: false,
-        transitionDuration: const Duration(milliseconds: 600),
-        reverseTransitionDuration: const Duration(milliseconds: 500),
-        pageBuilder: (_, __, ___) {
-          return Builder(
-            builder: (innerContext) => CinematicAiPresence(
-              title: config.title,
-              subtitle: config.subtitle,
-              subtitleTypewriter: true,
-              composingPlaceholder: config.composingPlaceholder,
-              mood: config.mood,
-              autoCloseAfter: config.autoCloseAfter,
-              onComplete: () {
-                if (innerContext.mounted) {
-                  Navigator.of(innerContext, rootNavigator: true).pop();
-                }
-              },
-            ),
-          );
-        },
-        transitionsBuilder: (_, anim, __, child) => FadeTransition(
-          opacity: CurvedAnimation(parent: anim, curve: Curves.easeOutCubic),
-          child: child,
-        ),
+    late final PageRouteBuilder<void> route;
+    route = PageRouteBuilder<void>(
+      opaque: true,
+      barrierDismissible: false,
+      transitionDuration: const Duration(milliseconds: 600),
+      reverseTransitionDuration: const Duration(milliseconds: 500),
+      pageBuilder: (_, __, ___) {
+        return Builder(
+          builder: (innerContext) => CinematicAiPresence(
+            title: config.title,
+            subtitle: config.subtitle,
+            subtitleTypewriter: true,
+            composingPlaceholder: config.composingPlaceholder,
+            mood: config.mood,
+            autoCloseAfter: config.autoCloseAfter,
+            onComplete: () {
+              if (innerContext.mounted) {
+                Navigator.of(innerContext, rootNavigator: true).pop();
+              }
+            },
+          ),
+        );
+      },
+      transitionsBuilder: (_, anim, __, child) => FadeTransition(
+        opacity: CurvedAnimation(parent: anim, curve: Curves.easeOutCubic),
+        child: child,
       ),
     );
+
+    final pushed = navigator.push<void>(route);
+
+    // Watchdog. The scene is a full-screen, non-dismissible route with no
+    // visible exit: if its internal auto-close doesn't fire, the user is
+    // stranded on a cinematic with nothing to tap. Device QA reproduced
+    // exactly that on a clean first run — the welcome scene sat past 22 s
+    // against an 8 s `autoCloseAfter`, and only the system back button
+    // got out of it.
+    //
+    // This does NOT replace the scene's own timer; it is the second one.
+    // `removeRoute` targets this exact route, so it cannot pop something
+    // the user navigated to in the meantime, and it no-ops entirely on
+    // the normal path because the route is no longer active by then.
+    // The log line is deliberate: it makes a failure that is currently
+    // invisible show up in diagnostics instead of only in a bug report.
+    var closed = false;
+    unawaited(pushed.whenComplete(() => closed = true));
+    unawaited(
+      Future<void>.delayed(config.autoCloseAfter + _watchdogGrace, () {
+        if (closed || !route.isActive) return;
+        AppLogger.warning(
+          'FirstTimeAiScene ${scene.name} did not auto-close; '
+          'watchdog removed it',
+          category: 'onboarding',
+        );
+        navigator.removeRoute(route);
+      }),
+    );
+
+    await pushed;
   }
 
   static bool _hasSeen(AppPreferences prefs, FirstTimeAiScene scene) {
