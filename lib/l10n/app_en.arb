@@ -2404,5 +2404,488 @@
         "type": "int"
       }
     }
+  },
+  "goalToneLabel": "Tone up",
+  "@goalToneLabel": {
+    "description": "Target-physique label. The stored value stays 'tone'."
+  },
+  "goalBulkLabel": "Build mass",
+  "@goalBulkLabel": {
+    "description": "Target-physique label. Stored value 'bulk'."
+  },
+  "goalSixpackLabel": "Six-pack only",
+  "@goalSixpackLabel": {
+    "description": "Target-physique label. Stored value 'sixpack'."
+  },
+  "goalBellyBurnLabel": "Burn belly fat",
+  "@goalBellyBurnLabel": {
+    "description": "Onboarding goal label. Stored value 'belly_burn'."
+  },
+  "goalMuscleGainLabel": "Build muscle",
+  "@goalMuscleGainLabel": {
+    "description": "Onboarding goal label. Stored value 'muscle_gain'."
+  },
+  "goalFitnessLookLabel": "Look fitter",
+  "@goalFitnessLookLabel": {
+    "description": "Onboarding goal label. Stored value 'fitness_look'."
+  },
+  "goalStrengthLabel": "Get stronger",
+  "@goalStrengthLabel": {
+    "description": "Onboarding goal label. Stored value 'strength'."
+  },
+  "profileSectionMyInfo": "MY DETAILS",
+  "@profileSectionMyInfo": {
+    "description": "Profile section header. Rendered uppercase."
+  },
+  "profileSectionProgress": "PROGRESS",
+  "@profileSectionProgress": {
+    "description": "Profile section header"
+  },
+  "profileSectionAccount": "ACCOUNT SETTINGS",
+  "@profileSectionAccount": {
+    "description": "Profile section header"
+  },
+  "profileSectionAdmin": "ADMIN",
+  "@profileSectionAdmin": {
+    "description": "Profile section header, shown only to admin accounts"
+  },
+  "profileSectionInviteFriend": "INVITE A FRIEND",
+  "@profileSectionInviteFriend": {
+    "description": "Profile section header"
+  },
+  "profileSectionNutrition": "MY NUTRITION",
+  "@profileSectionNutrition": {
+    "description": "Profile section header"
+  },
+  "profileSectionSettings": "SETTINGS",
+  "@profileSectionSettings": {
+    "description": "Profile section header"
+  },
+  "profileFieldAge": "AGE",
+  "@profileFieldAge": {
+    "description": "Profile info tile label. Very short — it sits in a narrow tile."
+  },
+  "profileFieldWeight": "WEIGHT",
+  "@profileFieldWeight": {
+    "description": "Profile info tile label"
+  },
+  "profileFieldHeight": "HEIGHT",
+  "@profileFieldHeight": {
+    "description": "Profile info tile label"
+  },
+  "profileFieldGoal": "GOAL",
+  "@profileFieldGoal": {
+    "description": "Profile info tile label"
+  },
+  "profileWeightKg": "{value} kg",
+  "@profileWeightKg": {
+    "description": "Weight value with its unit. {value} is the stored metric weight.",
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "profileHeightCm": "{value} cm",
+  "@profileHeightCm": {
+    "description": "Height value with its unit. {value} is the stored metric height.",
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "profileEdit": "Edit",
+  "@profileEdit": {
+    "description": "Button opening the profile edit sheet"
+  },
+  "profileStatStreak": "STREAK",
+  "@profileStatStreak": {
+    "description": "Profile stat tile label — consecutive-day streak"
+  },
+  "profileStatCompleted": "COMPLETED",
+  "@profileStatCompleted": {
+    "description": "Profile stat tile label — days completed"
+  },
+  "profileStreakDays": "{count} days",
+  "@profileStreakDays": {
+    "description": "Streak value. {count} is the number of days.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "profileCompletedOfTotal": "{completed} / {total}",
+  "@profileCompletedOfTotal": {
+    "description": "Completed-days value. {completed} of {total} programme days.",
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "profileEditProfileTitle": "Edit profile",
+  "@profileEditProfileTitle": {
+    "description": "Settings row title"
+  },
+  "profileEditProfileSubtitle": "Update your age, height, weight and goal.",
+  "@profileEditProfileSubtitle": {
+    "description": "Settings row subtitle"
+  },
+  "profileChangePasswordTitle": "Change password",
+  "@profileChangePasswordTitle": {
+    "description": "Settings row title"
+  },
+  "profileChangePasswordGuestSubtitle": "You need to create an account first.",
+  "@profileChangePasswordGuestSubtitle": {
+    "description": "Settings row subtitle shown to guest users, for whom the row is disabled"
+  },
+  "profileChangePasswordSubtitle": "Set a new password.",
+  "@profileChangePasswordSubtitle": {
+    "description": "Settings row subtitle"
+  },
+  "profileNotificationsTitle": "Notifications",
+  "@profileNotificationsTitle": {
+    "description": "Settings row title"
+  },
+  "profileNotificationsSubtitle": "Choose your daily reminder time.",
+  "@profileNotificationsSubtitle": {
+    "description": "Settings row subtitle"
+  },
+  "profileDeleteAccountTitle": "Delete account",
+  "@profileDeleteAccountTitle": {
+    "description": "Destructive settings row title"
+  },
+  "profileDeleteAccountSubtitle": "Permanently deletes all your training and nutrition data.",
+  "@profileDeleteAccountSubtitle": {
+    "description": "Destructive settings row subtitle — must make the permanence unambiguous in every locale"
+  },
+  "profileAdminPanelTitle": "Admin panel",
+  "@profileAdminPanelTitle": {
+    "description": "Settings row title, admin accounts only"
+  },
+  "profileAdminPanelSubtitle": "Recipe and exercise management.",
+  "@profileAdminPanelSubtitle": {
+    "description": "Settings row subtitle, admin accounts only"
+  },
+  "profileRedeemCodeTitle": "Use an invite code",
+  "@profileRedeemCodeTitle": {
+    "description": "Settings row title"
+  },
+  "profileRedeemCodeSubtitle": "Enter a friend's code and you both get a Pro month.",
+  "@profileRedeemCodeSubtitle": {
+    "description": "Settings row subtitle"
+  },
+  "profileFavouritesTitle": "My favourites",
+  "@profileFavouritesTitle": {
+    "description": "Settings row title"
+  },
+  "profileFavouritesSubtitle": "Recipes you liked and your shopping list.",
+  "@profileFavouritesSubtitle": {
+    "description": "Settings row subtitle"
+  },
+  "profilePremiumTitle": "FormAI Premium",
+  "@profilePremiumTitle": {
+    "description": "Settings row title. FormAI and Premium are brand terms."
+  },
+  "profilePremiumSubtitle": "Manage your subscription",
+  "@profilePremiumSubtitle": {
+    "description": "Settings row subtitle"
+  },
+  "profileCancelSubTitle": "Cancel subscription",
+  "@profileCancelSubTitle": {
+    "description": "Settings row title, shown only to subscribers"
+  },
+  "profileCancelSubSubtitle": "Opens the App Store / Play Store cancellation page.",
+  "@profileCancelSubSubtitle": {
+    "description": "Settings row subtitle. Store names stay untranslated."
+  },
+  "profileTtsTestTitle": "Voice coach test",
+  "@profileTtsTestTitle": {
+    "description": "Settings row title"
+  },
+  "profileTtsTestSubtitle": "Quickly try the speech engine",
+  "@profileTtsTestSubtitle": {
+    "description": "Settings row subtitle"
+  },
+  "profilePrivacyTitle": "Privacy",
+  "@profilePrivacyTitle": {
+    "description": "Settings row title"
+  },
+  "profilePrivacySubtitle": "Data and permissions",
+  "@profilePrivacySubtitle": {
+    "description": "Settings row subtitle"
+  },
+  "profileRateAppTitle": "Rate the app",
+  "@profileRateAppTitle": {
+    "description": "Settings row title"
+  },
+  "profileRateAppSubtitle": "Rate us on the Play Store.",
+  "@profileRateAppSubtitle": {
+    "description": "Settings row subtitle. Play Store stays untranslated."
+  },
+  "profileAppTourTitle": "App tour",
+  "@profileAppTourTitle": {
+    "description": "Settings row title"
+  },
+  "profileAppTourSubtitle": "Walk through the screens and features again.",
+  "@profileAppTourSubtitle": {
+    "description": "Settings row subtitle"
+  },
+  "profileDiscoverTitle": "Discover",
+  "@profileDiscoverTitle": {
+    "description": "Settings row title for the capability map"
+  },
+  "profileDiscoverSubtitle": "Everything FormAI can do, in one list.",
+  "@profileDiscoverSubtitle": {
+    "description": "Settings row subtitle"
+  },
+  "profileHelpCentreTitle": "Help centre",
+  "@profileHelpCentreTitle": {
+    "description": "Settings row title"
+  },
+  "profileHelpCentreSubtitle": "Frequently asked questions and fixes.",
+  "@profileHelpCentreSubtitle": {
+    "description": "Settings row subtitle"
+  },
+  "profileSupportTitle": "Support & feedback",
+  "@profileSupportTitle": {
+    "description": "Settings row title"
+  },
+  "profileSupportSubtitle": "Report a bug, send an idea, ask a question.",
+  "@profileSupportSubtitle": {
+    "description": "Settings row subtitle"
+  },
+  "profileSignOut": "Sign out",
+  "@profileSignOut": {
+    "description": "Settings row title"
+  },
+  "profileDetailsUpdated": "Details updated",
+  "@profileDetailsUpdated": {
+    "description": "Toast after saving the profile edit sheet"
+  },
+  "profilePasswordUpdated": "Password updated",
+  "@profilePasswordUpdated": {
+    "description": "Toast after a successful password change"
+  },
+  "profilePasswordUpdateRejected": "The password could not be updated. It must be at least 6 characters and different from the old one.",
+  "@profilePasswordUpdateRejected": {
+    "description": "Toast when the provider rejects a password change"
+  },
+  "profilePasswordUpdateFailed": "The password could not be updated. Please try again.",
+  "@profilePasswordUpdateFailed": {
+    "description": "Toast when a password change fails unexpectedly"
+  },
+  "profileReferralSaved": "Your invite code is saved. Rewards land in your account once the programme starts.",
+  "@profileReferralSaved": {
+    "description": "Toast after redeeming a referral code"
+  },
+  "profileFeedbackSent": "Your message was sent. Thank you!",
+  "@profileFeedbackSent": {
+    "description": "Toast after feedback reaches the server"
+  },
+  "profileFeedbackMailOpened": "Your mail app is open — it reaches us once you send it.",
+  "@profileFeedbackMailOpened": {
+    "description": "Toast when feedback fell back to the mailto transport"
+  },
+  "profileCancelPageFailed": "The page could not be opened. You can cancel through the App Store / Play Store.",
+  "@profileCancelPageFailed": {
+    "description": "Toast when the subscription-management URL will not open"
+  },
+  "profileTtsTestFired": "🔊 Speech test fired — check the logs",
+  "@profileTtsTestFired": {
+    "description": "Toast confirming the TTS smoke test ran. Developer-facing wording is intentional."
+  },
+  "profileSignOutFailed": "Sign-out failed",
+  "@profileSignOutFailed": {
+    "description": "Toast when sign-out throws"
+  },
+  "profileEditSheetTitle": "Update your details",
+  "@profileEditSheetTitle": {
+    "description": "Title of the profile edit bottom sheet"
+  },
+  "profileEditAge": "Age",
+  "@profileEditAge": {
+    "description": "Text field label in the profile edit sheet"
+  },
+  "profileEditGoal": "Goal",
+  "@profileEditGoal": {
+    "description": "Dropdown label in the profile edit sheet"
+  },
+  "profileEditGoalHint": "Choose a goal",
+  "@profileEditGoalHint": {
+    "description": "Dropdown placeholder in the profile edit sheet"
+  },
+  "profileEditInvalidNumber": "Enter a valid number",
+  "@profileEditInvalidNumber": {
+    "description": "Validation error on the numeric profile fields"
+  },
+  "profileGuestUser": "Guest user",
+  "@profileGuestUser": {
+    "description": "Header name shown for an anonymous account"
+  },
+  "profileWelcome": "Welcome",
+  "@profileWelcome": {
+    "description": "Header greeting shown above the account email"
+  },
+  "changePasswordTitle": "Change password",
+  "@changePasswordTitle": {
+    "description": "Title of the change-password sheet"
+  },
+  "changePasswordTooShort": "Your new password must be at least 8 characters.",
+  "@changePasswordTooShort": {
+    "description": "Client-side validation in the change-password sheet"
+  },
+  "changePasswordNewLabel": "New password",
+  "@changePasswordNewLabel": {
+    "description": "Field label in the change-password sheet"
+  },
+  "changePasswordRepeatLabel": "Repeat the password",
+  "@changePasswordRepeatLabel": {
+    "description": "Field label in the change-password sheet"
+  },
+  "changePasswordMismatch": "The passwords do not match",
+  "@changePasswordMismatch": {
+    "description": "Validation error in the change-password sheet"
+  },
+  "changePasswordSubmit": "UPDATE PASSWORD",
+  "@changePasswordSubmit": {
+    "description": "Primary action in the change-password sheet. Rendered uppercase."
+  },
+  "profileGuestSignUpTitle": "Sign up / Sign in",
+  "@profileGuestSignUpTitle": {
+    "description": "Call to action shown to guests at the bottom of the profile"
+  },
+  "profileGuestSignUpSubtitle": "Keep your progress safe in the cloud so a new phone doesn't cost you it.",
+  "@profileGuestSignUpSubtitle": {
+    "description": "Supporting line under the guest sign-up call to action"
+  },
+  "privacySheetTitle": "Privacy policy and data security",
+  "@privacySheetTitle": {
+    "description": "Title of the privacy bottom sheet"
+  },
+  "privacySheetCameraBody": "FormAI uses Google ML Kit to analyse your exercise form. Images are processed on your device, offline; they are never recorded and never sent to any server.",
+  "@privacySheetCameraBody": {
+    "description": "Privacy sheet — camera section. This is a legal representation: the meaning must be preserved exactly, and it must stay true of the shipped app."
+  },
+  "privacySheetProgressHeading": "2. Progress data",
+  "@privacySheetProgressHeading": {
+    "description": "Privacy sheet — numbered section heading"
+  },
+  "privacySheetProgressBody": "Your profile details and completed training days are stored securely so your experience can be personalised.",
+  "@privacySheetProgressBody": {
+    "description": "Privacy sheet — progress data section. Legal representation; preserve the meaning exactly."
+  },
+  "referralCardTitle": "Invite a friend",
+  "@referralCardTitle": {
+    "description": "Title of the referral card on the profile"
+  },
+  "referralCardBody": "Share your invite code — friends who use it are recorded under your code, and you both earn once the reward programme opens.",
+  "@referralCardBody": {
+    "description": "Explanatory body of the referral card"
+  },
+  "referralShare": "Share",
+  "@referralShare": {
+    "description": "Button opening the OS share sheet with the referral code"
+  },
+  "referralCodeLoadFailed": "The code could not be loaded. Check your connection.",
+  "@referralCodeLoadFailed": {
+    "description": "Error shown on the referral card when the code fetch fails"
+  },
+  "referralEnterCodePrompt": "Enter your friend's 6-character invite code.",
+  "@referralEnterCodePrompt": {
+    "description": "Prompt in the manual redeem dialog"
+  },
+  "commonCancel": "Cancel",
+  "@commonCancel": {
+    "description": "Dismissive action in dialogs"
+  },
+  "privacySheetCameraHeading": "1. Camera data",
+  "@privacySheetCameraHeading": {
+    "description": "Privacy sheet — numbered section heading"
+  },
+  "accountSettingsTitle": "Account settings",
+  "@accountSettingsTitle": {
+    "description": "Screen title"
+  },
+  "accountEditProfileSubtitle": "Update your name, age and goal.",
+  "@accountEditProfileSubtitle": {
+    "description": "Settings row subtitle on the account settings screen"
+  },
+  "accountDangerZone": "DANGER ZONE",
+  "@accountDangerZone": {
+    "description": "Section header above destructive actions. Rendered uppercase."
+  },
+  "accountProfileUpdated": "Profile updated",
+  "@accountProfileUpdated": {
+    "description": "Toast after saving the account profile sheet"
+  },
+  "accountReminderOn": "Daily reminder switched on (19:00)",
+  "@accountReminderOn": {
+    "description": "Toast when the daily reminder is enabled. The time is fixed at 19:00."
+  },
+  "accountReminderOff": "Daily reminder switched off",
+  "@accountReminderOff": {
+    "description": "Toast when the daily reminder is disabled"
+  },
+  "accountReminderFailed": "The notification setting could not be applied",
+  "@accountReminderFailed": {
+    "description": "Toast when scheduling or cancelling the reminder throws"
+  },
+  "accountDeleteFailed": "The account could not be deleted. Please try again or contact support.",
+  "@accountDeleteFailed": {
+    "description": "Toast when account deletion fails"
+  },
+  "accountDeleteDialogBody": "This cannot be undone. All your training and nutrition data will be deleted.",
+  "@accountDeleteDialogBody": {
+    "description": "Confirmation dialog body for account deletion. The irreversibility must be unambiguous in every locale."
+  },
+  "accountDeleteConfirm": "DELETE PERMANENTLY",
+  "@accountDeleteConfirm": {
+    "description": "Destructive confirm action. Rendered uppercase."
+  },
+  "accountReminderRowSubtitle": "Daily training reminder (19:00).",
+  "@accountReminderRowSubtitle": {
+    "description": "Notification row subtitle"
+  },
+  "accountEditProfileSheetTitle": "Edit profile",
+  "@accountEditProfileSheetTitle": {
+    "description": "Title of the account profile edit sheet"
+  },
+  "accountFieldName": "Name",
+  "@accountFieldName": {
+    "description": "Text field label"
+  },
+  "accountNameRequired": "Name cannot be empty",
+  "@accountNameRequired": {
+    "description": "Validation error on the name field"
+  },
+  "accountAgeInvalid": "Enter a valid age",
+  "@accountAgeInvalid": {
+    "description": "Validation error on the age field"
+  },
+  "accountAgeOutOfRange": "Must be between 12 and 100",
+  "@accountAgeOutOfRange": {
+    "description": "Validation error when the age is outside the accepted range"
+  },
+  "accountDeleteSectionTitle": "Delete my account",
+  "@accountDeleteSectionTitle": {
+    "description": "Heading of the destructive delete section"
+  },
+  "accountDeleteSectionBody": "This cannot be undone. Your entire training history, your streaks and your profile details will be permanently deleted.",
+  "@accountDeleteSectionBody": {
+    "description": "Explanatory body of the destructive delete section. Legal-adjacent: the irreversibility must survive translation."
+  },
+  "accountLeaveReasonLabel": "Why are you leaving? (optional)",
+  "@accountLeaveReasonLabel": {
+    "description": "Label above the optional churn-reason field"
+  },
+  "accountLeaveReasonHint": "e.g. The plan prices felt too high",
+  "@accountLeaveReasonHint": {
+    "description": "Placeholder in the optional churn-reason field"
   }
 }

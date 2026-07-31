@@ -9,15 +9,23 @@ import '../../../core/theme/theme_extension.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../onboarding/providers/wizard_provider.dart';
+import '../../../l10n/app_localizations.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _danger = Color(0xFFFF4D6D);
 
-const Map<String, String> _goalLabels = {
-  'tone': 'Sıkılaşmak',
-  'bulk': 'Hacim Kazanmak',
-  'sixpack': 'Sadece Six-Pack',
+/// Keys are the values persisted in SharedPreferences — data, never
+/// localized. Only the labels are copy, held as lookups because the map
+/// is `const`.
+const Map<String, String Function(AppLocalizations)> _goalLabels = {
+  'tone': _goalTone,
+  'bulk': _goalBulk,
+  'sixpack': _goalSixpack,
 };
+
+String _goalTone(AppLocalizations l) => l.goalToneLabel;
+String _goalBulk(AppLocalizations l) => l.goalBulkLabel;
+String _goalSixpack(AppLocalizations l) => l.goalSixpackLabel;
 
 /// Dedicated settings surface that hosts the four account-level sections
 /// added in Phase 48 (Edit Profile, Change Password, Notifications) plus
@@ -82,7 +90,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
         elevation: 0,
         foregroundColor: scheme.onSurface,
         title: Text(
-          'Hesap Ayarları',
+          AppLocalizations.of(context).accountSettingsTitle,
           style: TextStyle(
             color: scheme.onSurface,
             fontWeight: FontWeight.w900,
@@ -99,17 +107,18 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             const SizedBox(height: 10),
             _AccountTile(
               icon: Icons.person_outline,
-              title: 'Profili Düzenle',
-              subtitle: 'İsim, yaş ve hedefini güncelle.',
+              title: AppLocalizations.of(context).profileEditProfileTitle,
+              subtitle: AppLocalizations.of(context).accountEditProfileSubtitle,
               onTap: () => _openEditProfile(metrics),
             ),
             const SizedBox(height: 10),
             _AccountTile(
               icon: Icons.lock_outline,
-              title: 'Şifreyi Değiştir',
+              title: AppLocalizations.of(context).profileChangePasswordTitle,
               subtitle: user?.isAnonymous ?? true
-                  ? 'Önce bir hesap oluşturman gerekiyor.'
-                  : 'Yeni bir Supabase şifresi belirle.',
+                  ? AppLocalizations.of(context)
+                      .profileChangePasswordGuestSubtitle
+                  : AppLocalizations.of(context).profileChangePasswordSubtitle,
               onTap: user?.isAnonymous ?? true
                   ? null
                   : () => _openChangePassword(),
@@ -121,7 +130,9 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
               onChanged: _onReminderToggle,
             ),
             const SizedBox(height: 24),
-            _SectionHeader(title: 'TEHLİKELİ BÖLGE', color: _danger),
+            _SectionHeader(
+                title: AppLocalizations.of(context).accountDangerZone,
+                color: _danger),
             const SizedBox(height: 10),
             _DangerCard(
               reasonCtl: _reasonCtl,
@@ -167,7 +178,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     if (goal != null) wizard.setTargetPhysique(goal);
     if (!mounted) return;
     setState(() {});
-    _toast('Profil güncellendi');
+    _toast(AppLocalizations.of(context).accountProfileUpdated);
   }
 
   GoalPhysique? _goalFromKey(String? key) {
@@ -205,7 +216,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
         UserAttributes(password: result),
       );
       if (!mounted) return;
-      _toast('Şifre güncellendi');
+      _toast(AppLocalizations.of(context).profilePasswordUpdated);
     } on AuthException catch (e, st) {
       AppLogger.warning(
         'updatePassword AuthException',
@@ -215,8 +226,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
       if (!mounted) return;
       // AuthException.message is raw English from Supabase — keep it
       // out of the TR UI.
-      _toast('Şifre güncellenemedi. Şifre en az 6 karakter olmalı '
-          've eskisinden farklı olmalı.');
+      _toast(AppLocalizations.of(context).profilePasswordUpdateRejected);
     } catch (e, st) {
       AppLogger.error(
         'updatePassword failed',
@@ -225,7 +235,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
         category: 'auth',
       );
       if (!mounted) return;
-      _toast('Şifre güncellenemedi. Lütfen tekrar dene.');
+      _toast(AppLocalizations.of(context).profilePasswordUpdateFailed);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -251,12 +261,12 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             .scheduleDailyReminder(_defaultReminderTime);
         await prefs.setDailyReminderEnabled(true);
         if (!mounted) return;
-        _toast('Günlük hatırlatma açıldı (19:00)');
+        _toast(AppLocalizations.of(context).accountReminderOn);
       } else {
         await NotificationService.instance.cancelDailyReminder();
         await prefs.setDailyReminderEnabled(false);
         if (!mounted) return;
-        _toast('Günlük hatırlatma kapatıldı');
+        _toast(AppLocalizations.of(context).accountReminderOff);
       }
     } catch (e, st) {
       AppLogger.error(
@@ -266,7 +276,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
         category: 'notifications',
       );
       if (!mounted) return;
-      _toast('Bildirim ayarı uygulanamadı');
+      _toast(AppLocalizations.of(context).accountReminderFailed);
     } finally {
       if (mounted) setState(() => _reminderBusy = false);
     }
@@ -289,9 +299,9 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
-              'Hesap silinemedi. Lütfen tekrar dene veya destek ile iletişime geç.',
+              AppLocalizations.of(context).accountDeleteFailed,
             ),
             backgroundColor: Color(0xFF2A1B5C),
             behavior: SnackBarBehavior.floating,
@@ -325,9 +335,8 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             ),
           ],
         ),
-        content: const Text(
-          'Bu işlem geri alınamaz. Tüm antrenman ve beslenme '
-          'verileriniz silinecektir.',
+        content: Text(
+          AppLocalizations.of(context).accountDeleteDialogBody,
           style: TextStyle(
             color: Colors.white70,
             fontSize: 13.5,
@@ -339,7 +348,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
             style: TextButton.styleFrom(foregroundColor: Colors.white70),
-            child: const Text('Vazgeç'),
+            child: Text(AppLocalizations.of(context).commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
@@ -358,7 +367,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                 letterSpacing: 0.6,
               ),
             ),
-            child: const Text('KALICI OLARAK SİL'),
+            child: Text(AppLocalizations.of(context).accountDeleteConfirm),
           ),
         ],
       ),
@@ -543,7 +552,7 @@ class _NotificationToggleTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Günlük antrenman hatırlatması (19:00).',
+                  AppLocalizations.of(context).accountReminderRowSubtitle,
                   style: TextStyle(
                     color: scheme.onSurface.withValues(alpha: 0.55),
                     fontSize: 12,
@@ -640,8 +649,8 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Profili Düzenle',
+              Text(
+                AppLocalizations.of(context).profileEditProfileTitle,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 18,
@@ -652,11 +661,13 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
               TextFormField(
                 controller: _nameCtl,
                 style: const TextStyle(color: Colors.white),
-                decoration:
-                    _decoration(label: 'İsim', icon: Icons.badge_outlined),
+                decoration: _decoration(
+                    label: AppLocalizations.of(context).accountFieldName,
+                    icon: Icons.badge_outlined),
                 validator: (value) {
                   final v = value?.trim() ?? '';
-                  if (v.isEmpty) return 'İsim boş bırakılamaz';
+                  if (v.isEmpty)
+                    return AppLocalizations.of(context).accountNameRequired;
                   if (v.length > 40) return 'En fazla 40 karakter';
                   return null;
                 },
@@ -667,12 +678,15 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 style: const TextStyle(color: Colors.white),
-                decoration:
-                    _decoration(label: 'Yaş', icon: Icons.cake_outlined),
+                decoration: _decoration(
+                    label: AppLocalizations.of(context).profileEditAge,
+                    icon: Icons.cake_outlined),
                 validator: (value) {
                   final v = int.tryParse(value?.trim() ?? '');
-                  if (v == null) return 'Geçerli bir yaş gir';
-                  if (v < 12 || v > 100) return '12-100 aralığında olmalı';
+                  if (v == null)
+                    return AppLocalizations.of(context).accountAgeInvalid;
+                  if (v < 12 || v > 100)
+                    return AppLocalizations.of(context).accountAgeOutOfRange;
                   return null;
                 },
               ),
@@ -682,18 +696,21 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                 dropdownColor: const Color(0xFF1A1A22),
                 iconEnabledColor: _neon,
                 style: const TextStyle(color: Colors.white),
-                decoration:
-                    _decoration(label: 'Hedef', icon: Icons.flag_outlined),
+                decoration: _decoration(
+                    label: AppLocalizations.of(context).profileEditGoal,
+                    icon: Icons.flag_outlined),
                 items: _goalLabels.entries
                     .map(
                       (e) => DropdownMenuItem(
                         value: e.key,
-                        child: Text(e.value),
+                        child: Text(e.value(AppLocalizations.of(context))),
                       ),
                     )
                     .toList(),
                 onChanged: (v) => setState(() => _goal = v),
-                validator: (v) => v == null ? 'Hedef seç' : null,
+                validator: (v) => v == null
+                    ? AppLocalizations.of(context).profileEditGoalHint
+                    : null,
               ),
               const SizedBox(height: 22),
               FilledButton(
@@ -798,8 +815,8 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Şifreyi Değiştir',
+              Text(
+                AppLocalizations.of(context).profileChangePasswordTitle,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 18,
@@ -807,8 +824,8 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
                 ),
               ),
               const SizedBox(height: 6),
-              const Text(
-                'Yeni şifren en az 8 karakter olmalı.',
+              Text(
+                AppLocalizations.of(context).changePasswordTooShort,
                 style: TextStyle(color: Colors.white54, fontSize: 12),
               ),
               const SizedBox(height: 18),
@@ -817,7 +834,7 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
                 obscureText: _obscure,
                 style: const TextStyle(color: Colors.white),
                 decoration: _decoration(
-                  label: 'Yeni şifre',
+                  label: AppLocalizations.of(context).changePasswordNewLabel,
                   icon: Icons.lock_outline,
                   suffix: IconButton(
                     onPressed: () => setState(() => _obscure = !_obscure),
@@ -839,12 +856,12 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
                 obscureText: _obscure,
                 style: const TextStyle(color: Colors.white),
                 decoration: _decoration(
-                  label: 'Şifreyi tekrar gir',
+                  label: AppLocalizations.of(context).changePasswordRepeatLabel,
                   icon: Icons.lock_outline,
                 ),
                 validator: (value) {
                   if ((value ?? '') != _passwordCtl.text) {
-                    return 'Şifreler eşleşmiyor';
+                    return AppLocalizations.of(context).changePasswordMismatch;
                   }
                   return null;
                 },
@@ -864,7 +881,7 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-                child: const Text('ŞİFREYİ GÜNCELLE'),
+                child: Text(AppLocalizations.of(context).changePasswordSubmit),
               ),
             ],
           ),
@@ -954,9 +971,9 @@ class _DangerCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Hesabımı Sil',
+                  AppLocalizations.of(context).accountDeleteSectionTitle,
                   style: TextStyle(
                     color: _danger,
                     fontSize: 17,
@@ -969,8 +986,7 @@ class _DangerCard extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            'Bu işlem geri alınamaz. Tüm antrenman geçmişiniz, serileriniz '
-            've profil bilgileriniz kalıcı olarak silinecektir.',
+            AppLocalizations.of(context).accountDeleteSectionBody,
             style: TextStyle(
               color: context.colors.onSurface.withValues(alpha: 0.75),
               fontSize: 13,
@@ -979,7 +995,7 @@ class _DangerCard extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           Text(
-            'Ayrılma sebebin (opsiyonel)',
+            AppLocalizations.of(context).accountLeaveReasonLabel,
             style: TextStyle(
               color: context.colors.onSurface.withValues(alpha: 0.60),
               fontSize: 12,
@@ -995,7 +1011,7 @@ class _DangerCard extends StatelessWidget {
             minLines: 2,
             style: TextStyle(color: context.colors.onSurface),
             decoration: _decoration(
-              hint: 'Örn: Plan fiyatları yüksek geldi',
+              hint: AppLocalizations.of(context).accountLeaveReasonHint,
             ),
           ),
           const SizedBox(height: 18),
@@ -1035,7 +1051,7 @@ class _DangerCard extends StatelessWidget {
                       ),
                     )
                   : const Icon(Icons.delete_forever, size: 20),
-              label: const Text('KALICI OLARAK SİL'),
+              label: Text(AppLocalizations.of(context).accountDeleteConfirm),
               style: FilledButton.styleFrom(
                 backgroundColor: _danger,
                 foregroundColor: Colors.white,

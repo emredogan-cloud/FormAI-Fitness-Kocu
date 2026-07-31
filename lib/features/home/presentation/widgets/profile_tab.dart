@@ -39,22 +39,34 @@ const Color _danger = Color(0xFFFF4D6D);
 // Target physique enum names live in SharedPreferences as raw strings; these
 // are the same values used by the onboarding wizard. Keeping the map local so
 // we don't leak UI labels back into the wizard provider.
-const Map<String, String> _goalLabels = {
-  'tone': 'Sıkılaşmak',
-  'bulk': 'Hacim Kazanmak',
-  'sixpack': 'Sadece Six-Pack',
+/// Keys are the values stored in SharedPreferences and written by the
+/// onboarding wizard — DATA, never localized. Only the labels are copy,
+/// which is why they are lookups: the map is `const`.
+const Map<String, String Function(AppLocalizations)> _goalLabels = {
+  'tone': _goalTone,
+  'bulk': _goalBulk,
+  'sixpack': _goalSixpack,
 };
+
+String _goalTone(AppLocalizations l) => l.goalToneLabel;
+String _goalBulk(AppLocalizations l) => l.goalBulkLabel;
+String _goalSixpack(AppLocalizations l) => l.goalSixpackLabel;
 
 /// The onboarding Goal step writes `goal` (a distinct taxonomy from the
 /// account-settings `targetPhysique` enum). Without this fallback map,
 /// every onboarding-completed user saw "HEDEF —" because the profile
 /// only read `targetPhysique`, which onboarding never sets.
-const Map<String, String> _onboardingGoalLabels = {
-  'belly_burn': 'Göbek Eritmek',
-  'muscle_gain': 'Kas Yapmak',
-  'fitness_look': 'Daha Fit Görünmek',
-  'strength': 'Güçlenmek',
+const Map<String, String Function(AppLocalizations)> _onboardingGoalLabels = {
+  'belly_burn': _goalBellyBurn,
+  'muscle_gain': _goalMuscleGain,
+  'fitness_look': _goalFitnessLook,
+  'strength': _goalStrength,
 };
+
+String _goalBellyBurn(AppLocalizations l) => l.goalBellyBurnLabel;
+String _goalMuscleGain(AppLocalizations l) => l.goalMuscleGainLabel;
+String _goalFitnessLook(AppLocalizations l) => l.goalFitnessLookLabel;
+String _goalStrength(AppLocalizations l) => l.goalStrengthLabel;
 
 class ProfileTab extends ConsumerStatefulWidget {
   const ProfileTab({super.key});
@@ -81,10 +93,11 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     // (previously always "—" for that path).
     final goalKey = metrics['targetPhysique'] as String?;
     final onboardingGoal = metrics['goal'] as String?;
+    final l10n = AppLocalizations.of(context);
     final goalLabel = goalKey != null
-        ? (_goalLabels[goalKey] ?? goalKey)
+        ? (_goalLabels[goalKey]?.call(l10n) ?? goalKey)
         : (onboardingGoal != null
-            ? (_onboardingGoalLabels[onboardingGoal] ?? '—')
+            ? (_onboardingGoalLabels[onboardingGoal]?.call(l10n) ?? '—')
             : '—');
 
     return ListView(
@@ -92,13 +105,13 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
       children: [
         _ProfileHeader(email: user?.email, isGuest: user?.isAnonymous ?? false),
         const SizedBox(height: 22),
-        const _SettingsHeader(title: 'BİLGİLERİM'),
+        _SettingsHeader(title: l10n.profileSectionMyInfo),
         const SizedBox(height: 10),
         Row(
           children: [
             Expanded(
               child: _InfoTile(
-                label: 'YAŞ',
+                label: l10n.profileFieldAge,
                 value: age == null ? '—' : '$age',
                 icon: Icons.cake_outlined,
                 onTap: () => _openEditSheet(metrics),
@@ -107,8 +120,8 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
             const SizedBox(width: 12),
             Expanded(
               child: _InfoTile(
-                label: 'KİLO',
-                value: weight == null ? '—' : '$weight kg',
+                label: l10n.profileFieldWeight,
+                value: weight == null ? '—' : l10n.profileWeightKg(weight),
                 icon: Icons.monitor_weight_outlined,
                 onTap: () => _openEditSheet(metrics),
               ),
@@ -120,8 +133,8 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
           children: [
             Expanded(
               child: _InfoTile(
-                label: 'BOY',
-                value: height == null ? '—' : '$height cm',
+                label: l10n.profileFieldHeight,
+                value: height == null ? '—' : l10n.profileHeightCm(height),
                 icon: Icons.height,
                 onTap: () => _openEditSheet(metrics),
               ),
@@ -129,7 +142,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
             const SizedBox(width: 12),
             Expanded(
               child: _InfoTile(
-                label: 'HEDEF',
+                label: l10n.profileFieldGoal,
                 value: goalLabel,
                 icon: Icons.flag_outlined,
                 onTap: () => _openEditSheet(metrics),
@@ -143,7 +156,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
           child: FilledButton.icon(
             onPressed: () => _openEditSheet(metrics),
             icon: const Icon(Icons.edit, size: 18),
-            label: const Text('Düzenle'),
+            label: Text(l10n.profileEdit),
             style: FilledButton.styleFrom(
               backgroundColor: _neon,
               foregroundColor: Colors.white,
@@ -159,22 +172,22 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
           ),
         ),
         const SizedBox(height: 24),
-        const _SettingsHeader(title: 'İLERLEME'),
+        _SettingsHeader(title: l10n.profileSectionProgress),
         const SizedBox(height: 10),
         Row(
           children: [
             Expanded(
               child: StatTile(
-                label: 'SERİ',
-                value: '$streak gün',
+                label: l10n.profileStatStreak,
+                value: l10n.profileStreakDays(streak),
                 icon: Icons.local_fire_department,
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: StatTile(
-                label: 'TAMAMLANAN',
-                value: '$completed / 30',
+                label: l10n.profileStatCompleted,
+                value: l10n.profileCompletedOfTotal(completed, 30),
                 icon: Icons.check_circle_outline,
               ),
             ),
@@ -188,36 +201,35 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
         // shortcut. The PM specifically flagged this section as
         // missing in the Phase 48 review; rebuilding it here keeps the
         // discovery cost to a single tap from the Profile tab.
-        const _SettingsHeader(title: 'HESAP AYARLARI'),
+        _SettingsHeader(title: l10n.profileSectionAccount),
         const SizedBox(height: 10),
         _SettingsTile(
           icon: Icons.person_outline,
-          title: 'Profili Düzenle',
-          subtitle: 'Yaş, boy, kilo ve hedefini güncelle.',
+          title: l10n.profileEditProfileTitle,
+          subtitle: l10n.profileEditProfileSubtitle,
           onTap: () => _openEditSheet(metrics),
         ),
         _SettingsTile(
           icon: Icons.lock_outline,
-          title: 'Şifreyi Değiştir',
+          title: l10n.profileChangePasswordTitle,
           subtitle: user?.isAnonymous ?? true
-              ? 'Önce bir hesap oluşturman gerekiyor.'
-              : 'Yeni bir Supabase şifresi belirle.',
+              ? l10n.profileChangePasswordGuestSubtitle
+              : l10n.profileChangePasswordSubtitle,
           onTap: user?.isAnonymous ?? true
               ? null
               : () => _openChangePasswordSheet(context),
         ),
         _SettingsTile(
           icon: Icons.notifications_outlined,
-          title: 'Bildirimler',
-          subtitle: 'Günlük hatırlatma saati belirle.',
+          title: l10n.profileNotificationsTitle,
+          subtitle: l10n.profileNotificationsSubtitle,
           onTap: () => _pickReminderTime(context),
         ),
         if (!(user?.isAnonymous ?? true))
           _DangerSettingsTile(
             icon: Icons.delete_forever_outlined,
-            title: 'Hesabı Sil',
-            subtitle:
-                'Tüm antrenman ve beslenme verilerini kalıcı olarak siler.',
+            title: l10n.profileDeleteAccountTitle,
+            subtitle: l10n.profileDeleteAccountSubtitle,
             onTap: () => context.push(AppRoutes.accountSettings),
           ),
         // Phase 50D · admin entry point. Conditionally rendered based on
@@ -229,12 +241,12 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
         // discoverability fix for the legitimate admin flow.
         if (ref.watch(isAdminProvider)) ...[
           const SizedBox(height: 28),
-          const _SettingsHeader(title: 'YÖNETİM'),
+          _SettingsHeader(title: l10n.profileSectionAdmin),
           const SizedBox(height: 10),
           _SettingsTile(
             icon: Icons.admin_panel_settings,
-            title: 'Yönetici Paneli',
-            subtitle: 'Tarif ve egzersiz yönetimi.',
+            title: l10n.profileAdminPanelTitle,
+            subtitle: l10n.profileAdminPanelSubtitle,
             onTap: () => context.push(AppRoutes.admin),
           ),
         ],
@@ -244,7 +256,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
         // their HESAP AYARLARI block — high-conversion zone for the
         // viral CAC offset.
         const SizedBox(height: 28),
-        const _SettingsHeader(title: 'ARKADAŞINI DAVET ET'),
+        _SettingsHeader(title: l10n.profileSectionInviteFriend),
         const SizedBox(height: 10),
         const _ReferralCard(),
         // Phase 54B · manual fallback. Even with deep links wired
@@ -258,8 +270,8 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
         const SizedBox(height: 8),
         _SettingsTile(
           icon: Icons.qr_code_2_rounded,
-          title: 'Bir Davet Kodu Kullan',
-          subtitle: 'Arkadaşının kodunu gir, ilk ayını birlikte Pro yapın.',
+          title: l10n.profileRedeemCodeTitle,
+          subtitle: l10n.profileRedeemCodeSubtitle,
           onTap: () => _openManualReferralDialog(context),
         ),
         // Phase 56 Lite · BESLENMEM block. Single-tile entry point for
@@ -268,16 +280,16 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
         // archive) drop in next to it without re-cutting the profile
         // layout.
         const SizedBox(height: 28),
-        const _SettingsHeader(title: 'BESLENMEM'),
+        _SettingsHeader(title: l10n.profileSectionNutrition),
         const SizedBox(height: 10),
         _SettingsTile(
           icon: Icons.favorite,
-          title: 'Favorilerim',
-          subtitle: 'Beğendiğin tarifler ve alışveriş listesi.',
+          title: l10n.profileFavouritesTitle,
+          subtitle: l10n.profileFavouritesSubtitle,
           onTap: () => context.push(AppRoutes.nutritionFavorites),
         ),
         const SizedBox(height: 28),
-        const _SettingsHeader(title: 'AYARLAR'),
+        _SettingsHeader(title: l10n.profileSectionSettings),
         const SizedBox(height: 10),
         // Phase 53 · theme picker. Sits at the top of AYARLAR (above
         // Premium / Sesli Koç / Gizlilik) because dark/light is the
@@ -286,8 +298,8 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
         const _ThemeModeTile(),
         _SettingsTile(
           icon: Icons.workspace_premium,
-          title: 'FormAI Premium',
-          subtitle: 'Aboneliğini yönet',
+          title: l10n.profilePremiumTitle,
+          subtitle: l10n.profilePremiumSubtitle,
           onTap: () => context.push(AppRoutes.paywall),
         ),
         // Phase 56 Lite · cancel-subscription tile, only rendered when
@@ -299,20 +311,20 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
         if (ref.watch(isProProvider))
           _SettingsTile(
             icon: Icons.cancel_outlined,
-            title: 'Aboneliği İptal Et',
-            subtitle: 'App Store / Play Store ile iptal sayfası.',
+            title: l10n.profileCancelSubTitle,
+            subtitle: l10n.profileCancelSubSubtitle,
             onTap: () => _runChurnFlow(context),
           ),
         _SettingsTile(
           icon: Icons.volume_up,
-          title: 'Sesli Koç Testi',
-          subtitle: 'TTS motorunu hızlıca dene',
+          title: l10n.profileTtsTestTitle,
+          subtitle: l10n.profileTtsTestSubtitle,
           onTap: () => _runTtsTest(context),
         ),
         _SettingsTile(
           icon: Icons.shield_outlined,
-          title: 'Gizlilik',
-          subtitle: 'Veri ve izinler',
+          title: l10n.profilePrivacyTitle,
+          subtitle: l10n.profilePrivacySubtitle,
           onTap: () => _openPrivacySheet(context),
         ),
         // Roadmap Phase 1 (R2.1) · the Testers Community observation
@@ -322,8 +334,8 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
         // a separate, rate-limited surface; this one is the user's own.
         _SettingsTile(
           icon: Icons.star_rounded,
-          title: 'Uygulamayı Değerlendir',
-          subtitle: 'Play Store\'da bizi değerlendir.',
+          title: l10n.profileRateAppTitle,
+          subtitle: l10n.profileRateAppSubtitle,
           onTap: () => _openRateApp(context),
         ),
         // Roadmap Phase 2 (R1.1) · replayable tour. The first-run tour is
@@ -333,8 +345,8 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
         // Community observation for *returning* users, not just new ones.
         _SettingsTile(
           icon: Icons.explore_outlined,
-          title: 'Uygulama Turu',
-          subtitle: 'Ekranları ve özellikleri yeniden gez.',
+          title: l10n.profileAppTourTitle,
+          subtitle: l10n.profileAppTourSubtitle,
           onTap: () => _replayTour(context),
         ),
         // Roadmap Phase 4 (C28) · the capability map. Sits beside the
@@ -345,8 +357,8 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
         if (ref.watch(featureFlagProvider(FeatureFlag.discoveryHub)))
           _SettingsTile(
             icon: Icons.auto_awesome_mosaic_outlined,
-            title: 'Keşfet',
-            subtitle: 'FormAI neler yapabiliyor — hepsi tek listede.',
+            title: l10n.profileDiscoverTitle,
+            subtitle: l10n.profileDiscoverSubtitle,
             onTap: () => context.push(AppRoutes.discoveryHub),
           ),
         // Roadmap Phase 1 (C30) · sits directly above the feedback row
@@ -354,8 +366,8 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
         // ticket.
         _SettingsTile(
           icon: Icons.help_outline_rounded,
-          title: 'Yardım Merkezi',
-          subtitle: 'Sık sorulan sorular ve çözümler.',
+          title: l10n.profileHelpCentreTitle,
+          subtitle: l10n.profileHelpCentreSubtitle,
           onTap: () => context.push(AppRoutes.helpCenter),
         ),
         // Phase 56 Lite · "Destek" → "Destek & Geri Bildirim". The
@@ -366,8 +378,8 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
         // and we capture structured data when conditions allow it.
         _SettingsTile(
           icon: Icons.support_agent,
-          title: 'Destek & Geri Bildirim',
-          subtitle: 'Hata bildir, öneri gönder, soru sor.',
+          title: l10n.profileSupportTitle,
+          subtitle: l10n.profileSupportSubtitle,
           onTap: () => _openFeedback(context),
         ),
         if (user?.isAnonymous ?? false)
@@ -375,7 +387,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
         else
           _SettingsTile(
             icon: Icons.logout,
-            title: 'Çıkış Yap',
+            title: l10n.profileSignOut,
             onTap: () => _signOut(context),
           ),
       ],
@@ -403,7 +415,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     if (!mounted) return;
     setState(
         () {}); // userMetrics reads fresh from SharedPreferences on next build
-    _toast(context, 'Bilgiler güncellendi');
+    _toast(context, AppLocalizations.of(context).profileDetailsUpdated);
   }
 
   Future<void> _openChangePasswordSheet(BuildContext context) async {
@@ -422,7 +434,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
         UserAttributes(password: password),
       );
       if (!context.mounted) return;
-      _toast(context, 'Şifre güncellendi');
+      _toast(context, AppLocalizations.of(context).profilePasswordUpdated);
     } on AuthException catch (e, st) {
       AppLogger.warning(
         'updatePassword AuthException',
@@ -433,9 +445,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
       // AuthException.message is raw English from Supabase ("Password
       // should be at least 6 characters") — keep it out of the TR UI.
       _toast(
-          context,
-          'Şifre güncellenemedi. Şifre en az 6 karakter olmalı '
-          've eskisinden farklı olmalı.');
+          context, AppLocalizations.of(context).profilePasswordUpdateRejected);
     } catch (e, st) {
       AppLogger.error(
         'updatePassword failed',
@@ -444,7 +454,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
         category: 'auth',
       );
       if (!context.mounted) return;
-      _toast(context, 'Şifre güncellenemedi. Lütfen tekrar dene.');
+      _toast(context, AppLocalizations.of(context).profilePasswordUpdateFailed);
     }
   }
 
@@ -516,8 +526,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
       if (!context.mounted) return;
       _toast(
         context,
-        'Davet kodun kaydedildi! Ödüller dağıtılmaya başladığında '
-        'hesabına yansıyacak.',
+        AppLocalizations.of(context).profileReferralSaved,
       );
     } on ReferralException catch (e) {
       if (!context.mounted) return;
@@ -530,7 +539,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
         category: 'referral',
       );
       if (!context.mounted) return;
-      _toast(context, 'Davet alınırken bir hata oluştu.');
+      _toast(context, AppLocalizations.of(context).referralErrorUnknown);
     }
   }
 
@@ -548,8 +557,8 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     final result = await showFeedbackSheet(context);
     if (result == null || !context.mounted) return;
     final base = result.transport == FeedbackTransport.supabase
-        ? 'Mesajın iletildi. Teşekkürler!'
-        : 'Mail uygulaman açıldı — gönderince ulaşır.';
+        ? AppLocalizations.of(context).profileFeedbackSent
+        : AppLocalizations.of(context).profileFeedbackMailOpened;
     final reward = result.reward;
     _toast(
       context,
@@ -607,7 +616,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
       if (!context.mounted) return;
       _toast(
         context,
-        'Sayfa açılamadı. App Store / Play Store üzerinden iptal edebilirsin.',
+        AppLocalizations.of(context).profileCancelPageFailed,
       );
     }
   }
@@ -617,7 +626,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     await audio.init();
     await audio.testAudio();
     if (!context.mounted) return;
-    _toast(context, '🔊 TTS test tetiklendi — logları kontrol et');
+    _toast(context, AppLocalizations.of(context).profileTtsTestFired);
   }
 
   Future<void> _signOut(BuildContext context) async {
@@ -627,7 +636,8 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     try {
       await ref.read(authControllerProvider).signOut();
     } catch (_) {
-      if (context.mounted) _toast(context, 'Çıkış başarısız');
+      if (context.mounted)
+        _toast(context, AppLocalizations.of(context).profileSignOutFailed);
     }
   }
 
@@ -721,7 +731,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Bilgilerini Güncelle',
+                AppLocalizations.of(context).profileEditSheetTitle,
                 style: TextStyle(
                   color: scheme.onSurface,
                   fontSize: 18,
@@ -732,7 +742,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
               _numberField(
                 context: context,
                 controller: _ageCtl,
-                label: 'Yaş',
+                label: AppLocalizations.of(context).profileEditAge,
                 icon: Icons.cake_outlined,
                 min: 12,
                 max: 100,
@@ -763,19 +773,21 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                 style: TextStyle(color: scheme.onSurface),
                 decoration: _decoration(
                   context: context,
-                  label: 'Hedef',
+                  label: AppLocalizations.of(context).profileEditGoal,
                   icon: Icons.flag_outlined,
                 ),
                 items: _goalLabels.entries
                     .map(
                       (e) => DropdownMenuItem(
                         value: e.key,
-                        child: Text(e.value),
+                        child: Text(e.value(AppLocalizations.of(context))),
                       ),
                     )
                     .toList(),
                 onChanged: (v) => setState(() => _goal = v),
-                validator: (v) => v == null ? 'Hedef seç' : null,
+                validator: (v) => v == null
+                    ? AppLocalizations.of(context).profileEditGoalHint
+                    : null,
               ),
               const SizedBox(height: 22),
               FilledButton(
@@ -817,7 +829,8 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
       decoration: _decoration(context: context, label: label, icon: icon),
       validator: (value) {
         final v = int.tryParse(value?.trim() ?? '');
-        if (v == null) return 'Geçerli bir sayı gir';
+        if (v == null)
+          return AppLocalizations.of(context).profileEditInvalidNumber;
         if (v < min || v > max) return '$min–$max aralığında olmalı';
         return null;
       },
@@ -939,7 +952,9 @@ class _ProfileHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final label = isGuest ? 'Misafir Kullanıcı' : (email ?? 'Hoşgeldin');
+    final label = isGuest
+        ? AppLocalizations.of(context).profileGuestUser
+        : (email ?? AppLocalizations.of(context).profileWelcome);
     // P1-3 · the level/title/XP identity system was computed and
     // persisted with zero UI consumers — the profile now carries it:
     // level badge on the avatar, title + XP line, and a thin
@@ -1256,7 +1271,7 @@ class _ThemeModeTile extends ConsumerWidget {
           SizedBox(
             width: double.infinity,
             child: SegmentedButton<ThemeMode>(
-              segments: const [
+              segments: [
                 ButtonSegment(
                   value: ThemeMode.system,
                   label: Text('Sistem'),
@@ -1264,7 +1279,7 @@ class _ThemeModeTile extends ConsumerWidget {
                 ),
                 ButtonSegment(
                   value: ThemeMode.light,
-                  label: Text('Açık'),
+                  label: Text(AppLocalizations.of(context).themeModeLight),
                   icon: Icon(Icons.light_mode_outlined, size: 16),
                 ),
                 ButtonSegment(
@@ -1444,7 +1459,7 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Şifreyi Değiştir',
+                AppLocalizations.of(context).changePasswordTitle,
                 style: TextStyle(
                   color: scheme.onSurface,
                   fontSize: 18,
@@ -1453,7 +1468,7 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
               ),
               const SizedBox(height: 6),
               Text(
-                'Yeni şifren en az 8 karakter olmalı.',
+                AppLocalizations.of(context).changePasswordTooShort,
                 style: TextStyle(
                   color: scheme.onSurface.withValues(alpha: 0.55),
                   fontSize: 12,
@@ -1466,7 +1481,7 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
                 style: TextStyle(color: scheme.onSurface),
                 decoration: _decoration(
                   context: context,
-                  label: 'Yeni şifre',
+                  label: AppLocalizations.of(context).changePasswordNewLabel,
                   icon: Icons.lock_outline,
                   suffix: IconButton(
                     onPressed: () => setState(() => _obscure = !_obscure),
@@ -1489,12 +1504,12 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
                 style: TextStyle(color: scheme.onSurface),
                 decoration: _decoration(
                   context: context,
-                  label: 'Şifreyi tekrar gir',
+                  label: AppLocalizations.of(context).changePasswordRepeatLabel,
                   icon: Icons.lock_outline,
                 ),
                 validator: (value) {
                   if ((value ?? '') != _passwordCtl.text) {
-                    return 'Şifreler eşleşmiyor';
+                    return AppLocalizations.of(context).changePasswordMismatch;
                   }
                   return null;
                 },
@@ -1514,7 +1529,7 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-                child: const Text('ŞİFREYİ GÜNCELLE'),
+                child: Text(AppLocalizations.of(context).changePasswordSubmit),
               ),
             ],
           ),
@@ -1607,12 +1622,12 @@ class _GuestLoginTile extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 14),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Üye Ol / Giriş Yap',
+                        AppLocalizations.of(context).profileGuestSignUpTitle,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,
@@ -1622,9 +1637,9 @@ class _GuestLoginTile extends StatelessWidget {
                       ),
                       SizedBox(height: 2),
                       Text(
-                        'İlerlemeni bulutta güvene al, cihaz değiştirirken '
-                        'kaybetme.',
-                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                        AppLocalizations.of(context).profileGuestSignUpSubtitle,
+                        style: const TextStyle(
+                            color: Colors.white70, fontSize: 12),
                       ),
                     ],
                   ),
@@ -1685,7 +1700,7 @@ class _PrivacySheet extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Gizlilik Politikası ve Veri Güvenliği',
+                    AppLocalizations.of(context).privacySheetTitle,
                     style: TextStyle(
                       color: scheme.onSurface,
                       fontSize: 17,
@@ -1697,19 +1712,14 @@ class _PrivacySheet extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 18),
-            const _PrivacySection(
-              title: '1. Kamera Verisi',
-              body:
-                  'FormAI, egzersiz formunuzu analiz etmek için Google ML Kit '
-                  'kullanır. Görüntüler cihazınızda (çevrimdışı) işlenir, '
-                  'kaydedilmez ve hiçbir sunucuya gönderilmez.',
+            _PrivacySection(
+              title: AppLocalizations.of(context).privacySheetCameraHeading,
+              body: AppLocalizations.of(context).privacySheetCameraBody,
             ),
             const SizedBox(height: 14),
-            const _PrivacySection(
-              title: '2. İlerleme Verisi',
-              body: 'Profil bilgileriniz ve tamamlanan antrenman günleriniz, '
-                  'deneyiminizi kişiselleştirmek için güvenli bir şekilde '
-                  'saklanır.',
+            _PrivacySection(
+              title: AppLocalizations.of(context).privacySheetProgressHeading,
+              body: AppLocalizations.of(context).privacySheetProgressBody,
             ),
             const SizedBox(height: 22),
             SizedBox(
@@ -1807,7 +1817,7 @@ class _ReferralCard extends ConsumerWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Arkadaşını davet et',
+                  AppLocalizations.of(context).referralCardTitle,
                   style: TextStyle(
                     color: scheme.onSurface,
                     fontSize: 14,
@@ -1819,8 +1829,7 @@ class _ReferralCard extends ConsumerWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Davet kodunu paylaş — kullanan arkadaşların kodun altında '
-            'kaydedilir, ödül programı açıldığında birlikte kazanırsınız.',
+            AppLocalizations.of(context).referralCardBody,
             style: TextStyle(
               color: scheme.onSurface.withValues(alpha: 0.65),
               fontSize: 12,
@@ -1879,7 +1888,9 @@ class _ReferralCodeRow extends StatelessWidget {
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
               ..showSnackBar(
-                const SnackBar(content: Text('Kod kopyalandı')),
+                SnackBar(
+                    content:
+                        Text(AppLocalizations.of(context).referralCodeCopied)),
               );
           },
         ),
@@ -1893,7 +1904,7 @@ class _ReferralCodeRow extends StatelessWidget {
             );
           },
           icon: const Icon(Icons.ios_share_rounded, size: 16),
-          label: const Text('Paylaş'),
+          label: Text(AppLocalizations.of(context).referralShare),
           style: FilledButton.styleFrom(
             backgroundColor: _neon,
             foregroundColor: Colors.white,
@@ -1933,7 +1944,7 @@ class _ReferralCodeError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      'Kod yüklenemedi. Bağlantını kontrol et.',
+      AppLocalizations.of(context).referralCodeLoadFailed,
       style: TextStyle(
         color: context.colors.error,
         fontSize: 12,
@@ -1998,7 +2009,7 @@ class _RedeemReferralDialogState extends State<_RedeemReferralDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Arkadaşının 6 karakterlik davet kodunu gir.',
+            AppLocalizations.of(context).referralEnterCodePrompt,
             style: TextStyle(
               color: scheme.onSurface.withValues(alpha: 0.65),
               fontSize: 13,
@@ -2055,7 +2066,7 @@ class _RedeemReferralDialogState extends State<_RedeemReferralDialog> {
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: Text(
-            'Vazgeç',
+            AppLocalizations.of(context).commonCancel,
             style: TextStyle(color: scheme.onSurface.withValues(alpha: 0.65)),
           ),
         ),

@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sixpack_ai/core/services/app_preferences.dart';
 import 'package:sixpack_ai/features/auth/providers/auth_provider.dart';
 import 'package:sixpack_ai/features/home/presentation/account_settings_screen.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// Account settings hosts the Phase-1 compliance surfaces (password
 /// change gate, daily-reminder toggle, and the account-deletion danger
@@ -24,8 +25,10 @@ Widget _host(SharedPreferences prefs) {
       sharedPreferencesProvider.overrideWithValue(prefs),
       currentUserProvider.overrideWithValue(null),
     ],
-    child: const MaterialApp(
-      home: AccountSettingsScreen(),
+    child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: const [Locale('tr')],
+      home: const AccountSettingsScreen(),
       debugShowCheckedModeBanner: false,
     ),
   );
