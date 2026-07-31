@@ -155,10 +155,11 @@ void main() {
             completedDays: 9,
             visitedTabs: {0, 1, 2},
             hasUsedCoach: true,
+            nutritionOnboarded: true,
           ),
           dismissedIds: dismissed,
-        ),
-        isNull,
+        )?.id,
+        isNot('camera_framing'),
         reason: 'a user 9 sessions in does not need framing basics',
       );
     });

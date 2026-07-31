@@ -502,6 +502,52 @@ class AnalyticsService {
     return _capture('voice_coach_toggled', {'enabled': enabled});
   }
 
+  // ─── Roadmap Phase 4 (R1.3 · C7 · C28 · C36) · disclosure ─────────
+
+  /// A capability opened on schedule. [day] is days-since-install at the
+  /// moment it opened, which is what makes the schedule's pacing
+  /// measurable rather than assumed.
+  Future<void> featureUnlocked({
+    required String feature,
+    required int day,
+    required int sessions,
+  }) {
+    return _capture('feature_unlocked', {
+      'feature': feature,
+      'day': day,
+      'sessions': sessions,
+    });
+  }
+
+  /// The "Keşfet" capability map was opened.
+  Future<void> discoveryHubOpened() {
+    return _capture('discovery_hub_opened', const {});
+  }
+
+  /// A user opened a capability early from the hub. The rate of this is
+  /// the honest read on whether the schedule is well-paced: a high
+  /// manual-unlock rate means the pacing is wrong, not that users are
+  /// impatient.
+  Future<void> manualUnlock({required String feature, required int day}) {
+    return _capture('manual_unlock', {'feature': feature, 'day': day});
+  }
+
+  // Tip events (`tipShown` / `tipDismissed` / `tipActioned`) already
+  // exist from Phase 2 (C28) and are reused as-is.
+
+  /// The user was assigned to an experiment bucket. Emitted once per
+  /// session so assignment can be joined to behaviour without trusting
+  /// the client to remember it.
+  Future<void> experimentBucketed({
+    required String experiment,
+    required String bucket,
+  }) {
+    return _capture('experiment_bucketed', {
+      'experiment': experiment,
+      'bucket': bucket,
+    });
+  }
+
   /// A camera-free workout session began.
   Future<void> manualModeSessionStarted() {
     return _capture('manual_mode_session_started', const {});

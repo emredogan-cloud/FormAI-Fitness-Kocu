@@ -10,6 +10,7 @@ import '../../features/auth/providers/auth_provider.dart';
 import '../../features/feedback/presentation/help_center_screen.dart';
 import '../../features/home/presentation/account_settings_screen.dart';
 import '../../features/home/presentation/dashboard_screen.dart';
+import '../../features/home/presentation/discovery_hub_screen.dart';
 import '../../features/monetization/presentation/paywall_screen.dart';
 import '../../features/nutrition/domain/models/recipe.dart';
 import '../../features/nutrition/presentation/category_recipes_screen.dart';
@@ -112,6 +113,10 @@ class AppRoutes {
 
   /// Roadmap Phase 3 (C21) · the camera-free workout surface.
   static const String manualWorkout = '/workout/manual';
+
+  /// Roadmap Phase 4 (C28 · R1.3) · the capability map. Every feature
+  /// FormAI has, with its locked/unlocked state and a one-tap override.
+  static const String discoveryHub = '/discover';
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -439,6 +444,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.manualWorkout,
         name: 'manualWorkout',
         builder: (context, state) => const ManualWorkoutScreen(),
+      ),
+      // Roadmap Phase 4 (C28) · the capability map.
+      //
+      // Deliberately NOT gated on `FeatureFlag.discoveryHub`: the flag
+      // hides the *entry points*, but a route that 404s when a flag
+      // flips would break any deep link or back-stack entry created
+      // while it was on.
+      GoRoute(
+        path: AppRoutes.discoveryHub,
+        name: 'discoveryHub',
+        builder: (context, state) => const DiscoveryHubScreen(),
       ),
       // Phase 50B · admin panel. The redirect above already forces
       // non-admins to /, so the builder can render unconditionally.

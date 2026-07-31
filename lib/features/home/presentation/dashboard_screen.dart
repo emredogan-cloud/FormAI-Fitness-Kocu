@@ -7,9 +7,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/services/app_preferences.dart';
+import '../../../core/services/disclosure_providers.dart';
+import '../../../core/services/feature_flags.dart';
+import '../../../core/services/progressive_disclosure.dart';
 import '../../../core/services/first_time_ai_scenes.dart';
 import '../../../core/services/tour_service.dart';
 import '../../../core/services/tour_targets.dart';
+import '../../../core/services/unlock_announcer.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme_extension.dart';
 import '../../../core/services/analytics_service.dart';
@@ -31,6 +35,7 @@ import '../../progress/providers/badge_unlocks_provider.dart';
 import '../../progress/providers/streak_provider.dart';
 import '../../progress/providers/xp_award_listener.dart';
 import '../../progress/providers/xp_provider.dart';
+import '../../workout/domain/workout_mode.dart';
 import '../../workout/providers/workout_provider.dart';
 import 'dashboard_logic.dart';
 import '../domain/discovery_tips.dart';
@@ -255,6 +260,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       if (!mounted) return;
       await ref.read(tourServiceProvider).maybeStartDashboardTour(context);
       if (!mounted) return;
+      // Roadmap Phase 4 (R1.3) · everything open on day 0 is the
+      // starting position, not an achievement. Recording it as
+      // announced here is what stops a first-run user being handed a
+      // stack of "yeni bir şey açıldı" cinematics for capabilities they
+      // have not earned yet.
+      await UnlockAnnouncer.markCurrentStateAnnounced(ref);
+      if (!mounted) return;
       _refreshTip();
     });
   }
@@ -287,6 +299,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   Future<void> _runDashboardReturnFlow() async {
     final badgeJustUnlocked = await _maybeCelebrate();
     if (!mounted) return;
+
+    // Roadmap Phase 4 (R1.3) · a capability arriving is a reward, and
+    // rewards go before asks. If one fired, it is this visit's single
+    // interruption: the Pro invitation, the rating ask and the survey
+    // all wait for the next return. Handing someone a new capability
+    // and immediately asking them to pay or rate would spend the
+    // goodwill the moment just created.
+    final announced = await UnlockAnnouncer.announceIfNeeded(
+      context,
+      ref,
+      firstName:
+          (ref.read(appPreferencesProvider).userMetrics?['name'] as String?)
+              ?.trim(),
+      streakDays: ref.read(currentStreakProvider),
+    );
+    if (!mounted || announced) return;
+
     final session = ref.read(workoutSessionProvider).value;
     if (session == null) return;
     final completed = session.days.where((d) => d.isCompleted).length;
@@ -446,6 +475,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           onChanged: _onTabChanged,
           targets: ref.read(tourTargetsProvider),
           visitedTabs: _visitedTabs,
+          lockedTabs: _lockedTabs(),
         ),
       ),
     );
@@ -554,6 +584,28 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     }
   }
 
+  /// Roadmap Phase 4 (R1.3) · tab indices whose capability hasn't been
+  /// introduced yet.
+  ///
+  /// A tab is only dimmed while EVERY capability living in it is still
+  /// locked — Gelişim hosts three, and dimming it once the first has
+  /// arrived would misrepresent a tab that now has real content.
+  Set<int> _lockedTabs() {
+    final state = ref.watch(disclosureStateProvider);
+    final locked = <int>{};
+    final unlockedTabs = <int>{};
+    for (final capability in Capability.values) {
+      final tab = capability.tabIndex;
+      if (tab == null) continue;
+      if (isUnlocked(capability, state)) {
+        unlockedTabs.add(tab);
+      } else {
+        locked.add(tab);
+      }
+    }
+    return locked.difference(unlockedTabs);
+  }
+
   /// Roadmap Phase 2 · marks [index] visited and rebuilds the nav so the
   /// discovery dot disappears. No-op after the first visit.
   Future<void> _recordTabVisit(int index) async {
@@ -573,6 +625,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   void _refreshTip() {
     if (!mounted) return;
     final prefs = ref.read(appPreferencesProvider);
+    // Roadmap Phase 4 (C7) · the tips engine is kill-switchable.
+    if (!ref.read(featureFlagsProvider).isEnabled(FeatureFlag.contextualTips)) {
+      if (_tip != null) setState(() => _tip = null);
+      return;
+    }
     if (!prefs.seenDashboardTour) {
       if (_tip != null) setState(() => _tip = null);
       return;
@@ -587,13 +644,26 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         hasUsedCoach: prefs.hasChattedWithCoach,
         nutritionOnboarded: prefs.hasCompletedNutritionPrefs,
         daysSinceInstall: prefs.daysSinceInstall,
+        // Roadmap Phase 4 · a session that exists but isn't complete is
+        // one the user walked away from.
+        pausedMidWorkout: session != null &&
+            !session.isSessionComplete &&
+            session.currentReps > 0,
+        manualModeUser: prefs.preferredWorkoutMode == WorkoutMode.manual,
       ),
       dismissedIds: prefs.dismissedTipIds,
+      lastShownAt: prefs.lastTipShownAt,
+      now: DateTime.now(),
+      currentTipId: _tip?.id,
     );
     if (next?.id == _tip?.id) return;
     setState(() => _tip = next);
     if (next != null) {
       AnalyticsService.instance.tipShown(tipId: next.id);
+      // Stamped only when a NEW tip actually surfaces, so the cap
+      // measures gaps between tips rather than time since the last
+      // rebuild.
+      unawaited(prefs.markTipShownNow());
     }
   }
 
@@ -634,6 +704,7 @@ class _BottomNav extends StatelessWidget {
     required this.onChanged,
     required this.targets,
     required this.visitedTabs,
+    required this.lockedTabs,
   });
 
   final int index;
@@ -646,15 +717,31 @@ class _BottomNav extends StatelessWidget {
   /// Tabs already opened at least once. Anything absent gets a dot.
   final Set<int> visitedTabs;
 
-  /// Overlays the discovery dot when the tab has never been opened.
-  /// Applied to the inactive icon only — the active tab is by definition
-  /// one the user has just visited, so it never needs a dot.
+  /// Roadmap Phase 4 (R1.3) · tabs whose capability hasn't been
+  /// introduced yet.
+  ///
+  /// These render at reduced opacity and **remain fully tappable**. The
+  /// roadmap is explicit that locked never means blocked — that pattern
+  /// is reserved for Pro. A dimmed-but-working tab says "there's
+  /// something here you haven't met"; a disabled one says "you may not",
+  /// and only one of those is true.
+  final Set<int> lockedTabs;
+
+  /// Overlays the discovery dot when the tab has never been opened, and
+  /// dims a not-yet-introduced tab.
+  ///
+  /// A locked tab deliberately gets no dot: the dot means "new, go
+  /// look", which is the opposite of what disclosure is saying about it.
   Widget _item(Widget icon, int tabIndex) {
-    if (visitedTabs.contains(tabIndex)) return icon;
+    final child = lockedTabs.contains(tabIndex)
+        ? Opacity(opacity: 0.45, child: icon)
+        : icon;
+    if (lockedTabs.contains(tabIndex)) return child;
+    if (visitedTabs.contains(tabIndex)) return child;
     return Badge(
       backgroundColor: AppColors.neon,
       smallSize: 8,
-      child: icon,
+      child: child,
     );
   }
 

@@ -197,6 +197,10 @@ class AppPreferences {
   // how tip systems become nagging.
   static const String _dismissedTipsKey = 'sixpack.dismissed_tips';
 
+  // Roadmap Phase 4 (C28) · timestamp of the last surfaced tip, for the
+  // frequency cap that stops the catalogue behaving like a queue.
+  static const String _lastTipShownAtKey = 'sixpack.last_tip_shown_at';
+
   // ─── Roadmap Phase 3 · first-workout tutorial & workout mode ──────
   //
   // `_cameraTutorialCompletedKey` gates the one-time guided camera
@@ -218,6 +222,25 @@ class AppPreferences {
   // workout.
   static const String _seenInSessionTutorialKey =
       'sixpack.seen_in_session_tutorial';
+
+  // ─── Roadmap Phase 4 · progressive disclosure ─────────────────────
+  //
+  // Capability keys the user opened themselves from the discovery hub.
+  // Disclosure is a default, never a restriction, so this ledger is how
+  // "I want it now" is honoured permanently.
+  static const String _manualUnlocksKey = 'sixpack.manual_unlocks';
+
+  // Capability keys whose arrival has already been announced. Kept
+  // separately from the unlock ledger because "open" and "announced"
+  // are different facts — a capability can be open because the schedule
+  // reached it while the app wasn't running.
+  static const String _announcedUnlocksKey = 'sixpack.announced_unlocks';
+
+  // Set once for a user who was already mid-journey when disclosure
+  // shipped. They keep everything; a schedule applied on day 40 would
+  // take away surfaces they already use.
+  static const String _disclosureGrandfatheredKey =
+      'sixpack.disclosure_grandfathered';
 
   // Roadmap Phase 3b · the voice coach's mute switch. Absent means ON:
   // spoken coaching is the default experience and the toggle exists to
@@ -823,6 +846,20 @@ class AppPreferences {
     await _prefs.setStringList(_dismissedTipsKey, current.toList());
   }
 
+  /// Roadmap Phase 4 (C28) · when a tip was last surfaced, for the
+  /// frequency cap. Null until the first tip is shown.
+  DateTime? get lastTipShownAt {
+    final raw = _prefs.getString(_lastTipShownAtKey);
+    return raw == null ? null : DateTime.tryParse(raw);
+  }
+
+  Future<void> markTipShownNow() async {
+    await _prefs.setString(
+      _lastTipShownAtKey,
+      DateTime.now().toIso8601String(),
+    );
+  }
+
   // ─── Roadmap Phase 3 · tutorial & workout mode ────────────────────
 
   /// Whether the guided camera setup has reached a terminal choice.
@@ -870,6 +907,35 @@ class AppPreferences {
 
   Future<void> markCompletedPracticeRep() async {
     await _prefs.setBool(_completedPracticeRepKey, true);
+  }
+
+  // ─── Roadmap Phase 4 · progressive disclosure ─────────────────────
+
+  /// Capability keys the user unlocked themselves from the discovery hub.
+  Set<String> get manualUnlocks =>
+      (_prefs.getStringList(_manualUnlocksKey) ?? const <String>[]).toSet();
+
+  Future<void> markManuallyUnlocked(String capabilityKey) async {
+    final next = manualUnlocks..add(capabilityKey);
+    await _prefs.setStringList(_manualUnlocksKey, next.toList());
+  }
+
+  /// Capability keys whose arrival has already been announced.
+  Set<String> get announcedUnlocks =>
+      (_prefs.getStringList(_announcedUnlocksKey) ?? const <String>[]).toSet();
+
+  Future<void> markUnlockAnnounced(String capabilityKey) async {
+    final next = announcedUnlocks..add(capabilityKey);
+    await _prefs.setStringList(_announcedUnlocksKey, next.toList());
+  }
+
+  /// True for a user who predates staged disclosure. They keep every
+  /// capability regardless of schedule.
+  bool get disclosureGrandfathered =>
+      _prefs.getBool(_disclosureGrandfatheredKey) ?? false;
+
+  Future<void> setDisclosureGrandfathered(bool value) async {
+    await _prefs.setBool(_disclosureGrandfatheredKey, value);
   }
 
   /// Whether the user has ever actually *said something* to the AI coach.

@@ -14,6 +14,9 @@ import 'core/services/analytics_service.dart';
 import 'core/services/app_preferences.dart';
 import 'core/services/consent_state.dart';
 import 'core/services/deep_link_service.dart';
+import 'core/services/disclosure_providers.dart';
+import 'core/services/experiments.dart';
+import 'core/services/feature_flags.dart';
 import 'core/services/live_activity_service.dart';
 import 'core/services/smart_reminder_scheduler.dart';
 import 'core/services/widget_sync_service.dart';
@@ -618,6 +621,37 @@ class _FormAIAppState extends ConsumerState<FormAIApp> {
     Future<void>.microtask(() {
       ref.read(deepLinkServiceProvider).start();
     });
+    // Roadmap Phase 4 (C7 · R1.3 · C36) · start-of-session housekeeping.
+    //
+    // All three are fire-and-forget by design: none of them may delay
+    // first paint, and the app is fully functional if every one of them
+    // fails. `refresh()` in particular swallows its own errors — being
+    // unable to reach the flag service is a normal condition, not an
+    // outage.
+    Future<void>.microtask(() async {
+      await ensureDisclosureGrandfathering(ref);
+      if (!mounted) return;
+      _reportExperimentBucket();
+      unawaited(ref.read(featureFlagsProvider).refresh());
+    });
+  }
+
+  /// Records which side of the onboarding-length A/B this user is on.
+  ///
+  /// Emitted every session rather than once at assignment: bucketing is
+  /// a pure function of (experiment, user id), so re-emitting is free
+  /// and means analysis never has to trust that a one-time client event
+  /// was delivered. Skipped entirely while the experiment flag is off,
+  /// so a dormant experiment produces no data to misread.
+  void _reportExperimentBucket() {
+    final flags = ref.read(featureFlagsProvider);
+    if (!flags.isEnabled(FeatureFlag.onboardingLengthExperiment)) return;
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) return;
+    AnalyticsService.instance.experimentBucketed(
+      experiment: kOnboardingLengthExperiment.id,
+      bucket: bucketFor(kOnboardingLengthExperiment, userId),
+    );
   }
 
   @override

@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/routing/app_router.dart';
 import '../../../../core/services/app_preferences.dart';
+import '../../../../core/services/feature_flags.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/share_service.dart';
 import '../../../../core/services/tour_service.dart';
@@ -335,6 +336,18 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
           subtitle: 'Ekranları ve özellikleri yeniden gez.',
           onTap: () => _replayTour(context),
         ),
+        // Roadmap Phase 4 (C28) · the capability map. Sits beside the
+        // tour because the two answer the same question at different
+        // depths: the tour shows where things are, the hub shows what
+        // exists — including what hasn't been introduced yet, which is
+        // the part staged disclosure owes the user.
+        if (ref.watch(featureFlagProvider(FeatureFlag.discoveryHub)))
+          _SettingsTile(
+            icon: Icons.auto_awesome_mosaic_outlined,
+            title: 'Keşfet',
+            subtitle: 'FormAI neler yapabiliyor — hepsi tek listede.',
+            onTap: () => context.push(AppRoutes.discoveryHub),
+          ),
         // Roadmap Phase 1 (C30) · sits directly above the feedback row
         // so a user with a question finds the answer before writing a
         // ticket.
