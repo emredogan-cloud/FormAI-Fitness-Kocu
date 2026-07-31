@@ -1,7 +1,6 @@
 {
   "lib/core/routing/app_router.dart": 4,
   "lib/core/services/first_time_ai_scenes.dart": 9,
-  "lib/core/services/notification_service.dart": 22,
   "lib/core/services/progressive_disclosure.dart": 17,
   "lib/core/services/share_service.dart": 3,
   "lib/core/services/tour_service.dart": 15,

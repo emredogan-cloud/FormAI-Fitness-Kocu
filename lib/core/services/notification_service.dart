@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+
+import '../../l10n/app_localizations.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
@@ -40,18 +42,29 @@ class NotificationService {
   static const int _dailyReminderId = 1001;
   static const int _streakWarningId = 1002;
   static const String _channelId = 'formai_daily_reminder';
-  static const String _channelName = 'Günlük Hatırlatıcı';
-  static const String _channelDesc =
-      'FormAI günlük antrenman hatırlatmaları için kullanılır.';
   // Phase 52 · streak-protection ping fires 48 h after the last workout
   // and shares the same Android notification channel because the OS
   // settings UI groups by channel name; users would be confused by a
   // separate "Streak Warning" toggle when the intent is the same
   // ("FormAI is reminding me to train").
   static const String _streakChannelId = 'formai_streak_warning';
-  static const String _streakChannelName = 'Seri Koruma';
-  static const String _streakChannelDesc =
-      'Antrenman serini kaybetmek üzereyken bilgilendirici uyarı.';
+
+  /// The locale scheduled notification copy is written in.
+  ///
+  /// Roadmap Phase 5 · notifications are composed at SCHEDULE time and
+  /// fired later by the OS with no app process running, so their words
+  /// are frozen the moment they are scheduled. A locale change takes
+  /// effect on the next reschedule, not on an already-pending
+  /// notification — which is why this is a locale rather than a live
+  /// AppLocalizations, and why `main.dart` assigns it where the app
+  /// resolves its own locale.
+  static Locale copyLocale = const Locale('tr');
+
+  /// Loads copy without a widget tree — two of the three schedulers
+  /// (the workout repository and the smart-reminder scheduler) run far
+  /// from any BuildContext.
+  static Future<AppLocalizations> _copy() =>
+      AppLocalizations.delegate.load(copyLocale);
   // Phase 58 · smart-reminder variant pools, keyed by the
   // [SmartReminderCondition] the user is in at scheduling time.
   //
@@ -67,60 +80,39 @@ class NotificationService {
   // verbatim ("Antrenman Vakti! 💪" / "Hedeflerinden uzaklaşma…");
   // the rest of each pool offers tonal variation so the user doesn't
   // see the same string every day.
-  static const List<({String title, String body})> _noWorkoutVariants = [
-    (
-      title: 'Antrenman Vakti! 💪',
-      body:
-          'Hedeflerinden uzaklaşma. Günün egzersizi seni bekliyor, hemen başla!',
-    ),
-    (
-      title: 'Bugünün antrenmanı seni bekliyor! 💪',
-      body: 'Sadece 10–15 dakika. Seriyi koruyalım, bir adım daha at.',
-    ),
-    (
-      title: 'Bir hedefin var, unutma 🎯',
-      body: 'Bugün antrenmanı geçersen yarın iki gün geride kalırsın.',
-    ),
-  ];
-  static const List<({String title, String body})> _workoutNoFoodVariants = [
-    (
-      title: 'Yakıt Gerekli! 🥩',
-      body:
-          'Harika bir antrenman çıkardın. Şimdi toparlanma vakti, bugünün öğünlerini kaydet!',
-    ),
-    (
-      title: 'Toparlanma zamanı 🥗',
-      body: 'Antrenmanı bitirdin — şimdi öğünlerini ekle ve bugünü tamamla.',
-    ),
-  ];
-  static const List<({String title, String body})> _bothDoneVariants = [
-    (
-      title: 'Günü fethettin! 🏆',
-      body: 'Bugün disiplinden kopmadın. Şimdi bol su iç ve dinlenmeye geç.',
-    ),
-    (
-      title: 'Mükemmel bir gün 💧',
-      body: 'Antrenman ✅ Beslenme ✅ — kalan tek şey su ve kaliteli uyku.',
-    ),
-    (
-      title: 'Devam et! ⚡',
-      body: 'Bugün hedeflerini tutturdun. Yarın da aynı disiplinle devam.',
-    ),
-  ];
+  static List<({String title, String body})> _noWorkoutVariants(
+          AppLocalizations l) =>
+      [
+        (title: l.notifTrainTimeTitle, body: l.notifTrainTimeBody),
+        (
+          title: l.notifTodaysWorkoutWaitsTitle,
+          body: l.notifTodaysWorkoutWaitsBody
+        ),
+        (title: l.notifYouHaveAGoalTitle, body: l.notifYouHaveAGoalBody),
+      ];
+  static List<({String title, String body})> _workoutNoFoodVariants(
+          AppLocalizations l) =>
+      [
+        (title: l.notifFuelNeededTitle, body: l.notifFuelNeededBody),
+        (title: l.notifRecoveryTimeTitle, body: l.notifRecoveryTimeBody),
+      ];
+  static List<({String title, String body})> _bothDoneVariants(
+          AppLocalizations l) =>
+      [
+        (title: l.notifConqueredTheDayTitle, body: l.notifConqueredTheDayBody),
+        (title: l.notifPerfectDayTitle, body: l.notifPerfectDayBody),
+        (title: l.notifKeepGoingTitle, body: l.notifKeepGoingBody),
+      ];
 
   // Streak warning fires after 48 h of inactivity; intentionally
   // separate from the smart-reminder pools because by definition
   // the user *hasn't* worked out, so it always uses urgency framing.
-  static const List<({String title, String body})> _streakVariants = [
-    (
-      title: 'Seriyi kaybetmek üzeresin! ⚡',
-      body: '48 saat oldu. 10 dakikalık bir oturum momentumu kurtarır.',
-    ),
-    (
-      title: 'Geri dönüş zamanı 🔁',
-      body: 'Serini bozmadan bugün bir set yap; yarın daha da kolaylaşır.',
-    ),
-  ];
+  static List<({String title, String body})> _streakVariants(
+          AppLocalizations l) =>
+      [
+        (title: l.notifStreakAtRiskTitle, body: l.notifStreakAtRiskBody),
+        (title: l.notifTimeToComeBackTitle, body: l.notifTimeToComeBackBody),
+      ];
 
   Future<void> init() async {
     if (_initialized) return;
@@ -212,7 +204,8 @@ class NotificationService {
     await _plugin.cancel(id: _dailyReminderId);
 
     final scheduled = _nextInstanceOf(time);
-    final variant = _pickVariant(_variantsFor(condition));
+    final l10n = await _copy();
+    final variant = _pickVariant(_variantsFor(condition, l10n));
     // Exact-alarm decision · `inexactAllowWhileIdle` (was
     // `exactAllowWhileIdle`). The manifest no longer declares the
     // exact-alarm permissions, and `exactAllowWhileIdle` without them
@@ -227,11 +220,11 @@ class NotificationService {
         title: variant.title,
         body: variant.body,
         scheduledDate: scheduled,
-        notificationDetails: const NotificationDetails(
+        notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             _channelId,
-            _channelName,
-            channelDescription: _channelDesc,
+            l10n.notifChannelDailyName,
+            channelDescription: l10n.notifChannelDailyDesc,
             importance: Importance.high,
             priority: Priority.high,
           ),
@@ -261,14 +254,14 @@ class NotificationService {
   }
 
   List<({String title, String body})> _variantsFor(
-      SmartReminderCondition condition) {
+      SmartReminderCondition condition, AppLocalizations l10n) {
     switch (condition) {
       case SmartReminderCondition.noWorkout:
-        return _noWorkoutVariants;
+        return _noWorkoutVariants(l10n);
       case SmartReminderCondition.workoutNoFood:
-        return _workoutNoFoodVariants;
+        return _workoutNoFoodVariants(l10n);
       case SmartReminderCondition.bothDone:
-        return _bothDoneVariants;
+        return _bothDoneVariants(l10n);
     }
   }
 
@@ -303,18 +296,19 @@ class NotificationService {
     await _plugin.cancel(id: _streakWarningId);
 
     final scheduled = tz.TZDateTime.now(tz.local).add(delay);
-    final variant = _pickVariant(_streakVariants);
+    final l10n = await _copy();
+    final variant = _pickVariant(_streakVariants(l10n));
     try {
       await _plugin.zonedSchedule(
         id: _streakWarningId,
         title: variant.title,
         body: variant.body,
         scheduledDate: scheduled,
-        notificationDetails: const NotificationDetails(
+        notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             _streakChannelId,
-            _streakChannelName,
-            channelDescription: _streakChannelDesc,
+            l10n.notifChannelStreakName,
+            channelDescription: l10n.notifChannelStreakDesc,
             importance: Importance.high,
             priority: Priority.high,
           ),

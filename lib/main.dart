@@ -18,6 +18,7 @@ import 'core/services/disclosure_providers.dart';
 import 'core/services/experiments.dart';
 import 'core/services/feature_flags.dart';
 import 'core/services/live_activity_service.dart';
+import 'core/services/notification_service.dart';
 import 'core/services/smart_reminder_scheduler.dart';
 import 'core/services/widget_sync_service.dart';
 import 'core/theme/app_theme.dart';
@@ -702,14 +703,14 @@ class _FormAIAppState extends ConsumerState<FormAIApp> {
       // default, which would hand an unsupported-locale user a screen
       // of untranslated keys.
       localeResolutionCallback: (deviceLocale, supported) {
-        if (deviceLocale != null) {
-          for (final locale in supported) {
-            if (locale.languageCode == deviceLocale.languageCode) {
-              return locale;
-            }
-          }
-        }
-        return supported.isEmpty ? const Locale('tr') : supported.first;
+        final resolved = _resolveLocale(deviceLocale, supported);
+        // Scheduled notifications are composed with no widget tree —
+        // the workout repository and the smart-reminder scheduler both
+        // run far from a BuildContext. This is the point where the app
+        // decides what language it speaks, so it is also where the
+        // notification service is told.
+        NotificationService.copyLocale = resolved;
+        return resolved;
       },
       // Phase 49 · the dark builder layers floating, neon-bordered
       // SnackBars on top of the seed-based ColorScheme so toasts read
@@ -736,4 +737,18 @@ class _FormAIAppState extends ConsumerState<FormAIApp> {
       routerConfig: router,
     );
   }
+}
+
+/// Roadmap Phase 5 (C11) · device locale → a locale we actually ship.
+///
+/// Honours the device locale when we genuinely support it, otherwise
+/// falls back to Turkish — never to the framework default, which would
+/// hand an unsupported-locale user a screen of untranslated keys.
+Locale _resolveLocale(Locale? deviceLocale, Iterable<Locale> supported) {
+  if (deviceLocale != null) {
+    for (final locale in supported) {
+      if (locale.languageCode == deviceLocale.languageCode) return locale;
+    }
+  }
+  return supported.isEmpty ? const Locale('tr') : supported.first;
 }

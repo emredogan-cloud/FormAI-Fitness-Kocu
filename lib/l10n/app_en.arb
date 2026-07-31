@@ -1571,5 +1571,101 @@
   "badgeFormLegendUnlocked": "30 days of training + 30 days of nutrition!",
   "@badgeFormLegendUnlocked": {
     "description": "Celebration line shown the moment the form_legend badge unlocks. Past tense on purpose — the gallery's badgeFormLegendDesc states the GOAL, this states the ACHIEVEMENT, and they are shown at different moments."
+  },
+  "notifTrainTimeTitle": "Training time! 💪",
+  "@notifTrainTimeTitle": {
+    "description": "Daily reminder, user has not trained today (variant 1 of 3). Title and body match the product spec verbatim; the other two variants exist so two consecutive days never show identical copy."
+  },
+  "notifTrainTimeBody": "Don't drift from your goals. Today's workout is waiting — start now!",
+  "@notifTrainTimeBody": {
+    "description": "Body for notifTrainTimeTitle"
+  },
+  "notifTodaysWorkoutWaitsTitle": "Today's workout is waiting! 💪",
+  "@notifTodaysWorkoutWaitsTitle": {
+    "description": "Daily reminder, no workout today (variant 2 of 3)"
+  },
+  "notifTodaysWorkoutWaitsBody": "Just 10–15 minutes. Keep the streak alive, take one more step.",
+  "@notifTodaysWorkoutWaitsBody": {
+    "description": "Body for notifTodaysWorkoutWaitsTitle"
+  },
+  "notifYouHaveAGoalTitle": "You have a goal — don't forget 🎯",
+  "@notifYouHaveAGoalTitle": {
+    "description": "Daily reminder, no workout today (variant 3 of 3)"
+  },
+  "notifYouHaveAGoalBody": "Skip today and tomorrow you are two days behind.",
+  "@notifYouHaveAGoalBody": {
+    "description": "Body for notifYouHaveAGoalTitle"
+  },
+  "notifFuelNeededTitle": "Fuel needed! 🥩",
+  "@notifFuelNeededTitle": {
+    "description": "Daily reminder, workout done but no nutrition logged (variant 1 of 2)"
+  },
+  "notifFuelNeededBody": "Great session. Now for recovery — log today’s meals!",
+  "@notifFuelNeededBody": {
+    "description": "Body for notifFuelNeededTitle"
+  },
+  "notifRecoveryTimeTitle": "Recovery time 🥗",
+  "@notifRecoveryTimeTitle": {
+    "description": "Daily reminder, workout done but no nutrition logged (variant 2 of 2)"
+  },
+  "notifRecoveryTimeBody": "Workout done — now add your meals and finish the day.",
+  "@notifRecoveryTimeBody": {
+    "description": "Body for notifRecoveryTimeTitle"
+  },
+  "notifConqueredTheDayTitle": "You conquered the day! 🏆",
+  "@notifConqueredTheDayTitle": {
+    "description": "Daily reminder, workout and nutrition both done (variant 1 of 3)"
+  },
+  "notifConqueredTheDayBody": "You held the line today. Now drink plenty of water and rest.",
+  "@notifConqueredTheDayBody": {
+    "description": "Body for notifConqueredTheDayTitle"
+  },
+  "notifPerfectDayTitle": "A perfect day 💧",
+  "@notifPerfectDayTitle": {
+    "description": "Daily reminder, both done (variant 2 of 3)"
+  },
+  "notifPerfectDayBody": "Workout ✅ Nutrition ✅ — all that is left is water and good sleep.",
+  "@notifPerfectDayBody": {
+    "description": "Body for notifPerfectDayTitle"
+  },
+  "notifKeepGoingTitle": "Keep going! ⚡",
+  "@notifKeepGoingTitle": {
+    "description": "Daily reminder, both done (variant 3 of 3)"
+  },
+  "notifKeepGoingBody": "You hit your targets today. Same discipline tomorrow.",
+  "@notifKeepGoingBody": {
+    "description": "Body for notifKeepGoingTitle"
+  },
+  "notifStreakAtRiskTitle": "Your streak is at risk! ⚡",
+  "@notifStreakAtRiskTitle": {
+    "description": "Streak warning fired 48h after the last workout (variant 1 of 2). Always urgency framing — by definition the user has not trained."
+  },
+  "notifStreakAtRiskBody": "It has been 48 hours. A 10-minute session saves your momentum.",
+  "@notifStreakAtRiskBody": {
+    "description": "Body for notifStreakAtRiskTitle"
+  },
+  "notifTimeToComeBackTitle": "Time to come back 🔁",
+  "@notifTimeToComeBackTitle": {
+    "description": "Streak warning (variant 2 of 2)"
+  },
+  "notifTimeToComeBackBody": "Do one set today before the streak breaks; tomorrow gets easier.",
+  "@notifTimeToComeBackBody": {
+    "description": "Body for notifTimeToComeBackTitle"
+  },
+  "notifChannelDailyName": "Daily reminder",
+  "@notifChannelDailyName": {
+    "description": "Android notification channel name, shown in OS settings"
+  },
+  "notifChannelDailyDesc": "Used for FormAI daily workout reminders.",
+  "@notifChannelDailyDesc": {
+    "description": "Android notification channel description"
+  },
+  "notifChannelStreakName": "Streak protection",
+  "@notifChannelStreakName": {
+    "description": "Android channel name for the 48h streak warning"
+  },
+  "notifChannelStreakDesc": "A heads-up when you are about to lose your training streak.",
+  "@notifChannelStreakDesc": {
+    "description": "Android channel description for the streak warning"
   }
 }
