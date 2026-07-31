@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:sixpack_ai/core/routing/app_router.dart';
 import 'package:sixpack_ai/features/auth/providers/auth_provider.dart';
 import 'package:sixpack_ai/features/referral/presentation/referral_landing_screen.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// The `formai://r/<code>` deep-link landing. The common entry is a
 /// signed-out friend arriving from a share, so these tests cover that
@@ -34,6 +35,8 @@ Widget _host(String code) {
       currentUserProvider.overrideWithValue(null),
     ],
     child: MaterialApp.router(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: [Locale('tr')],
       routerConfig: router,
       debugShowCheckedModeBanner: false,
     ),

@@ -9,6 +9,7 @@ import '../../../core/theme/theme_extension.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/referral_provider.dart';
 import '../services/referral_service.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Phase 54 · landing screen reached via the `formai://r/<code>` deep
 /// link. Two roles:
@@ -75,7 +76,7 @@ class _ReferralLandingScreenState extends ConsumerState<ReferralLandingScreen> {
               ),
               const Spacer(),
               Text(
-                'Bir arkadaşın seni davet etti! 🎉',
+                AppLocalizations.of(context).referralInvited,
                 style: TextStyle(
                   color: scheme.onSurface,
                   fontSize: 28,
@@ -113,7 +114,8 @@ class _ReferralLandingScreenState extends ConsumerState<ReferralLandingScreen> {
               else if (isAnonOrSignedOut)
                 FilledButton(
                   onPressed: () => context.go(AppRoutes.auth),
-                  child: const Text('Hesap Oluştur'),
+                  child:
+                      Text(AppLocalizations.of(context).referralCreateAccount),
                 )
               else
                 FilledButton(
@@ -124,7 +126,7 @@ class _ReferralLandingScreenState extends ConsumerState<ReferralLandingScreen> {
                           width: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Daveti Kabul Et'),
+                      : Text(AppLocalizations.of(context).referralAccept),
                 ),
             ],
           ),
@@ -190,7 +192,9 @@ class _CodeCard extends StatelessWidget {
             onPressed: () {
               Clipboard.setData(ClipboardData(text: code.toUpperCase()));
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Kod kopyalandı')),
+                SnackBar(
+                    content:
+                        Text(AppLocalizations.of(context).referralCodeCopied)),
               );
             },
           ),

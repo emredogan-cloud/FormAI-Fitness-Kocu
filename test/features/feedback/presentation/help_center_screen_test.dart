@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sixpack_ai/core/services/app_preferences.dart';
 import 'package:sixpack_ai/features/feedback/data/faq_content.dart';
 import 'package:sixpack_ai/features/feedback/presentation/help_center_screen.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// Roadmap Phase 1 (C30) · the help centre.
 Future<Widget> _host() async {
@@ -12,7 +13,9 @@ Future<Widget> _host() async {
   final prefs = await SharedPreferences.getInstance();
   return ProviderScope(
     overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
-    child: const MaterialApp(
+    child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: [Locale('tr')],
       home: HelpCenterScreen(),
       debugShowCheckedModeBanner: false,
     ),
@@ -154,6 +157,8 @@ void main() {
           child: const MediaQuery(
             data: MediaQueryData(textScaler: TextScaler.linear(1.3)),
             child: MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: [Locale('tr')],
               home: HelpCenterScreen(),
               debugShowCheckedModeBanner: false,
             ),

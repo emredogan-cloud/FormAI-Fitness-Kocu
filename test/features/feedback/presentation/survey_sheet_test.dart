@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sixpack_ai/core/services/app_preferences.dart';
 import 'package:sixpack_ai/features/feedback/domain/survey.dart';
 import 'package:sixpack_ai/features/feedback/presentation/survey_sheet.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// Roadmap Phase 1 (C8) · the micro-survey sheet.
 const _nps = SurveyDefinition(
@@ -37,6 +38,8 @@ Future<void> _pumpSheet(
       child: MediaQuery(
         data: MediaQueryData(textScaler: TextScaler.linear(textScale)),
         child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: [Locale('tr')],
           debugShowCheckedModeBanner: false,
           home: Builder(
             builder: (context) => Scaffold(
@@ -113,6 +116,8 @@ void main() {
       UncontrolledProviderScope(
         container: container,
         child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: [Locale('tr')],
           debugShowCheckedModeBanner: false,
           home: Builder(
             builder: (context) => Scaffold(
@@ -154,6 +159,8 @@ void main() {
       UncontrolledProviderScope(
         container: container,
         child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: [Locale('tr')],
           debugShowCheckedModeBanner: false,
           home: Builder(
             builder: (context) => Scaffold(

@@ -6,6 +6,7 @@ import '../../../core/theme/theme_extension.dart';
 import '../data/faq_content.dart';
 import '../services/feedback_service.dart';
 import 'feedback_sheet.dart';
+import '../../../l10n/app_localizations.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 
@@ -48,8 +49,8 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen> {
     );
     if (result == null || !mounted) return;
     final base = result.transport == FeedbackTransport.supabase
-        ? 'Mesajın iletildi. Teşekkürler!'
-        : 'Mail uygulaman açıldı — gönderince ulaşır.';
+        ? AppLocalizations.of(context).feedbackSent
+        : AppLocalizations.of(context).feedbackMailOpened;
     final reward = result.reward;
     ScaffoldMessenger.maybeOf(context)?.showSnackBar(
       SnackBar(
@@ -72,7 +73,7 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen> {
         elevation: 0,
         foregroundColor: scheme.onSurface,
         title: Text(
-          'Yardım Merkezi',
+          AppLocalizations.of(context).helpCenterTitle,
           style: TextStyle(
             color: scheme.onSurface,
             fontWeight: FontWeight.w900,
@@ -146,7 +147,7 @@ class _SearchField extends StatelessWidget {
             ? null
             : Semantics(
                 button: true,
-                label: 'Aramayı temizle',
+                label: AppLocalizations.of(context).helpCenterClearSearch,
                 child: IconButton(
                   icon: const Icon(Icons.close_rounded, size: 18),
                   color: scheme.onSurface.withValues(alpha: 0.45),
@@ -296,7 +297,7 @@ class _NoResults extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Sorunu bize doğrudan yazabilirsin — her mesaj okunur.',
+            AppLocalizations.of(context).helpCenterAskDirect,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: scheme.onSurface.withValues(alpha: 0.6),
@@ -307,7 +308,7 @@ class _NoResults extends StatelessWidget {
           FilledButton.icon(
             onPressed: onAsk,
             icon: const Icon(Icons.support_agent, size: 18),
-            label: const Text('Soru Gönder'),
+            label: Text(AppLocalizations.of(context).helpCenterSendQuestion),
             style: FilledButton.styleFrom(
               backgroundColor: _neon,
               foregroundColor: Colors.white,
@@ -351,7 +352,7 @@ class _StillStuckCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Cevabını bulamadın mı?',
+                      AppLocalizations.of(context).helpCenterNoAnswer,
                       style: TextStyle(
                         color: scheme.onSurface,
                         fontSize: 14.5,
@@ -360,7 +361,7 @@ class _StillStuckCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      'Bize yaz — her mesaj okunur ve yanıtlanır.',
+                      AppLocalizations.of(context).helpCenterWriteToUs,
                       style: TextStyle(
                         color: scheme.onSurface.withValues(alpha: 0.65),
                         fontSize: 12.5,

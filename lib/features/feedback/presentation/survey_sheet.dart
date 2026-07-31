@@ -5,6 +5,7 @@ import '../../../core/theme/theme_extension.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../domain/survey.dart';
 import '../services/survey_service.dart';
+import '../../../l10n/app_localizations.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 
@@ -122,7 +123,7 @@ class _SurveySheetState extends ConsumerState<_SurveySheet> {
                   // when they feel interrupted.
                   Semantics(
                     button: true,
-                    label: 'Anketi kapat',
+                    label: AppLocalizations.of(context).surveyClose,
                     child: IconButton(
                       onPressed: _submitting ? null : _dismiss,
                       icon: const Icon(Icons.close_rounded, size: 20),
@@ -180,7 +181,7 @@ class _ThankYou extends StatelessWidget {
           const Icon(Icons.favorite_rounded, color: _neon, size: 34),
           const SizedBox(height: 12),
           Text(
-            'Teşekkürler.',
+            AppLocalizations.of(context).surveyThanks,
             style: TextStyle(
               color: scheme.onSurface,
               fontSize: 18,
@@ -267,7 +268,7 @@ class _NpsScale extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                'Hiç önermem',
+                AppLocalizations.of(context).surveyNpsLow,
                 style: TextStyle(
                   color: scheme.onSurface.withValues(alpha: 0.45),
                   fontSize: 11,
@@ -277,7 +278,7 @@ class _NpsScale extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Kesinlikle öneririm',
+                AppLocalizations.of(context).surveyNpsHigh,
                 textAlign: TextAlign.end,
                 style: TextStyle(
                   color: scheme.onSurface.withValues(alpha: 0.45),

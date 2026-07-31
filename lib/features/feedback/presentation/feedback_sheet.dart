@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/theme_extension.dart';
 import '../services/feedback_reward_service.dart';
 import '../services/feedback_service.dart';
+import '../../../l10n/app_localizations.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 
@@ -81,7 +82,7 @@ class _FeedbackSheetState extends ConsumerState<_FeedbackSheet> {
   Future<void> _submit() async {
     final body = _messageCtrl.text.trim();
     if (body.length < 4) {
-      setState(() => _error = 'Lütfen birkaç cümle yaz.');
+      setState(() => _error = AppLocalizations.of(context).feedbackWriteMore);
       return;
     }
     setState(() {
@@ -105,7 +106,8 @@ class _FeedbackSheetState extends ConsumerState<_FeedbackSheet> {
       setState(() => _error = e.message);
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = 'Beklenmeyen bir hata oluştu.');
+      setState(
+          () => _error = AppLocalizations.of(context).feedbackUnexpectedError);
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -134,7 +136,7 @@ class _FeedbackSheetState extends ConsumerState<_FeedbackSheet> {
             ),
             const SizedBox(height: 14),
             Text(
-              'Destek & Geri Bildirim',
+              AppLocalizations.of(context).feedbackTitle,
               style: TextStyle(
                 color: scheme.onSurface,
                 fontSize: 20,
@@ -144,7 +146,7 @@ class _FeedbackSheetState extends ConsumerState<_FeedbackSheet> {
             const SizedBox(height: 6),
             Text(
               widget.introOverride ??
-                  'Sorunu, fikrini ya da sorunu yaz; ekibimize doğrudan ulaşır.',
+                  AppLocalizations.of(context).feedbackSubtitle,
               style: TextStyle(
                 color: scheme.onSurface.withValues(alpha: 0.65),
                 fontSize: 13,
@@ -187,8 +189,8 @@ class _FeedbackSheetState extends ConsumerState<_FeedbackSheet> {
                 LengthLimitingTextInputFormatter(800),
               ],
               decoration: InputDecoration(
-                labelText: 'Mesajın',
-                hintText: 'Olabildiğince çok detay paylaş.',
+                labelText: AppLocalizations.of(context).feedbackMessageLabel,
+                hintText: AppLocalizations.of(context).feedbackMessageHint,
                 alignLabelWithHint: true,
                 filled: true,
                 fillColor: scheme.onSurface.withValues(alpha: 0.04),
@@ -235,7 +237,7 @@ class _FeedbackSheetState extends ConsumerState<_FeedbackSheet> {
                         color: Colors.white,
                       ),
                     )
-                  : const Text('Gönder'),
+                  : Text(AppLocalizations.of(context).feedbackSubmit),
             ),
           ],
         ),

@@ -24,7 +24,6 @@
   "@configurationFailed": {
     "description": "Boot error screen — missing configuration message"
   },
-
   "commonRetryUpper": "TRY AGAIN",
   "@commonRetryUpper": {
     "description": "Uppercase retry action on error cards"
@@ -37,7 +36,6 @@
   "@commonNotNow": {
     "description": "Dismissive secondary action on prompts"
   },
-
   "coachHeaderStatus": "Your AI coach · online",
   "@coachHeaderStatus": {
     "description": "Coach chat header subtitle"
@@ -50,7 +48,6 @@
   "@coachInputHint": {
     "description": "Coach chat text field placeholder"
   },
-
   "authSheetTitle": "Create your free account to save your plan.",
   "@authSheetTitle": {
     "description": "Auth bottom-sheet headline"
@@ -86,5 +83,101 @@
   "authAppleFailed": "Apple sign-in failed. Please try again.",
   "@authAppleFailed": {
     "description": "Generic Apple sign-in failure"
+  },
+  "helpCenterTitle": "Help Center",
+  "@helpCenterTitle": {
+    "description": "Help centre screen title"
+  },
+  "helpCenterClearSearch": "Clear search",
+  "@helpCenterClearSearch": {
+    "description": "Clears the FAQ search field"
+  },
+  "helpCenterAskDirect": "Write to us directly — every message is read.",
+  "@helpCenterAskDirect": {
+    "description": "Help centre contact prompt"
+  },
+  "helpCenterSendQuestion": "Send a question",
+  "@helpCenterSendQuestion": {
+    "description": "Help centre contact button"
+  },
+  "helpCenterNoAnswer": "Didn't find your answer?",
+  "@helpCenterNoAnswer": {
+    "description": "Help centre empty-result heading"
+  },
+  "helpCenterWriteToUs": "Write to us — every message is read and answered.",
+  "@helpCenterWriteToUs": {
+    "description": "Help centre contact subtitle"
+  },
+  "feedbackSent": "Your message was sent. Thank you!",
+  "@feedbackSent": {
+    "description": "Feedback success toast"
+  },
+  "feedbackMailOpened": "Your mail app opened — it reaches us once you send it.",
+  "@feedbackMailOpened": {
+    "description": "Mail fallback toast"
+  },
+  "feedbackWriteMore": "Please write a couple of sentences.",
+  "@feedbackWriteMore": {
+    "description": "Feedback validation message"
+  },
+  "feedbackUnexpectedError": "Something went wrong.",
+  "@feedbackUnexpectedError": {
+    "description": "Generic feedback failure"
+  },
+  "feedbackTitle": "Support & Feedback",
+  "@feedbackTitle": {
+    "description": "Feedback sheet title"
+  },
+  "feedbackSubtitle": "Tell us about a problem or an idea; it reaches our team directly.",
+  "@feedbackSubtitle": {
+    "description": "Feedback sheet subtitle"
+  },
+  "feedbackMessageLabel": "Your message",
+  "@feedbackMessageLabel": {
+    "description": "Feedback text field label"
+  },
+  "feedbackMessageHint": "Share as much detail as you can.",
+  "@feedbackMessageHint": {
+    "description": "Feedback text field hint"
+  },
+  "feedbackSubmit": "Send",
+  "@feedbackSubmit": {
+    "description": "Feedback submit button"
+  },
+  "surveyClose": "Close survey",
+  "@surveyClose": {
+    "description": "Survey dismiss action"
+  },
+  "surveyThanks": "Thank you.",
+  "@surveyThanks": {
+    "description": "Survey completion heading"
+  },
+  "surveyNpsLow": "Not at all likely",
+  "@surveyNpsLow": {
+    "description": "NPS scale low anchor"
+  },
+  "surveyNpsHigh": "Extremely likely",
+  "@surveyNpsHigh": {
+    "description": "NPS scale high anchor"
+  },
+  "referralInvited": "A friend invited you! 🎉",
+  "@referralInvited": {
+    "description": "Referral landing headline"
+  },
+  "referralSavedNotice": "Your invite code is saved! It will appear in your account once rewards start.",
+  "@referralSavedNotice": {
+    "description": "Referral saved confirmation"
+  },
+  "referralCreateAccount": "Create account",
+  "@referralCreateAccount": {
+    "description": "Referral landing primary CTA"
+  },
+  "referralAccept": "Accept invite",
+  "@referralAccept": {
+    "description": "Referral landing accept CTA"
+  },
+  "referralCodeCopied": "Code copied",
+  "@referralCodeCopied": {
+    "description": "Referral code copy toast"
   }
 }
