@@ -1095,5 +1095,169 @@
   "workoutManualModeBanner": "Camera-free mode — you count the reps. Your progress is saved as normal.",
   "@workoutManualModeBanner": {
     "description": "Manual mode honesty banner"
+  },
+  "tutorialEyebrowSetup": "SETUP",
+  "@tutorialEyebrowSetup": {
+    "description": "Eyebrow above the camera setup guide"
+  },
+  "tutorialSetupTitle": "First, let's make sure\nI can see you.",
+  "@tutorialSetupTitle": {
+    "description": "Camera setup headline. The line break is deliberate — it keeps the two clauses balanced on a narrow phone."
+  },
+  "tutorialSetupSubtitle": "You only do this once. After that I'll be ready every workout.",
+  "@tutorialSetupSubtitle": {
+    "description": "Reassurance that camera setup is a one-time cost"
+  },
+  "tutorialStepPlaceTitle": "Prop your phone somewhere steady",
+  "@tutorialStepPlaceTitle": {
+    "description": "Setup step 1 title"
+  },
+  "tutorialStepPlaceBody": "Lean it against the floor, a chair or a wall. Keep it upright.",
+  "@tutorialStepPlaceBody": {
+    "description": "Setup step 1 body"
+  },
+  "tutorialStepDistanceTitle": "Step back about 6 feet",
+  "@tutorialStepDistanceTitle": {
+    "description": "Setup step 2 title. Distance is converted, not translated: the Turkish source says 2 metres."
+  },
+  "tutorialStepDistanceBody": "You should still fit in frame with your arms spread.",
+  "@tutorialStepDistanceBody": {
+    "description": "Setup step 2 body"
+  },
+  "tutorialStepLightTitle": "Keep the room bright",
+  "@tutorialStepLightTitle": {
+    "description": "Setup step 3 title"
+  },
+  "tutorialStepLightBody": "Strong light behind you leaves you in shadow.",
+  "@tutorialStepLightBody": {
+    "description": "Setup step 3 body"
+  },
+  "tutorialDiagramPhone": "Phone",
+  "@tutorialDiagramPhone": {
+    "description": "Label under the phone in the placement diagram"
+  },
+  "tutorialDiagramDistance": "~6 ft",
+  "@tutorialDiagramDistance": {
+    "description": "Distance label in the placement diagram. Converted from the Turkish '~2 m', not translated."
+  },
+  "tutorialDiagramYou": "You",
+  "@tutorialDiagramYou": {
+    "description": "Label under the figure in the placement diagram"
+  },
+  "tutorialPrivacyNote": "Your video never leaves your phone. Analysis runs entirely on your device; no frame is stored or sent anywhere.",
+  "@tutorialPrivacyNote": {
+    "description": "On-device privacy note under the setup guide"
+  },
+  "tutorialOpenCamera": "OPEN CAMERA",
+  "@tutorialOpenCamera": {
+    "description": "Primary CTA on the setup guide"
+  },
+  "tutorialContinueWithoutCamera": "Continue without the camera",
+  "@tutorialContinueWithoutCamera": {
+    "description": "Secondary exit offered at every stage of the tutorial"
+  },
+  "tutorialHoldStill": "Hold still…",
+  "@tutorialHoldStill": {
+    "description": "Framing status while the confidence ring fills"
+  },
+  "tutorialSearchingForYou": "Looking for you",
+  "@tutorialSearchingForYou": {
+    "description": "Framing status before a body is detected"
+  },
+  "tutorialReadyTitle": "I can see you.",
+  "@tutorialReadyTitle": {
+    "description": "Calibration success headline"
+  },
+  "tutorialReadyBody": "Now I can watch every rep. I'll warn you when your form slips.",
+  "@tutorialReadyBody": {
+    "description": "Calibration success body"
+  },
+  "tutorialBackToWorkout": "BACK TO WORKOUT",
+  "@tutorialBackToWorkout": {
+    "description": "Success CTA when the guide was opened as a replay from an active session"
+  },
+  "tutorialStartWorkout": "START WORKOUT",
+  "@tutorialStartWorkout": {
+    "description": "Success CTA on the first run through the guide"
+  },
+  "tutorialPermissionBlockedTitle": "Camera access is off",
+  "@tutorialPermissionBlockedTitle": {
+    "description": "Shown when camera permission is permanently denied"
+  },
+  "tutorialPermissionBlockedBody": "I need camera access for form analysis. You can turn it on in Settings, or carry on without the camera.",
+  "@tutorialPermissionBlockedBody": {
+    "description": "Body for the permanently-denied permission state"
+  },
+  "tutorialOpenSettings": "OPEN SETTINGS",
+  "@tutorialOpenSettings": {
+    "description": "CTA that deep-links to the OS app settings page"
+  },
+  "tutorialCameraFailedTitle": "I couldn't open the camera",
+  "@tutorialCameraFailedTitle": {
+    "description": "Title for a camera hardware failure"
+  },
+  "tutorialRetry": "TRY AGAIN",
+  "@tutorialRetry": {
+    "description": "Retry CTA after a camera failure"
+  },
+  "tutorialErrorPermissionDenied": "Without camera access I can't show you form analysis. You can carry on without it — the workout still works.",
+  "@tutorialErrorPermissionDenied": {
+    "description": "Error body when the user declines the camera permission"
+  },
+  "tutorialErrorMlUnavailable": "This device can't run the form analysis layer. You can carry on with the workout in camera-free mode.",
+  "@tutorialErrorMlUnavailable": {
+    "description": "Error body when ML Kit pose detection is unavailable on the device"
+  },
+  "tutorialErrorNoCamera": "No usable camera was found on this device.",
+  "@tutorialErrorNoCamera": {
+    "description": "Error body when the device reports no cameras"
+  },
+  "tutorialErrorCameraFailed": "I couldn't open the camera. You can carry on without it, or try again.",
+  "@tutorialErrorCameraFailed": {
+    "description": "Error body after the camera failed to open twice"
+  },
+  "tutorialVoiceCameraOpened": "Camera's on. Step back so I can see all of you.",
+  "@tutorialVoiceCameraOpened": {
+    "description": "Spoken coach line when the camera opens. Written to be heard, not read — the user is walking away from the phone."
+  },
+  "tutorialVoiceSeeYou": "I can see you. You're set.",
+  "@tutorialVoiceSeeYou": {
+    "description": "Spoken coach line when framing is confirmed"
+  },
+  "tutorialVoicePracticePrompt": "Now squat down and stand up once. I'll count it.",
+  "@tutorialVoicePracticePrompt": {
+    "description": "Spoken coach line that starts the practice rep"
+  },
+  "tutorialVoiceRepCounted": "Counted. That's how I'll track every rep from now on.",
+  "@tutorialVoiceRepCounted": {
+    "description": "Spoken coach line after the practice rep is counted"
+  },
+  "tutorialCueStandUp": "I see you down there — now stand up.",
+  "@tutorialCueStandUp": {
+    "description": "On-screen cue mirroring the detector's live phase during the practice rep"
+  },
+  "framingHintNoPose": "I can't see you — step into frame and make sure the room is lit.",
+  "@framingHintNoPose": {
+    "description": "Live framing hint: no pose detected at all. Every framing hint instructs the setup rather than judging the user — 'step back a bit', never 'you are too close'."
+  },
+  "framingHintPartiallyVisible": "Almost — adjust so all of you is in frame.",
+  "@framingHintPartiallyVisible": {
+    "description": "Live framing hint: some landmarks missing or low-confidence"
+  },
+  "framingHintTooFar": "Come a little closer — I need to see you more clearly.",
+  "@framingHintTooFar": {
+    "description": "Live framing hint: body too small in frame"
+  },
+  "framingHintTooClose": "Step back a bit — you need to fit with your arms spread.",
+  "@framingHintTooClose": {
+    "description": "Live framing hint: body overflowing the frame"
+  },
+  "framingHintWrongOrientation": "Put the phone to your side — I need to see this movement from there.",
+  "@framingHintWrongOrientation": {
+    "description": "Live framing hint: exercise needs a side view but the user is face-on (or the reverse)"
+  },
+  "framingHintReady": "I can see you. You're set.",
+  "@framingHintReady": {
+    "description": "Live framing hint: framing is good. Same words as tutorialVoiceSeeYou but a separate key on purpose — one is spoken aloud and one is read on screen, and they must be free to diverge per locale."
   }
 }

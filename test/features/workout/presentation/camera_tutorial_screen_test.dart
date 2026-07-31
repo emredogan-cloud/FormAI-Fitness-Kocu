@@ -7,6 +7,7 @@ import 'package:sixpack_ai/core/routing/app_router.dart';
 import 'package:sixpack_ai/core/services/app_preferences.dart';
 import 'package:sixpack_ai/features/workout/domain/workout_mode.dart';
 import 'package:sixpack_ai/features/workout/presentation/camera_tutorial_screen.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 // Roadmap Phase 3 (R1.2 · C26 · C21) · the guided setup's first stage.
 //
@@ -69,7 +70,11 @@ Future<ProviderContainer> _pump(
       container: container,
       child: MediaQuery(
         data: MediaQueryData(textScaler: TextScaler.linear(textScale)),
-        child: MaterialApp.router(routerConfig: router),
+        child: MaterialApp.router(
+          routerConfig: router,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: const [Locale('tr')],
+        ),
       ),
     ),
   );

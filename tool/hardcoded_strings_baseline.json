@@ -35,7 +35,6 @@
   "lib/features/onboarding/presentation/steps/name_capture_step.dart": 17,
   "lib/features/onboarding/presentation/steps/setup_thinking_step.dart": 5,
   "lib/features/onboarding/presentation/steps/social_proof_step.dart": 13,
-  "lib/features/workout/presentation/camera_tutorial_screen.dart": 38,
   "lib/features/workout/presentation/plan_detail_screen.dart": 24,
   "lib/features/workout/presentation/workout_camera_screen.dart": 47
 }

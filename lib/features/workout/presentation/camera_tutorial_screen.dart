@@ -15,12 +15,14 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/audio_feedback.dart';
+import '../../../l10n/app_localizations.dart';
 import '../domain/framing_validator.dart';
 import '../domain/workout_mode.dart';
 import '../services/back_legs_analyzers.dart';
 import '../services/camera_frame_converter.dart';
 import '../services/crunch_analyzer.dart' show CrunchState;
 import '../services/pose_detector_service.dart';
+import 'framing_hint.dart';
 import 'widgets/practice_rep_stage.dart';
 
 /// Roadmap Phase 3 (R1.2 · C26 · C21) · the guided first-workout setup.
@@ -145,6 +147,11 @@ class _CameraTutorialScreenState extends ConsumerState<CameraTutorialScreen>
     unawaited(_voice.speak(phrase, priority: SpeechPriority.cue));
   }
 
+  /// Roadmap Phase 5 · every read is behind a `mounted` guard at its call
+  /// site, which is what makes reaching for `context` here safe in the
+  /// async paths that set `_error`.
+  AppLocalizations get _l10n => AppLocalizations.of(context);
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // Release the camera when backgrounded — holding it would block
@@ -203,9 +210,7 @@ class _CameraTutorialScreenState extends ConsumerState<CameraTutorialScreen>
     if (!status.isGranted) {
       AnalyticsService.instance.tutorialCameraDeclined(permanent: false);
       AnalyticsService.instance.tutorialCalibrationFailed(reason: 'permission');
-      setState(() =>
-          _error = 'Kamera izni olmadan form analizini gösteremem. İstersen '
-              'kamerasız devam edebilirsin — antrenman yine çalışır.');
+      setState(() => _error = _l10n.tutorialErrorPermissionDenied);
       return;
     }
 
@@ -218,12 +223,10 @@ class _CameraTutorialScreenState extends ConsumerState<CameraTutorialScreen>
       );
       AnalyticsService.instance
           .tutorialCalibrationFailed(reason: 'ml_unavailable');
-      setState(() =>
-          _error = 'Bu cihaz form analizi katmanını çalıştıramıyor. Kamerasız '
-              'modda antrenmana devam edebilirsin.');
+      setState(() => _error = _l10n.tutorialErrorMlUnavailable);
       return;
     }
-    _say('Kamerayı açtım. Tüm vücudun görünecek şekilde geri git.');
+    _say(_l10n.tutorialVoiceCameraOpened);
     await _startCamera();
   }
 
@@ -242,7 +245,7 @@ class _CameraTutorialScreenState extends ConsumerState<CameraTutorialScreen>
       final cameras = await availableCameras();
       if (cameras.isEmpty) {
         if (!mounted) return;
-        setState(() => _error = 'Bu cihazda kullanılabilir kamera bulunamadı.');
+        setState(() => _error = _l10n.tutorialErrorNoCamera);
         return;
       }
       // Prefer the front lens: during setup the user needs to SEE
@@ -293,9 +296,7 @@ class _CameraTutorialScreenState extends ConsumerState<CameraTutorialScreen>
       AnalyticsService.instance
           .tutorialCalibrationFailed(reason: 'camera_error');
       if (!mounted) return;
-      setState(() =>
-          _error = 'Kamera açılamadı. Kamerasız devam edebilir ya da tekrar '
-              'deneyebilirsin.');
+      setState(() => _error = _l10n.tutorialErrorCameraFailed);
     }
   }
 
@@ -356,7 +357,7 @@ class _CameraTutorialScreenState extends ConsumerState<CameraTutorialScreen>
       confidence: _framing.confidence,
     );
     AppHaptics.primaryCta();
-    _say('Seni görüyorum. Hazırsın.');
+    _say(_l10n.tutorialVoiceSeeYou);
 
     // Replay visitors, and anyone who has already done the practice rep,
     // stop at the confirmation. Repeating a movement drill every time
@@ -379,7 +380,7 @@ class _CameraTutorialScreenState extends ConsumerState<CameraTutorialScreen>
       _practiceCue = null;
       _practiceDone = false;
     });
-    _say('Şimdi bir kez çömel ve kalk. Tekrarını sayacağım.');
+    _say(_l10n.tutorialVoicePracticePrompt);
   }
 
   // ─── Practice rep ──────────────────────────────────────────────────
@@ -410,9 +411,7 @@ class _CameraTutorialScreenState extends ConsumerState<CameraTutorialScreen>
       // the user sees the detector tracking them rather than a frozen
       // caption. Both are read off the pose — neither is scripted.
       _practiceCue = result.formWarning ??
-          (result.state == CrunchState.down
-              ? 'Aşağıda görüyorum — şimdi kalk.'
-              : null);
+          (result.state == CrunchState.down ? _l10n.tutorialCueStandUp : null);
     });
 
     if (result.formWarning != null) {
@@ -432,7 +431,7 @@ class _CameraTutorialScreenState extends ConsumerState<CameraTutorialScreen>
       reps: _practiceReps,
     );
     await ref.read(appPreferencesProvider).markCompletedPracticeRep();
-    _say('Saydım. Artık her tekrarını böyle takip edeceğim.');
+    _say(_l10n.tutorialVoiceRepCounted);
     if (!mounted) return;
     setState(() => _stage = _Stage.ready);
     // The camera has done its job; release it before the workout screen
@@ -561,10 +560,10 @@ class _PlacementStage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const _Eyebrow('KURULUM'),
+                _Eyebrow(AppLocalizations.of(context).tutorialEyebrowSetup),
                 const SizedBox(height: 8),
-                const Text(
-                  'Önce seni görebildiğimden\nemin olalım.',
+                Text(
+                  AppLocalizations.of(context).tutorialSetupTitle,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 25,
@@ -574,8 +573,7 @@ class _PlacementStage extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'Bu bir kere yapılır. Sonrasında her antrenmanda '
-                  'hazır olacağım.',
+                  AppLocalizations.of(context).tutorialSetupSubtitle,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.66),
                     fontSize: 14,
@@ -585,24 +583,23 @@ class _PlacementStage extends StatelessWidget {
                 const SizedBox(height: 24),
                 const _PlacementDiagram(),
                 const SizedBox(height: 24),
-                const _Step(
+                _Step(
                   index: 1,
                   icon: Icons.stay_current_portrait_rounded,
-                  title: 'Telefonu sabit bir yere koy',
-                  body: 'Yere, bir sandalyeye ya da duvara yasla. '
-                      'Dikey tut.',
+                  title: AppLocalizations.of(context).tutorialStepPlaceTitle,
+                  body: AppLocalizations.of(context).tutorialStepPlaceBody,
                 ),
-                const _Step(
+                _Step(
                   index: 2,
                   icon: Icons.straighten_rounded,
-                  title: 'Yaklaşık 2 metre uzaklaş',
-                  body: 'Kollarını açtığında da kadraja sığmalısın.',
+                  title: AppLocalizations.of(context).tutorialStepDistanceTitle,
+                  body: AppLocalizations.of(context).tutorialStepDistanceBody,
                 ),
-                const _Step(
+                _Step(
                   index: 3,
                   icon: Icons.lightbulb_outline_rounded,
-                  title: 'Ortam aydınlık olsun',
-                  body: 'Arkandan gelen güçlü ışık seni gölgede bırakır.',
+                  title: AppLocalizations.of(context).tutorialStepLightTitle,
+                  body: AppLocalizations.of(context).tutorialStepLightBody,
                 ),
                 const SizedBox(height: 8),
                 const _PrivacyNote(),
@@ -611,9 +608,10 @@ class _PlacementStage extends StatelessWidget {
           ),
         ),
         _StageFooter(
-          primaryLabel: 'KAMERAYI AÇ',
+          primaryLabel: AppLocalizations.of(context).tutorialOpenCamera,
           onPrimary: onStart,
-          secondaryLabel: 'Kamerasız devam et',
+          secondaryLabel:
+              AppLocalizations.of(context).tutorialContinueWithoutCamera,
           onSecondary: onSkipCamera,
         ),
       ],
@@ -656,7 +654,7 @@ class _PlacementDiagram extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                'Telefon',
+                AppLocalizations.of(context).tutorialDiagramPhone,
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.5),
                   fontSize: 10,
@@ -683,7 +681,7 @@ class _PlacementDiagram extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  '~2 m',
+                  AppLocalizations.of(context).tutorialDiagramDistance,
                   style: TextStyle(
                     color: AppColors.neon.withValues(alpha: 0.9),
                     fontSize: 12,
@@ -703,7 +701,7 @@ class _PlacementDiagram extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                'Sen',
+                AppLocalizations.of(context).tutorialDiagramYou,
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.5),
                   fontSize: 10,
@@ -747,19 +745,18 @@ class _CalibrationStage extends StatelessWidget {
   Widget build(BuildContext context) {
     if (permanentlyDenied) {
       return _BlockedState(
-        title: 'Kamera izni kapalı',
-        body: 'Form analizi için kamera iznine ihtiyacım var. '
-            'Ayarlardan açabilir ya da kamerasız devam edebilirsin.',
-        primaryLabel: 'AYARLARI AÇ',
+        title: AppLocalizations.of(context).tutorialPermissionBlockedTitle,
+        body: AppLocalizations.of(context).tutorialPermissionBlockedBody,
+        primaryLabel: AppLocalizations.of(context).tutorialOpenSettings,
         onPrimary: onOpenSettings,
         onSkipCamera: onSkipCamera,
       );
     }
     if (error != null) {
       return _BlockedState(
-        title: 'Kamerayı açamadım',
+        title: AppLocalizations.of(context).tutorialCameraFailedTitle,
         body: error!,
-        primaryLabel: 'TEKRAR DENE',
+        primaryLabel: AppLocalizations.of(context).tutorialRetry,
         onPrimary: onRetry,
         onSkipCamera: onSkipCamera,
       );
@@ -795,7 +792,7 @@ class _CalibrationStage extends StatelessWidget {
           child: Semantics(
             liveRegion: true,
             child: Text(
-              framing.hint,
+              framing.issue.hint(AppLocalizations.of(context)),
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: framing.isReady
@@ -814,8 +811,8 @@ class _CalibrationStage extends StatelessWidget {
             foregroundColor: Colors.white.withValues(alpha: 0.55),
             minimumSize: const Size(120, 48),
           ),
-          child: const Text(
-            'Kamerasız devam et',
+          child: Text(
+            AppLocalizations.of(context).tutorialContinueWithoutCamera,
             style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
           ),
         ),
@@ -875,7 +872,9 @@ class _FramingOverlay extends StatelessWidget {
                   ),
                   const SizedBox(width: 9),
                   Text(
-                    ok ? 'Sabit dur…' : 'Seni arıyorum',
+                    ok
+                        ? AppLocalizations.of(context).tutorialHoldStill
+                        : AppLocalizations.of(context).tutorialSearchingForYou,
                     style: TextStyle(
                       color: color,
                       fontSize: 12.5,
@@ -936,8 +935,8 @@ class _ReadyStage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 22),
-                  const Text(
-                    'Seni görüyorum.',
+                  Text(
+                    AppLocalizations.of(context).tutorialReadyTitle,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white,
@@ -947,8 +946,7 @@ class _ReadyStage extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'Artık her tekrarını izleyebilirim. Formun '
-                    'bozulduğunda seni uyaracağım.',
+                    AppLocalizations.of(context).tutorialReadyBody,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.7),
@@ -962,9 +960,12 @@ class _ReadyStage extends StatelessWidget {
           ),
         ),
         _StageFooter(
-          primaryLabel: isReplay ? 'ANTRENMANA DÖN' : 'ANTRENMANA BAŞLA',
+          primaryLabel: isReplay
+              ? AppLocalizations.of(context).tutorialBackToWorkout
+              : AppLocalizations.of(context).tutorialStartWorkout,
           onPrimary: onStart,
-          secondaryLabel: 'Kamerasız devam et',
+          secondaryLabel:
+              AppLocalizations.of(context).tutorialContinueWithoutCamera,
           onSecondary: onSkipCamera,
         ),
       ],
@@ -1035,7 +1036,8 @@ class _BlockedState extends StatelessWidget {
         _StageFooter(
           primaryLabel: primaryLabel,
           onPrimary: onPrimary,
-          secondaryLabel: 'Kamerasız devam et',
+          secondaryLabel:
+              AppLocalizations.of(context).tutorialContinueWithoutCamera,
           onSecondary: onSkipCamera,
         ),
       ],
@@ -1210,8 +1212,7 @@ class _PrivacyNote extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Görüntün telefonundan çıkmaz. Analiz tamamen cihazında '
-              'yapılır; hiçbir kare kaydedilmez veya gönderilmez.',
+              AppLocalizations.of(context).tutorialPrivacyNote,
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.6),
                 fontSize: 12,

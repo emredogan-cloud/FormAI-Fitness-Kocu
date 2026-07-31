@@ -74,30 +74,6 @@ class FramingResult {
   final double coverage;
 
   bool get isReady => issue == FramingIssue.none;
-
-  /// Turkish guidance for [issue]. Kept beside the enum so a new issue
-  /// can't ship without copy.
-  ///
-  /// Deliberately phrased as an instruction to the *setup*, never as a
-  /// judgement of the user — "biraz geri git", not "çok yakınsın".
-  String get hint {
-    switch (issue) {
-      case FramingIssue.noPose:
-        return 'Seni göremiyorum — kadraja gir ve ortamın aydınlık '
-            'olduğundan emin ol.';
-      case FramingIssue.partiallyVisible:
-        return 'Neredeyse oldu — tüm vücudun görünecek şekilde ayarla.';
-      case FramingIssue.tooFar:
-        return 'Biraz yaklaş — seni daha net görmem gerek.';
-      case FramingIssue.tooClose:
-        return 'Biraz geri git — kollarını açtığında da sığman lazım.';
-      case FramingIssue.wrongOrientation:
-        return 'Telefonu yan tarafına yerleştir — bu hareketi '
-            'yandan görmem gerekiyor.';
-      case FramingIssue.none:
-        return 'Seni görüyorum. Hazırsın.';
-    }
-  }
 }
 
 /// Landmarks that must be present for a full-body read. Deliberately

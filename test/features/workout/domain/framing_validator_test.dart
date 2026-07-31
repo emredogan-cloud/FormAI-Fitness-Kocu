@@ -228,26 +228,9 @@ void main() {
     });
   });
 
-  group('hints', () {
-    test(
-        'every issue has non-empty guidance — a state with no copy '
-        'would leave the user stuck', () {
-      for (final issue in FramingIssue.values) {
-        final r = FramingResult(issue: issue, confidence: 0, coverage: 0);
-        expect(r.hint.trim(), isNotEmpty, reason: issue.name);
-      }
-    });
-
-    test('guidance instructs the setup rather than judging the user', () {
-      // "biraz geri git" (move back a bit), not "you are too close".
-      final tooClose = const FramingResult(
-        issue: FramingIssue.tooClose,
-        confidence: 1,
-        coverage: 1,
-      );
-      expect(tooClose.hint, contains('geri git'));
-    });
-  });
+  // Roadmap Phase 5 · the hint copy moved out of this layer and into
+  // presentation/framing_hint.dart, so both hint tests moved with it:
+  // see test/features/workout/presentation/framing_hint_test.dart.
 
   group('FramingStabilizer', () {
     test('a single good frame is not enough — ML Kit flickers', () {

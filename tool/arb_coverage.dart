@@ -38,12 +38,19 @@ Set<String> _keysOf(Map<String, dynamic> arb) =>
 Set<String> _placeholdersOf(String value) =>
     _placeholder.allMatches(value).map((m) => m.group(1)!).toSet();
 
-/// Every `AppLocalizations.of(context).key` / `l10n.key` reference in
-/// lib/, so unused keys can be reported.
+/// Every `AppLocalizations.of(context).key` / `l10n.key` / `_l10n.key`
+/// reference in lib/, so unused keys can be reported.
+///
+/// The `_?` is load-bearing: a State class that reads localizations in
+/// several async methods naturally caches them behind a private
+/// `_l10n` getter, and `\bl10n` never matches inside `_l10n` because
+/// `_` is a word character. Without it the report calls live keys dead,
+/// which is the one failure mode that makes a coverage tool worse than
+/// no tool — it invites deleting a key that is actually on screen.
 Set<String> _usedKeys() {
   final used = <String>{};
   final pattern = RegExp(
-    r'(?:AppLocalizations\.of\([^)]*\)|\bl10n|\bstrings)\s*\.\s*([a-zA-Z_]\w*)',
+    r'(?:AppLocalizations\.of\([^)]*\)|\b_?l10n|\bstrings)\s*\.\s*([a-zA-Z_]\w*)',
   );
   final dir = Directory('lib');
   if (!dir.existsSync()) return used;
