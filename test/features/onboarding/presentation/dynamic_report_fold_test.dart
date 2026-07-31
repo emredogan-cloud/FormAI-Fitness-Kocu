@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sixpack_ai/features/onboarding/presentation/steps/act_4_revelation_steps.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// The AI report's primary CTA must be on screen at every phone height.
 ///
@@ -32,6 +33,8 @@ Future<void> _pump(
           textScaler: TextScaler.linear(textScale),
         ),
         child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: const [Locale('tr')],
           home: Scaffold(
             backgroundColor: const Color(0xFF0A0612),
             body: DynamicReportStep(onComplete: onComplete),

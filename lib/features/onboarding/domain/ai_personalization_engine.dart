@@ -1,4 +1,5 @@
 import '../providers/wizard_provider.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Phase 60D · the AI report DTO consumed by the dynamic-report and
 /// pre-paywall-summary screens. Single immutable value type so the
@@ -66,31 +67,31 @@ class AiReport {
 class AiPersonalizationEngine {
   const AiPersonalizationEngine._();
 
-  static AiReport generateReport(WizardState state) {
+  static AiReport generateReport(AppLocalizations l10n, WizardState state) {
     return AiReport(
-      assessment: _assessment(state),
+      assessment: _assessment(l10n, state),
       bmi: _bmi(state),
       maintenanceCalories: _maintenanceCalories(state),
-      goalLabel: _goalLabel(state.goal),
-      difficultyLabel: _difficultyLabel(state.experienceLevel),
+      goalLabel: _goalLabel(l10n, state.goal),
+      difficultyLabel: _difficultyLabel(l10n, state.experienceLevel),
       weeklyWorkoutCount: _weeklyWorkoutCount(state),
-      durationLabel: '12 Hafta',
-      estimatedResults: _estimatedResults(state),
+      durationLabel: l10n.reportDuration12Weeks,
+      estimatedResults: _estimatedResults(l10n, state),
     );
   }
 
   // ───────────────────────────── assessment ────────────────────────────────
 
-  static String _assessment(WizardState s) {
+  static String _assessment(AppLocalizations l10n, WizardState s) {
     // Greet by name when we have one. The name capture step asks Form
     // "Bu yolculukta sana nasıl sesleneyim?" between coach intro and
     // gender; landing here without a name means the user skipped that
     // step somehow (e.g. legacy save), so we fall back to the un-named
     // greeting instead of a brittle empty-vocative.
-    final greeting = _normalizeName(s.name) != null
-        ? '${_normalizeName(s.name)}, profilini analiz ettim ve sana '
-            'özel bir yol haritası çıkardım.'
-        : 'Profilini analiz ettim ve sana özel bir yol haritası çıkardım.';
+    final normalized = _normalizeName(s.name);
+    final greeting = normalized != null
+        ? l10n.reportGreetingNamed(normalized)
+        : l10n.reportGreeting;
     final parts = <String>[greeting];
 
     // Quote-back. Pain-point > experience > activity (pain-point is the most
@@ -101,10 +102,7 @@ class AiPersonalizationEngine {
         _quoteFirstSentence(s.experienceDescription) ??
         _quoteFirstSentence(s.activityDescription);
     if (quoted != null) {
-      parts.add(
-        'Yazdıklarına dikkat ettim — özellikle "$quoted" kısmı planını '
-        'şekillendirdi.',
-      );
+      parts.add(l10n.reportQuoteBack(quoted));
     }
 
     final isFatLossSedentary =
@@ -113,19 +111,15 @@ class AiPersonalizationEngine {
     // Combination rule 1: fat-loss + sedentary lifestyle.
     if (isFatLossSedentary) {
       parts.add(
-        'Aktivite seviyen düşük olduğu için yağlanma riskin var; '
-        'planın düşük-eşikli kardiyo + kalori-açıklı beslenmeyle bu '
-        'riski hızla tersine çevirecek.',
+        l10n.reportSedentaryFatLoss,
       );
     } else if (s.activityLevel == ActivityLevel.sedentary) {
       parts.add(
-        'Aktivite seviyen düşük; ilk haftayı hareket alışkanlığını '
-        'oturtmaya ayıracağım.',
+        l10n.reportSedentary,
       );
     } else if (s.activityLevel == ActivityLevel.active) {
       parts.add(
-        'Aktivite seviyen yüksek — temeli zaten attığın için ilerlemen '
-        'ortalamadan daha hızlı olacak.',
+        l10n.reportActive,
       );
     }
 
@@ -135,23 +129,19 @@ class AiPersonalizationEngine {
       switch (s.goal) {
         case 'belly_burn':
           parts.add(
-            'Kilo verme hedefin için kalori açığı yaratıp göbek '
-            'bölgesine odaklı core çalışmaları ekleyeceğim.',
+            l10n.reportGoalBellyBurn,
           );
         case 'muscle_gain':
           parts.add(
-            'Kas yapma hedefin için yüksek-protein beslenme ve '
-            'progresif yüklenme ile programını şekillendiriyorum.',
+            l10n.reportGoalMuscleGain,
           );
         case 'fitness_look':
           parts.add(
-            'Daha fit görünmek için kardiyo + full-body antrenmanını '
-            'dengeleyeceğim.',
+            l10n.reportGoalFitnessLook,
           );
         case 'strength':
           parts.add(
-            'Güçlenme hedefin için bileşik hareketlere ağırlık veren '
-            'bir program tasarladım.',
+            l10n.reportGoalStrength,
           );
       }
     }
@@ -159,13 +149,11 @@ class AiPersonalizationEngine {
     // Combination rule 2: beginner → newbie-gain story.
     if (s.experienceLevel == 'none') {
       parts.add(
-        'Spora yeni başladığın için ilk 30 günde "newbie gain" '
-        'etkisiyle çok hızlı ve gözle görülür sonuçlar alacaksın.',
+        l10n.reportBeginner,
       );
     } else if (s.experienceLevel == 'regular') {
       parts.add(
-        'Düzenli antrenman geçmişin programının yoğunluğunu yukarı '
-        'çekmeme imkân tanıyor.',
+        l10n.reportRegular,
       );
     }
 
@@ -173,18 +161,15 @@ class AiPersonalizationEngine {
     final pain = s.painPoint;
     if (pain == 'motivation' || pain == 'consistency') {
       parts.add(
-        'Senin için kritik nokta süreklilik — AI koçun günlük '
-        'hesap-veren-arkadaş gibi davranıp seni omurgada tutacak.',
+        l10n.reportPainConsistency,
       );
     } else if (pain == 'no_idea') {
       parts.add(
-        'Ne yapacağını bilmemek artık dert değil; adım adım yönlendiren '
-        'rehber moduyla başlayacağız.',
+        l10n.reportPainNoIdea,
       );
     } else if (pain == 'diet') {
       parts.add(
-        'Diyet konusunda da yanındayım; tercihlerine uygun esnek yemek '
-        'listeleri oluşturacağım.',
+        l10n.reportPainDiet,
       );
     }
 
@@ -248,22 +233,22 @@ class AiPersonalizationEngine {
 
   // ───────────────────────────── derived labels ────────────────────────────
 
-  static String _goalLabel(String? token) {
+  static String _goalLabel(AppLocalizations l10n, String? token) {
     return switch (token) {
-      'belly_burn' => 'Göbek eritmek',
-      'muscle_gain' => 'Kas yapmak',
-      'fitness_look' => 'Daha fit görünmek',
-      'strength' => 'Güçlenmek',
-      _ => 'Form kazanmak',
+      'belly_burn' => l10n.goalBellyBurnLower,
+      'muscle_gain' => l10n.goalMuscleGainLower,
+      'fitness_look' => l10n.goalFitnessLookLower,
+      'strength' => l10n.goalStrengthLower,
+      _ => l10n.reportGoalLabelFallback,
     };
   }
 
-  static String _difficultyLabel(String? exp) {
+  static String _difficultyLabel(AppLocalizations l10n, String? exp) {
     return switch (exp) {
-      'none' => 'Başlangıç',
-      'occasional' => 'Orta',
-      'regular' => 'İleri',
-      _ => 'Başlangıç',
+      'none' => l10n.difficultyBeginner,
+      'occasional' => l10n.difficultyIntermediateShort,
+      'regular' => l10n.difficultyAdvanced,
+      _ => l10n.difficultyBeginner,
     };
   }
 
@@ -277,13 +262,13 @@ class AiPersonalizationEngine {
   // ("4-8 kg", "%20-30") — Apple 1.4.1 / Play health-misrepresentation
   // reject guaranteed numeric results. Qualitative, effort-conditional
   // framing only.
-  static String _estimatedResults(WizardState s) {
+  static String _estimatedResults(AppLocalizations l10n, WizardState s) {
     return switch (s.goal) {
-      'belly_burn' => '12 haftalık yağ yakımı odaklı program',
-      'muscle_gain' => '12 haftalık kas gelişimi odaklı program',
-      'fitness_look' => '12 haftalık form ve estetik odaklı program',
-      'strength' => '12 haftalık güç gelişimi odaklı program',
-      _ => '12 haftalık form dönüşümü odaklı program',
+      'belly_burn' => l10n.reportResultBellyBurn,
+      'muscle_gain' => l10n.reportResultMuscleGain,
+      'fitness_look' => l10n.reportResultFitnessLook,
+      'strength' => l10n.reportResultStrength,
+      _ => l10n.reportResultDefault,
     };
   }
 }

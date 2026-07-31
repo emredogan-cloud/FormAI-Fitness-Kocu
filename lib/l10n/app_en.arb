@@ -4434,5 +4434,107 @@
   "interludePainPointComposing": "Looking for the right words...",
   "@interludePainPointComposing": {
     "description": "Placeholder while the coach 'types'"
+  },
+  "reportDuration12Weeks": "12 weeks",
+  "@reportDuration12Weeks": {
+    "description": "Programme duration shown on the AI report card"
+  },
+  "reportGreetingNamed": "{name}, I've analysed your profile and mapped out a route just for you.",
+  "@reportGreetingNamed": {
+    "description": "Opening sentence of the AI report when the user gave a name.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "reportGreeting": "I've analysed your profile and mapped out a route just for you.",
+  "@reportGreeting": {
+    "description": "Opening sentence of the AI report when no name was captured"
+  },
+  "reportQuoteBack": "I paid attention to what you wrote — the \"{quote}\" part especially shaped your plan.",
+  "@reportQuoteBack": {
+    "description": "Quotes the user's own words back. {quote} is a sentence the USER typed and is never translated.",
+    "placeholders": {
+      "quote": {
+        "type": "String"
+      }
+    }
+  },
+  "reportSedentaryFatLoss": "Your activity level is low, which carries a risk of gaining fat; your plan reverses that quickly with low-threshold cardio and a calorie deficit.",
+  "@reportSedentaryFatLoss": {
+    "description": "AI report assessment sentence — sedentary user with a fat-loss goal"
+  },
+  "reportSedentary": "Your activity level is low; I'll spend the first week building the habit of moving.",
+  "@reportSedentary": {
+    "description": "AI report assessment sentence — sedentary user"
+  },
+  "reportActive": "Your activity level is high — you've already laid the foundation, so you'll progress faster than average.",
+  "@reportActive": {
+    "description": "AI report assessment sentence — active user"
+  },
+  "reportGoalBellyBurn": "For your weight-loss goal I'll create a calorie deficit and add core work focused on the midsection.",
+  "@reportGoalBellyBurn": {
+    "description": "AI report assessment sentence — belly_burn goal"
+  },
+  "reportGoalMuscleGain": "For your muscle-building goal I'm shaping the programme around high-protein eating and progressive overload.",
+  "@reportGoalMuscleGain": {
+    "description": "AI report assessment sentence — muscle_gain goal"
+  },
+  "reportGoalFitnessLook": "To look fitter, I'll balance cardio with full-body training.",
+  "@reportGoalFitnessLook": {
+    "description": "AI report assessment sentence — fitness_look goal"
+  },
+  "reportGoalStrength": "For your strength goal I've designed a programme weighted towards compound movements.",
+  "@reportGoalStrength": {
+    "description": "AI report assessment sentence — strength goal"
+  },
+  "reportBeginner": "Because you're new to training, the \"newbie gain\" effect means fast, visible results in the first 30 days.",
+  "@reportBeginner": {
+    "description": "AI report assessment sentence — beginner. Store compliance: this must stay qualitative, never a quantified promise."
+  },
+  "reportRegular": "Your regular training history lets me push the intensity of your programme up.",
+  "@reportRegular": {
+    "description": "AI report assessment sentence — experienced user"
+  },
+  "reportPainConsistency": "Consistency is the crux for you — your AI coach acts like a daily accountability partner and keeps you on track.",
+  "@reportPainConsistency": {
+    "description": "AI report assessment sentence — motivation or consistency pain point"
+  },
+  "reportPainNoIdea": "Not knowing what to do is no longer a problem; we'll start in step-by-step guided mode.",
+  "@reportPainNoIdea": {
+    "description": "AI report assessment sentence — 'no idea where to start' pain point"
+  },
+  "reportPainDiet": "I'm with you on diet too; I'll build flexible meal lists that match your preferences.",
+  "@reportPainDiet": {
+    "description": "AI report assessment sentence — diet pain point"
+  },
+  "reportGoalLabelFallback": "Get in shape",
+  "@reportGoalLabelFallback": {
+    "description": "AI report goal label when the stored goal is unrecognised"
+  },
+  "difficultyIntermediateShort": "Medium",
+  "@difficultyIntermediateShort": {
+    "description": "Difficulty label on the AI report card. Short — it sits in a metric tile."
+  },
+  "reportResultBellyBurn": "A 12-week fat-loss-focused programme",
+  "@reportResultBellyBurn": {
+    "description": "AI report outcome label. Store compliance (Apple 1.4.1 / Play health misrepresentation): qualitative and effort-conditional only — never a quantified result like '4-8 kg'."
+  },
+  "reportResultMuscleGain": "A 12-week muscle-building programme",
+  "@reportResultMuscleGain": {
+    "description": "AI report outcome label. Never quantify the result — see reportResultBellyBurn."
+  },
+  "reportResultFitnessLook": "A 12-week fitness and physique programme",
+  "@reportResultFitnessLook": {
+    "description": "AI report outcome label. Never quantify the result."
+  },
+  "reportResultStrength": "A 12-week strength-building programme",
+  "@reportResultStrength": {
+    "description": "AI report outcome label. Never quantify the result."
+  },
+  "reportResultDefault": "A 12-week transformation programme",
+  "@reportResultDefault": {
+    "description": "AI report outcome label. Never quantify the result."
   }
 }

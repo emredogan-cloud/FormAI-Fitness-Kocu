@@ -15,6 +15,7 @@ import '../../domain/ai_personalization_engine.dart';
 import '../../providers/wizard_provider.dart';
 import '../widgets/coach_mood.dart';
 import '../widgets/living_coach_avatar.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Act 4 · Revelation.
 ///
@@ -445,7 +446,10 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
   @override
   Widget build(BuildContext context) {
     final wizard = ref.watch(wizardProvider);
-    final report = AiPersonalizationEngine.generateReport(wizard);
+    final report = AiPersonalizationEngine.generateReport(
+      AppLocalizations.of(context),
+      wizard,
+    );
     final bmi = report.bmi;
     final calories = report.maintenanceCalories;
     final assessment = report.assessment;
