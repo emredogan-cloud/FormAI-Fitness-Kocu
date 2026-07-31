@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../domain/coach_brain.dart';
 import '../providers/coach_providers.dart';
 
@@ -84,16 +85,19 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
               ),
             ),
             const SizedBox(width: 10),
-            const Column(
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Form',
+                // 'Form' is the coach's name — a brand term, never
+                // translated. See the Phase 5 glossary.
+                const Text('Form', // i18n-ignore
                     style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w800,
                         fontSize: 16)),
-                Text('AI Koçun · çevrimiçi',
-                    style: TextStyle(color: Colors.white54, fontSize: 11)),
+                Text(AppLocalizations.of(context).coachHeaderStatus,
+                    style:
+                        const TextStyle(color: Colors.white54, fontSize: 11)),
               ],
             ),
           ],
@@ -414,8 +418,8 @@ class _TypingBubbleState extends State<_TypingBubble>
                 );
               }),
               const SizedBox(width: 4),
-              const Text('Form yazıyor…',
-                  style: TextStyle(color: Colors.white38, fontSize: 12)),
+              Text(AppLocalizations.of(context).coachTyping,
+                  style: const TextStyle(color: Colors.white38, fontSize: 12)),
             ],
           ),
         ),
@@ -474,7 +478,7 @@ class _InputBar extends StatelessWidget {
                 minLines: 1,
                 maxLines: 4,
                 decoration: InputDecoration(
-                  hintText: "Form'a bir şey sor…",
+                  hintText: AppLocalizations.of(context).coachInputHint,
                   hintStyle: const TextStyle(color: Colors.white38),
                   filled: true,
                   fillColor: _coachBubble,

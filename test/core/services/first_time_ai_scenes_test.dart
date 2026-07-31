@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sixpack_ai/core/services/app_preferences.dart';
 import 'package:sixpack_ai/core/services/first_time_ai_scenes.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// A first-run cinematic must always end.
 ///
@@ -28,6 +29,11 @@ Future<ProviderContainer> _pump(
     UncontrolledProviderScope(
       container: container,
       child: MaterialApp(
+        // Roadmap Phase 5 · localized strings need the
+        // delegates; assertions stay unchanged because the
+        // Turkish ARB values are the same literals.
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: const [Locale('tr')],
         home: Consumer(
           builder: (context, ref, _) => Scaffold(
             body: Center(

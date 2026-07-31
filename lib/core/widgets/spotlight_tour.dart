@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 import '../utils/app_haptics.dart';
 
@@ -62,13 +63,18 @@ Future<bool> showSpotlightTour(
   BuildContext context, {
   required List<SpotlightStep> steps,
   String nextLabel = 'Devam',
-  String finishLabel = 'Anladım',
+  String? finishLabel,
   String skipLabel = 'Atla',
   ValueChanged<int>? onStepShown,
 }) async {
   final resolvable =
       steps.where((s) => s.rect() != null).toList(growable: false);
   if (resolvable.isEmpty) return false;
+
+  // Roadmap Phase 5 · the default finish label is localized, but the
+  // parameter stays overridable so a tour can say something specific.
+  final resolvedFinish =
+      finishLabel ?? AppLocalizations.of(context).commonUnderstood;
 
   final result = await Navigator.of(context, rootNavigator: true).push<bool>(
     PageRouteBuilder<bool>(
@@ -81,7 +87,7 @@ Future<bool> showSpotlightTour(
       pageBuilder: (_, __, ___) => _SpotlightOverlay(
         steps: resolvable,
         nextLabel: nextLabel,
-        finishLabel: finishLabel,
+        finishLabel: resolvedFinish,
         skipLabel: skipLabel,
         onStepShown: onStepShown,
       ),

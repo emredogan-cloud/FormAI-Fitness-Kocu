@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/routing/app_router.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../core/services/connectivity_service.dart';
 import '../providers/auth_provider.dart';
 
@@ -282,10 +283,10 @@ class _AuthModalBottomSheetState extends ConsumerState<AuthModalBottomSheet>
   }
 
   Widget _buildTitle() {
-    return const Text(
-      'Planını kaydetmek için ücretsiz hesabını oluştur.',
+    return Text(
+      AppLocalizations.of(context).authSheetTitle,
       textAlign: TextAlign.center,
-      style: TextStyle(
+      style: const TextStyle(
         color: Colors.white,
         fontSize: 19,
         fontWeight: FontWeight.w900,
@@ -297,7 +298,7 @@ class _AuthModalBottomSheetState extends ConsumerState<AuthModalBottomSheet>
 
   Widget _buildSubtitle() {
     return Text(
-      'Hesap olmadan satın alımın yeni cihazda kaybolabilir.',
+      AppLocalizations.of(context).authSheetPurchaseWarning,
       textAlign: TextAlign.center,
       style: TextStyle(
         color: Colors.white.withValues(alpha: 0.66),
@@ -338,10 +339,10 @@ class _AuthModalBottomSheetState extends ConsumerState<AuthModalBottomSheet>
             )
           : Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                _GoogleLogo(size: 18),
-                SizedBox(width: 10),
-                Text('Google ile Devam Et'),
+              children: [
+                const _GoogleLogo(size: 18),
+                const SizedBox(width: 10),
+                Text(AppLocalizations.of(context).authContinueWithGoogle),
               ],
             ),
     );
@@ -379,10 +380,10 @@ class _AuthModalBottomSheetState extends ConsumerState<AuthModalBottomSheet>
             )
           : Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Icon(Icons.apple, size: 22, color: Colors.white),
-                SizedBox(width: 8),
-                Text('Apple ile Devam Et'),
+              children: [
+                const Icon(Icons.apple, size: 22, color: Colors.white),
+                const SizedBox(width: 8),
+                Text(AppLocalizations.of(context).authContinueWithApple),
               ],
             ),
     );
@@ -410,7 +411,7 @@ class _AuthModalBottomSheetState extends ConsumerState<AuthModalBottomSheet>
             letterSpacing: 0.3,
           ),
         ),
-        child: const Text('Şimdilik değil'),
+        child: Text(AppLocalizations.of(context).commonNotNow),
       ),
     );
   }
@@ -431,7 +432,7 @@ class _AuthModalBottomSheetState extends ConsumerState<AuthModalBottomSheet>
             decoration: TextDecoration.underline,
           ),
         ),
-        child: const Text('E-posta ile Giriş Sayfasına Git'),
+        child: Text(AppLocalizations.of(context).authGoToEmailSignIn),
       ),
     );
   }
@@ -443,17 +444,15 @@ class _AuthModalBottomSheetState extends ConsumerState<AuthModalBottomSheet>
   Future<void> _onGooglePressed() => _runOAuth(
         _Provider.google,
         () => ref.read(authControllerProvider).signInWithGoogle(),
-        offlineMessage:
-            'Google ile giriş yapmak için internet bağlantısı gereklidir.',
-        fallbackError: 'Google ile giriş başarısız oldu. Lütfen tekrar dene.',
+        offlineMessage: AppLocalizations.of(context).authGoogleNeedsInternet,
+        fallbackError: AppLocalizations.of(context).authGoogleFailed,
       );
 
   Future<void> _onApplePressed() => _runOAuth(
         _Provider.apple,
         () => ref.read(authControllerProvider).signInWithApple(),
-        offlineMessage:
-            'Apple ile giriş yapmak için internet bağlantısı gereklidir.',
-        fallbackError: 'Apple ile giriş başarısız oldu. Lütfen tekrar dene.',
+        offlineMessage: AppLocalizations.of(context).authAppleNeedsInternet,
+        fallbackError: AppLocalizations.of(context).authAppleFailed,
       );
 
   Future<void> _runOAuth(

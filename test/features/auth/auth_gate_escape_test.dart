@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sixpack_ai/features/auth/presentation/auth_modal_bottom_sheet.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// Guest-trap regression (P0). The paywall's forced auth gate must never
 /// be a dead-end: an anonymous user (guest, or a store reviewer picking
@@ -25,6 +26,11 @@ void main() {
       await tester.pumpWidget(
         const ProviderScope(
           child: MaterialApp(
+            // Roadmap Phase 5 · localized strings need the
+            // delegates; assertions stay unchanged because the
+            // Turkish ARB values are the same literals.
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: const [Locale('tr')],
             home: Scaffold(body: AuthModalBottomSheet()),
           ),
         ),

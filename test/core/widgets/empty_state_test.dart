@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sixpack_ai/core/widgets/empty_state.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// Roadmap Phase 2 (C37) · the consolidated empty state.
 ///
@@ -16,6 +17,11 @@ Future<void> _pump(
     MediaQuery(
       data: MediaQueryData(textScaler: TextScaler.linear(textScale)),
       child: MaterialApp(
+        // Roadmap Phase 5 · localized strings need the
+        // delegates; assertions stay unchanged because the
+        // Turkish ARB values are the same literals.
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: const [Locale('tr')],
         debugShowCheckedModeBanner: false,
         home: Scaffold(body: Center(child: child)),
       ),

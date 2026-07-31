@@ -6,6 +6,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:sixpack_ai/features/auth/providers/auth_provider.dart';
 import 'package:sixpack_ai/features/monetization/presentation/paywall_screen.dart';
 import 'package:sixpack_ai/features/monetization/providers/monetization_provider.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// Stubs [SubscriptionNotifier.build] with a fixed [SubscriptionState] so
 /// the widget tree never touches the RevenueCat SDK. Everything else on
@@ -57,6 +58,11 @@ Widget _wrapPaywall({required SubscriptionState seededState}) {
       supabaseAuthReader.overrideWithValue(() => null),
     ],
     child: MaterialApp.router(
+      // Roadmap Phase 5 · localized strings need the
+      // delegates; assertions stay unchanged because the
+      // Turkish ARB values are the same literals.
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: const [Locale('tr')],
       routerConfig: router,
       debugShowCheckedModeBanner: false,
     ),

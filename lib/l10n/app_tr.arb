@@ -5,5 +5,23 @@
   "settings": "Ayarlar",
   "deleteAccount": "Hesabımı Sil",
   "connectionFailed": "Bağlantı kurulamadı.",
-  "configurationFailed": "Uygulama yapılandırılamadı."
+  "configurationFailed": "Uygulama yapılandırılamadı.",
+
+  "commonRetryUpper": "TEKRAR DENE",
+  "commonUnderstood": "Anladım",
+  "commonNotNow": "Şimdilik değil",
+
+  "coachHeaderStatus": "AI Koçun · çevrimiçi",
+  "coachTyping": "Form yazıyor…",
+  "coachInputHint": "Form'a bir şey sor…",
+
+  "authSheetTitle": "Planını kaydetmek için ücretsiz hesabını oluştur.",
+  "authSheetPurchaseWarning": "Hesap olmadan satın alımın yeni cihazda kaybolabilir.",
+  "authContinueWithGoogle": "Google ile Devam Et",
+  "authContinueWithApple": "Apple ile Devam Et",
+  "authGoToEmailSignIn": "E-posta ile Giriş Sayfasına Git",
+  "authGoogleNeedsInternet": "Google ile giriş yapmak için internet bağlantısı gereklidir.",
+  "authGoogleFailed": "Google ile giriş başarısız oldu. Lütfen tekrar dene.",
+  "authAppleNeedsInternet": "Apple ile giriş yapmak için internet bağlantısı gereklidir.",
+  "authAppleFailed": "Apple ile giriş başarısız oldu. Lütfen tekrar dene."
 }

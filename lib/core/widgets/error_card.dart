@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
+
 /// Neon-themed error surface used wherever a Riverpod AsyncValue lands in
 /// the error branch. Hides the raw exception from users (only debugPrinted)
 /// and offers an optional retry button so offline launches don't look dead.
@@ -79,9 +81,9 @@ class ErrorCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
-                  'TEKRAR DENE',
-                  style: TextStyle(color: _neon),
+                child: Text(
+                  AppLocalizations.of(context).commonRetryUpper,
+                  style: const TextStyle(color: _neon),
                 ),
               ),
             ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sixpack_ai/core/widgets/spotlight_tour.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// Roadmap Phase 2 (C27) · the spotlight tour system.
 ///
@@ -24,6 +25,11 @@ Future<List<int>> _runTour(
         disableAnimations: reduceMotion,
       ),
       child: MaterialApp(
+        // Roadmap Phase 5 · localized strings need the
+        // delegates; assertions stay unchanged because the
+        // Turkish ARB values are the same literals.
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: const [Locale('tr')],
         debugShowCheckedModeBanner: false,
         home: Builder(
           builder: (context) => Scaffold(

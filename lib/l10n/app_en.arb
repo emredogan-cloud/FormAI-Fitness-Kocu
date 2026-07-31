@@ -23,5 +23,68 @@
   "configurationFailed": "The app could not be configured.",
   "@configurationFailed": {
     "description": "Boot error screen — missing configuration message"
+  },
+
+  "commonRetryUpper": "TRY AGAIN",
+  "@commonRetryUpper": {
+    "description": "Uppercase retry action on error cards"
+  },
+  "commonUnderstood": "Got it",
+  "@commonUnderstood": {
+    "description": "Final step action in a coach-mark tour"
+  },
+  "commonNotNow": "Not now",
+  "@commonNotNow": {
+    "description": "Dismissive secondary action on prompts"
+  },
+
+  "coachHeaderStatus": "Your AI coach · online",
+  "@coachHeaderStatus": {
+    "description": "Coach chat header subtitle"
+  },
+  "coachTyping": "Form is typing…",
+  "@coachTyping": {
+    "description": "Typing indicator while the coach composes a reply"
+  },
+  "coachInputHint": "Ask Form something…",
+  "@coachInputHint": {
+    "description": "Coach chat text field placeholder"
+  },
+
+  "authSheetTitle": "Create your free account to save your plan.",
+  "@authSheetTitle": {
+    "description": "Auth bottom-sheet headline"
+  },
+  "authSheetPurchaseWarning": "Without an account your purchase may be lost on a new device.",
+  "@authSheetPurchaseWarning": {
+    "description": "Auth bottom-sheet warning shown before purchase"
+  },
+  "authContinueWithGoogle": "Continue with Google",
+  "@authContinueWithGoogle": {
+    "description": "Google sign-in button"
+  },
+  "authContinueWithApple": "Continue with Apple",
+  "@authContinueWithApple": {
+    "description": "Apple sign-in button"
+  },
+  "authGoToEmailSignIn": "Go to email sign-in",
+  "@authGoToEmailSignIn": {
+    "description": "Link to the full email sign-in screen"
+  },
+  "authGoogleNeedsInternet": "Signing in with Google requires an internet connection.",
+  "@authGoogleNeedsInternet": {
+    "description": "Offline error for Google sign-in"
+  },
+  "authGoogleFailed": "Google sign-in failed. Please try again.",
+  "@authGoogleFailed": {
+    "description": "Generic Google sign-in failure"
+  },
+  "authAppleNeedsInternet": "Signing in with Apple requires an internet connection.",
+  "@authAppleNeedsInternet": {
+    "description": "Offline error for Apple sign-in"
+  },
+  "authAppleFailed": "Apple sign-in failed. Please try again.",
+  "@authAppleFailed": {
+    "description": "Generic Apple sign-in failure"
   }
 }
