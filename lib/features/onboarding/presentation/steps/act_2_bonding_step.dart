@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_haptics.dart';
 import '../widgets/coach_mood.dart';
 import '../widgets/living_coach_avatar.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Act 2 · AI companion bonding.
 ///
@@ -241,8 +242,8 @@ class _CoachIntroStepState extends State<CoachIntroStep>
                         AnimatedOpacity(
                           duration: const Duration(milliseconds: 240),
                           opacity: _typingDone ? 0.0 : 1.0,
-                          child: const Text(
-                            'Geçmek için ekrana dokun',
+                          child: Text(
+                            AppLocalizations.of(context).tapToSkip,
                             style: TextStyle(
                               color: Colors.white54,
                               fontSize: 11,

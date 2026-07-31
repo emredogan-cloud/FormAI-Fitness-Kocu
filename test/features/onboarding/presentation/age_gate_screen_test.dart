@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sixpack_ai/core/routing/app_router.dart';
 import 'package:sixpack_ai/core/services/app_preferences.dart';
 import 'package:sixpack_ai/features/onboarding/presentation/age_gate_screen.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// The 18+ age gate is a store-compliance surface (Play Console
 /// "Target audience: 18+"). Two behaviours must never regress:
@@ -40,6 +41,8 @@ Widget _hostAgeGate(SharedPreferences prefs) {
       sharedPreferencesProvider.overrideWithValue(prefs),
     ],
     child: MaterialApp.router(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: const [Locale('tr')],
       routerConfig: router,
       debugShowCheckedModeBanner: false,
     ),

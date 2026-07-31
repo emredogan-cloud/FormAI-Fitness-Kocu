@@ -28,6 +28,7 @@ import 'steps/interlude_before_pain_point_step.dart';
 import 'steps/name_capture_step.dart';
 import 'steps/setup_thinking_step.dart';
 import 'steps/social_proof_step.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Cinematic rebuild · the wizard orchestrator. Owns the step index,
 /// the navigation transitions, and the exit-to-paywall finisher.
@@ -130,15 +131,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   /// never sees a placeholder flash on a swipe — and so a future asset
   /// swap doesn't trigger a decode hitch.
   static const List<String> _precacheImagePaths = [
-    'photos/cinsiyetseçimikadın.webp',
-    'photos/cinsiyetseçimierkek.webp',
-    'photos/hedefinneSıkılaşmak.webp',
+    'photos/cinsiyetseçimikadın.webp', // i18n-ignore — asset path
+    'photos/cinsiyetseçimierkek.webp', // i18n-ignore — asset path
+    'photos/hedefinneSıkılaşmak.webp', // i18n-ignore — asset path
     'photos/hedefinneHacimKazanmak.webp',
     'photos/hedefinneSadeceSix-Pack.webp',
     'photos/hedef_guclenmek.webp',
-    'photos/günlükaktivitenmasabaşı.webp',
-    'photos/günlükaktivitenhafifhareketli.webp',
-    'photos/günlükaktivitenneÇokAktif.webp',
+    'photos/günlükaktivitenmasabaşı.webp', // i18n-ignore — asset path
+    'photos/günlükaktivitenhafifhareketli.webp', // i18n-ignore — asset path
+    'photos/günlükaktivitenneÇokAktif.webp', // i18n-ignore — asset path
     'photos/PT_FORM.png',
   ];
 
@@ -297,9 +298,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Tercihlerin kaydedilemedi. Lütfen biraz sonra tekrar dene.',
+            AppLocalizations.of(context).onboardingSaveFailed,
           ),
           duration: Duration(seconds: 4),
         ),

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/widgets/cinematic_ai_presence.dart';
 import '../../providers/wizard_provider.dart';
 import '../widgets/coach_mood.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Act 3 · Strategic interlude #1 (post-goal predictive empathy).
 ///
@@ -27,10 +28,10 @@ class InterludeAfterGoalStep extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final wizard = ref.watch(wizardProvider);
     return CinematicAiPresence(
-      title: 'Anlıyorum...',
-      subtitle: _composeSubtitle(wizard),
+      title: AppLocalizations.of(context).interludeGoalUnderstood,
+      subtitle: _composeSubtitle(AppLocalizations.of(context), wizard),
       subtitleTypewriter: true,
-      composingPlaceholder: 'Düşüncelerimi topluyorum...',
+      composingPlaceholder: AppLocalizations.of(context).interludeGoalComposing,
       // Form is reassuring the user about their goal — warmer halo,
       // slower breath, slight inward settle. Reads as "I hear you."
       mood: CoachMood.reassuring,
@@ -39,19 +40,15 @@ class InterludeAfterGoalStep extends ConsumerWidget {
     );
   }
 
-  String _composeSubtitle(WizardState s) {
+  String _composeSubtitle(AppLocalizations l10n, WizardState s) {
     final name = _capitaliseFirst(s.name);
-    final prefix = name != null ? '$name, ' : '';
+    final prefix = name != null ? l10n.interludeNamePrefix(name) : '';
     final body = switch (s.goal) {
-      'belly_burn' => 'yağ kaybı çoğu zaman süreklilikle zorlanır.\n'
-          'Sana ağır başlayan bir plan kurmayacağım.',
-      'muscle_gain' => 'kas büyütmek sabır işidir.\n'
-          'Acelesi olmayan ama kararlı bir program kuracağım.',
-      'fitness_look' => "'fit görünmek' aslında "
-          "'kendinde rahat hissetmek' demek.\nPlana onu yansıtacağım.",
-      'strength' => 'güç temeli yavaş atılır.\n'
-          'Aceleye getirmeyen bir program kurarım.',
-      _ => 'hedefini gördüm.\nBuna göre planı şekillendireceğim.',
+      'belly_burn' => l10n.interludeGoalBellyBurn,
+      'muscle_gain' => l10n.interludeGoalMuscleGain,
+      'fitness_look' => l10n.interludeGoalFitnessLook,
+      'strength' => l10n.interludeGoalStrength,
+      _ => l10n.interludeGoalDefault,
     };
     return prefix + body;
   }

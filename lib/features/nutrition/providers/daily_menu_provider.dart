@@ -197,7 +197,7 @@ class DailyMenuNotifier extends AsyncNotifier<List<PlannedMeal>> {
     }
     if (slot == DailyMealSlot.snack) {
       final tags = r.tags.map((t) => t.toLowerCase());
-      final wantsSweet = taste == 'tatli';
+      final wantsSweet = taste == 'tatli'; // i18n-ignore — stored value
       final wantsSavory = taste == 'tuzlu';
       final isSweet = tags.any((t) =>
           t.contains('tatlı') ||

@@ -6,6 +6,7 @@ import '../../../../core/utils/app_haptics.dart';
 import '../../../../core/widgets/cinematic_ai_presence.dart';
 import '../../providers/wizard_provider.dart';
 import '../widgets/coach_mood.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Phase 133 · the first onboarding step that directly changes the
 /// generated 30-day workout plan.
@@ -72,7 +73,7 @@ class _EquipmentCaptureStepState extends ConsumerState<EquipmentCaptureStep> {
     final wizard = ref.watch(wizardProvider);
     final currentValue = wizard.hasEquipment;
     return CinematicAiPresence(
-      title: 'Son bir şey...',
+      title: AppLocalizations.of(context).equipmentOneMoreThing,
       subtitle: _composeSubtitle(wizard),
       subtitleTypewriter: true,
       composingPlaceholder: '',
@@ -86,14 +87,14 @@ class _EquipmentCaptureStepState extends ConsumerState<EquipmentCaptureStep> {
           children: [
             _EquipmentOption(
               icon: Icons.fitness_center_rounded,
-              label: 'Evet, birkaç dambıl ve lastiğim var',
+              label: AppLocalizations.of(context).equipmentYes,
               selected: currentValue == true,
               onTap: () => _select(true),
             ),
             const SizedBox(height: 12),
             _EquipmentOption(
               icon: Icons.self_improvement_rounded,
-              label: 'Hayır, hiçbir ekipmanım yok',
+              label: AppLocalizations.of(context).equipmentNo,
               selected: currentValue == false,
               onTap: () => _select(false),
             ),

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../core/services/app_preferences.dart';
 import '../../../core/utils/app_haptics.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Phase 138 · B-4 · 18+ verification gate.
 ///
@@ -110,8 +111,8 @@ class _AgeGateScreenState extends ConsumerState<AgeGateScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SizedBox(height: 16),
-          const Text(
-            'Doğum yılını seç',
+          Text(
+            AppLocalizations.of(context).ageGatePickYear,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white,
@@ -121,9 +122,8 @@ class _AgeGateScreenState extends ConsumerState<AgeGateScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          const Text(
-            'FormAI 18 yaşından büyük kullanıcılar içindir. '
-            'Devam etmek için doğum yılını seçmen gerekiyor.',
+          Text(
+            AppLocalizations.of(context).ageGateExplain,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white70,
@@ -162,8 +162,8 @@ class _AgeGateScreenState extends ConsumerState<AgeGateScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          const Text(
-            'Bilgilerin telefonunda kalır. Hesabınla ilişkilendirilmez.',
+          Text(
+            AppLocalizations.of(context).ageGatePrivacyNote,
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.white38, fontSize: 12),
           ),
@@ -262,8 +262,8 @@ class _BlockedView extends StatelessWidget {
             size: 64,
           ),
           const SizedBox(height: 24),
-          const Text(
-            'Üzgünüz',
+          Text(
+            AppLocalizations.of(context).ageGateSorryTitle,
             style: TextStyle(
               color: Colors.white,
               fontSize: 28,
@@ -272,9 +272,8 @@ class _BlockedView extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          const Text(
-            'FormAI 18 yaşından küçük kullanıcılar için uygun '
-            'değildir. Lütfen bir yetişkin eşliğinde değerlendirin.',
+          Text(
+            AppLocalizations.of(context).ageGateSorryBody,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white70,
@@ -294,8 +293,8 @@ class _BlockedView extends StatelessWidget {
                 side: const BorderSide(color: Colors.white24),
               ),
             ),
-            child: const Text(
-              'Uygulamayı Kapat',
+            child: Text(
+              AppLocalizations.of(context).ageGateCloseApp,
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w800,

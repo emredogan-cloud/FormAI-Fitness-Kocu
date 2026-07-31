@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sixpack_ai/core/services/app_preferences.dart';
 import 'package:sixpack_ai/features/onboarding/presentation/onboarding_screen.dart';
+import 'package:sixpack_ai/l10n/app_localizations.dart';
 
 /// The onboarding screen invokes `_finish` on the last page, which
 /// calls the real `Supabase.instance.client` + `context.go` chain.
@@ -50,6 +51,8 @@ Widget _hostOnboarding(SharedPreferences prefs) {
       sharedPreferencesProvider.overrideWithValue(prefs),
     ],
     child: MaterialApp.router(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: const [Locale('tr')],
       routerConfig: router,
       debugShowCheckedModeBanner: false,
     ),
@@ -241,11 +244,15 @@ class _MiniPageViewHarnessState extends State<_MiniPageViewHarness> {
   @override
   Widget build(BuildContext context) {
     if (_finished) {
-      return const MaterialApp(
+      return MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: const [Locale('tr')],
         home: Scaffold(body: Center(child: Text('FINISHED!'))),
       );
     }
     return MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: const [Locale('tr')],
       home: Scaffold(
         body: Column(
           children: [

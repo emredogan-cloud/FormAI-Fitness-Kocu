@@ -4292,5 +4292,147 @@
   "premiumWelcomeTitle": "Welcome to Premium! 🎉",
   "@premiumWelcomeTitle": {
     "description": "Headline of the sheet shown once after a successful purchase. 'Premium' is a brand term."
+  },
+  "ageGatePickYear": "Choose your year of birth",
+  "@ageGatePickYear": {
+    "description": "Age gate — picker prompt"
+  },
+  "ageGateExplain": "FormAI is for users over 18. Choose your year of birth to continue.",
+  "@ageGateExplain": {
+    "description": "Age gate — why the question is being asked. Store-compliance copy: the age requirement must stay explicit."
+  },
+  "ageGatePrivacyNote": "This stays on your phone. It is not linked to your account.",
+  "@ageGatePrivacyNote": {
+    "description": "Age gate — privacy reassurance. A factual claim about data handling; keep it true."
+  },
+  "ageGateSorryTitle": "Sorry",
+  "@ageGateSorryTitle": {
+    "description": "Age gate — title of the under-18 refusal"
+  },
+  "ageGateSorryBody": "FormAI is not suitable for users under 18. Please review it with an adult.",
+  "@ageGateSorryBody": {
+    "description": "Age gate — under-18 refusal. Store-compliance copy."
+  },
+  "ageGateCloseApp": "Close the app",
+  "@ageGateCloseApp": {
+    "description": "Age gate — the only action available after an under-18 answer"
+  },
+  "onboardingSaveFailed": "Your preferences could not be saved. Please try again shortly.",
+  "@onboardingSaveFailed": {
+    "description": "Error shown when onboarding answers fail to persist"
+  },
+  "interludeGoalUnderstood": "I see...",
+  "@interludeGoalUnderstood": {
+    "description": "Coach interlude title after the goal step"
+  },
+  "interludeGoalComposing": "Gathering my thoughts...",
+  "@interludeGoalComposing": {
+    "description": "Placeholder while the coach 'types' after the goal step"
+  },
+  "interludeGoalBellyBurn": "fat loss is usually where consistency gets hard.\nI won't build you a plan that starts heavy.",
+  "@interludeGoalBellyBurn": {
+    "description": "Coach reflection on the 'belly_burn' goal. Begins lower-case: it follows the user's name and a comma."
+  },
+  "interludeGoalMuscleGain": "building muscle takes patience.\nI'll build a programme that isn't rushed, but is steady.",
+  "@interludeGoalMuscleGain": {
+    "description": "Coach reflection on the 'muscle_gain' goal. Begins lower-case."
+  },
+  "interludeGoalFitnessLook": "'looking fit' really means 'feeling at home in your body'.\nI'll build the plan around that.",
+  "@interludeGoalFitnessLook": {
+    "description": "Coach reflection on the 'fitness_look' goal. Begins lower-case."
+  },
+  "interludeGoalStrength": "a base of strength is laid slowly.\nI'll build a programme that doesn't rush it.",
+  "@interludeGoalStrength": {
+    "description": "Coach reflection on the 'strength' goal. Begins lower-case."
+  },
+  "interludeGoalDefault": "I've seen your goal.\nI'll shape the plan around it.",
+  "@interludeGoalDefault": {
+    "description": "Coach reflection fallback. Begins lower-case."
+  },
+  "interludeNamePrefix": "{name}, ",
+  "@interludeNamePrefix": {
+    "description": "Prefix placing the user's name before a lower-case coach reflection. Trailing space is intentional.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "bodyFeelingsQuestion": "How are you feeling about yourself lately?",
+  "@bodyFeelingsQuestion": {
+    "description": "Onboarding step question"
+  },
+  "bodyFeelingsHelper": "Pick whatever sounds familiar. You can choose more than one.",
+  "@bodyFeelingsHelper": {
+    "description": "Onboarding step helper — multi-select"
+  },
+  "bodyFeelingLowEnergy": "My energy is low",
+  "@bodyFeelingLowEnergy": {
+    "description": "Body-feelings option. The stored token is separate."
+  },
+  "bodyFeelingLost": "I don't know where to start",
+  "@bodyFeelingLost": {
+    "description": "Body-feelings option"
+  },
+  "bodyFeelingWantBetter": "I want to feel better",
+  "@bodyFeelingWantBetter": {
+    "description": "Body-feelings option"
+  },
+  "setupThinkingSubtitle": "I need to learn a few things about you. The plan will be entirely yours.",
+  "@setupThinkingSubtitle": {
+    "description": "Coach line before the wizard questions"
+  },
+  "setupThinkingSubtitleNamed": "{name}, I need to learn a few things about you. The plan will be entirely yours.",
+  "@setupThinkingSubtitleNamed": {
+    "description": "Coach line before the wizard questions, addressing the user by name.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "setupThinkingTitle": "Thinking...",
+  "@setupThinkingTitle": {
+    "description": "Coach scene title while the wizard prepares"
+  },
+  "setupThinkingComposing": "Writing something for you...",
+  "@setupThinkingComposing": {
+    "description": "Placeholder while the coach 'types'"
+  },
+  "equipmentQuestion": "Do you have any equipment at home or at the gym?",
+  "@equipmentQuestion": {
+    "description": "Onboarding step question"
+  },
+  "equipmentOneMoreThing": "One last thing...",
+  "@equipmentOneMoreThing": {
+    "description": "Coach lead-in to the equipment question"
+  },
+  "equipmentYes": "Yes, I have some dumbbells and bands",
+  "@equipmentYes": {
+    "description": "Equipment option — yes. The stored value is a boolean."
+  },
+  "equipmentNo": "No, I don't have any equipment",
+  "@equipmentNo": {
+    "description": "Equipment option — no"
+  },
+  "bondingPromise": "I'll show you how to change your body in 12 weeks. First let me get to know you — it takes 90 seconds.",
+  "@bondingPromise": {
+    "description": "Coach promise at the start of onboarding. The 90-second claim sets an expectation the flow must keep."
+  },
+  "tapToSkip": "Tap the screen to skip",
+  "@tapToSkip": {
+    "description": "Hint on a timed onboarding scene"
+  },
+  "interludePainPointTitle": "Now I need to know what you struggle with most.",
+  "@interludePainPointTitle": {
+    "description": "Coach interlude before the pain-point step"
+  },
+  "interludePainPointBeat": "One moment...",
+  "@interludePainPointBeat": {
+    "description": "Coach interlude beat before the pain-point step"
+  },
+  "interludePainPointComposing": "Looking for the right words...",
+  "@interludePainPointComposing": {
+    "description": "Placeholder while the coach 'types'"
   }
 }

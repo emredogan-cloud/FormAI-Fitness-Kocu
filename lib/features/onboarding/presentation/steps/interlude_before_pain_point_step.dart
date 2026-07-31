@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/widgets/cinematic_ai_presence.dart';
 import '../../providers/wizard_provider.dart';
 import '../widgets/coach_mood.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Act 3 · Strategic interlude #2 (vulnerability setup before
 /// pain-point).
@@ -28,12 +29,13 @@ class InterludeBeforePainPointStep extends ConsumerWidget {
     final name = _capitaliseFirst(wizard.name);
     final opener = name != null
         ? '$name, şimdi en zorlandığın şeyi bilmem gerekiyor.'
-        : 'Şimdi en zorlandığın şeyi bilmem gerekiyor.';
+        : AppLocalizations.of(context).interludePainPointTitle;
     return CinematicAiPresence(
-      title: 'Bir an...',
+      title: AppLocalizations.of(context).interludePainPointBeat,
       subtitle: '$opener\nYargılamak için değil — birlikte çözmek için.',
       subtitleTypewriter: true,
-      composingPlaceholder: 'Doğru kelimeleri arıyorum...',
+      composingPlaceholder:
+          AppLocalizations.of(context).interludePainPointComposing,
       // Form is preparing the user for the most vulnerable answer —
       // dimmer, slower, deepest tone in the palette. Reads as
       // "this matters and I'm holding space for it."

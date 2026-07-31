@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/wizard_provider.dart';
 import '../widgets/multi_select_question_step.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Phase 111 · emotional self-recognition step.
 ///
@@ -30,10 +31,10 @@ class BodyFeelingsStep extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final initial = ref.watch(wizardProvider).bodyFeelings;
     return MultiSelectQuestionStep(
-      title: 'Şu sıralar kendinle ilgili neler hissediyorsun?',
-      subtitle: 'Sana tanıdık gelenleri seç. Birden fazla seçebilirsin.',
+      title: AppLocalizations.of(context).bodyFeelingsQuestion,
+      subtitle: AppLocalizations.of(context).bodyFeelingsHelper,
       initialSelected: initial,
-      options: const [
+      options: [
         MultiSelectOption(
           value: 'tired',
           label: 'Yorgunum',
@@ -51,7 +52,7 @@ class BodyFeelingsStep extends ConsumerWidget {
         ),
         MultiSelectOption(
           value: 'low_energy',
-          label: 'Enerjim düşük',
+          label: AppLocalizations.of(context).bodyFeelingLowEnergy,
           emoji: '😴',
         ),
         MultiSelectOption(
@@ -61,7 +62,7 @@ class BodyFeelingsStep extends ConsumerWidget {
         ),
         MultiSelectOption(
           value: 'dont_know_start',
-          label: 'Nereden başlayacağımı bilmiyorum',
+          label: AppLocalizations.of(context).bodyFeelingLost,
           emoji: '🤷',
         ),
         MultiSelectOption(
@@ -71,7 +72,7 @@ class BodyFeelingsStep extends ConsumerWidget {
         ),
         MultiSelectOption(
           value: 'want_better',
-          label: 'Daha iyi hissetmek istiyorum',
+          label: AppLocalizations.of(context).bodyFeelingWantBetter,
           emoji: '🌱',
         ),
       ],

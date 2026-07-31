@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/widgets/cinematic_ai_presence.dart';
 import '../../providers/wizard_provider.dart';
 import '../widgets/coach_mood.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Act 2.7 · Form's thinking moment.
 ///
@@ -45,14 +46,12 @@ class _SetupThinkingStepState extends ConsumerState<SetupThinkingStep> {
     widget.onContinue();
   }
 
-  String _composeSubtitle(WizardState s) {
+  String _composeSubtitle(AppLocalizations l10n, WizardState s) {
     final name = _capitaliseFirst(s.name);
     if (name != null) {
-      return '$name, senden birkaç şey öğrenmem gerekiyor. '
-          'Plan tamamen sana özel olacak.';
+      return l10n.setupThinkingSubtitleNamed(name);
     }
-    return 'Senden birkaç şey öğrenmem gerekiyor. '
-        'Plan tamamen sana özel olacak.';
+    return l10n.setupThinkingSubtitle;
   }
 
   String? _capitaliseFirst(String? raw) {
@@ -67,10 +66,10 @@ class _SetupThinkingStepState extends ConsumerState<SetupThinkingStep> {
   Widget build(BuildContext context) {
     final wizard = ref.watch(wizardProvider);
     return CinematicAiPresence(
-      title: 'Düşünüyorum...',
-      subtitle: _composeSubtitle(wizard),
+      title: AppLocalizations.of(context).setupThinkingTitle,
+      subtitle: _composeSubtitle(AppLocalizations.of(context), wizard),
       subtitleTypewriter: true,
-      composingPlaceholder: 'Sana bir şey yazıyor...',
+      composingPlaceholder: AppLocalizations.of(context).setupThinkingComposing,
       mood: CoachMood.thinking,
       autoCloseAfter: const Duration(milliseconds: 6500),
       onComplete: _onAutoClose,

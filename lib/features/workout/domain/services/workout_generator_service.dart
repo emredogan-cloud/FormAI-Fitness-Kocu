@@ -222,6 +222,7 @@ class WorkoutGeneratorService {
         v == 'baslangic' ||
         v == 'başlangıç') {
       // i18n-ignore — stored value
+      // i18n-ignore — stored value
       return _Level.beginner;
     }
     // Phase 86 · default fell through. Beginner stays the safe default
