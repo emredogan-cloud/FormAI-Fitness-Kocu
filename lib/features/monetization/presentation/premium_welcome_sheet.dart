@@ -85,8 +85,8 @@ class PremiumWelcomeSheet extends StatelessWidget {
               shaderCallback: (r) => const LinearGradient(
                 colors: [Colors.white, _neon],
               ).createShader(r),
-              child: const Text(
-                'Premium\'a hoş geldin! 🎉',
+              child: Text(
+                AppLocalizations.of(context).premiumWelcomeTitle,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.white,

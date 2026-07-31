@@ -10,6 +10,7 @@ import '../../../core/widgets/cinematic_ai_presence.dart';
 import '../../onboarding/presentation/widgets/coach_mood.dart';
 import '../models/locked_feature_type.dart';
 import '../widgets/premium_cta_button.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Phase 135 · the cinematic conversion-moment orchestrator.
 ///
@@ -88,6 +89,7 @@ class ConversionMomentService {
     AnalyticsService.instance.conversionMomentShown(source: source);
     AppHaptics.lightImpact();
     var ctaTapped = false;
+    final l10n = AppLocalizations.of(context);
     await Navigator.of(context, rootNavigator: true).push<void>(
       PageRouteBuilder<void>(
         opaque: true,
@@ -97,14 +99,14 @@ class ConversionMomentService {
         pageBuilder: (_, __, ___) {
           return Builder(
             builder: (innerContext) => CinematicAiPresence(
-              title: config.title,
-              subtitle: config.subtitle,
+              title: config.title(l10n),
+              subtitle: config.subtitle(l10n),
               subtitleTypewriter: true,
               composingPlaceholder: '',
               mood: config.mood,
               autoCloseAfter: null,
               bottomActions: _ConversionActions(
-                ctaLabel: config.ctaLabel,
+                ctaLabel: config.ctaLabel(l10n),
                 onCtaTap: () {
                   ctaTapped = true;
                   AnalyticsService.instance
@@ -146,24 +148,21 @@ final conversionMomentProvider =
 /// every callsite.
 const Map<LockedFeatureType, _ConversionConfig> _lockedConfigs = {
   LockedFeatureType.nutritionTab: _ConversionConfig(
-    title: 'Beslenmen, dönüşümün anahtarı.',
-    subtitle: 'Antrenman gücü artırır.\n'
-        'Beslenme görünür değişiklik yaratır.',
-    ctaLabel: 'Tam Potansiyelini Aç',
+    title: _nutritionTitle,
+    subtitle: _nutritionSubtitle,
+    ctaLabel: _ctaPotential,
     mood: CoachMood.thinking,
   ),
   LockedFeatureType.equipmentExercise: _ConversionConfig(
-    title: 'Daha derin gelişim seni bekliyor.',
-    subtitle: 'Premium ekipman egzersizleri\n'
-        'yeni güç katmanlarını açar.',
-    ctaLabel: 'Dönüşümünü Tam Aç',
+    title: _equipmentTitle,
+    subtitle: _equipmentSubtitle,
+    ctaLabel: _ctaTransformation,
     mood: CoachMood.proud,
   ),
   LockedFeatureType.futureDay: _ConversionConfig(
-    title: 'Yolculuğunun devamı hazır.',
-    subtitle: '30 günlük plan boyunca\n'
-        'seninle her gün ilerleyeceğiz.',
-    ctaLabel: 'Dönüşümünü Tam Aç',
+    title: _futureDayTitle,
+    subtitle: _futureDaySubtitle,
+    ctaLabel: _ctaTransformation,
     mood: CoachMood.proud,
   ),
 };
@@ -172,12 +171,24 @@ const Map<LockedFeatureType, _ConversionConfig> _lockedConfigs = {
 /// locked-tap. Triggered from dashboard `didPopNext` after the first
 /// completed workout.
 const _ConversionConfig _firstWorkoutInvitation = _ConversionConfig(
-  title: 'İlk adımı attın.',
-  subtitle: 'Bu hissi yakaladın mı?\n'
-      'Dönüşümünü hızlandırmaya hazır mısın?',
-  ctaLabel: 'Tam Potansiyelini Aç',
+  title: _firstWorkoutTitle,
+  subtitle: _firstWorkoutSubtitle,
+  ctaLabel: _ctaPotential,
   mood: CoachMood.celebratory,
 );
+
+// Named lookups so both catalogues above stay `const`.
+String _nutritionTitle(AppLocalizations l) => l.conversionNutritionTitle;
+String _nutritionSubtitle(AppLocalizations l) => l.conversionNutritionSubtitle;
+String _equipmentTitle(AppLocalizations l) => l.conversionEquipmentTitle;
+String _equipmentSubtitle(AppLocalizations l) => l.conversionEquipmentSubtitle;
+String _futureDayTitle(AppLocalizations l) => l.conversionFutureDayTitle;
+String _futureDaySubtitle(AppLocalizations l) => l.conversionFutureDaySubtitle;
+String _firstWorkoutTitle(AppLocalizations l) => l.conversionFirstWorkoutTitle;
+String _firstWorkoutSubtitle(AppLocalizations l) =>
+    l.conversionFirstWorkoutSubtitle;
+String _ctaPotential(AppLocalizations l) => l.ctaUnlockPotential;
+String _ctaTransformation(AppLocalizations l) => l.ctaUnlockTransformation;
 
 class _ConversionConfig {
   const _ConversionConfig({
@@ -187,9 +198,10 @@ class _ConversionConfig {
     required this.mood,
   });
 
-  final String title;
-  final String subtitle;
-  final String ctaLabel;
+  /// Lookups, not text — both catalogues above are `const`.
+  final String Function(AppLocalizations) title;
+  final String Function(AppLocalizations) subtitle;
+  final String Function(AppLocalizations) ctaLabel;
   final CoachMood mood;
 }
 
@@ -225,8 +237,8 @@ class _ConversionActions extends StatelessWidget {
             foregroundColor: Colors.white.withValues(alpha: 0.55),
             padding: const EdgeInsets.symmetric(vertical: 12),
           ),
-          child: const Text(
-            'Daha sonra',
+          child: Text(
+            AppLocalizations.of(context).commonLater,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,

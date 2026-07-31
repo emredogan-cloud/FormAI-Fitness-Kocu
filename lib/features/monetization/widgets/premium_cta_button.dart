@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Phase 134 · the cinematic "Unlock Pro" CTA.
 ///
@@ -12,20 +13,24 @@ import '../../../core/theme/app_colors.dart';
 /// for "Antrenmana Başla" elsewhere, and we don't want premium CTAs
 /// reading as workout CTAs at a glance.
 ///
-/// Default label is `'Dönüşümünü Tam Aç'` — the Phase 134-/135-/136-
+/// Default label is [AppLocalizations.ctaUnlockTransformation] — the Phase 134-/135-/136-
 /// spec wording. Override per scene where the framing benefits (e.g.
 /// `'Tam Potansiyelini Aç'` for the post-first-workout invitation).
 class PremiumCtaButton extends StatelessWidget {
   const PremiumCtaButton({
     super.key,
     required this.onTap,
-    this.label = 'Dönüşümünü Tam Aç',
+    this.label,
     this.icon = Icons.lock_open_rounded,
     this.fullWidth = true,
   });
 
   final VoidCallback onTap;
-  final String label;
+
+  /// Null falls back to [AppLocalizations.ctaUnlockTransformation] at
+  /// build time — a default cannot be a localized string in a const
+  /// constructor.
+  final String? label;
   final IconData? icon;
   final bool fullWidth;
 
@@ -73,7 +78,10 @@ class PremiumCtaButton extends StatelessWidget {
                   ],
                   Flexible(
                     child: Text(
-                      label.toUpperCase(),
+                      (label ??
+                              AppLocalizations.of(context)
+                                  .ctaUnlockTransformation)
+                          .toUpperCase(),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,

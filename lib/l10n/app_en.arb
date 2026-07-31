@@ -3929,34 +3929,6 @@
       }
     }
   },
-  "coachCtxProfileHeading": "User profile:",
-  "@coachCtxProfileHeading": {
-    "description": "Heading inside the context block sent to the coach model. Localized so the model receives context in the same language it is asked to reply in."
-  },
-  "coachCtxProgressHeading": "Progress:",
-  "@coachCtxProgressHeading": {
-    "description": "Heading inside the context block sent to the coach model"
-  },
-  "coachCtxDone": "completed",
-  "@coachCtxDone": {
-    "description": "Status word inside the coach context block"
-  },
-  "coachCtxNotDone": "not done yet",
-  "@coachCtxNotDone": {
-    "description": "Status word inside the coach context block"
-  },
-  "coachCtxManualMode": "- Workout mode: camera-free (the user counts reps; no form analysis)",
-  "@coachCtxManualMode": {
-    "description": "Line inside the coach context block telling the model the user trains without the camera"
-  },
-  "coachCtxFirstSession": "- Just finished camera setup; hasn't done a first session yet.",
-  "@coachCtxFirstSession": {
-    "description": "Line inside the coach context block"
-  },
-  "coachOnboardingPrompt": "Context: the app's onboarding conversation. The user is meeting you for the first time. Reply once, briefly and warmly.",
-  "@coachOnboardingPrompt": {
-    "description": "Instruction prefix sent to the coach model during onboarding"
-  },
   "goalBellyBurnLower": "Burn belly fat",
   "@goalBellyBurnLower": {
     "description": "Goal label used inside a coach context sentence. Stored value 'belly_burn'."
@@ -4161,15 +4133,6 @@
   "@difficultyIntermediateLong": {
     "description": "Difficulty label on the plan detail screen"
   },
-  "planDaysLeft": "{days} days left",
-  "@planDaysLeft": {
-    "description": "Remaining programme days.",
-    "placeholders": {
-      "days": {
-        "type": "int"
-      }
-    }
-  },
   "planRequestedAbbrev": "Req.",
   "@planRequestedAbbrev": {
     "description": "Abbreviation for 'requested' on the exercise row — space is very tight, keep it to ~4 characters."
@@ -4225,5 +4188,109 @@
   "planHeroFullBody": "Full-Body\nConditioning",
   "@planHeroFullBody": {
     "description": "Plan hero headline for cardio or full-body days. Two short lines."
+  },
+  "ratingFeedbackIntro": "What could we do better? We're listening.",
+  "@ratingFeedbackIntro": {
+    "description": "Intro shown in the feedback sheet when it is reached from a low rating"
+  },
+  "ratingDismissTitle": "That's all right.",
+  "@ratingDismissTitle": {
+    "description": "Coach scene shown after dismissing a rating prompt — deliberately gracious, never pressuring"
+  },
+  "ratingDismissSubtitle": "Maybe another day.\nCarry on with your training.",
+  "@ratingDismissSubtitle": {
+    "description": "Coach scene body after dismissing a rating prompt"
+  },
+  "ratingProgramCompleteTitle": "30 days. Done.",
+  "@ratingProgramCompleteTitle": {
+    "description": "Rating prompt title after finishing the programme"
+  },
+  "ratingProgramCompleteSubtitle": "You finished what you started.\nYou're among the people who see it through.\nWould you help someone considering the same path?",
+  "@ratingProgramCompleteSubtitle": {
+    "description": "Rating prompt body after finishing the programme"
+  },
+  "ratingStreakSevenTitle": "Seven days, unbroken.",
+  "@ratingStreakSevenTitle": {
+    "description": "Rating prompt title at a seven-day streak"
+  },
+  "ratingStreakSevenSubtitle": "This is a habit now.\nWould you point the way for someone looking for the same?",
+  "@ratingStreakSevenSubtitle": {
+    "description": "Rating prompt body at a seven-day streak"
+  },
+  "ratingThirdWorkoutTitle": "I'm proud of you.",
+  "@ratingThirdWorkoutTitle": {
+    "description": "Rating prompt title after the third workout"
+  },
+  "ratingThirdWorkoutSubtitle": "You've completed three workouts.\nIf your transformation has started,\nmaybe you can help someone else begin theirs.",
+  "@ratingThirdWorkoutSubtitle": {
+    "description": "Rating prompt body after the third workout"
+  },
+  "ratingBadgeTitle": "You've earned a new badge.",
+  "@ratingBadgeTitle": {
+    "description": "Rating prompt title after unlocking a badge"
+  },
+  "ratingBadgeSubtitle": "Your effort is paying off.\nWould you leave a word for someone considering this path?",
+  "@ratingBadgeSubtitle": {
+    "description": "Rating prompt body after unlocking a badge"
+  },
+  "ratingFirstWorkoutTitle": "You took the first step.",
+  "@ratingFirstWorkoutTitle": {
+    "description": "Rating prompt title after the first workout"
+  },
+  "ratingFirstWorkoutSubtitle": "The hardest part is behind you.\nHow has FormAI felt so far?",
+  "@ratingFirstWorkoutSubtitle": {
+    "description": "Rating prompt body after the first workout"
+  },
+  "ratingStarsSemantics": "Rate FormAI, from 1 to 5 stars",
+  "@ratingStarsSemantics": {
+    "description": "Accessibility label on the star row. Screen readers announce this instead of five separate buttons."
+  },
+  "commonLater": "Later",
+  "@commonLater": {
+    "description": "Dismissive action on rating and upsell prompts"
+  },
+  "conversionNutritionTitle": "Nutrition is the key to your transformation.",
+  "@conversionNutritionTitle": {
+    "description": "Upsell scene title for the locked nutrition tab"
+  },
+  "conversionNutritionSubtitle": "Training builds strength.\nNutrition makes the change visible.",
+  "@conversionNutritionSubtitle": {
+    "description": "Upsell scene body for the locked nutrition tab"
+  },
+  "conversionEquipmentTitle": "Deeper progress is waiting.",
+  "@conversionEquipmentTitle": {
+    "description": "Upsell scene title for locked equipment exercises"
+  },
+  "conversionEquipmentSubtitle": "Premium equipment exercises\nunlock new layers of strength.",
+  "@conversionEquipmentSubtitle": {
+    "description": "Upsell scene body for locked equipment exercises"
+  },
+  "conversionFutureDayTitle": "The rest of your journey is ready.",
+  "@conversionFutureDayTitle": {
+    "description": "Upsell scene title for locked future days"
+  },
+  "conversionFutureDaySubtitle": "Across the 30-day plan\nwe'll move forward together every day.",
+  "@conversionFutureDaySubtitle": {
+    "description": "Upsell scene body for locked future days"
+  },
+  "conversionFirstWorkoutTitle": "You took the first step.",
+  "@conversionFirstWorkoutTitle": {
+    "description": "Upsell scene title after the first completed workout"
+  },
+  "conversionFirstWorkoutSubtitle": "Did you feel that?\nReady to speed your transformation up?",
+  "@conversionFirstWorkoutSubtitle": {
+    "description": "Upsell scene body after the first completed workout"
+  },
+  "ctaUnlockPotential": "Unlock your full potential",
+  "@ctaUnlockPotential": {
+    "description": "Upsell call to action"
+  },
+  "ctaUnlockTransformation": "Unlock your transformation",
+  "@ctaUnlockTransformation": {
+    "description": "Upsell call to action, also the default label on the Premium CTA button"
+  },
+  "premiumWelcomeTitle": "Welcome to Premium! 🎉",
+  "@premiumWelcomeTitle": {
+    "description": "Headline of the sheet shown once after a successful purchase. 'Premium' is a brand term."
   }
 }

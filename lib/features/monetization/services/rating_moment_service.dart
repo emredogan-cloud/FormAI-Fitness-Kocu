@@ -13,6 +13,7 @@ import '../../feedback/presentation/feedback_sheet.dart';
 import '../../feedback/services/feedback_service.dart';
 import '../../onboarding/presentation/widgets/coach_mood.dart';
 import '../domain/rating_trigger.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Play Store listing URL, used as the fallback path when the In-App
 /// Review API is unavailable (non-Play devices, sideloaded builds,
@@ -152,8 +153,9 @@ class RatingMomentService {
         pageBuilder: (_, __, ___) {
           return Builder(
             builder: (innerContext) => CinematicAiPresence(
-              title: _copyFor(trigger).title,
-              subtitle: _copyFor(trigger).subtitle,
+              title: _copyFor(AppLocalizations.of(context), trigger).title,
+              subtitle:
+                  _copyFor(AppLocalizations.of(context), trigger).subtitle,
               subtitleTypewriter: true,
               composingPlaceholder: '',
               mood: CoachMood.proud,
@@ -231,18 +233,20 @@ class RatingMomentService {
     final result = await showFeedbackSheet(
       context,
       initialSubject: FeedbackSubject.suggestion,
-      introOverride: 'Neyi daha iyi yapabiliriz? Seni dinliyoruz.',
+      introOverride: AppLocalizations.of(context).ratingFeedbackIntro,
     );
     if (result == null || !context.mounted) return;
+    final l10n = AppLocalizations.of(context);
     final message = result.transport == FeedbackTransport.supabase
-        ? 'Mesajın iletildi. Teşekkürler!'
-        : 'Mail uygulaman açıldı — gönderince ulaşır.';
+        ? l10n.profileFeedbackSent
+        : l10n.profileFeedbackMailOpened;
     ScaffoldMessenger.maybeOf(context)?.showSnackBar(
       SnackBar(content: Text(message)),
     );
   }
 
   Future<void> _onDismiss(BuildContext context, RatingTrigger trigger) async {
+    final l10n = AppLocalizations.of(context);
     AnalyticsService.instance.ratingPromptDismissed(trigger: trigger.token);
     AppHaptics.secondaryTap();
     // Two sequenced scenes rather than one mount — keeps the typewriter
@@ -258,9 +262,8 @@ class RatingMomentService {
         pageBuilder: (_, __, ___) {
           return Builder(
             builder: (innerContext) => CinematicAiPresence(
-              title: 'Sorun değil.',
-              subtitle: 'Belki başka bir gün.\n'
-                  'Antrenmanına devam et.',
+              title: l10n.ratingDismissTitle,
+              subtitle: l10n.ratingDismissSubtitle,
               subtitleTypewriter: true,
               composingPlaceholder: '',
               mood: CoachMood.thinking,
@@ -285,39 +288,32 @@ class RatingMomentService {
 /// Per-trigger scene copy. Each moment gets wording that names what the
 /// user actually just did — a generic "rate us" prompt at five
 /// different moments would read as a template.
-_RatingCopy _copyFor(RatingTrigger trigger) {
+_RatingCopy _copyFor(AppLocalizations l10n, RatingTrigger trigger) {
   switch (trigger) {
     case RatingTrigger.programComplete:
-      return const _RatingCopy(
-        title: '30 gün. Tamamladın.',
-        subtitle: 'Başladığın şeyi bitirdin.\n'
-            'Bunu başaranların yanına yazıldın.\n'
-            'Aynı yolu düşünen birine yardım eder misin?',
+      return _RatingCopy(
+        title: l10n.ratingProgramCompleteTitle,
+        subtitle: l10n.ratingProgramCompleteSubtitle,
       );
     case RatingTrigger.streakSeven:
-      return const _RatingCopy(
-        title: 'Yedi gün, kesintisiz.',
-        subtitle: 'Artık bu bir alışkanlık.\n'
-            'Aynı şeyi arayan birine yol gösterir misin?',
+      return _RatingCopy(
+        title: l10n.ratingStreakSevenTitle,
+        subtitle: l10n.ratingStreakSevenSubtitle,
       );
     case RatingTrigger.thirdWorkout:
-      return const _RatingCopy(
-        title: 'Seninle gurur duyuyorum.',
-        subtitle: 'Üç antrenmanı tamamladın.\n'
-            'Eğer dönüşümün başladıysa,\n'
-            'belki bir başkasının da başlamasına yardımcı olabilirsin.',
+      return _RatingCopy(
+        title: l10n.ratingThirdWorkoutTitle,
+        subtitle: l10n.ratingThirdWorkoutSubtitle,
       );
     case RatingTrigger.badgeUnlocked:
-      return const _RatingCopy(
-        title: 'Yeni bir rozet kazandın.',
-        subtitle: 'Emeğinin karşılığını alıyorsun.\n'
-            'Bu yolu düşünen birine bir söz bırakır mısın?',
+      return _RatingCopy(
+        title: l10n.ratingBadgeTitle,
+        subtitle: l10n.ratingBadgeSubtitle,
       );
     case RatingTrigger.firstWorkout:
-      return const _RatingCopy(
-        title: 'İlk adımı attın.',
-        subtitle: 'En zor kısmı geride bıraktın.\n'
-            'FormAI sana nasıl geldi?',
+      return _RatingCopy(
+        title: l10n.ratingFirstWorkoutTitle,
+        subtitle: l10n.ratingFirstWorkoutSubtitle,
       );
   }
 }
@@ -381,7 +377,7 @@ class _RatingStarsState extends State<_RatingStars> {
       children: [
         Semantics(
           container: true,
-          label: 'FormAI\'ı değerlendir, 1 ile 5 yıldız arası',
+          label: AppLocalizations.of(context).ratingStarsSemantics,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(5, (index) {
@@ -407,8 +403,8 @@ class _RatingStarsState extends State<_RatingStars> {
             // already holds elsewhere.
             minimumSize: const Size(88, 48),
           ),
-          child: const Text(
-            'Daha sonra',
+          child: Text(
+            AppLocalizations.of(context).commonLater,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,

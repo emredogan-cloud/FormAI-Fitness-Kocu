@@ -1,9 +1,5 @@
 {
   "lib/features/monetization/presentation/paywall_screen.dart": 50,
-  "lib/features/monetization/presentation/premium_welcome_sheet.dart": 1,
-  "lib/features/monetization/services/conversion_moment_service.dart": 13,
-  "lib/features/monetization/services/rating_moment_service.dart": 16,
-  "lib/features/monetization/widgets/premium_cta_button.dart": 1,
   "lib/features/nutrition/providers/daily_menu_provider.dart": 1,
   "lib/features/onboarding/domain/ai_personalization_engine.dart": 40,
   "lib/features/onboarding/presentation/age_gate_screen.dart": 8,
