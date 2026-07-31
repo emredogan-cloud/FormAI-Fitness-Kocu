@@ -1,4 +1,5 @@
 import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart' show mapEquals;
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 
@@ -141,6 +142,12 @@ class PosePainter extends CustomPainter {
     return Offset(x, y);
   }
 
+  /// Exposed for [TutorialPosePainter], which needs the same projection
+  /// so its labels land on the joints the base painter drew.
+  @protected
+  Offset projectLandmark(PoseLandmark landmark, Size canvasSize) =>
+      _project(landmark, canvasSize);
+
   @override
   bool shouldRepaint(covariant PosePainter oldDelegate) {
     // Fast paths first: image + camera config changes always need a repaint.
@@ -166,5 +173,114 @@ class PosePainter extends CustomPainter {
       if (a?.x != b?.x || a?.y != b?.y) return true;
     }
     return false;
+  }
+}
+
+/// Roadmap Phase 3 (R1.2) · the practice-rep painter — the skeleton plus
+/// a name on every joint the active analyzer is actually reading.
+///
+/// This is the phase's whole claim made literal. "AI form analysis" is an
+/// abstraction until the user watches the app label *their* knee and then
+/// count *their* rep off it; after that it is a thing they have seen work.
+/// The labels are therefore not decoration — they are the evidence.
+///
+/// Which is also why the label set is passed in by the caller from the
+/// analyzer's own geometry rather than hardcoded here: a painter that
+/// claims to watch the knee while the analyzer reads the hip would be
+/// a lie rendered at 15 fps, and the least detectable kind.
+class TutorialPosePainter extends PosePainter {
+  TutorialPosePainter({
+    required super.pose,
+    required super.imageSize,
+    required super.rotation,
+    required super.cameraLensDirection,
+    required this.trackedJoints,
+  });
+
+  /// Joint → Turkish label, e.g. `PoseLandmarkType.leftKnee: 'Diz'`.
+  final Map<PoseLandmarkType, String> trackedJoints;
+
+  static const Color _labelColor = Color(0xFF39FF14);
+
+  /// Below this likelihood the joint's label is suppressed. Naming a
+  /// joint the detector can barely see would attach the app's confidence
+  /// to a guess.
+  static const double _labelConfidenceFloor = 0.4;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    super.paint(canvas, size);
+
+    for (final entry in trackedJoints.entries) {
+      final landmark = pose.landmarks[entry.key];
+      if (landmark == null) continue;
+      if (landmark.likelihood < _labelConfidenceFloor) continue;
+      _drawLabel(canvas, size, projectLandmark(landmark, size), entry.value);
+    }
+  }
+
+  void _drawLabel(Canvas canvas, Size size, Offset at, String text) {
+    final painter = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: const TextStyle(
+          color: _labelColor,
+          fontSize: 12,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.4,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    const gap = 12.0;
+    const padH = 7.0;
+    const padV = 3.5;
+    final chipWidth = painter.width + padH * 2;
+    final chipHeight = painter.height + padV * 2;
+
+    // Prefer the right of the joint; flip to the left when that would
+    // run off-canvas. A label clipped at the screen edge reads as a
+    // rendering bug on exactly the framing this screen is teaching.
+    var left = at.dx + gap;
+    if (left + chipWidth > size.width - 4) {
+      left = at.dx - gap - chipWidth;
+    }
+    // The canvas can be smaller than the chip — a zero-size box during a
+    // layout transition, or a long label on a narrow preview. Clamping
+    // against a max below the min throws, so the degenerate case pins to
+    // the inset instead. Found by test, and it would have crashed the
+    // live camera screen rather than merely misplacing a label.
+    left = _pin(left, 4.0, size.width - chipWidth - 4);
+    final top = _pin(at.dy - chipHeight / 2, 4.0, size.height - chipHeight - 4);
+
+    final chip = RRect.fromRectAndRadius(
+      Rect.fromLTWH(left, top, chipWidth, chipHeight),
+      const Radius.circular(7),
+    );
+    canvas.drawRRect(
+      chip,
+      Paint()..color = Colors.black.withValues(alpha: 0.62),
+    );
+    canvas.drawRRect(
+      chip,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1
+        ..color = _labelColor.withValues(alpha: 0.7),
+    );
+    painter.paint(canvas, Offset(left + padH, top + padV));
+  }
+
+  /// `clamp` with a max that may fall below the min. Returns [min] in
+  /// that case rather than throwing.
+  static double _pin(double value, double min, double max) =>
+      max <= min ? min : value.clamp(min, max);
+
+  @override
+  bool shouldRepaint(covariant PosePainter oldDelegate) {
+    if (oldDelegate is! TutorialPosePainter) return true;
+    if (!mapEquals(oldDelegate.trackedJoints, trackedJoints)) return true;
+    return super.shouldRepaint(oldDelegate);
   }
 }

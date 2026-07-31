@@ -6,7 +6,7 @@ publish_to: 'none'
 # +14 = first store-submission release candidate (Phase 2 of the
 # FINAL_STORE_SUBMISSION_ROADMAP). +15 was uploaded to the closed test;
 # +16 = closed-test polish Part 2 (image refresh + illustration assets).
-version: 1.0.0+21
+version: 1.0.0+22
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -163,6 +163,13 @@ dev_dependencies:
   integration_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  # Roadmap Phase 3b · test-only. `camera` re-exports just a subset of
+  # the platform interface, so constructing a real `CameraImage` for the
+  # frame-geometry tests needs `CameraImageData` from here directly. The
+  # alternative — `CameraImage.fromPlatformData` — is deprecated, and
+  # hand-rolling the geometry in the test would only assert that a copy
+  # of the implementation matches itself.
+  camera_platform_interface: ^2.13.0
   # Native app-icon generator. Pinned to ^0.14.x so the config block
   # below (flutter_launcher_icons:) keeps parsing on future upgrades.
   flutter_launcher_icons: ^0.14.1

@@ -17,6 +17,10 @@ class WorkoutControlPanel extends StatelessWidget {
     required this.onTogglePlay,
     required this.onNext,
     this.onPrev,
+    this.repCounterKey,
+    this.formIndicatorKey,
+    this.pauseControlKey,
+    this.nextControlKey,
   });
 
   final int currentSet;
@@ -32,6 +36,16 @@ class WorkoutControlPanel extends StatelessWidget {
   final VoidCallback? onPrev;
   final VoidCallback? onTogglePlay;
   final VoidCallback? onNext;
+
+  // Roadmap Phase 3b · spotlight anchors for the first-workout coach-mark
+  // layer. Passed in rather than read from the tour registry here so this
+  // widget stays a plain StatelessWidget with no provider dependency —
+  // it is rendered by three tests that never build a ProviderScope.
+  // Null everywhere except the live workout screen.
+  final GlobalKey? repCounterKey;
+  final GlobalKey? formIndicatorKey;
+  final GlobalKey? pauseControlKey;
+  final GlobalKey? nextControlKey;
 
   @override
   Widget build(BuildContext context) {
@@ -57,9 +71,11 @@ class WorkoutControlPanel extends StatelessWidget {
             currentSet: currentSet,
             totalSets: totalSets,
             detectorLabel: detectorState.name.toUpperCase(),
+            detectorKey: formIndicatorKey,
           ),
           const Spacer(),
           FittedBox(
+            key: repCounterKey,
             fit: BoxFit.scaleDown,
             child: Text(
               metric,
@@ -102,10 +118,12 @@ class WorkoutControlPanel extends StatelessWidget {
               else
                 const SizedBox(width: 48, height: 48),
               _CenterPlayButton(
+                key: pauseControlKey,
                 isPaused: isPaused,
                 onTap: onTogglePlay,
               ),
               _ControlIconButton(
+                key: nextControlKey,
                 icon: Icons.skip_next_rounded,
                 semanticLabel: 'Sonraki egzersiz',
                 onTap: onNext,
@@ -123,11 +141,13 @@ class _SetIndicator extends StatelessWidget {
     required this.currentSet,
     required this.totalSets,
     required this.detectorLabel,
+    this.detectorKey,
   });
 
   final int currentSet;
   final int totalSets;
   final String detectorLabel;
+  final GlobalKey? detectorKey;
 
   @override
   Widget build(BuildContext context) {
@@ -156,6 +176,7 @@ class _SetIndicator extends StatelessWidget {
         ),
         Text(
           detectorLabel,
+          key: detectorKey,
           style: const TextStyle(
             color: Colors.white38,
             fontSize: 10,
@@ -170,6 +191,7 @@ class _SetIndicator extends StatelessWidget {
 
 class _ControlIconButton extends StatelessWidget {
   const _ControlIconButton({
+    super.key,
     required this.icon,
     required this.semanticLabel,
     required this.onTap,
@@ -205,7 +227,11 @@ class _ControlIconButton extends StatelessWidget {
 }
 
 class _CenterPlayButton extends StatelessWidget {
-  const _CenterPlayButton({required this.isPaused, required this.onTap});
+  const _CenterPlayButton({
+    super.key,
+    required this.isPaused,
+    required this.onTap,
+  });
 
   final bool isPaused;
   final VoidCallback? onTap;

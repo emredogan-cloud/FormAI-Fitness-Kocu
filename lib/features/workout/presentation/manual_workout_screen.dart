@@ -58,6 +58,13 @@ class _ManualWorkoutScreenState extends ConsumerState<ManualWorkoutScreen> {
     ref.read(workoutSessionProvider.notifier).setCurrentReps(next);
   }
 
+  /// Roadmap Phase 3 feature 6 · reopens the setup guide as a reference.
+  /// Pushed, so the user lands back on their in-progress session.
+  Future<void> _showSetupGuide() async {
+    AnalyticsService.instance.tutorialReplayed();
+    await context.push(AppRoutes.cameraTutorialReplay);
+  }
+
   /// Offers the camera back. A user who picked manual once shouldn't
   /// have to reinstall to change their mind.
   Future<void> _switchToCamera() async {
@@ -83,6 +90,20 @@ class _ManualWorkoutScreenState extends ConsumerState<ManualWorkoutScreen> {
           style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 0.4),
         ),
         actions: [
+          // Roadmap Phase 3 feature 6 · the setup guide stays reachable
+          // from the camera-free surface too. Someone who chose manual
+          // because the camera felt daunting is exactly who benefits
+          // from being able to re-read the placement guidance without
+          // committing to a camera session first.
+          Semantics(
+            button: true,
+            label: 'Kamera kurulumunu göster',
+            child: IconButton(
+              onPressed: _showSetupGuide,
+              icon: const Icon(Icons.center_focus_strong_outlined),
+              tooltip: 'Kamera kurulumunu göster',
+            ),
+          ),
           Semantics(
             button: true,
             label: 'Kamerayı aç',

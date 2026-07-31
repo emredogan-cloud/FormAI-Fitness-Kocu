@@ -72,6 +72,41 @@ class AudioFeedback {
   /// inside the cooldown window.
   final Map<String, DateTime> _phraseLastSpoken = <String, DateTime>{};
 
+  bool _muted = false;
+
+  /// Roadmap Phase 3b · the voice coach's mute switch.
+  ///
+  /// Gating here rather than at each call site is deliberate: the coach
+  /// speaks from a dozen places (rep milestones, pacing, form warnings,
+  /// rest checkpoints, tutorial guidance) and a mute that each of them
+  /// had to remember to honour is a mute that leaks. One gate in
+  /// [speak] cannot leak.
+  bool get muted => _muted;
+
+  set muted(bool value) {
+    if (_muted == value) return;
+    _muted = value;
+    if (value) {
+      // Silence must be immediate. Leaving a queued burst to drain after
+      // the user hits mute is precisely the failure the toggle exists to
+      // prevent — they pressed it because someone walked in.
+      _queue.clear();
+      unawaited(_stopQuietly());
+    }
+  }
+
+  Future<void> _stopQuietly() async {
+    try {
+      await _tts.stop();
+    } catch (e, st) {
+      AppLogger.warning(
+        'AudioFeedback: stop() on mute failed',
+        category: 'tts',
+        data: {'error': e.toString(), 'stack': st.toString()},
+      );
+    }
+  }
+
   Future<void> init() async {
     if (_ready) return;
     if (_initInFlight) {
@@ -203,6 +238,10 @@ class AudioFeedback {
     Duration cooldown = const Duration(seconds: 3),
   }) async {
     if (phrase.isEmpty) return;
+    // Checked before init() so a muted user never pays the TTS engine
+    // handshake — and, more importantly, so muting can never be
+    // defeated by a call site that speaks before the engine is ready.
+    if (_muted) return;
     if (!_ready) await init();
 
     final now = DateTime.now();

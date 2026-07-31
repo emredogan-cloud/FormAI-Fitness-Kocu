@@ -105,6 +105,11 @@ class AppRoutes {
   /// Interposed before the FIRST `/workout`; skipped forever after.
   static const String cameraTutorial = '/workout/tutorial';
 
+  /// Roadmap Phase 3 feature 6 · the same guide, reopened on purpose from
+  /// the workout overflow menu. `push`ed (not `go`ne to) so it returns
+  /// the user to the session they left.
+  static const String cameraTutorialReplay = '$cameraTutorial?replay=1';
+
   /// Roadmap Phase 3 (C21) · the camera-free workout surface.
   static const String manualWorkout = '/workout/manual';
 }
@@ -421,7 +426,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.cameraTutorial,
         name: 'cameraTutorial',
-        builder: (context, state) => const CameraTutorialScreen(),
+        // Roadmap Phase 3 feature 6 · `?replay=1` marks a visit from the
+        // workout overflow menu. A replay returns the user where they
+        // came from instead of launching a workout, and skips the
+        // practice rep they have already done.
+        builder: (context, state) => CameraTutorialScreen(
+          replay: state.uri.queryParameters['replay'] == '1',
+        ),
       ),
       // Roadmap Phase 3 (C21) · camera-free workout.
       GoRoute(

@@ -25,6 +25,8 @@ class CoachContext {
     this.todayIsCompleted = false,
     this.todayExerciseNames = const [],
     this.lastSessionLine,
+    this.firstCameraSession = false,
+    this.workoutMode = 'camera',
   });
 
   final int hour; // 0–23 local
@@ -54,6 +56,20 @@ class CoachContext {
   /// pipeline's ground truth. Lets the coach reference what the user actually
   /// did ("dün 84 tekrar yaptın") instead of guessing.
   final String? lastSessionLine;
+
+  /// Roadmap Phase 3 · true once the user has been through the guided
+  /// camera setup but has not yet logged a session.
+  ///
+  /// It buys the coach exactly one thing, and it's a big one: the ability
+  /// to reference a moment the user just lived through ("kamerayı ayarladık,
+  /// sıra ilk seansında") instead of greeting them as a stranger. Coaches
+  /// who remember the last five minutes feel like coaches.
+  final bool firstCameraSession;
+
+  /// `camera` or `manual`. The coach must not promise form feedback to
+  /// someone training without a camera — the fastest way to sound like
+  /// software that isn't paying attention.
+  final String workoutMode;
 
   String get firstName {
     final n = name?.trim();
@@ -100,6 +116,14 @@ class CoachContext {
       b.writeln('- Bugünkü egzersizler: ${todayExerciseNames.join(', ')}');
     }
     if (lastSessionLine != null) b.writeln('- $lastSessionLine');
+    if (workoutMode == 'manual') {
+      b.writeln('- Antrenman modu: kamerasız (tekrarları kullanıcı sayıyor; '
+          'form analizi yapılmıyor)');
+    }
+    if (firstCameraSession) {
+      b.writeln('- Kamera kurulumunu az önce tamamladı; henüz ilk seansını '
+          'yapmadı.');
+    }
     return b.toString().trim();
   }
 }

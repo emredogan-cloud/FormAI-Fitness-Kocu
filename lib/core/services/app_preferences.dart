@@ -219,6 +219,19 @@ class AppPreferences {
   static const String _seenInSessionTutorialKey =
       'sixpack.seen_in_session_tutorial';
 
+  // Roadmap Phase 3b · the voice coach's mute switch. Absent means ON:
+  // spoken coaching is the default experience and the toggle exists to
+  // opt *out*, not in. Someone training in a shared gym previously had
+  // no way to silence the coach short of muting the whole phone.
+  static const String _voiceCoachEnabledKey = 'sixpack.voice_coach_enabled';
+
+  // One-shot gate for the guided practice rep inside the camera
+  // tutorial. Separate from `_cameraTutorialCompletedKey` so a replay of
+  // the setup guide doesn't force a returning user back through the
+  // practice movement they've already done.
+  static const String _completedPracticeRepKey =
+      'sixpack.completed_practice_rep';
+
   // Phase 138 · H-2 KVKK / GDPR consent. Three keys: `decided` flag
   // tracks whether the user has interacted with the consent dialog;
   // `analytics` + `crash` are the per-channel grants. Defaults are
@@ -836,6 +849,27 @@ class AppPreferences {
 
   Future<void> markSeenInSessionTutorial() async {
     await _prefs.setBool(_seenInSessionTutorialKey, true);
+  }
+
+  // ─── Roadmap Phase 3b · voice coach & practice rep ────────────────
+
+  /// Whether spoken coaching is on. **Defaults to true** — the voice
+  /// coach is a headline capability and a silent-by-default coach would
+  /// read as broken. The toggle is an opt-out for shared spaces.
+  bool get voiceCoachEnabled => _prefs.getBool(_voiceCoachEnabledKey) ?? true;
+
+  Future<void> setVoiceCoachEnabled(bool enabled) async {
+    await _prefs.setBool(_voiceCoachEnabledKey, enabled);
+  }
+
+  /// Whether the guided practice rep has been completed (or explicitly
+  /// skipped). Kept apart from [cameraTutorialCompleted] so replaying the
+  /// setup guide doesn't repeat the practice movement.
+  bool get completedPracticeRep =>
+      _prefs.getBool(_completedPracticeRepKey) ?? false;
+
+  Future<void> markCompletedPracticeRep() async {
+    await _prefs.setBool(_completedPracticeRepKey, true);
   }
 
   /// Whether the user has ever actually *said something* to the AI coach.

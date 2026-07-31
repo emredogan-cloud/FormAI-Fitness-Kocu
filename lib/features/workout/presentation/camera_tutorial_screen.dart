@@ -5,6 +5,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../../core/routing/app_router.dart';
@@ -13,10 +14,14 @@ import '../../../core/services/app_preferences.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/utils/app_logger.dart';
+import '../../../core/utils/audio_feedback.dart';
 import '../domain/framing_validator.dart';
 import '../domain/workout_mode.dart';
+import '../services/back_legs_analyzers.dart';
 import '../services/camera_frame_converter.dart';
+import '../services/crunch_analyzer.dart' show CrunchState;
 import '../services/pose_detector_service.dart';
+import 'widgets/practice_rep_stage.dart';
 
 /// Roadmap Phase 3 (R1.2 · C26 · C21) · the guided first-workout setup.
 ///
@@ -33,28 +38,41 @@ import '../services/pose_detector_service.dart';
 /// this screen, the only guidance was a reactive "Kadraja gir" pill that
 /// appeared *after* the user was already mid-workout and already lost.
 ///
-/// Three stages, each with its own exit:
+/// Four stages, each with its own exit:
 ///
 ///   1. **Placement** — static guidance, no camera, no permission. The
 ///      user learns what to do before being asked for anything.
 ///   2. **Calibration** — live pose detection with a confidence ring and
 ///      specific, non-judgemental corrections ("biraz geri git"), ending
 ///      in the "Seni görüyorum" moment.
-///   3. **Ready** — a short confirmation, then into the real workout.
+///   3. **Practice** — one guided rep through the production analyzer,
+///      with the tracked joints named on screen. Skippable, and skipped
+///      outright on a replay or for anyone who has already done it.
+///   4. **Ready** — a short confirmation, then into the real workout.
 ///
 /// **The camera-free path (C21) is offered at every stage**, and framed
 /// as a legitimate choice rather than a failure exit. Users who decline
 /// camera permission, train in shared spaces, or can't position a phone
 /// are not second-class here.
 class CameraTutorialScreen extends ConsumerStatefulWidget {
-  const CameraTutorialScreen({super.key});
+  const CameraTutorialScreen({super.key, this.replay = false});
+
+  /// True when the user reopened the guide from the workout overflow menu
+  /// rather than being routed here before their first session.
+  ///
+  /// A replay is a *reference* visit: it returns the user to where they
+  /// came from instead of launching a workout, and it doesn't re-run the
+  /// practice rep they've already done. Pushing someone who tapped
+  /// "remind me how to place the phone" into a fresh workout would be a
+  /// hijack.
+  final bool replay;
 
   @override
   ConsumerState<CameraTutorialScreen> createState() =>
       _CameraTutorialScreenState();
 }
 
-enum _Stage { placement, calibration, ready }
+enum _Stage { placement, calibration, practice, ready }
 
 class _CameraTutorialScreenState extends ConsumerState<CameraTutorialScreen>
     with WidgetsBindingObserver {
@@ -62,8 +80,16 @@ class _CameraTutorialScreenState extends ConsumerState<CameraTutorialScreen>
 
   CameraController? _controller;
   CameraDescription? _camera;
+  Size? _imageSize;
   final PoseDetectorService _poseService = PoseDetectorService();
   final FramingStabilizer _stabilizer = FramingStabilizer();
+  final AudioFeedback _voice = AudioFeedback();
+
+  /// The practice rep runs a real production analyzer over real
+  /// landmarks. A squat is the movement that fits: the user is already
+  /// standing at ~2 m in full view from calibration, so nothing about
+  /// the framing they just achieved has to change.
+  final SquatAnalyzer _practiceAnalyzer = SquatAnalyzer();
 
   bool _processing = false;
   bool _disposed = false;
@@ -75,10 +101,22 @@ class _CameraTutorialScreenState extends ConsumerState<CameraTutorialScreen>
   String? _error;
   bool _permissionPermanentlyDenied = false;
 
+  // ─── Practice-rep state ────────────────────────────────────────────
+  Pose? _practicePose;
+  int _practiceReps = 0;
+  CrunchState _practiceState = CrunchState.unknown;
+  String? _practiceCue;
+  bool _practiceDone = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // The voice coach's mute switch is a user setting, not a per-screen
+    // one: someone who silenced the coach for the gym did not consent to
+    // the tutorial talking.
+    _voice.muted = !ref.read(appPreferencesProvider).voiceCoachEnabled;
+    unawaited(_voice.init());
     AnalyticsService.instance.tutorialStarted();
   }
 
@@ -86,9 +124,25 @@ class _CameraTutorialScreenState extends ConsumerState<CameraTutorialScreen>
   void dispose() {
     _disposed = true;
     WidgetsBinding.instance.removeObserver(this);
+    // A user who leaves mid-calibration is a funnel drop the success
+    // event can't show. Fired only while still mid-setup so a normal
+    // completion doesn't also register as a failure.
+    if (_stage == _Stage.calibration &&
+        _error == null &&
+        !_permissionPermanentlyDenied) {
+      AnalyticsService.instance.tutorialCalibrationFailed(
+        reason: 'left_screen',
+        lastIssue: _framing.issue.name,
+      );
+    }
     unawaited(_teardownCamera());
     unawaited(_poseService.dispose());
+    unawaited(_voice.dispose());
     super.dispose();
+  }
+
+  void _say(String phrase) {
+    unawaited(_voice.speak(phrase, priority: SpeechPriority.cue));
   }
 
   @override
@@ -100,7 +154,7 @@ class _CameraTutorialScreenState extends ConsumerState<CameraTutorialScreen>
         state == AppLifecycleState.hidden) {
       unawaited(_teardownCamera());
     } else if (state == AppLifecycleState.resumed &&
-        _stage == _Stage.calibration &&
+        (_stage == _Stage.calibration || _stage == _Stage.practice) &&
         _controller == null) {
       unawaited(_startCamera());
     }
@@ -141,11 +195,14 @@ class _CameraTutorialScreenState extends ConsumerState<CameraTutorialScreen>
     if (!mounted) return;
     if (status.isPermanentlyDenied) {
       AnalyticsService.instance.tutorialCameraDeclined(permanent: true);
+      AnalyticsService.instance
+          .tutorialCalibrationFailed(reason: 'permission_permanent');
       setState(() => _permissionPermanentlyDenied = true);
       return;
     }
     if (!status.isGranted) {
       AnalyticsService.instance.tutorialCameraDeclined(permanent: false);
+      AnalyticsService.instance.tutorialCalibrationFailed(reason: 'permission');
       setState(() =>
           _error = 'Kamera izni olmadan form analizini gösteremem. İstersen '
               'kamerasız devam edebilirsin — antrenman yine çalışır.');
@@ -159,11 +216,14 @@ class _CameraTutorialScreenState extends ConsumerState<CameraTutorialScreen>
         'ML Kit unavailable during tutorial — offering camera-free path',
         category: 'workout',
       );
+      AnalyticsService.instance
+          .tutorialCalibrationFailed(reason: 'ml_unavailable');
       setState(() =>
           _error = 'Bu cihaz form analizi katmanını çalıştıramıyor. Kamerasız '
               'modda antrenmana devam edebilirsin.');
       return;
     }
+    _say('Kamerayı açtım. Tüm vücudun görünecek şekilde geri git.');
     await _startCamera();
   }
 
@@ -230,6 +290,8 @@ class _CameraTutorialScreenState extends ConsumerState<CameraTutorialScreen>
         stackTrace: st,
         category: 'workout',
       );
+      AnalyticsService.instance
+          .tutorialCalibrationFailed(reason: 'camera_error');
       if (!mounted) return;
       setState(() =>
           _error = 'Kamera açılamadı. Kamerasız devam edebilir ya da tekrar '
@@ -239,7 +301,7 @@ class _CameraTutorialScreenState extends ConsumerState<CameraTutorialScreen>
 
   void _onFrame(CameraImage image) {
     if (!mounted || _disposed || _processing) return;
-    if (_stage != _Stage.calibration) return;
+    if (_stage != _Stage.calibration && _stage != _Stage.practice) return;
     _processing = true;
     unawaited(_analyse(image).whenComplete(() => _processing = false));
   }
@@ -263,6 +325,11 @@ class _CameraTutorialScreenState extends ConsumerState<CameraTutorialScreen>
 
       final poses = await _poseService.detectPose(input);
       if (!mounted || _disposed) return;
+
+      if (_stage == _Stage.practice) {
+        _onPracticeFrame(poses.isEmpty ? null : poses.first, image, rotation);
+        return;
+      }
 
       final result = evaluateFraming(
         poses.isEmpty ? null : poses.first,
@@ -289,10 +356,105 @@ class _CameraTutorialScreenState extends ConsumerState<CameraTutorialScreen>
       confidence: _framing.confidence,
     );
     AppHaptics.primaryCta();
+    _say('Seni görüyorum. Hazırsın.');
+
+    // Replay visitors, and anyone who has already done the practice rep,
+    // stop at the confirmation. Repeating a movement drill every time
+    // someone re-reads the placement guide would turn a reference into a
+    // chore.
+    final prefs = ref.read(appPreferencesProvider);
+    if (widget.replay || prefs.completedPracticeRep) {
+      setState(() => _stage = _Stage.ready);
+      await _teardownCamera();
+      return;
+    }
+
+    // The camera stays live: the practice rep is the next stage and it
+    // needs the same stream. It is released when practice ends.
+    _practiceAnalyzer.reset();
+    setState(() {
+      _stage = _Stage.practice;
+      _practiceReps = 0;
+      _practiceState = CrunchState.unknown;
+      _practiceCue = null;
+      _practiceDone = false;
+    });
+    _say('Şimdi bir kez çömel ve kalk. Tekrarını sayacağım.');
+  }
+
+  // ─── Practice rep ──────────────────────────────────────────────────
+
+  /// One frame of the guided practice rep, through the *production*
+  /// [SquatAnalyzer]. Using the real analyzer rather than a scripted
+  /// animation is the entire point: what the user watches succeed here
+  /// is the same code that will count their workout.
+  void _onPracticeFrame(Pose? pose, CameraImage image, InputImageRotation rot) {
+    if (_practiceDone) return;
+    if (pose == null) {
+      if (_practicePose != null && mounted) {
+        setState(() => _practicePose = null);
+      }
+      return;
+    }
+
+    final result = _practiceAnalyzer.analyze(pose);
+    final size = CameraFrameConverter.analysedSize(image, rot);
+    if (!mounted) return;
+
+    setState(() {
+      _practicePose = pose;
+      _imageSize = size;
+      _practiceState = result.state;
+      _practiceReps = result.reps;
+      // Real form warnings win; otherwise mirror the live phase back so
+      // the user sees the detector tracking them rather than a frozen
+      // caption. Both are read off the pose — neither is scripted.
+      _practiceCue = result.formWarning ??
+          (result.state == CrunchState.down
+              ? 'Aşağıda görüyorum — şimdi kalk.'
+              : null);
+    });
+
+    if (result.formWarning != null) {
+      _say(result.formWarning!);
+    }
+    if (result.repJustCompleted) {
+      unawaited(_onPracticeRepCounted());
+    }
+  }
+
+  Future<void> _onPracticeRepCounted() async {
+    if (_practiceDone) return;
+    _practiceDone = true;
+    AppHaptics.primaryCta();
+    AnalyticsService.instance.tutorialPracticeRep(
+      completed: true,
+      reps: _practiceReps,
+    );
+    await ref.read(appPreferencesProvider).markCompletedPracticeRep();
+    _say('Saydım. Artık her tekrarını böyle takip edeceğim.');
+    if (!mounted) return;
     setState(() => _stage = _Stage.ready);
     // The camera has done its job; release it before the workout screen
     // opens its own controller. Two live controllers on one lens fails
     // on most Android devices.
+    await _teardownCamera();
+  }
+
+  /// Skipping is a first-class exit, not a failure. A user with a
+  /// mobility limitation, in a crowded room, or simply not dressed to
+  /// squat must not be blocked from their workout by a demo.
+  Future<void> _skipPractice() async {
+    if (_practiceDone) return;
+    _practiceDone = true;
+    AppHaptics.secondaryTap();
+    AnalyticsService.instance.tutorialPracticeRep(
+      completed: false,
+      reps: _practiceReps,
+    );
+    await ref.read(appPreferencesProvider).markCompletedPracticeRep();
+    if (!mounted) return;
+    setState(() => _stage = _Stage.ready);
     await _teardownCamera();
   }
 
@@ -304,6 +466,10 @@ class _CameraTutorialScreenState extends ConsumerState<CameraTutorialScreen>
     await prefs.setPreferredWorkoutMode(WorkoutMode.camera);
     AnalyticsService.instance.tutorialCompleted(mode: WorkoutMode.camera.token);
     if (!mounted) return;
+    if (widget.replay) {
+      _leaveReplay();
+      return;
+    }
     context.pushReplacement(AppRoutes.workout);
   }
 
@@ -316,6 +482,17 @@ class _CameraTutorialScreenState extends ConsumerState<CameraTutorialScreen>
     await _teardownCamera();
     if (!mounted) return;
     context.pushReplacement(AppRoutes.manualWorkout);
+  }
+
+  /// Returns a replay visitor to wherever they opened the guide from.
+  /// Falls back to the workout route when there is nothing to pop — a
+  /// deep link into the guide should still leave the user somewhere real.
+  void _leaveReplay() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.pushReplacement(AppRoutes.workout);
+    }
   }
 
   @override
@@ -342,7 +519,18 @@ class _CameraTutorialScreenState extends ConsumerState<CameraTutorialScreen>
                 onRetry: _beginCalibration,
                 onSkipCamera: _continueWithoutCamera,
               ),
+            _Stage.practice => PracticeRepStage(
+                controller: _controller,
+                pose: _practicePose,
+                imageSize: _imageSize,
+                lensDirection: _camera?.lensDirection,
+                reps: _practiceReps,
+                state: _practiceState,
+                cue: _practiceCue,
+                onSkip: _skipPractice,
+              ),
             _Stage.ready => _ReadyStage(
+                isReplay: widget.replay,
                 onStart: _startWorkout,
                 onSkipCamera: _continueWithoutCamera,
               ),
@@ -705,12 +893,17 @@ class _FramingOverlay extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// Stage 3 · confirmed
+// Stage 4 · confirmed
 // ═══════════════════════════════════════════════════════════════════════
 
 class _ReadyStage extends StatelessWidget {
-  const _ReadyStage({required this.onStart, required this.onSkipCamera});
+  const _ReadyStage({
+    required this.isReplay,
+    required this.onStart,
+    required this.onSkipCamera,
+  });
 
+  final bool isReplay;
   final VoidCallback onStart;
   final VoidCallback onSkipCamera;
 
@@ -769,7 +962,7 @@ class _ReadyStage extends StatelessWidget {
           ),
         ),
         _StageFooter(
-          primaryLabel: 'ANTRENMANA BAŞLA',
+          primaryLabel: isReplay ? 'ANTRENMANA DÖN' : 'ANTRENMANA BAŞLA',
           onPrimary: onStart,
           secondaryLabel: 'Kamerasız devam et',
           onSecondary: onSkipCamera,

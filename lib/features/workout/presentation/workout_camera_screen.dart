@@ -9,12 +9,16 @@ import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
+import '../../../core/routing/app_router.dart';
+import '../../../core/services/analytics_service.dart';
 import '../../../core/services/app_preferences.dart';
 import '../../../core/services/live_activity_service.dart';
+import '../../../core/services/tour_targets.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/audio_feedback.dart';
 import '../../../core/widgets/error_card.dart';
+import '../../../core/widgets/spotlight_tour.dart';
 import '../models/exercise_model.dart';
 import '../providers/workout_provider.dart';
 import '../services/analyzer_factory.dart';
@@ -95,10 +99,32 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
   /// sagittal-plane exercises (squat / push-up / hinge families).
   bool _spokeSideViewHint = false;
 
+  // ─── Roadmap Phase 3b · in-session tutorial + voice toggle ────────
+
+  /// True while the first-workout coach-mark layer is on screen.
+  ///
+  /// Rep analysis and the countdown are suspended for its duration. A
+  /// user reading an explanation of the rep counter is standing still,
+  /// and letting a time-based set burn down — or letting the analyzer
+  /// bank reps off them shifting their weight — would make the
+  /// explanation cost them the very thing it's explaining.
+  ///
+  /// Deliberately NOT implemented by flipping `_isPaused`: the layer
+  /// spotlights the pause control while describing it, and that control
+  /// showing "resume" mid-explanation is exactly the confusion this
+  /// phase exists to remove.
+  bool _tutorialActive = false;
+  bool _tutorialFired = false;
+
+  /// Mirrors `AppPreferences.voiceCoachEnabled` for the toggle's icon.
+  bool _voiceEnabled = true;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _voiceEnabled = ref.read(appPreferencesProvider).voiceCoachEnabled;
+    _audio.muted = !_voiceEnabled;
     _audio.init();
     _enableWakelock();
     // Defer bootstrap to the first frame so the ML Kit disclosure dialog has
@@ -314,7 +340,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     // a widget is unmounted". Bailing out before any `ref.read` keeps
     // us safe.
     if (!mounted) return;
-    if (_isProcessingFrame || _isPaused) return;
+    if (_isProcessingFrame || _isPaused || _tutorialActive) return;
 
     // Phase 48 · hard skip on rest/prep states.
     //
@@ -381,6 +407,136 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     if (exercise?.type == ExerciseType.timeBased && _secondsRemaining > 0) {
       _resumeWorkoutTimer();
     }
+  }
+
+  // ─── Roadmap Phase 3b · in-session tutorial layer (R1.2) ──────────
+
+  /// Runs the first-workout coach-mark layer once, then never again.
+  ///
+  /// Fires only on a live, non-resting, non-preparing set: every target
+  /// it points at lives in the control panel or over the preview, and
+  /// none of them are laid out under the rest or HAZIRLAN! overlays.
+  /// `SpotlightTour` would silently drop those steps rather than crash,
+  /// which is worse than not running — the user would get a two-step
+  /// tour and never be offered the rest.
+  Future<void> _maybeShowInSessionTutorial() async {
+    if (_tutorialFired || _tutorialActive || !mounted) return;
+    final prefs = ref.read(appPreferencesProvider);
+    if (prefs.seenInSessionTutorial) return;
+    final session = ref.read(workoutSessionProvider).value;
+    if (session == null ||
+        session.activeExercise == null ||
+        session.isResting ||
+        session.isPreparing ||
+        session.isSessionComplete) {
+      return;
+    }
+    _tutorialFired = true;
+
+    // Let the control panel finish its first layout — the targets are
+    // resolved from live RenderBoxes, and a rect read a frame too early
+    // is a rect of zero size.
+    await Future<void>.delayed(const Duration(milliseconds: 450));
+    if (!mounted) return;
+
+    final targets = ref.read(tourTargetsProvider);
+    // `showSpotlightTour` drops unresolvable steps and returns false when
+    // that leaves nothing — indistinguishable, at the call site, from
+    // "the user skipped". Marking the one-shot seen on that would burn
+    // the tutorial without ever showing it. So check first, and let a
+    // later transition retry instead.
+    final anchored = [
+      targets.workoutRepCounter,
+      targets.workoutFormIndicator,
+      targets.workoutPauseControl,
+      targets.workoutVoiceToggle,
+      targets.workoutNextControl,
+    ].any((key) => TourTargets.rectOf(key) != null);
+    if (!anchored) {
+      _tutorialFired = false;
+      return;
+    }
+
+    setState(() => _tutorialActive = true);
+    _workoutTimer?.cancel();
+    _workoutTimer = null;
+    _coach.onPause();
+
+    var completed = false;
+    try {
+      completed = await showSpotlightTour(
+        context,
+        steps: [
+          SpotlightStep(
+            title: 'Tekrarların burada',
+            body: 'Her tamamlanan tekrarı buraya yazıyorum. Sen saymıyorsun '
+                '— sadece hareketi yap.',
+            rect: () => TourTargets.rectOf(targets.workoutRepCounter),
+          ),
+          SpotlightStep(
+            title: 'Form göstergesi',
+            body: 'Hareketin hangi aşamasında olduğunu buradan takip '
+                'ediyorum. Formun bozulursa ekranda ve sesle uyarırım.',
+            rect: () => TourTargets.rectOf(targets.workoutFormIndicator),
+          ),
+          SpotlightStep(
+            title: 'Ara vermek istersen',
+            body: 'Buradan duraklat. Analiz durur, ilerlemen kaybolmaz — '
+                'kaldığın yerden devam edersin.',
+            rect: () => TourTargets.rectOf(targets.workoutPauseControl),
+          ),
+          SpotlightStep(
+            title: 'Sesli koç',
+            body: 'Sesli yönlendirmeyi buradan kapatabilirsin. Kalabalık '
+                'bir yerdeysen tek dokunuş yeter.',
+            rect: () => TourTargets.rectOf(targets.workoutVoiceToggle),
+          ),
+          SpotlightStep(
+            title: 'Sıradaki harekete geç',
+            body: 'Bir hareketi erken bitirmek istersen buradan ilerle. '
+                'Son hareketten sonra seansı tamamlarsın.',
+            rect: () => TourTargets.rectOf(targets.workoutNextControl),
+          ),
+        ],
+      );
+    } finally {
+      // Marked seen even on skip: a coach-mark layer that reappears
+      // because the user dismissed it is the definition of nagging.
+      await prefs.markSeenInSessionTutorial();
+      AnalyticsService.instance.inSessionTutorialFinished(completed: completed);
+      if (mounted) {
+        setState(() => _tutorialActive = false);
+        _coach.onResume();
+        final exercise = ref.read(workoutSessionProvider).value?.activeExercise;
+        if (!_isPaused &&
+            exercise?.type == ExerciseType.timeBased &&
+            _secondsRemaining > 0) {
+          _resumeWorkoutTimer();
+        }
+      }
+    }
+  }
+
+  /// Roadmap Phase 3b · the voice coach's mute switch.
+  Future<void> _toggleVoice() async {
+    AppHaptics.secondaryTap();
+    final next = !_voiceEnabled;
+    setState(() => _voiceEnabled = next);
+    _audio.muted = !next;
+    AnalyticsService.instance.voiceCoachToggled(enabled: next);
+    await ref.read(appPreferencesProvider).setVoiceCoachEnabled(next);
+  }
+
+  /// Roadmap Phase 3 feature 6 · reopen the setup guide, forever after.
+  ///
+  /// Pushed rather than navigated to, and paused first: the user is
+  /// stepping away from a live set to re-read the placement guidance, so
+  /// analysis should stop and the session should still be there when
+  /// they come back.
+  Future<void> _replaySetupGuide() async {
+    if (!_isPaused) _togglePause();
+    AnalyticsService.instance.tutorialReplayed();
+    await context.push(AppRoutes.cameraTutorialReplay);
   }
 
   void _resumeWorkoutTimer() {
@@ -874,6 +1030,13 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
         _coach.endSet();
         _coach.endRest();
       }
+
+      // Roadmap Phase 3b · the first-workout coach-mark layer. Attempted
+      // on every active-state transition rather than once at mount: the
+      // session arrives asynchronously and the first frames are usually
+      // the HAZIRLAN! countdown, so "when the screen opens" is reliably
+      // too early. `_tutorialFired` makes the repeated attempts free.
+      unawaited(_maybeShowInSessionTutorial());
     });
 
     // Phase 138 · M-2 — system-back gesture goes through the same
@@ -1058,8 +1221,23 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
           Positioned(
             top: 18,
             left: 16,
-            child: WorkoutBackButton(
-              onPressed: () => _confirmAndExit(context),
+            child: Row(
+              children: [
+                WorkoutBackButton(
+                  onPressed: () => _confirmAndExit(context),
+                ),
+                const SizedBox(width: 10),
+                // Roadmap Phase 3b · voice-coach mute + the replayable
+                // setup guide (feature 6), both reachable without
+                // leaving the set.
+                _VoiceToggleButton(
+                  key: ref.read(tourTargetsProvider).workoutVoiceToggle,
+                  enabled: _voiceEnabled,
+                  onPressed: _toggleVoice,
+                ),
+                const SizedBox(width: 10),
+                _WorkoutOverflowMenu(onReplayGuide: _replaySetupGuide),
+              ],
             ),
           ),
           if (exercise != null)
@@ -1127,6 +1305,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     // the control-panel row swaps in an invisible puck of matching
     // width and the play control stays centered.
     final canGoBack = exercise != null && session.activeExerciseIndex > 0;
+    final targets = ref.read(tourTargetsProvider);
     return WorkoutControlPanel(
       currentSet: session.currentSet,
       totalSets: exercise?.sets ?? 0,
@@ -1137,6 +1316,10 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
       onTogglePlay: exercise == null ? null : _togglePause,
       onPrev: canGoBack ? _onPrev : null,
       onNext: exercise == null ? null : _onNext,
+      repCounterKey: targets.workoutRepCounter,
+      formIndicatorKey: targets.workoutFormIndicator,
+      pauseControlKey: targets.workoutPauseControl,
+      nextControlKey: targets.workoutNextControl,
     );
   }
 
@@ -1241,6 +1424,119 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
     if (confirmed == true && context.mounted) {
       _exit(context);
     }
+  }
+}
+
+/// Roadmap Phase 3b · the voice coach's mute switch, on the surface where
+/// the coach actually speaks.
+///
+/// Settings would have been the tidier home and the wrong one: the moment
+/// a user needs this is the moment someone walks into the room mid-set,
+/// and a control that costs them their session to reach is a control they
+/// resent. It carries a state-dependent semantic label because an
+/// icon-only toggle announces nothing useful otherwise.
+class _VoiceToggleButton extends StatelessWidget {
+  const _VoiceToggleButton({
+    super.key,
+    required this.enabled,
+    required this.onPressed,
+  });
+
+  final bool enabled;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      toggled: enabled,
+      label: enabled ? 'Sesli koçu kapat' : 'Sesli koçu aç',
+      child: Material(
+        color: Colors.black.withValues(alpha: 0.42),
+        shape: const CircleBorder(
+          side: BorderSide(color: Colors.white24, width: 1),
+        ),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onPressed,
+          child: Padding(
+            // 12 + 20 + 12 = 44dp of ink, matched to WorkoutBackButton's
+            // footprint so the two read as one control cluster.
+            padding: const EdgeInsets.all(12),
+            child: Icon(
+              enabled ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+              color: enabled ? Colors.white : Colors.white54,
+              size: 20,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Roadmap Phase 3 feature 6 · "…accessible from the workout screen's
+/// overflow menu forever after". A user who forgets how far back to stand
+/// three weeks from now shouldn't have to reinstall to be told again.
+class _WorkoutOverflowMenu extends StatelessWidget {
+  const _WorkoutOverflowMenu({required this.onReplayGuide});
+
+  static const Color _neon = Color(0xFF00F0FF);
+
+  final VoidCallback onReplayGuide;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Antrenman seçenekleri',
+      child: Material(
+        color: Colors.black.withValues(alpha: 0.42),
+        shape: const CircleBorder(
+          side: BorderSide(color: Colors.white24, width: 1),
+        ),
+        child: PopupMenuButton<String>(
+          tooltip: 'Antrenman seçenekleri',
+          color: const Color(0xFF160C26),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+            side: BorderSide(color: _neon.withValues(alpha: 0.35)),
+          ),
+          padding: EdgeInsets.zero,
+          // 44dp target — a PopupMenuButton's default icon padding is
+          // below the 48dp guideline this app holds elsewhere.
+          child: const Padding(
+            padding: EdgeInsets.all(12),
+            child: Icon(Icons.more_vert_rounded, color: Colors.white, size: 20),
+          ),
+          onSelected: (value) {
+            if (value == 'guide') onReplayGuide();
+          },
+          itemBuilder: (context) => const [
+            PopupMenuItem<String>(
+              value: 'guide',
+              child: Row(
+                children: [
+                  Icon(Icons.center_focus_strong_rounded,
+                      color: _neon, size: 19),
+                  SizedBox(width: 11),
+                  Flexible(
+                    child: Text(
+                      'Kamera kurulumunu tekrar göster',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

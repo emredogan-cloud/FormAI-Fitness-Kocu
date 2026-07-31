@@ -10,6 +10,7 @@ import '../../progress/providers/badge_unlocks_provider.dart';
 import '../../progress/providers/streak_provider.dart';
 import '../../progress/providers/xp_provider.dart';
 import '../../workout/data/session_log_repository.dart';
+import '../../workout/domain/workout_mode.dart';
 import '../../workout/providers/workout_provider.dart';
 import '../domain/coach_brain.dart';
 import '../domain/coach_context.dart';
@@ -229,6 +230,15 @@ final coachContextProvider = Provider<CoachContext>((ref) {
     todayIsCompleted: todayDone,
     todayExerciseNames: todayNames,
     lastSessionLine: lastSession,
+    // Roadmap Phase 3 · "post-calibration, the coach receives a
+    // firstCameraSession flag so its next message can reference the
+    // moment". Derived rather than stored: setup done + nothing logged
+    // yet IS the state, and a separate flag would be one more thing that
+    // can disagree with reality.
+    firstCameraSession: prefs.cameraTutorialCompleted &&
+        prefs.preferredWorkoutMode == WorkoutMode.camera &&
+        (logs == null || logs.isEmpty),
+    workoutMode: prefs.preferredWorkoutMode.token,
   );
 });
 

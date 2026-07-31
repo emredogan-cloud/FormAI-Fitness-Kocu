@@ -11,12 +11,43 @@
 /// in the prior Gelişim surface.
 library;
 
+/// How a session's reps were counted.
+///
+/// Roadmap Phase 3 asked for this explicitly: with the camera-free path
+/// (C21) shipped, a rep total is no longer uniformly camera-derived, and
+/// a stats surface that averages pose-counted and self-counted reps
+/// without saying so is quietly dishonest. Recording the provenance is
+/// what keeps later form-score reporting truthful — a manual session has
+/// no form data at all, and must never be shown as though it scored
+/// perfectly.
+enum SessionSource {
+  camera('camera'),
+  manual('manual');
+
+  const SessionSource(this.token);
+
+  /// Stable persisted token. Never derive this from [name] — a rename
+  /// would silently orphan every log already on disk.
+  final String token;
+
+  /// Unknown, absent or malformed tokens resolve to [camera]: logs
+  /// written before this field existed were all camera sessions, so that
+  /// is the historically accurate default rather than a guess.
+  static SessionSource fromToken(String? token) {
+    for (final source in SessionSource.values) {
+      if (source.token == token) return source;
+    }
+    return SessionSource.camera;
+  }
+}
+
 class SessionLog {
   const SessionLog({
     required this.dayNumber,
     required this.completedAtIso,
     required this.durationSeconds,
     required this.exerciseLogs,
+    this.source = SessionSource.camera,
   });
 
   /// Program day this log corresponds to. Always > 0 — ad-hoc runs
@@ -40,6 +71,11 @@ class SessionLog {
 
   final List<ExerciseLog> exerciseLogs;
 
+  /// Whether the reps were counted by pose detection or by the user.
+  /// Defaults to [SessionSource.camera] for logs written before the
+  /// camera-free path existed.
+  final SessionSource source;
+
   /// Total reps across every exercise in the session — the headline
   /// number rendered by the HACİM stats card.
   int get totalReps =>
@@ -51,6 +87,7 @@ class SessionLog {
         'durationSeconds': durationSeconds,
         'exerciseLogs':
             exerciseLogs.map((e) => e.toJson()).toList(growable: false),
+        'source': source.token,
       };
 
   /// Parser is intentionally tolerant: missing optional fields collapse
@@ -76,6 +113,7 @@ class SessionLog {
           .whereType<Map<String, dynamic>>()
           .map(ExerciseLog.fromJson)
           .toList(growable: false),
+      source: SessionSource.fromToken(json['source'] as String?),
     );
   }
 }

@@ -40,6 +40,40 @@ class TourTargets {
   /// Today's plan / challenge hero card on the Antrenman tab.
   final GlobalKey planCard = GlobalKey(debugLabel: 'tour.planCard');
 
+  // ─── Roadmap Phase 3b · the in-workout coach-mark layer ───────────
+  //
+  // These live in the same registry as the dashboard's targets rather
+  // than in a parallel workout-only one. The registry's job is "resolve
+  // a spotlightable widget's rect", and that job doesn't change by
+  // feature; a second copy of it would be two objects to keep alive,
+  // two providers to remember, and two places for the
+  // GlobalKey-must-be-stable rule to be broken.
+  //
+  // Unlike the nav items these ARE keyed directly: each is a single
+  // widget that stays mounted for the whole set, so there is no
+  // active/inactive swap to detach the key.
+
+  /// The live rep / duration readout in the workout control panel.
+  final GlobalKey workoutRepCounter =
+      GlobalKey(debugLabel: 'tour.workoutRepCounter');
+
+  /// The pose-detector state chip — the "is it analysing me" indicator.
+  final GlobalKey workoutFormIndicator =
+      GlobalKey(debugLabel: 'tour.workoutFormIndicator');
+
+  /// The centre play/pause control.
+  final GlobalKey workoutPauseControl =
+      GlobalKey(debugLabel: 'tour.workoutPauseControl');
+
+  /// The voice-coach mute toggle over the camera preview.
+  final GlobalKey workoutVoiceToggle =
+      GlobalKey(debugLabel: 'tour.workoutVoiceToggle');
+
+  /// The "next exercise" control — the manual route through the session
+  /// to its completion screen.
+  final GlobalKey workoutNextControl =
+      GlobalKey(debugLabel: 'tour.workoutNextControl');
+
   /// The rect of nav item [index] of [count], derived from the bar's own
   /// rect. Returns `null` when the bar isn't laid out.
   ///

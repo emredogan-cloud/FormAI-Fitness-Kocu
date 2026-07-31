@@ -10,6 +10,7 @@ import '../../progress/domain/streak_calculator.dart';
 import '../data/session_log_repository.dart';
 import '../data/workout_repository.dart';
 import '../domain/services/workout_generator_service.dart';
+import '../domain/workout_mode.dart';
 import '../models/exercise_model.dart';
 import '../models/session_log_model.dart';
 import '../models/workout_day_model.dart';
@@ -723,6 +724,14 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
       completedAtIso: DateTime.now().toIso8601String(),
       durationSeconds: totalDuration,
       exerciseLogs: exerciseLogs,
+      // Roadmap Phase 3 · provenance of the rep counts. Read from the
+      // live preference rather than threaded down from the screen: both
+      // surfaces drive this same notifier, and the preference is what
+      // decides which of them the router opened.
+      source: ref.read(appPreferencesProvider).preferredWorkoutMode ==
+              WorkoutMode.manual
+          ? SessionSource.manual
+          : SessionSource.camera,
     );
   }
 }

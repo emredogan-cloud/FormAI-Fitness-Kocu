@@ -447,11 +447,59 @@ class AnalyticsService {
     return _capture('tutorial_camera_declined', {'permanent': permanent});
   }
 
+  /// Calibration was abandoned before it ever locked on. [reason] is a
+  /// stable slug (`permission`, `camera_error`, `ml_unavailable`,
+  /// `left_screen`), and [lastIssue] carries the framing verdict the user
+  /// was stuck on. Without this the funnel only shows successes: a
+  /// device that never reaches a stable read is otherwise indistinguish-
+  /// able from a user who simply didn't open the tutorial.
+  Future<void> tutorialCalibrationFailed({
+    required String reason,
+    String? lastIssue,
+  }) {
+    return _capture('tutorial_calibration_failed', {
+      'reason': reason,
+      if (lastIssue != null) 'last_issue': lastIssue,
+    });
+  }
+
+  /// The guided practice rep finished. [completed] is false when the user
+  /// skipped it — the skip rate is the honest measure of whether the
+  /// practice rep is a welcome rehearsal or an obstacle before the real
+  /// workout.
+  Future<void> tutorialPracticeRep({
+    required bool completed,
+    int reps = 0,
+  }) {
+    return _capture('tutorial_practice_rep', {
+      'completed': completed,
+      'reps': reps,
+    });
+  }
+
   /// The tutorial reached a terminal choice. [mode] is `camera` or
   /// `manual` — the split that says how many users the camera
   /// requirement would otherwise have excluded.
   Future<void> tutorialCompleted({required String mode}) {
     return _capture('tutorial_completed', {'mode': mode});
+  }
+
+  /// The in-session coach-mark layer finished. [completed] separates
+  /// "read to the end" from "skipped", which is the only way to tell an
+  /// explanation people want from one they dismiss.
+  Future<void> inSessionTutorialFinished({required bool completed}) {
+    return _capture('in_session_tutorial_finished', {'completed': completed});
+  }
+
+  /// The setup guide was reopened from the workout overflow menu — the
+  /// signal that the one-time tutorial didn't stick the first time.
+  Future<void> tutorialReplayed() {
+    return _capture('tutorial_replayed', const {});
+  }
+
+  /// The voice coach was muted or unmuted mid-workout.
+  Future<void> voiceCoachToggled({required bool enabled}) {
+    return _capture('voice_coach_toggled', {'enabled': enabled});
   }
 
   /// A camera-free workout session began.

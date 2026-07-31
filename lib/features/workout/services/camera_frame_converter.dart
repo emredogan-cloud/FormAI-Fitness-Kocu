@@ -85,15 +85,24 @@ class CameraFrameConverter {
     return null;
   }
 
-  /// The height of the analysed frame in landmark coordinate space.
+  /// The analysed frame's size in landmark coordinate space.
   ///
   /// ML Kit reports landmarks in the *rotated* frame, so a 90°/270°
-  /// rotation swaps width and height. `evaluateFraming` divides by this
-  /// to compute body coverage, and using the unrotated height would make
-  /// every portrait read wrong by the aspect ratio.
-  static double analysedHeight(CameraImage image, InputImageRotation rotation) {
+  /// rotation swaps width and height. Anything that maps a landmark back
+  /// onto a canvas — coverage maths, the tutorial's labelled overlay —
+  /// must divide by these dimensions and not the raw sensor ones, or
+  /// every portrait read is wrong by the aspect ratio.
+  static Size analysedSize(CameraImage image, InputImageRotation rotation) {
     final swapped = rotation == InputImageRotation.rotation90deg ||
         rotation == InputImageRotation.rotation270deg;
-    return (swapped ? image.width : image.height).toDouble();
+    return swapped
+        ? Size(image.height.toDouble(), image.width.toDouble())
+        : Size(image.width.toDouble(), image.height.toDouble());
   }
+
+  /// The height of the analysed frame in landmark coordinate space.
+  /// `evaluateFraming` divides body height by this to compute coverage.
+  static double analysedHeight(
+          CameraImage image, InputImageRotation rotation) =>
+      analysedSize(image, rotation).height;
 }
