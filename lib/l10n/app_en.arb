@@ -6510,5 +6510,33 @@
   "nutritionOnboardingLastStep": "Last step",
   "@nutritionOnboardingLastStep": {
     "description": "Progress hint on the final nutrition-onboarding step."
+  },
+  "setProgressUnknown": "SET —",
+  "@setProgressUnknown": {
+    "description": "Set indicator before the session reports how many sets the exercise has."
+  },
+  "detectorStateWaiting": "WAITING",
+  "@detectorStateWaiting": {
+    "description": "Rep detector has not locked onto a pose yet. Shown beside the live rep counter — it used to render the raw enum name 'UNKNOWN'."
+  },
+  "detectorStateDown": "DOWN",
+  "@detectorStateDown": {
+    "description": "Rep detector sees the bottom of the movement."
+  },
+  "detectorStateUp": "UP",
+  "@detectorStateUp": {
+    "description": "Rep detector sees the top of the movement."
+  },
+  "setProgressUpper": "SET {current} / {total}",
+  "@setProgressUpper": {
+    "description": "Set indicator on the live workout HUD, styled uppercase. The rest overlay uses the sentence-case setProgress; keeping them separate lets either be reworded alone.",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
   }
 }

@@ -1384,5 +1384,10 @@
   "feedbackPlatformLabel": "Platform: {platform} {osVersion}",
   "macroFatChip": "{value}g Y",
   "onboardingAlmostDone": "Neredeyse bitti!",
-  "nutritionOnboardingLastStep": "Son adım"
+  "nutritionOnboardingLastStep": "Son adım",
+  "setProgressUnknown": "SET —",
+  "detectorStateWaiting": "BEKLİYOR",
+  "detectorStateDown": "AŞAĞI",
+  "detectorStateUp": "YUKARI",
+  "setProgressUpper": "SET {current} / {total}"
 }

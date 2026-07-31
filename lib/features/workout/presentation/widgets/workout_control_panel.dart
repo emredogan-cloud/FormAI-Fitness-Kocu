@@ -71,7 +71,7 @@ class WorkoutControlPanel extends StatelessWidget {
           _SetIndicator(
             currentSet: currentSet,
             totalSets: totalSets,
-            detectorLabel: detectorState.name.toUpperCase(),
+            detectorLabel: _detectorLabel(context, detectorState),
             detectorKey: formIndicatorKey,
           ),
           const Spacer(),
@@ -167,7 +167,10 @@ class _SetIndicator extends StatelessWidget {
             ),
           ),
           child: Text(
-            totalSets > 0 ? 'SET $currentSet / $totalSets' : 'SET —',
+            totalSets > 0
+                ? AppLocalizations.of(context)
+                    .setProgressUpper(currentSet, totalSets)
+                : AppLocalizations.of(context).setProgressUnknown,
             style: const TextStyle(
               color: _neon,
               fontSize: 11,
@@ -276,4 +279,18 @@ class _CenterPlayButton extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The rep detector's state, in the user's language.
+///
+/// This used to render `detectorState.name.toUpperCase()` — so a
+/// Turkish user watched "UNKNOWN" sit beside their rep counter until
+/// the analyser locked on. An enum name is an identifier, not copy.
+String _detectorLabel(BuildContext context, CrunchState state) {
+  final l10n = AppLocalizations.of(context);
+  return switch (state) {
+    CrunchState.unknown => l10n.detectorStateWaiting,
+    CrunchState.down => l10n.detectorStateDown,
+    CrunchState.up => l10n.detectorStateUp,
+  };
 }

@@ -456,7 +456,12 @@ class _CardTextContent extends StatelessWidget {
                 Flexible(
                   child: Text(
                     option.helper!,
-                    maxLines: 2,
+                    // One line when the card also carries a photo: the
+                    // text column is only ~55% of the card then, so a
+                    // wrapping label plus a two-line helper exactly
+                    // fills the fixed height — and the 1.02 selected
+                    // scale pushes it over into a collision.
+                    maxLines: option.imageAsset == null ? 2 : 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: Colors.white70,
