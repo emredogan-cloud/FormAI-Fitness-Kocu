@@ -4157,10 +4157,6 @@
   "@difficultyIntermediateLong": {
     "description": "Difficulty label on the plan detail screen"
   },
-  "planRequestedAbbrev": "Req.",
-  "@planRequestedAbbrev": {
-    "description": "Abbreviation for 'requested' on the exercise row — space is very tight, keep it to ~4 characters."
-  },
   "planUnlockWithPremium": "Unlock with Premium",
   "@planUnlockWithPremium": {
     "description": "Label on a Premium-gated plan card"

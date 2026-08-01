@@ -188,7 +188,18 @@ class _AnalysisIllusionStepState extends State<AnalysisIllusionStep>
                 const SizedBox(height: 36),
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 380),
-                  switchInCurve: MotionTokens.reflectionEase,
+                  // The two phrases are sequenced in time, not just
+                  // cross-faded. AnimatedSwitcher's default layout stacks
+                  // the outgoing and incoming children at the same
+                  // position, so a plain fade paints both at once — on
+                  // the device this read as "AssEstimating body-fat
+                  // ratiotial…", four times, on a five-step loader.
+                  //
+                  // Halving the interval means the old phrase is gone
+                  // before the new one starts, which is the one thing a
+                  // cross-fade of *text* cannot do.
+                  switchOutCurve: const Interval(0.5, 1, curve: Curves.easeIn),
+                  switchInCurve: const Interval(0.5, 1, curve: Curves.easeOut),
                   transitionBuilder: (child, animation) {
                     return FadeTransition(
                       opacity: animation,
@@ -854,15 +865,24 @@ class _ReportMetricCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white54,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.4,
+                // "DAILY CALORIES" ellipsised to "DAILY CAL…" on a
+                // 1080 px phone — found on the device during the Phase 6
+                // polish walk. The tile is half the screen and shares its
+                // height with the BMI tile beside it, so the label shrinks
+                // rather than wrapping or clipping; both tiles stay the
+                // same height and no language loses the word.
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    style: const TextStyle(
+                      color: Colors.white54,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.4,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 2),

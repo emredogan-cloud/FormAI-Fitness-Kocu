@@ -503,17 +503,23 @@ class _ExerciseCard extends StatelessWidget {
             // Legibility, and it is doing real work: these photographs
             // are bright in the middle, which is exactly where the rep
             // count sits.
+            //
+            // The bottom stop was 94% opaque and turned the lower third
+            // of every card into a black box on the device — the card
+            // stopped reading as a photograph at all. The counter
+            // carries its own dark disc and neon ring, so it does not
+            // need the backdrop to do the work.
             const DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Color(0xE60A0612),
-                    Color(0x730A0612),
-                    Color(0xF00A0612),
+                    Color(0xE00A0612),
+                    Color(0x550A0612),
+                    Color(0xB80A0612),
                   ],
-                  stops: [0.0, 0.42, 1.0],
+                  stops: [0.0, 0.45, 1.0],
                 ),
               ),
             ),

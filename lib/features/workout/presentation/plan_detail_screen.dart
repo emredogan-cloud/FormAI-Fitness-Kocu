@@ -779,7 +779,11 @@ class _StandardDayCard extends StatelessWidget {
 
     final String subtitle;
     if (isRest) {
-      subtitle = AppLocalizations.of(context).planRequestedAbbrev;
+      // Was `planRequestedAbbrev` — "Req." / "İst.", an abbreviation of
+      // "requested" meant for a cramped exercise row, on a rest day.
+      // Meaningless in both languages, and found on the device only
+      // because the English made it obviously so.
+      subtitle = AppLocalizations.of(context).planRestDay;
     } else if (lockedWorkoutDay) {
       subtitle = AppLocalizations.of(context).planUnlockWithPremium;
     } else {

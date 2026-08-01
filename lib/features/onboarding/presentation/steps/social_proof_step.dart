@@ -176,7 +176,14 @@ class _SocialProofStepState extends State<SocialProofStep> {
                         ),
                         const SizedBox(height: 12),
                         SizedBox(
-                          height: 160,
+                          // 160 clipped the English privacy card's last
+                          // line on a 393 dp phone — "…the analysis runs
+                          // entirely" with the "on your phone" gone, and
+                          // no ellipsis to show it had happened. That
+                          // sentence is a claim about what the app does
+                          // with your camera, so it does not get to be
+                          // half-rendered.
+                          height: 176,
                           child: _HighlightCarousel(
                             highlights: _highlightsFor(l10n),
                           ),
@@ -383,15 +390,23 @@ class _StatBadge extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-            Text(
-              caption,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.62),
-                fontSize: 9.5,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.6,
-                height: 1.2,
+            // "LIVE FORM ANALYSIS" ellipsised to "LIVE FORM ANALY…" in
+            // English on a 393 dp phone. The caption is two authored
+            // lines, so wrapping it further is not an option and a
+            // shorter English string would be losing the claim to fit a
+            // badge — it scales instead.
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                caption,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.62),
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.6,
+                  height: 1.2,
+                ),
               ),
             ),
           ],
@@ -593,8 +608,11 @@ class _HighlightCard extends StatelessWidget {
               child: Text(
                 highlight.body,
                 textAlign: TextAlign.center,
-                maxLines: 3,
-                overflow: TextOverflow.fade,
+                maxLines: 4,
+                // `fade` was hiding the cut. An ellipsis makes a future
+                // overflow visible in a screenshot instead of reading as
+                // a shorter sentence that happens to be wrong.
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.75),
                   fontSize: 11.5,

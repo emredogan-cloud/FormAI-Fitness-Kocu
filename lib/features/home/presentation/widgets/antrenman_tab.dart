@@ -28,6 +28,11 @@ import '../../../../l10n/app_localizations.dart';
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonAccent = Color(0xFF4DA6FF);
 
+/// The light-mode counterpart to [_neon]. Translucent neon fills go
+/// almost white on a light scaffold, so anything drawn *on* one needs a
+/// darker ink than the neon itself.
+const Color _neonDeep = Color(0xFF6A3DFF);
+
 Widget _resolveImage(String image) {
   final fallback = Container(
     color: Colors.white10,
@@ -754,6 +759,12 @@ class _CoachEntryCard extends StatelessWidget {
 class _ProButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    // The fill is a translucent neon gradient, so on a light scaffold it
+    // resolves to a near-white lavender — and the label was hardcoded
+    // white. Found on the device: "PREMIUM" was white on almost-white,
+    // around 1.3:1, in the dashboard header. The deeper purple keeps the
+    // brand and is legible on the light fill; dark mode is unchanged.
+    final fg = context.isDarkMode ? Colors.white : _neonDeep;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -774,12 +785,12 @@ class _ProButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.workspace_premium, color: Colors.white, size: 14),
-              SizedBox(width: 4),
+              Icon(Icons.workspace_premium, color: fg, size: 14),
+              const SizedBox(width: 4),
               Text(
                 AppLocalizations.of(context).premiumBadge,
                 style: TextStyle(
-                  color: Colors.white,
+                  color: fg,
                   fontSize: 11,
                   letterSpacing: 1.6,
                   fontWeight: FontWeight.w900,
