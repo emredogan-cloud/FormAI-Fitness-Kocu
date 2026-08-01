@@ -509,7 +509,7 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
                             children: [
                               Expanded(
                                 child: _ReportMetricCard(
-                                  label: 'BMI',
+                                  label: AppLocalizations.of(context).metricBmi,
                                   morphingValue: bmi,
                                   formatter: (v) => v.toStringAsFixed(1),
                                   startDelay: const Duration(milliseconds: 200),

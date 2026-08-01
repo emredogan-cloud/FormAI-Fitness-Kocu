@@ -286,7 +286,7 @@ class _LevelUpScreenState extends State<LevelUpScreen>
                 borderRadius: BorderRadius.circular(14),
               ),
             ),
-            child: const Text('DEVAM'),
+            child: Text(AppLocalizations.of(context).commonContinueUpper),
           ),
         ),
       ),

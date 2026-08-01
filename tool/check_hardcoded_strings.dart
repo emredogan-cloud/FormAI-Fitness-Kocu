@@ -142,7 +142,13 @@ final _labelShape = RegExp(
   // A sentence-cased word: `Tema`, `Rozetler`, `Beslenme`.
   r'^[A-ZÇĞİÖŞÜ][a-zçğıöşü]'
   // Or two letter-words separated by a space: `Plana Ekle`, `ya da`.
-  r'|^[a-zA-ZÇĞİÖŞÜçğıöşü]+ [a-zA-ZÇĞİÖŞÜçğıöşü]',
+  r'|^[a-zA-ZÇĞİÖŞÜçğıöşü]+ [a-zA-ZÇĞİÖŞÜçğıöşü]'
+  // Or a single ALL-CAPS word: `PRO`, `HAZIRLIK`, `BAŞLA`. The
+  // sentence-case rule above needs a lowercase letter in position two,
+  // so it was silent on every shouty label in the app — and the app
+  // shouts a lot. Found during the Phase 6 polish sprint: the `PRO`
+  // chip on the dashboard and the `PRO` pill on every locked card.
+  r'|^[A-ZÇĞİÖŞÜ]{2,}$',
 );
 
 bool _looksLikeLabel(String value) => _labelShape.hasMatch(value.trim());

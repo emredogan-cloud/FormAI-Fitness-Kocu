@@ -1861,7 +1861,7 @@
   "@sceneWorkoutCompleteComposing": {
     "description": "First-time coach scene after the first completed workout — placeholder shown while the coach 'types'"
   },
-  "shareReferralText": "I run my training and nutrition with AI. Join FormAI and use invite code {code} to make your first month Pro, free! 💪",
+  "shareReferralText": "I run my training and nutrition with AI. Join FormAI and use invite code {code} to make your first month Premium, free! 💪",
   "@shareReferralText": {
     "description": "Referral share message. {code} is the user's invite code. FormAI is a brand name and stays untranslated.",
     "placeholders": {
@@ -1874,7 +1874,7 @@
   "@shareReferralSubject": {
     "description": "Subject line for the referral share sheet (used by email clients)"
   },
-  "shareReferralTail": "Join me and let's both go Pro for a month: ",
+  "shareReferralTail": "Join me and let's both go Premium for a month: ",
   "@shareReferralTail": {
     "description": "Trailing referral invitation appended to progress and badge shares, immediately followed by the deep link"
   },
@@ -2568,7 +2568,7 @@
   "@profileRedeemCodeTitle": {
     "description": "Settings row title"
   },
-  "profileRedeemCodeSubtitle": "Enter a friend's code and you both get a Pro month.",
+  "profileRedeemCodeSubtitle": "Enter a friend's code and you both get a Premium month.",
   "@profileRedeemCodeSubtitle": {
     "description": "Settings row subtitle"
   },
@@ -3320,7 +3320,7 @@
   "@nutritionProTitle": {
     "description": "Pro upsell headline on the nutrition tab"
   },
-  "nutritionProBody": "The target above is yours. Unlock the personal menu that fills it in every day, meal tracking and AI suggestions with Pro.",
+  "nutritionProBody": "The target above is yours. Unlock the personal menu that fills it in every day, meal tracking and AI suggestions with Premium.",
   "@nutritionProBody": {
     "description": "Pro upsell body on the nutrition tab. Subscription copy — it must describe exactly what Pro provides."
   },
@@ -3336,7 +3336,7 @@
   "@nutritionProFeatureAi": {
     "description": "Pro upsell feature bullet"
   },
-  "nutritionProCta": "Explore Pro",
+  "nutritionProCta": "Explore Premium",
   "@nutritionProCta": {
     "description": "Pro upsell call to action. 'Pro' is a brand term."
   },
@@ -4141,7 +4141,7 @@
   "@planNeedsConnection": {
     "description": "Shown when offline content is unavailable"
   },
-  "planUnlockWithProUpper": "UNLOCK WITH PRO",
+  "planUnlockWithProUpper": "UNLOCK WITH PREMIUM",
   "@planUnlockWithProUpper": {
     "description": "Primary call to action on a locked plan. Rendered uppercase. 'Pro' is a brand term."
   },
@@ -5797,7 +5797,7 @@
   "@shareRecipeMethodHeading": {
     "description": "Heading above the method in a shared recipe."
   },
-  "shareRecipeReferralLine": "Download the app and use my code {code} to get your first month of Pro free: formai://r/{code}",
+  "shareRecipeReferralLine": "Download the app and use my code {code} to get your first month of Premium free: formai://r/{code}",
   "@shareRecipeReferralLine": {
     "description": "Referral invitation appended to a shared recipe. The deep link must stay intact.",
     "placeholders": {
@@ -6790,7 +6790,7 @@
   "@planTierLite": {
     "description": "Label marking a plan as available without a subscription."
   },
-  "planProRequired": "PRO required",
+  "planProRequired": "PREMIUM required",
   "@planProRequired": {
     "description": "Badge on a plan the user cannot start without Pro."
   },
@@ -6818,5 +6818,49 @@
         "type": "int"
       }
     }
+  },
+  "premiumTierName": "FormAI Premium",
+  "@premiumTierName": {
+    "description": "The paid tier, written out. Founder decision: the tier is FormAI Premium in every language and on every surface. The RevenueCat ENTITLEMENT id is still the string 'FormAI Pro' — that is a technical identifier the dashboard matches on, never shown to a user."
+  },
+  "premiumBadge": "PREMIUM",
+  "@premiumBadge": {
+    "description": "Short badge form of the tier name, used on lock pills and plan chips where the full name does not fit."
+  },
+  "deleteConfirmPhrase": "DELETE",
+  "@deleteConfirmPhrase": {
+    "description": "The word the user must type to confirm account deletion. Localized on purpose: a Turkish user typing an English word to destroy their account is a needless barrier, and deleteConfirmPrompt already interpolates whatever this is."
+  },
+  "accountSectionUpper": "ACCOUNT",
+  "@accountSectionUpper": {
+    "description": "Uppercase section header above the account rows."
+  },
+  "commonSaveUpper": "SAVE",
+  "@commonSaveUpper": {
+    "description": "Uppercase save button, used on the profile and account editors."
+  },
+  "commonCloseUpper": "CLOSE",
+  "@commonCloseUpper": {
+    "description": "Uppercase dismiss button on a full-screen sheet."
+  },
+  "macroCarbChipUpper": "CARBS",
+  "@macroCarbChipUpper": {
+    "description": "Uppercase carbohydrate label on the recipe macro tiles. macroCarbChip is the sentence-case one on the nutrition ring."
+  },
+  "metricBmi": "BMI",
+  "@metricBmi": {
+    "description": "Body-mass-index label on the AI report. An ARB key rather than a literal because not every language uses the English acronym — Turkish also writes VKİ — and that is a per-locale call."
+  },
+  "onbReadinessLabel": "READINESS",
+  "@onbReadinessLabel": {
+    "description": "Label under the percentage ring on the welcome hero's analysis card."
+  },
+  "commonContinueUpper": "CONTINUE",
+  "@commonContinueUpper": {
+    "description": "Uppercase continue button on the level-up celebration."
+  },
+  "workoutPausedUpper": "PAUSED",
+  "@workoutPausedUpper": {
+    "description": "Overlay label shown when a live workout is paused."
   }
 }

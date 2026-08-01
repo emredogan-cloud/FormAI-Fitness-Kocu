@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Phase 134 / 137-polish · the reusable visual treatment for premium-
 /// locked content.
@@ -235,7 +236,7 @@ class PremiumProPill extends StatelessWidget {
         ),
       ),
       child: Text(
-        'PRO',
+        AppLocalizations.of(context).premiumBadge,
         style: TextStyle(
           color: _softPurple.withValues(alpha: 0.90),
           fontSize: 9,

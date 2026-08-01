@@ -8,7 +8,7 @@
 //   2. a layout that only fits Turkish overflows here instead of in a
 //      German store review.
 //
-// 1454 members covered.
+// 1465 members covered.
 
 import 'package:flutter/widgets.dart';
 import 'package:sixpack_ai/core/utils/pseudo_locale.dart';
@@ -4528,6 +4528,39 @@ class PseudoAppLocalizations extends AppLocalizations {
   String get macroProteinChip => pseudoLocalize(_inner.macroProteinChip);
 
   @override
+  String get premiumTierName => pseudoLocalize(_inner.premiumTierName);
+
+  @override
+  String get premiumBadge => pseudoLocalize(_inner.premiumBadge);
+
+  @override
+  String get deleteConfirmPhrase => pseudoLocalize(_inner.deleteConfirmPhrase);
+
+  @override
+  String get accountSectionUpper => pseudoLocalize(_inner.accountSectionUpper);
+
+  @override
+  String get commonSaveUpper => pseudoLocalize(_inner.commonSaveUpper);
+
+  @override
+  String get commonCloseUpper => pseudoLocalize(_inner.commonCloseUpper);
+
+  @override
+  String get macroCarbChipUpper => pseudoLocalize(_inner.macroCarbChipUpper);
+
+  @override
+  String get metricBmi => pseudoLocalize(_inner.metricBmi);
+
+  @override
+  String get onbReadinessLabel => pseudoLocalize(_inner.onbReadinessLabel);
+
+  @override
+  String get commonContinueUpper => pseudoLocalize(_inner.commonContinueUpper);
+
+  @override
+  String get workoutPausedUpper => pseudoLocalize(_inner.workoutPausedUpper);
+
+  @override
   String retrospectiveSummary(String workouts, String minutes, String reps) =>
       pseudoLocalize(_inner.retrospectiveSummary(workouts, minutes, reps));
 
@@ -5171,5 +5204,5 @@ class PseudoAppLocalizations extends AppLocalizations {
   /// Number of members this wrapper covers. The test suite asserts
   /// it still matches the generated class, so a new ARB key cannot
   /// slip past pseudo mode unnoticed.
-  static const int coveredMembers = 1454;
+  static const int coveredMembers = 1465;
 }

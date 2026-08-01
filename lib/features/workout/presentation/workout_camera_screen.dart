@@ -317,7 +317,8 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
                 letterSpacing: 1.5,
               ),
             ),
-            child: const Text('ANLADIM'),
+            child: Text(
+                AppLocalizations.of(context).commonUnderstood.toUpperCase()),
           ),
         ],
       ),
@@ -1841,13 +1842,13 @@ class _PausedBadge extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: _neon.withValues(alpha: 0.6), width: 1),
         ),
-        child: const Row(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.pause_circle_filled, color: _neon, size: 18),
             SizedBox(width: 8),
             Text(
-              'DURAKLATILDI',
+              AppLocalizations.of(context).workoutPausedUpper,
               style: TextStyle(
                 color: _neon,
                 fontSize: 11,

@@ -394,7 +394,7 @@ class _MacroTilesRow extends StatelessWidget {
         const SizedBox(width: 8),
         Expanded(
           child: _MacroTile(
-            label: 'KARB',
+            label: AppLocalizations.of(context).macroCarbChipUpper,
             value: '${recipe.carbs}',
             unit: 'g',
             color: _carbsColor,

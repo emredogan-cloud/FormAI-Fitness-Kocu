@@ -461,7 +461,7 @@ class _AnalysisCard extends StatelessWidget {
                     valueColor: const AlwaysStoppedAnimation(Color(0xFF39FF14)),
                   ),
                 ),
-                const Column(
+                Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
@@ -473,7 +473,7 @@ class _AnalysisCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'HAZIRLIK',
+                      AppLocalizations.of(context).onbReadinessLabel,
                       style: TextStyle(
                         color: Colors.white54,
                         fontSize: 8,

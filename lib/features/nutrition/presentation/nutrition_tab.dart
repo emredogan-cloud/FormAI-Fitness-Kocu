@@ -1175,13 +1175,13 @@ class _NutritionProUpsell extends ConsumerWidget {
                 color: _neon.withValues(alpha: 0.18),
                 border: Border.all(color: _neon.withValues(alpha: 0.6)),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.workspace_premium, color: _neon, size: 13),
                   SizedBox(width: 4),
                   Text(
-                    'FormAI Pro', // i18n-ignore — store product name
+                    AppLocalizations.of(context).premiumTierName,
                     style: TextStyle(
                       color: _neon,
                       fontSize: 11,

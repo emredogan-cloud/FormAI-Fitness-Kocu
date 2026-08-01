@@ -45,7 +45,15 @@ class AccountSettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
-  static const String _confirmPhrase = 'DELETE';
+  /// The word the user must type to confirm deletion.
+  ///
+  /// Read through `context` rather than held as a const so it is
+  /// localized — a Turkish user typing an English word to destroy
+  /// their own account is a needless barrier. `deleteConfirmPrompt`
+  /// already interpolates whatever this returns, so the instruction
+  /// and the expected input cannot drift apart.
+  String get _confirmPhrase => AppLocalizations.of(context).deleteConfirmPhrase;
+
   static const TimeOfDay _defaultReminderTime = TimeOfDay(hour: 19, minute: 0);
 
   final _reasonCtl = TextEditingController();
@@ -103,7 +111,9 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
           children: [
-            const _SectionHeader(title: 'HESAP', color: _neon),
+            _SectionHeader(
+                title: AppLocalizations.of(context).accountSectionUpper,
+                color: _neon),
             const SizedBox(height: 10),
             _AccountTile(
               icon: Icons.person_outline,
@@ -732,7 +742,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-                child: const Text('KAYDET'),
+                child: Text(AppLocalizations.of(context).commonSaveUpper),
               ),
             ],
           ),

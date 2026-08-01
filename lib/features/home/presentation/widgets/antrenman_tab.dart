@@ -771,13 +771,13 @@ class _ProButton extends StatelessWidget {
               ],
             ),
           ),
-          child: const Row(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.workspace_premium, color: Colors.white, size: 14),
               SizedBox(width: 4),
               Text(
-                'PRO',
+                AppLocalizations.of(context).premiumBadge,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 11,
