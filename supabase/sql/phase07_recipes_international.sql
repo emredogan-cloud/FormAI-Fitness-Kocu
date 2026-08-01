@@ -40,10 +40,10 @@ HAZIRLANIŞI:
   'INGREDIENTS:
 - 170 g salmon fillet
 - 85 g sushi rice (dry weight)
-- 2 yemek kaşığı soy sauce
-- 1 yemek kaşığı mirin (sweet rice wine; honey and water works)
-- 1 çay kaşığı sesame seeds
-- 1 yemek kaşığı spring onion
+- 2 tbsp soy sauce
+- 1 tbsp mirin (sweet rice wine; honey and water works)
+- 1 tsp sesame seeds
+- 1 tbsp spring onion
 
 METHOD:
 1. Cook the rice and keep it warm.
@@ -52,7 +52,7 @@ METHOD:
 4. Flake the salmon over the rice, pour the glaze on, and finish with sesame and spring onion.',
   ARRAY['high_protein', 'bulking']::text[],
   'japanese',
-  ARRAY[]::text[],
+  ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[],
   ARRAY[]::text[],
   'photos/meals/salmon-donburi.webp'
 )
@@ -114,9 +114,9 @@ HAZIRLANIŞI:
   'INGREDIENTS:
 - 180 g chicken thigh
 - 85 g jasmine rice (dry weight)
-- 2 yemek kaşığı soy sauce
-- 1 yemek kaşığı honey
-- 1 çay kaşığı grated ginger
+- 2 tbsp soy sauce
+- 1 tbsp honey
+- 1 tsp grated ginger
 - 100 g broccoli
 
 METHOD:
@@ -187,11 +187,11 @@ HAZIRLANIŞI:
 4. Susam yağı ve yeşil soğanla bitirin.',
   'INGREDIENTS:
 - 200 g firm tofu
-- 2 yemek kaşığı miso paste (fermented soybean)
+- 2 tbsp miso paste (fermented soybean)
 - 600 ml vegetable stock
 - 50 g spinach
-- 2 yemek kaşığı spring onion
-- 1 çay kaşığı sesame oil
+- 2 tbsp spring onion
+- 1 tsp sesame oil
 
 METHOD:
 1. Bring the stock to a bare simmer — miso goes bitter if it boils.
@@ -200,7 +200,7 @@ METHOD:
 4. Finish with sesame oil and spring onion.',
   ARRAY['low_calorie', 'toning']::text[],
   'japanese',
-  ARRAY[]::text[],
+  ARRAY['vegan', 'vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[],
   ARRAY[]::text[],
   'photos/meals/miso-tofu-soup-bowl.webp'
 )
@@ -261,9 +261,9 @@ HAZIRLANIŞI:
   'INGREDIENTS:
 - 3 eggs
 - 80 g rice (dry weight)
-- 1 yemek kaşığı soy sauce
-- 1 çay kaşığı sesame oil
-- 1 yaprak nori (dried seaweed sheet)
+- 1 tbsp soy sauce
+- 1 tsp sesame oil
+- 1 leaf nori (dried seaweed sheet)
 
 METHOD:
 1. Cook the rice.
@@ -334,9 +334,9 @@ HAZIRLANIŞI:
 - 150 g canned tuna (drained)
 - 80 g rice (dry weight)
 - 80 g edamame
-- 1 yemek kaşığı soy sauce
-- 1 çay kaşığı sesame oil
-- 1 çay kaşığı sesame seeds
+- 1 tbsp soy sauce
+- 1 tsp sesame oil
+- 1 tsp sesame seeds
 
 METHOD:
 1. Cook the rice and let it cool slightly.
@@ -404,10 +404,10 @@ HAZIRLANIŞI:
 3. Uzun bir bardakta soğuk servis edin.',
   'INGREDIENTS:
 - 30 g vanilla whey protein powder
-- 1 çay kaşığı matcha powder (green tea powder)
+- 1 tsp matcha powder (green tea powder)
 - 250 ml almond milk
 - 1 frozen banana
-- 1 çay kaşığı honey
+- 1 tsp honey
 
 METHOD:
 1. Sift the matcha so it does not clump in the blender.
@@ -480,7 +480,7 @@ HAZIRLANIŞI:
 - 150 g black beans
 - 150 g chopped tomatoes
 - 1 onion
-- 1 yemek kaşığı olive oil
+- 1 tbsp olive oil
 - cumin, chilli, salt
 
 METHOD:
@@ -556,8 +556,8 @@ HAZIRLANIŞI:
 - 80 g rice (dry weight)
 - 200 g chopped tomatoes
 - 1 onion
-- 2 diş garlic
-- 1 yemek kaşığı olive oil
+- 2 cloves garlic
+- 1 tbsp olive oil
 - chipotle, oregano, salt
 
 METHOD:
@@ -634,7 +634,7 @@ HAZIRLANIŞI:
 - 3 corn tortillas
 - 1 avocado
 - 1 lime
-- 1 avuç coriander
+- 1 handful coriander
 - cumin, salt
 
 METHOD:
@@ -644,7 +644,7 @@ METHOD:
 4. Fill the warmed tortillas and top with avocado, coriander and lime.',
   ARRAY['budget_friendly', 'toning']::text[],
   'mexican',
-  ARRAY[]::text[],
+  ARRAY['vegan', 'vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[],
   ARRAY[]::text[],
   'photos/meals/black-bean-quinoa-tacos.webp'
 )
@@ -707,10 +707,10 @@ HAZIRLANIŞI:
   'INGREDIENTS:
 - 300 g sweetcorn
 - 60 g feta cheese
-- 2 yemek kaşığı Greek yogurt
+- 2 tbsp Greek yogurt
 - 1 lime
-- 1 avuç coriander
-- 1 çay kaşığı chilli powder
+- 1 handful coriander
+- 1 tsp chilli powder
 
 METHOD:
 1. Char the corn in a dry hot pan until it blisters, about 6 minutes.
@@ -719,7 +719,7 @@ METHOD:
 4. Crumble the feta over and scatter the coriander.',
   ARRAY['low_calorie', 'budget_friendly']::text[],
   'mexican',
-  ARRAY[]::text[],
+  ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[],
   ARRAY[]::text[],
   'photos/meals/mexican-street-corn-salad.webp'
 )
@@ -784,7 +784,7 @@ HAZIRLANIŞI:
 - 80 g rice (dry weight)
 - 100 g black beans
 - 200 ml beef stock
-- 2 diş garlic
+- 2 cloves garlic
 - 1 lime
 - cumin, oregano, chilli
 
@@ -856,9 +856,9 @@ HAZIRLANIŞI:
   'INGREDIENTS:
 - 35 g chocolate whey protein powder
 - 200 ml milk
-- 2 yemek kaşığı chia seeds
-- 1 çay kaşığı cinnamon
-- 1 çimdik cayenne pepper
+- 2 tbsp chia seeds
+- 1 tsp cinnamon
+- 1 pinch cayenne pepper
 
 METHOD:
 1. Whisk everything together in a jar.
@@ -929,9 +929,9 @@ HAZIRLANIŞI:
 - 200 g paneer (Indian fresh cheese)
 - 70 g basmati rice (dry weight)
 - 120 g Greek yogurt
-- 1 yemek kaşığı olive oil
-- 2 çay kaşığı garam masala
-- 1 çay kaşığı grated ginger
+- 1 tbsp olive oil
+- 2 tsp garam masala
+- 1 tsp grated ginger
 - 1 bell pepper
 
 METHOD:
@@ -1006,10 +1006,10 @@ HAZIRLANIŞI:
 - 150 g red lentils
 - 600 ml vegetable stock
 - 1 onion
-- 2 diş garlic
-- 1 çay kaşığı turmeric
-- 1 çay kaşığı cumin
-- 1 yemek kaşığı coconut oil
+- 2 cloves garlic
+- 1 tsp turmeric
+- 1 tsp cumin
+- 1 tbsp coconut oil
 
 METHOD:
 1. Rinse the lentils until the water runs clear.
@@ -1018,7 +1018,7 @@ METHOD:
 4. Mash a little against the side of the pan to thicken it.',
   ARRAY['budget_friendly', 'toning']::text[],
   'indian',
-  ARRAY[]::text[],
+  ARRAY['vegan', 'vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[],
   ARRAY[]::text[],
   'photos/meals/red-lentil-dal.webp'
 )
@@ -1085,9 +1085,9 @@ HAZIRLANIŞI:
 - 70 g basmati rice (dry weight)
 - 150 g Greek yogurt
 - 200 g chopped tomatoes
-- 2 çay kaşığı garam masala
-- 1 çay kaşığı grated ginger
-- 1 yemek kaşığı olive oil
+- 2 tsp garam masala
+- 1 tsp grated ginger
+- 1 tbsp olive oil
 
 METHOD:
 1. Marinate the cubed chicken in half the yogurt with the spices for 20 minutes.
@@ -1162,10 +1162,10 @@ HAZIRLANIŞI:
 - 300 g chickpeas
 - 200 g chopped tomatoes
 - 1 onion
-- 2 diş garlic
-- 2 çay kaşığı garam masala
-- 1 yemek kaşığı olive oil
-- 1 avuç coriander
+- 2 cloves garlic
+- 2 tsp garam masala
+- 1 tbsp olive oil
+- 1 handful coriander
 
 METHOD:
 1. Fry the onion and garlic until deeply golden — this is where the flavour comes from, so do not rush it.
@@ -1174,7 +1174,7 @@ METHOD:
 4. Finish with coriander.',
   ARRAY['budget_friendly', 'toning']::text[],
   'indian',
-  ARRAY[]::text[],
+  ARRAY['vegan', 'vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[],
   ARRAY[]::text[],
   'photos/meals/chana-masala.webp'
 )
@@ -1240,10 +1240,10 @@ HAZIRLANIŞI:
 - 4 eggs
 - 1 onion
 - 1 tomato
-- 1 çay kaşığı turmeric
-- 1 çay kaşığı cumin
-- 1 yemek kaşığı olive oil
-- 1 avuç coriander
+- 1 tsp turmeric
+- 1 tsp cumin
+- 1 tbsp olive oil
+- 1 handful coriander
 
 METHOD:
 1. Fry the diced onion in the oil until it softens.
@@ -1253,7 +1253,7 @@ METHOD:
 5. Finish with coriander.',
   ARRAY['high_protein', 'budget_friendly']::text[],
   'indian',
-  ARRAY[]::text[],
+  ARRAY['vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[],
   ARRAY[]::text[],
   'photos/meals/masala-egg-bhurji.webp'
 )
@@ -1316,7 +1316,7 @@ HAZIRLANIŞI:
 - 150 g mango
 - 25 g vanilla whey protein powder
 - 100 ml milk
-- 1 çimdik cardamom
+- 1 pinch cardamom
 
 METHOD:
 1. Blend everything for 30 seconds.
@@ -1324,7 +1324,7 @@ METHOD:
 3. Serve over ice.',
   ARRAY['high_protein', 'low_calorie']::text[],
   'indian',
-  ARRAY[]::text[],
+  ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[],
   ARRAY[]::text[],
   'photos/meals/mango-lassi-protein.webp'
 )
@@ -1387,8 +1387,8 @@ HAZIRLANIŞI:
 - 200 g chicken breast
 - 150 g Greek yogurt
 - 1 cucumber
-- 2 diş garlic
-- 1 yemek kaşığı olive oil
+- 2 cloves garlic
+- 1 tbsp olive oil
 - 1 lemon
 - oregano, salt, pepper
 
@@ -1466,7 +1466,7 @@ HAZIRLANIŞI:
 - 100 g feta cheese
 - 60 g olives
 - 1 red onion
-- 2 yemek kaşığı olive oil
+- 2 tbsp olive oil
 - oregano, salt
 
 METHOD:
@@ -1538,8 +1538,8 @@ HAZIRLANIŞI:
   'INGREDIENTS:
 - 3 peaches
 - 30 g pistachios
-- 1 yemek kaşığı honey
-- 1 çay kaşığı cinnamon
+- 1 tbsp honey
+- 1 tsp cinnamon
 - 1 lemon
 
 METHOD:
@@ -1610,9 +1610,9 @@ HAZIRLANIŞI:
   'INGREDIENTS:
 - 150 g feta cheese
 - 300 g cherry tomatoes
-- 2 diş garlic
-- 2 yemek kaşığı olive oil
-- 1 avuç basil
+- 2 cloves garlic
+- 2 tbsp olive oil
+- 1 handful basil
 - oregano, pepper
 
 METHOD:
@@ -1759,10 +1759,10 @@ HAZIRLANIŞI:
   'INGREDIENTS:
 - 200 g chicken thigh
 - 100 g bulgur (dry weight)
-- 2 yemek kaşığı tahini
+- 2 tbsp tahini
 - 1 lemon
-- 2 çay kaşığı baharat spice mix
-- 1 yemek kaşığı olive oil
+- 2 tsp baharat spice mix
+- 1 tbsp olive oil
 - 1 tomato
 
 METHOD:
@@ -1836,11 +1836,11 @@ HAZIRLANIŞI:
   'INGREDIENTS:
 - 300 g chickpeas
 - 1 onion
-- 3 diş garlic
-- 1 avuç parsley
-- 2 yemek kaşığı tahini
-- 2 çay kaşığı cumin
-- 1 yemek kaşığı olive oil
+- 3 cloves garlic
+- 1 handful parsley
+- 2 tbsp tahini
+- 2 tsp cumin
+- 1 tbsp olive oil
 
 METHOD:
 1. Blitz the chickpeas, onion, garlic, parsley and cumin to a coarse paste — a smooth one makes falafel dense.
@@ -1915,8 +1915,8 @@ HAZIRLANIŞI:
 - 400 g chopped tomatoes
 - 1 bell pepper
 - 1 onion
-- 2 diş garlic
-- 1 yemek kaşığı olive oil
+- 2 cloves garlic
+- 1 tbsp olive oil
 - cumin, paprika, salt
 
 METHOD:
@@ -1991,9 +1991,9 @@ HAZIRLANIŞI:
 - 200 g roasted red peppers
 - 60 g walnuts
 - 30 g breadcrumbs
-- 1 yemek kaşığı pomegranate molasses
-- 2 yemek kaşığı olive oil
-- 1 çay kaşığı cumin
+- 1 tbsp pomegranate molasses
+- 2 tbsp olive oil
+- 1 tsp cumin
 - 150 g cucumber sticks
 
 METHOD:
@@ -2067,11 +2067,11 @@ HAZIRLANIŞI:
   'INGREDIENTS:
 - 60 g fine bulgur (dry weight)
 - 150 g chickpeas
-- 2 demet parsley
+- 2 bunches parsley
 - 2 tomatoes
 - 1 lemon
-- 2 yemek kaşığı olive oil
-- 1 avuç mint
+- 2 tbsp olive oil
+- 1 handful mint
 
 METHOD:
 1. Soak the bulgur in warm water for 15 minutes and drain it well.
@@ -2144,11 +2144,11 @@ HAZIRLANIŞI:
   'INGREDIENTS:
 - 300 g silken tofu
 - 500 ml vegetable stock
-- 1 yemek kaşığı gochujang (Korean chilli paste)
+- 1 tbsp gochujang (Korean chilli paste)
 - 1 courgette
 - 1 egg
-- 2 yemek kaşığı spring onion
-- 1 çay kaşığı sesame oil
+- 2 tbsp spring onion
+- 1 tsp sesame oil
 
 METHOD:
 1. Dissolve the gochujang in the stock and bring it to a simmer.
@@ -2157,7 +2157,7 @@ METHOD:
 4. Crack the egg in, cover for 2 minutes, and finish with sesame oil and spring onion.',
   ARRAY['toning', 'low_calorie']::text[],
   'korean',
-  ARRAY[]::text[],
+  ARRAY['vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[],
   ARRAY[]::text[],
   'photos/meals/korean-tofu-stew.webp'
 )
@@ -2224,8 +2224,8 @@ HAZIRLANIŞI:
 - 100 g spinach
 - 80 g carrot
 - 1 egg
-- 1 yemek kaşığı gochujang
-- 1 yemek kaşığı sesame oil
+- 1 tbsp gochujang
+- 1 tbsp sesame oil
 
 METHOD:
 1. Cook the rice.
@@ -2234,7 +2234,7 @@ METHOD:
 4. Arrange everything over the rice, top with a fried egg and the gochujang.',
   ARRAY['high_protein', 'bulking']::text[],
   'korean',
-  ARRAY[]::text[],
+  ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[],
   ARRAY[]::text[],
   'photos/meals/bibimbap-protein-bowl.webp'
 )
@@ -2296,12 +2296,12 @@ HAZIRLANIŞI:
 3. Marul yapraklarına doldurup susam serpin.',
   'INGREDIENTS:
 - 200 g chicken breast
-- 8 yaprak lettuce leaves
-- 1 yemek kaşığı gochujang
-- 1 yemek kaşığı soy sauce
-- 1 çay kaşığı grated ginger
-- 1 çay kaşığı sesame oil
-- 1 çay kaşığı sesame seeds
+- 8 leaves lettuce leaves
+- 1 tbsp gochujang
+- 1 tbsp soy sauce
+- 1 tsp grated ginger
+- 1 tsp sesame oil
+- 1 tsp sesame seeds
 
 METHOD:
 1. Dice the chicken and toss it with the gochujang, soy sauce and ginger.
@@ -2309,7 +2309,7 @@ METHOD:
 3. Spoon into lettuce leaves and scatter the sesame seeds.',
   ARRAY['high_protein', 'low_calorie']::text[],
   'korean',
-  ARRAY[]::text[],
+  ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[],
   ARRAY[]::text[],
   'photos/meals/korean-chicken-lettuce-wraps.webp'
 )
@@ -2373,9 +2373,9 @@ HAZIRLANIŞI:
 - 200 g cooked rice
 - 120 g kimchi (fermented cabbage)
 - 2 eggs
-- 1 yemek kaşığı sesame oil
-- 1 yemek kaşığı soy sauce
-- 2 yemek kaşığı spring onion
+- 1 tbsp sesame oil
+- 1 tbsp soy sauce
+- 2 tbsp spring onion
 
 METHOD:
 1. Fry the chopped kimchi in the sesame oil for 3 minutes.
@@ -2448,11 +2448,11 @@ HAZIRLANIŞI:
   'INGREDIENTS:
 - 180 g beef sirloin
 - 85 g rice (dry weight)
-- 2 yemek kaşığı soy sauce
+- 2 tbsp soy sauce
 - 1 pear (the tenderiser; do not skip it)
-- 2 diş garlic
-- 1 yemek kaşığı sesame oil
-- 1 çay kaşığı sesame seeds
+- 2 cloves garlic
+- 1 tbsp sesame oil
+- 1 tsp sesame seeds
 
 METHOD:
 1. Grate the pear and mix it with the soy sauce, garlic and sesame oil.
@@ -2527,10 +2527,10 @@ HAZIRLANIŞI:
   'INGREDIENTS:
 - 200 g chicken breast
 - 85 g jasmine rice (dry weight)
-- 1 avuç basil
-- 2 yemek kaşığı soy sauce
-- 2 diş garlic
-- 1 yemek kaşığı sesame oil
+- 1 handful basil
+- 2 tbsp soy sauce
+- 2 cloves garlic
+- 1 tbsp sesame oil
 - chilli flakes
 
 METHOD:
@@ -2606,10 +2606,10 @@ HAZIRLANIŞI:
 - 250 g firm tofu
 - 80 g jasmine rice (dry weight)
 - 200 ml coconut milk
-- 2 yemek kaşığı green curry paste
+- 2 tbsp green curry paste
 - 100 g green beans
 - 1 lime
-- 1 avuç basil
+- 1 handful basil
 
 METHOD:
 1. Fry the curry paste in a splash of the coconut milk for 2 minutes until it smells of the spices.
@@ -2684,8 +2684,8 @@ HAZIRLANIŞI:
 - 120 g cucumber
 - 80 g cherry tomatoes
 - 1 lime
-- 1 yemek kaşığı soy sauce
-- 1 avuç mint
+- 1 tbsp soy sauce
+- 1 handful mint
 - chilli flakes
 
 METHOD:
@@ -2760,8 +2760,8 @@ HAZIRLANIŞI:
 - 150 ml coconut milk
 - 150 g mango
 - 20 g vanilla whey protein powder
-- 1 yemek kaşığı honey
-- 1 çay kaşığı sesame seeds
+- 1 tbsp honey
+- 1 tsp sesame seeds
 
 METHOD:
 1. Cook the rice, then stir most of the coconut milk and the honey through it while it is hot.
@@ -2770,7 +2770,7 @@ METHOD:
 4. Pour the remaining coconut milk over and scatter the sesame seeds.',
   ARRAY['high_protein', 'bulking']::text[],
   'thai',
-  ARRAY[]::text[],
+  ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[],
   ARRAY[]::text[],
   'photos/meals/thai-mango-sticky-protein.webp'
 )
@@ -2835,9 +2835,9 @@ HAZIRLANIŞI:
 - 600 ml vegetable stock
 - 1 carrot
 - 1 onion
-- 2 diş garlic
-- 2 yemek kaşığı olive oil
-- 1 dal rosemary
+- 2 cloves garlic
+- 2 tbsp olive oil
+- 1 sprig rosemary
 
 METHOD:
 1. Soften the diced onion, carrot and garlic in the oil for 8 minutes.
@@ -2908,9 +2908,9 @@ HAZIRLANIŞI:
   'INGREDIENTS:
 - 150 g mozzarella
 - 200 g tomatoes
-- 1 avuç basil
-- 1 yemek kaşığı olive oil
-- 1 çay kaşığı balsamic vinegar
+- 1 handful basil
+- 1 tbsp olive oil
+- 1 tsp balsamic vinegar
 - salt and pepper
 
 METHOD:
@@ -2984,7 +2984,7 @@ HAZIRLANIŞI:
 - 100 g cherry tomatoes
 - 50 g olives
 - 1 red onion
-- 2 yemek kaşığı olive oil
+- 2 tbsp olive oil
 - 1 lemon
 
 METHOD:

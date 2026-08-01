@@ -73,6 +73,20 @@ jobs:
       - name: ARB coverage
         run: dart run tool/arb_coverage.dart --strict
 
+      # Roadmap Phase 7 (§6.3) · the CONTENT translation gate.
+      #
+      # The ARB gates above check the UI. This one checks the catalogue,
+      # which they cannot see: recipe titles, method steps and ingredient
+      # names live in Postgres and change without an app release.
+      #
+      # It reads through the public REST endpoint with the anon key, the
+      # same way the app does, so CI needs no database password. CI also
+      # writes a blank `.env`, so on this runner the tool prints a SKIP
+      # and exits 0 — it is a local and pre-release gate, and the
+      # committed baseline is what stops coverage silently falling.
+      - name: Recipe translation audit
+        run: dart run tool/recipe_translation_audit.dart
+
       # The pseudo-localisation wrapper is generated from the generated
       # localisations class. If it goes stale, a new ARB key renders
       # un-inflated and the pseudo-locale layout sweep silently stops

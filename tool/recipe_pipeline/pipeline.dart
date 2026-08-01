@@ -38,6 +38,8 @@ library;
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:sixpack_ai/features/nutrition/domain/models/recipe_ingredient.dart';
+
 import 'recipe_proposal.dart';
 
 void main(List<String> args) {
@@ -59,6 +61,18 @@ void main(List<String> args) {
   // pipeline can be exercised offline; the review sheet says when it ran
   // without one, because "no duplicates found" against no catalogue is
   // not a finding.
+  // A batch's own previously-seeded rows are not duplicates of it.
+  // Re-running a batch after an edit is the documented way to fix one —
+  // the seed is idempotent by slug — so the catalogue snapshot has to be
+  // read with this batch's own titles removed, or the second run rejects
+  // everything it wrote on the first.
+  final ownTitles = <String>{
+    for (final p in proposals) ...[
+      _normalise(p.titleEn),
+      _normalise(p.titleTr),
+    ],
+  };
+
   final existingTitles = <String>{};
   final existingIngredients = <String, Set<String>>{};
   var knownTagTokens = <String>[];
@@ -72,13 +86,14 @@ void main(List<String> args) {
         (catalogue['tag_tokens'] as List? ?? const []).cast<String>();
     for (final row in (catalogue['recipes'] as List? ?? const [])) {
       final map = row as Map<String, dynamic>;
-      for (final key in ['title', 'title_en']) {
-        final value = map[key] as String?;
-        if (value != null && value.trim().isNotEmpty) {
-          existingTitles
-              .add(value.toLowerCase().replaceAll(RegExp(r'\s+'), ' ').trim());
-        }
-      }
+      final titles = ['title', 'title_en']
+          .map((k) => map[k] as String?)
+          .whereType<String>()
+          .where((v) => v.trim().isNotEmpty)
+          .map(_normalise)
+          .toList();
+      if (titles.any(ownTitles.contains)) continue; // our own earlier seed
+      existingTitles.addAll(titles);
       existingIngredients[map['title'] as String? ?? '?'] =
           ingredientFingerprint(
         (map['ingredients'] as List? ?? const []).map((e) => e.toString()),
@@ -110,8 +125,8 @@ void main(List<String> args) {
       // comparison set, so two near-identical proposals in one file
       // cannot both pass.
       existingTitles
-        ..add(proposal.titleEn.toLowerCase())
-        ..add(proposal.titleTr.toLowerCase());
+        ..add(_normalise(proposal.titleEn))
+        ..add(_normalise(proposal.titleTr));
       existingIngredients[proposal.titleEn] =
           ingredientFingerprint(proposal.ingredients.map((i) => i.nameTr));
     } else {
@@ -256,10 +271,18 @@ String _instructions(RecipeProposal proposal, {required bool turkish}) {
   final buffer = StringBuffer()
     ..writeln(turkish ? 'MALZEMELER:' : 'INGREDIENTS:');
   for (final ingredient in proposal.ingredients) {
+    // Phase 7 · the unit is named in the reader's language, never
+    // converted. The translation audit found `2 yemek kaşığı olive oil`
+    // here — the names had been translated and the units had not,
+    // because they live in a different column.
+    final unit = localizedUnit(
+      ingredient.unit,
+      ingredient.quantity,
+      languageCode: turkish ? 'tr' : 'en',
+    );
     final parts = <String>[
       if (ingredient.quantity != null) _number(ingredient.quantity!),
-      if (ingredient.unit != null && ingredient.unit!.isNotEmpty)
-        ingredient.unit!,
+      if (unit != null && unit.isNotEmpty) unit,
       turkish ? ingredient.nameTr : ingredient.nameEn,
     ];
     final note = turkish ? ingredient.noteTr : ingredient.noteEn;
@@ -409,6 +432,9 @@ String _lit(String? value) {
 }
 
 String _esc(String value) => value.replaceAll("'", "''");
+
+String _normalise(String title) =>
+    title.toLowerCase().replaceAll(RegExp(r'\s+'), ' ').trim();
 
 String _number(num value) => value == value.roundToDouble()
     ? value.round().toString()

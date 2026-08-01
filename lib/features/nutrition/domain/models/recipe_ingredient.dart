@@ -51,12 +51,13 @@ class RecipeIngredient {
   /// The quantity is formatted, not interpolated: `0.5` has to read as
   /// `1/2` and `100.0` as `100`, and every caller getting that right
   /// independently is how one of them stops.
-  String get displayLine {
+  String displayLine({String languageCode = 'tr'}) {
     final buffer = StringBuffer();
     if (quantity != null) buffer.write(formatQuantity(quantity!));
-    if (unit != null) {
+    final rendered = localizedUnit(unit, quantity, languageCode: languageCode);
+    if (rendered != null) {
       if (buffer.isNotEmpty) buffer.write(' ');
-      buffer.write(unit);
+      buffer.write(rendered);
     }
     if (buffer.isNotEmpty) buffer.write(' ');
     buffer.write(name);
@@ -101,6 +102,73 @@ class RecipeIngredient {
     if (value is String) return int.tryParse(value) ?? 0;
     return 0;
   }
+}
+
+/// Renders [unit] in [languageCode], or null when the line should carry
+/// no unit at all.
+///
+/// ## Naming, not converting
+///
+/// A `yemek kaşığı` becomes `tbsp` and never `15 ml`. §6.2 of the Phase 7
+/// plan forbids converting a unit inside a translation for a specific
+/// reason: `core/utils/unit_system.dart` is where conversion belongs, and
+/// a value converted during translation cannot be converted back. So this
+/// is a naming table — the same measure, said in the reader's language.
+///
+/// The Turkish column stays authoritative. It is the authored value and
+/// is what the seed scripts, the audit and the pipeline all compare on;
+/// this is presentation, exactly like `formatWeight`.
+///
+/// ## `adet` renders as nothing
+///
+/// Turkish counts with an explicit classifier — `10 adet zeytin`. English
+/// does not: "10 pieces olives" is not a sentence anyone writes. The
+/// honest rendering of a classifier a language does not have is nothing.
+///
+/// ## Why this exists at all
+///
+/// The Phase 7 translation audit found `2 yemek kaşığı olive oil` in the
+/// generated English instructions of every new recipe. The ingredient
+/// names had been translated and the units had not, because they live in
+/// a different column and nothing had ever needed to read them in
+/// English before.
+String? localizedUnit(
+  String? unit,
+  num? quantity, {
+  required String languageCode,
+}) {
+  if (unit == null || unit.isEmpty) return null;
+  if (languageCode == 'tr') return unit;
+
+  final plural = quantity != null && quantity > 1;
+  return switch (unit) {
+    // Metric abbreviations are already international.
+    'g' || 'kg' || 'ml' || 'l' => unit,
+    // The classifier English does without.
+    'adet' => null,
+    'yemek kaşığı' => 'tbsp',
+    'çay kaşığı' => 'tsp',
+    'tatlı kaşığı' => 'dessertspoon',
+    'kaşık' => plural ? 'spoons' : 'spoon',
+    'su bardağı' || 'bardak' => plural ? 'glasses' : 'glass',
+    'fincan' => plural ? 'small cups' : 'small cup',
+    'dilim' => plural ? 'slices' : 'slice',
+    'diş' => plural ? 'cloves' : 'clove',
+    'demet' => plural ? 'bunches' : 'bunch',
+    'dal' => plural ? 'sprigs' : 'sprig',
+    'yaprak' => plural ? 'leaves' : 'leaf',
+    'tutam' || 'çimdik' => plural ? 'pinches' : 'pinch',
+    'avuç' => plural ? 'handfuls' : 'handful',
+    'paket' => plural ? 'packets' : 'packet',
+    'kutu' => plural ? 'cans' : 'can',
+    'porsiyon' => plural ? 'portions' : 'portion',
+    'ölçek' => plural ? 'scoops' : 'scoop',
+    'baş' => plural ? 'heads' : 'head',
+    'top' => plural ? 'balls' : 'ball',
+    // An unknown unit renders as written. Dropping it would silently
+    // remove an amount; guessing at it would silently change one.
+    _ => unit,
+  };
 }
 
 /// Formats a stored quantity the way a recipe writes it.

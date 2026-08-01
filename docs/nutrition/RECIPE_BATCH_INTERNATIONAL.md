@@ -20,24 +20,24 @@ rejection.
 
 | recipe | meal | kcal | P/C/F | min | steps | speciality | diet |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Salmon Donburi | dinner | 585 | 42/64/18 | 25 | 4 | 4 |  |
+| Salmon Donburi | dinner | 585 | 42/64/18 | 25 | 4 | 4 | pork_free, gluten_free, dairy_free |
 | Chicken Teriyaki with Rice | dinner | 580 | 48/66/14 | 25 | 4 | 3 | pork_free, gluten_free, dairy_free |
-| Miso Tofu Soup | lunch | 330 | 28/12/19 | 15 | 4 | 3 |  |
+| Miso Tofu Soup | lunch | 330 | 28/12/19 | 15 | 4 | 3 | vegan, vegetarian, pork_free, gluten_free, dairy_free |
 | Tamago Rice Breakfast Bowl | breakfast | 420 | 26/52/12 | 12 | 4 | 2 | vegetarian, pork_free, gluten_free, dairy_free |
 | Tuna Edamame Rice Bowl | lunch | 490 | 40/56/12 | 15 | 4 | 4 | pork_free, gluten_free, dairy_free |
 | Matcha Protein Smoothie | snack | 315 | 32/24/10 | 5 | 3 | 1 | vegetarian, pork_free, gluten_free |
 | Huevos Rancheros | breakfast | 500 | 32/44/22 | 20 | 4 | 1 | vegetarian, pork_free, gluten_free, dairy_free |
 | Chicken Tinga Bowl | dinner | 550 | 46/56/16 | 35 | 4 | 0 | pork_free, gluten_free, dairy_free |
-| Black Bean and Quinoa Tacos | lunch | 480 | 22/62/16 | 20 | 4 | 5 |  |
-| Mexican Street Corn Salad | snack | 325 | 12/38/14 | 15 | 4 | 4 |  |
+| Black Bean and Quinoa Tacos | lunch | 480 | 22/62/16 | 20 | 4 | 5 | vegan, vegetarian, pork_free, gluten_free, dairy_free |
+| Mexican Street Corn Salad | snack | 325 | 12/38/14 | 15 | 4 | 4 | vegetarian, pork_free, gluten_free |
 | Beef Barbacoa Bowl | dinner | 600 | 48/52/22 | 45 | 4 | 1 | pork_free, gluten_free, dairy_free |
 | Mexican Chocolate Protein Pudding | dessert | 300 | 30/22/10 | 10 | 3 | 2 | vegetarian, pork_free, gluten_free |
 | Paneer Tikka Bowl | dinner | 560 | 34/48/26 | 30 | 4 | 3 | vegetarian, pork_free, gluten_free |
-| Red Lentil Dal | lunch | 450 | 24/62/12 | 30 | 4 | 2 |  |
+| Red Lentil Dal | lunch | 450 | 24/62/12 | 30 | 4 | 2 | vegan, vegetarian, pork_free, gluten_free, dairy_free |
 | Lighter Chicken Tikka Masala | dinner | 580 | 48/52/20 | 35 | 5 | 2 | pork_free, gluten_free |
-| Chana Masala | lunch | 460 | 20/64/14 | 25 | 4 | 2 |  |
-| Masala Egg Bhurji | breakfast | 340 | 26/14/20 | 15 | 5 | 2 |  |
-| Mango Protein Lassi | snack | 335 | 30/40/6 | 5 | 3 | 2 |  |
+| Chana Masala | lunch | 460 | 20/64/14 | 25 | 4 | 2 | vegan, vegetarian, pork_free, gluten_free, dairy_free |
+| Masala Egg Bhurji | breakfast | 340 | 26/14/20 | 15 | 5 | 2 | vegetarian, pork_free, gluten_free, dairy_free |
+| Mango Protein Lassi | snack | 335 | 30/40/6 | 5 | 3 | 2 | vegetarian, pork_free, gluten_free |
 | Chicken Souvlaki Bowl | dinner | 520 | 48/32/22 | 25 | 4 | 0 | pork_free, gluten_free |
 | Greek Salad with Feta | lunch | 390 | 16/18/28 | 12 | 4 | 0 | vegetarian, pork_free, gluten_free |
 | Baked Peaches with Pistachios | dessert | 285 | 6/34/14 | 25 | 4 | 2 | vegetarian, pork_free, gluten_free, dairy_free |
@@ -48,15 +48,15 @@ rejection.
 | Shakshuka | breakfast | 405 | 26/26/22 | 25 | 4 | 0 | vegetarian, pork_free, gluten_free, dairy_free |
 | Muhammara with Vegetables | snack | 395 | 10/30/26 | 15 | 4 | 2 | vegan, vegetarian, pork_free, dairy_free |
 | Tabbouleh with Chickpeas | lunch | 380 | 16/48/14 | 20 | 4 | 1 | vegan, vegetarian, pork_free, dairy_free |
-| Korean Soft Tofu Stew | dinner | 345 | 26/24/16 | 25 | 4 | 4 |  |
-| Beef Bibimbap | dinner | 620 | 42/68/20 | 35 | 4 | 1 |  |
-| Korean Chicken Lettuce Wraps | lunch | 360 | 40/18/14 | 20 | 3 | 5 |  |
+| Korean Soft Tofu Stew | dinner | 345 | 26/24/16 | 25 | 4 | 4 | vegetarian, pork_free, gluten_free, dairy_free |
+| Beef Bibimbap | dinner | 620 | 42/68/20 | 35 | 4 | 1 | pork_free, gluten_free, dairy_free |
+| Korean Chicken Lettuce Wraps | lunch | 360 | 40/18/14 | 20 | 3 | 5 | pork_free, gluten_free, dairy_free |
 | Kimchi Fried Rice with Egg | lunch | 500 | 22/62/18 | 15 | 4 | 2 | vegetarian, pork_free, gluten_free, dairy_free |
 | Beef Bulgogi | dinner | 590 | 44/58/20 | 25 | 5 | 3 | pork_free, gluten_free, dairy_free |
 | Thai Basil Chicken | dinner | 580 | 44/60/18 | 20 | 5 | 3 | pork_free, gluten_free, dairy_free |
 | Thai Green Curry with Tofu | dinner | 570 | 24/56/28 | 25 | 4 | 4 |  |
 | Thai Beef Salad | lunch | 395 | 42/16/18 | 20 | 4 | 3 | pork_free, gluten_free, dairy_free |
-| Mango Coconut Protein Rice | dessert | 495 | 20/72/14 | 30 | 4 | 2 |  |
+| Mango Coconut Protein Rice | dessert | 495 | 20/72/14 | 30 | 4 | 2 | vegetarian, pork_free, gluten_free |
 | Tuscan White Bean Soup | lunch | 395 | 20/52/12 | 30 | 4 | 2 | vegan, vegetarian, pork_free, gluten_free, dairy_free |
 | Caprese Protein Plate | snack | 360 | 28/12/22 | 8 | 3 | 2 | vegetarian, pork_free, gluten_free |
 | Mediterranean Tuna Salad | lunch | 385 | 34/22/18 | 12 | 3 | 1 | pork_free, gluten_free, dairy_free |

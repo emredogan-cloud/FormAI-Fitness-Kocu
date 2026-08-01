@@ -327,19 +327,65 @@ void main() {
         name: 'kinoa',
         note: 'kuru ölçü',
       );
-      expect(row.displayLine, '100 g kinoa (kuru ölçü)');
+      expect(row.displayLine(), '100 g kinoa (kuru ölçü)');
     });
 
     test('omits each part it does not have', () {
       expect(
-        const RecipeIngredient(position: 1, name: 'Tuz').displayLine,
+        const RecipeIngredient(position: 1, name: 'Tuz').displayLine(),
         'Tuz',
       );
       expect(
         const RecipeIngredient(position: 1, quantity: 3, name: 'yumurta')
-            .displayLine,
+            .displayLine(),
         '3 yumurta',
       );
+    });
+  });
+
+  group('localizedUnit', () {
+    test('names a unit, never converts it', () {
+      // `unit_system.dart` is where conversion belongs. A value converted
+      // during translation cannot be converted back.
+      expect(localizedUnit('yemek kaşığı', 2, languageCode: 'en'), 'tbsp');
+      expect(localizedUnit('çay kaşığı', 1, languageCode: 'en'), 'tsp');
+      expect(localizedUnit('g', 100, languageCode: 'en'), 'g');
+    });
+
+    test('Turkish keeps the authored value untouched', () {
+      expect(
+          localizedUnit('yemek kaşığı', 2, languageCode: 'tr'), 'yemek kaşığı');
+      expect(localizedUnit('adet', 10, languageCode: 'tr'), 'adet');
+    });
+
+    test('`adet` renders as nothing in English', () {
+      // Turkish counts with a classifier; English does not. "10 pieces
+      // olives" is not a sentence anyone writes.
+      expect(localizedUnit('adet', 10, languageCode: 'en'), isNull);
+    });
+
+    test('countable units take a plural', () {
+      expect(localizedUnit('diş', 1, languageCode: 'en'), 'clove');
+      expect(localizedUnit('diş', 3, languageCode: 'en'), 'cloves');
+      expect(localizedUnit('dilim', 2, languageCode: 'en'), 'slices');
+      expect(localizedUnit('yaprak', 4, languageCode: 'en'), 'leaves');
+    });
+
+    test('an unknown unit renders as written, not dropped or guessed', () {
+      // Dropping it silently removes an amount; guessing silently
+      // changes one.
+      expect(localizedUnit('şişe', 1, languageCode: 'en'), 'şişe');
+    });
+
+    test('the English line reads as English end to end', () {
+      // The defect the Phase 7 audit found: `2 yemek kaşığı olive oil`.
+      const row = RecipeIngredient(
+        position: 1,
+        quantity: 2,
+        unit: 'yemek kaşığı',
+        name: 'olive oil',
+      );
+      expect(row.displayLine(languageCode: 'en'), '2 tbsp olive oil');
     });
   });
 }

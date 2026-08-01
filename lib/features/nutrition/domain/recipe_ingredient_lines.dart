@@ -31,8 +31,11 @@ import 'models/recipe.dart';
 /// ingredients anywhere — which no live row does.
 List<String> recipeIngredientLines(Recipe recipe) {
   if (recipe.ingredientRows.isNotEmpty) {
+    // The recipe's own language, not the user's preference: a row that
+    // fell back to Turkish must render Turkish units beside its Turkish
+    // ingredient names, or the line reads half in each.
     return recipe.ingredientRows
-        .map((row) => row.displayLine)
+        .map((row) => row.displayLine(languageCode: recipe.language))
         .toList(growable: false);
   }
   if (recipe.ingredients.isNotEmpty) return recipe.ingredients;

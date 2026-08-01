@@ -40,9 +40,9 @@ HAZIRLANIŞI:
 - 60 g rolled oats
 - 200 ml milk
 - 30 g vanilla whey protein powder
-- 1 yemek kaşığı chia seeds
+- 1 tbsp chia seeds
 - 80 g blueberries
-- 1 tatlı kaşığı honey
+- 1 dessertspoon honey
 
 METHOD:
 1. Stir the oats, milk, protein powder and chia seeds together in a jar.
@@ -115,7 +115,7 @@ HAZIRLANIŞI:
 - 1 whole egg
 - 60 g spinach
 - 60 g mushrooms
-- 1 tatlı kaşığı olive oil
+- 1 dessertspoon olive oil
 - salt and pepper
 
 METHOD:
@@ -191,9 +191,9 @@ HAZIRLANIŞI:
 - 2 eggs
 - 40 g rolled oats
 - 30 g vanilla whey protein powder
-- 1 çay kaşığı baking powder
-- 1 tatlı kaşığı coconut oil
-- 1 yemek kaşığı maple syrup
+- 1 tsp baking powder
+- 1 dessertspoon coconut oil
+- 1 tbsp maple syrup
 
 METHOD:
 1. Blend the banana, eggs, oats, protein powder and baking powder smooth.
@@ -264,8 +264,8 @@ HAZIRLANIŞI:
 - 200 g Greek yogurt
 - 30 g mixed berries
 - 20 g walnuts
-- 1 yemek kaşığı chia seeds
-- 1 tatlı kaşığı honey
+- 1 tbsp chia seeds
+- 1 dessertspoon honey
 
 METHOD:
 1. Spoon the Greek yogurt into a wide bowl.
@@ -331,11 +331,11 @@ HAZIRLANIŞI:
 3. Fıstık ezmesini iki dilime de sürün.
 4. Üzerine muz dilimlerini dizin, tarçın serpin ve yumurtaları yanında servis edin.',
   'INGREDIENTS:
-- 2 dilim wholemeal bread
-- 2 yemek kaşığı peanut butter
+- 2 slices wholemeal bread
+- 2 tbsp peanut butter
 - 1 banana
 - 2 eggs
-- 1 çimdik cinnamon
+- 1 pinch cinnamon
 
 METHOD:
 1. Toast the bread until it is golden and firm.
@@ -402,7 +402,7 @@ HAZIRLANIŞI:
   'INGREDIENTS:
 - 200 g cottage cheese
 - 100 g strawberries
-- 1 tatlı kaşığı honey
+- 1 dessertspoon honey
 - 10 g almonds
 
 METHOD:
@@ -473,7 +473,7 @@ HAZIRLANIŞI:
 - 250 ml vegetable stock
 - 2 eggs
 - 30 g cheddar cheese
-- 1 yemek kaşığı spring onion
+- 1 tbsp spring onion
 - salt and pepper
 
 METHOD:
@@ -542,12 +542,12 @@ HAZIRLANIŞI:
 2. Her ekmek dilimini iki yüzünde 20 saniye bekletin.
 3. Tereyağında orta ateşte, her yüzü yaklaşık 2 dakika, altın rengi olana kadar kızartın.',
   'INGREDIENTS:
-- 3 dilim wholemeal bread
+- 3 slices wholemeal bread
 - 2 eggs
 - 120 ml milk
 - 25 g vanilla whey protein powder
-- 1 çay kaşığı cinnamon
-- 1 tatlı kaşığı butter
+- 1 tsp cinnamon
+- 1 dessertspoon butter
 
 METHOD:
 1. Whisk the eggs, milk, protein powder and cinnamon in a shallow dish.
@@ -691,7 +691,7 @@ HAZIRLANIŞI:
 - 250 ml almond milk
 - 100 g frozen blueberries
 - 100 g Greek yogurt
-- 1 yemek kaşığı almond butter
+- 1 tbsp almond butter
 
 METHOD:
 1. Put every ingredient into a blender.
@@ -760,9 +760,9 @@ HAZIRLANIŞI:
   'INGREDIENTS:
 - 80 g smoked salmon
 - 2 eggs
-- 2 dilim rye bread
+- 2 slices rye bread
 - 30 g cream cheese
-- 1 yemek kaşığı dill
+- 1 tbsp dill
 - black pepper
 
 METHOD:
@@ -835,7 +835,7 @@ HAZIRLANIŞI:
 - 250 ml milk
 - 1 apple
 - 25 g vanilla whey protein powder
-- 1 çay kaşığı cinnamon
+- 1 tsp cinnamon
 - 10 g walnuts
 
 METHOD:
@@ -910,7 +910,7 @@ HAZIRLANIŞI:
 - 80 g black beans
 - 60 g lean ground beef
 - 30 g cheddar cheese
-- 2 yemek kaşığı salsa
+- 2 tbsp salsa
 - cumin, salt, pepper
 
 METHOD:
@@ -979,11 +979,11 @@ HAZIRLANIŞI:
 2. 5 dakika sonra tekrar çırpın; tohumlar dipte topaklanmasın.
 3. En az 4 saat buzdolabında bekletin, sonra ahududu ve akçaağaç şurubuyla servis edin.',
   'INGREDIENTS:
-- 3 yemek kaşığı chia seeds
+- 3 tbsp chia seeds
 - 250 ml almond milk
 - 30 g vanilla whey protein powder
 - 80 g raspberries
-- 1 tatlı kaşığı maple syrup
+- 1 dessertspoon maple syrup
 
 METHOD:
 1. Whisk the chia seeds, almond milk and protein powder in a jar.
@@ -1054,8 +1054,8 @@ HAZIRLANIŞI:
 - 180 g chicken breast
 - 80 g white rice (dry weight)
 - 100 g broccoli
-- 1 yemek kaşığı olive oil
-- 1 tatlı kaşığı paprika
+- 1 tbsp olive oil
+- 1 dessertspoon paprika
 - salt and pepper
 
 METHOD:
@@ -1129,8 +1129,8 @@ HAZIRLANIŞI:
 - 1 wholemeal tortilla
 - 150 g canned tuna (drained)
 - 1 avocado
-- 2 yaprak lettuce
-- 1 yemek kaşığı lemon juice
+- 2 leaves lettuce
+- 1 tbsp lemon juice
 - salt and pepper
 
 METHOD:
@@ -1203,8 +1203,8 @@ HAZIRLANIŞI:
 - 160 g lean ground beef
 - 250 g sweet potato
 - 80 g green beans
-- 1 yemek kaşığı olive oil
-- 1 diş garlic
+- 1 tbsp olive oil
+- 1 clove garlic
 - cumin, salt, pepper
 
 METHOD:
@@ -1278,10 +1278,10 @@ HAZIRLANIŞI:
 - 160 g chicken breast
 - 150 g romaine lettuce
 - 25 g parmesan cheese
-- 2 yemek kaşığı Greek yogurt
-- 1 çay kaşığı dijon mustard
-- 1 yemek kaşığı lemon juice
-- 1 yemek kaşığı olive oil
+- 2 tbsp Greek yogurt
+- 1 tsp dijon mustard
+- 1 tbsp lemon juice
+- 1 tbsp olive oil
 
 METHOD:
 1. Grill the chicken for 6 minutes a side and rest it.
@@ -1356,8 +1356,8 @@ HAZIRLANIŞI:
 - 70 g quinoa (dry weight)
 - 80 g cherry tomatoes
 - 60 g cucumber
-- 1 yemek kaşığı olive oil
-- 1 yemek kaşığı lemon juice
+- 1 tbsp olive oil
+- 1 tbsp lemon juice
 - salt and pepper
 
 METHOD:
@@ -1432,8 +1432,8 @@ HAZIRLANIŞI:
 - 80 g sushi rice (dry weight)
 - 1 avocado
 - 50 g edamame
-- 1 yemek kaşığı soy sauce
-- 1 çay kaşığı sesame seeds
+- 1 tbsp soy sauce
+- 1 tsp sesame seeds
 
 METHOD:
 1. Cook the rice and let it cool to room temperature.
@@ -1507,8 +1507,8 @@ HAZIRLANIŞI:
 - 80 g brown rice (dry weight)
 - 100 g black beans
 - 60 g sweetcorn
-- 2 yemek kaşığı salsa
-- 1 yemek kaşığı olive oil
+- 2 tbsp salsa
+- 1 tbsp olive oil
 - cumin, salt, pepper
 
 METHOD:
@@ -1584,8 +1584,8 @@ HAZIRLANIŞI:
 - 160 g lean ground beef
 - 200 g passata
 - 1 onion
-- 1 diş garlic
-- 1 yemek kaşığı olive oil
+- 1 clove garlic
+- 1 tbsp olive oil
 - oregano, salt, pepper
 
 METHOD:
@@ -1661,9 +1661,9 @@ HAZIRLANIŞI:
 - 60 g quinoa (dry weight)
 - 80 g cucumber
 - 60 g cherry tomatoes
-- 1 avuç parsley
-- 1 yemek kaşığı olive oil
-- 1 yemek kaşığı lemon juice
+- 1 handful parsley
+- 1 tbsp olive oil
+- 1 tbsp lemon juice
 
 METHOD:
 1. Simmer the quinoa for 15 minutes and cool it.
@@ -1734,11 +1734,11 @@ HAZIRLANIŞI:
 4. Her yaprağı paket gibi katlayın.',
   'INGREDIENTS:
 - 150 g sliced turkey breast
-- 6 yaprak large lettuce leaves
+- 6 leaves large lettuce leaves
 - 1 avocado
 - 1 tomato
-- 2 yemek kaşığı Greek yogurt
-- 1 çay kaşığı dijon mustard
+- 2 tbsp Greek yogurt
+- 1 tsp dijon mustard
 
 METHOD:
 1. Mix the Greek yogurt and mustard into a dressing.
@@ -1809,7 +1809,7 @@ HAZIRLANIŞI:
 - 300 g baking potato
 - 120 g canned tuna (drained)
 - 120 g cottage cheese
-- 1 yemek kaşığı spring onion
+- 1 tbsp spring onion
 - salt and pepper
 
 METHOD:
@@ -1880,7 +1880,7 @@ HAZIRLANIŞI:
   'INGREDIENTS:
 - 90 g wholemeal pasta (dry weight)
 - 160 g chicken breast
-- 2 yemek kaşığı basil pesto
+- 2 tbsp basil pesto
 - 80 g cherry tomatoes
 - 30 g rocket
 - salt and pepper
@@ -1954,7 +1954,7 @@ HAZIRLANIŞI:
 - 180 g beef sirloin
 - 3 eggs
 - 60 g rocket
-- 1 yemek kaşığı olive oil
+- 1 tbsp olive oil
 - salt and black pepper
 
 METHOD:
@@ -2026,7 +2026,7 @@ HAZIRLANIŞI:
 - 180 g salmon fillet
 - 220 g sweet potato
 - 100 g asparagus
-- 1 yemek kaşığı olive oil
+- 1 tbsp olive oil
 - 1 lemon
 - salt, pepper, dill
 
@@ -2101,7 +2101,7 @@ HAZIRLANIŞI:
 - 150 g green beans
 - 100 g mushrooms
 - 15 g butter
-- 3 diş garlic
+- 3 cloves garlic
 - thyme, salt, pepper
 
 METHOD:
@@ -2177,9 +2177,9 @@ HAZIRLANIŞI:
 - 80 g jasmine rice (dry weight)
 - 80 g bell pepper
 - 80 g broccoli
-- 2 yemek kaşığı soy sauce
-- 1 yemek kaşığı sesame oil
-- 1 tatlı kaşığı grated ginger
+- 2 tbsp soy sauce
+- 1 tbsp sesame oil
+- 1 dessertspoon grated ginger
 
 METHOD:
 1. Cook the rice and keep it warm.
@@ -2255,8 +2255,8 @@ HAZIRLANIŞI:
 - 1 egg
 - 20 g breadcrumbs
 - 300 g passata
-- 2 diş garlic
-- 1 yemek kaşığı olive oil
+- 2 cloves garlic
+- 1 tbsp olive oil
 - basil, salt, pepper
 
 METHOD:
@@ -2331,7 +2331,7 @@ HAZIRLANIŞI:
 - 150 g courgette
 - 150 g bell pepper
 - 100 g cherry tomatoes
-- 1 yemek kaşığı olive oil
+- 1 tbsp olive oil
 - 1 lemon
 - oregano, salt, pepper
 
@@ -2341,7 +2341,7 @@ METHOD:
 3. Return to the oven for 12 minutes until the fish is opaque.',
   ARRAY['high_protein', 'low_calorie']::text[],
   'american',
-  ARRAY[]::text[],
+  ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[],
   ARRAY['en']::text[],
   'photos/meals/cod-with-roasted-vegetables.webp'
 )
@@ -2407,8 +2407,8 @@ HAZIRLANIŞI:
 - 150 g bell pepper
 - 1 onion
 - 2 corn tortillas
-- 1 yemek kaşığı olive oil
-- 2 çay kaşığı smoked paprika
+- 1 tbsp olive oil
+- 2 tsp smoked paprika
 - cumin, salt, pepper
 
 METHOD:
@@ -2559,8 +2559,8 @@ HAZIRLANIŞI:
 - 200 g chicken breast
 - 70 g quinoa (dry weight)
 - 100 g spinach
-- 1 yemek kaşığı olive oil
-- 2 çay kaşığı cajun spice
+- 1 tbsp olive oil
+- 2 tsp cajun spice
 - 1 lemon
 
 METHOD:
@@ -2570,7 +2570,7 @@ METHOD:
 4. Wilt the spinach in the same pan and serve with the quinoa and lemon.',
   ARRAY['high_protein', 'toning']::text[],
   'american',
-  ARRAY[]::text[],
+  ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[],
   ARRAY['en']::text[],
   'photos/meals/blackened-chicken-quinoa.webp'
 )
@@ -2635,10 +2635,10 @@ HAZIRLANIŞI:
 - 200 g firm tofu
 - 80 g jasmine rice (dry weight)
 - 100 g broccoli
-- 2 yemek kaşığı soy sauce
-- 1 yemek kaşığı maple syrup
-- 1 yemek kaşığı sesame oil
-- 1 çay kaşığı sesame seeds
+- 2 tbsp soy sauce
+- 1 tbsp maple syrup
+- 1 tbsp sesame oil
+- 1 tsp sesame seeds
 
 METHOD:
 1. Press the tofu for 10 minutes to drive the water out, then cube it.
@@ -2788,8 +2788,8 @@ HAZIRLANIŞI:
 - 150 g kidney beans
 - 300 g chopped tomatoes
 - 1 onion
-- 2 diş garlic
-- 2 çay kaşığı chili powder
+- 2 cloves garlic
+- 2 tsp chili powder
 - cumin, salt, pepper
 
 METHOD:
@@ -2863,7 +2863,7 @@ HAZIRLANIŞI:
 - 200 g potato
 - 120 g courgette
 - 120 g carrot
-- 1 yemek kaşığı olive oil
+- 1 tbsp olive oil
 - rosemary, salt, pepper
 
 METHOD:
@@ -2935,9 +2935,9 @@ HAZIRLANIŞI:
 - 200 g tuna steak
 - 120 g rocket
 - 80 g cucumber
-- 1 yemek kaşığı soy sauce
-- 1 yemek kaşığı sesame oil
-- 1 çay kaşığı sesame seeds
+- 1 tbsp soy sauce
+- 1 tbsp sesame oil
+- 1 tsp sesame seeds
 
 METHOD:
 1. Rub the tuna with half the sesame oil and season it.
@@ -3005,7 +3005,7 @@ HAZIRLANIŞI:
   'INGREDIENTS:
 - 35 g casein protein powder
 - 180 ml milk
-- 1 tatlı kaşığı cocoa powder
+- 1 dessertspoon cocoa powder
 - 10 g almonds
 
 METHOD:
@@ -3073,8 +3073,8 @@ HAZIRLANIŞI:
 - 60 g rolled oats
 - 60 g peanut butter
 - 25 g vanilla whey protein powder
-- 2 yemek kaşığı maple syrup
-- 1 yemek kaşığı chia seeds
+- 2 tbsp maple syrup
+- 1 tbsp chia seeds
 
 METHOD:
 1. Mix everything in a bowl until it holds together.
@@ -3207,9 +3207,9 @@ HAZIRLANIŞI:
 3. Sebzeleri çubuk çubuk doğrayıp yanında servis edin.',
   'INGREDIENTS:
 - 200 g Greek yogurt
-- 1 diş garlic
-- 1 yemek kaşığı lemon juice
-- 1 yemek kaşığı dill
+- 1 clove garlic
+- 1 tbsp lemon juice
+- 1 tbsp dill
 - 100 g carrot sticks
 - 100 g cucumber sticks
 
@@ -3279,8 +3279,8 @@ HAZIRLANIŞI:
   'INGREDIENTS:
 - 120 g canned tuna (drained)
 - 1 cucumber
-- 2 yemek kaşığı Greek yogurt
-- 1 yemek kaşığı lemon juice
+- 2 tbsp Greek yogurt
+- 1 tbsp lemon juice
 - salt and pepper
 
 METHOD:
@@ -3347,8 +3347,8 @@ HAZIRLANIŞI:
   'INGREDIENTS:
 - 3 eggs
 - 80 g hummus
-- 1 çay kaşığı paprika
-- 1 tatlı kaşığı olive oil
+- 1 tsp paprika
+- 1 dessertspoon olive oil
 
 METHOD:
 1. Boil the eggs for 8 minutes, then cool them in cold water.
@@ -3412,9 +3412,9 @@ HAZIRLANIŞI:
 3. Tarçın serpin.',
   'INGREDIENTS:
 - 3 rice cakes
-- 2 yemek kaşığı almond butter
+- 2 tbsp almond butter
 - 1 banana
-- 1 çimdik cinnamon
+- 1 pinch cinnamon
 
 METHOD:
 1. Spread the almond butter over the rice cakes.
@@ -3479,8 +3479,8 @@ HAZIRLANIŞI:
   'INGREDIENTS:
 - 120 g sliced turkey breast
 - 60 g cheddar cheese
-- 4 yaprak lettuce
-- 1 çay kaşığı dijon mustard
+- 4 leaves lettuce
+- 1 tsp dijon mustard
 
 METHOD:
 1. Lay the turkey slices out flat and spread them with the mustard.
@@ -3546,7 +3546,7 @@ HAZIRLANIŞI:
 - 35 g chocolate whey protein powder
 - 300 ml milk
 - 1 banana
-- 1 yemek kaşığı peanut butter
+- 1 tbsp peanut butter
 
 METHOD:
 1. Put everything in a blender with a handful of ice.
@@ -3609,7 +3609,7 @@ HAZIRLANIŞI:
 3. Üzerine deniz tuzu serpip kabuğundan yiyin.',
   'INGREDIENTS:
 - 200 g edamame (in the pod)
-- 1 tatlı kaşığı sesame oil
+- 1 dessertspoon sesame oil
 - sea salt
 
 METHOD:
@@ -3742,9 +3742,9 @@ HAZIRLANIŞI:
 3. Üzerine chia tohumu ve tarçın serpin.',
   'INGREDIENTS:
 - 1 apple
-- 2 yemek kaşığı almond butter
-- 1 çay kaşığı chia seeds
-- 1 çimdik cinnamon
+- 2 tbsp almond butter
+- 1 tsp chia seeds
+- 1 pinch cinnamon
 
 METHOD:
 1. Core the apple and cut it into rounds.
@@ -3815,7 +3815,7 @@ HAZIRLANIŞI:
 - 20 g cocoa powder
 - 2 eggs
 - 60 g Greek yogurt
-- 2 yemek kaşığı maple syrup
+- 2 tbsp maple syrup
 
 METHOD:
 1. Whisk the eggs, yogurt and maple syrup together.
@@ -3887,7 +3887,7 @@ HAZIRLANIŞI:
 - 25 g vanilla whey protein powder
 - 80 g mixed berries
 - 15 g dark chocolate
-- 1 yemek kaşığı honey
+- 1 tbsp honey
 
 METHOD:
 1. Stir the protein powder and honey through the yogurt.
@@ -3959,7 +3959,7 @@ HAZIRLANIŞI:
 - 80 g Greek yogurt
 - 25 g vanilla whey protein powder
 - 2 rye crackers
-- 1 tatlı kaşığı butter
+- 1 dessertspoon butter
 - 60 g strawberries
 
 METHOD:
@@ -4029,7 +4029,7 @@ HAZIRLANIŞI:
 - 2 frozen bananas
 - 30 g vanilla whey protein powder
 - 60 ml almond milk
-- 1 yemek kaşığı peanut butter
+- 1 tbsp peanut butter
 
 METHOD:
 1. Blend the frozen banana, protein powder and almond milk until it turns creamy.
@@ -4095,9 +4095,9 @@ HAZIRLANIŞI:
   'INGREDIENTS:
 - 1 ripe avocado
 - 25 g cocoa powder
-- 3 yemek kaşığı maple syrup
+- 3 tbsp maple syrup
 - 60 ml almond milk
-- 1 çimdik sea salt
+- 1 pinch sea salt
 
 METHOD:
 1. Blend the avocado, cocoa, maple syrup and almond milk until glossy.
@@ -4167,8 +4167,8 @@ HAZIRLANIŞI:
 - 20 g oat flour
 - 1 egg
 - 60 ml milk
-- 1 çay kaşığı baking powder
-- 1 tatlı kaşığı cocoa powder
+- 1 tsp baking powder
+- 1 dessertspoon cocoa powder
 
 METHOD:
 1. Whisk everything directly in a large mug until no lumps remain.
@@ -4238,8 +4238,8 @@ HAZIRLANIŞI:
 - 70 g rice
 - 400 ml milk
 - 25 g vanilla whey protein powder
-- 1 yemek kaşığı honey
-- 1 çay kaşığı cinnamon
+- 1 tbsp honey
+- 1 tsp cinnamon
 
 METHOD:
 1. Simmer the rice in the milk for 25 minutes, stirring often.
@@ -4310,7 +4310,7 @@ HAZIRLANIŞI:
 - 20 g vanilla whey protein powder
 - 100 g mixed berries
 - 20 g rolled oats
-- 1 tatlı kaşığı honey
+- 1 dessertspoon honey
 
 METHOD:
 1. Stir the protein powder through the yogurt until smooth.

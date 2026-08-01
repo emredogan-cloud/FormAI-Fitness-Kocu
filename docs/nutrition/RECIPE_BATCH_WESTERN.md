@@ -51,10 +51,10 @@ rejection.
 | Garlic Butter Chicken and Greens | dinner | 490 | 48/16/26 | 30 | 4 | 1 | pork_free, gluten_free |
 | Lean Beef Stir Fry | dinner | 555 | 46/52/18 | 20 | 5 | 3 | pork_free, gluten_free, dairy_free |
 | Turkey Meatballs in Marinara | dinner | 440 | 46/24/18 | 35 | 4 | 2 | pork_free, dairy_free |
-| Baked Cod with Roasted Vegetables | dinner | 390 | 40/30/12 | 30 | 3 | 2 |  |
+| Baked Cod with Roasted Vegetables | dinner | 390 | 40/30/12 | 30 | 3 | 2 | pork_free, gluten_free, dairy_free |
 | Chicken Fajita Skillet | dinner | 465 | 46/34/16 | 25 | 4 | 1 | pork_free, gluten_free, dairy_free |
 | Protein Shepherd's Pie | dinner | 590 | 48/54/20 | 45 | 4 | 1 | pork_free, gluten_free |
-| Blackened Chicken with Quinoa | dinner | 500 | 50/44/14 | 25 | 4 | 2 |  |
+| Blackened Chicken with Quinoa | dinner | 500 | 50/44/14 | 25 | 4 | 2 | pork_free, gluten_free, dairy_free |
 | Teriyaki Tofu Rice Bowl | dinner | 530 | 30/66/16 | 25 | 5 | 5 | vegan, vegetarian, pork_free, gluten_free, dairy_free |
 | Turkey Stuffed Peppers | dinner | 420 | 40/34/14 | 45 | 4 | 2 | pork_free, gluten_free, dairy_free |
 | High-Protein Chili con Carne | dinner | 535 | 46/52/16 | 40 | 4 | 1 | pork_free, gluten_free, dairy_free |
