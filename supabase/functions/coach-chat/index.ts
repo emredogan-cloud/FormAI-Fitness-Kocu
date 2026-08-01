@@ -195,6 +195,8 @@ const SCAFFOLD: Record<string, {
   noContext: string;
   memoryHeader: string;
   languageDirective: string;
+  menuHeader: string;
+  menuDirective: string;
 }> = {
   tr: {
     summarizer: SUMMARIZER,
@@ -209,6 +211,12 @@ const SCAFFOLD: Record<string, {
       "ÇIKTI DİLİ: Yanıtını YALNIZCA Türkçe yaz. Yukarıdaki bağlamda ya " +
       "da konuşma geçmişinde başka bir dil geçse bile — kullanıcı sana " +
       "başka bir dilde yazsa bile — Türkçe cevap ver.",
+    menuHeader: "UYGULAMADAKİ TARİFLER (yalnızca bunları önerebilirsin)",
+    menuDirective:
+      "Beslenme önerisi verirken YALNIZCA yukarıdaki listedeki tarifleri " +
+      "adıyla öner. Listede olmayan bir yemeği adıyla önerme — kullanıcı " +
+      "onu uygulamada bulamaz. Genel beslenme ilkelerini anlatmakta " +
+      "serbestsin; uydurma bir tarif adı vermekte değil.",
   },
   en: {
     summarizer: SUMMARIZER_EN,
@@ -225,8 +233,86 @@ const SCAFFOLD: Record<string, {
       "context above or the conversation history contains another " +
       "language — even if the user writes to you in another language — " +
       "answer in English.",
+    menuHeader: "RECIPES IN THE APP (you may only recommend these)",
+    menuDirective:
+      "When you recommend food, name ONLY recipes from the list above. " +
+      "Do not name a dish that is not on it — the user cannot find it in " +
+      "the app. You are free to explain nutrition principles; you are " +
+      "not free to invent a recipe name.",
   },
 };
+
+// ── Roadmap Phase 7 · the catalogue the coach is allowed to name ──────
+//
+// Before this, a user who asked "what should I eat for breakfast?" got a
+// generic answer from the model's own knowledge, and every dish it named
+// was one the app could not show them. The coach was confidently
+// recommending food that does not exist here.
+//
+// So it now receives a digest of the real catalogue — title, meal type
+// and macros — and is told to recommend from it. Three properties this
+// has to keep:
+//
+//   • **In the reader's language.** `title_en` when the persona is
+//     English, falling back to `title` — the same one-recipe-one-language
+//     rule `recipe_localization.dart` applies on the client. A coach that
+//     names a Turkish dish inside an English reply is the Phase 6 bug in
+//     a new place.
+//
+//   • **Titles and numbers only, never invented ones.** The digest is
+//     the whitelist. The directive below says so explicitly, because
+//     "recommend from this list" and "you may only name things on this
+//     list" are different instructions and the model will treat the
+//     first as a suggestion.
+//
+//   • **Small.** 120 rows of `title · type · kcal/P` is roughly 1.5 k
+//     tokens against a 392-row catalogue that would be five times that.
+//     Ordered by the locale the reader is in, so an English user gets
+//     the recipes authored for them rather than the first 120 by id.
+const MENU_ROWS = 120;
+
+async function fetchMenuDigest(language: string): Promise<string> {
+  const url = Deno.env.get("SUPABASE_URL");
+  const key = Deno.env.get("SUPABASE_ANON_KEY");
+  if (!url || !key) return "";
+  try {
+    const query = new URLSearchParams({
+      select: "title,title_en,meal_type,calories,protein,locale_scope",
+      limit: String(MENU_ROWS),
+    });
+    const res = await fetch(`${url}/rest/v1/recipes?${query}`, {
+      headers: { apikey: key, Authorization: `Bearer ${key}` },
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!res.ok) return "";
+    const rows = await res.json() as Array<Record<string, unknown>>;
+    // Recipes authored for this reader lead. This mirrors
+    // `sortRecipesForLocale` on the client: it ORDERS, it never filters,
+    // so the digest still carries the whole sample.
+    const ranked = rows.sort((a, b) =>
+      scopeRank(a, language) - scopeRank(b, language)
+    );
+    const lines = ranked.map((r) => {
+      const title = language === "en" && typeof r.title_en === "string" &&
+          r.title_en.trim()
+        ? r.title_en
+        : r.title;
+      return `- ${title} · ${r.meal_type} · ${r.calories} kcal · ` +
+        `${r.protein}g protein`;
+    });
+    return lines.join("\n");
+  } catch {
+    // The coach works without it. A menu that fails to load must not
+    // take the conversation down with it.
+    return "";
+  }
+}
+
+function scopeRank(row: Record<string, unknown>, language: string): number {
+  const scope = Array.isArray(row.locale_scope) ? row.locale_scope : [];
+  if (scope.length === 0) return 1;
+  return scope.includes(language) ? 0 : 2;
+}
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -334,6 +420,12 @@ serve(async (req) => {
   if (!message) return json({ error: "empty_message" }, 400);
   messages.push({ role: "user", content: message });
 
+  // Phase 7 · fetched per turn rather than cached, because the
+  // catalogue grows and a stale menu recommends a recipe that has been
+  // renamed. 4 s timeout and an empty string on any failure: the coach
+  // has always worked without a menu and must keep doing so.
+  const menuDigest = await fetchMenuDigest(personaLocale);
+
   // system = [cacheable persona] + [per-session context]. The persona is
   // identical on every call so Anthropic caches it; the context changes only
   // when the user's state changes.
@@ -350,6 +442,9 @@ serve(async (req) => {
           ? `${scaffold.contextHeader}:\n${contextBlock}`
           : scaffold.noContext,
         priorSummary ? `\n${scaffold.memoryHeader}:\n${priorSummary}` : "",
+        menuDigest
+          ? `\n\n${scaffold.menuHeader}:\n${menuDigest}\n\n${scaffold.menuDirective}`
+          : "",
       ].join(""),
     },
     // LAST, and deliberately so. The client now sends the persona, the
