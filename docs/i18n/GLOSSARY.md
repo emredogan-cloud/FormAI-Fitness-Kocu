@@ -11,7 +11,7 @@ the same way every time.
 | --- | --- |
 | **FormAI** | The product name. Appears in copy, deep links (`formai://`), the share hashtag `#FormAI`, and the Play listing. In Turkish it takes apostrophe suffixes — `FormAI'ı`, `FormAI'da` — which harmonise with the preceding vowel. In a language without that convention, drop the apostrophe rather than transliterate the name. |
 | **Form** | The coach's name, not the English word. "Ben Form" is an introduction. If a language would read it as the common noun, keep it capitalised and unchanged — renaming the coach is a product decision, not a translation one. |
-| **Pro** | The subscription tier. It is the name shown on the Play/App Store product, so it must match what the store shows or the purchase flow reads as a bait-and-switch. |
+| **Pro** | The subscription tier. It is the name shown on the Play/App Store product, so it must match what the store shows or the purchase flow reads as a bait-and-switch. **Open question, found in the Phase 6 English review:** the copy does not agree with itself. 13 keys say *Premium* (the paywall CTA, the welcome screen, the profile row) and 6 say *Pro* (the nutrition upsell, referral share text), while the RevenueCat product constant is `FormAI Pro` and a plan badge reads `PRO required`. A user can be sold "Premium" and then told they need "PRO". Picking one is a product decision that touches the store listing, so it is recorded here rather than resolved in a translation pass. |
 | **AI** | Used as a badge and in headings. Turkish copy uses both "AI" and "Yapay Zeka"; that is deliberate — the badge is short, the sentence is not. Follow the same rule: whichever form the target language actually uses in consumer fitness apps. |
 | **XP** | The points unit. Short, understood, and joined by analytics. |
 | **kcal**, **g**, **cm**, **kg**, **dk / min** | Unit symbols. Convert the *value* through `core/utils/unit_system.dart`; never translate the symbol. |
@@ -42,6 +42,29 @@ synonyms is how a product starts sounding like three products.
 | macros | **makro** | |
 | meal | **öğün** | |
 | recipe | **tarif** | |
+
+---
+
+## English variety
+
+**American.** `program`, not `programme`. `analyze`, `personalized`,
+`optimize`, `favorites`, `meters`, `liters`, `center`, `catalog`,
+`canceled`. (`cancellation` keeps both l's in American English too.)
+
+Not a stylistic preference — a consistency requirement. The Phase 6
+draft mixed both varieties: 24 keys said "programme" while ten said
+"program", and "analyses" sat next to "optimise". Either variety reads
+fine; the mixture reads like nobody proofread it.
+
+American is the default because the largest English-speaking market is
+the US and American spellings are legible everywhere, while British ones
+read as foreign to an American user. `tool/arb_coverage.dart` does not
+police this — a reviewer does, and this paragraph is what they check
+against.
+
+Units are the exception and are not spelling: `kcal`, `g`, `cm`, `kg`
+stay as symbols in every locale, and the metric/imperial *value*
+conversion is `core/utils/unit_system.dart`'s job.
 
 ---
 

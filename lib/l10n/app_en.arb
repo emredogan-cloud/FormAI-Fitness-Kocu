@@ -78,7 +78,7 @@
   },
   "helpCenterTitle": "Help Center",
   "@helpCenterTitle": {
-    "description": "Help centre screen title"
+    "description": "Help center screen title"
   },
   "helpCenterClearSearch": "Clear search",
   "@helpCenterClearSearch": {
@@ -86,19 +86,19 @@
   },
   "helpCenterAskDirect": "Write to us directly — every message is read.",
   "@helpCenterAskDirect": {
-    "description": "Help centre contact prompt"
+    "description": "Help center contact prompt"
   },
   "helpCenterSendQuestion": "Send a question",
   "@helpCenterSendQuestion": {
-    "description": "Help centre contact button"
+    "description": "Help center contact button"
   },
   "helpCenterNoAnswer": "Didn't find your answer?",
   "@helpCenterNoAnswer": {
-    "description": "Help centre empty-result heading"
+    "description": "Help center empty-result heading"
   },
   "helpCenterWriteToUs": "Write to us — every message is read and answered.",
   "@helpCenterWriteToUs": {
-    "description": "Help centre contact subtitle"
+    "description": "Help center contact subtitle"
   },
   "feedbackSent": "Your message was sent. Thank you!",
   "@feedbackSent": {
@@ -378,7 +378,7 @@
   "@badgeThirtyDayChampTitle": {
     "description": "30-Day Champion badge name"
   },
-  "badgeThirtyDayChampDesc": "Finish the whole programme",
+  "badgeThirtyDayChampDesc": "Finish the whole program",
   "@badgeThirtyDayChampDesc": {
     "description": "30-Day Champion badge unlock condition"
   },
@@ -430,7 +430,7 @@
   "@suggestionHydrateTitle": {
     "description": "Hydration suggestion title"
   },
-  "suggestionHydrateBody": "At least 2.5 litres a day directly affects your energy and muscle recovery. Have another glass within the hour.",
+  "suggestionHydrateBody": "At least 2.5 liters a day directly affects your energy and muscle recovery. Have another glass within the hour.",
   "@suggestionHydrateBody": {
     "description": "Hydration suggestion body"
   },
@@ -440,15 +440,15 @@
   },
   "suggestionProgramDoneTitle": "You finished all 30 days!",
   "@suggestionProgramDoneTitle": {
-    "description": "Programme-complete suggestion title"
+    "description": "Program-complete suggestion title"
   },
   "suggestionProgramDoneBody": "The 30-day arc is done — plan a light mobility day and reward yourself. Check the Progress tab to set a new goal.",
   "@suggestionProgramDoneBody": {
-    "description": "Programme-complete suggestion body"
+    "description": "Program-complete suggestion body"
   },
   "suggestionProgramDoneCta": "Go to Progress",
   "@suggestionProgramDoneCta": {
-    "description": "Programme-complete suggestion CTA"
+    "description": "Program-complete suggestion CTA"
   },
   "suggestionStartWorkoutBody": "Start your workout and carry your streak into today.",
   "@suggestionStartWorkoutBody": {
@@ -532,7 +532,7 @@
   "@churnTitle": {
     "description": "Churn survey sheet title"
   },
-  "churnSubtitle": "Why are you cancelling? Whatever your answer, it shapes what we do next.",
+  "churnSubtitle": "Why are you canceling? Whatever your answer, it shapes what we do next.",
   "@churnSubtitle": {
     "description": "Churn survey sheet subtitle"
   },
@@ -552,7 +552,7 @@
   "@premiumWelcomeCoachBody": {
     "description": "Premium welcome feature body"
   },
-  "premiumWelcomeWorkoutTitle": "Your personal training programme",
+  "premiumWelcomeWorkoutTitle": "Your personal training program",
   "@premiumWelcomeWorkoutTitle": {
     "description": "Premium welcome feature"
   },
@@ -712,13 +712,13 @@
   "@focusGeneric": {
     "description": "Workout focus label — fallback"
   },
-  "referralJoinPitch": "Join FormAI with this invite code — it's saved to your account and you both win when the reward programme opens.",
+  "referralJoinPitch": "Join FormAI with this invite code — it's saved to your account and you both win when the reward program opens.",
   "@referralJoinPitch": {
     "description": "Referral landing pitch"
   },
-  "shareProgramOf": "OF MY PROGRAMME",
+  "shareProgramOf": "OF MY PROGRAM",
   "@shareProgramOf": {
-    "description": "Share template — programme label"
+    "description": "Share template — program label"
   },
   "shareCompleted": "COMPLETE!",
   "@shareCompleted": {
@@ -760,25 +760,25 @@
   "@recipesClearFilter": {
     "description": "Clear-filter action"
   },
-  "favoritesTitle": "My favourites",
+  "favoritesTitle": "My favorites",
   "@favoritesTitle": {
-    "description": "Favourites screen title"
+    "description": "Favorites screen title"
   },
-  "favoritesEmptyTitle": "No favourite recipes yet",
+  "favoritesEmptyTitle": "No favorite recipes yet",
   "@favoritesEmptyTitle": {
-    "description": "Favourites empty state"
+    "description": "Favorites empty state"
   },
   "favoritesEmptyBody": "Open a recipe and tap the heart. It shows up here, and you can share the shopping list in one tap.",
   "@favoritesEmptyBody": {
-    "description": "Favourites empty state body"
+    "description": "Favorites empty state body"
   },
   "favoritesDiscoverCta": "Explore recipes",
   "@favoritesDiscoverCta": {
-    "description": "Favourites empty state CTA"
+    "description": "Favorites empty state CTA"
   },
   "favoritesBuildShoppingList": "Build shopping list",
   "@favoritesBuildShoppingList": {
-    "description": "Favourites action"
+    "description": "Favorites action"
   },
   "favoritesShoppingListEmpty": "Your shopping list is empty.",
   "@favoritesShoppingListEmpty": {
@@ -788,13 +788,13 @@
   "@favoritesIngredientsHeading": {
     "description": "Shopping list section heading"
   },
-  "favoritesRemove": "Remove from favourites",
+  "favoritesRemove": "Remove from favorites",
   "@favoritesRemove": {
-    "description": "Favourite removal action"
+    "description": "Favorite removal action"
   },
-  "recipesCatalogueLoadError": "The recipe catalogue could not be loaded.",
+  "recipesCatalogueLoadError": "The recipe catalog could not be loaded.",
   "@recipesCatalogueLoadError": {
-    "description": "Catalogue load failure"
+    "description": "Catalog load failure"
   },
   "commonTryAgain": "Try again",
   "@commonTryAgain": {
@@ -908,13 +908,13 @@
   "@mealSkippedBadge": {
     "description": "Meal state badge"
   },
-  "recipeFavoriteAdded": "Added to favourites",
+  "recipeFavoriteAdded": "Added to favorites",
   "@recipeFavoriteAdded": {
-    "description": "Favourite toggle toast"
+    "description": "Favorite toggle toast"
   },
-  "recipeFavoriteRemoved": "Removed from favourites",
+  "recipeFavoriteRemoved": "Removed from favorites",
   "@recipeFavoriteRemoved": {
-    "description": "Favourite toggle toast"
+    "description": "Favorite toggle toast"
   },
   "recipeCalories": "CALORIES",
   "@recipeCalories": {
@@ -1110,7 +1110,7 @@
   },
   "tutorialStepDistanceTitle": "Step back about 6 feet",
   "@tutorialStepDistanceTitle": {
-    "description": "Setup step 2 title. Distance is converted, not translated: the Turkish source says 2 metres."
+    "description": "Setup step 2 title. Distance is converted, not translated: the Turkish source says 2 meters."
   },
   "tutorialStepDistanceBody": "You should still fit in frame with your arms spread.",
   "@tutorialStepDistanceBody": {
@@ -1486,7 +1486,7 @@
   },
   "coachRestBreatheDeep": "Breathe deep, let the muscles relax.",
   "@coachRestBreatheDeep": {
-    "description": "Rest-window rotation 1 of 4. Recovery-flavoured, never a push."
+    "description": "Rest-window rotation 1 of 4. Recovery-flavored, never a push."
   },
   "coachRestDropShoulders": "Drop your shoulders, gather your posture.",
   "@coachRestDropShoulders": {
@@ -1878,9 +1878,9 @@
   "@shareReferralTail": {
     "description": "Trailing referral invitation appended to progress and badge shares, immediately followed by the deep link"
   },
-  "shareProgressText": "One step closer to my goals with my AI fitness coach! 🚀 I have completed {percent}% of my FormAI programme.",
+  "shareProgressText": "One step closer to my goals with my AI fitness coach! 🚀 I have completed {percent}% of my FormAI program.",
   "@shareProgressText": {
-    "description": "Progress share message. {percent} is whole-number programme completion.",
+    "description": "Progress share message. {percent} is whole-number program completion.",
     "placeholders": {
       "percent": {
         "type": "int"
@@ -1942,7 +1942,7 @@
   },
   "widgetDayTask": "Day {day} · {label}",
   "@widgetDayTask": {
-    "description": "Home-screen widget task line. {day} is the programme day number, {label} the muscle group or rest label.",
+    "description": "Home-screen widget task line. {day} is the program day number, {label} the muscle group or rest label.",
     "placeholders": {
       "day": {
         "type": "int"
@@ -1962,7 +1962,7 @@
   },
   "widgetProgressSubtitle": "{percent}% · {streak}-day streak",
   "@widgetProgressSubtitle": {
-    "description": "Home-screen widget subtitle when no exercise is in progress. {percent} is programme completion, {streak} the calendar-day streak.",
+    "description": "Home-screen widget subtitle when no exercise is in progress. {percent} is program completion, {streak} the calendar-day streak.",
     "placeholders": {
       "percent": {
         "type": "int"
@@ -2014,7 +2014,7 @@
   },
   "shareProgressSubject": "I completed {percent}% with FormAI!",
   "@shareProgressSubject": {
-    "description": "Subject line for the progress share sheet. {percent} is whole-number programme completion.",
+    "description": "Subject line for the progress share sheet. {percent} is whole-number program completion.",
     "placeholders": {
       "percent": {
         "type": "int"
@@ -2032,29 +2032,29 @@
   },
   "faqCategoryWorkoutCamera": "TRAINING & CAMERA",
   "@faqCategoryWorkoutCamera": {
-    "description": "Help-centre category heading. Rendered uppercase in the design."
+    "description": "Help-center category heading. Rendered uppercase in the design."
   },
   "faqCategoryAiCoach": "AI COACH",
   "@faqCategoryAiCoach": {
-    "description": "Help-centre category heading"
+    "description": "Help-center category heading"
   },
   "faqCategorySubscription": "SUBSCRIPTION",
   "@faqCategorySubscription": {
-    "description": "Help-centre category heading"
+    "description": "Help-center category heading"
   },
   "faqCategoryAccountData": "ACCOUNT & DATA",
   "@faqCategoryAccountData": {
-    "description": "Help-centre category heading"
+    "description": "Help-center category heading"
   },
   "faqCategoryNotificationsOther": "NOTIFICATIONS & OTHER",
   "@faqCategoryNotificationsOther": {
-    "description": "Help-centre category heading"
+    "description": "Help-center category heading"
   },
   "faqCameraNotSeeingQ": "Why can't the camera see my movements?",
   "@faqCameraNotSeeingQ": {
     "description": "FAQ question — camera framing"
   },
-  "faqCameraNotSeeingA": "Analysis needs your whole body in frame. Put the phone on the floor or another stable spot about 2 metres away, hold it in portrait and make sure the room is well lit. If you see the \"Step into frame\" warning, move back a little.",
+  "faqCameraNotSeeingA": "Analysis needs your whole body in frame. Put the phone on the floor or another stable spot about 2 meters away, hold it in portrait and make sure the room is well lit. If you see the \"Step into frame\" warning, move back a little.",
   "@faqCameraNotSeeingA": {
     "description": "FAQ answer — camera framing"
   },
@@ -2118,7 +2118,7 @@
   "@faqCancelSubQ": {
     "description": "FAQ question — subscription cancellation"
   },
-  "faqCancelSubA": "Go to Profile → Settings → \"Cancel subscription\". Cancellation completes through your Google Play account. After cancelling you keep Premium features until the end of the current period.",
+  "faqCancelSubA": "Go to Profile → Settings → \"Cancel subscription\". Cancellation completes through your Google Play account. After canceling you keep Premium features until the end of the current period.",
   "@faqCancelSubA": {
     "description": "FAQ answer — subscription cancellation. Store-compliance copy; the navigation path must match the actual UI labels in each locale."
   },
@@ -2134,7 +2134,7 @@
   "@faqFreeFeaturesQ": {
     "description": "FAQ question — free vs paid features"
   },
-  "faqFreeFeaturesA": "The 30-day training programme, real-time form analysis, the AI coach, your calorie and macro targets and the recipe library are all free. Premium unlocks your personalised daily nutrition plan and meal tracking.",
+  "faqFreeFeaturesA": "The 30-day training program, real-time form analysis, the AI coach, your calorie and macro targets and the recipe library are all free. Premium unlocks your personalized daily nutrition plan and meal tracking.",
   "@faqFreeFeaturesA": {
     "description": "FAQ answer — free vs paid features. Store-compliance copy: this must stay an accurate description of what money buys."
   },
@@ -2166,7 +2166,7 @@
   "@faqNoRemindersQ": {
     "description": "FAQ question — notifications not arriving"
   },
-  "faqNoRemindersA": "Make sure you have picked a time under Profile → Account settings → \"Notifications\". Also check that notification permission is granted for FormAI in your phone's settings, and that battery optimisation is not restricting the app.",
+  "faqNoRemindersA": "Make sure you have picked a time under Profile → Account settings → \"Notifications\". Also check that notification permission is granted for FormAI in your phone's settings, and that battery optimization is not restricting the app.",
   "@faqNoRemindersA": {
     "description": "FAQ answer — notifications not arriving"
   },
@@ -2405,7 +2405,7 @@
   "@goalBulkLabel": {
     "description": "Target-physique label. Stored value 'bulk'."
   },
-  "goalSixpackLabel": "Six-pack only",
+  "goalSixpackLabel": "Six-Pack only",
   "@goalSixpackLabel": {
     "description": "Target-physique label. Stored value 'sixpack'."
   },
@@ -2510,7 +2510,7 @@
   },
   "profileCompletedOfTotal": "{completed} / {total}",
   "@profileCompletedOfTotal": {
-    "description": "Completed-days value. {completed} of {total} programme days.",
+    "description": "Completed-days value. {completed} of {total} program days.",
     "placeholders": {
       "completed": {
         "type": "int"
@@ -2572,12 +2572,12 @@
   "@profileRedeemCodeSubtitle": {
     "description": "Settings row subtitle"
   },
-  "profileFavouritesTitle": "My favourites",
-  "@profileFavouritesTitle": {
+  "profileFavoritesTitle": "My favorites",
+  "@profileFavoritesTitle": {
     "description": "Settings row title"
   },
-  "profileFavouritesSubtitle": "Recipes you liked and your shopping list.",
-  "@profileFavouritesSubtitle": {
+  "profileFavoritesSubtitle": "Recipes you liked and your shopping list.",
+  "@profileFavoritesSubtitle": {
     "description": "Settings row subtitle"
   },
   "profilePremiumTitle": "FormAI Premium",
@@ -2636,7 +2636,7 @@
   "@profileDiscoverSubtitle": {
     "description": "Settings row subtitle"
   },
-  "profileHelpCentreTitle": "Help centre",
+  "profileHelpCentreTitle": "Help center",
   "@profileHelpCentreTitle": {
     "description": "Settings row title"
   },
@@ -2672,7 +2672,7 @@
   "@profilePasswordUpdateFailed": {
     "description": "Toast when a password change fails unexpectedly"
   },
-  "profileReferralSaved": "Your invite code is saved. Rewards land in your account once the programme starts.",
+  "profileReferralSaved": "Your invite code is saved. Rewards land in your account once the program starts.",
   "@profileReferralSaved": {
     "description": "Toast after redeeming a referral code"
   },
@@ -2760,7 +2760,7 @@
   "@privacySheetTitle": {
     "description": "Title of the privacy bottom sheet"
   },
-  "privacySheetCameraBody": "FormAI uses Google ML Kit to analyse your exercise form. Images are processed on your device, offline; they are never recorded and never sent to any server.",
+  "privacySheetCameraBody": "FormAI uses Google ML Kit to analyze your exercise form. Images are processed on your device, offline; they are never recorded and never sent to any server.",
   "@privacySheetCameraBody": {
     "description": "Privacy sheet — camera section. This is a legal representation: the meaning must be preserved exactly, and it must stay true of the shipped app."
   },
@@ -2768,7 +2768,7 @@
   "@privacySheetProgressHeading": {
     "description": "Privacy sheet — numbered section heading"
   },
-  "privacySheetProgressBody": "Your profile details and completed training days are stored securely so your experience can be personalised.",
+  "privacySheetProgressBody": "Your profile details and completed training days are stored securely so your experience can be personalized.",
   "@privacySheetProgressBody": {
     "description": "Privacy sheet — progress data section. Legal representation; preserve the meaning exactly."
   },
@@ -2776,7 +2776,7 @@
   "@referralCardTitle": {
     "description": "Title of the referral card on the profile"
   },
-  "referralCardBody": "Share your invite code — friends who use it are recorded under your code, and you both earn once the reward programme opens.",
+  "referralCardBody": "Share your invite code — friends who use it are recorded under your code, and you both earn once the reward program opens.",
   "@referralCardBody": {
     "description": "Explanatory body of the referral card"
   },
@@ -2826,7 +2826,7 @@
   },
   "accountReminderFailed": "The notification setting could not be applied",
   "@accountReminderFailed": {
-    "description": "Toast when scheduling or cancelling the reminder throws"
+    "description": "Toast when scheduling or canceling the reminder throws"
   },
   "accountDeleteFailed": "The account could not be deleted. Please try again or contact support.",
   "@accountDeleteFailed": {
@@ -2904,9 +2904,9 @@
   "@weekdayShortSun": {
     "description": "Three-letter weekday abbreviation"
   },
-  "programSyncing": "Your programme is syncing — it will be created automatically once you're back online.",
+  "programSyncing": "Your program is syncing — it will be created automatically once you're back online.",
   "@programSyncing": {
-    "description": "Empty-state shown when the workout programme has not reached the device yet"
+    "description": "Empty-state shown when the workout program has not reached the device yet"
   },
   "progressTabTitle": "Progress",
   "@progressTabTitle": {
@@ -2916,13 +2916,13 @@
   "@progressStreakLabel": {
     "description": "Streak label on the progress hero. Rendered uppercase."
   },
-  "progressProgramHeading": "30-DAY PROGRAMME",
+  "progressProgramHeading": "30-DAY PROGRAM",
   "@progressProgramHeading": {
-    "description": "Section heading above the programme calendar"
+    "description": "Section heading above the program calendar"
   },
   "progressSeeCalendar": "See calendar",
   "@progressSeeCalendar": {
-    "description": "Action opening the full programme calendar"
+    "description": "Action opening the full program calendar"
   },
   "progressThisWeek": "THIS WEEK",
   "@progressThisWeek": {
@@ -3008,7 +3008,7 @@
   "@muscleBack": {
     "description": "Body-area filter chip"
   },
-  "workoutTabHeading": "Your personal training programme",
+  "workoutTabHeading": "Your personal training program",
   "@workoutTabHeading": {
     "description": "Training tab heading"
   },
@@ -3104,13 +3104,13 @@
   "@difficultyAdvanced": {
     "description": "Difficulty chip. Token 'advanced'."
   },
-  "programCompleted": "You finished the 30-day programme.",
+  "programCompleted": "You finished the 30-day program.",
   "@programCompleted": {
     "description": "Task card state once every day is done"
   },
   "seeYourJourney": "See your journey",
   "@seeYourJourney": {
-    "description": "Action shown after the programme is complete"
+    "description": "Action shown after the program is complete"
   },
   "startWorkoutShort": "Start the workout",
   "@startWorkoutShort": {
@@ -3144,7 +3144,7 @@
   "@tipSetReminder": {
     "description": "Contextual tip about reminders"
   },
-  "tipCameraFraming": "For the best analysis, place your phone about 2 metres away, in portrait.",
+  "tipCameraFraming": "For the best analysis, place your phone about 2 meters away, in portrait.",
   "@tipCameraFraming": {
     "description": "Contextual tip about camera setup. Suppressed for camera-free users."
   },
@@ -3204,9 +3204,9 @@
   "@weeklyGoalTitle": {
     "description": "Title of the weekly goal card"
   },
-  "workoutProgramLoadFailed": "Something went wrong loading your programme.",
+  "workoutProgramLoadFailed": "Something went wrong loading your program.",
   "@workoutProgramLoadFailed": {
-    "description": "Error state on the training tab when the programme fails to load. Distinct from workoutLoadFailed, which covers a single workout."
+    "description": "Error state on the training tab when the program fails to load. Distinct from workoutLoadFailed, which covers a single workout."
   },
   "badgeStripFirstWeek": "First 7 days",
   "@badgeStripFirstWeek": {
@@ -3407,8 +3407,8 @@
       }
     }
   },
-  "nutritionWizardStepAnalysing": "Analysing your eating habits...",
-  "@nutritionWizardStepAnalysing": {
+  "nutritionWizardStepAnalyzing": "Analyzing your eating habits...",
+  "@nutritionWizardStepAnalyzing": {
     "description": "Progress line in the nutrition wizard's loading sequence"
   },
   "nutritionWizardStepCalculating": "Calculating calories and macros...",
@@ -3547,7 +3547,7 @@
   "@nutritionTasteMixedBody": {
     "description": "Taste option subtitle"
   },
-  "nutritionTasteCoachLine": "When recipes score equally, this is what I favour.",
+  "nutritionTasteCoachLine": "When recipes score equally, this is what I favor.",
   "@nutritionTasteCoachLine": {
     "description": "Coach line under the taste step"
   },
@@ -3802,7 +3802,7 @@
   "@coachTodayDone": {
     "description": "Offline coach reply when today's workout is complete"
   },
-  "coachTodayEquipmentNote": "Since you have equipment, I've added a few loaded movements to your programme. ",
+  "coachTodayEquipmentNote": "Since you have equipment, I've added a few loaded movements to your program. ",
   "@coachTodayEquipmentNote": {
     "description": "Optional fragment inside the offline coach's today reply. Trailing space is intentional."
   },
@@ -3981,7 +3981,7 @@
   "@cameraOnDeviceTitle": {
     "description": "Heading of the on-device privacy note above the camera"
   },
-  "cameraOnDeviceBody": "FormAI analyses your form on your device with Google ML Kit. Images are never recorded and never sent to any server.",
+  "cameraOnDeviceBody": "FormAI analyzes your form on your device with Google ML Kit. Images are never recorded and never sent to any server.",
   "@cameraOnDeviceBody": {
     "description": "Privacy note above the camera. A legal representation — it must stay true and must not be softened in translation."
   },
@@ -4053,7 +4053,7 @@
   "@cameraPermissionOffTitle": {
     "description": "Blocking screen title when camera permission is denied"
   },
-  "cameraPermissionOffBody": "We need camera permission to analyse your form. Open Settings, turn the camera permission on for FormAI, then come back here.",
+  "cameraPermissionOffBody": "We need camera permission to analyze your form. Open Settings, turn the camera permission on for FormAI, then come back here.",
   "@cameraPermissionOffBody": {
     "description": "Blocking screen body when camera permission is denied"
   },
@@ -4195,11 +4195,11 @@
   },
   "ratingProgramCompleteTitle": "30 days. Done.",
   "@ratingProgramCompleteTitle": {
-    "description": "Rating prompt title after finishing the programme"
+    "description": "Rating prompt title after finishing the program"
   },
   "ratingProgramCompleteSubtitle": "You finished what you started.\nYou're among the people who see it through.\nWould you help someone considering the same path?",
   "@ratingProgramCompleteSubtitle": {
-    "description": "Rating prompt body after finishing the programme"
+    "description": "Rating prompt body after finishing the program"
   },
   "ratingStreakSevenTitle": "Seven days, unbroken.",
   "@ratingStreakSevenTitle": {
@@ -4325,7 +4325,7 @@
   "@interludeGoalBellyBurn": {
     "description": "Coach reflection on the 'belly_burn' goal. Begins lower-case: it follows the user's name and a comma."
   },
-  "interludeGoalMuscleGain": "building muscle takes patience.\nI'll build a programme that isn't rushed, but is steady.",
+  "interludeGoalMuscleGain": "building muscle takes patience.\nI'll build a program that isn't rushed, but is steady.",
   "@interludeGoalMuscleGain": {
     "description": "Coach reflection on the 'muscle_gain' goal. Begins lower-case."
   },
@@ -4333,7 +4333,7 @@
   "@interludeGoalFitnessLook": {
     "description": "Coach reflection on the 'fitness_look' goal. Begins lower-case."
   },
-  "interludeGoalStrength": "a base of strength is laid slowly.\nI'll build a programme that doesn't rush it.",
+  "interludeGoalStrength": "a base of strength is laid slowly.\nI'll build a program that doesn't rush it.",
   "@interludeGoalStrength": {
     "description": "Coach reflection on the 'strength' goal. Begins lower-case."
   },
@@ -4429,9 +4429,9 @@
   },
   "reportDuration12Weeks": "12 weeks",
   "@reportDuration12Weeks": {
-    "description": "Programme duration shown on the AI report card"
+    "description": "Program duration shown on the AI report card"
   },
-  "reportGreetingNamed": "{name}, I've analysed your profile and mapped out a route just for you.",
+  "reportGreetingNamed": "{name}, I've analyzed your profile and mapped out a route just for you.",
   "@reportGreetingNamed": {
     "description": "Opening sentence of the AI report when the user gave a name.",
     "placeholders": {
@@ -4440,7 +4440,7 @@
       }
     }
   },
-  "reportGreeting": "I've analysed your profile and mapped out a route just for you.",
+  "reportGreeting": "I've analyzed your profile and mapped out a route just for you.",
   "@reportGreeting": {
     "description": "Opening sentence of the AI report when no name was captured"
   },
@@ -4469,7 +4469,7 @@
   "@reportGoalBellyBurn": {
     "description": "AI report assessment sentence — belly_burn goal"
   },
-  "reportGoalMuscleGain": "For your muscle-building goal I'm shaping the programme around high-protein eating and progressive overload.",
+  "reportGoalMuscleGain": "For your muscle-building goal I'm shaping the program around high-protein eating and progressive overload.",
   "@reportGoalMuscleGain": {
     "description": "AI report assessment sentence — muscle_gain goal"
   },
@@ -4477,7 +4477,7 @@
   "@reportGoalFitnessLook": {
     "description": "AI report assessment sentence — fitness_look goal"
   },
-  "reportGoalStrength": "For your strength goal I've designed a programme weighted towards compound movements.",
+  "reportGoalStrength": "For your strength goal I've designed a program weighted towards compound movements.",
   "@reportGoalStrength": {
     "description": "AI report assessment sentence — strength goal"
   },
@@ -4485,7 +4485,7 @@
   "@reportBeginner": {
     "description": "AI report assessment sentence — beginner. Store compliance: this must stay qualitative, never a quantified promise."
   },
-  "reportRegular": "Your regular training history lets me push the intensity of your programme up.",
+  "reportRegular": "Your regular training history lets me push the intensity of your program up.",
   "@reportRegular": {
     "description": "AI report assessment sentence — experienced user"
   },
@@ -4509,23 +4509,23 @@
   "@difficultyIntermediateShort": {
     "description": "Difficulty label on the AI report card. Short — it sits in a metric tile."
   },
-  "reportResultBellyBurn": "A 12-week fat-loss-focused programme",
+  "reportResultBellyBurn": "A 12-week fat-loss-focused program",
   "@reportResultBellyBurn": {
     "description": "AI report outcome label. Store compliance (Apple 1.4.1 / Play health misrepresentation): qualitative and effort-conditional only — never a quantified result like '4-8 kg'."
   },
-  "reportResultMuscleGain": "A 12-week muscle-building programme",
+  "reportResultMuscleGain": "A 12-week muscle-building program",
   "@reportResultMuscleGain": {
     "description": "AI report outcome label. Never quantify the result — see reportResultBellyBurn."
   },
-  "reportResultFitnessLook": "A 12-week fitness and physique programme",
+  "reportResultFitnessLook": "A 12-week fitness and physique program",
   "@reportResultFitnessLook": {
     "description": "AI report outcome label. Never quantify the result."
   },
-  "reportResultStrength": "A 12-week strength-building programme",
+  "reportResultStrength": "A 12-week strength-building program",
   "@reportResultStrength": {
     "description": "AI report outcome label. Never quantify the result."
   },
-  "reportResultDefault": "A 12-week transformation programme",
+  "reportResultDefault": "A 12-week transformation program",
   "@reportResultDefault": {
     "description": "AI report outcome label. Never quantify the result."
   },
@@ -4566,7 +4566,7 @@
   "@onbAiNoteHeadline": {
     "description": "Headline of the AI insight card shown during onboarding."
   },
-  "onbGenderAiNote": "We analyse your gender data so we can build the training skeleton that best fits your physiology and biomechanics.",
+  "onbGenderAiNote": "We analyze your gender data so we can build the training skeleton that best fits your physiology and biomechanics.",
   "@onbGenderAiNote": {
     "description": "AI insight body on the gender step."
   },
@@ -4750,7 +4750,7 @@
   "@onbBodyTitle": {
     "description": "Onboarding physical-data step title."
   },
-  "onbBodySubtitle": "A short data entry for full personalisation.",
+  "onbBodySubtitle": "A short data entry for full personalization.",
   "@onbBodySubtitle": {
     "description": "Onboarding physical-data step subtitle."
   },
@@ -4774,7 +4774,7 @@
   "@onbPainSubtitle": {
     "description": "Onboarding pain-point step subtitle."
   },
-  "onbPainFeedback": "I'll optimise your plan to solve this.",
+  "onbPainFeedback": "I'll optimize your plan to solve this.",
   "@onbPainFeedback": {
     "description": "Fallback feedback banner on the pain-point step."
   },
@@ -4949,7 +4949,7 @@
   "@predictionGoalFallback": {
     "description": "Goal shown when the wizard has no target physique."
   },
-  "goalSixpackTitleCase": "Six-pack",
+  "goalSixpackTitleCase": "Six-Pack",
   "@goalSixpackTitleCase": {
     "description": "Six-pack goal in title case. A fitness term the Turkish copy keeps in English."
   },
@@ -4965,7 +4965,7 @@
   "@predictionDifficultyCustom": {
     "description": "Difficulty shown when the wizard has no activity level."
   },
-  "analysisPhraseBody": "Analysing your body…",
+  "analysisPhraseBody": "Analyzing your body…",
   "@analysisPhraseBody": {
     "description": "Rotating line in the analysis-illusion scene."
   },
@@ -5065,7 +5065,7 @@
   "@showcaseFormTitle": {
     "description": "Showcase card title: live form analysis."
   },
-  "showcaseFormBody": "Your phone's camera analyses your movement in real time; the moment your form slips, I tell you.",
+  "showcaseFormBody": "Your phone's camera analyzes your movement in real time; the moment your form slips, I tell you.",
   "@showcaseFormBody": {
     "description": "Showcase card body: live form analysis."
   },
@@ -5228,7 +5228,7 @@
   "@act1HeroTitleHighlight": {
     "description": "The neon-highlighted fragment inside the hero title."
   },
-  "act1HeroBlurb": "It analyses every rep, corrects your form, and with a 30-day program moves you a little closer to your goal each day.",
+  "act1HeroBlurb": "It analyzes every rep, corrects your form, and with a 30-day program moves you a little closer to your goal each day.",
   "@act1HeroBlurb": {
     "description": "Supporting paragraph under the hero title."
   },
@@ -5240,7 +5240,7 @@
   "@act1CapCoachTitle": {
     "description": "Capability card title."
   },
-  "act1CapCoachBody": "Analyses your reps,\ncorrects your form.",
+  "act1CapCoachBody": "Analyzes your reps,\ncorrects your form.",
   "@act1CapCoachBody": {
     "description": "Capability card body. The line break is deliberate — three cards share a row and must stay balanced."
   },
@@ -5628,7 +5628,7 @@
       }
     }
   },
-  "paywallHeroTitleHighlight": "personalised plan!",
+  "paywallHeroTitleHighlight": "personalized plan!",
   "@paywallHeroTitleHighlight": {
     "description": "The accent-painted fragment inside the paywall hero title."
   },
@@ -5656,7 +5656,7 @@
   "@paywallHeroProgressBody": {
     "description": "Hero feature body."
   },
-  "paywallFeatureAiCoach": "An AI coach that analyses your body",
+  "paywallFeatureAiCoach": "An AI coach that analyzes your body",
   "@paywallFeatureAiCoach": {
     "description": "AI-features checklist item."
   },
@@ -5724,7 +5724,7 @@
       }
     }
   },
-  "paywallRenewalWithPrice": "Unless cancelled, the subscription ({price} / {period}) renews automatically at the end of each period and your store account is charged.",
+  "paywallRenewalWithPrice": "Unless canceled, the subscription ({price} / {period}) renews automatically at the end of each period and your store account is charged.",
   "@paywallRenewalWithPrice": {
     "description": "Auto-renewal disclosure with the real store price. Required by Apple 3.1.2 and Play subscription policy.",
     "placeholders": {
@@ -5736,7 +5736,7 @@
       }
     }
   },
-  "paywallRenewalNoPrice": "Unless cancelled, the subscription renews automatically at the end of each period and your store account is charged.",
+  "paywallRenewalNoPrice": "Unless canceled, the subscription renews automatically at the end of each period and your store account is charged.",
   "@paywallRenewalNoPrice": {
     "description": "Auto-renewal disclosure used when the store price is unavailable. Required disclosure — never drop it."
   },
@@ -6060,7 +6060,7 @@
   },
   "recipeMacroTimeLine": "{calories} kcal · {protein}g P · {minutes} min",
   "@recipeMacroTimeLine": {
-    "description": "Recipe summary line in the favourites list.",
+    "description": "Recipe summary line in the favorites list.",
     "placeholders": {
       "calories": {
         "type": "int"
@@ -6294,7 +6294,7 @@
   },
   "searchNoResults": "No results for \"{query}\"",
   "@searchNoResults": {
-    "description": "Empty state in the help-centre search.",
+    "description": "Empty state in the help-center search.",
     "placeholders": {
       "query": {
         "type": "String"
@@ -6611,7 +6611,7 @@
   },
   "helpCenterSearchHint": "Search questions…",
   "@helpCenterSearchHint": {
-    "description": "Placeholder in the help centre's search field."
+    "description": "Placeholder in the help center's search field."
   },
   "notificationPermissionDenied": "Notification permission was not granted",
   "@notificationPermissionDenied": {
@@ -6722,7 +6722,7 @@
   "@nutritionDietQuestion": {
     "description": "Second question in the nutrition onboarding sheet."
   },
-  "nutritionTasteQuestion": "Which flavours do you prefer?",
+  "nutritionTasteQuestion": "Which flavors do you prefer?",
   "@nutritionTasteQuestion": {
     "description": "Third question in the nutrition onboarding sheet."
   },

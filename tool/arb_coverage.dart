@@ -72,6 +72,28 @@ Set<String> _usedKeys() {
   return used;
 }
 
+/// Terms `docs/i18n/GLOSSARY.md` marks as never translated.
+///
+/// Checked one way only — present in Turkish, absent in English — so a
+/// translator who rendered "FormAI" as something else is caught, while a
+/// sentence that legitimately drops the brand is not flagged.
+const _neverTranslate = <String>[
+  'FormAI',
+  'XP',
+  'kcal',
+  'Six-Pack',
+];
+
+/// Values that are correctly the same in both languages.
+///
+/// Mostly composition — `'{a} · {b}'` — and strings that are all symbol,
+/// number or placeholder. A sentence that survives translation unchanged
+/// is a sentence nobody translated.
+bool _isInvariant(String value) {
+  final withoutPlaceholders = value.replaceAll(RegExp(r'\{[^}]*\}'), '');
+  return !RegExp('[A-Za-z]{3}').hasMatch(withoutPlaceholders);
+}
+
 void main(List<String> args) {
   final strict = args.contains('--strict');
   final dir = Directory(_arbDir);
@@ -172,6 +194,59 @@ void main(List<String> args) {
         '(${plurallike.length}) — review, do not assume:');
     stdout.writeln('    ${plurallike.take(15).join(', ')}'
         '${plurallike.length > 15 ? ', …' : ''}');
+  }
+
+  // 5 · English copy audit.
+  //
+  // Roadmap Phase 6 ships English, and `app_en.arb` started life as a
+  // machine-assisted draft. These are the checks a reviewer would
+  // otherwise do by scrolling: a value that is still Turkish, a value
+  // identical to the Turkish one, and a never-translate term that got
+  // translated anyway. None of it judges style — that needs a person —
+  // but all of it catches the failures that are obvious once seen and
+  // invisible at 1,400 keys.
+  final source = arbs['tr'];
+  if (source != null) {
+    final turkishLeftovers = <String>[];
+    final identical = <String>[];
+    final glossaryBreaks = <String>[];
+
+    for (final key in templateKeys) {
+      final en = '${template[key]}';
+      final tr = '${source[key] ?? ''}';
+
+      // ğ, ı, ş and their capitals do not occur in English. ç/ö/ü are
+      // excluded: they ride along in borrowed proper nouns.
+      if (RegExp(r'[ğışĞİŞ]').hasMatch(en)) turkishLeftovers.add(key);
+
+      // Identical is not automatically wrong — "Pro", "AI", "OK" and
+      // most unit symbols are the same in both — so short values and
+      // known invariants are excused, and the rest is reported.
+      if (en == tr && en.trim().length > 12 && !_isInvariant(en)) {
+        identical.add(key);
+      }
+
+      for (final term in _neverTranslate) {
+        if (tr.contains(term) && !en.contains(term)) {
+          glossaryBreaks.add('$key ($term)');
+          break;
+        }
+      }
+    }
+
+    void report(String title, List<String> items) {
+      if (items.isEmpty) return;
+      items.sort();
+      stdout.writeln('\n  $title (${items.length}):');
+      stdout.writeln('    ${items.take(15).join(', ')}'
+          '${items.length > 15 ? ', …' : ''}');
+    }
+
+    report('English values still carrying Turkish letters', turkishLeftovers);
+    report('English identical to Turkish — check it was translated', identical);
+    report(
+        'never-translate term missing from the English value', glossaryBreaks);
+    problems += turkishLeftovers.length + glossaryBreaks.length;
   }
 
   // 2 · unused keys.

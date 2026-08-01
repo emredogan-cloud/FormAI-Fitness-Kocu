@@ -285,8 +285,8 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
         const SizedBox(height: 10),
         _SettingsTile(
           icon: Icons.favorite,
-          title: l10n.profileFavouritesTitle,
-          subtitle: l10n.profileFavouritesSubtitle,
+          title: l10n.profileFavoritesTitle,
+          subtitle: l10n.profileFavoritesSubtitle,
           onTap: () => context.push(AppRoutes.nutritionFavorites),
         ),
         const SizedBox(height: 28),

@@ -62,11 +62,16 @@ jobs:
       - name: Guard against new hardcoded user-facing strings
         run: dart run tool/check_hardcoded_strings.dart
 
-      # Reports missing keys, unused keys and — the one that matters —
-      # placeholder mismatches between locales. A translation that drops
-      # {count} still compiles; it just renders a sentence with a hole.
-      - name: ARB coverage report
-        run: dart run tool/arb_coverage.dart
+      # Missing keys, unused keys, placeholder mismatches, and English
+      # values that are still Turkish.
+      #
+      # `--strict` from Phase 6 on. While the app shipped one language a
+      # gap was a note to self; now that English is a declared locale, a
+      # translation that drops {count} renders a sentence with a hole to
+      # a real user, so it blocks the build. The report is unchanged —
+      # only its exit code is.
+      - name: ARB coverage
+        run: dart run tool/arb_coverage.dart --strict
 
       # The pseudo-localisation wrapper is generated from the generated
       # localisations class. If it goes stale, a new ARB key renders

@@ -302,7 +302,7 @@ class _AiIllusionScreenState extends State<_AiIllusionScreen>
   /// Spec'd by the PM in first-person voice so the loading reads as
   /// the AI doing real work rather than a generic spinner caption.
   static List<String> _phrases(AppLocalizations l10n) => [
-        l10n.nutritionWizardStepAnalysing,
+        l10n.nutritionWizardStepAnalyzing,
         l10n.nutritionWizardStepCalculating,
         l10n.nutritionWizardStepSelecting,
         l10n.nutritionWizardStepPreparing,

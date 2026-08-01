@@ -2018,12 +2018,12 @@ class PseudoAppLocalizations extends AppLocalizations {
       pseudoLocalize(_inner.profileRedeemCodeSubtitle);
 
   @override
-  String get profileFavouritesTitle =>
-      pseudoLocalize(_inner.profileFavouritesTitle);
+  String get profileFavoritesTitle =>
+      pseudoLocalize(_inner.profileFavoritesTitle);
 
   @override
-  String get profileFavouritesSubtitle =>
-      pseudoLocalize(_inner.profileFavouritesSubtitle);
+  String get profileFavoritesSubtitle =>
+      pseudoLocalize(_inner.profileFavoritesSubtitle);
 
   @override
   String get profilePremiumTitle => pseudoLocalize(_inner.profilePremiumTitle);
@@ -2720,8 +2720,8 @@ class PseudoAppLocalizations extends AppLocalizations {
   String get mealCategorySnacks => pseudoLocalize(_inner.mealCategorySnacks);
 
   @override
-  String get nutritionWizardStepAnalysing =>
-      pseudoLocalize(_inner.nutritionWizardStepAnalysing);
+  String get nutritionWizardStepAnalyzing =>
+      pseudoLocalize(_inner.nutritionWizardStepAnalyzing);
 
   @override
   String get nutritionWizardStepCalculating =>
