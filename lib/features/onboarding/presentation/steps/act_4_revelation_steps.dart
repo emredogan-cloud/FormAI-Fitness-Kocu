@@ -1112,7 +1112,7 @@ class _SuccessRing extends StatelessWidget {
           ),
           Center(
             child: Text(
-              '%$pct',
+              AppLocalizations.of(context).percentValue(pct),
               style: const TextStyle(
                 color: AppColors.neon,
                 fontSize: 14,

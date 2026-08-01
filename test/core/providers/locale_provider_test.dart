@@ -88,6 +88,40 @@ void main() {
     });
   });
 
+  group('deviceLocale', () {
+    // Found on a device: with English selected on a Turkish phone, the
+    // settings sheet's "Device language" row read "Currently English"
+    // — describing the choice it exists to undo. `Localizations.localeOf`
+    // returns the ACTIVE locale, which is the override when there is one.
+    testWidgets('reports the phone, not the app', (tester) async {
+      tester.platformDispatcher.localesTestValue = [const Locale('tr')];
+      addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+      expect(deviceLocale(), const Locale('tr'));
+
+      tester.platformDispatcher.localesTestValue = [const Locale('en')];
+      expect(deviceLocale(), const Locale('en'));
+    });
+
+    testWidgets('an unshipped phone language falls back to the first',
+        (tester) async {
+      tester.platformDispatcher.localesTestValue = [const Locale('de')];
+      addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+      expect(deviceLocale(), kSupportedLocales.first);
+    });
+
+    testWidgets('a later preferred locale wins over an unshipped first',
+        (tester) async {
+      // Android hands over an ordered list. A phone set to German with
+      // English second should get English, not the Turkish fallback.
+      tester.platformDispatcher.localesTestValue = const [
+        Locale('de'),
+        Locale('en')
+      ];
+      addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+      expect(deviceLocale(), const Locale('en'));
+    });
+  });
+
   group('endonyms', () {
     test('each shipped locale names itself in its own language', () {
       expect(localeEndonym(const Locale('tr')), 'Türkçe');

@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart' show Locale;
+import 'package:flutter/widgets.dart' show Locale, WidgetsBinding;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -27,6 +27,26 @@ String localeEndonym(Locale locale) {
     default:
       return 'Türkçe'; // i18n-ignore — endonym, never translated
   }
+}
+
+/// What the app would resolve to if the user had never chosen.
+///
+/// Reads the platform directly rather than `Localizations.localeOf`,
+/// which returns the *active* locale and therefore the user's override
+/// when there is one. The settings sheet found this on a device: with
+/// English selected on a Turkish phone, the "Device language" row read
+/// "Currently English" — describing the choice it exists to undo.
+///
+/// Same matching rule as `main.dart`'s resolver: language code only,
+/// falling back to the first supported locale.
+Locale deviceLocale() {
+  final platform = WidgetsBinding.instance.platformDispatcher.locales;
+  for (final candidate in platform) {
+    for (final supported in kSupportedLocales) {
+      if (supported.languageCode == candidate.languageCode) return supported;
+    }
+  }
+  return kSupportedLocales.first;
 }
 
 /// Roadmap Phase 6 (R3.2) · the user's language preference.

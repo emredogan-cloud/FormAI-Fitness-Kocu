@@ -6809,5 +6809,14 @@
   "macroProteinChip": "Protein",
   "@macroProteinChip": {
     "description": "Protein macro label on the nutrition ring. The similarly-named macroProtein is the '{value}g P' chip and is a different string."
+  },
+  "percentValue": "{percent}%",
+  "@percentValue": {
+    "description": "A bare percentage. The symbol goes BEFORE the number in Turkish and after it in English, which is why this is an ARB key and not string interpolation — five screens had '%$value' baked in and rendered '%0' inside the English app.",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
   }
 }

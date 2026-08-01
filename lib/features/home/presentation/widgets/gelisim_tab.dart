@@ -463,7 +463,7 @@ class _ProgramProgressCard extends StatelessWidget {
                     text: AppLocalizations.of(context).progressCompletionLabel),
                 const SizedBox(height: 8),
                 Text(
-                  '%$pctInt',
+                  AppLocalizations.of(context).percentValue(pctInt),
                   style: TextStyle(
                     color: context.colors.onSurface,
                     fontSize: 34,
@@ -1996,7 +1996,8 @@ class _HexBadge extends StatelessWidget {
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Text(
-                  '%${(data.progress * 100).round()}',
+                  AppLocalizations.of(context)
+                      .percentValue((data.progress * 100).round()),
                   style: TextStyle(
                     color: data.accent.withValues(alpha: 0.85),
                     fontSize: 9.5,

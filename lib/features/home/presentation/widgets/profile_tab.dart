@@ -1381,7 +1381,10 @@ class _LanguageSheet extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final scheme = context.colors;
     final stored = ref.watch(localeProvider);
-    final active = Localizations.localeOf(context);
+    // The DEVICE's language, not the app's — the row describes what
+    // choosing it would give you, and with an override active
+    // `Localizations.localeOf` would describe the override instead.
+    final device = deviceLocale();
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
@@ -1400,7 +1403,7 @@ class _LanguageSheet extends ConsumerWidget {
             const SizedBox(height: 14),
             _LanguageOption(
               title: l10n.languageFollowDevice,
-              detail: l10n.languageFollowDeviceDetail(localeEndonym(active)),
+              detail: l10n.languageFollowDeviceDetail(localeEndonym(device)),
               selected: stored == null,
               onTap: () => ref.read(localeProvider.notifier).set(null),
             ),

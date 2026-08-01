@@ -26,10 +26,13 @@
 // outside the allowlist, is at least two characters, is not obviously
 // technical (an asset path, a route, a key, a locale tag, a format
 // pattern), is not on an `// i18n-ignore` line, and either **reads as
-// Turkish** or **is shaped like a label**.
+// Turkish**, **is shaped like a label**, or **places a locale-ordered
+// symbol against a value**.
 //
-// That last clause was added in Phase 6 and is the reason this comment
-// no longer says "contains a Turkish character". See [_looksLikeLabel].
+// The last two clauses were both added in Phase 6, which is why this
+// comment no longer says "contains a Turkish character". See
+// [_looksLikeLabel] and [_hasLocaleOrderedSymbol] for what each of them
+// caught in shipped screens.
 
 import 'dart:convert';
 import 'dart:io';
@@ -189,6 +192,30 @@ final _diagnostic = RegExp(
 final _onlyInterpolation = RegExp(r'[A-Za-zÇĞİÖŞÜçğıöşü]');
 final _interpolation = RegExp(r'\$\{[^}]*\}|\$\w+');
 
+/// Punctuation whose PLACEMENT is a language decision.
+///
+/// Blind spot #6, found on a device during the Phase 6 English walk. The
+/// progress tab rendered `%0` inside the English app, because five
+/// screens built their percentage as `'%$value'` — and Turkish writes
+/// the symbol before the number while English writes it after.
+///
+/// The composition rule was right that there is no *word* to translate
+/// there. It was wrong that there is nothing to localise: the order is
+/// the localisation. Only `%` qualifies today; a currency symbol would
+/// belong here too if the app ever formatted one by hand.
+/// It has to be a positive SIGNAL, not merely an un-exclusion. The first
+/// attempt only stopped `'%$value'` being called pure composition, and
+/// the literal then failed both the Turkish test and the label test and
+/// was skipped anyway — the gate still reported zero. A synthetic probe
+/// caught that; the real files would not have.
+bool _hasLocaleOrderedSymbol(String value) {
+  final withoutValues = value.replaceAll(_interpolation, '');
+  // A bare "%" on its own is a unit, not an ordering decision. It only
+  // matters when there is a value for it to sit before or after.
+  if (withoutValues.trim() == value.trim()) return false;
+  return withoutValues.contains('%');
+}
+
 bool _isPureComposition(String value) =>
     !_onlyInterpolation.hasMatch(value.replaceAll(_interpolation, ''));
 
@@ -231,8 +258,13 @@ List<Violation> _findViolations(String source) {
     for (final match in _literal.allMatches(rawLine)) {
       final value = match.group(1) ?? match.group(2) ?? '';
       if (_isTechnical(value)) continue;
-      if (_isPureComposition(value)) continue;
-      if (!_turkishSignal.hasMatch(value) && !_looksLikeLabel(value)) continue;
+      final ordered = _hasLocaleOrderedSymbol(value);
+      if (!ordered && _isPureComposition(value)) continue;
+      if (!ordered &&
+          !_turkishSignal.hasMatch(value) &&
+          !_looksLikeLabel(value)) {
+        continue;
+      }
       found.add(Violation(i + 1, value));
     }
   }

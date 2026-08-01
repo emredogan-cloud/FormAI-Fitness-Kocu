@@ -338,7 +338,7 @@ class _PercentRing extends StatelessWidget {
             ),
           ),
           Text(
-            '%$percent',
+            AppLocalizations.of(context).percentValue(percent),
             style: const TextStyle(
               color: _brandText,
               fontSize: 180,

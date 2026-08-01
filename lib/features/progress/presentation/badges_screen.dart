@@ -565,7 +565,7 @@ class _BadgeStatusPill extends StatelessWidget {
           ),
           const SizedBox(width: 3),
           Text(
-            '%$pct',
+            AppLocalizations.of(context).percentValue(pct),
             style: TextStyle(
               color: scheme.onSurface.withValues(alpha: 0.7),
               fontSize: 10.5,

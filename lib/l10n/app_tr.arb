@@ -1452,5 +1452,6 @@
   "sessionProgramComplete": "Program Tamam!",
   "commonOk": "Tamam",
   "workoutResumeCta": "Devam et",
-  "macroProteinChip": "Protein"
+  "macroProteinChip": "Protein",
+  "percentValue": "%{percent}"
 }
