@@ -10,6 +10,7 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/utils/app_logger.dart';
 import '../domain/models/recipe.dart';
+import '../domain/recipe_ingredient_lines.dart';
 import 'widgets/recipe_image.dart';
 import '../providers/favorite_recipes_provider.dart';
 import '../providers/nutrition_provider.dart';
@@ -149,14 +150,13 @@ class FavoritesScreen extends ConsumerWidget {
   ///     ...
   ///
   /// Per-recipe ingredients are sourced in priority order:
-  ///   1. The structured `recipe.ingredients` text[] column when the
-  ///      backend has migrated to it (Phase 57 schema bump).
-  ///   2. Heuristic extraction from `recipe.instructions` — most
-  ///      curated rows lead with a "Malzemeler:" section so we look
-  ///      for that header and collect the bullets/lines beneath it.
-  ///   3. A polite fallback line so the recipient sees the recipe
-  ///      title + a "malzeme listesi yakında" placeholder rather than
-  ///      an empty section.
+  /// Phase 7 · the per-recipe list comes from
+  /// [recipeIngredientLines], which prefers the structured
+  /// `recipe_ingredients` rows and falls back to the legacy blob. The
+  /// local copy of that scan lived here and in `ShareService`, with a
+  /// comment on both promising a refactor when a third caller appeared.
+  /// It did. A placeholder still covers the genuinely-empty case so the
+  /// recipient sees the title rather than a bare heading.
   String _buildShoppingListBody(AppLocalizations l10n, List<Recipe> recipes) {
     if (recipes.isEmpty) return l10n.favoritesShoppingListEmpty;
     final buf = StringBuffer()..writeln(l10n.favoritesIngredientsHeading);
@@ -165,7 +165,7 @@ class FavoritesScreen extends ConsumerWidget {
       buf
         ..writeln('${i + 1}) ${r.title}')
         ..writeln(l10n.shoppingListRecipeIngredients);
-      final items = _ingredientsFor(r);
+      final items = recipeIngredientLines(r);
       if (items.isEmpty) {
         buf.writeln(l10n.shoppingListPlaceholder);
       } else {
@@ -175,58 +175,6 @@ class FavoritesScreen extends ConsumerWidget {
       }
     }
     return buf.toString().trimRight();
-  }
-
-  /// Resolves a clean ingredients list per recipe. Tries the
-  /// structured column first; falls back to a "Malzemeler:" header
-  /// scan inside `instructions`.
-  List<String> _ingredientsFor(Recipe recipe) {
-    if (recipe.ingredients.isNotEmpty) return recipe.ingredients;
-    final raw = (recipe.instructions ?? '').trim();
-    if (raw.isEmpty) return const [];
-    final lines = raw.split(RegExp(r'\r?\n'));
-    final extracted = <String>[];
-    var inBlock = false;
-    for (final line in lines) {
-      final trimmed = line.trim();
-      if (trimmed.isEmpty) {
-        if (inBlock) break; // blank line ends the ingredients block
-        continue;
-      }
-      // Header detection: "Malzemeler" / "Malzemeler:" / "MALZEMELER".
-      if (RegExp(r'^malzemeler\s*:?\s*$', caseSensitive: false)
-          .hasMatch(trimmed)) {
-        inBlock = true;
-        continue;
-      }
-      // Method header ends the ingredients block.
-      if (RegExp(r'^(yapılışı|hazırlanışı|tarif)\s*:?\s*$',
-              caseSensitive: false)
-          .hasMatch(trimmed)) {
-        if (inBlock) break;
-      }
-      if (inBlock) {
-        extracted.add(_stripBullet(trimmed));
-      }
-    }
-    if (extracted.isNotEmpty) return extracted;
-    // No "Malzemeler:" header found — try splitting the first sentence
-    // on commas as a last-resort heuristic for short single-line
-    // recipes ("2 yumurta, 1 dilim peynir, 1 yulaf"). 240-char guard
-    // protects against dumping a paragraph as a single ingredient.
-    final firstSentence = raw.split(RegExp(r'(?<=[.!?])\s+')).first;
-    if (firstSentence.length > 240) return const [];
-    final commaSplit = firstSentence
-        .split(RegExp(r'[,;]'))
-        .map((e) => _stripBullet(e.trim()))
-        .where((e) => e.isNotEmpty)
-        .toList(growable: false);
-    if (commaSplit.length >= 2) return commaSplit;
-    return const [];
-  }
-
-  String _stripBullet(String line) {
-    return line.replaceFirst(RegExp(r'^[-•*•]\s*'), '').trim();
   }
 }
 

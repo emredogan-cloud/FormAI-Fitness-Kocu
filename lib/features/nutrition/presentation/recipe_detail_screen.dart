@@ -15,6 +15,7 @@ import '../../monetization/services/premium_gate_service.dart';
 import '../../referral/providers/referral_provider.dart';
 import '../domain/models/daily_meal_slot.dart';
 import '../domain/models/recipe.dart';
+import '../domain/recipe_ingredient_lines.dart';
 import '../providers/daily_menu_provider.dart';
 import '../providers/favorite_recipes_provider.dart';
 import 'widgets/recipe_tags.dart';
@@ -118,8 +119,18 @@ class RecipeDetailScreen extends StatelessWidget {
                   const SizedBox(height: 22),
                   _MacroTilesRow(recipe: recipe),
                   const SizedBox(height: 28),
+                  _IngredientsSection(recipe: recipe),
                   if ((recipe.instructions ?? '').trim().isNotEmpty)
-                    _InstructionsSection(text: recipe.instructions!),
+                    _InstructionsSection(
+                      text: recipe.instructions!,
+                      // Phase 7 · when the structured rows rendered
+                      // above, the blob's own MALZEMELER: half is the
+                      // same list a second time. `instructions` keeps
+                      // carrying it until migration 016 so shipped
+                      // clients keep working, which makes hiding it a
+                      // client-side decision for exactly one release.
+                      skipIngredientBlock: recipe.ingredientRows.isNotEmpty,
+                    ),
                   // Leave headroom for the sticky CTA so long instruction
                   // blocks don't get visually eaten by the button.
                   const SizedBox(height: 96),
@@ -492,9 +503,79 @@ class _MacroTile extends StatelessWidget {
 /// into two visually distinct blocks. Legacy recipes (plain prose,
 /// no section headers) fall through to a single block with the
 /// original 14 px / 1.5 line height so they still read cleanly.
+/// Roadmap Phase 7 · the recipe's ingredients, as data.
+///
+/// Renders `public.recipe_ingredients` when the row carries them and the
+/// legacy `MALZEMELER:` scan when it does not, through the one resolver
+/// in `domain/recipe_ingredient_lines.dart`. Renders nothing at all when
+/// a recipe genuinely states no ingredients — an empty "Malzemeler"
+/// heading is worse than no heading.
+class _IngredientsSection extends StatelessWidget {
+  const _IngredientsSection({required this.recipe});
+  final Recipe recipe;
+
+  @override
+  Widget build(BuildContext context) {
+    final lines = recipeIngredientLines(recipe);
+    if (lines.isEmpty) return const SizedBox.shrink();
+    final scheme = context.colors;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 28),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SectionHeading(
+              label: AppLocalizations.of(context).recipeIngredients),
+          const SizedBox(height: 10),
+          for (final line in lines)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6, right: 10),
+                    child: Container(
+                      width: 5,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: scheme.primary,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                  // The line wraps rather than ellipsising: "2 yemek
+                  // kaşığı sızma zeytinyağı" is longer in English than
+                  // Turkish and a cut ingredient is a wrong ingredient.
+                  Expanded(
+                    child: Text(
+                      line,
+                      style: TextStyle(
+                        color: scheme.onSurface.withValues(alpha: 0.85),
+                        fontSize: 14,
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 class _InstructionsSection extends StatelessWidget {
-  const _InstructionsSection({required this.text});
+  const _InstructionsSection({
+    required this.text,
+    this.skipIngredientBlock = false,
+  });
   final String text;
+
+  /// Drops the `MALZEMELER:` half, because [_IngredientsSection] already
+  /// rendered it from structured rows.
+  final bool skipIngredientBlock;
 
   /// Parse markers embedded in the stored recipe text, NOT UI copy.
   ///
@@ -506,7 +587,11 @@ class _InstructionsSection extends StatelessWidget {
   static const List<String> _sectionHeaders = [
     'MALZEMELER:', // i18n-ignore
     'HAZIRLANIŞI:', // i18n-ignore
+    'YAPILIŞ:', // i18n-ignore — two of the oldest seed rows spell it so
   ];
+
+  /// The one header whose block [_IngredientsSection] can replace.
+  static const String _ingredientHeader = 'MALZEMELER:'; // i18n-ignore
 
   @override
   Widget build(BuildContext context) {
@@ -519,7 +604,14 @@ class _InstructionsSection extends StatelessWidget {
       fontSize: 14,
       height: 1.5,
     );
-    final sections = _split(context, text);
+    final split = _split(context, text);
+    final sections = split
+        .where((section) => !(skipIngredientBlock && section.isIngredients))
+        .toList(growable: false);
+    // A recipe whose only section was the ingredient block, already
+    // rendered above. Falling through to the unstructured branch would
+    // print the whole blob and show the list twice.
+    if (sections.isEmpty && split.isNotEmpty) return const SizedBox.shrink();
     if (sections.isEmpty) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -567,6 +659,7 @@ class _InstructionsSection extends StatelessWidget {
       blocks.add(_InstructionBlock(
         heading: _headingFor(context, matches[i].header),
         body: body,
+        isIngredients: matches[i].header == _ingredientHeader,
       ));
     }
     return blocks;
@@ -577,6 +670,7 @@ class _InstructionsSection extends StatelessWidget {
       case 'MALZEMELER:': // i18n-ignore
         return AppLocalizations.of(context).recipeIngredients;
       case 'HAZIRLANIŞI:': // i18n-ignore
+      case 'YAPILIŞ:': // i18n-ignore
         return AppLocalizations.of(context).recipeInstructions;
       default:
         return raw;
@@ -585,9 +679,17 @@ class _InstructionsSection extends StatelessWidget {
 }
 
 class _InstructionBlock {
-  const _InstructionBlock({required this.heading, required this.body});
+  const _InstructionBlock({
+    required this.heading,
+    required this.body,
+    this.isIngredients = false,
+  });
   final String heading;
   final String body;
+
+  /// True for the `MALZEMELER:` block, which Phase 7 renders from
+  /// structured rows instead whenever the recipe carries them.
+  final bool isIngredients;
 }
 
 class _SectionHeading extends StatelessWidget {

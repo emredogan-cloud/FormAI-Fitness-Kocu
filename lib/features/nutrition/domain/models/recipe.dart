@@ -1,8 +1,15 @@
 import '../../../../core/utils/media_url.dart';
+import '../recipe_localization.dart';
+import 'recipe_ingredient.dart';
 
 /// Row from the Supabase `recipes` table. Columns are snake_case on the
 /// server; [Recipe.fromJson] maps them to camelCase fields so the rest
 /// of the app doesn't have to think about SQL naming conventions.
+///
+/// Phase 7 · the row arrives with a `<column>_<lang>` per shipped
+/// language and [Recipe.fromJson] picks one language for the whole row.
+/// [language] records which. See `domain/recipe_localization.dart` for
+/// why that decision is per recipe rather than per field.
 class Recipe {
   const Recipe({
     required this.id,
@@ -18,6 +25,8 @@ class Recipe {
     this.tags = const [],
     this.tagTokens = const [],
     this.ingredients = const [],
+    this.ingredientRows = const [],
+    this.language = kRecipeFallbackLanguage,
   });
 
   /// Primary key. Stored as [String] regardless of whether the column is
@@ -69,13 +78,32 @@ class Recipe {
   /// breaking the filter that read it.
   final List<String> tagTokens;
 
-  /// Phase 57 · structured ingredients list. Optional Postgres
-  /// `text[]` column; when present the share / shopping-list builders
-  /// prefer it over heuristic extraction from `instructions`.
-  /// Mirrors the [_parseTags] tolerance for both List and Postgres
-  /// array-literal payloads so a backend that hasn't migrated to a
-  /// proper text[] yet can still ship rows.
+  /// Phase 57 · flat ingredient strings from the `recipes.ingredients`
+  /// `text[]` column.
+  ///
+  /// **Null on every live row** and superseded by [ingredientRows], which
+  /// carries quantity and unit as separate fields so a translation can
+  /// never touch them. Still parsed because the column exists and a
+  /// model that ignores a column the server returns is a model that lies
+  /// about the row.
   final List<String> ingredients;
+
+  /// Phase 7 · the `public.recipe_ingredients` rows for this recipe, in
+  /// `position` order, already resolved to [language].
+  ///
+  /// Empty unless the caller asked for the embed — see
+  /// `NutritionRepository._selectWithIngredients`. Empty is not the same
+  /// as "this recipe has no ingredients"; the resolver in
+  /// `domain/recipe_ingredient_lines.dart` is what tells the two apart.
+  final List<RecipeIngredient> ingredientRows;
+
+  /// The language every copy field on this instance is written in.
+  ///
+  /// Not necessarily the language the user picked: a row that is not
+  /// fully translated renders entirely in Turkish rather than half in
+  /// each. Surfaces that care — the audit, a "translation coming soon"
+  /// affordance — read this instead of guessing from the text.
+  final String language;
 
   /// Tolerant parser: coerces numeric fields from either `int` or `num`
   /// (Supabase sometimes returns `double` for integer columns depending
@@ -85,10 +113,22 @@ class Recipe {
   /// `tags` is delegated to [_parseTags] which handles both a Postgres
   /// text[] (decoded as `List<dynamic>`) and the raw Postgres array
   /// literal String form that certain driver paths return.
-  factory Recipe.fromJson(Map<String, dynamic> json) {
+  ///
+  /// Phase 7 · [languageCode] is what the reader asked for, not
+  /// necessarily what they get. `resolveRecipeLanguage` decides once for
+  /// the whole row and every copy field below follows that one decision,
+  /// so a half-translated recipe renders entirely in Turkish rather than
+  /// an English title over Turkish steps. Defaults to Turkish — the
+  /// authored language, and the right answer for every caller that has
+  /// no locale to offer.
+  factory Recipe.fromJson(
+    Map<String, dynamic> json, {
+    String languageCode = kRecipeFallbackLanguage,
+  }) {
+    final language = resolveRecipeLanguage(json, preferred: languageCode);
     return Recipe(
       id: json['id']?.toString() ?? '',
-      title: (json['title'] as String?) ?? '',
+      title: localizedRecipeField(json, 'title', language: language) ?? '',
       mealType: (json['meal_type'] as String?) ?? 'snack',
       calories: _asInt(json['calories']),
       protein: _asInt(json['protein']),
@@ -103,7 +143,10 @@ class Recipe {
         json['image_url'] as String?,
         bucket: 'recipes_images',
       ),
-      instructions: json['instructions'] as String?,
+      instructions:
+          localizedRecipeField(json, 'instructions', language: language),
+      language: language,
+      ingredientRows: _parseIngredients(json, language),
       tags: _parseTags(json['tags']),
       // Phase 7 · same tolerant parser; `tag_tokens` is a text[] with
       // exactly the two driver shapes `tags` has.
@@ -120,6 +163,31 @@ class Recipe {
     if (value is num) return value.round();
     if (value is String) return int.tryParse(value) ?? 0;
     return 0;
+  }
+
+  /// Reads the PostgREST embedded `recipe_ingredients(*)` resource.
+  ///
+  /// Sorted here rather than in the query because PostgREST orders an
+  /// embedded resource with `order=recipe_ingredients(position)`, a
+  /// syntax the supabase-flutter builder does not expose — and a
+  /// six-element sort is not worth a raw RPC. Absent embed → empty list,
+  /// which is the correct reading of "the caller did not ask".
+  static List<RecipeIngredient> _parseIngredients(
+    Map<String, dynamic> json,
+    String language,
+  ) {
+    final embedded = json['recipe_ingredients'];
+    if (embedded is! List) return const [];
+    final rows = embedded
+        .whereType<Map>()
+        .map((row) => RecipeIngredient.fromJson(
+              row.cast<String, dynamic>(),
+              languageCode: language,
+            ))
+        .where((row) => row.name.isNotEmpty)
+        .toList()
+      ..sort((a, b) => a.position.compareTo(b.position));
+    return List.unmodifiable(rows);
   }
 
   /// Tolerant parser for the `tags` column. Supabase returns Postgres

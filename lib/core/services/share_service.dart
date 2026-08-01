@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../features/nutrition/domain/models/recipe.dart';
+import '../../features/nutrition/domain/recipe_ingredient_lines.dart';
 import '../../l10n/app_localizations.dart';
 import '../utils/app_logger.dart';
 import '../widgets/share_templates.dart';
@@ -189,8 +190,9 @@ class ShareService {
   ///
   /// Phase 57 · the share payload now carries the full recipe so the
   /// recipient can cook it without opening the app: macro line,
-  /// Malzemeler block (structured `recipe.ingredients` when present;
-  /// otherwise heuristic extraction from `instructions`) and the
+  /// Malzemeler block (the structured `recipe_ingredients` rows when
+  /// present, otherwise the legacy blob — see
+  /// [recipeIngredientLines]) and the
   /// Yapılışı block. The referral CTA stays at the tail so the link
   /// remains the prominent call-to-action.
   Future<void> shareRecipe({
@@ -203,7 +205,7 @@ class ShareService {
     try {
       final referralLine =
           userCode == null ? '' : l10n.shareRecipeReferralLine(userCode);
-      final ingredients = _ingredientsFor(recipe);
+      final ingredients = recipeIngredientLines(recipe);
       final method = _methodFor(recipe);
       final sections = <String>[
         l10n.shareRecipeIntro(recipe.title),
@@ -234,41 +236,6 @@ class ShareService {
     }
   }
 
-  /// Phase 57 · shared ingredient extractor. Mirrors
-  /// `FavoritesScreen._ingredientsFor` so the share payload and the
-  /// shopping-list export agree on what counts as an ingredient line.
-  /// Kept inline rather than extracted to a util because the two call
-  /// sites are tiny — a third caller is the trigger to refactor.
-  List<String> _ingredientsFor(Recipe recipe) {
-    if (recipe.ingredients.isNotEmpty) return recipe.ingredients;
-    final raw = (recipe.instructions ?? '').trim();
-    if (raw.isEmpty) return const [];
-    final lines = raw.split(RegExp(r'\r?\n'));
-    final extracted = <String>[];
-    var inBlock = false;
-    for (final line in lines) {
-      final trimmed = line.trim();
-      if (trimmed.isEmpty) {
-        if (inBlock) break;
-        continue;
-      }
-      if (RegExp(r'^malzemeler\s*:?\s*$', caseSensitive: false)
-          .hasMatch(trimmed)) {
-        inBlock = true;
-        continue;
-      }
-      if (RegExp(r'^(yapılışı|hazırlanışı|tarif)\s*:?\s*$',
-              caseSensitive: false)
-          .hasMatch(trimmed)) {
-        if (inBlock) break;
-      }
-      if (inBlock) {
-        extracted.add(_stripBullet(trimmed));
-      }
-    }
-    return extracted;
-  }
-
   /// Phase 57 · returns the cooking-method block from `instructions`.
   /// If the instructions text has a "Yapılışı:" / "Hazırlanışı:"
   /// header, returns everything after it; otherwise returns the whole
@@ -286,10 +253,6 @@ class ShareService {
         headerMatch == null ? raw : raw.substring(headerMatch.end).trim();
     if (body.length <= 1000) return body;
     return '${body.substring(0, 1000).trimRight()}…';
-  }
-
-  String _stripBullet(String line) {
-    return line.replaceFirst(RegExp(r'^[-•*•]\s*'), '').trim();
   }
 
   /// Mounts [widget] in a positioned-off-screen overlay layer, pumps a

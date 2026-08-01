@@ -1,18 +1,49 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/utils/app_copy.dart';
 import '../domain/models/recipe.dart';
 
 /// Thin data-access layer over the Supabase `recipes` table. Kept
 /// intentionally small — the calorie / macro math lives in
 /// [NutritionCalculatorService], not here.
 class NutritionRepository {
-  NutritionRepository({SupabaseClient? client})
-      : _client = client ?? Supabase.instance.client;
+  NutritionRepository({SupabaseClient? client, String? languageCode})
+      : _client = client ?? Supabase.instance.client,
+        _languageCode = languageCode;
 
   final SupabaseClient _client;
 
+  /// Phase 7 · overridable for tests; otherwise read fresh from
+  /// [AppCopy] on every fetch.
+  final String? _languageCode;
+
+  /// The language rows are resolved into.
+  ///
+  /// [AppCopy.locale] is the app's one locale source for code with no
+  /// widget tree, which a repository is. Read per fetch rather than
+  /// captured in the constructor: the language picker applies live, and
+  /// a repository built at startup would keep serving the language the
+  /// app opened in.
+  String get _language => _languageCode ?? AppCopy.locale.languageCode;
+
   static const String _table = 'recipes';
+
+  /// Phase 7 · every recipe read pulls its `recipe_ingredients` rows in
+  /// the same round-trip.
+  ///
+  /// The alternative — ingredients only on the detail screen — was
+  /// tempting and wrong. Three surfaces need them (detail, the
+  /// favourites shopping-list export, the share sheet), two of those
+  /// operate on recipes loaded by a *different* query, and the resulting
+  /// "does this instance have ingredients?" ambiguity is exactly the
+  /// class of bug that ships.
+  ///
+  /// The cost is small enough to state: 1,642 ingredient rows across 292
+  /// recipes is ~5.6 per recipe, so a 20-row page carries ~110 short
+  /// rows — single-digit kilobytes against images already measured in
+  /// hundreds. Revisit if a recipe ever has fifty ingredients.
+  static const String _selectWithIngredients = '*, recipe_ingredients(*)';
 
   /// Offline short-circuit (mirrors WorkoutRepository._fetchExercises):
   /// without it a recipe fetch on a dead interface waits out the full
@@ -60,11 +91,11 @@ class NutritionRepository {
     // state can render. 10 s is generous for a 20-row page.
     final rows = await _client
         .from(_table)
-        .select()
+        .select(_selectWithIngredients)
         .order('id', ascending: true)
         .range(from, from + limit - 1)
         .timeout(const Duration(seconds: 10));
-    return rows.map<Recipe>(Recipe.fromJson).toList(growable: false);
+    return _decode(rows);
   }
 
   /// Phase 83 · sentinel route token used by `CategoryRecipesScreen` for
@@ -121,7 +152,7 @@ class NutritionRepository {
     String? mealTypeSubFilter,
   }) async {
     await _throwIfOffline();
-    var query = _client.from(_table).select();
+    var query = _client.from(_table).select(_selectWithIngredients);
     if (categoryToken == budgetCategoryToken) {
       query = query.contains('tag_tokens', const [budgetTagToken]);
       if (mealTypeSubFilter != null && mealTypeSubFilter.isNotEmpty) {
@@ -131,7 +162,16 @@ class NutritionRepository {
       query = query.eq('meal_type', categoryToken);
     }
     final rows = await query.order('id', ascending: true);
-    return rows.map<Recipe>(Recipe.fromJson).toList(growable: false);
+    return _decode(rows);
+  }
+
+  /// The one place a raw PostgREST row becomes a [Recipe], so the locale
+  /// is applied exactly once per fetch instead of once per call site.
+  List<Recipe> _decode(List<Map<String, dynamic>> rows) {
+    final language = _language;
+    return rows
+        .map((row) => Recipe.fromJson(row, languageCode: language))
+        .toList(growable: false);
   }
 }
 
