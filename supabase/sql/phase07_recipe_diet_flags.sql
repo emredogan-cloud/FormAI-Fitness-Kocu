@@ -10,6 +10,8 @@ begin;
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[] where id = 'c7530a54-0946-41fe-a283-20d70fc067de';
 -- Akdeniz Kinoa Salatası
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[] where id = '3971c479-ce32-4b34-9b9c-013dee1df749';
+-- Akdeniz Ton Balıklı Salata
+update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = '235693c6-88f2-51bb-ac1e-9c14ecb4252c';
 -- Avokadolu Tam Buğday Tost
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'dairy_free']::text[] where id = 'eac3e53c-155b-413f-baac-a9a3e8d1e079';
 -- Avokadolu Yumurtalı Tam Buğday Tost
@@ -22,6 +24,8 @@ update public.recipes set diet_flags = ARRAY['vegan', 'vegetarian', 'pork_free',
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[] where id = 'a4b2407b-b8c5-42c9-897a-9b278cf09a80';
 -- Baharatlı Tavuk ve Kinoa
 update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = 'd6b3c5b5-b5cd-5b07-ab4e-2b2b2e45f05a';
+-- Baharatlı Yumurta Bhurji
+update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[] where id = '4d882837-5456-5c47-9119-72cabc1ea448';
 -- Bahçıvan Salatası
 update public.recipes set diet_flags = ARRAY['vegan', 'vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[] where id = '8ee45d41-201d-4070-8125-82572e27e368';
 -- Bal Soslu Vanilyalı Yoğurt
@@ -32,6 +36,8 @@ update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free']::text[] 
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[] where id = '199c2d0f-6762-4ab5-a8e9-43bf797836ce';
 -- Bal-Tarçınlı Ekmek Tatlısı
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free']::text[] where id = '954637ff-d82c-4895-b007-f4a07a5be8be';
+-- Barbacoa Dana Kasesi
+update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = '57abca76-4972-5726-b2b1-6cdd44c129e8';
 -- Bazlama Tava Tost
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free']::text[] where id = 'f6a99c06-ec20-4ded-ad03-c922b5ce6924';
 -- Beyaz Peynirli Bal Tatlısı
@@ -42,6 +48,8 @@ update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free']::text[] 
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free']::text[] where id = '1b35914c-3679-4653-ba66-6712fe4580ec';
 -- Beyaz Peynirli Tam Buğday Tost
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free']::text[] where id = '3a214fcf-8431-446d-a3c7-c79477ed35c1';
+-- Beyaz Peynirli Yunan Salatası
+update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[] where id = 'a51d24b8-f93f-58c3-8a82-867dc879d258';
 -- Beyaz Pilav ve Etli Sote
 update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = '69fe7821-da0d-4fde-b922-1bff725ba374';
 -- Beyaz Pilav ve Sade Yoğurt
@@ -54,6 +62,8 @@ update public.recipes set diet_flags = ARRAY['pork_free']::text[] where id = '2c
 update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = 'c44f3263-ab6b-4199-90bc-56597b5711b4';
 -- Bonfileli Yumurta Tabağı
 update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = '70f978ef-67ae-58bc-a9b4-81159167abd3';
+-- Bulgogi Dana Eti
+update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = 'dfb701ee-4cc2-5a3d-b2d5-381bbb336ba9';
 -- Cevizli Hurma Topları
 update public.recipes set diet_flags = ARRAY['vegan', 'vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[] where id = 'bf0de0db-b6d4-4097-a476-5e885f7df580';
 -- Cevizli Karamelize Muz
@@ -118,6 +128,8 @@ update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_
 update public.recipes set diet_flags = ARRAY['vegan', 'vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[] where id = 'be63a065-aebc-4f62-90ab-1fe8a19e275f';
 -- Elmalı Tarçınlı Protein Yulafı
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free']::text[] where id = '5734eb6f-80f9-5f77-853e-22c2bc5e4d5e';
+-- Etli Bibimbap
+update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = '0a5737fd-01a0-5620-948f-acbf6c84448e';
 -- Etli Kabak Yemeği
 update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = '31e02a6c-3dd9-42f6-86f2-0e21b7fd1b9f';
 -- Etli Kuru Fasulye
@@ -142,6 +154,12 @@ update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free']::text[] 
 update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = '6fe3d2ec-cbae-4325-9af2-36c442ddb89e';
 -- Fırın Tarçınlı Elma
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[] where id = '79b6a605-3578-46b8-b3aa-45c9d5224c14';
+-- Fırında Antep Fıstıklı Şeftali
+update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[] where id = 'ce116b64-4caf-55a4-b728-682e20f8c9cc';
+-- Fırında Beyaz Peynir ve Domates
+update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[] where id = 'ba858e89-c505-51f3-ae71-80dbd4e1af59';
+-- Fırında Falafel Kasesi
+update public.recipes set diet_flags = ARRAY['vegan', 'vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[] where id = '66b5933f-554d-5ded-a31f-7afba1113cad';
 -- Fırında Hindi ve Esmer Pirinç
 update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = 'b3c75b75-78ec-4cd6-8a8a-9b9b1c7d71f1';
 -- Fırında Levrek ve Kuskus
@@ -170,6 +188,8 @@ update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free']::text[] 
 update public.recipes set diet_flags = ARRAY['pork_free']::text[] where id = 'bf484751-de1b-5d77-b230-90ac2cd762f9';
 -- Gecelik Protein Yulafı
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free']::text[] where id = '0f9b7abc-321a-5cc9-8777-3b31a2e813c3';
+-- Hafif Tavuklu Tikka Masala
+update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free']::text[] where id = '8690f655-e8cb-56a3-8523-a7f7b7da0ed0';
 -- Hamsi Tava
 update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = 'e9b728ed-f7f7-47eb-ba79-27d2921eb6a1';
 -- Hardallı Tavuk Salatası
@@ -228,6 +248,8 @@ update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'dairy_f
 update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = '99c97c76-6ffa-44d5-b6b3-28e0f0861638';
 -- Hızlı Yumurtalı Mercimek Çorbası
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[] where id = 'bf56330b-1533-4aac-8a28-1ea1d5e367ad';
+-- Huevos Rancheros
+update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[] where id = '7f327f69-afc7-573a-843d-fbcd6a1e95fe';
 -- Ispanaklı Peynirli Omlet
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[] where id = '3208f001-4786-4e84-b679-203ccc625390';
 -- Izgara Bonfile ve Brokoli
@@ -274,6 +296,8 @@ update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free']::text[] 
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[] where id = '2a23a87c-e217-5b5e-ad0c-27cf35f0e6a0';
 -- Kırmızı Mercimek Çorbası ve Tam Buğday Ekmeği
 update public.recipes set diet_flags = ARRAY['vegan', 'vegetarian', 'pork_free', 'dairy_free']::text[] where id = '3d353b52-869a-4200-892e-4167675eb37b';
+-- Kırmızı Mercimek Dal
+update public.recipes set diet_flags = ARRAY['vegan', 'vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[] where id = '1092d079-1d96-5be4-ab8e-2a9b4b5d5768';
 -- Kıymalı Patates Yemeği
 update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = '0bee4c83-4936-41d5-87d1-64e06b681794';
 -- Kıymalı Sade Makarna
@@ -284,6 +308,10 @@ update public.recipes set diet_flags = ARRAY['pork_free']::text[] where id = '63
 update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = '019ff752-06ec-4385-ace0-26045a84c75c';
 -- Klasik Mercimek Çorbası
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[] where id = 'f14a3060-241b-42a5-a2e0-a64afa7f309c';
+-- Kore Usulü Tavuklu Marul Sarma
+update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = '2e403b04-1457-52d5-a3bb-b2903fe917d5';
+-- Kore Usulü Tofu Güveci
+update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[] where id = 'c66f73b7-4c24-5cab-a219-7934daff90b1';
 -- Kuru Kayısı Yulaflı Süt
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free']::text[] where id = 'dc5bb5aa-6a6f-4d26-bd43-17f9d831d719';
 -- Levrek Tava
@@ -298,14 +326,24 @@ update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free']::text[] where id = 'e50f4425-cdd0-4080-9340-b1768caa560b';
 -- Lor Peynirli Domates Tabağı
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[] where id = 'd36fcc2b-35ec-476d-89ab-3bdf2d4c4041';
+-- Mangolu Hindistan Cevizli Protein Pirinç
+update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[] where id = 'e9901306-2241-5bb3-af9b-00697cbe1f9a';
+-- Mangolu Protein Lassi
+update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[] where id = 'baf77a4e-4836-5c4e-8da9-779ebf8d764b';
 -- Mantarlı Sade Omlet
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[] where id = '49dd6e39-2146-4ae4-82c8-9ed52c3ad072';
 -- Mantarlı Tavuk Sote
 update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = 'fe75401a-3a4f-45bb-8fdc-6aa763efe90f';
+-- Matcha Protein Smoothie
+update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[] where id = 'e0194bcf-3fa1-5981-8f6e-cf0de63fcb5e';
 -- Maydanozlu Sade Omlet
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[] where id = '2eed26c5-0159-4f1d-8843-ed5630524c06';
 -- Maydanozlu Yumurta Salatası
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[] where id = '666cc2d1-aae3-4ccf-9261-d667354b3641';
+-- Meksika Çikolatalı Protein Puding
+update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[] where id = '02192ed0-1033-5872-8ad6-f97f9494af28';
+-- Meksika Sokak Mısırı Salatası
+update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[] where id = '8fd8442e-257a-5804-a9e2-529512ba5aff';
 -- Menemen Klasik
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[] where id = 'c1d7465b-c283-4721-a5f2-fbf45867b9c2';
 -- Mercimek Köftesi Wrap
@@ -320,6 +358,8 @@ update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free']::text[] 
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free']::text[] where id = '41b4d8b4-ff73-4ec9-9a52-0535f47af768';
 -- Mikrodalgada Tarçınlı Elma
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[] where id = 'ba6e9ad9-0f95-40e9-9571-34472de90557';
+-- Misolu Tofu Çorbası
+update public.recipes set diet_flags = ARRAY['vegan', 'vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[] where id = '4f282acb-361d-5352-9111-8d4cbd37bdff';
 -- Mısır Gevrekli Süt
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free']::text[] where id = '8a2e1bdd-b0bf-4bbd-bf10-c7666a18bd15';
 -- Mücver Tava
@@ -338,8 +378,14 @@ update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free']::text[] 
 update public.recipes set diet_flags = ARRAY['vegan', 'vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[] where id = '170064fe-1eea-4b22-a968-18fecb4f161d';
 -- Muzlu Yoğurt Tatlısı
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[] where id = 'd6c4a12c-5c3a-4e12-806d-fbc8077b2a07';
+-- Nohutlu Chana Masala
+update public.recipes set diet_flags = ARRAY['vegan', 'vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[] where id = '88fc405c-0552-5c61-97c0-c0ecf6ea7857';
 -- Nohutlu Kinoa Buddha Kasesi
 update public.recipes set diet_flags = ARRAY['vegan', 'vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[] where id = '6205195a-8a45-4333-b7f0-9d9ff2a4d683';
+-- Nohutlu Tabule
+update public.recipes set diet_flags = ARRAY['vegan', 'vegetarian', 'pork_free', 'dairy_free']::text[] where id = '90cb0644-b277-5e5a-b2c9-96e1bf39dfa3';
+-- Paneer Tikka Kasesi
+update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[] where id = '540d8ce9-9ce0-5430-bc3e-9ffdb8ddd4af';
 -- Patates Çorbası
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[] where id = '8072e753-085e-4b97-8ffb-8b869b85eb7e';
 -- Patates Pofuduk
@@ -384,6 +430,8 @@ update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free']::text[] 
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[] where id = 'c7c38e2a-3888-445f-b81b-761e5bf9160b';
 -- Protein Pankek Yığını
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free']::text[] where id = '2b644680-9aab-4ef8-924a-f98de8e20bfd';
+-- Proteinli Caprese Tabağı
+update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[] where id = '008b4414-dde0-576d-89c7-3f2e8bb13028';
 -- Proteinli Çoban Güveci
 update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free']::text[] where id = '8f09de9b-1477-54e2-83b3-e553da1be98c';
 -- Proteinli Fransız Tostu
@@ -442,6 +490,8 @@ update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free']::text[] 
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free']::text[] where id = '5a6e1cce-1094-4d5d-aebf-6f5e39fa126d';
 -- Sade Yumurtalı Süt Tatlısı
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[] where id = 'e64c30b0-41f8-472f-b5ee-648a0282fe5f';
+-- Şakşuka
+update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[] where id = 'b1b1300d-5792-5ffd-9640-7b2fb6fd9081';
 -- Salam ve Sade Tabak
 update public.recipes set diet_flags = ARRAY['pork_free']::text[] where id = '57515ce3-6a2b-4092-8f1a-aee0f8e2b341';
 -- Salatalık Sticks ve Yoğurt Sosu
@@ -462,6 +512,8 @@ update public.recipes set diet_flags = ARRAY['vegan', 'vegetarian', 'pork_free',
 update public.recipes set diet_flags = ARRAY['vegan', 'vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[] where id = 'b068825f-c965-4b78-afc4-bf3a231a7ca1';
 -- Sebzeli Mercimek Çorbası
 update public.recipes set diet_flags = ARRAY['vegan', 'vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[] where id = '23fbcfae-5a2b-45f8-9496-6f6ad78a7f29';
+-- Sebzeli Muhammara
+update public.recipes set diet_flags = ARRAY['vegan', 'vegetarian', 'pork_free', 'dairy_free']::text[] where id = 'deb92654-e191-55f4-879b-ddd3545b71f7';
 -- Sebzeli Pratik Köfte
 update public.recipes set diet_flags = ARRAY['pork_free', 'dairy_free']::text[] where id = 'e30b79b4-3f62-40e1-8036-d20c67dd5fe6';
 -- Sebzeli Yumurta Akı
@@ -472,6 +524,8 @@ update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free']::text[] 
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[] where id = '8f406bf5-a009-43f6-a97c-b44dcdd4e370';
 -- Şerbetli Yulaf Topları
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'dairy_free']::text[] where id = '13cf5b2f-1cfc-4305-8183-993f1d7b8660';
+-- Siyah Fasulyeli Kinoa Taco
+update public.recipes set diet_flags = ARRAY['vegan', 'vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[] where id = 'f31c501a-b11f-5d57-8cb0-946a703995f0';
 -- Soğan-Domates Çorbası
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free']::text[] where id = '18d40545-b0b2-45bd-ae6e-16e1f935709a';
 -- Soğanlı Etli Sote
@@ -486,6 +540,8 @@ update public.recipes set diet_flags = ARRAY['vegan', 'vegetarian', 'pork_free',
 update public.recipes set diet_flags = ARRAY['vegan', 'vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[] where id = '380efa78-7e00-4038-85e2-d04098a858f8';
 -- Soğuk Tavuk Göğsü Dilimleri
 update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = '8c613f1a-fd95-46df-b994-496c4d5b1185';
+-- Somonlu Donburi
+update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = '677408e6-7ae1-5a42-95d1-5d26a9aef390';
 -- Somonlu Pirinç Kasesi
 update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = 'c268aacb-8a3c-5edb-bb5b-1e93230aa1cd';
 -- Sucuklu Sade Patates
@@ -524,6 +580,8 @@ update public.recipes set diet_flags = ARRAY['vegan', 'vegetarian', 'pork_free',
 update public.recipes set diet_flags = ARRAY['vegan', 'vegetarian', 'pork_free', 'dairy_free']::text[] where id = 'ca57151b-64ff-40be-a7ac-4d08ce00f885';
 -- Tahinli Sade Yoğurt
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[] where id = '10e48528-dff4-41fe-a5a2-2bef4b5c2089';
+-- Tamagolu Kahvaltı Kasesi
+update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[] where id = 'd6786ae9-9a51-5cab-a797-3a26c3084a74';
 -- Tarçınlı Protein Sütlaç
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[] where id = '154ab0fe-981a-597a-89dc-71359fc4cc46';
 -- Tarçınlı Süzme Yoğurt
@@ -546,6 +604,8 @@ update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_
 update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = '5bb75f53-c831-413c-830e-7fe4afa4b44d';
 -- Tavuk Göğsülü Sade Sandviç
 update public.recipes set diet_flags = ARRAY['pork_free']::text[] where id = 'de34dfa9-3e83-42f3-9679-5cd1a569da4e';
+-- Tavuk Shawarma Tabağı
+update public.recipes set diet_flags = ARRAY['pork_free', 'dairy_free']::text[] where id = 'f57c1d1a-bd50-55e5-a5ec-60413eb4983e';
 -- Tavuk Şinitzel
 update public.recipes set diet_flags = ARRAY['pork_free', 'dairy_free']::text[] where id = '895f1c0c-caf8-4911-b64a-5a99d6e3b37d';
 -- Tavuk Şiş
@@ -578,8 +638,16 @@ update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free']::text[]
 update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = '78edea8b-4a12-53a9-b0c3-949aa20452fb';
 -- Tavuklu Sebze Çorbası
 update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = '5b16d059-a49a-4a9e-8a1b-e611ec01e603';
+-- Tavuklu Souvlaki Kasesi
+update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free']::text[] where id = '033f91a0-cdfa-5a78-a449-9e0a171493c5';
+-- Tavuklu Tinga Kasesi
+update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = '5a5c33b1-79d0-50f1-9d41-be42dd27f7be';
 -- Tavuklu Yulaflı Wrap
 update public.recipes set diet_flags = ARRAY['pork_free']::text[] where id = '20d9ceab-4c86-460e-8007-033092c595b9';
+-- Tayland Usulü Etli Salata
+update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = '8b04a82b-7485-5620-8184-7282b8398c03';
+-- Tayland Usulü Fesleğenli Tavuk
+update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = '5ba408a0-aa66-57e5-8a75-9430a9c811e4';
 -- Taze Fasulye Etli
 update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = '18d212ed-568d-4642-89bb-2da2e976db4e';
 -- Tek Tepsi Tavuk ve Sebze
@@ -594,18 +662,24 @@ update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free']::text[] where id = '8f4eb6cc-f675-4723-ba5a-d1e62ea1bce0';
 -- Tereyağlı Limonlu Makarna
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free']::text[] where id = 'b60d8c64-6d4d-4754-839e-e122280f6693';
+-- Teriyaki Tavuk ve Pilav
+update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = 'a58c3a75-1ac8-506a-8064-0411b2049f3a';
 -- Teriyaki Tofulu Pirinç Kasesi
 update public.recipes set diet_flags = ARRAY['vegan', 'vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[] where id = '1fbecc74-0960-548d-8c7e-46b00903a618';
 -- Tofu Soteli Kahverengi Pirinç
 update public.recipes set diet_flags = ARRAY['vegan', 'vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[] where id = '2039017c-b2fc-44d3-ac05-a325326d00a4';
 -- Ton Balıklı Avokado Dürüm
 update public.recipes set diet_flags = ARRAY['pork_free', 'dairy_free']::text[] where id = '28b422b6-51c0-5adc-bc90-6d77db7b14ee';
+-- Ton Balıklı Edamame Kasesi
+update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = 'ff660cb4-8326-55f1-bc35-b002a414c78b';
 -- Ton Balıklı Makarna Salatası
 update public.recipes set diet_flags = ARRAY['pork_free', 'dairy_free']::text[] where id = 'ed6622d5-b21b-4f28-86f1-154d6ef83cf7';
 -- Ton Balıklı Salatalık Kayıkları
 update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free']::text[] where id = '24a360dc-796a-5bed-b897-01d1f914e144';
 -- Ton Balıklı Süzme Peynirli Fırın Patates
 update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free']::text[] where id = '1691beac-d190-5fa6-b850-506e7bf9ce14';
+-- Toskana Beyaz Fasulye Çorbası
+update public.recipes set diet_flags = ARRAY['vegan', 'vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[] where id = '6124f8a2-dac8-5511-b94a-c317330f6a8b';
 -- Türlü Sebze Etli
 update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = '4a55cc97-dd46-444f-b962-c1c82660f282';
 -- Üzümlü Yulaf
@@ -678,6 +752,8 @@ update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free']::text[] 
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'dairy_free']::text[] where id = 'f26ca644-1885-43c5-a598-82d9700694a4';
 -- Yumurtalı Erişte
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free']::text[] where id = 'ba909998-425f-4e53-b349-cf1fe5ba0f67';
+-- Yumurtalı Kimchi Pilavı
+update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free', 'dairy_free']::text[] where id = 'd766fca9-0e4c-5225-8307-482f811f7644';
 -- Yumurtalı Patates Salatası
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free', 'gluten_free']::text[] where id = '9e8342f0-e081-4c06-a9be-39a18eee8210';
 -- Yumurtalı Patates Tava
@@ -694,5 +770,7 @@ update public.recipes set diet_flags = ARRAY['pork_free', 'dairy_free']::text[] 
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free']::text[] where id = '91d0cb99-0c9a-493f-a6b4-d69f44b57be4';
 -- Yumurtalı Tuzlu Yulaf
 update public.recipes set diet_flags = ARRAY['vegetarian', 'pork_free']::text[] where id = '63ac9145-8207-5032-b02d-e6e7420d46d6';
+-- Yunan Limonlu Tavuk Çorbası
+update public.recipes set diet_flags = ARRAY['pork_free', 'gluten_free', 'dairy_free']::text[] where id = 'e73c34c4-f7ed-5842-8b63-36a53c6f0925';
 
 commit;

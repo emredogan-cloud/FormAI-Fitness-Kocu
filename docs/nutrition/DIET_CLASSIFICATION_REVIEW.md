@@ -11,20 +11,20 @@ derived — it depends on how an animal was slaughtered, which
 no ingredient name records.
 
 ```
-recipes read        352
-classified          344
-no claim made       8
+recipes read        392
+classified          383
+no claim made       9
 ```
 
 ## Flags derived
 
 | flag | recipes |
 | --- | --- |
-| `pork_free` | 344 |
-| `vegetarian` | 221 |
-| `gluten_free` | 213 |
-| `dairy_free` | 163 |
-| `vegan` | 50 |
+| `pork_free` | 383 |
+| `gluten_free` | 249 |
+| `vegetarian` | 245 |
+| `dairy_free` | 191 |
+| `vegan` | 58 |
 
 ## Ingredients the classifier does not recognise
 
@@ -36,6 +36,7 @@ genuinely varies by brand, in which case silence is correct.
 | --- | --- |
 | granola | 6 |
 | şekersiz granola | 2 |
+| yeşil köri ezmesi | 1 |
 
 ## Recipes making no claim
 
@@ -45,5 +46,6 @@ genuinely varies by brand, in which case silence is correct.
 - **Süzme Yoğurtlu Çilek Kasesi** — granola
 - **Süzme Yoğurtlu Frozen Bar** — granola
 - **Süzme Yoğurtlu Meyve Parfe** — şekersiz granola
+- **Tayland Yeşil Köri ve Tofu** — yeşil köri ezmesi
 - **Yoğurtlu Granola Parfe** — şekersiz granola
 - **Yüksek Proteinli Yoğurt Mousse** — granola

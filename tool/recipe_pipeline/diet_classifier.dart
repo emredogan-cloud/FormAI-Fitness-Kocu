@@ -135,6 +135,12 @@ const Map<String, Set<IngredientKind>> _overrides = {
 /// a word".
 const Set<String> _knownUnknowable = {
   'granola',
+  // Thai curry paste. Shrimp paste (kapi) is a standard ingredient in
+  // most brands and absent from some, so this is genuinely two different
+  // foods sold under one name. Same reasoning as granola: silence beats
+  // a guess in either direction.
+  'köri ezmesi',
+  'curry paste',
 };
 
 /// Substrings that mark a kind, matched at a word start.
@@ -320,6 +326,22 @@ const Map<IngredientKind, List<String>> _terms = {
     'rende',
     'baharat',
     'cajun',
+    // Phase 7 §5.3 · the international catalogue's pantry.
+    'zerdeçal',
+    'kişniş',
+    'kakule',
+    'gochujang',
+    'miso',
+    'mirin',
+    'mango',
+    'matcha',
+    'nori',
+    'kimchi',
+    'chipotle',
+    'wasabi',
+    'tamari',
+    'edamame',
+    'nar ekşisi',
     'kapari',
     'turp',
     'enginar',
@@ -345,14 +367,15 @@ const Map<IngredientKind, List<String>> _terms = {
 /// until neither fires would cost every other term its precision.
 ///
 ///   * `hindi` (turkey) starts `hindistan cevizi` (coconut).
-///   * `bal` (honey) starts `balık` / `balığı` (fish).
+///   * `bal` (honey) starts `balık` / `balığı` (fish) and `balzamik`
+///     (balsamic).
 ///   * `su` (water) starts `sucuk` (a sausage).
 ///
 /// The overrides above catch the specific catalogue names; these keep a
 /// name nobody has written yet from landing the same way.
 const Map<String, List<String>> _notFollowedBy = {
   'hindi': ['stan'],
-  'bal': ['ık', 'ığ', 'ıkç'],
+  'bal': ['ık', 'ığ', 'ıkç', 'zamik', 'zamdid'],
   'su': ['cuk'],
 };
 

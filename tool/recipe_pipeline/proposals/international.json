@@ -1,0 +1,2837 @@
+[
+ {
+  "slug": "salmon-donburi",
+  "title_en": "Salmon Donburi",
+  "title_tr": "Somonlu Donburi",
+  "meal_type": "dinner",
+  "cuisine": "japanese",
+  "calories": 585,
+  "protein": 42,
+  "carbs": 64,
+  "fat": 18,
+  "prep_time_minutes": 25,
+  "tag_tokens": [
+   "high_protein",
+   "bulking"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "salmon fillet",
+    "name_tr": "somon fileto",
+    "quantity": 170,
+    "unit": "g"
+   },
+   {
+    "name_en": "sushi rice",
+    "name_tr": "pirinç",
+    "quantity": 85,
+    "unit": "g",
+    "note_en": "dry weight",
+    "note_tr": "kuru ölçü"
+   },
+   {
+    "name_en": "soy sauce",
+    "name_tr": "soya sosu",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "mirin",
+    "name_tr": "mirin",
+    "quantity": 1,
+    "unit": "yemek kaşığı",
+    "note_en": "sweet rice wine; honey and water works",
+    "note_tr": "tatlı pirinç sirkesi; bal ve su da olur"
+   },
+   {
+    "name_en": "sesame seeds",
+    "name_tr": "susam",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "spring onion",
+    "name_tr": "yeşil soğan",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Cook the rice and keep it warm.",
+   "Simmer the soy sauce and mirin for 2 minutes until slightly syrupy.",
+   "Sear the salmon skin-side down for 4 minutes, then 2 on the flesh.",
+   "Flake the salmon over the rice, pour the glaze on, and finish with sesame and spring onion."
+  ],
+  "steps_tr": [
+   "Pirinci pişirip sıcak tutun.",
+   "Soya sosu ve mirini hafif kıvam alana kadar 2 dakika kaynatın.",
+   "Somonu derili tarafı altta 4 dakika, sonra etli tarafı 2 dakika pişirin.",
+   "Somonu pilavın üzerine parçalayın, sosu gezdirin, susam ve yeşil soğanla bitirin."
+  ],
+  "image_prompt": "Japanese donburi bowl with flaked glazed salmon over rice, sesame seeds and spring onion, dark ceramic bowl, moody izakaya lighting"
+ },
+ {
+  "slug": "chicken-teriyaki-rice",
+  "title_en": "Chicken Teriyaki with Rice",
+  "title_tr": "Teriyaki Tavuk ve Pilav",
+  "meal_type": "dinner",
+  "cuisine": "japanese",
+  "calories": 580,
+  "protein": 48,
+  "carbs": 66,
+  "fat": 14,
+  "prep_time_minutes": 25,
+  "tag_tokens": [
+   "high_protein",
+   "bulking"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "chicken thigh",
+    "name_tr": "tavuk but",
+    "quantity": 180,
+    "unit": "g"
+   },
+   {
+    "name_en": "jasmine rice",
+    "name_tr": "yasemin pirinci",
+    "quantity": 85,
+    "unit": "g",
+    "note_en": "dry weight",
+    "note_tr": "kuru ölçü"
+   },
+   {
+    "name_en": "soy sauce",
+    "name_tr": "soya sosu",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "honey",
+    "name_tr": "bal",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "grated ginger",
+    "name_tr": "zencefil rende",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "broccoli",
+    "name_tr": "brokoli",
+    "quantity": 100,
+    "unit": "g"
+   }
+  ],
+  "steps_en": [
+   "Cook the rice and steam the broccoli over it for the last 5 minutes.",
+   "Sear the chicken skin-side down for 6 minutes until it renders.",
+   "Turn it, add the soy sauce, honey and ginger, and let the glaze reduce for 4 minutes.",
+   "Slice the chicken and serve it over the rice with the broccoli."
+  ],
+  "steps_tr": [
+   "Pirinci pişirin, son 5 dakikada brokoliyi üzerinde buharda haşlayın.",
+   "Tavuğu derili tarafı altta yağını salana kadar 6 dakika pişirin.",
+   "Çevirin, soya sosu, bal ve zencefili ekleyip sosu 4 dakika koyulaştırın.",
+   "Tavuğu dilimleyip brokoliyle birlikte pilavın üzerinde servis edin."
+  ],
+  "image_prompt": "Glossy teriyaki chicken sliced over steamed rice with broccoli, glaze pooling, warm japanese home-cooking styling"
+ },
+ {
+  "slug": "miso-tofu-soup-bowl",
+  "title_en": "Miso Tofu Soup",
+  "title_tr": "Misolu Tofu Çorbası",
+  "meal_type": "lunch",
+  "cuisine": "japanese",
+  "calories": 330,
+  "protein": 28,
+  "carbs": 12,
+  "fat": 19,
+  "prep_time_minutes": 15,
+  "tag_tokens": [
+   "low_calorie",
+   "toning"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "firm tofu",
+    "name_tr": "katı tofu",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "miso paste",
+    "name_tr": "miso ezmesi",
+    "quantity": 2,
+    "unit": "yemek kaşığı",
+    "note_en": "fermented soybean",
+    "note_tr": "fermente soya ezmesi"
+   },
+   {
+    "name_en": "vegetable stock",
+    "name_tr": "sebze suyu",
+    "quantity": 600,
+    "unit": "ml"
+   },
+   {
+    "name_en": "spinach",
+    "name_tr": "ıspanak",
+    "quantity": 50,
+    "unit": "g"
+   },
+   {
+    "name_en": "spring onion",
+    "name_tr": "yeşil soğan",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "sesame oil",
+    "name_tr": "susam yağı",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Bring the stock to a bare simmer — miso goes bitter if it boils.",
+   "Whisk the miso paste into a ladleful of stock, then stir it back in.",
+   "Add the cubed tofu and spinach and warm them for 3 minutes.",
+   "Finish with sesame oil and spring onion."
+  ],
+  "steps_tr": [
+   "Sebze suyunu kaynama noktasının altında tutun — miso kaynayınca acılaşır.",
+   "Miso ezmesini bir kepçe suyla açıp tencereye geri karıştırın.",
+   "Küp doğranmış tofu ve ıspanağı ekleyip 3 dakika ısıtın.",
+   "Susam yağı ve yeşil soğanla bitirin."
+  ],
+  "image_prompt": "Steaming miso soup with tofu cubes and spinach in a lacquer bowl, spring onion floating, minimal japanese styling"
+ },
+ {
+  "slug": "tamago-protein-breakfast",
+  "title_en": "Tamago Rice Breakfast Bowl",
+  "title_tr": "Tamagolu Kahvaltı Kasesi",
+  "meal_type": "breakfast",
+  "cuisine": "japanese",
+  "calories": 420,
+  "protein": 26,
+  "carbs": 52,
+  "fat": 12,
+  "prep_time_minutes": 12,
+  "tag_tokens": [
+   "high_protein",
+   "budget_friendly"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "eggs",
+    "name_tr": "yumurta",
+    "quantity": 3
+   },
+   {
+    "name_en": "rice",
+    "name_tr": "pirinç",
+    "quantity": 80,
+    "unit": "g",
+    "note_en": "dry weight",
+    "note_tr": "kuru ölçü"
+   },
+   {
+    "name_en": "soy sauce",
+    "name_tr": "soya sosu",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "sesame oil",
+    "name_tr": "susam yağı",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "nori",
+    "name_tr": "nori",
+    "quantity": 1,
+    "unit": "yaprak",
+    "note_en": "dried seaweed sheet",
+    "note_tr": "kurutulmuş deniz yosunu"
+   }
+  ],
+  "steps_en": [
+   "Cook the rice.",
+   "Beat the eggs with the soy sauce.",
+   "Cook them in a hot oiled pan in three thin layers, rolling each one over the last.",
+   "Slice the roll and lay it on the rice with torn nori."
+  ],
+  "steps_tr": [
+   "Pirinci pişirin.",
+   "Yumurtaları soya sosuyla çırpın.",
+   "Yağlanmış kızgın tavada üç ince kat hâlinde pişirip her katı bir öncekinin üzerine sarın.",
+   "Ruloyu dilimleyip pilavın üzerine, koparılmış noriyle dizin."
+  ],
+  "image_prompt": "Japanese rolled omelette sliced over a bowl of rice with nori strips, clean minimal breakfast styling"
+ },
+ {
+  "slug": "edamame-tuna-rice-bowl",
+  "title_en": "Tuna Edamame Rice Bowl",
+  "title_tr": "Ton Balıklı Edamame Kasesi",
+  "meal_type": "lunch",
+  "cuisine": "japanese",
+  "calories": 490,
+  "protein": 40,
+  "carbs": 56,
+  "fat": 12,
+  "prep_time_minutes": 15,
+  "tag_tokens": [
+   "high_protein",
+   "budget_friendly"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "canned tuna",
+    "name_tr": "ton balığı",
+    "quantity": 150,
+    "unit": "g",
+    "note_en": "drained",
+    "note_tr": "suyu süzülmüş"
+   },
+   {
+    "name_en": "rice",
+    "name_tr": "pirinç",
+    "quantity": 80,
+    "unit": "g",
+    "note_en": "dry weight",
+    "note_tr": "kuru ölçü"
+   },
+   {
+    "name_en": "edamame",
+    "name_tr": "edamame",
+    "quantity": 80,
+    "unit": "g"
+   },
+   {
+    "name_en": "soy sauce",
+    "name_tr": "soya sosu",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "sesame oil",
+    "name_tr": "susam yağı",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "sesame seeds",
+    "name_tr": "susam",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Cook the rice and let it cool slightly.",
+   "Warm the edamame in boiling water for 3 minutes.",
+   "Fork the tuna through the soy sauce and sesame oil.",
+   "Build the bowl and scatter the sesame seeds."
+  ],
+  "steps_tr": [
+   "Pirinci pişirip hafif soğumaya bırakın.",
+   "Edamameyi kaynar suda 3 dakika ısıtın.",
+   "Ton balığını soya sosu ve susam yağıyla çatalla karıştırın.",
+   "Kaseyi kurup susamı serpin."
+  ],
+  "image_prompt": "Rice bowl with seasoned tuna, bright green edamame and sesame seeds, overhead, fresh japanese-inspired styling"
+ },
+ {
+  "slug": "matcha-protein-smoothie",
+  "title_en": "Matcha Protein Smoothie",
+  "title_tr": "Matcha Protein Smoothie",
+  "meal_type": "snack",
+  "cuisine": "japanese",
+  "calories": 315,
+  "protein": 32,
+  "carbs": 24,
+  "fat": 10,
+  "prep_time_minutes": 5,
+  "tag_tokens": [
+   "high_protein",
+   "low_calorie"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "vanilla whey protein powder",
+    "name_tr": "vanilyalı whey protein tozu",
+    "quantity": 30,
+    "unit": "g"
+   },
+   {
+    "name_en": "matcha powder",
+    "name_tr": "matcha tozu",
+    "quantity": 1,
+    "unit": "çay kaşığı",
+    "note_en": "green tea powder",
+    "note_tr": "yeşil çay tozu"
+   },
+   {
+    "name_en": "almond milk",
+    "name_tr": "badem sütü",
+    "quantity": 250,
+    "unit": "ml"
+   },
+   {
+    "name_en": "frozen banana",
+    "name_tr": "dondurulmuş muz",
+    "quantity": 1
+   },
+   {
+    "name_en": "honey",
+    "name_tr": "bal",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Sift the matcha so it does not clump in the blender.",
+   "Add every other ingredient and blend for 30 seconds.",
+   "Serve cold in a tall glass."
+  ],
+  "steps_tr": [
+   "Matchayı blenderda topaklanmaması için eleyin.",
+   "Diğer tüm malzemeleri ekleyip 30 saniye çekin.",
+   "Uzun bir bardakta soğuk servis edin."
+  ],
+  "image_prompt": "Vivid green matcha protein smoothie in a tall glass with matcha powder dusted on top, bright minimal styling"
+ },
+ {
+  "slug": "huevos-rancheros-protein",
+  "title_en": "Huevos Rancheros",
+  "title_tr": "Huevos Rancheros",
+  "meal_type": "breakfast",
+  "cuisine": "mexican",
+  "calories": 500,
+  "protein": 32,
+  "carbs": 44,
+  "fat": 22,
+  "prep_time_minutes": 20,
+  "tag_tokens": [
+   "high_protein",
+   "budget_friendly"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "eggs",
+    "name_tr": "yumurta",
+    "quantity": 3
+   },
+   {
+    "name_en": "corn tortillas",
+    "name_tr": "mısır tortilla",
+    "quantity": 2
+   },
+   {
+    "name_en": "black beans",
+    "name_tr": "siyah fasulye",
+    "quantity": 150,
+    "unit": "g"
+   },
+   {
+    "name_en": "chopped tomatoes",
+    "name_tr": "doğranmış domates",
+    "quantity": 150,
+    "unit": "g"
+   },
+   {
+    "name_en": "onion",
+    "name_tr": "kuru soğan",
+    "quantity": 1
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "cumin, chilli, salt",
+    "name_tr": "kimyon, acı biber, tuz",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Soften the onion in the oil, then add the tomatoes, cumin and chilli.",
+   "Simmer the sauce for 8 minutes and stir the beans through.",
+   "Warm the tortillas in a dry pan.",
+   "Fry the eggs and serve them over the tortillas and sauce."
+  ],
+  "steps_tr": [
+   "Soğanı yağda yumuşatın, sonra domatesi, kimyonu ve acı biberi ekleyin.",
+   "Sosu 8 dakika pişirip fasulyeyi içine karıştırın.",
+   "Tortillaları kuru tavada ısıtın.",
+   "Yumurtaları pişirip tortilla ve sosun üzerinde servis edin."
+  ],
+  "image_prompt": "Huevos rancheros with fried eggs over corn tortillas, black beans and red salsa, vibrant mexican colours, overhead"
+ },
+ {
+  "slug": "chicken-tinga-bowl",
+  "title_en": "Chicken Tinga Bowl",
+  "title_tr": "Tavuklu Tinga Kasesi",
+  "meal_type": "dinner",
+  "cuisine": "mexican",
+  "calories": 550,
+  "protein": 46,
+  "carbs": 56,
+  "fat": 16,
+  "prep_time_minutes": 35,
+  "tag_tokens": [
+   "high_protein",
+   "bulking"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "chicken breast",
+    "name_tr": "tavuk göğsü",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "rice",
+    "name_tr": "pirinç",
+    "quantity": 80,
+    "unit": "g",
+    "note_en": "dry weight",
+    "note_tr": "kuru ölçü"
+   },
+   {
+    "name_en": "chopped tomatoes",
+    "name_tr": "doğranmış domates",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "onion",
+    "name_tr": "kuru soğan",
+    "quantity": 1
+   },
+   {
+    "name_en": "garlic",
+    "name_tr": "sarımsak",
+    "quantity": 2,
+    "unit": "diş"
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "chipotle, oregano, salt",
+    "name_tr": "chipotle, kekik, tuz",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Poach the chicken for 15 minutes, then shred it with two forks.",
+   "Blend the tomatoes, onion, garlic and chipotle into a sauce.",
+   "Fry the sauce in the oil for 6 minutes to deepen it.",
+   "Fold the shredded chicken through and serve over the rice."
+  ],
+  "steps_tr": [
+   "Tavuğu 15 dakika haşlayıp iki çatalla lif lif ayırın.",
+   "Domates, soğan, sarımsak ve chipotleyi blenderdan geçirerek sos yapın.",
+   "Sosu yağda 6 dakika kavurarak koyulaştırın.",
+   "Didilmiş tavuğu sosa karıştırıp pilavın üzerinde servis edin."
+  ],
+  "image_prompt": "Shredded chipotle chicken tinga over rice with lime wedges, deep red sauce, rustic mexican plating"
+ },
+ {
+  "slug": "black-bean-quinoa-tacos",
+  "title_en": "Black Bean and Quinoa Tacos",
+  "title_tr": "Siyah Fasulyeli Kinoa Taco",
+  "meal_type": "lunch",
+  "cuisine": "mexican",
+  "calories": 480,
+  "protein": 22,
+  "carbs": 62,
+  "fat": 16,
+  "prep_time_minutes": 20,
+  "tag_tokens": [
+   "budget_friendly",
+   "toning"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "black beans",
+    "name_tr": "siyah fasulye",
+    "quantity": 150,
+    "unit": "g"
+   },
+   {
+    "name_en": "quinoa",
+    "name_tr": "kinoa",
+    "quantity": 60,
+    "unit": "g",
+    "note_en": "dry weight",
+    "note_tr": "kuru ölçü"
+   },
+   {
+    "name_en": "corn tortillas",
+    "name_tr": "mısır tortilla",
+    "quantity": 3
+   },
+   {
+    "name_en": "avocado",
+    "name_tr": "avokado",
+    "quantity": 1
+   },
+   {
+    "name_en": "lime",
+    "name_tr": "misket limonu",
+    "quantity": 1
+   },
+   {
+    "name_en": "coriander",
+    "name_tr": "kişniş",
+    "quantity": 1,
+    "unit": "avuç"
+   },
+   {
+    "name_en": "cumin, salt",
+    "name_tr": "kimyon, tuz",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Simmer the quinoa for 15 minutes.",
+   "Warm the beans with the cumin and mash a third of them for body.",
+   "Fold the quinoa through the beans.",
+   "Fill the warmed tortillas and top with avocado, coriander and lime."
+  ],
+  "steps_tr": [
+   "Kinoayı 15 dakika haşlayın.",
+   "Fasulyeyi kimyonla ısıtın ve kıvam için üçte birini ezin.",
+   "Kinoayı fasulyeye karıştırın.",
+   "Isıtılmış tortillaları doldurup avokado, kişniş ve misket limonuyla servis edin."
+  ],
+  "image_prompt": "Three corn tacos filled with black beans and quinoa, topped with avocado and coriander, lime wedges, bright cantina styling"
+ },
+ {
+  "slug": "mexican-street-corn-salad",
+  "title_en": "Mexican Street Corn Salad",
+  "title_tr": "Meksika Sokak Mısırı Salatası",
+  "meal_type": "snack",
+  "cuisine": "mexican",
+  "calories": 325,
+  "protein": 12,
+  "carbs": 38,
+  "fat": 14,
+  "prep_time_minutes": 15,
+  "tag_tokens": [
+   "low_calorie",
+   "budget_friendly"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "sweetcorn",
+    "name_tr": "mısır",
+    "quantity": 300,
+    "unit": "g"
+   },
+   {
+    "name_en": "feta cheese",
+    "name_tr": "beyaz peynir",
+    "quantity": 60,
+    "unit": "g"
+   },
+   {
+    "name_en": "Greek yogurt",
+    "name_tr": "süzme yoğurt",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "lime",
+    "name_tr": "misket limonu",
+    "quantity": 1
+   },
+   {
+    "name_en": "coriander",
+    "name_tr": "kişniş",
+    "quantity": 1,
+    "unit": "avuç"
+   },
+   {
+    "name_en": "chilli powder",
+    "name_tr": "toz acı biber",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Char the corn in a dry hot pan until it blisters, about 6 minutes.",
+   "Mix the yogurt, lime juice and chilli into a dressing.",
+   "Toss the warm corn through the dressing.",
+   "Crumble the feta over and scatter the coriander."
+  ],
+  "steps_tr": [
+   "Mısırı kuru kızgın tavada kabarana kadar, yaklaşık 6 dakika kavurun.",
+   "Yoğurt, misket limonu suyu ve acı biberi karıştırarak sos yapın.",
+   "Sıcak mısırı sosla harmanlayın.",
+   "Üzerine beyaz peyniri ufalayıp kişnişi serpin."
+  ],
+  "image_prompt": "Charred street corn salad with crumbled white cheese, chilli powder and coriander in a bowl, lime wedge, vibrant"
+ },
+ {
+  "slug": "beef-barbacoa-bowl",
+  "title_en": "Beef Barbacoa Bowl",
+  "title_tr": "Barbacoa Dana Kasesi",
+  "meal_type": "dinner",
+  "cuisine": "mexican",
+  "calories": 600,
+  "protein": 48,
+  "carbs": 52,
+  "fat": 22,
+  "prep_time_minutes": 45,
+  "tag_tokens": [
+   "high_protein",
+   "bulking"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "beef brisket",
+    "name_tr": "dana kuşbaşı",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "rice",
+    "name_tr": "pirinç",
+    "quantity": 80,
+    "unit": "g",
+    "note_en": "dry weight",
+    "note_tr": "kuru ölçü"
+   },
+   {
+    "name_en": "black beans",
+    "name_tr": "siyah fasulye",
+    "quantity": 100,
+    "unit": "g"
+   },
+   {
+    "name_en": "beef stock",
+    "name_tr": "et suyu",
+    "quantity": 200,
+    "unit": "ml"
+   },
+   {
+    "name_en": "garlic",
+    "name_tr": "sarımsak",
+    "quantity": 2,
+    "unit": "diş"
+   },
+   {
+    "name_en": "lime",
+    "name_tr": "misket limonu",
+    "quantity": 1
+   },
+   {
+    "name_en": "cumin, oregano, chilli",
+    "name_tr": "kimyon, kekik, acı biber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Brown the beef on every side, then add the stock, garlic and spices.",
+   "Cover and simmer for 35 minutes until it pulls apart.",
+   "Shred the beef and reduce the remaining liquid over it.",
+   "Serve over rice and beans with a squeeze of lime."
+  ],
+  "steps_tr": [
+   "Eti her tarafı kızarana kadar mühürleyin, sonra et suyu, sarımsak ve baharatları ekleyin.",
+   "Kapağını kapatıp lif lif ayrılana kadar 35 dakika pişirin.",
+   "Eti didikleyip kalan suyu üzerinde koyulaştırın.",
+   "Pilav ve fasulyeyle, misket limonu sıkarak servis edin."
+  ],
+  "image_prompt": "Shredded barbacoa beef over rice and black beans with lime, rich dark sauce, rustic mexican bowl"
+ },
+ {
+  "slug": "mexican-chocolate-protein-pudding",
+  "title_en": "Mexican Chocolate Protein Pudding",
+  "title_tr": "Meksika Çikolatalı Protein Puding",
+  "meal_type": "dessert",
+  "cuisine": "mexican",
+  "calories": 300,
+  "protein": 30,
+  "carbs": 22,
+  "fat": 10,
+  "prep_time_minutes": 10,
+  "tag_tokens": [
+   "high_protein",
+   "toning"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "chocolate whey protein powder",
+    "name_tr": "çikolatalı whey protein tozu",
+    "quantity": 35,
+    "unit": "g"
+   },
+   {
+    "name_en": "milk",
+    "name_tr": "süt",
+    "quantity": 200,
+    "unit": "ml"
+   },
+   {
+    "name_en": "chia seeds",
+    "name_tr": "chia tohumu",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "cinnamon",
+    "name_tr": "tarçın",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "cayenne pepper",
+    "name_tr": "acı toz biber",
+    "quantity": 1,
+    "unit": "çimdik"
+   }
+  ],
+  "steps_en": [
+   "Whisk everything together in a jar.",
+   "Whisk again after 5 minutes so the chia does not settle.",
+   "Chill for 3 hours — the cayenne is what makes it Mexican, and a pinch is enough."
+  ],
+  "steps_tr": [
+   "Her şeyi bir kavanozda çırpın.",
+   "Chia dibe çökmesin diye 5 dakika sonra tekrar çırpın.",
+   "3 saat soğutun — bunu Meksika yapan acı biberdir ve bir tutam yeterlidir."
+  ],
+  "image_prompt": "Dark chocolate chia pudding dusted with cinnamon in a small glass, warm spice tones, moody styling"
+ },
+ {
+  "slug": "paneer-tikka-bowl",
+  "title_en": "Paneer Tikka Bowl",
+  "title_tr": "Paneer Tikka Kasesi",
+  "meal_type": "dinner",
+  "cuisine": "indian",
+  "calories": 560,
+  "protein": 34,
+  "carbs": 48,
+  "fat": 26,
+  "prep_time_minutes": 30,
+  "tag_tokens": [
+   "high_protein",
+   "toning"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "paneer",
+    "name_tr": "paneer",
+    "quantity": 200,
+    "unit": "g",
+    "note_en": "Indian fresh cheese",
+    "note_tr": "Hint taze peyniri"
+   },
+   {
+    "name_en": "basmati rice",
+    "name_tr": "basmati pirinci",
+    "quantity": 70,
+    "unit": "g",
+    "note_en": "dry weight",
+    "note_tr": "kuru ölçü"
+   },
+   {
+    "name_en": "Greek yogurt",
+    "name_tr": "süzme yoğurt",
+    "quantity": 120,
+    "unit": "g"
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "garam masala",
+    "name_tr": "garam masala baharatı",
+    "quantity": 2,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "grated ginger",
+    "name_tr": "zencefil rende",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "bell pepper",
+    "name_tr": "renkli biber",
+    "quantity": 1
+   }
+  ],
+  "steps_en": [
+   "Marinate the cubed paneer in the yogurt, garam masala and ginger for 15 minutes.",
+   "Cook the rice.",
+   "Sear the paneer and pepper in a very hot pan until charred at the edges, about 8 minutes.",
+   "Serve over the rice with the remaining marinade warmed through."
+  ],
+  "steps_tr": [
+   "Küp doğranmış paneeri yoğurt, garam masala ve zencefille 15 dakika marine edin.",
+   "Pirinci pişirin.",
+   "Paneer ve biberi çok kızgın tavada kenarları yanana kadar, yaklaşık 8 dakika pişirin.",
+   "Kalan marinatı ısıtıp pilavın üzerinde servis edin."
+  ],
+  "image_prompt": "Charred paneer tikka cubes with peppers over basmati rice, yogurt marinade, vibrant indian spice colours"
+ },
+ {
+  "slug": "red-lentil-dal",
+  "title_en": "Red Lentil Dal",
+  "title_tr": "Kırmızı Mercimek Dal",
+  "meal_type": "lunch",
+  "cuisine": "indian",
+  "calories": 450,
+  "protein": 24,
+  "carbs": 62,
+  "fat": 12,
+  "prep_time_minutes": 30,
+  "tag_tokens": [
+   "budget_friendly",
+   "toning"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "red lentils",
+    "name_tr": "kırmızı mercimek",
+    "quantity": 150,
+    "unit": "g"
+   },
+   {
+    "name_en": "vegetable stock",
+    "name_tr": "sebze suyu",
+    "quantity": 600,
+    "unit": "ml"
+   },
+   {
+    "name_en": "onion",
+    "name_tr": "kuru soğan",
+    "quantity": 1
+   },
+   {
+    "name_en": "garlic",
+    "name_tr": "sarımsak",
+    "quantity": 2,
+    "unit": "diş"
+   },
+   {
+    "name_en": "turmeric",
+    "name_tr": "zerdeçal",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "cumin",
+    "name_tr": "kimyon",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "coconut oil",
+    "name_tr": "hindistancevizi yağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Rinse the lentils until the water runs clear.",
+   "Fry the onion, garlic and spices in the coconut oil for 4 minutes.",
+   "Add the lentils and stock and simmer for 22 minutes, stirring.",
+   "Mash a little against the side of the pan to thicken it."
+  ],
+  "steps_tr": [
+   "Mercimeği suyu berraklaşana kadar yıkayın.",
+   "Soğan, sarımsak ve baharatları hindistancevizi yağında 4 dakika kavurun.",
+   "Mercimeği ve sebze suyunu ekleyip karıştırarak 22 dakika pişirin.",
+   "Kıvam alması için bir kısmını tencerenin kenarında ezin."
+  ],
+  "image_prompt": "Golden red lentil dal in a bowl with a swirl of oil and fresh coriander, warm spice tones, indian home cooking"
+ },
+ {
+  "slug": "chicken-tikka-masala-light",
+  "title_en": "Lighter Chicken Tikka Masala",
+  "title_tr": "Hafif Tavuklu Tikka Masala",
+  "meal_type": "dinner",
+  "cuisine": "indian",
+  "calories": 580,
+  "protein": 48,
+  "carbs": 52,
+  "fat": 20,
+  "prep_time_minutes": 35,
+  "tag_tokens": [
+   "high_protein",
+   "bulking"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "chicken breast",
+    "name_tr": "tavuk göğsü",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "basmati rice",
+    "name_tr": "basmati pirinci",
+    "quantity": 70,
+    "unit": "g",
+    "note_en": "dry weight",
+    "note_tr": "kuru ölçü"
+   },
+   {
+    "name_en": "Greek yogurt",
+    "name_tr": "süzme yoğurt",
+    "quantity": 150,
+    "unit": "g"
+   },
+   {
+    "name_en": "chopped tomatoes",
+    "name_tr": "doğranmış domates",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "garam masala",
+    "name_tr": "garam masala baharatı",
+    "quantity": 2,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "grated ginger",
+    "name_tr": "zencefil rende",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Marinate the cubed chicken in half the yogurt with the spices for 20 minutes.",
+   "Sear it hard in the oil until charred at the edges.",
+   "Add the tomatoes and simmer for 12 minutes.",
+   "Stir the remaining yogurt in off the heat — boiling it splits the sauce.",
+   "Serve over the basmati."
+  ],
+  "steps_tr": [
+   "Küp doğranmış tavuğu yoğurdun yarısı ve baharatlarla 20 dakika marine edin.",
+   "Yağda kenarları yanana kadar yüksek ateşte mühürleyin.",
+   "Domatesi ekleyip 12 dakika pişirin.",
+   "Kalan yoğurdu ateşten uzakta karıştırın — kaynatmak sosu kestirir.",
+   "Basmati pilavının üzerinde servis edin."
+  ],
+  "image_prompt": "Creamy tikka masala with charred chicken pieces over basmati rice, coriander garnish, warm indian restaurant lighting"
+ },
+ {
+  "slug": "chana-masala",
+  "title_en": "Chana Masala",
+  "title_tr": "Nohutlu Chana Masala",
+  "meal_type": "lunch",
+  "cuisine": "indian",
+  "calories": 460,
+  "protein": 20,
+  "carbs": 64,
+  "fat": 14,
+  "prep_time_minutes": 25,
+  "tag_tokens": [
+   "budget_friendly",
+   "toning"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "chickpeas",
+    "name_tr": "haşlanmış nohut",
+    "quantity": 300,
+    "unit": "g"
+   },
+   {
+    "name_en": "chopped tomatoes",
+    "name_tr": "doğranmış domates",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "onion",
+    "name_tr": "kuru soğan",
+    "quantity": 1
+   },
+   {
+    "name_en": "garlic",
+    "name_tr": "sarımsak",
+    "quantity": 2,
+    "unit": "diş"
+   },
+   {
+    "name_en": "garam masala",
+    "name_tr": "garam masala baharatı",
+    "quantity": 2,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "coriander",
+    "name_tr": "kişniş",
+    "quantity": 1,
+    "unit": "avuç"
+   }
+  ],
+  "steps_en": [
+   "Fry the onion and garlic until deeply golden — this is where the flavour comes from, so do not rush it.",
+   "Add the garam masala and cook for 1 minute.",
+   "Add the tomatoes and chickpeas and simmer for 15 minutes.",
+   "Finish with coriander."
+  ],
+  "steps_tr": [
+   "Soğan ve sarımsağı koyu altın rengi olana kadar kavurun — lezzet buradan gelir, acele etmeyin.",
+   "Garam masalayı ekleyip 1 dakika pişirin.",
+   "Domates ve nohudu ekleyip 15 dakika pişirin.",
+   "Kişnişle bitirin."
+  ],
+  "image_prompt": "Chana masala chickpea curry in a deep bowl with fresh coriander, rich tomato sauce, indian street food styling"
+ },
+ {
+  "slug": "masala-egg-bhurji",
+  "title_en": "Masala Egg Bhurji",
+  "title_tr": "Baharatlı Yumurta Bhurji",
+  "meal_type": "breakfast",
+  "cuisine": "indian",
+  "calories": 340,
+  "protein": 26,
+  "carbs": 14,
+  "fat": 20,
+  "prep_time_minutes": 15,
+  "tag_tokens": [
+   "high_protein",
+   "budget_friendly"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "eggs",
+    "name_tr": "yumurta",
+    "quantity": 4
+   },
+   {
+    "name_en": "onion",
+    "name_tr": "kuru soğan",
+    "quantity": 1
+   },
+   {
+    "name_en": "tomato",
+    "name_tr": "domates",
+    "quantity": 1
+   },
+   {
+    "name_en": "turmeric",
+    "name_tr": "zerdeçal",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "cumin",
+    "name_tr": "kimyon",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "coriander",
+    "name_tr": "kişniş",
+    "quantity": 1,
+    "unit": "avuç"
+   }
+  ],
+  "steps_en": [
+   "Fry the diced onion in the oil until it softens.",
+   "Add the cumin and turmeric and cook for 30 seconds.",
+   "Add the chopped tomato and cook it down for 3 minutes.",
+   "Pour in the beaten eggs and scramble them into the masala.",
+   "Finish with coriander."
+  ],
+  "steps_tr": [
+   "Doğranmış soğanı yağda yumuşayana kadar kavurun.",
+   "Kimyon ve zerdeçalı ekleyip 30 saniye pişirin.",
+   "Doğranmış domatesi ekleyip 3 dakika suyunu çektirin.",
+   "Çırpılmış yumurtaları dökün ve masalanın içinde karıştırın.",
+   "Kişnişle bitirin."
+  ],
+  "image_prompt": "Spiced Indian scrambled eggs with tomato and onion in a pan, coriander scattered, warm golden tones"
+ },
+ {
+  "slug": "mango-lassi-protein",
+  "title_en": "Mango Protein Lassi",
+  "title_tr": "Mangolu Protein Lassi",
+  "meal_type": "snack",
+  "cuisine": "indian",
+  "calories": 335,
+  "protein": 30,
+  "carbs": 40,
+  "fat": 6,
+  "prep_time_minutes": 5,
+  "tag_tokens": [
+   "high_protein",
+   "low_calorie"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "Greek yogurt",
+    "name_tr": "süzme yoğurt",
+    "quantity": 150,
+    "unit": "g"
+   },
+   {
+    "name_en": "mango",
+    "name_tr": "mango",
+    "quantity": 150,
+    "unit": "g"
+   },
+   {
+    "name_en": "vanilla whey protein powder",
+    "name_tr": "vanilyalı whey protein tozu",
+    "quantity": 25,
+    "unit": "g"
+   },
+   {
+    "name_en": "milk",
+    "name_tr": "süt",
+    "quantity": 100,
+    "unit": "ml"
+   },
+   {
+    "name_en": "cardamom",
+    "name_tr": "kakule",
+    "quantity": 1,
+    "unit": "çimdik"
+   }
+  ],
+  "steps_en": [
+   "Blend everything for 30 seconds.",
+   "Add the cardamom last and pulse once — too much and it dominates.",
+   "Serve over ice."
+  ],
+  "steps_tr": [
+   "Her şeyi 30 saniye blenderdan geçirin.",
+   "Kakuleyi en son ekleyip bir kez çalıştırın — fazlası her şeyi bastırır.",
+   "Buz üzerine servis edin."
+  ],
+  "image_prompt": "Creamy orange mango lassi in a tall glass with a dusting of cardamom, bright fresh styling"
+ },
+ {
+  "slug": "greek-chicken-souvlaki-bowl",
+  "title_en": "Chicken Souvlaki Bowl",
+  "title_tr": "Tavuklu Souvlaki Kasesi",
+  "meal_type": "dinner",
+  "cuisine": "greek",
+  "calories": 520,
+  "protein": 48,
+  "carbs": 32,
+  "fat": 22,
+  "prep_time_minutes": 25,
+  "tag_tokens": [
+   "high_protein",
+   "toning"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "chicken breast",
+    "name_tr": "tavuk göğsü",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "Greek yogurt",
+    "name_tr": "süzme yoğurt",
+    "quantity": 150,
+    "unit": "g"
+   },
+   {
+    "name_en": "cucumber",
+    "name_tr": "salatalık",
+    "quantity": 1
+   },
+   {
+    "name_en": "garlic",
+    "name_tr": "sarımsak",
+    "quantity": 2,
+    "unit": "diş"
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "lemon",
+    "name_tr": "limon",
+    "quantity": 1
+   },
+   {
+    "name_en": "oregano, salt, pepper",
+    "name_tr": "kekik, tuz, karabiber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Marinate the cubed chicken in the oil, lemon juice and oregano for 20 minutes.",
+   "Grate the cucumber, squeeze the water out, and mix it with the yogurt and garlic for the tzatziki.",
+   "Grill the chicken for 10 minutes, turning, until charred.",
+   "Serve the chicken over the tzatziki."
+  ],
+  "steps_tr": [
+   "Küp doğranmış tavuğu zeytinyağı, limon suyu ve kekikle 20 dakika marine edin.",
+   "Salatalığı rendeleyip suyunu sıkın, yoğurt ve sarımsakla karıştırarak cacık yapın.",
+   "Tavuğu çevirerek 10 dakika, kenarları yanana kadar ızgarada pişirin.",
+   "Tavuğu cacığın üzerinde servis edin."
+  ],
+  "image_prompt": "Grilled chicken souvlaki over thick tzatziki with lemon and oregano, aegean blue and white styling"
+ },
+ {
+  "slug": "greek-salad-with-feta",
+  "title_en": "Greek Salad with Feta",
+  "title_tr": "Beyaz Peynirli Yunan Salatası",
+  "meal_type": "lunch",
+  "cuisine": "greek",
+  "calories": 390,
+  "protein": 16,
+  "carbs": 18,
+  "fat": 28,
+  "prep_time_minutes": 12,
+  "tag_tokens": [
+   "low_calorie",
+   "toning"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "tomatoes",
+    "name_tr": "domates",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "cucumber",
+    "name_tr": "salatalık",
+    "quantity": 150,
+    "unit": "g"
+   },
+   {
+    "name_en": "feta cheese",
+    "name_tr": "beyaz peynir",
+    "quantity": 100,
+    "unit": "g"
+   },
+   {
+    "name_en": "olives",
+    "name_tr": "zeytin",
+    "quantity": 60,
+    "unit": "g"
+   },
+   {
+    "name_en": "red onion",
+    "name_tr": "kırmızı soğan",
+    "quantity": 1
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "oregano, salt",
+    "name_tr": "kekik, tuz",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Cut the tomatoes into wedges rather than dice — a Greek salad is chunky.",
+   "Slice the cucumber and onion and combine them with the olives.",
+   "Lay the feta on top whole, not crumbled.",
+   "Pour the olive oil over and finish with oregano and salt."
+  ],
+  "steps_tr": [
+   "Domatesleri küp değil, dilim dilim kesin — Yunan salatası iri doğranır.",
+   "Salatalık ve soğanı dilimleyip zeytinlerle birleştirin.",
+   "Beyaz peyniri ufalamadan bütün hâlde üzerine koyun.",
+   "Zeytinyağını gezdirip kekik ve tuzla bitirin."
+  ],
+  "image_prompt": "Traditional Greek salad with a whole slab of feta on top, olives and oregano, olive oil pooling, rustic taverna styling"
+ },
+ {
+  "slug": "greek-baked-peaches",
+  "title_en": "Baked Peaches with Pistachios",
+  "title_tr": "Fırında Antep Fıstıklı Şeftali",
+  "meal_type": "dessert",
+  "cuisine": "greek",
+  "calories": 285,
+  "protein": 6,
+  "carbs": 34,
+  "fat": 14,
+  "prep_time_minutes": 25,
+  "tag_tokens": [
+   "low_calorie",
+   "budget_friendly"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "peaches",
+    "name_tr": "şeftali",
+    "quantity": 3
+   },
+   {
+    "name_en": "pistachios",
+    "name_tr": "antep fıstığı",
+    "quantity": 30,
+    "unit": "g"
+   },
+   {
+    "name_en": "honey",
+    "name_tr": "bal",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "cinnamon",
+    "name_tr": "tarçın",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "lemon",
+    "name_tr": "limon",
+    "quantity": 1
+   }
+  ],
+  "steps_en": [
+   "Halve the peaches and set them cut-side up in a dish.",
+   "Drizzle the honey and lemon juice over and dust with cinnamon.",
+   "Bake at 190 degrees for 20 minutes until they collapse slightly.",
+   "Scatter the chopped pistachios over while they are still hot."
+  ],
+  "steps_tr": [
+   "Şeftalileri ikiye bölüp kesik yüzleri yukarı bakacak şekilde kaba dizin.",
+   "Bal ve limon suyunu gezdirip tarçın serpin.",
+   "Hafifçe çökene kadar 190 derecede 20 dakika pişirin.",
+   "Sıcakken üzerine doğranmış antep fıstığını serpin."
+  ],
+  "image_prompt": "Baked peach halves glistening with honey and scattered with chopped pistachios, cinnamon dusting, warm golden dessert styling"
+ },
+ {
+  "slug": "baked-feta-tomato-protein",
+  "title_en": "Baked Feta with Tomatoes",
+  "title_tr": "Fırında Beyaz Peynir ve Domates",
+  "meal_type": "dinner",
+  "cuisine": "greek",
+  "calories": 445,
+  "protein": 22,
+  "carbs": 22,
+  "fat": 30,
+  "prep_time_minutes": 30,
+  "tag_tokens": [
+   "toning",
+   "low_calorie"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "feta cheese",
+    "name_tr": "beyaz peynir",
+    "quantity": 150,
+    "unit": "g"
+   },
+   {
+    "name_en": "cherry tomatoes",
+    "name_tr": "cherry domates",
+    "quantity": 300,
+    "unit": "g"
+   },
+   {
+    "name_en": "garlic",
+    "name_tr": "sarımsak",
+    "quantity": 2,
+    "unit": "diş"
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "basil",
+    "name_tr": "fesleğen",
+    "quantity": 1,
+    "unit": "avuç"
+   },
+   {
+    "name_en": "oregano, pepper",
+    "name_tr": "kekik, karabiber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Put the feta in the middle of a dish and surround it with the tomatoes and garlic.",
+   "Pour the olive oil over everything and season.",
+   "Bake at 200 degrees for 25 minutes until the tomatoes burst.",
+   "Stir it all together and finish with basil."
+  ],
+  "steps_tr": [
+   "Beyaz peyniri kabın ortasına koyup etrafına domates ve sarımsağı dizin.",
+   "Zeytinyağını üzerine gezdirip tatlandırın.",
+   "Domatesler patlayana kadar 200 derecede 25 dakika pişirin.",
+   "Hepsini karıştırıp fesleğenle bitirin."
+  ],
+  "image_prompt": "Baked feta block surrounded by burst cherry tomatoes in olive oil, fresh basil, rustic ceramic dish"
+ },
+ {
+  "slug": "greek-lemon-chicken-soup",
+  "title_en": "Greek Lemon Chicken Soup",
+  "title_tr": "Yunan Limonlu Tavuk Çorbası",
+  "meal_type": "lunch",
+  "cuisine": "greek",
+  "calories": 380,
+  "protein": 32,
+  "carbs": 36,
+  "fat": 12,
+  "prep_time_minutes": 30,
+  "tag_tokens": [
+   "high_protein",
+   "low_calorie"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "chicken breast",
+    "name_tr": "tavuk göğsü",
+    "quantity": 150,
+    "unit": "g"
+   },
+   {
+    "name_en": "rice",
+    "name_tr": "pirinç",
+    "quantity": 60,
+    "unit": "g",
+    "note_en": "dry weight",
+    "note_tr": "kuru ölçü"
+   },
+   {
+    "name_en": "chicken stock",
+    "name_tr": "tavuk suyu",
+    "quantity": 700,
+    "unit": "ml"
+   },
+   {
+    "name_en": "eggs",
+    "name_tr": "yumurta",
+    "quantity": 2
+   },
+   {
+    "name_en": "lemons",
+    "name_tr": "limon",
+    "quantity": 2
+   },
+   {
+    "name_en": "salt and pepper",
+    "name_tr": "tuz ve karabiber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Poach the chicken in the stock for 15 minutes, then shred it.",
+   "Cook the rice in the same stock for 15 minutes.",
+   "Whisk the eggs with the lemon juice, then temper them by whisking in hot stock a ladleful at a time.",
+   "Stir the mixture back into the pan OFF the heat — it curdles at a simmer."
+  ],
+  "steps_tr": [
+   "Tavuğu et suyunda 15 dakika haşlayıp didikleyin.",
+   "Pirinci aynı suda 15 dakika pişirin.",
+   "Yumurtaları limon suyuyla çırpın, sonra kepçe kepçe sıcak su ekleyerek ısıtın.",
+   "Karışımı ateşten uzakta tencereye geri karıştırın — kaynarken kesilir."
+  ],
+  "image_prompt": "Creamy avgolemono lemon chicken soup with rice, lemon slices on the side, steam rising, mediterranean styling"
+ },
+ {
+  "slug": "shawarma-chicken-plate",
+  "title_en": "Chicken Shawarma Plate",
+  "title_tr": "Tavuk Shawarma Tabağı",
+  "meal_type": "dinner",
+  "cuisine": "levantine",
+  "calories": 575,
+  "protein": 46,
+  "carbs": 48,
+  "fat": 22,
+  "prep_time_minutes": 30,
+  "tag_tokens": [
+   "high_protein",
+   "bulking"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "chicken thigh",
+    "name_tr": "tavuk but",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "bulgur",
+    "name_tr": "pilavlık bulgur",
+    "quantity": 100,
+    "unit": "g",
+    "note_en": "dry weight",
+    "note_tr": "kuru ölçü"
+   },
+   {
+    "name_en": "tahini",
+    "name_tr": "tahin",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "lemon",
+    "name_tr": "limon",
+    "quantity": 1
+   },
+   {
+    "name_en": "baharat spice mix",
+    "name_tr": "baharat karışımı",
+    "quantity": 2,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "tomato",
+    "name_tr": "domates",
+    "quantity": 1
+   }
+  ],
+  "steps_en": [
+   "Toss the sliced chicken in the spice mix and oil and leave it for 15 minutes.",
+   "Cook the bulgur in twice its volume of water for 12 minutes.",
+   "Sear the chicken hard until the edges crisp.",
+   "Loosen the tahini with lemon juice and water and pour it over."
+  ],
+  "steps_tr": [
+   "Dilimlenmiş tavuğu baharat karışımı ve yağla harmanlayıp 15 dakika bekletin.",
+   "Bulguru iki katı suda 12 dakika pişirin.",
+   "Tavuğu kenarları çıtırlaşana kadar yüksek ateşte kızartın.",
+   "Tahini limon suyu ve suyla açıp üzerine gezdirin."
+  ],
+  "image_prompt": "Chicken shawarma over bulgur with tahini sauce drizzled across, tomato and parsley, levantine street food styling"
+ },
+ {
+  "slug": "falafel-protein-bowl",
+  "title_en": "Baked Falafel Bowl",
+  "title_tr": "Fırında Falafel Kasesi",
+  "meal_type": "lunch",
+  "cuisine": "levantine",
+  "calories": 510,
+  "protein": 24,
+  "carbs": 58,
+  "fat": 20,
+  "prep_time_minutes": 35,
+  "tag_tokens": [
+   "budget_friendly",
+   "toning"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "chickpeas",
+    "name_tr": "haşlanmış nohut",
+    "quantity": 300,
+    "unit": "g"
+   },
+   {
+    "name_en": "onion",
+    "name_tr": "kuru soğan",
+    "quantity": 1
+   },
+   {
+    "name_en": "garlic",
+    "name_tr": "sarımsak",
+    "quantity": 3,
+    "unit": "diş"
+   },
+   {
+    "name_en": "parsley",
+    "name_tr": "maydanoz",
+    "quantity": 1,
+    "unit": "avuç"
+   },
+   {
+    "name_en": "tahini",
+    "name_tr": "tahin",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "cumin",
+    "name_tr": "kimyon",
+    "quantity": 2,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Blitz the chickpeas, onion, garlic, parsley and cumin to a coarse paste — a smooth one makes falafel dense.",
+   "Shape into 10 patties and brush them with the oil.",
+   "Bake at 200 degrees for 25 minutes, turning once.",
+   "Loosen the tahini with water and lemon and serve alongside."
+  ],
+  "steps_tr": [
+   "Nohut, soğan, sarımsak, maydanoz ve kimyonu iri taneli bir hamur olana kadar çekin — pürüzsüz hamur falafeli ağırlaştırır.",
+   "10 köfte şekli verip üzerlerine yağ sürün.",
+   "200 derecede bir kez çevirerek 25 dakika pişirin.",
+   "Tahini su ve limonla açıp yanında servis edin."
+  ],
+  "image_prompt": "Baked falafel patties on a bed of salad with tahini sauce, lemon wedges, middle eastern styling"
+ },
+ {
+  "slug": "shakshuka-protein",
+  "title_en": "Shakshuka",
+  "title_tr": "Şakşuka",
+  "meal_type": "breakfast",
+  "cuisine": "levantine",
+  "calories": 405,
+  "protein": 26,
+  "carbs": 26,
+  "fat": 22,
+  "prep_time_minutes": 25,
+  "tag_tokens": [
+   "high_protein",
+   "budget_friendly"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "eggs",
+    "name_tr": "yumurta",
+    "quantity": 4
+   },
+   {
+    "name_en": "chopped tomatoes",
+    "name_tr": "doğranmış domates",
+    "quantity": 400,
+    "unit": "g"
+   },
+   {
+    "name_en": "bell pepper",
+    "name_tr": "renkli biber",
+    "quantity": 1
+   },
+   {
+    "name_en": "onion",
+    "name_tr": "kuru soğan",
+    "quantity": 1
+   },
+   {
+    "name_en": "garlic",
+    "name_tr": "sarımsak",
+    "quantity": 2,
+    "unit": "diş"
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "cumin, paprika, salt",
+    "name_tr": "kimyon, toz biber, tuz",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Soften the onion and pepper in the oil for 8 minutes.",
+   "Add the garlic and spices, then the tomatoes, and simmer for 10 minutes.",
+   "Make four wells and crack an egg into each.",
+   "Cover and cook for 6 minutes until the whites set and the yolks stay soft."
+  ],
+  "steps_tr": [
+   "Soğan ve biberi yağda 8 dakika yumuşatın.",
+   "Sarımsak ve baharatları, sonra domatesi ekleyip 10 dakika pişirin.",
+   "Dört çukur açıp her birine bir yumurta kırın.",
+   "Kapağını kapatıp beyazları donana, sarılar akışkan kalana kadar 6 dakika pişirin."
+  ],
+  "image_prompt": "Shakshuka in a cast iron pan with four eggs nestled in red pepper sauce, parsley scattered, rustic overhead"
+ },
+ {
+  "slug": "muhammara-protein-dip",
+  "title_en": "Muhammara with Vegetables",
+  "title_tr": "Sebzeli Muhammara",
+  "meal_type": "snack",
+  "cuisine": "levantine",
+  "calories": 395,
+  "protein": 10,
+  "carbs": 30,
+  "fat": 26,
+  "prep_time_minutes": 15,
+  "tag_tokens": [
+   "budget_friendly",
+   "toning"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "roasted red peppers",
+    "name_tr": "ızgara kırmızı biber",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "walnuts",
+    "name_tr": "ceviz",
+    "quantity": 60,
+    "unit": "g"
+   },
+   {
+    "name_en": "breadcrumbs",
+    "name_tr": "galeta unu",
+    "quantity": 30,
+    "unit": "g"
+   },
+   {
+    "name_en": "pomegranate molasses",
+    "name_tr": "nar ekşisi",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "cumin",
+    "name_tr": "kimyon",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "cucumber sticks",
+    "name_tr": "salatalık çubukları",
+    "quantity": 150,
+    "unit": "g"
+   }
+  ],
+  "steps_en": [
+   "Blitz the peppers, walnuts, breadcrumbs, cumin and pomegranate molasses to a coarse paste.",
+   "Loosen it with the olive oil until it is spoonable.",
+   "Rest it for 10 minutes so the breadcrumbs swell.",
+   "Serve with the cucumber sticks."
+  ],
+  "steps_tr": [
+   "Biberleri, cevizi, galeta ununu, kimyonu ve nar ekşisini iri taneli bir ezme olana kadar çekin.",
+   "Zeytinyağıyla kaşıkla alınabilecek kıvama getirin.",
+   "Galeta unu şişsin diye 10 dakika dinlendirin.",
+   "Salatalık çubuklarıyla servis edin."
+  ],
+  "image_prompt": "Deep red muhammara dip with walnut pieces and a swirl of olive oil, cucumber sticks beside, levantine mezze styling"
+ },
+ {
+  "slug": "tabbouleh-protein-salad",
+  "title_en": "Tabbouleh with Chickpeas",
+  "title_tr": "Nohutlu Tabule",
+  "meal_type": "lunch",
+  "cuisine": "levantine",
+  "calories": 380,
+  "protein": 16,
+  "carbs": 48,
+  "fat": 14,
+  "prep_time_minutes": 20,
+  "tag_tokens": [
+   "low_calorie",
+   "budget_friendly"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "fine bulgur",
+    "name_tr": "ince bulgur",
+    "quantity": 60,
+    "unit": "g",
+    "note_en": "dry weight",
+    "note_tr": "kuru ölçü"
+   },
+   {
+    "name_en": "chickpeas",
+    "name_tr": "haşlanmış nohut",
+    "quantity": 150,
+    "unit": "g"
+   },
+   {
+    "name_en": "parsley",
+    "name_tr": "maydanoz",
+    "quantity": 2,
+    "unit": "demet"
+   },
+   {
+    "name_en": "tomatoes",
+    "name_tr": "domates",
+    "quantity": 2
+   },
+   {
+    "name_en": "lemon",
+    "name_tr": "limon",
+    "quantity": 1
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "mint",
+    "name_tr": "nane",
+    "quantity": 1,
+    "unit": "avuç"
+   }
+  ],
+  "steps_en": [
+   "Soak the bulgur in warm water for 15 minutes and drain it well.",
+   "Chop the parsley very fine — tabbouleh is a herb salad with bulgur in it, not the other way round.",
+   "Dice the tomatoes and combine everything.",
+   "Dress with lemon juice and olive oil and rest for 10 minutes."
+  ],
+  "steps_tr": [
+   "Bulguru ılık suda 15 dakika bekletip iyice süzün.",
+   "Maydanozu çok ince kıyın — tabule, içinde bulgur olan bir yeşillik salatasıdır, tersi değil.",
+   "Domatesleri küp doğrayıp hepsini birleştirin.",
+   "Limon suyu ve zeytinyağıyla harmanlayıp 10 dakika dinlendirin."
+  ],
+  "image_prompt": "Bright green tabbouleh with chickpeas, tomato and lemon in a wide bowl, fresh herbs dominating, mezze styling"
+ },
+ {
+  "slug": "korean-tofu-stew",
+  "title_en": "Korean Soft Tofu Stew",
+  "title_tr": "Kore Usulü Tofu Güveci",
+  "meal_type": "dinner",
+  "cuisine": "korean",
+  "calories": 345,
+  "protein": 26,
+  "carbs": 24,
+  "fat": 16,
+  "prep_time_minutes": 25,
+  "tag_tokens": [
+   "toning",
+   "low_calorie"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "silken tofu",
+    "name_tr": "yumuşak tofu",
+    "quantity": 300,
+    "unit": "g"
+   },
+   {
+    "name_en": "vegetable stock",
+    "name_tr": "sebze suyu",
+    "quantity": 500,
+    "unit": "ml"
+   },
+   {
+    "name_en": "gochujang",
+    "name_tr": "gochujang",
+    "quantity": 1,
+    "unit": "yemek kaşığı",
+    "note_en": "Korean chilli paste",
+    "note_tr": "Kore acı biber ezmesi"
+   },
+   {
+    "name_en": "courgette",
+    "name_tr": "kabak",
+    "quantity": 1
+   },
+   {
+    "name_en": "egg",
+    "name_tr": "yumurta",
+    "quantity": 1
+   },
+   {
+    "name_en": "spring onion",
+    "name_tr": "yeşil soğan",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "sesame oil",
+    "name_tr": "susam yağı",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Dissolve the gochujang in the stock and bring it to a simmer.",
+   "Add the sliced courgette and cook for 5 minutes.",
+   "Spoon the tofu in whole chunks — breaking it up makes it grainy.",
+   "Crack the egg in, cover for 2 minutes, and finish with sesame oil and spring onion."
+  ],
+  "steps_tr": [
+   "Gochujangı sebze suyunda eritip kaynama noktasına getirin.",
+   "Dilimlenmiş kabağı ekleyip 5 dakika pişirin.",
+   "Tofuyu iri parçalar hâlinde kaşıkla ekleyin — dağıtmak dokusunu bozar.",
+   "Yumurtayı kırın, 2 dakika kapağını kapatın, susam yağı ve yeşil soğanla bitirin."
+  ],
+  "image_prompt": "Bubbling red Korean soft tofu stew in a stone pot with an egg on top, spring onion, steam rising, dramatic"
+ },
+ {
+  "slug": "bibimbap-protein-bowl",
+  "title_en": "Beef Bibimbap",
+  "title_tr": "Etli Bibimbap",
+  "meal_type": "dinner",
+  "cuisine": "korean",
+  "calories": 620,
+  "protein": 42,
+  "carbs": 68,
+  "fat": 20,
+  "prep_time_minutes": 35,
+  "tag_tokens": [
+   "high_protein",
+   "bulking"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "lean ground beef",
+    "name_tr": "yağsız dana kıyma",
+    "quantity": 150,
+    "unit": "g"
+   },
+   {
+    "name_en": "rice",
+    "name_tr": "pirinç",
+    "quantity": 85,
+    "unit": "g",
+    "note_en": "dry weight",
+    "note_tr": "kuru ölçü"
+   },
+   {
+    "name_en": "spinach",
+    "name_tr": "ıspanak",
+    "quantity": 100,
+    "unit": "g"
+   },
+   {
+    "name_en": "carrot",
+    "name_tr": "havuç",
+    "quantity": 80,
+    "unit": "g"
+   },
+   {
+    "name_en": "egg",
+    "name_tr": "yumurta",
+    "quantity": 1
+   },
+   {
+    "name_en": "gochujang",
+    "name_tr": "gochujang",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "sesame oil",
+    "name_tr": "susam yağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Cook the rice.",
+   "Brown the beef with half the sesame oil.",
+   "Blanch the spinach and julienne the carrot, dressing each separately — bibimbap keeps its components apart until the table.",
+   "Arrange everything over the rice, top with a fried egg and the gochujang."
+  ],
+  "steps_tr": [
+   "Pirinci pişirin.",
+   "Kıymayı susam yağının yarısıyla kavurun.",
+   "Ispanağı haşlayın, havucu jülyen doğrayın ve her birini ayrı ayrı tatlandırın — bibimbap malzemelerini sofraya kadar ayrı tutar.",
+   "Hepsini pilavın üzerine dizin, sahanda yumurta ve gochujang ekleyin."
+  ],
+  "image_prompt": "Bibimbap bowl with separate sections of beef, spinach and carrot over rice, fried egg centre, red gochujang, overhead"
+ },
+ {
+  "slug": "korean-chicken-lettuce-wraps",
+  "title_en": "Korean Chicken Lettuce Wraps",
+  "title_tr": "Kore Usulü Tavuklu Marul Sarma",
+  "meal_type": "lunch",
+  "cuisine": "korean",
+  "calories": 360,
+  "protein": 40,
+  "carbs": 18,
+  "fat": 14,
+  "prep_time_minutes": 20,
+  "tag_tokens": [
+   "high_protein",
+   "low_calorie"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "chicken breast",
+    "name_tr": "tavuk göğsü",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "lettuce leaves",
+    "name_tr": "marul yaprağı",
+    "quantity": 8,
+    "unit": "yaprak"
+   },
+   {
+    "name_en": "gochujang",
+    "name_tr": "gochujang",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "soy sauce",
+    "name_tr": "soya sosu",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "grated ginger",
+    "name_tr": "zencefil rende",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "sesame oil",
+    "name_tr": "susam yağı",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "sesame seeds",
+    "name_tr": "susam",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Dice the chicken and toss it with the gochujang, soy sauce and ginger.",
+   "Sear it in the sesame oil over high heat for 7 minutes.",
+   "Spoon into lettuce leaves and scatter the sesame seeds."
+  ],
+  "steps_tr": [
+   "Tavuğu küp doğrayıp gochujang, soya sosu ve zencefille harmanlayın.",
+   "Susam yağında yüksek ateşte 7 dakika kızartın.",
+   "Marul yapraklarına doldurup susam serpin."
+  ],
+  "image_prompt": "Spicy Korean chicken in crisp lettuce cups with sesame seeds, vibrant red glaze, fresh clean styling"
+ },
+ {
+  "slug": "kimchi-fried-rice-protein",
+  "title_en": "Kimchi Fried Rice with Egg",
+  "title_tr": "Yumurtalı Kimchi Pilavı",
+  "meal_type": "lunch",
+  "cuisine": "korean",
+  "calories": 500,
+  "protein": 22,
+  "carbs": 62,
+  "fat": 18,
+  "prep_time_minutes": 15,
+  "tag_tokens": [
+   "budget_friendly",
+   "bulking"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "cooked rice",
+    "name_tr": "pişmiş pirinç",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "kimchi",
+    "name_tr": "kimchi",
+    "quantity": 120,
+    "unit": "g",
+    "note_en": "fermented cabbage",
+    "note_tr": "fermente lahana"
+   },
+   {
+    "name_en": "eggs",
+    "name_tr": "yumurta",
+    "quantity": 2
+   },
+   {
+    "name_en": "sesame oil",
+    "name_tr": "susam yağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "soy sauce",
+    "name_tr": "soya sosu",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "spring onion",
+    "name_tr": "yeşil soğan",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Fry the chopped kimchi in the sesame oil for 3 minutes.",
+   "Add the rice — day-old is better, fresh rice steams instead of frying — and stir-fry for 4 minutes.",
+   "Push it aside, scramble the eggs in the space, then fold everything together.",
+   "Finish with soy sauce and spring onion."
+  ],
+  "steps_tr": [
+   "Doğranmış kimchiyi susam yağında 3 dakika kavurun.",
+   "Pilavı ekleyin — bir günlük pilav daha iyidir, taze pilav kızarmak yerine buharlanır — ve 4 dakika soteleyin.",
+   "Kenara itip boşlukta yumurtaları karıştırın, sonra hepsini birleştirin.",
+   "Soya sosu ve yeşil soğanla bitirin."
+  ],
+  "image_prompt": "Kimchi fried rice with scrambled egg folded through, spring onion on top, orange-red tones, wok styling"
+ },
+ {
+  "slug": "korean-beef-bulgogi",
+  "title_en": "Beef Bulgogi",
+  "title_tr": "Bulgogi Dana Eti",
+  "meal_type": "dinner",
+  "cuisine": "korean",
+  "calories": 590,
+  "protein": 44,
+  "carbs": 58,
+  "fat": 20,
+  "prep_time_minutes": 25,
+  "tag_tokens": [
+   "high_protein",
+   "bulking"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "beef sirloin",
+    "name_tr": "dana bonfile",
+    "quantity": 180,
+    "unit": "g"
+   },
+   {
+    "name_en": "rice",
+    "name_tr": "pirinç",
+    "quantity": 85,
+    "unit": "g",
+    "note_en": "dry weight",
+    "note_tr": "kuru ölçü"
+   },
+   {
+    "name_en": "soy sauce",
+    "name_tr": "soya sosu",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "pear",
+    "name_tr": "armut",
+    "quantity": 1,
+    "note_en": "the tenderiser; do not skip it",
+    "note_tr": "eti yumuşatır; atlamayın"
+   },
+   {
+    "name_en": "garlic",
+    "name_tr": "sarımsak",
+    "quantity": 2,
+    "unit": "diş"
+   },
+   {
+    "name_en": "sesame oil",
+    "name_tr": "susam yağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "sesame seeds",
+    "name_tr": "susam",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Grate the pear and mix it with the soy sauce, garlic and sesame oil.",
+   "Slice the beef paper-thin and marinate it for 20 minutes.",
+   "Cook the rice.",
+   "Sear the beef in a screaming-hot pan for 2 minutes — any longer and it stews.",
+   "Serve over the rice with sesame seeds."
+  ],
+  "steps_tr": [
+   "Armudu rendeleyip soya sosu, sarımsak ve susam yağıyla karıştırın.",
+   "Eti kâğıt inceliğinde dilimleyip 20 dakika marine edin.",
+   "Pirinci pişirin.",
+   "Eti çok kızgın tavada 2 dakika mühürleyin — daha uzunu haşlar.",
+   "Susamla birlikte pilavın üzerinde servis edin."
+  ],
+  "image_prompt": "Caramelised bulgogi beef strips over rice with sesame seeds and spring onion, glossy dark glaze, korean bbq styling"
+ },
+ {
+  "slug": "thai-basil-chicken",
+  "title_en": "Thai Basil Chicken",
+  "title_tr": "Tayland Usulü Fesleğenli Tavuk",
+  "meal_type": "dinner",
+  "cuisine": "thai",
+  "calories": 580,
+  "protein": 44,
+  "carbs": 60,
+  "fat": 18,
+  "prep_time_minutes": 20,
+  "tag_tokens": [
+   "high_protein",
+   "bulking"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "chicken breast",
+    "name_tr": "tavuk göğsü",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "jasmine rice",
+    "name_tr": "yasemin pirinci",
+    "quantity": 85,
+    "unit": "g",
+    "note_en": "dry weight",
+    "note_tr": "kuru ölçü"
+   },
+   {
+    "name_en": "basil",
+    "name_tr": "fesleğen",
+    "quantity": 1,
+    "unit": "avuç"
+   },
+   {
+    "name_en": "soy sauce",
+    "name_tr": "soya sosu",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "garlic",
+    "name_tr": "sarımsak",
+    "quantity": 2,
+    "unit": "diş"
+   },
+   {
+    "name_en": "sesame oil",
+    "name_tr": "susam yağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "chilli flakes",
+    "name_tr": "pul biber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Cook the rice.",
+   "Chop the chicken small rather than slicing it — the texture is the point of this dish.",
+   "Fry the garlic and chilli in the oil for 30 seconds.",
+   "Add the chicken and soy sauce and stir-fry for 6 minutes.",
+   "Kill the heat and fold the basil through so it wilts rather than cooks."
+  ],
+  "steps_tr": [
+   "Pirinci pişirin.",
+   "Tavuğu dilimlemek yerine ufak doğrayın — bu yemeğin özü dokusudur.",
+   "Sarımsak ve pul biberi yağda 30 saniye kavurun.",
+   "Tavuğu ve soya sosunu ekleyip 6 dakika soteleyin.",
+   "Ateşi kapatıp fesleğeni pişmeden solacak şekilde karıştırın."
+  ],
+  "image_prompt": "Thai basil chicken over jasmine rice with fresh basil leaves wilting on top, chilli flakes, street food wok styling"
+ },
+ {
+  "slug": "thai-green-curry-tofu",
+  "title_en": "Thai Green Curry with Tofu",
+  "title_tr": "Tayland Yeşil Köri ve Tofu",
+  "meal_type": "dinner",
+  "cuisine": "thai",
+  "calories": 570,
+  "protein": 24,
+  "carbs": 56,
+  "fat": 28,
+  "prep_time_minutes": 25,
+  "tag_tokens": [
+   "toning",
+   "budget_friendly"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "firm tofu",
+    "name_tr": "katı tofu",
+    "quantity": 250,
+    "unit": "g"
+   },
+   {
+    "name_en": "jasmine rice",
+    "name_tr": "yasemin pirinci",
+    "quantity": 80,
+    "unit": "g",
+    "note_en": "dry weight",
+    "note_tr": "kuru ölçü"
+   },
+   {
+    "name_en": "coconut milk",
+    "name_tr": "hindistan cevizi sütü",
+    "quantity": 200,
+    "unit": "ml"
+   },
+   {
+    "name_en": "green curry paste",
+    "name_tr": "yeşil köri ezmesi",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "green beans",
+    "name_tr": "taze fasulye",
+    "quantity": 100,
+    "unit": "g"
+   },
+   {
+    "name_en": "lime",
+    "name_tr": "misket limonu",
+    "quantity": 1
+   },
+   {
+    "name_en": "basil",
+    "name_tr": "fesleğen",
+    "quantity": 1,
+    "unit": "avuç"
+   }
+  ],
+  "steps_en": [
+   "Fry the curry paste in a splash of the coconut milk for 2 minutes until it smells of the spices.",
+   "Add the rest of the coconut milk and bring it to a simmer.",
+   "Add the cubed tofu and green beans and cook for 8 minutes.",
+   "Finish with lime juice and basil off the heat."
+  ],
+  "steps_tr": [
+   "Köri ezmesini bir miktar hindistan cevizi sütünde 2 dakika, baharatların kokusu çıkana kadar kavurun.",
+   "Kalan hindistan cevizi sütünü ekleyip kaynama noktasına getirin.",
+   "Küp doğranmış tofu ve taze fasulyeyi ekleyip 8 dakika pişirin.",
+   "Ateşten aldıktan sonra misket limonu suyu ve fesleğenle bitirin."
+  ],
+  "image_prompt": "Green Thai curry with tofu cubes and green beans in coconut broth, fresh basil and lime, vibrant green tones"
+ },
+ {
+  "slug": "thai-beef-salad",
+  "title_en": "Thai Beef Salad",
+  "title_tr": "Tayland Usulü Etli Salata",
+  "meal_type": "lunch",
+  "cuisine": "thai",
+  "calories": 395,
+  "protein": 42,
+  "carbs": 16,
+  "fat": 18,
+  "prep_time_minutes": 20,
+  "tag_tokens": [
+   "high_protein",
+   "low_calorie"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "beef sirloin",
+    "name_tr": "dana bonfile",
+    "quantity": 180,
+    "unit": "g"
+   },
+   {
+    "name_en": "cucumber",
+    "name_tr": "salatalık",
+    "quantity": 120,
+    "unit": "g"
+   },
+   {
+    "name_en": "cherry tomatoes",
+    "name_tr": "cherry domates",
+    "quantity": 80,
+    "unit": "g"
+   },
+   {
+    "name_en": "lime",
+    "name_tr": "misket limonu",
+    "quantity": 1
+   },
+   {
+    "name_en": "soy sauce",
+    "name_tr": "soya sosu",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "mint",
+    "name_tr": "nane",
+    "quantity": 1,
+    "unit": "avuç"
+   },
+   {
+    "name_en": "chilli flakes",
+    "name_tr": "pul biber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Sear the beef 3 minutes a side and rest it for 5.",
+   "Whisk the lime juice, soy sauce and chilli into a dressing.",
+   "Slice the beef thinly against the grain.",
+   "Toss it with the cucumber, tomatoes and mint in the dressing."
+  ],
+  "steps_tr": [
+   "Eti her yüzü 3 dakika mühürleyip 5 dakika dinlendirin.",
+   "Misket limonu suyu, soya sosu ve pul biberi çırparak sos yapın.",
+   "Eti liflerine dik ince dilimleyin.",
+   "Salatalık, domates ve naneyle birlikte sosta harmanlayın."
+  ],
+  "image_prompt": "Thai beef salad with pink sliced steak, cucumber, tomato and mint, lime dressing, fresh vibrant styling"
+ },
+ {
+  "slug": "thai-mango-sticky-protein",
+  "title_en": "Mango Coconut Protein Rice",
+  "title_tr": "Mangolu Hindistan Cevizli Protein Pirinç",
+  "meal_type": "dessert",
+  "cuisine": "thai",
+  "calories": 495,
+  "protein": 20,
+  "carbs": 72,
+  "fat": 14,
+  "prep_time_minutes": 30,
+  "tag_tokens": [
+   "high_protein",
+   "bulking"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "rice",
+    "name_tr": "pirinç",
+    "quantity": 80,
+    "unit": "g",
+    "note_en": "dry weight",
+    "note_tr": "kuru ölçü"
+   },
+   {
+    "name_en": "coconut milk",
+    "name_tr": "hindistan cevizi sütü",
+    "quantity": 150,
+    "unit": "ml"
+   },
+   {
+    "name_en": "mango",
+    "name_tr": "mango",
+    "quantity": 150,
+    "unit": "g"
+   },
+   {
+    "name_en": "vanilla whey protein powder",
+    "name_tr": "vanilyalı whey protein tozu",
+    "quantity": 20,
+    "unit": "g"
+   },
+   {
+    "name_en": "honey",
+    "name_tr": "bal",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "sesame seeds",
+    "name_tr": "susam",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Cook the rice, then stir most of the coconut milk and the honey through it while it is hot.",
+   "Let it cool to warm, then stir the protein powder in — hot liquid makes it grainy.",
+   "Slice the mango and lay it alongside.",
+   "Pour the remaining coconut milk over and scatter the sesame seeds."
+  ],
+  "steps_tr": [
+   "Pirinci pişirip sıcakken hindistan cevizi sütünün çoğunu ve balı içine karıştırın.",
+   "Ilıyana kadar bekletip protein tozunu ekleyin — sıcak sıvı tozu topaklandırır.",
+   "Mangoyu dilimleyip yanına dizin.",
+   "Kalan hindistan cevizi sütünü gezdirip susam serpin."
+  ],
+  "image_prompt": "Coconut sticky rice with fanned mango slices and sesame seeds, coconut cream drizzle, thai dessert styling"
+ },
+ {
+  "slug": "tuscan-white-bean-soup",
+  "title_en": "Tuscan White Bean Soup",
+  "title_tr": "Toskana Beyaz Fasulye Çorbası",
+  "meal_type": "lunch",
+  "cuisine": "italian",
+  "calories": 395,
+  "protein": 20,
+  "carbs": 52,
+  "fat": 12,
+  "prep_time_minutes": 30,
+  "tag_tokens": [
+   "budget_friendly",
+   "toning"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "white beans",
+    "name_tr": "haşlanmış kuru fasulye",
+    "quantity": 300,
+    "unit": "g"
+   },
+   {
+    "name_en": "vegetable stock",
+    "name_tr": "sebze suyu",
+    "quantity": 600,
+    "unit": "ml"
+   },
+   {
+    "name_en": "carrot",
+    "name_tr": "havuç",
+    "quantity": 1
+   },
+   {
+    "name_en": "onion",
+    "name_tr": "kuru soğan",
+    "quantity": 1
+   },
+   {
+    "name_en": "garlic",
+    "name_tr": "sarımsak",
+    "quantity": 2,
+    "unit": "diş"
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "rosemary",
+    "name_tr": "taze biberiye",
+    "quantity": 1,
+    "unit": "dal"
+   }
+  ],
+  "steps_en": [
+   "Soften the diced onion, carrot and garlic in the oil for 8 minutes.",
+   "Add the beans, stock and rosemary and simmer for 18 minutes.",
+   "Blend a third of the soup and stir it back in — that is what makes it creamy without cream.",
+   "Finish with a hard drizzle of olive oil."
+  ],
+  "steps_tr": [
+   "Doğranmış soğan, havuç ve sarımsağı yağda 8 dakika yumuşatın.",
+   "Fasulye, sebze suyu ve biberiyeyi ekleyip 18 dakika pişirin.",
+   "Çorbanın üçte birini blenderdan geçirip geri karıştırın — kremasız kremamsılık buradan gelir.",
+   "Bolca zeytinyağı gezdirerek bitirin."
+  ],
+  "image_prompt": "Rustic Tuscan white bean soup with rosemary and a swirl of olive oil, crusty bread beside, warm tuscan tones"
+ },
+ {
+  "slug": "caprese-protein-plate",
+  "title_en": "Caprese Protein Plate",
+  "title_tr": "Proteinli Caprese Tabağı",
+  "meal_type": "snack",
+  "cuisine": "italian",
+  "calories": 360,
+  "protein": 28,
+  "carbs": 12,
+  "fat": 22,
+  "prep_time_minutes": 8,
+  "tag_tokens": [
+   "high_protein",
+   "low_calorie"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "mozzarella",
+    "name_tr": "mozzarella peyniri",
+    "quantity": 150,
+    "unit": "g"
+   },
+   {
+    "name_en": "tomatoes",
+    "name_tr": "domates",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "basil",
+    "name_tr": "fesleğen",
+    "quantity": 1,
+    "unit": "avuç"
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "balsamic vinegar",
+    "name_tr": "balzamik sirke",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "salt and pepper",
+    "name_tr": "tuz ve karabiber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Slice the tomatoes and mozzarella to the same thickness.",
+   "Alternate them on a plate with basil leaves between.",
+   "Dress with the olive oil and balsamic and season generously."
+  ],
+  "steps_tr": [
+   "Domates ve mozzarellayı aynı kalınlıkta dilimleyin.",
+   "Aralarına fesleğen yaprakları koyarak tabağa sırayla dizin.",
+   "Zeytinyağı ve balzamik sirkeyle tatlandırıp bolca baharatlayın."
+  ],
+  "image_prompt": "Caprese plate with alternating tomato and mozzarella slices, fresh basil, balsamic drizzle, clean italian styling"
+ },
+ {
+  "slug": "mediterranean-tuna-salad",
+  "title_en": "Mediterranean Tuna Salad",
+  "title_tr": "Akdeniz Ton Balıklı Salata",
+  "meal_type": "lunch",
+  "cuisine": "mediterranean",
+  "calories": 385,
+  "protein": 34,
+  "carbs": 22,
+  "fat": 18,
+  "prep_time_minutes": 12,
+  "tag_tokens": [
+   "high_protein",
+   "low_calorie"
+  ],
+  "locale_scope": [],
+  "ingredients": [
+   {
+    "name_en": "canned tuna",
+    "name_tr": "ton balığı",
+    "quantity": 150,
+    "unit": "g",
+    "note_en": "drained",
+    "note_tr": "suyu süzülmüş"
+   },
+   {
+    "name_en": "white beans",
+    "name_tr": "haşlanmış kuru fasulye",
+    "quantity": 150,
+    "unit": "g"
+   },
+   {
+    "name_en": "cherry tomatoes",
+    "name_tr": "cherry domates",
+    "quantity": 100,
+    "unit": "g"
+   },
+   {
+    "name_en": "olives",
+    "name_tr": "zeytin",
+    "quantity": 50,
+    "unit": "g"
+   },
+   {
+    "name_en": "red onion",
+    "name_tr": "kırmızı soğan",
+    "quantity": 1
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "lemon",
+    "name_tr": "limon",
+    "quantity": 1
+   }
+  ],
+  "steps_en": [
+   "Slice the red onion thinly and soak it in the lemon juice for 5 minutes to take the bite out.",
+   "Halve the tomatoes and combine everything.",
+   "Dress with the olive oil and the lemon the onion soaked in."
+  ],
+  "steps_tr": [
+   "Kırmızı soğanı ince dilimleyip keskinliği gitsin diye limon suyunda 5 dakika bekletin.",
+   "Domatesleri ikiye bölüp hepsini birleştirin.",
+   "Zeytinyağı ve soğanın beklediği limon suyuyla harmanlayın."
+  ],
+  "image_prompt": "Mediterranean tuna and white bean salad with olives, cherry tomatoes and red onion, olive oil, bright aegean styling"
+ }
+]
