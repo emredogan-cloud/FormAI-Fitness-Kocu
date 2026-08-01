@@ -21,6 +21,8 @@
 ///     switch twice never sees their weight drift.
 library;
 
+import '../../l10n/app_localizations.dart';
+
 import 'dart:math' as math;
 
 enum UnitSystem {
@@ -183,3 +185,34 @@ double roundTo(double value, int places) {
   final factor = math.pow(10, places);
   return (value * factor).round() / factor;
 }
+
+/// Localized name of a [UnitSystem], for the settings selector.
+///
+/// Lives here rather than in the widget so the two places that name a
+/// unit system — the segmented button and the helper line under it —
+/// cannot disagree.
+String unitSystemLabel(AppLocalizations l10n, UnitSystem system) =>
+    switch (system) {
+      UnitSystem.metric => l10n.unitSystemMetric,
+      UnitSystem.imperial => l10n.unitSystemImperial,
+    };
+
+// ─── Editor bounds ──────────────────────────────────────────────────
+//
+// The profile editor validates against these, and swaps them with the
+// user's units. They live here rather than in the widget so the metric
+// and imperial ranges cannot drift apart — an imperial range narrower
+// than the metric one would reject a value the user had already saved,
+// the moment they flipped the toggle.
+//
+// The imperial bounds are the metric ones converted and then rounded
+// OUTWARD, which is what makes the covering property hold at the edges.
+const int kMinHeightCm = 120;
+const int kMaxHeightCm = 230;
+const int kMinWeightKg = 30;
+const int kMaxWeightKg = 250;
+
+const int kMinHeightFeet = 3; // 120 cm is 3'11"
+const int kMaxHeightFeet = 8; // 230 cm is 7'7"
+const int kMinWeightLb = 66; // 30 kg is 66.1 lb
+const int kMaxWeightLb = 552; // 250 kg is 551.2 lb

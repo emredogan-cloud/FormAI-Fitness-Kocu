@@ -221,6 +221,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     }
   }
 
+  /// Guards the one-shot first-run chain (tour then welcome scene).
+  ///
+  /// Not redundant with the two `seen*` flags: those are written before
+  /// presentation, so they cannot stop a second `didPush` that arrives
+  /// while the first chain is still awaiting.
+  bool _firstRunFlowStarted = false;
+
   @override
   void dispose() {
     _menuSub?.close();
@@ -236,30 +243,45 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     // is already unlocked so we don't replay yesterday's wins on cold
     // start. The seed is null-checked inside `_maybeCelebrate`.
     _maybeCelebrate();
-    // Phase 126 · first-time post-paywall welcome AI scene. The gate
-    // inside [FirstTimeAiScenes] makes this a no-op on subsequent
-    // dashboard pushes; on the first push it pushes a cinematic
-    // welcome over the dashboard, then auto-pops back here.
+    // The first-run sequence, in the order the founder specified:
     //
-    // Roadmap Phase 2 (R1.1) · the spotlight tour runs immediately
-    // AFTER that scene resolves. The two are deliberately layered, not
-    // merged: the scene carries the emotional beat ("bugün dönüşümünün
-    // ilk günü") and the tour carries the functional one (where things
-    // are). Awaiting the scene first means the tour never draws over a
-    // cinematic route.
+    //   1. the spotlight tour — the functional layer, "where things are"
+    //   2. it finishes
+    //   3. the Form welcome scene — the emotional beat
+    //
+    // This is a reversal. The scene used to run first, on the reasoning
+    // that the emotional beat should land before the mechanics. In
+    // practice the two were arriving on top of each other, and the tour
+    // is the one that has to own the screen: it points at real widgets,
+    // so anything drawn over it makes it point at nothing.
+    //
+    // `_firstRunFlowStarted` is the guard. Both steps are individually
+    // one-shot and each is gated on its own `seen*` flag, which is why
+    // this looked safe — but the flags are written BEFORE presentation
+    // (the idempotency contract both services share), so a second
+    // `didPush` arriving while this chain is still awaiting would sail
+    // through both gates and start a second, concurrent chain. That is
+    // an overlap no amount of awaiting inside the chain can prevent.
+    if (_firstRunFlowStarted) return;
+    _firstRunFlowStarted = true;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      // One frame so the dashboard has certainly laid out — the tour
+      // resolves target rects from live RenderBoxes, and an unresolved
+      // step is silently dropped rather than retried.
+      await Future<void>.delayed(const Duration(milliseconds: 320));
+      if (!mounted) return;
+      await ref.read(tourServiceProvider).maybeStartDashboardTour(context);
+      if (!mounted) return;
+      // Let the tour's exit transition finish before the scene's own
+      // 600 ms fade-in starts, so the two never cross-dissolve.
+      await Future<void>.delayed(const Duration(milliseconds: 260));
       if (!mounted) return;
       await FirstTimeAiScenes.showIfNeeded(
         context,
         ref,
         FirstTimeAiScene.dashboardWelcome,
       );
-      if (!mounted) return;
-      // One extra frame so the dashboard has certainly laid out — the
-      // tour resolves target rects from live RenderBoxes.
-      await Future<void>.delayed(const Duration(milliseconds: 320));
-      if (!mounted) return;
-      await ref.read(tourServiceProvider).maybeStartDashboardTour(context);
       if (!mounted) return;
       // Roadmap Phase 4 (R1.3) · everything open on day 0 is the
       // starting position, not an achievement. Recording it as

@@ -6862,5 +6862,38 @@
   "workoutPausedUpper": "PAUSED",
   "@workoutPausedUpper": {
     "description": "Overlay label shown when a live workout is paused."
+  },
+  "profileHeightFeet": "Height (ft)",
+  "@profileHeightFeet": {
+    "description": "Feet part of the height field, shown only when the user is on imperial units."
+  },
+  "profileHeightInches": "Height (in)",
+  "@profileHeightInches": {
+    "description": "Inches part of the height field, shown only when the user is on imperial units."
+  },
+  "profileWeightFieldLabelLb": "Weight (lb)",
+  "@profileWeightFieldLabelLb": {
+    "description": "Weight field label in imperial units. profileWeightFieldLabel is the metric one."
+  },
+  "profileUnitsTitle": "Units",
+  "@profileUnitsTitle": {
+    "description": "Title of the metric/imperial tile in the profile tab's settings section."
+  },
+  "profileUnitsCurrent": "Currently: {system}",
+  "@profileUnitsCurrent": {
+    "description": "Helper line under the units selector, naming the active system.",
+    "placeholders": {
+      "system": {
+        "type": "String"
+      }
+    }
+  },
+  "unitSystemMetric": "Metric",
+  "@unitSystemMetric": {
+    "description": "The metric option: centimetres and kilograms."
+  },
+  "unitSystemImperial": "Imperial",
+  "@unitSystemImperial": {
+    "description": "The imperial option: feet, inches and pounds."
   }
 }

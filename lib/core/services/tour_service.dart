@@ -18,12 +18,14 @@ import 'tour_targets.dart';
 ///
 /// This service adds the showing. The cinematic welcome scene is kept —
 /// it carries the emotional beat, which the tour deliberately does not
-/// try to replicate — and the tour runs immediately after it as the
-/// functional layer.
+/// try to replicate — and it now runs immediately AFTER the tour. The
+/// tour has to own the screen while it is up: it points at real widgets,
+/// so anything drawn over it makes it point at nothing.
 ///
 /// Two entry points:
 ///   * [maybeStartDashboardTour] — one-shot, gated on
-///     `seenDashboardTour`, called after the welcome scene resolves.
+///     `seenDashboardTour`, called FIRST in the dashboard's first-run
+///     chain; the welcome scene follows it.
 ///   * [replayDashboardTour] — from the Settings row, always available.
 ///     A tour the user can never see again is a tour they lose the one
 ///     time they weren't paying attention.

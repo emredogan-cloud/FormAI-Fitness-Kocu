@@ -1464,5 +1464,12 @@
   "metricBmi": "BMI",
   "onbReadinessLabel": "HAZIRLIK",
   "commonContinueUpper": "DEVAM",
-  "workoutPausedUpper": "DURAKLATILDI"
+  "workoutPausedUpper": "DURAKLATILDI",
+  "profileHeightFeet": "Boy (ft)",
+  "profileHeightInches": "Boy (in)",
+  "profileWeightFieldLabelLb": "Kilo (lb)",
+  "profileUnitsTitle": "Ölçü Birimi",
+  "profileUnitsCurrent": "Şu an: {system}",
+  "unitSystemMetric": "Metrik",
+  "unitSystemImperial": "Emperyal"
 }

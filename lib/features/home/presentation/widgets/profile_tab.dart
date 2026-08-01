@@ -8,6 +8,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/providers/locale_provider.dart';
+import '../../../../core/providers/unit_system_provider.dart';
+import '../../../../core/utils/unit_system.dart';
 import '../../../../core/routing/app_router.dart';
 import '../../../../core/services/app_preferences.dart';
 import '../../../../core/services/feature_flags.dart';
@@ -95,6 +97,9 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     final goalKey = metrics['targetPhysique'] as String?;
     final onboardingGoal = metrics['goal'] as String?;
     final l10n = AppLocalizations.of(context);
+    // Stored metric, rendered in whatever the user picked. The
+    // conversion lives here, at the render boundary, and nowhere else.
+    final units = ref.watch(unitSystemProvider);
     final goalLabel = goalKey != null
         ? (_goalLabels[goalKey]?.call(l10n) ?? goalKey)
         : (onboardingGoal != null
@@ -122,7 +127,9 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
             Expanded(
               child: _InfoTile(
                 label: l10n.profileFieldWeight,
-                value: weight == null ? '—' : l10n.profileWeightKg(weight),
+                value: weight == null
+                    ? '—'
+                    : formatWeight((weight as num).toDouble(), system: units),
                 icon: Icons.monitor_weight_outlined,
                 onTap: () => _openEditSheet(metrics),
               ),
@@ -135,7 +142,9 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
             Expanded(
               child: _InfoTile(
                 label: l10n.profileFieldHeight,
-                value: height == null ? '—' : l10n.profileHeightCm(height),
+                value: height == null
+                    ? '—'
+                    : formatHeight((height as num).toDouble(), system: units),
                 icon: Icons.height,
                 onTap: () => _openEditSheet(metrics),
               ),
@@ -309,6 +318,10 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
           subtitle: localeEndonym(Localizations.localeOf(context)),
           onTap: () => _openLanguageSheet(context),
         ),
+        // Phase 6 polish · metric/imperial. Sits with theme and language
+        // because it is the same kind of setting: how the app renders,
+        // not what it does. Storage stays metric either way.
+        const _UnitSystemTile(),
         _SettingsTile(
           icon: Icons.workspace_premium,
           title: l10n.profilePremiumTitle,
@@ -418,7 +431,10 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (_) => _EditProfileSheet(initial: initial),
+      builder: (_) => _EditProfileSheet(
+        initial: initial,
+        units: ref.read(unitSystemProvider),
+      ),
     );
     if (result == null || !mounted) return;
 
@@ -692,8 +708,13 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
 }
 
 class _EditProfileSheet extends StatefulWidget {
-  const _EditProfileSheet({required this.initial});
+  const _EditProfileSheet({required this.initial, required this.units});
   final Map<String, dynamic> initial;
+
+  /// The units the sheet edits in. Read once when the sheet opens
+  /// rather than watched: changing units underneath a half-typed
+  /// form would silently reinterpret what the user had entered.
+  final UnitSystem units;
 
   @override
   State<_EditProfileSheet> createState() => _EditProfileSheetState();
@@ -703,6 +724,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _ageCtl;
   late final TextEditingController _heightCtl;
+  late final TextEditingController _heightInchesCtl;
   late final TextEditingController _weightCtl;
   String? _goal;
 
@@ -712,11 +734,24 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
     _ageCtl = TextEditingController(
       text: widget.initial['age']?.toString() ?? '',
     );
+    // The sheet edits in the user's units and stores metric. Seeding
+    // the controllers is therefore a conversion, and so is _save().
+    final cm = (widget.initial['heightCm'] as num?)?.toDouble();
+    final kg = (widget.initial['weightKg'] as num?)?.toDouble();
+    final imperial = widget.units == UnitSystem.imperial;
+    final split = cm == null ? null : cmToFeetInches(cm);
     _heightCtl = TextEditingController(
-      text: widget.initial['heightCm']?.toString() ?? '',
+      text: cm == null
+          ? ''
+          : (imperial ? '${split!.feet}' : cm.toStringAsFixed(0)),
+    );
+    _heightInchesCtl = TextEditingController(
+      text: split == null ? '' : '${split.inches}',
     );
     _weightCtl = TextEditingController(
-      text: widget.initial['weightKg']?.toString() ?? '',
+      text: kg == null
+          ? ''
+          : (imperial ? kgToLb(kg).toStringAsFixed(0) : kg.toStringAsFixed(0)),
     );
     final existingGoal = widget.initial['targetPhysique'] as String?;
     _goal = _goalLabels.containsKey(existingGoal) ? existingGoal : null;
@@ -726,16 +761,30 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
   void dispose() {
     _ageCtl.dispose();
     _heightCtl.dispose();
+    _heightInchesCtl.dispose();
     _weightCtl.dispose();
     super.dispose();
   }
 
   void _save() {
     if (!_formKey.currentState!.validate()) return;
+    // Back to metric before it leaves this sheet. Everything
+    // downstream — prefs, Supabase, the calorie maths — is metric, and
+    // this is the only place that has to know the user's units.
+    final imperial = widget.units == UnitSystem.imperial;
+    final heightCm = imperial
+        ? feetInchesToCm(
+            int.parse(_heightCtl.text),
+            int.tryParse(_heightInchesCtl.text) ?? 0,
+          )
+        : double.parse(_heightCtl.text);
+    final weightKg = imperial
+        ? lbToKg(double.parse(_weightCtl.text))
+        : double.parse(_weightCtl.text);
     Navigator.of(context).pop(<String, dynamic>{
       'age': int.parse(_ageCtl.text),
-      'heightCm': int.parse(_heightCtl.text),
-      'weightKg': int.parse(_weightCtl.text),
+      'heightCm': heightCm.round(),
+      'weightKg': weightKg.round(),
       if (_goal != null) 'targetPhysique': _goal,
     });
   }
@@ -785,22 +834,57 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                 max: 100,
               ),
               const SizedBox(height: 12),
-              _numberField(
-                context: context,
-                controller: _heightCtl,
-                label: AppLocalizations.of(context).profileHeightFieldLabel,
-                icon: Icons.height,
-                min: 120,
-                max: 230,
-              ),
+              if (widget.units == UnitSystem.imperial)
+                // Feet and inches, not decimal feet — nobody says
+                // "5.75 feet", and a single field would make them.
+                Row(
+                  children: [
+                    Expanded(
+                      child: _numberField(
+                        context: context,
+                        controller: _heightCtl,
+                        label: AppLocalizations.of(context).profileHeightFeet,
+                        icon: Icons.height,
+                        min: kMinHeightFeet,
+                        max: kMaxHeightFeet,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _numberField(
+                        context: context,
+                        controller: _heightInchesCtl,
+                        label: AppLocalizations.of(context).profileHeightInches,
+                        icon: Icons.straighten,
+                        min: 0,
+                        max: 11,
+                      ),
+                    ),
+                  ],
+                )
+              else
+                _numberField(
+                  context: context,
+                  controller: _heightCtl,
+                  label: AppLocalizations.of(context).profileHeightFieldLabel,
+                  icon: Icons.height,
+                  min: kMinHeightCm,
+                  max: kMaxHeightCm,
+                ),
               const SizedBox(height: 12),
               _numberField(
                 context: context,
                 controller: _weightCtl,
-                label: AppLocalizations.of(context).profileWeightFieldLabel,
+                label: widget.units == UnitSystem.imperial
+                    ? AppLocalizations.of(context).profileWeightFieldLabelLb
+                    : AppLocalizations.of(context).profileWeightFieldLabel,
                 icon: Icons.monitor_weight_outlined,
-                min: 30,
-                max: 250,
+                min: widget.units == UnitSystem.imperial
+                    ? kMinWeightLb
+                    : kMinWeightKg,
+                max: widget.units == UnitSystem.imperial
+                    ? kMaxWeightLb
+                    : kMaxWeightKg,
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
@@ -1353,6 +1437,107 @@ class _ThemeModeTile extends ConsumerWidget {
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Phase 6 polish · metric / imperial.
+///
+/// Same chrome as [_ThemeModeTile] and the same two-state contract: the
+/// selection changes how values are *rendered*, never what is stored.
+/// Every height stays centimetres and every weight stays kilograms in
+/// prefs, in Supabase and in every calculation — which is what makes
+/// flipping this twice a genuine no-op.
+class _UnitSystemTile extends ConsumerWidget {
+  const _UnitSystemTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final system = ref.watch(unitSystemProvider);
+    final l10n = AppLocalizations.of(context);
+    final scheme = context.colors;
+    final isDark = context.isDarkMode;
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsetsDirectional.fromSTEB(14, 14, 14, 14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        color: isDark ? Colors.white.withValues(alpha: 0.03) : scheme.surface,
+        border: Border.all(
+          color: isDark ? Colors.white12 : scheme.outlineVariant,
+          width: isDark ? 1 : 1.2,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: _neon.withValues(alpha: 0.18),
+                ),
+                child: const Icon(Icons.straighten, color: _neon, size: 20),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.profileUnitsTitle,
+                      style: TextStyle(
+                        color: scheme.onSurface,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      l10n.profileUnitsCurrent(unitSystemLabel(l10n, system)),
+                      style: TextStyle(
+                        color: scheme.onSurface.withValues(alpha: 0.55),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<UnitSystem>(
+              segments: [
+                ButtonSegment(
+                  value: UnitSystem.metric,
+                  label: Text(l10n.unitSystemMetric),
+                ),
+                ButtonSegment(
+                  value: UnitSystem.imperial,
+                  label: Text(l10n.unitSystemImperial),
+                ),
+              ],
+              selected: {system},
+              showSelectedIcon: false,
+              onSelectionChanged: (next) {
+                if (next.isEmpty) return;
+                ref.read(unitSystemProvider.notifier).set(next.first);
+              },
+              style: ButtonStyle(
+                visualDensity: VisualDensity.compact,
+                textStyle: WidgetStateProperty.all(
+                  const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
                 ),
               ),
             ),
