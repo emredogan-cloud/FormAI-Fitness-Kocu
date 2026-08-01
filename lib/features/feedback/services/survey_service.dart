@@ -92,7 +92,9 @@ class SurveyService {
         'app_version': version,
         'platform': Platform.isIOS
             ? 'iOS'
-            : (Platform.isAndroid ? 'Android' : Platform.operatingSystem),
+            : (Platform.isAndroid
+                ? 'Android' // i18n-ignore — platform tag
+                : Platform.operatingSystem),
       });
     } catch (e, st) {
       AppLogger.warning(

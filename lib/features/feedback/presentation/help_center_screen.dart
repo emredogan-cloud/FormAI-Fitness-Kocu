@@ -139,7 +139,7 @@ class _SearchField extends StatelessWidget {
       textInputAction: TextInputAction.search,
       style: TextStyle(color: scheme.onSurface, fontSize: 14.5),
       decoration: InputDecoration(
-        hintText: 'Soru ara…',
+        hintText: AppLocalizations.of(context).helpCenterSearchHint,
         prefixIcon: Icon(
           Icons.search_rounded,
           color: scheme.onSurface.withValues(alpha: 0.45),

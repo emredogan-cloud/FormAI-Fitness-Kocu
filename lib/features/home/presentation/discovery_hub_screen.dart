@@ -162,8 +162,8 @@ class _HubHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'FormAI neler yapabiliyor?',
+          Text(
+            AppLocalizations.of(context).discoveryHubHeading,
             style: TextStyle(
               color: Colors.white,
               fontSize: 19,

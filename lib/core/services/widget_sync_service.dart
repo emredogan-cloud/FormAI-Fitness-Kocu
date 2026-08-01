@@ -49,7 +49,8 @@ class WidgetSyncService {
 
   /// iOS widget bundle name registered via `@main` in the
   /// FormAIWidget target's `WidgetBundle`.
-  static const String _iosWidgetName = 'FormAIWidget';
+  static const String _iosWidgetName =
+      'FormAIWidget'; // i18n-ignore — Android widget class
 
   // Keys read by the native widget code.
   static const String _kTaskName = 'today_task_name';

@@ -792,7 +792,7 @@ class _BottomNav extends StatelessWidget {
           BottomNavigationBarItem(
             icon: _item(const Icon(Icons.restaurant_outlined), 1),
             activeIcon: const Icon(Icons.restaurant),
-            label: 'Beslenme',
+            label: AppLocalizations.of(context).navNutrition,
           ),
           BottomNavigationBarItem(
             icon: _item(const Icon(Icons.insights_outlined), 2),
@@ -802,7 +802,7 @@ class _BottomNav extends StatelessWidget {
           BottomNavigationBarItem(
             icon: _item(const Icon(Icons.person_outline), 3),
             activeIcon: const Icon(Icons.person),
-            label: 'Profil',
+            label: AppLocalizations.of(context).navProfile,
           ),
         ],
       ),

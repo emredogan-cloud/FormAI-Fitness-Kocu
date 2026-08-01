@@ -283,7 +283,8 @@ class AuthController {
       );
       return (
         outcome: SocialAuthOutcome.error,
-        errorMessage: 'Google: ${e.code.name}',
+        errorMessage:
+            'Google: ${e.code.name}', // i18n-ignore — provider error code
       );
     } catch (e, st) {
       AppLogger.error(
@@ -354,7 +355,8 @@ class AuthController {
       );
       return (
         outcome: SocialAuthOutcome.error,
-        errorMessage: 'Apple: ${e.code.name}',
+        errorMessage:
+            'Apple: ${e.code.name}', // i18n-ignore — provider error code
       );
     } catch (e, st) {
       AppLogger.error(

@@ -471,7 +471,7 @@ class _BootSplash extends StatelessWidget {
       color: Colors.black,
       child: Center(
         child: Text(
-          'FormAI',
+          'FormAI', // i18n-ignore — brand wordmark
           style: TextStyle(
             color: _kNeon,
             fontSize: 36,

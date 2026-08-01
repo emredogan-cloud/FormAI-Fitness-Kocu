@@ -176,7 +176,10 @@ class WorkoutGeneratorService {
   /// a convention on the other.
   _Goal _normaliseGoal(String raw) {
     final v = raw.trim().toLowerCase().replaceAll('-', '_');
-    if (v == 'sixpack' || v == 'six_pack' || v == 'six pack' || v == 'core') {
+    if (v == 'sixpack' ||
+        v == 'six_pack' ||
+        v == 'six pack' || // i18n-ignore — stored goal token
+        v == 'core') {
       return _Goal.sixpack;
     }
     if (v == 'bulk' || v == 'hacim' || v == 'hypertrophy' || v == 'muscle') {

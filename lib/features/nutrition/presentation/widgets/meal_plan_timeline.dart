@@ -798,7 +798,7 @@ class _TertiaryRow extends StatelessWidget {
       child: TextButton.icon(
         onPressed: () => context.push('/recipe', extra: recipe),
         icon: const Icon(Icons.open_in_new, size: 14),
-        label: const Text('Detay'),
+        label: Text(AppLocalizations.of(context).mealDetail),
         style: TextButton.styleFrom(
           foregroundColor: Colors.white60,
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

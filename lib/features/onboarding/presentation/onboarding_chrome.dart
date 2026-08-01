@@ -60,7 +60,7 @@ class WizardHeader extends StatelessWidget {
                       ),
               ),
               const Text(
-                'FormAI',
+                'FormAI', // i18n-ignore — brand wordmark
                 style: TextStyle(
                   color: AppColors.neon,
                   fontSize: 14,

@@ -97,7 +97,7 @@ class _SessionCompleteOverlayState
                 const SizedBox(height: 16),
                 Text(
                   widget.day == null
-                      ? 'Program Tamam!'
+                      ? AppLocalizations.of(context).sessionProgramComplete
                       : AppLocalizations.of(context)
                           .dayDoneTitle(widget.day!.dayNumber),
                   style: const TextStyle(
@@ -171,7 +171,7 @@ class _SessionCompleteOverlayState
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        child: const Text('Tamam'),
+                        child: Text(AppLocalizations.of(context).commonOk),
                       ),
                     ),
                   ],

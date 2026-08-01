@@ -133,7 +133,7 @@ List<({String icon, String label, Color tint})> recipeTags(Recipe recipe) {
   );
   const bulk = (
     icon: '💪',
-    label: 'Hacim',
+    label: 'Hacim', // i18n-ignore
     tint: Color(0xFFFF4DDB),
   );
   const fast = (
@@ -178,16 +178,24 @@ List<({String icon, String label, Color tint})> recipeTags(Recipe recipe) {
         label: 'Düşük Kalori', // i18n-ignore
         tint: const Color(0xFF39FF14)
       ); // i18n-ignore
-    case 'Hacim':
-      return (icon: '💪', label: 'Hacim', tint: const Color(0xFFFF4DDB));
+    case 'Hacim': // i18n-ignore
+      return (
+        icon: '💪',
+        label: 'Hacim', // i18n-ignore
+        tint: const Color(0xFFFF4DDB),
+      );
     case 'Sıkılaşma': // i18n-ignore
       return (
         icon: '✨',
         label: 'Sıkılaşma', // i18n-ignore
         tint: const Color(0xFFEAFF00)
       ); // i18n-ignore
-    case 'Vegan':
-      return (icon: '🌱', label: 'Vegan', tint: const Color(0xFF39C46B));
+    case 'Vegan': // i18n-ignore
+      return (
+        icon: '🌱',
+        label: 'Vegan', // i18n-ignore
+        tint: const Color(0xFF39C46B),
+      );
     default:
       // Neutral neon-purple for any server-side tag we don't yet know
       // about; keeps the UI stable while new categories roll out.

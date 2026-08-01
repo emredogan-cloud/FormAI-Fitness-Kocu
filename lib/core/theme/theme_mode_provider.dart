@@ -103,7 +103,7 @@ String themeModeLabel(AppLocalizations l10n, ThemeMode mode) {
 /// (e.g. moving the value into a remote-synced UserSettings table) a
 /// hook to write through.
 @Deprecated(
-  'Reserved for future remote-sync; prefer themeModeProvider for reads.',
+  'Reserved for future remote-sync; prefer themeModeProvider for reads.', // i18n-ignore — developer-facing deprecation
 )
 Future<String?> readPersistedThemeMode(SharedPreferences prefs) async {
   return prefs.getString('sixpack.theme_mode');

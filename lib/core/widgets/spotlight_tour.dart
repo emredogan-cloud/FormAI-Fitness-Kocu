@@ -62,9 +62,9 @@ class SpotlightStep {
 Future<bool> showSpotlightTour(
   BuildContext context, {
   required List<SpotlightStep> steps,
-  String nextLabel = 'Devam',
+  String? nextLabel,
   String? finishLabel,
-  String skipLabel = 'Atla',
+  String? skipLabel,
   ValueChanged<int>? onStepShown,
 }) async {
   final resolvable =
@@ -73,8 +73,10 @@ Future<bool> showSpotlightTour(
 
   // Roadmap Phase 5 · the default finish label is localized, but the
   // parameter stays overridable so a tour can say something specific.
-  final resolvedFinish =
-      finishLabel ?? AppLocalizations.of(context).commonUnderstood;
+  final l10n = AppLocalizations.of(context);
+  final resolvedFinish = finishLabel ?? l10n.commonUnderstood;
+  final resolvedNext = nextLabel ?? l10n.tourNext;
+  final resolvedSkip = skipLabel ?? l10n.showcaseSkip;
 
   final result = await Navigator.of(context, rootNavigator: true).push<bool>(
     PageRouteBuilder<bool>(
@@ -86,9 +88,9 @@ Future<bool> showSpotlightTour(
       reverseTransitionDuration: const Duration(milliseconds: 200),
       pageBuilder: (_, __, ___) => _SpotlightOverlay(
         steps: resolvable,
-        nextLabel: nextLabel,
+        nextLabel: resolvedNext,
         finishLabel: resolvedFinish,
-        skipLabel: skipLabel,
+        skipLabel: resolvedSkip,
         onStepShown: onStepShown,
       ),
       transitionsBuilder: (_, anim, __, child) => FadeTransition(

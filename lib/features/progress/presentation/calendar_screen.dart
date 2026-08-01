@@ -462,13 +462,17 @@ class _Legend extends StatelessWidget {
         spacing: 16,
         runSpacing: 10,
         children: [
-          _LegendItem(color: _success, label: 'Tamamlanan'),
+          _LegendItem(
+              color: _success,
+              label: AppLocalizations.of(context).calendarLegendCompleted),
           _LegendItem(
               color: _neon, label: AppLocalizations.of(context).calendarToday),
           _LegendItem(
               color: _restAmber,
               label: AppLocalizations.of(context).calendarRest),
-          _LegendItem(color: Color(0xFF2A2A36), label: 'Bekleyen'),
+          _LegendItem(
+              color: Color(0xFF2A2A36),
+              label: AppLocalizations.of(context).calendarLegendPending),
         ],
       ),
     );
@@ -570,12 +574,12 @@ class _MonthSummaryCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _SummaryTile(
-                label: 'Tamamlanan',
+                label: AppLocalizations.of(context).calendarLegendCompleted,
                 value: '$completed',
                 accent: _success,
               ),
               _SummaryTile(
-                label: 'Planlanan',
+                label: AppLocalizations.of(context).calendarLegendPlanned,
                 value: '$planned',
                 accent: _neon,
               ),

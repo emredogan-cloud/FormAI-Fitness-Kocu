@@ -8,7 +8,7 @@
 //   2. a layout that only fits Turkish overflows here instead of in a
 //      German store review.
 //
-// 1390 members covered.
+// 1453 members covered.
 
 import 'package:flutter/widgets.dart';
 import 'package:sixpack_ai/core/utils/pseudo_locale.dart';
@@ -4321,6 +4321,213 @@ class PseudoAppLocalizations extends AppLocalizations {
   String get detectorStateUp => pseudoLocalize(_inner.detectorStateUp);
 
   @override
+  String get languageStepTitle => pseudoLocalize(_inner.languageStepTitle);
+
+  @override
+  String get languageStepSubtitle =>
+      pseudoLocalize(_inner.languageStepSubtitle);
+
+  @override
+  String get languageSettingsTitle =>
+      pseudoLocalize(_inner.languageSettingsTitle);
+
+  @override
+  String get languageSettingsSheetTitle =>
+      pseudoLocalize(_inner.languageSettingsSheetTitle);
+
+  @override
+  String get languageFollowDevice =>
+      pseudoLocalize(_inner.languageFollowDevice);
+
+  @override
+  String get navNutrition => pseudoLocalize(_inner.navNutrition);
+
+  @override
+  String get navProfile => pseudoLocalize(_inner.navProfile);
+
+  @override
+  String get supportMailSubject => pseudoLocalize(_inner.supportMailSubject);
+
+  @override
+  String get tourNext => pseudoLocalize(_inner.tourNext);
+
+  @override
+  String get authSheetBarrierLabel =>
+      pseudoLocalize(_inner.authSheetBarrierLabel);
+
+  @override
+  String get authOrDivider => pseudoLocalize(_inner.authOrDivider);
+
+  @override
+  String get feedbackTopicLabel => pseudoLocalize(_inner.feedbackTopicLabel);
+
+  @override
+  String get helpCenterSearchHint =>
+      pseudoLocalize(_inner.helpCenterSearchHint);
+
+  @override
+  String get notificationPermissionDenied =>
+      pseudoLocalize(_inner.notificationPermissionDenied);
+
+  @override
+  String get accountDeleteConfirmTitle =>
+      pseudoLocalize(_inner.accountDeleteConfirmTitle);
+
+  @override
+  String get passwordMinLengthHint =>
+      pseudoLocalize(_inner.passwordMinLengthHint);
+
+  @override
+  String get discoveryHubHeading => pseudoLocalize(_inner.discoveryHubHeading);
+
+  @override
+  String get progressCompletionLabel =>
+      pseudoLocalize(_inner.progressCompletionLabel);
+
+  @override
+  String get progressKeepGoing => pseudoLocalize(_inner.progressKeepGoing);
+
+  @override
+  String get progressDontBreakStreak =>
+      pseudoLocalize(_inner.progressDontBreakStreak);
+
+  @override
+  String get profileHeightFieldLabel =>
+      pseudoLocalize(_inner.profileHeightFieldLabel);
+
+  @override
+  String get profileWeightFieldLabel =>
+      pseudoLocalize(_inner.profileWeightFieldLabel);
+
+  @override
+  String get themeTileTitle => pseudoLocalize(_inner.themeTileTitle);
+
+  @override
+  String get commonCopy => pseudoLocalize(_inner.commonCopy);
+
+  @override
+  String get referralCodeLabel => pseudoLocalize(_inner.referralCodeLabel);
+
+  @override
+  String get referralCodeLabelUpper =>
+      pseudoLocalize(_inner.referralCodeLabelUpper);
+
+  @override
+  String get commonUse => pseudoLocalize(_inner.commonUse);
+
+  @override
+  String get todayActiveRest => pseudoLocalize(_inner.todayActiveRest);
+
+  @override
+  String get todayCongrats => pseudoLocalize(_inner.todayCongrats);
+
+  @override
+  String get macroCarbChip => pseudoLocalize(_inner.macroCarbChip);
+
+  @override
+  String get nutritionAddNow => pseudoLocalize(_inner.nutritionAddNow);
+
+  @override
+  String get nutritionLightAlternative =>
+      pseudoLocalize(_inner.nutritionLightAlternative);
+
+  @override
+  String get nutritionQuickMealsTitle =>
+      pseudoLocalize(_inner.nutritionQuickMealsTitle);
+
+  @override
+  String get recipeAddToPlan => pseudoLocalize(_inner.recipeAddToPlan);
+
+  @override
+  String get mealDetail => pseudoLocalize(_inner.mealDetail);
+
+  @override
+  String get nutritionPrefsSheetTitle =>
+      pseudoLocalize(_inner.nutritionPrefsSheetTitle);
+
+  @override
+  String get nutritionGoalQuestion =>
+      pseudoLocalize(_inner.nutritionGoalQuestion);
+
+  @override
+  String get nutritionDietQuestion =>
+      pseudoLocalize(_inner.nutritionDietQuestion);
+
+  @override
+  String get nutritionTasteQuestion =>
+      pseudoLocalize(_inner.nutritionTasteQuestion);
+
+  @override
+  String get ageGateContinue => pseudoLocalize(_inner.ageGateContinue);
+
+  @override
+  String get onbAiReady => pseudoLocalize(_inner.onbAiReady);
+
+  @override
+  String get onbFeelingTired => pseudoLocalize(_inner.onbFeelingTired);
+
+  @override
+  String get onbFeelingLostForm => pseudoLocalize(_inner.onbFeelingLostForm);
+
+  @override
+  String get onbFeelingNoDiscipline =>
+      pseudoLocalize(_inner.onbFeelingNoDiscipline);
+
+  @override
+  String get onbFeelingMirrorHard =>
+      pseudoLocalize(_inner.onbFeelingMirrorHard);
+
+  @override
+  String get onbFeelingWantOldSelf =>
+      pseudoLocalize(_inner.onbFeelingWantOldSelf);
+
+  @override
+  String get coachStatusOnline => pseudoLocalize(_inner.coachStatusOnline);
+
+  @override
+  String get badgesTitle => pseudoLocalize(_inner.badgesTitle);
+
+  @override
+  String get calendarLegendCompleted =>
+      pseudoLocalize(_inner.calendarLegendCompleted);
+
+  @override
+  String get calendarLegendPending =>
+      pseudoLocalize(_inner.calendarLegendPending);
+
+  @override
+  String get calendarLegendPlanned =>
+      pseudoLocalize(_inner.calendarLegendPlanned);
+
+  @override
+  String get referralContinueCta => pseudoLocalize(_inner.referralContinueCta);
+
+  @override
+  String get planContinueCta => pseudoLocalize(_inner.planContinueCta);
+
+  @override
+  String get planTierPremium => pseudoLocalize(_inner.planTierPremium);
+
+  @override
+  String get planTierLite => pseudoLocalize(_inner.planTierLite);
+
+  @override
+  String get planProRequired => pseudoLocalize(_inner.planProRequired);
+
+  @override
+  String get sessionProgramComplete =>
+      pseudoLocalize(_inner.sessionProgramComplete);
+
+  @override
+  String get commonOk => pseudoLocalize(_inner.commonOk);
+
+  @override
+  String get workoutResumeCta => pseudoLocalize(_inner.workoutResumeCta);
+
+  @override
+  String get macroProteinChip => pseudoLocalize(_inner.macroProteinChip);
+
+  @override
   String retrospectiveSummary(String workouts, String minutes, String reps) =>
       pseudoLocalize(_inner.retrospectiveSummary(workouts, minutes, reps));
 
@@ -4946,8 +5153,19 @@ class PseudoAppLocalizations extends AppLocalizations {
   String setProgressUpper(int current, int total) =>
       pseudoLocalize(_inner.setProgressUpper(current, total));
 
+  @override
+  String languageFollowDeviceDetail(String language) =>
+      pseudoLocalize(_inner.languageFollowDeviceDetail(language));
+
+  @override
+  String liveActivitySetLabel(int current, int total) =>
+      pseudoLocalize(_inner.liveActivitySetLabel(current, total));
+
+  @override
+  String levelShort(int level) => pseudoLocalize(_inner.levelShort(level));
+
   /// Number of members this wrapper covers. The test suite asserts
   /// it still matches the generated class, so a new ARB key cannot
   /// slip past pseudo mode unnoticed.
-  static const int coveredMembers = 1390;
+  static const int coveredMembers = 1453;
 }

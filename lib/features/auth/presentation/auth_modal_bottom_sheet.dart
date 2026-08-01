@@ -62,7 +62,7 @@ Future<void> showAuthGate(BuildContext context) {
       opaque: false,
       barrierDismissible: false,
       barrierColor: Colors.transparent,
-      barrierLabel: 'Auth gate',
+      barrierLabel: AppLocalizations.of(context).authSheetBarrierLabel,
       transitionDuration: const Duration(milliseconds: 360),
       reverseTransitionDuration: const Duration(milliseconds: 240),
       pageBuilder: (context, animation, secondaryAnimation) {
@@ -269,7 +269,7 @@ class _AuthModalBottomSheetState extends ConsumerState<AuthModalBottomSheet>
           ),
         ),
         child: const Text(
-          'FormAI',
+          'FormAI', // i18n-ignore — brand wordmark
           style: TextStyle(
             color: _neonCyan,
             fontSize: 12,

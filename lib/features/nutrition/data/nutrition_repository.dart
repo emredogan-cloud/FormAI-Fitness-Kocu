@@ -73,7 +73,8 @@ class NutritionRepository {
   /// sides need to recognise the same string and a shared constants file
   /// would be a layering churn we don't yet need.
   static const String budgetCategoryToken = 'budget';
-  static const String budgetCategoryTagLabel = 'Pratik & Ekonomik';
+  static const String budgetCategoryTagLabel =
+      'Pratik & Ekonomik'; // i18n-ignore — tag data identity
 
   /// Phase 83 hotfix · server-side category fetch.
   ///

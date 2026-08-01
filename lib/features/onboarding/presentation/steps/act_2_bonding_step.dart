@@ -277,7 +277,8 @@ class _CoachIntroStepState extends State<CoachIntroStep>
                               }
                             : null,
                         icon: const Icon(Icons.arrow_forward_rounded),
-                        label: const Text('DEVAM ET'),
+                        label:
+                            Text(AppLocalizations.of(context).onbContinueCta),
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.neon,
                           foregroundColor: Colors.white,

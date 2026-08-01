@@ -25,6 +25,7 @@ import 'steps/body_feelings_step.dart';
 import 'steps/equipment_capture_step.dart';
 import 'steps/interlude_after_goal_step.dart';
 import 'steps/interlude_before_pain_point_step.dart';
+import 'steps/language_step.dart';
 import 'steps/name_capture_step.dart';
 import 'steps/setup_thinking_step.dart';
 import 'steps/social_proof_step.dart';
@@ -38,7 +39,9 @@ import '../../../l10n/app_localizations.dart';
 /// and fade while incoming scenes rise and settle in the same 480 ms
 /// window. The wizard reads as scene progression, not page snapping.
 ///
-/// The 16-step act mapping:
+/// The act mapping:
+///   • Act 0 (language) — the language ask, before any prose. Applies
+///     live so the screen re-renders in the tapped language.
 ///   • Act 1 (welcome) — emotional hook, immersive hero.
 ///   • Act 2 (coach_intro → name_capture → SETUP THINKING) — Form
 ///     introduces itself, asks the user's name, then visibly
@@ -65,10 +68,19 @@ import '../../../l10n/app_localizations.dart';
 /// microcommitment, first-workout prompt) get added inside the
 /// appropriate act file as they ship — the orchestrator only
 /// extends [_stepNames] and the [_buildStep] switch.
-const int _totalSteps = 19;
-const int _hookSteps = 3;
+const int _totalSteps = 20;
+
+/// Header-less prefix. Roadmap Phase 6 pushed this from 3 to 4 by
+/// putting the language ask in front of the welcome hero — the language
+/// picker is not a data step and must not appear in the "n / 11"
+/// counter, which starts once the questions do.
+const int _hookSteps = 4;
 
 const List<String> _stepNames = [
+  // Roadmap Phase 6 (R3.2, C29) · first, because everything after it is
+  // words. The selection applies live, so this screen re-renders in the
+  // language the user just tapped.
+  'language',
   'welcome',
   'coach_intro',
   'name_capture',
@@ -161,6 +173,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         // Clamp the step index to the live step list so a checkpoint
         // written by a release with a different _totalSteps can't
         // strand the user past the end of the wizard.
+        //
+        // Roadmap Phase 6 inserted a step at index 0, so a checkpoint
+        // from an earlier build now resolves one step behind where it
+        // was written. Deliberately not migrated: the wizard state is
+        // restored alongside it, so the cost is re-confirming one
+        // already-answered question, and the alternative is a version
+        // field that exists to serve a single upgrade.
         _index = checkpoint.stepIndex.clamp(0, _totalSteps - 1);
       } catch (e, st) {
         AppLogger.warning(
@@ -345,42 +364,44 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Widget _buildStep(int i) {
     switch (i) {
       case 0:
-        return WelcomeStep(onStart: _next);
+        return LanguageStep(onContinue: _next);
       case 1:
-        return CoachIntroStep(onContinue: _next);
+        return WelcomeStep(onStart: _next);
       case 2:
-        return NameCaptureStep(onContinue: _next);
+        return CoachIntroStep(onContinue: _next);
       case 3:
-        return SetupThinkingStep(onContinue: _next);
+        return NameCaptureStep(onContinue: _next);
       case 4:
-        return BodyFeelingsStep(onCommitted: _next);
+        return SetupThinkingStep(onContinue: _next);
       case 5:
-        return GenderStep(onCommitted: _next);
+        return BodyFeelingsStep(onCommitted: _next);
       case 6:
-        return GoalStep(onCommitted: _next);
+        return GenderStep(onCommitted: _next);
       case 7:
-        return InterludeAfterGoalStep(onContinue: _next);
+        return GoalStep(onCommitted: _next);
       case 8:
-        return ExperienceStep(onCommitted: _next);
+        return InterludeAfterGoalStep(onContinue: _next);
       case 9:
-        return DailyMinutesStep(onCommitted: _next);
+        return ExperienceStep(onCommitted: _next);
       case 10:
-        return ActivityStep(onCommitted: _next);
+        return DailyMinutesStep(onCommitted: _next);
       case 11:
-        return PhysicalDataStep(onContinue: _next);
+        return ActivityStep(onCommitted: _next);
       case 12:
-        return InterludeBeforePainPointStep(onContinue: _next);
+        return PhysicalDataStep(onContinue: _next);
       case 13:
-        return PainPointStep(onCommitted: _next);
+        return InterludeBeforePainPointStep(onContinue: _next);
       case 14:
-        return AnalysisIllusionStep(onComplete: _next);
+        return PainPointStep(onCommitted: _next);
       case 15:
-        return DynamicReportStep(onComplete: _next);
+        return AnalysisIllusionStep(onComplete: _next);
       case 16:
-        return SocialProofStep(onContinue: _next);
+        return DynamicReportStep(onComplete: _next);
       case 17:
-        return EquipmentCaptureStep(onContinue: _next);
+        return SocialProofStep(onContinue: _next);
       case 18:
+        return EquipmentCaptureStep(onContinue: _next);
+      case 19:
         return PrePaywallSummaryStep(onComplete: _finish);
       default:
         return const SizedBox.shrink();

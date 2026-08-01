@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/providers/locale_provider.dart';
 import '../../../../core/routing/app_router.dart';
 import '../../../../core/services/app_preferences.dart';
 import '../../../../core/services/feature_flags.dart';
@@ -296,6 +297,18 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
         // setting users hunt for first when the OS-level pref doesn't
         // match what they want for FormAI specifically.
         const _ThemeModeTile(),
+        // Roadmap Phase 6 (R3.2) · the language row. Next to the theme
+        // picker because they are the same kind of setting — "render the
+        // app the way I want it", not "change what the app does". The
+        // subtitle is the active language written in itself, so a user
+        // who set the wrong one can find their way back without being
+        // able to read the label above it.
+        _SettingsTile(
+          icon: Icons.language,
+          title: l10n.languageSettingsTitle,
+          subtitle: localeEndonym(Localizations.localeOf(context)),
+          onTap: () => _openLanguageSheet(context),
+        ),
         _SettingsTile(
           icon: Icons.workspace_premium,
           title: l10n.profilePremiumTitle,
@@ -484,7 +497,8 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     final granted = await NotificationService.instance.requestPermissions();
     if (!context.mounted) return;
     if (!granted) {
-      _toast(context, 'Bildirim izni verilmedi');
+      _toast(
+          context, AppLocalizations.of(context).notificationPermissionDenied);
       return;
     }
     try {
@@ -499,6 +513,23 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     if (!context.mounted) return;
     final label = picked.format(context);
     _toast(context, AppLocalizations.of(context).notificationTimeSet(label));
+  }
+
+  /// Roadmap Phase 6 (R3.2) · language selection, applied on tap.
+  ///
+  /// The sheet stays open after a selection so the user sees the change
+  /// land underneath it — every label in the sheet, including the one
+  /// they just tapped, re-renders in the new language. Closing on tap
+  /// would hide the only immediate confirmation the change worked.
+  Future<void> _openLanguageSheet(BuildContext context) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: context.colors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => const _LanguageSheet(),
+    );
   }
 
   Future<void> _openPrivacySheet(BuildContext context) async {
@@ -757,7 +788,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
               _numberField(
                 context: context,
                 controller: _heightCtl,
-                label: 'Boy (cm)',
+                label: AppLocalizations.of(context).profileHeightFieldLabel,
                 icon: Icons.height,
                 min: 120,
                 max: 230,
@@ -766,7 +797,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
               _numberField(
                 context: context,
                 controller: _weightCtl,
-                label: 'Kilo (kg)',
+                label: AppLocalizations.of(context).profileWeightFieldLabel,
                 icon: Icons.monitor_weight_outlined,
                 min: 30,
                 max: 250,
@@ -1009,7 +1040,7 @@ class _ProfileHeader extends ConsumerWidget {
                   border: Border.all(color: _neon, width: 1.2),
                 ),
                 child: Text(
-                  'Sv ${lp.level}',
+                  AppLocalizations.of(context).levelShort(lp.level),
                   style: TextStyle(
                     color: context.colors.onSurface,
                     fontSize: 10,
@@ -1031,7 +1062,7 @@ class _ProfileHeader extends ConsumerWidget {
               // Pull from `onSurface` so it lands as charcoal on the
               // light scaffold and pure white on the dark one.
               Text(
-                'Profil',
+                AppLocalizations.of(context).navProfile,
                 style: TextStyle(
                   color: context.colors.onSurface,
                   fontSize: 22,
@@ -1252,7 +1283,7 @@ class _ThemeModeTile extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Tema',
+                      AppLocalizations.of(context).themeTileTitle,
                       style: TextStyle(
                         color: scheme.onSurface,
                         fontSize: 15,
@@ -1284,7 +1315,7 @@ class _ThemeModeTile extends ConsumerWidget {
               segments: [
                 ButtonSegment(
                   value: ThemeMode.system,
-                  label: Text('Sistem'),
+                  label: Text(AppLocalizations.of(context).themeModeSystem),
                   icon: Icon(Icons.settings_suggest, size: 16),
                 ),
                 ButtonSegment(
@@ -1294,7 +1325,7 @@ class _ThemeModeTile extends ConsumerWidget {
                 ),
                 ButtonSegment(
                   value: ThemeMode.dark,
-                  label: Text('Koyu'),
+                  label: Text(AppLocalizations.of(context).themeModeDark),
                   icon: Icon(Icons.dark_mode_outlined, size: 16),
                 ),
               ],
@@ -1328,6 +1359,100 @@ class _ThemeModeTile extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Roadmap Phase 6 (R3.2) · the language selector.
+///
+/// A sheet rather than a segmented button: three options fit in
+/// segments, but the fourth language would not, and a control that has
+/// to be rebuilt the first time the list grows is the wrong control.
+///
+/// "Device language" is a separate option from picking the language the
+/// device happens to use. They look identical the day you choose them
+/// and diverge the day the phone's language changes — which is the
+/// whole reason the preference distinguishes them.
+class _LanguageSheet extends ConsumerWidget {
+  const _LanguageSheet();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final scheme = context.colors;
+    final stored = ref.watch(localeProvider);
+    final active = Localizations.localeOf(context);
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.languageSettingsSheetTitle,
+              style: TextStyle(
+                color: scheme.onSurface,
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 14),
+            _LanguageOption(
+              title: l10n.languageFollowDevice,
+              detail: l10n.languageFollowDeviceDetail(localeEndonym(active)),
+              selected: stored == null,
+              onTap: () => ref.read(localeProvider.notifier).set(null),
+            ),
+            for (final locale in kSupportedLocales)
+              _LanguageOption(
+                title: localeEndonym(locale),
+                selected: stored?.languageCode == locale.languageCode,
+                onTap: () => ref.read(localeProvider.notifier).set(locale),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LanguageOption extends StatelessWidget {
+  const _LanguageOption({
+    required this.title,
+    required this.selected,
+    required this.onTap,
+    this.detail,
+  });
+
+  final String title;
+  final String? detail;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colors;
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      onTap: onTap,
+      title: Text(
+        title,
+        style: TextStyle(
+          color: scheme.onSurface,
+          fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+        ),
+      ),
+      subtitle: detail == null
+          ? null
+          : Text(
+              detail!,
+              style: TextStyle(
+                color: scheme.onSurface.withValues(alpha: 0.55),
+                fontSize: 12,
+              ),
+            ),
+      trailing: selected ? const Icon(Icons.check, color: _neon) : null,
     );
   }
 }
@@ -1503,7 +1628,9 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
                 ),
                 validator: (value) {
                   final v = value ?? '';
-                  if (v.length < 8) return 'En az 8 karakter';
+                  if (v.length < 8) {
+                    return AppLocalizations.of(context).passwordMinLengthHint;
+                  }
                   return null;
                 },
               ),
@@ -1891,7 +2018,7 @@ class _ReferralCodeRow extends StatelessWidget {
         const SizedBox(width: 8),
         IconButton(
           icon: Icon(Icons.copy_rounded, color: scheme.onSurface),
-          tooltip: 'Kopyala',
+          tooltip: AppLocalizations.of(context).commonCopy,
           onPressed: () {
             Clipboard.setData(ClipboardData(text: code));
             HapticFeedback.lightImpact();
@@ -2008,7 +2135,7 @@ class _RedeemReferralDialogState extends State<_RedeemReferralDialog> {
       backgroundColor: scheme.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: Text(
-        'Davet Kodu',
+        AppLocalizations.of(context).referralCodeLabel,
         style: TextStyle(
           color: scheme.onSurface,
           fontWeight: FontWeight.w900,
@@ -2087,7 +2214,7 @@ class _RedeemReferralDialogState extends State<_RedeemReferralDialog> {
             foregroundColor: Colors.white,
             disabledBackgroundColor: scheme.onSurface.withValues(alpha: 0.15),
           ),
-          child: const Text('Kullan'),
+          child: Text(AppLocalizations.of(context).commonUse),
         ),
       ],
     );

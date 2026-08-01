@@ -178,7 +178,7 @@ class _FormAiWordmark extends StatelessWidget {
         colors: [AppColors.neon, AppColors.neonAccent],
       ).createShader(rect),
       child: const Text(
-        'FormAI',
+        'FormAI', // i18n-ignore
         textAlign: TextAlign.center,
         style: TextStyle(
           color: Colors.white,

@@ -125,7 +125,8 @@ class NotificationService {
     // thing at risk if the user is elsewhere is a time-of-day mismatch,
     // which showTimePicker already lets them tune.
     try {
-      tz.setLocalLocation(tz.getLocation('Europe/Istanbul'));
+      tz.setLocalLocation(
+          tz.getLocation('Europe/Istanbul')); // i18n-ignore — IANA timezone id
     } catch (_) {
       // Location database missing — fall through to UTC.
     }

@@ -99,11 +99,13 @@ class SessionLog {
   factory SessionLog.fromJson(Map<String, dynamic> json) {
     final dayNumber = json['dayNumber'];
     if (dayNumber is! int) {
-      throw const FormatException('SessionLog.dayNumber missing or not int');
+      throw const FormatException(
+          'SessionLog.dayNumber missing or not int'); // i18n-ignore — parse diagnostic
     }
     final rawLogs = json['exerciseLogs'];
     if (rawLogs is! List) {
-      throw const FormatException('SessionLog.exerciseLogs not a List');
+      throw const FormatException(
+          'SessionLog.exerciseLogs not a List'); // i18n-ignore — parse diagnostic
     }
     return SessionLog(
       dayNumber: dayNumber,

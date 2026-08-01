@@ -254,7 +254,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
         final granted = await NotificationService.instance.requestPermissions();
         if (!mounted) return;
         if (!granted) {
-          _toast('Bildirim izni verilmedi');
+          _toast(AppLocalizations.of(context).notificationPermissionDenied);
           return;
         }
         await NotificationService.instance
@@ -319,13 +319,13 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
         ),
-        title: const Row(
+        title: Row(
           children: [
             Icon(Icons.warning_amber_rounded, color: _danger, size: 24),
             SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Emin misin?',
+                AppLocalizations.of(context).accountDeleteConfirmTitle,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 18,
@@ -543,7 +543,7 @@ class _NotificationToggleTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Bildirimler',
+                  AppLocalizations.of(context).profileNotificationsTitle,
                   style: TextStyle(
                     color: scheme.onSurface,
                     fontSize: 15,
@@ -851,7 +851,9 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
                 ),
                 validator: (value) {
                   final v = value ?? '';
-                  if (v.length < 8) return 'En az 8 karakter';
+                  if (v.length < 8) {
+                    return AppLocalizations.of(context).passwordMinLengthHint;
+                  }
                   return null;
                 },
               ),

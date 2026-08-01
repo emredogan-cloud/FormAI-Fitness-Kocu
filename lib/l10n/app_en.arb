@@ -6538,5 +6538,276 @@
         "type": "int"
       }
     }
+  },
+  "languageStepTitle": "Choose your language",
+  "@languageStepTitle": {
+    "description": "Heading of onboarding step 0, the language picker. The selection applies instantly, so a user who cannot read this heading taps their language and watches it become readable — keep it short enough to be scanned rather than read."
+  },
+  "languageStepSubtitle": "You can change this any time from your profile.",
+  "@languageStepSubtitle": {
+    "description": "Reassurance under the language-picker heading, so the first screen in the product does not read as an irreversible decision."
+  },
+  "languageSettingsTitle": "Language",
+  "@languageSettingsTitle": {
+    "description": "Label of the language row in the profile tab's settings section."
+  },
+  "languageSettingsSheetTitle": "App language",
+  "@languageSettingsSheetTitle": {
+    "description": "Heading of the bottom sheet opened by the language row in settings."
+  },
+  "languageFollowDevice": "Device language",
+  "@languageFollowDevice": {
+    "description": "The option that defers to the phone's own language setting rather than pinning one. Distinct from picking the language the device currently uses: this one keeps tracking the device if it changes."
+  },
+  "languageFollowDeviceDetail": "Currently {language}",
+  "@languageFollowDeviceDetail": {
+    "description": "Subtitle under the device-language option, naming the language the device currently resolves to, so the option is not an unknown.",
+    "placeholders": {
+      "language": {
+        "type": "String",
+        "example": "English"
+      }
+    }
+  },
+  "navNutrition": "Nutrition",
+  "@navNutrition": {
+    "description": "Bottom navigation label for the nutrition tab."
+  },
+  "navProfile": "Profile",
+  "@navProfile": {
+    "description": "Bottom navigation label for the profile tab, and the profile screen's own heading."
+  },
+  "liveActivitySetLabel": "Set {current}/{total}",
+  "@liveActivitySetLabel": {
+    "description": "Set counter on the lock-screen Live Activity. Rendered with no widget tree, so it is read through AppCopy. Kept terse — the lock screen gives it one line.",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "supportMailSubject": "FormAI Support",
+  "@supportMailSubject": {
+    "description": "Pre-filled subject line of the support email. Was 'SixPack AI Destek' — a stale pre-rename brand that reached the user's mail composer."
+  },
+  "tourNext": "Next",
+  "@tourNext": {
+    "description": "Advance button in the spotlight tour overlay."
+  },
+  "authSheetBarrierLabel": "Sign-in sheet",
+  "@authSheetBarrierLabel": {
+    "description": "Accessibility label for the dimmed area behind the sign-in sheet. Screen readers announce it as the thing a tap would dismiss, so it names the sheet rather than describing the barrier."
+  },
+  "authOrDivider": "or",
+  "@authOrDivider": {
+    "description": "Divider between the social sign-in buttons and the email form."
+  },
+  "feedbackTopicLabel": "Topic",
+  "@feedbackTopicLabel": {
+    "description": "Label above the topic selector in the feedback sheet."
+  },
+  "helpCenterSearchHint": "Search questions…",
+  "@helpCenterSearchHint": {
+    "description": "Placeholder in the help centre's search field."
+  },
+  "notificationPermissionDenied": "Notification permission was not granted",
+  "@notificationPermissionDenied": {
+    "description": "Toast shown when the user declines the OS notification prompt. States what happened without arguing with the decision."
+  },
+  "accountDeleteConfirmTitle": "Are you sure?",
+  "@accountDeleteConfirmTitle": {
+    "description": "Title of the confirmation dialog before an irreversible account action."
+  },
+  "passwordMinLengthHint": "At least 8 characters",
+  "@passwordMinLengthHint": {
+    "description": "Helper text under a new-password field."
+  },
+  "discoveryHubHeading": "What can FormAI do?",
+  "@discoveryHubHeading": {
+    "description": "Heading of the discovery hub, which lists the features the user has unlocked so far."
+  },
+  "progressCompletionLabel": "PROGRAM COMPLETION",
+  "@progressCompletionLabel": {
+    "description": "Uppercase label above the 30-day program completion bar on the progress tab."
+  },
+  "progressKeepGoing": "You're doing great — keep going! 💪",
+  "@progressKeepGoing": {
+    "description": "Encouragement under the progress bar when the user is mid-program."
+  },
+  "progressDontBreakStreak": "Don't break your streak!",
+  "@progressDontBreakStreak": {
+    "description": "Nudge on the progress tab when a streak is live. The coach never scolds — this is a reminder of something the user built, not a warning."
+  },
+  "profileHeightFieldLabel": "Height (cm)",
+  "@profileHeightFieldLabel": {
+    "description": "Label of the height field in the profile editor. The unit is in the label because the UI is metric-only; a future unit toggle replaces this key with one per system."
+  },
+  "profileWeightFieldLabel": "Weight (kg)",
+  "@profileWeightFieldLabel": {
+    "description": "Label of the weight field in the profile editor. Metric-only, same as profileHeightFieldLabel."
+  },
+  "levelShort": "Lv {level}",
+  "@levelShort": {
+    "description": "Abbreviated level indicator on the profile chip, where there is room for two characters and a number.",
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "themeTileTitle": "Theme",
+  "@themeTileTitle": {
+    "description": "Title of the appearance tile in the profile tab's settings section."
+  },
+  "commonCopy": "Copy",
+  "@commonCopy": {
+    "description": "Button that copies a value to the clipboard."
+  },
+  "referralCodeLabel": "Invite code",
+  "@referralCodeLabel": {
+    "description": "Label above the user's own referral code in the profile tab."
+  },
+  "referralCodeLabelUpper": "INVITE CODE",
+  "@referralCodeLabelUpper": {
+    "description": "Same label styled uppercase on the referral landing screen. Separate from referralCodeLabel so either can be reworded alone."
+  },
+  "commonUse": "Use",
+  "@commonUse": {
+    "description": "Button that applies an entered code or value."
+  },
+  "todayActiveRest": "Active recovery",
+  "@todayActiveRest": {
+    "description": "Today's task when the plan schedules a rest day with light movement. Not 'rest' — the plan still asks for something."
+  },
+  "todayCongrats": "Congratulations!",
+  "@todayCongrats": {
+    "description": "Heading on the today card once the day's work is done."
+  },
+  "macroCarbChip": "Carbs",
+  "@macroCarbChip": {
+    "description": "Abbreviated carbohydrate label on the nutrition ring, where the full word does not fit."
+  },
+  "nutritionAddNow": "Add now",
+  "@nutritionAddNow": {
+    "description": "Button that logs a suggested meal straight to today's diary."
+  },
+  "nutritionLightAlternative": "Lighter option",
+  "@nutritionLightAlternative": {
+    "description": "Header of the lower-calorie swap offered next to a meal."
+  },
+  "nutritionQuickMealsTitle": "Quick & affordable",
+  "@nutritionQuickMealsTitle": {
+    "description": "Section title above the budget-friendly recipe row."
+  },
+  "recipeAddToPlan": "Add to plan",
+  "@recipeAddToPlan": {
+    "description": "Button on a recipe that adds it to the user's meal plan."
+  },
+  "mealDetail": "Details",
+  "@mealDetail": {
+    "description": "Opens the full detail view of a planned meal."
+  },
+  "nutritionPrefsSheetTitle": "Your nutrition preferences",
+  "@nutritionPrefsSheetTitle": {
+    "description": "Title of the one-shot nutrition onboarding sheet."
+  },
+  "nutritionGoalQuestion": "What is your nutrition goal?",
+  "@nutritionGoalQuestion": {
+    "description": "First question in the nutrition onboarding sheet."
+  },
+  "nutritionDietQuestion": "What is your diet preference?",
+  "@nutritionDietQuestion": {
+    "description": "Second question in the nutrition onboarding sheet."
+  },
+  "nutritionTasteQuestion": "Which flavours do you prefer?",
+  "@nutritionTasteQuestion": {
+    "description": "Third question in the nutrition onboarding sheet."
+  },
+  "ageGateContinue": "Continue",
+  "@ageGateContinue": {
+    "description": "Continue button on the age gate."
+  },
+  "onbAiReady": "AI READY",
+  "@onbAiReady": {
+    "description": "Uppercase status badge shown when the onboarding analysis finishes."
+  },
+  "onbFeelingTired": "I feel tired",
+  "@onbFeelingTired": {
+    "description": "Body-feelings option. These are the user's own words about themselves, so they are first person and plain — not clinical, not self-critical."
+  },
+  "onbFeelingLostForm": "I've lost my shape",
+  "@onbFeelingLostForm": {
+    "description": "Body-feelings option. 'Form' here is physical condition, not the coach's name."
+  },
+  "onbFeelingNoDiscipline": "My discipline doesn't hold",
+  "@onbFeelingNoDiscipline": {
+    "description": "Body-feelings option."
+  },
+  "onbFeelingMirrorHard": "Looking in the mirror is hard",
+  "@onbFeelingMirrorHard": {
+    "description": "Body-feelings option."
+  },
+  "onbFeelingWantOldSelf": "I want my old self back",
+  "@onbFeelingWantOldSelf": {
+    "description": "Body-feelings option."
+  },
+  "coachStatusOnline": "Online",
+  "@coachStatusOnline": {
+    "description": "Presence label under the coach's name in the onboarding chat header."
+  },
+  "badgesTitle": "Badges",
+  "@badgesTitle": {
+    "description": "Title of the badges screen."
+  },
+  "calendarLegendCompleted": "Completed",
+  "@calendarLegendCompleted": {
+    "description": "Calendar legend: a day the user finished."
+  },
+  "calendarLegendPending": "Pending",
+  "@calendarLegendPending": {
+    "description": "Calendar legend: a scheduled day that has not been done yet."
+  },
+  "calendarLegendPlanned": "Planned",
+  "@calendarLegendPlanned": {
+    "description": "Calendar legend: a future day in the plan."
+  },
+  "referralContinueCta": "Continue",
+  "@referralContinueCta": {
+    "description": "Continue button on the referral landing screen."
+  },
+  "planContinueCta": "CONTINUE",
+  "@planContinueCta": {
+    "description": "Uppercase continue button on the plan detail screen. Separate from onbContinueCta so the onboarding wording can change without moving this one."
+  },
+  "planTierPremium": "Premium tier",
+  "@planTierPremium": {
+    "description": "Label marking a plan as part of the paid tier."
+  },
+  "planTierLite": "Lite tier",
+  "@planTierLite": {
+    "description": "Label marking a plan as available without a subscription."
+  },
+  "planProRequired": "PRO required",
+  "@planProRequired": {
+    "description": "Badge on a plan the user cannot start without Pro."
+  },
+  "sessionProgramComplete": "Program complete!",
+  "@sessionProgramComplete": {
+    "description": "Headline on the overlay shown when the user finishes the final day of a program."
+  },
+  "commonOk": "OK",
+  "@commonOk": {
+    "description": "Dismiss button on a confirmation overlay."
+  },
+  "workoutResumeCta": "Resume",
+  "@workoutResumeCta": {
+    "description": "Button that resumes a paused workout."
+  },
+  "macroProteinChip": "Protein",
+  "@macroProteinChip": {
+    "description": "Protein macro label on the nutrition ring. The similarly-named macroProtein is the '{value}g P' chip and is a different string."
   }
 }

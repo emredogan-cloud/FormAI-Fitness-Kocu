@@ -1,6 +1,7 @@
 import 'package:url_launcher/url_launcher.dart';
 
 import 'app_logger.dart';
+import 'app_copy.dart';
 
 /// Production URLs for the Kullanım Şartları (Terms of Use) and Gizlilik
 /// Politikası (Privacy Policy) pages. Surfaced from the paywall footer,
@@ -23,7 +24,11 @@ class LegalUrls {
   /// profile-tab's "Destek" tile (`openSupportMail`) and referenced in
   /// the account-settings error toast when a delete fails.
   static const String supportEmail = 'support@formai.app';
-  static const String supportSubject = 'SixPack AI Destek';
+
+  /// Roadmap Phase 6 · the subject line follows the app's language.
+  /// It used to be the const `'SixPack AI Destek'` — a pre-rename brand
+  /// that was still reaching the user's mail composer.
+  static String get supportSubject => AppCopy.strings.supportMailSubject;
 }
 
 /// Opens [url] in the external browser. Returns true on success; logs and
@@ -53,12 +58,13 @@ Future<bool> openLegalUrl(String url) async {
 /// failures are logged and swallowed so the UI can show a toast.
 Future<bool> openSupportMail({
   String email = LegalUrls.supportEmail,
-  String subject = LegalUrls.supportSubject,
+  String? subject,
 }) async {
+  final resolved = subject ?? LegalUrls.supportSubject;
   final uri = Uri(
     scheme: 'mailto',
     path: email,
-    query: 'subject=${Uri.encodeQueryComponent(subject)}',
+    query: 'subject=${Uri.encodeQueryComponent(resolved)}',
   );
   try {
     return await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -68,7 +74,7 @@ Future<bool> openSupportMail({
       e,
       stackTrace: st,
       category: 'legal',
-      data: {'email': email, 'subject': subject},
+      data: {'email': email, 'subject': resolved},
     );
     return false;
   }

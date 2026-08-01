@@ -168,7 +168,9 @@ class _DeviceContext {
     }
     final platform = Platform.isIOS
         ? 'iOS'
-        : (Platform.isAndroid ? 'Android' : Platform.operatingSystem);
+        : (Platform.isAndroid
+            ? 'Android' // i18n-ignore — platform tag
+            : Platform.operatingSystem);
     return _DeviceContext(
       appVersion: version,
       platform: platform,

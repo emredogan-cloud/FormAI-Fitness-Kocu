@@ -152,8 +152,8 @@ class _AgeGateScreenState extends ConsumerState<AgeGateScreen> {
                 borderRadius: BorderRadius.circular(16),
               ),
             ),
-            child: const Text(
-              'Devam Et',
+            child: Text(
+              AppLocalizations.of(context).ageGateContinue,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,

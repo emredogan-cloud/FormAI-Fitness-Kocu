@@ -729,10 +729,10 @@ class _ActiveDayCard extends StatelessWidget {
             child: InkWell(
               customBorder: const StadiumBorder(),
               onTap: onTap,
-              child: const Padding(
+              child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 22, vertical: 14),
                 child: Text(
-                  'DEVAM ET',
+                  AppLocalizations.of(context).planContinueCta,
                   style: TextStyle(
                     color: _neon,
                     fontSize: 14,
@@ -1545,7 +1545,8 @@ class _TierLaunchButton extends ConsumerWidget {
       ? const [_premiumGold, _premiumGoldDeep]
       : const [Color(0xFF6A3DFF), Color(0xFF4DA6FF)];
 
-  String get _subtitle => _isPremium ? 'Premium Seviye' : 'Lite Seviye';
+  String _subtitle(AppLocalizations l10n) =>
+      _isPremium ? l10n.planTierPremium : l10n.planTierLite;
 
   IconData? get _icon => locked
       ? Icons.lock
@@ -1610,7 +1611,9 @@ class _TierLaunchButton extends ConsumerWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    locked ? 'PRO Gerekli' : _subtitle,
+                    locked
+                        ? AppLocalizations.of(context).planProRequired
+                        : _subtitle(AppLocalizations.of(context)),
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.82),
                       fontSize: 11,

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_haptics.dart';
 import '../onboarding_chrome.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// One option in a [MultiSelectQuestionStep]. Emoji-leading because the
 /// reference video (Unrot ~0:35–0:50) leans on emoji to make
@@ -40,7 +41,7 @@ class MultiSelectQuestionStep extends StatefulWidget {
     required this.options,
     required this.initialSelected,
     required this.onCommitted,
-    this.ctaLabel = 'DEVAM ET',
+    this.ctaLabel,
     this.minSelection = 1,
   });
 
@@ -49,7 +50,9 @@ class MultiSelectQuestionStep extends StatefulWidget {
   final List<MultiSelectOption> options;
   final Set<String> initialSelected;
   final void Function(Set<String>) onCommitted;
-  final String ctaLabel;
+
+  /// Null resolves to the localized default at build time.
+  final String? ctaLabel;
 
   /// Minimum number of options that must be selected for the CTA to
   /// enable. Default 1 — the user has to acknowledge at least one
@@ -110,7 +113,7 @@ class _MultiSelectQuestionStepState extends State<MultiSelectQuestionStep> {
           ),
         ),
         PrimaryOnboardingButton(
-          label: widget.ctaLabel,
+          label: widget.ctaLabel ?? AppLocalizations.of(context).onbContinueCta,
           onPressed: ctaEnabled ? _commit : null,
         ),
       ],

@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 
 import 'package:live_activities/live_activities.dart';
 
+import '../utils/app_copy.dart';
 import '../utils/app_logger.dart';
 
 /// Phase 55 · iOS-only Live Activity engine for the workout flow.
@@ -198,7 +199,7 @@ class WorkoutLiveActivityService {
     return <String, dynamic>{
       'day_number': dayNumber,
       'exercise_name': exerciseName,
-      'set_label': 'Set $setIndex/$totalSets',
+      'set_label': AppCopy.strings.liveActivitySetLabel(setIndex, totalSets),
       'set_index': setIndex,
       'total_sets': totalSets,
       'exercise_index': currentExerciseIndex,

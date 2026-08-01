@@ -459,7 +459,8 @@ class _ProgramProgressCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                const _CardLabel(text: 'PROGRAM TAMAMLAMA'),
+                _CardLabel(
+                    text: AppLocalizations.of(context).progressCompletionLabel),
                 const SizedBox(height: 8),
                 Text(
                   '%$pctInt',
@@ -512,7 +513,7 @@ class _ProgramProgressCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'Harika gidiyorsun, devam et! 💪',
+                  AppLocalizations.of(context).progressKeepGoing,
                   style: TextStyle(
                     color: context.colors.onSurface.withValues(alpha: 0.70),
                     fontSize: 12,
@@ -609,7 +610,7 @@ class _StreakCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Serini bozma!',
+                  AppLocalizations.of(context).progressDontBreakStreak,
                   style: TextStyle(
                     color: context.colors.onSurface.withValues(alpha: 0.55),
                     fontSize: 12,

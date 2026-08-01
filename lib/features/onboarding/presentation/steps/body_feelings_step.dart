@@ -37,17 +37,17 @@ class BodyFeelingsStep extends ConsumerWidget {
       options: [
         MultiSelectOption(
           value: 'tired',
-          label: 'Yorgunum',
+          label: AppLocalizations.of(context).onbFeelingTired,
           emoji: '😟',
         ),
         MultiSelectOption(
           value: 'lost_form',
-          label: 'Form bende kayboldu',
+          label: AppLocalizations.of(context).onbFeelingLostForm,
           emoji: '💔',
         ),
         MultiSelectOption(
           value: 'low_discipline',
-          label: 'Disiplinim tutmuyor',
+          label: AppLocalizations.of(context).onbFeelingNoDiscipline,
           emoji: '😤',
         ),
         MultiSelectOption(
@@ -57,7 +57,7 @@ class BodyFeelingsStep extends ConsumerWidget {
         ),
         MultiSelectOption(
           value: 'mirror_avoid',
-          label: 'Aynaya bakmak zor geliyor',
+          label: AppLocalizations.of(context).onbFeelingMirrorHard,
           emoji: '🪞',
         ),
         MultiSelectOption(
@@ -67,7 +67,7 @@ class BodyFeelingsStep extends ConsumerWidget {
         ),
         MultiSelectOption(
           value: 'want_old_self',
-          label: 'Eski hâlimi geri istiyorum',
+          label: AppLocalizations.of(context).onbFeelingWantOldSelf,
           emoji: '💪',
         ),
         MultiSelectOption(

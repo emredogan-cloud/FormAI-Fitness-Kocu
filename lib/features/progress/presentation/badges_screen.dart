@@ -185,7 +185,7 @@ class BadgesScreen extends ConsumerWidget {
         elevation: 0,
         foregroundColor: scheme.onSurface,
         title: Text(
-          'Rozetler',
+          AppLocalizations.of(context).badgesTitle,
           style: TextStyle(
             color: scheme.onSurface,
             fontWeight: FontWeight.w900,

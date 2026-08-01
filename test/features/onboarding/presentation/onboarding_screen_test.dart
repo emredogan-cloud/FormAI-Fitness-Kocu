@@ -60,6 +60,24 @@ Widget _hostOnboarding(SharedPreferences prefs) {
   );
 }
 
+/// Mounts the wizard and steps past the language ask onto the welcome
+/// hero, which is where every test below starts.
+///
+/// Roadmap Phase 6 put the language picker at index 0. It is genuinely
+/// the first screen now, so the tests that assert on the hero have to
+/// walk to it rather than pretend it is still first — and the walk is
+/// itself a check that step 0 hands off to step 1.
+Future<void> _pumpToWelcome(
+    WidgetTester tester, SharedPreferences prefs) async {
+  await tester.pumpWidget(_hostOnboarding(prefs));
+  await tester.pump();
+  await tester.tap(find.text('DEVAM ET'));
+  // Not pumpAndSettle: the welcome hero runs a looping glow, so the
+  // tree never settles. One pump past the 480 ms scene transition is
+  // what "the next screen is up" actually means here.
+  await tester.pump(const Duration(milliseconds: 600));
+}
+
 void main() {
   group('OnboardingScreen smoke', () {
     setUp(() {
@@ -69,8 +87,7 @@ void main() {
     testWidgets('welcome page renders the hero copy and BAŞLA CTA',
         (tester) async {
       final prefs = await SharedPreferences.getInstance();
-      await tester.pumpWidget(_hostOnboarding(prefs));
-      await tester.pump();
+      await _pumpToWelcome(tester, prefs);
 
       // Task 1 hotfix · the hook title is now a three-line gradient
       // RichText ("Vücudunu" / "Yapay Zeka" / "ile Şekillendir").
@@ -91,8 +108,7 @@ void main() {
       'fragment highlighted',
       (tester) async {
         final prefs = await SharedPreferences.getInstance();
-        await tester.pumpWidget(_hostOnboarding(prefs));
-        await tester.pump();
+        await _pumpToWelcome(tester, prefs);
 
         // Phase 5 · the title used to be three hardcoded TextSpans, one
         // per line, which pinned the neon word to the middle line. It is
@@ -118,8 +134,7 @@ void main() {
       'both legal documents stay tappable inside the localised sentence',
       (tester) async {
         final prefs = await SharedPreferences.getInstance();
-        await tester.pumpWidget(_hostOnboarding(prefs));
-        await tester.pump();
+        await _pumpToWelcome(tester, prefs);
 
         final legal = _richTextContaining(tester, 'Kullanım Şartları');
         final plain = legal.text.toPlainText();
@@ -154,8 +169,7 @@ void main() {
         });
 
         final prefs = await SharedPreferences.getInstance();
-        await tester.pumpWidget(_hostOnboarding(prefs));
-        await tester.pump();
+        await _pumpToWelcome(tester, prefs);
 
         // The BAŞLA CTA is pinned below the scroll area, so its bottom edge
         // must land within the 851 px viewport — visible without scrolling.
@@ -187,8 +201,7 @@ void main() {
       });
 
       final prefs = await SharedPreferences.getInstance();
-      await tester.pumpWidget(_hostOnboarding(prefs));
-      await tester.pump();
+      await _pumpToWelcome(tester, prefs);
 
       await tester.tap(find.text('BAŞLA'));
       // Two reasons to pump well past the 480 ms SceneTransition:

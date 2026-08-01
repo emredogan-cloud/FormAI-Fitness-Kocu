@@ -255,8 +255,10 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
           code.contains('inuse') ||
           code.contains('cameraaccess') ||
           code.contains('max_cameras') ||
-          description.contains('already in use') ||
-          description.contains('in use by another');
+          description.contains(
+              'already in use') || // i18n-ignore — matches the platform error
+          description.contains(
+              'in use by another'); // i18n-ignore — matches the platform error
       setState(() {
         _error = inUse
             ? AppLocalizations.of(context).cameraInUse
@@ -1430,7 +1432,7 @@ class _WorkoutCameraScreenState extends ConsumerState<WorkoutCameraScreen>
             style: TextButton.styleFrom(
               foregroundColor: Colors.white70,
             ),
-            child: const Text('Devam et'),
+            child: Text(AppLocalizations.of(context).workoutResumeCta),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),

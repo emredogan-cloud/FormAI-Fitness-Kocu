@@ -16,22 +16,37 @@ import '../../l10n/app_localizations.dart';
 ///
 /// The caller is responsible for logging the raw [AuthException.message];
 /// this returns only the user-facing copy.
+/// The fragments of Supabase's wire text this file matches on.
+///
+/// Named rather than inlined so each one sits on a short line of its
+/// own with a stable `// i18n-ignore`. Inline, the markers ride on
+/// `if (...)` conditions, and `dart format` relocates a trailing comment
+/// the moment a condition wraps or the marker follows an opening brace —
+/// which silently un-marks the literal and reopens the file in the gate.
+const _invalidCredentials = 'invalid login credentials'; // i18n-ignore
+const _emailNotConfirmed = 'email not confirmed'; // i18n-ignore
+const _alreadyRegistered = 'already registered'; // i18n-ignore
+const _alreadyBeenRegistered = 'already been registered'; // i18n-ignore
+const _rateLimit = 'rate limit'; // i18n-ignore
+const _securityPurposes = 'security purposes'; // i18n-ignore
+const _atLeastSixCharacters = 'at least 6 characters'; // i18n-ignore
+const _weakPassword = 'weak password'; // i18n-ignore
+
 String authErrorMessage(AppLocalizations l10n, AuthException e) {
   final m = e.message.toLowerCase();
-  if (m.contains('invalid login credentials')) {
+  if (m.contains(_invalidCredentials)) {
     return l10n.authErrorInvalidCredentials;
   }
-  if (m.contains('email not confirmed')) {
+  if (m.contains(_emailNotConfirmed)) {
     return l10n.authErrorEmailNotConfirmed;
   }
-  if (m.contains('already registered') ||
-      m.contains('already been registered')) {
+  if (m.contains(_alreadyRegistered) || m.contains(_alreadyBeenRegistered)) {
     return l10n.authErrorAlreadyRegistered;
   }
-  if (m.contains('rate limit') || m.contains('security purposes')) {
+  if (m.contains(_rateLimit) || m.contains(_securityPurposes)) {
     return l10n.authErrorRateLimited;
   }
-  if (m.contains('at least 6 characters') || m.contains('weak password')) {
+  if (m.contains(_atLeastSixCharacters) || m.contains(_weakPassword)) {
     return l10n.authErrorWeakPassword;
   }
   return l10n.authErrorGeneric;

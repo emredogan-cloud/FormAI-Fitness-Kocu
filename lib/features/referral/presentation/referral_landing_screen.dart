@@ -106,7 +106,7 @@ class _ReferralLandingScreenState extends ConsumerState<ReferralLandingScreen> {
               if (_redeemed)
                 FilledButton(
                   onPressed: () => context.go(AppRoutes.dashboard),
-                  child: const Text('Devam Et'),
+                  child: Text(AppLocalizations.of(context).referralContinueCta),
                 )
               else if (isAnonOrSignedOut)
                 FilledButton(
@@ -163,7 +163,7 @@ class _CodeCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'DAVET KODU',
+                  AppLocalizations.of(context).referralCodeLabelUpper,
                   style: TextStyle(
                     color: scheme.onSurface.withValues(alpha: 0.55),
                     fontSize: 11,

@@ -650,7 +650,7 @@ class _SheetHeader extends StatelessWidget {
               ),
               Expanded(
                 child: Text(
-                  'Beslenme Tercihlerin',
+                  AppLocalizations.of(context).nutritionPrefsSheetTitle,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.9),
@@ -875,7 +875,7 @@ class _NutritionGoalPage extends ConsumerWidget {
     return Column(
       children: [
         _PageTitle(
-          title: 'Beslenme hedefin nedir?',
+          title: AppLocalizations.of(context).nutritionGoalQuestion,
           subtitle: AppLocalizations.of(context).nutritionGoalCoachLine,
         ),
         const SizedBox(height: 12),
@@ -937,7 +937,7 @@ class _DietPreferencePage extends ConsumerWidget {
     return Column(
       children: [
         _PageTitle(
-          title: 'Diyet tercihin nedir?',
+          title: AppLocalizations.of(context).nutritionDietQuestion,
           subtitle: AppLocalizations.of(context).nutritionDietCoachLine,
         ),
         const SizedBox(height: 12),
@@ -1099,7 +1099,7 @@ class _TastePreferencePage extends ConsumerWidget {
     return Column(
       children: [
         _PageTitle(
-          title: 'Tat tercihin nedir?',
+          title: AppLocalizations.of(context).nutritionTasteQuestion,
           subtitle: AppLocalizations.of(context).nutritionTasteCoachLine,
         ),
         const SizedBox(height: 12),

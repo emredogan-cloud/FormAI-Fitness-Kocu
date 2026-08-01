@@ -158,7 +158,7 @@ class _FeedbackSheetState extends ConsumerState<_FeedbackSheet> {
               initialValue: _subject,
               isDense: true,
               decoration: InputDecoration(
-                labelText: 'Konu',
+                labelText: AppLocalizations.of(context).feedbackTopicLabel,
                 filled: true,
                 fillColor: scheme.onSurface.withValues(alpha: 0.04),
                 border: OutlineInputBorder(

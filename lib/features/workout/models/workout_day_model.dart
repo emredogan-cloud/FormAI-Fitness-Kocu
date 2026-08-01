@@ -32,7 +32,8 @@ class WorkoutDay {
   factory WorkoutDay.fromJson(Map<String, dynamic> json) {
     final rawExercises = json['exercises'];
     if (rawExercises is! List) {
-      throw const FormatException('WorkoutDay.exercises was not a list');
+      throw const FormatException(
+          'WorkoutDay.exercises was not a list'); // i18n-ignore — parse diagnostic
     }
     return WorkoutDay(
       dayNumber: json['dayNumber'] as int,

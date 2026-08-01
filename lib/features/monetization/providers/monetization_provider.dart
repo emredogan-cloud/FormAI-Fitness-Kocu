@@ -14,7 +14,8 @@ import '../../auth/providers/auth_provider.dart';
 /// Entitlement id configured on the RevenueCat dashboard. Products mapped
 /// to this id (monthly/quarterly/yearly) all unlock the same premium gate.
 /// Case-sensitive — must match the RC dashboard exactly (space included).
-const String kProEntitlementId = 'FormAI Pro';
+const String kProEntitlementId =
+    'FormAI Pro'; // i18n-ignore — store product name
 
 /// Persisted flag used by the debug "Sandbox" button on the paywall to
 /// force-unlock Premium without a real RevenueCat purchase. Needed while

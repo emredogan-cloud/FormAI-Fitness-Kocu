@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/motion/kinetic_text_reveal.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Which side of the chat thread a bubble belongs to.
 ///
@@ -138,8 +139,8 @@ class CoachChatHeader extends StatelessWidget {
   const CoachChatHeader({
     super.key,
     required this.avatar,
-    this.name = 'Form',
-    this.statusLabel = 'Online',
+    this.name = 'Form', // i18n-ignore — the coach's name
+    this.statusLabel,
   });
 
   /// Pre-built avatar widget (typically a small [LivingCoachAvatar]).
@@ -147,7 +148,10 @@ class CoachChatHeader extends StatelessWidget {
   /// it lives on.
   final Widget avatar;
   final String name;
-  final String statusLabel;
+
+  /// Null resolves to the localized default at build time. A literal
+  /// default would bake one language into the constructor signature.
+  final String? statusLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -191,7 +195,8 @@ class CoachChatHeader extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    statusLabel,
+                    statusLabel ??
+                        AppLocalizations.of(context).coachStatusOnline,
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.7),
                       fontSize: 11,

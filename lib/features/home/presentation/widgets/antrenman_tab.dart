@@ -578,7 +578,7 @@ class _AntrenmanHeader extends StatelessWidget {
         children: [
           const Expanded(
             child: Text(
-              'FormAI',
+              'FormAI', // i18n-ignore — brand wordmark
               style: TextStyle(
                 color: _neon,
                 fontSize: 22,
@@ -695,7 +695,7 @@ class _CoachEntryCard extends StatelessWidget {
                       Row(
                         children: [
                           Text(
-                            'Form',
+                            'Form', // i18n-ignore — the coach's name
                             style: TextStyle(
                               color: scheme.onSurface,
                               fontSize: 15,

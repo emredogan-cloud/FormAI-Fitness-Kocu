@@ -398,7 +398,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     ),
                   ),
                   const SizedBox(height: 28),
-                  const _Divider(label: 'ya da'),
+                  _Divider(label: AppLocalizations.of(context).authOrDivider),
                   const SizedBox(height: 18),
                   OutlinedButton.icon(
                     onPressed:

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_haptics.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../onboarding_chrome.dart';
 import 'interactive_question_step.dart';
 
@@ -235,7 +236,8 @@ class _HybridQuestionStepState extends State<HybridQuestionStep>
                               fontSize: 14,
                             ),
                           ),
-                          child: const Text('DEVAM ET'),
+                          child:
+                              Text(AppLocalizations.of(context).onbContinueCta),
                         ),
                       ),
                     ),

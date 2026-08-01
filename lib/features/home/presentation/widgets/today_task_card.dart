@@ -119,7 +119,7 @@ class TodayTaskCard extends ConsumerWidget {
   }
 
   String _focusLabel(AppLocalizations l10n, WorkoutDay day) {
-    if (day.isRestDay) return 'Aktif Dinlenme';
+    if (day.isRestDay) return l10n.todayActiveRest;
     final counts = <String, int>{};
     for (final exercise in day.exercises) {
       counts[exercise.targetMuscle] = (counts[exercise.targetMuscle] ?? 0) + 1;
@@ -208,8 +208,8 @@ class ProgramCompleteCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
-                      'Tebrikler!',
+                    Text(
+                      AppLocalizations.of(context).todayCongrats,
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 18,

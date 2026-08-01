@@ -276,7 +276,7 @@ class _BrandHeader extends StatelessWidget {
         ),
         const SizedBox(width: 18),
         const Text(
-          'FormAI',
+          'FormAI', // i18n-ignore — brand wordmark
           style: TextStyle(
             color: _brandText,
             fontSize: 56,

@@ -527,7 +527,7 @@ class _DeepLinkSplashScreenState extends State<_DeepLinkSplashScreen> {
       backgroundColor: Color(0xFF0B0B12),
       body: Center(
         child: Text(
-          'FormAI',
+          'FormAI', // i18n-ignore — brand wordmark
           // Store-submission U7 · brand purple (matches the boot-splash
           // wordmark); this screen previously kept the retired cyan.
           style: TextStyle(

@@ -6,7 +6,8 @@ import 'package:sixpack_ai/core/providers/locale_provider.dart';
 import 'package:sixpack_ai/core/services/app_preferences.dart';
 
 /// Roadmap Phase 6 (R3.2) · the language preference and its default.
-Future<ProviderContainer> _container([Map<String, Object> seed = const {}]) async {
+Future<ProviderContainer> _container(
+    [Map<String, Object> seed = const {}]) async {
   SharedPreferences.setMockInitialValues(seed);
   final raw = await SharedPreferences.getInstance();
   final container = ProviderContainer(

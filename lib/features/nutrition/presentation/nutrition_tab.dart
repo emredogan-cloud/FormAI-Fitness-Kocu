@@ -350,13 +350,13 @@ class _MacroBarsRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _MacroBar(
-                label: 'Protein',
+                label: AppLocalizations.of(context).macroProteinChip,
                 color: _proteinColor,
                 macro: _MacroField.protein,
               ),
               SizedBox(height: 6),
               _MacroBar(
-                label: 'Karb',
+                label: AppLocalizations.of(context).macroCarbChip,
                 color: _carbsColor,
                 macro: _MacroField.carbs,
               ),
@@ -961,7 +961,7 @@ class _PrimaryHemenEkleButton extends StatelessWidget {
     return FilledButton.icon(
       onPressed: onPressed,
       icon: const Icon(Icons.add, size: 14),
-      label: const Text('Hemen Ekle'),
+      label: Text(AppLocalizations.of(context).nutritionAddNow),
       style: FilledButton.styleFrom(
         backgroundColor: _neonGreen,
         foregroundColor: Colors.black,
@@ -992,7 +992,7 @@ class _WarningCta extends StatelessWidget {
         context.push('/recipe', extra: recipe);
       },
       icon: const Icon(Icons.cancel_outlined, size: 14),
-      label: const Text('Hafif Alternatif'),
+      label: Text(AppLocalizations.of(context).nutritionLightAlternative),
       style: OutlinedButton.styleFrom(
         foregroundColor: _warningColor,
         side: const BorderSide(color: _warningColor, width: 1.2),
@@ -1181,7 +1181,7 @@ class _NutritionProUpsell extends ConsumerWidget {
                   Icon(Icons.workspace_premium, color: _neon, size: 13),
                   SizedBox(width: 4),
                   Text(
-                    'FormAI Pro',
+                    'FormAI Pro', // i18n-ignore — store product name
                     style: TextStyle(
                       color: _neon,
                       fontSize: 11,
@@ -1315,7 +1315,8 @@ class _BudgetSectionHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionTitle(title: 'Pratik & Ekonomik'),
+        _SectionTitle(
+            title: AppLocalizations.of(context).nutritionQuickMealsTitle),
         const SizedBox(height: 4),
         Text(
           AppLocalizations.of(context).nutritionQuickMealsSubtitle,

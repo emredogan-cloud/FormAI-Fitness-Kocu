@@ -7,6 +7,7 @@
 //
 // Run:
 //   dart run tool/check_hardcoded_strings.dart            # report
+//   dart run tool/check_hardcoded_strings.dart --list     # every flagged line
 //   dart run tool/check_hardcoded_strings.dart --baseline # rewrite baseline
 //
 // HOW IT AVOIDS BEING IGNORED
@@ -21,11 +22,14 @@
 // WHAT COUNTS AS USER-FACING
 //
 // Heuristics, deliberately biased toward false negatives — a gate that
-// cries wolf gets muted. A literal is flagged when it is in a
-// presentation file, contains a Turkish-alphabet character or a common
-// Turkish word, is at least two characters, and is not obviously
+// cries wolf gets muted. A literal is flagged when it is under `lib/`
+// outside the allowlist, is at least two characters, is not obviously
 // technical (an asset path, a route, a key, a locale tag, a format
-// pattern) or already inside an `// i18n-ignore` line.
+// pattern), is not on an `// i18n-ignore` line, and either **reads as
+// Turkish** or **is shaped like a label**.
+//
+// That last clause was added in Phase 6 and is the reason this comment
+// no longer says "contains a Turkish character". See [_looksLikeLabel].
 
 import 'dart:convert';
 import 'dart:io';
@@ -110,12 +114,46 @@ final _turkishSignal = RegExp(
   caseSensitive: false,
 );
 
+/// A literal shaped like something a person reads, rather than a key.
+///
+/// Blind spot #4, found in Phase 6 while adding the language picker.
+/// `_turkishSignal` recognises Turkish by its diacritics or by a short
+/// stopword list, so it was silent on every Turkish word that happens to
+/// be pure ASCII and isn't one of those eighteen. `'Tema'` sat in the
+/// profile tab's theme tile — a title on a settings screen — and the
+/// gate reported the file at zero.
+///
+/// It was not alone: widening to this rule surfaced `'Rozetler'` (the
+/// badges screen title), the calendar's `'Tamamlanan'` / `'Bekleyen'` /
+/// `'Planlanan'` legend, four separate `'DEVAM ET'` buttons, the body-
+/// feelings options, `'Beslenme'` on the dashboard, and the spotlight
+/// tour's `'Devam'` / `'Atla'`. All of it would have rendered Turkish
+/// inside the English app.
+///
+/// The shape, not the language: a sentence-cased word, or two words with
+/// a space between them. Keys are `snake_case`, `camelCase` or dotted;
+/// none of those match. This is what makes the gate bilingual — an
+/// English literal in `lib/` is now just as wrong as a Turkish one, and
+/// as of Phase 6 that is the truth the gate needs to enforce.
+final _labelShape = RegExp(
+  // A sentence-cased word: `Tema`, `Rozetler`, `Beslenme`.
+  r'^[A-ZÇĞİÖŞÜ][a-zçğıöşü]'
+  // Or two letter-words separated by a space: `Plana Ekle`, `ya da`.
+  r'|^[a-zA-ZÇĞİÖŞÜçğıöşü]+ [a-zA-ZÇĞİÖŞÜçğıöşü]',
+);
+
+bool _looksLikeLabel(String value) => _labelShape.hasMatch(value.trim());
+
 /// Literals that are technical rather than user-facing.
 final _technical = <RegExp>[
   RegExp(r'^[a-z0-9_./-]+\.(png|jpg|jpeg|webp|svg|json|riv|mp4|otf|ttf)$'),
   RegExp(r'^/[a-z0-9/_-]*$'), // routes
   RegExp(r'^[a-z][a-zA-Z0-9]*$'), // identifiers / tokens
   RegExp(r'^[a-z0-9_]+$'), // snake_case keys
+  // Dotted storage / analytics keys — `sixpack.theme_mode`. Only
+  // excluded now that the label rule would otherwise catch the ones
+  // with two dotted segments.
+  RegExp(r'^[a-z0-9_]+(\.[a-z0-9_]+)+$'),
   RegExp(r'^https?://'),
   RegExp(r'^#[0-9a-fA-F]{3,8}$'),
   RegExp(r'^[\d\s\-+*/%.,:()]+$'), // pure punctuation / numbers
@@ -173,8 +211,15 @@ final _literal = RegExp(
   r"'((?:[^'\\\n]|\\.){2,}?)'" r'|"((?:[^"\\\n]|\\.){2,}?)"',
 );
 
-int _countViolations(String source) {
-  var count = 0;
+/// One flagged literal, with enough to go and fix it.
+class Violation {
+  Violation(this.line, this.value);
+  final int line;
+  final String value;
+}
+
+List<Violation> _findViolations(String source) {
+  final found = <Violation>[];
   final lines = const LineSplitter().convert(source);
   for (var i = 0; i < lines.length; i++) {
     final rawLine = lines[i];
@@ -187,12 +232,14 @@ int _countViolations(String source) {
       final value = match.group(1) ?? match.group(2) ?? '';
       if (_isTechnical(value)) continue;
       if (_isPureComposition(value)) continue;
-      if (!_turkishSignal.hasMatch(value)) continue;
-      count++;
+      if (!_turkishSignal.hasMatch(value) && !_looksLikeLabel(value)) continue;
+      found.add(Violation(i + 1, value));
     }
   }
-  return count;
+  return found;
 }
+
+int _countViolations(String source) => _findViolations(source).length;
 
 Map<String, int> _scan() {
   final counts = <String, int>{};
@@ -248,6 +295,20 @@ const _baselinePath = 'tool/hardcoded_strings_baseline.json';
 void main(List<String> args) {
   final counts = _scan();
   final total = counts.values.fold<int>(0, (a, b) => a + b);
+
+  // A count tells you a file regressed; it doesn't tell you which line.
+  // Every extraction pass so far has started by re-deriving this list by
+  // hand, so the gate may as well print it.
+  if (args.contains('--list')) {
+    final paths = counts.keys.toList()..sort();
+    for (final path in paths) {
+      for (final v in _findViolations(File(path).readAsStringSync())) {
+        stdout.writeln('$path:${v.line}: ${v.value}');
+      }
+    }
+    stdout.writeln('\n$total literals in ${counts.length} files');
+    return;
+  }
 
   if (args.contains('--baseline')) {
     final sorted = Map.fromEntries(

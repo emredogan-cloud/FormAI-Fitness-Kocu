@@ -1009,11 +1009,11 @@ class _ReportHeroCard extends StatelessWidget {
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
-                    children: const [
+                    children: [
                       _PulsingDot(),
                       SizedBox(width: 5),
                       Text(
-                        'AI HAZIR',
+                        AppLocalizations.of(context).onbAiReady,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 9.5,

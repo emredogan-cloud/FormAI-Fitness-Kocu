@@ -635,7 +635,7 @@ class _AddToPlanButton extends ConsumerWidget {
           child: FilledButton.icon(
             onPressed: () => _handleAddToPlan(context, ref, recipe),
             icon: const Icon(Icons.add_circle_outline, size: 20),
-            label: const Text('Plana Ekle'),
+            label: Text(AppLocalizations.of(context).recipeAddToPlan),
             style: FilledButton.styleFrom(
               backgroundColor: _neon,
               foregroundColor: Colors.white,
