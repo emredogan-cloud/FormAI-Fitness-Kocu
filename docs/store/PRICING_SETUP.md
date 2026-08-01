@@ -40,9 +40,36 @@ a country change once per year with a local payment method.
 
 ---
 
-## 2. The pricing decision I need you to make first
+## 2. The pricing decision — **DECIDED 2026-08-01**
 
-Your target, and what it works out to per month:
+**Approved USD ladder. This is what to create in Play Console:**
+
+| Plan | USD | per month | Play product ID |
+| --- | --- | --- | --- |
+| Weekly | **$3.99** | $17.29 | `formai_pro_weekly` |
+| Monthly | **$9.99** | $9.99 | `formai_pro_monthly` |
+| Yearly | **$49.99** — *Most Popular* | $4.17 | `formai_pro_annual` |
+
+**Turkish pricing is unchanged** — ₺100 / ₺400 / ₺1200. It was already
+correctly ordered (₺433 > ₺400 > ₺100 per month) and there is no
+technical reason to move it. Play bills in the Play account's country, so
+a Turkish account keeps seeing ₺ regardless of app language; §1 explains
+why that is correct rather than a bug.
+
+**Yearly carries the "Most Popular" badge**, which the paywall already
+renders on the annual card. Nothing in the app is compiled with a price —
+`price_format.dart` reads the store's own strings — so this decision
+needs no app release, only the Play Console and RevenueCat steps in §3
+and §4.
+
+The reasoning that produced it is kept below, because the next person to
+touch a price needs to know why $2 was rejected.
+
+---
+
+### Why $2/week was wrong
+
+Your original target, and what it works out to per month:
 
 | Plan | USD | per month | TRY | per month |
 | --- | --- | --- | --- | --- |
@@ -60,8 +87,9 @@ earns less than it should. In TRY the same ladder is correct: ₺433 > ₺400
 The cause is that $2 ≈ ₺80 at a realistic rate but $10 ≈ ₺400, so the
 weekly tier is priced for Turkey and the monthly tier for the US.
 
-**Recommendation: USD weekly `$3.99`.** That is $17.29/month — comfortably
-above the $10 monthly plan — and it keeps every tier's ordering intact:
+**$3.99 weekly is what fixed it.** That is $17.29/month — comfortably
+above the $9.99 monthly plan — and it keeps every tier's ordering
+intact:
 
 | Plan | USD | per month | vs yearly |
 | --- | --- | --- | --- |
@@ -72,17 +100,17 @@ above the $10 monthly plan — and it keeps every tier's ordering intact:
 $2.99 also works ($12.96/mo) if $3.99 feels steep for a weekly impulse
 buy. Anything at or below $2.30 re-inverts the ladder.
 
-I have implemented the app side so that **whatever you decide is what
-renders** — the number below is not compiled into anything. But please
-decide before creating the SKU: a Play base plan's price can be changed
-later, its billing period and product ID cannot.
+The app side renders whatever the store says — no number is compiled into
+anything. A Play base plan's price can be changed later; its billing
+period and product ID cannot, which is why the decision came first.
 
-Two smaller notes on the target:
+Two smaller notes, both now folded into the approved ladder above:
 
-- **`.00` prices convert badly.** `$10.00` in a market that expects
-  `$9.99` reads as a rounding error. Google's price templates default to
-  charm pricing for a reason. `$9.99 / $49.99` are the same money and
-  convert measurably better.
+- **`.00` prices convert badly**, which is why the approved ladder says
+  `$9.99 / $49.99` rather than `$10 / $50`. `$10.00` in a market that
+  expects `$9.99` reads as a rounding error; Google's price templates
+  default to charm pricing for a reason. Same money, measurably better
+  conversion.
 - **The yearly plan already carries a 7-day free trial** (offer
   `freetrial7d`, guide §E.4). You said "no trial" only for weekly, so I
   have left yearly's alone. Say if you want it gone.

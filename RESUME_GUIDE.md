@@ -100,7 +100,11 @@ flutter test --tags live \
 listing copy is written.
 
 **Play Console pricing** — `docs/store/PRICING_SETUP.md` is the whole
-procedure, including the USD ladder problem.
+procedure. **The price is decided** (§2, 2026-08-01): $3.99 / $9.99 /
+$49.99 USD, yearly Most Popular, Turkish unchanged at ₺100 / ₺400 /
+₺1200. What remains is Console + RevenueCat configuration; creating
+`formai_pro_weekly` is what makes the weekly card appear, with no app
+release.
 
 **Two device surfaces still unverified**, both carried from Phase 5:
 the paywall interior (auth-gated) and a clean-install onboarding. Both

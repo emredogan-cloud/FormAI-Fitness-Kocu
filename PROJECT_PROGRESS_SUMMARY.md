@@ -97,8 +97,11 @@ Founder-side, carried and still open:
 1. **Walk the nutrition surfaces on a device.** Six specific surfaces are
    listed in the Phase 7 report §9. Needs the Redmi Note 12 connected
    with "Install via USB" re-enabled.
-2. **Decide the USD weekly price**, then do Play Console + RevenueCat per
-   `docs/store/PRICING_SETUP.md`.
+2. **Play Console + RevenueCat**, per `docs/store/PRICING_SETUP.md` §3–§4.
+   The price is **decided**: $3.99 / $9.99 / $49.99 USD with yearly as
+   Most Popular, Turkish pricing unchanged at ₺100 / ₺400 / ₺1200. No app
+   release is needed — nothing compiles a price — but the `formai_pro_weekly`
+   SKU has to be created before the weekly card can appear.
 3. **Generate the meal and workout photographs** at your own pace, from
    `docs/nutrition/MEAL_IMAGE_REQUESTS*.md` and
    `WORKOUT_BACKGROUND_IMAGE_REQUESTS.md`. Nothing is broken while those
