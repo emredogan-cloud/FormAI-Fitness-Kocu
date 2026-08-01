@@ -1526,5 +1526,10 @@
   "unitSystemImperial": "Emperyal",
   "languageWelcomeTo": "Hoş geldin",
   "languageTagline": "Yapay zekâ fitness koçun",
-  "languageContinue": "Devam"
+  "languageContinue": "Devam",
+  "recipeTagHighProtein": "Yüksek Protein",
+  "recipeTagLowCalorie": "Düşük Kalori",
+  "recipeTagBulking": "Hacim",
+  "recipeTagToning": "Sıkılaşma",
+  "recipeTagVegan": "Vegan"
 }

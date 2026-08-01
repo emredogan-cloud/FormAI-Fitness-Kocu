@@ -7125,5 +7125,25 @@
   "languageContinue": "Continue",
   "@languageContinue": {
     "description": "Primary button on the language screen. Shorter than the onboarding DEVAM ET because this button carries a chevron beside it."
+  },
+  "recipeTagHighProtein": "High protein",
+  "@recipeTagHighProtein": {
+    "description": "Recipe category chip for the `high_protein` token. Sits on a narrow card footer, so keep it to two short words. The `budget_friendly` token deliberately has no key of its own — it reuses nutritionQuickMealsTitle, which names the same bucket on the dashboard."
+  },
+  "recipeTagLowCalorie": "Low calorie",
+  "@recipeTagLowCalorie": {
+    "description": "Recipe category chip for the `low_calorie` token."
+  },
+  "recipeTagBulking": "Bulking",
+  "@recipeTagBulking": {
+    "description": "Recipe category chip for the `bulking` token — meals for gaining mass. The Turkish source is 'Hacim' (volume). Use the word lifters actually say in the target language, not a literal translation."
+  },
+  "recipeTagToning": "Toning",
+  "@recipeTagToning": {
+    "description": "Recipe category chip for the `toning` token — meals for leaning out and firming up. Turkish source is 'Sıkılaşma'."
+  },
+  "recipeTagVegan": "Vegan",
+  "@recipeTagVegan": {
+    "description": "Recipe category chip for the `vegan` token."
   }
 }

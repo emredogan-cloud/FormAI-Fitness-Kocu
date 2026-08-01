@@ -10,6 +10,7 @@ import '../../../core/widgets/error_card.dart';
 import '../../../core/widgets/skeleton_loader.dart';
 import 'widgets/recipe_image.dart';
 import '../domain/models/recipe.dart';
+import '../domain/recipe_tag_token.dart';
 import '../providers/nutrition_provider.dart';
 import 'widgets/recipe_tags.dart';
 import '../../../l10n/app_localizations.dart';
@@ -20,9 +21,8 @@ const Color _proteinColor = Color(0xFF4DA6FF);
 /// Phase 47A · "Tüm Tarifler" discover screen.
 ///
 /// Reuses the same filter chip catalogue as the Nutrition tab's
-/// compact discovery strip (`Yüksek Protein / Düşük Kalori / Hacim /
-/// Sıkılaşma / Vegan`) so users see a consistent filtering language
-/// across the app. Reads from the same `recipesProvider` the tab
+/// compact discovery strip ([kRecipeFilterTokens]) so users see a
+/// consistent filtering language across the app. Reads from the same `recipesProvider` the tab
 /// reads — no extra Supabase round-trip. The list is a 2-column grid
 /// of recipe cards; every image goes through [CachedImage] so repeat
 /// opens don't re-download.
@@ -51,21 +51,6 @@ class _DiscoverRecipesScreenState extends ConsumerState<DiscoverRecipesScreen> {
   /// "loading more" spinner unless their connection is genuinely slow.
   static const double _loadMoreThreshold = 600;
 
-  /// DATA, not copy. These are compared against `recipe.tags`, which are
-  /// values in the Supabase `recipes` rows — `_apply` does
-  /// `r.tags.any((t) => t == activeTag)`. Localising them here would
-  /// filter every recipe out the moment the app ran in another
-  /// language. Content localisation is Phase 7, through the columns
-  /// migration 011 added; the same boundary `recipe_tags.dart`
-  /// documents.
-  static const List<String> _filters = [
-    'Yüksek Protein', // i18n-ignore
-    'Düşük Kalori', // i18n-ignore
-    'Hacim', // i18n-ignore
-    'Sıkılaşma', // i18n-ignore
-    'Vegan', // i18n-ignore
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -87,13 +72,14 @@ class _DiscoverRecipesScreenState extends ConsumerState<DiscoverRecipesScreen> {
     }
   }
 
-  /// Exact-match on the raw selected tag. Trim is already done inside
-  /// `Recipe._parseTags`, and `toLowerCase` is deliberately avoided
-  /// (Turkish İ/I case folding is locale-dependent, and the UI + DB
-  /// both ship identical Title Case labels).
-  List<Recipe> _apply(List<Recipe> source, String? activeTag) {
-    if (activeTag == null) return source;
-    return source.where((r) => r.tags.any((t) => t == activeTag)).toList();
+  /// Phase 7 · exact-match on the selected [kRecipeFilterTokens] token, not
+  /// on a Turkish display label. Trim is already done inside
+  /// `Recipe._parseTags`, and `toLowerCase` is deliberately avoided —
+  /// Turkish İ/I case folding is locale-dependent, which is the class of
+  /// bug the token split removes at the root.
+  List<Recipe> _apply(List<Recipe> source, String? activeToken) {
+    if (activeToken == null) return source;
+    return source.where((r) => r.tagTokens.contains(activeToken)).toList();
   }
 
   @override
@@ -134,19 +120,18 @@ class _DiscoverRecipesScreenState extends ConsumerState<DiscoverRecipesScreen> {
         },
         data: (recipes) {
           final filtered = _apply(recipes, activeFilter)
-            ..sort((a, b) => b.tags.length.compareTo(a.tags.length));
+            ..sort((a, b) => b.tagTokens.length.compareTo(a.tagTokens.length));
           final hasMore = ref.read(recipesProvider.notifier).hasMore;
           return CustomScrollView(
             controller: _scrollController,
             slivers: [
               SliverToBoxAdapter(
                 child: _FilterRow(
-                  filters: _filters,
                   active: activeFilter,
-                  onTap: (label) {
+                  onTap: (token) {
                     // Phase 49 · subtle tactile feedback on chip toggles.
                     AppHaptics.secondaryTap();
-                    ref.read(filterChipsProvider.notifier).toggle(label);
+                    ref.read(filterChipsProvider.notifier).toggle(token);
                   },
                 ),
               ),
@@ -236,31 +221,34 @@ class _DiscoverRecipesScreenState extends ConsumerState<DiscoverRecipesScreen> {
 
 class _FilterRow extends StatelessWidget {
   const _FilterRow({
-    required this.filters,
     required this.active,
     required this.onTap,
   });
 
-  final List<String> filters;
+  /// The selected [kRecipeFilterTokens] token, or null for "no filter".
   final String? active;
+
+  /// Called with the tapped **token**, never the label — the label is
+  /// what the user reads and changes with the language; the token is
+  /// what the filter compares.
   final ValueChanged<String> onTap;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return SizedBox(
       height: 52,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-        itemCount: filters.length,
+        itemCount: kRecipeFilterTokens.length,
         separatorBuilder: (_, __) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
-          final label = filters[index];
-          final selected = label == active;
+          final token = kRecipeFilterTokens[index];
           return _FilterChip(
-            label: label,
-            selected: selected,
-            onTap: () => onTap(label),
+            label: recipeTagLabel(l10n, token) ?? token,
+            selected: token == active,
+            onTap: () => onTap(token),
           );
         },
       ),
@@ -336,11 +324,19 @@ class _FilterChip extends StatelessWidget {
 class _ResultCount extends StatelessWidget {
   const _ResultCount({required this.count, required this.filter});
   final int count;
+
+  /// The active [kRecipeFilterTokens] token, or null. Phase 7 · this used
+  /// to be the Turkish label and was interpolated straight into the
+  /// count line; a raw `high_protein` in that position would be a
+  /// database identifier printed at the user.
   final String? filter;
 
   @override
   Widget build(BuildContext context) {
-    final suffix = filter == null ? '' : ' · $filter';
+    final label = filter == null
+        ? null
+        : recipeTagLabel(AppLocalizations.of(context), filter!);
+    final suffix = label == null ? '' : ' · $label';
     return Padding(
       padding: const EdgeInsets.fromLTRB(18, 14, 18, 4),
       child: Text(

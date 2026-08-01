@@ -68,13 +68,20 @@ class NutritionRepository {
   }
 
   /// Phase 83 · sentinel route token used by `CategoryRecipesScreen` for
-  /// the tag-based "Pratik & Ekonomik" bucket. Mirrors the constant in
+  /// the budget bucket. Mirrors the constant in
   /// `category_recipes_screen.dart` — kept in sync manually because both
   /// sides need to recognise the same string and a shared constants file
   /// would be a layering churn we don't yet need.
+  ///
+  /// Note this is a *route* token and not the same value as the tag
+  /// token it selects on; the route has said `budget` since Phase 83 and
+  /// renaming it would break deep links for no gain.
   static const String budgetCategoryToken = 'budget';
-  static const String budgetCategoryTagLabel =
-      'Pratik & Ekonomik'; // i18n-ignore — tag data identity
+
+  /// Phase 7 · the `recipe_tags` identity the budget route selects.
+  /// Was the Turkish label `'Pratik & Ekonomik'` until migration 013
+  /// split identity from copy — see `domain/recipe_tag_token.dart`.
+  static const String budgetTagToken = 'budget_friendly';
 
   /// Phase 83 hotfix · server-side category fetch.
   ///
@@ -90,19 +97,24 @@ class NutritionRepository {
   /// New shape: ask Postgres to do the filtering. For the five existing
   /// `meal_type` tokens (`breakfast` / `lunch` / `dinner` / `snack` /
   /// `dessert`) it's an `eq()`; for the Phase 83 `budget` sentinel it's
-  /// `.contains('tags', ['Pratik & Ekonomik'])` which the supabase-flutter
-  /// SDK translates into a `tags @> ARRAY['Pratik & Ekonomik']` predicate
-  /// on the `text[]` column. Returns the complete filtered list because
-  /// individual category sizes are bounded (today: <20 each, plausibly
-  /// <100 long-term — well within a single round-trip budget).
+  /// `.contains('tag_tokens', ['budget_friendly'])`, which the
+  /// supabase-flutter SDK translates into a
+  /// `tag_tokens @> ARRAY['budget_friendly']` predicate served by the
+  /// GIN index migration 013 added. Returns the complete filtered list
+  /// because individual category sizes are bounded (today: <20 each,
+  /// plausibly <100 long-term — well within a single round-trip budget).
+  ///
+  /// Phase 7 · the predicate used to read `tags @> ARRAY['Pratik &
+  /// Ekonomik']`. Selecting on a Turkish display string meant the
+  /// catalogue could not be translated without breaking navigation;
+  /// `tag_tokens` is identity and never moves.
   ///
   /// Phase 83 dashboard expansion · optional [mealTypeSubFilter]. The
-  /// new "Pratik & Ekonomik" dashboard strip exposes five sub-cards
-  /// (Kahvaltı / Öğle / Akşam / Tatlı Çeşitleri / Atıştırmalıklar) —
-  /// each tap routes here with token `'budget'` AND a `meal_type`
-  /// hint, producing the intersection
-  /// `tags @> ARRAY['Pratik & Ekonomik'] AND meal_type = $sub`. Ignored
-  /// for non-budget tokens (where the meal_type is already the
+  /// quick-meals dashboard strip exposes five sub-cards (breakfast /
+  /// lunch / dinner / dessert / snack) — each tap routes here with token
+  /// `'budget'` AND a `meal_type` hint, producing the intersection
+  /// `tag_tokens @> ARRAY['budget_friendly'] AND meal_type = $sub`.
+  /// Ignored for non-budget tokens (where the meal_type is already the
   /// primary filter).
   Future<List<Recipe>> fetchRecipesByCategory(
     String categoryToken, {
@@ -111,7 +123,7 @@ class NutritionRepository {
     await _throwIfOffline();
     var query = _client.from(_table).select();
     if (categoryToken == budgetCategoryToken) {
-      query = query.contains('tags', const [budgetCategoryTagLabel]);
+      query = query.contains('tag_tokens', const [budgetTagToken]);
       if (mealTypeSubFilter != null && mealTypeSubFilter.isNotEmpty) {
         query = query.eq('meal_type', mealTypeSubFilter);
       }

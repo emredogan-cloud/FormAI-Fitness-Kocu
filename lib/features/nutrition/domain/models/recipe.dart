@@ -16,6 +16,7 @@ class Recipe {
     this.imageUrl,
     this.instructions,
     this.tags = const [],
+    this.tagTokens = const [],
     this.ingredients = const [],
   });
 
@@ -48,11 +49,25 @@ class Recipe {
   /// newlines for paragraph breaks.
   final String? instructions;
 
-  /// Dietitian-curated category labels (e.g. "Yüksek Protein", "Vegan").
-  /// Populated from the Postgres `text[]` column of the same name. The
-  /// list is immutable; callers should treat missing/empty as "no tag
-  /// overrides, fall back to macro-based heuristics".
+  /// **Legacy.** The Turkish category labels this catalogue shipped with
+  /// (e.g. "Yüksek Protein", "Vegan"), read straight off the `tags`
+  /// `text[]` column.
+  ///
+  /// Phase 7 replaced this with [tagTokens]. Nothing filters or renders
+  /// on it any more; it is still parsed because migration `016` has not
+  /// dropped the column yet and a model that silently ignores a column
+  /// the server still returns is a model that lies about the row.
   final List<String> tags;
+
+  /// Phase 7 · stable category identities from the `tag_tokens` `text[]`
+  /// column — `high_protein`, `vegan`, `budget_friendly` and so on.
+  ///
+  /// These are **data identity, never copy**: they are what the
+  /// repository filters on server-side and what the UI resolves to a
+  /// localized label through `recipeTagLabel`. That split is the whole
+  /// point — the Turkish [tags] column could not be translated without
+  /// breaking the filter that read it.
+  final List<String> tagTokens;
 
   /// Phase 57 · structured ingredients list. Optional Postgres
   /// `text[]` column; when present the share / shopping-list builders
@@ -90,6 +105,9 @@ class Recipe {
       ),
       instructions: json['instructions'] as String?,
       tags: _parseTags(json['tags']),
+      // Phase 7 · same tolerant parser; `tag_tokens` is a text[] with
+      // exactly the two driver shapes `tags` has.
+      tagTokens: _parseTags(json['tag_tokens']),
       // Phase 57 · `_parseTags` does the right thing for any
       // PG text[] column. Reuses the same tolerant parser instead of
       // duplicating the array-literal logic.

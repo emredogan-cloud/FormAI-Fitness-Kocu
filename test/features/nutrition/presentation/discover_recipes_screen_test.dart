@@ -33,10 +33,14 @@ Widget _host(List<Recipe> recipes) {
   );
 }
 
+/// Phase 7 · seeded with `tagTokens`, not the Turkish `tags` column.
+/// The chips render `recipeTagLabel`, so this host (locale `tr`) still
+/// reads "Yüksek Protein" — but the value the filter compares is now
+/// `high_protein`, and that is the whole point of the split.
 Recipe _recipe({
   required String id,
   required String title,
-  List<String> tags = const [],
+  List<String> tagTokens = const [],
   int protein = 20,
   int calories = 400,
 }) {
@@ -49,7 +53,7 @@ Recipe _recipe({
     carbs: 40,
     fat: 15,
     prepTimeMinutes: 15,
-    tags: tags,
+    tagTokens: tagTokens,
   );
 }
 
@@ -57,9 +61,10 @@ void main() {
   testWidgets('shows the filter row and a grid of recipes without overflow',
       (tester) async {
     await tester.pumpWidget(_host([
-      _recipe(id: '1', title: 'Protein Bowl', tags: const ['Yüksek Protein']),
-      _recipe(id: '2', title: 'Vegan Wrap', tags: const ['Vegan']),
-      _recipe(id: '3', title: 'Light Salad', tags: const ['Düşük Kalori']),
+      _recipe(
+          id: '1', title: 'Protein Bowl', tagTokens: const ['high_protein']),
+      _recipe(id: '2', title: 'Vegan Wrap', tagTokens: const ['vegan']),
+      _recipe(id: '3', title: 'Light Salad', tagTokens: const ['low_calorie']),
     ]));
     // Let the FutureProvider settle.
     await tester.pump();
@@ -74,8 +79,9 @@ void main() {
   testWidgets('tapping a filter chip narrows the grid to matching recipes',
       (tester) async {
     await tester.pumpWidget(_host([
-      _recipe(id: '1', title: 'Protein Bowl', tags: const ['Yüksek Protein']),
-      _recipe(id: '2', title: 'Vegan Wrap', tags: const ['Vegan']),
+      _recipe(
+          id: '1', title: 'Protein Bowl', tagTokens: const ['high_protein']),
+      _recipe(id: '2', title: 'Vegan Wrap', tagTokens: const ['vegan']),
     ]));
     await tester.pump();
     await tester.pump();

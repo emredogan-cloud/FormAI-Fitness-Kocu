@@ -16,6 +16,7 @@ import '../../monetization/services/premium_gate_service.dart';
 import '../domain/models/macro_target.dart';
 import 'widgets/recipe_image.dart';
 import '../domain/models/recipe.dart';
+import '../domain/recipe_tag_token.dart';
 import '../domain/services/next_best_meal_service.dart';
 import '../providers/daily_menu_provider.dart';
 import '../providers/nutrition_provider.dart';
@@ -1418,30 +1419,19 @@ class _DiscoverySection extends ConsumerWidget {
   const _DiscoverySection({required this.recipes});
   final List<Recipe> recipes;
 
-  /// DATA, not copy. These are compared against `recipe.tags`, which are
-  /// values in the Supabase `recipes` rows — `_apply` does
-  /// `r.tags.any((t) => t == activeTag)`. Localising them here would
-  /// filter every recipe out the moment the app ran in another
-  /// language. Content localisation is Phase 7, through the columns
-  /// migration 011 added; the same boundary `recipe_tags.dart`
-  /// documents.
-  static const List<String> _filters = [
-    'Yüksek Protein', // i18n-ignore
-    'Düşük Kalori', // i18n-ignore
-    'Hacim', // i18n-ignore
-    'Sıkılaşma', // i18n-ignore
-    'Vegan', // i18n-ignore
-  ];
-
-  /// Strict `==` against the raw selected tag — no `trim`, no
-  /// `toLowerCase`. Trim already happens inside [Recipe._parseTags],
-  /// so both sides of the compare are already clean; adding it here
-  /// would only hide a real bug. Dart's Turkish İ/I case folding is
-  /// locale-dependent so `toLowerCase` is deliberately avoided; UI
-  /// and DB both use identical Title Case.
-  List<Recipe> _apply(List<Recipe> source, String? activeTag) {
-    if (activeTag == null) return source;
-    return source.where((r) => r.tags.any((t) => t == activeTag)).toList();
+  /// Phase 7 · the chips were five Turkish strings compared against
+  /// `recipe.tags`, so the filter and the label were the same value and
+  /// neither could be translated without breaking the other. They are
+  /// now [kRecipeFilterTokens] — identity — resolved to copy at render
+  /// through `recipeTagLabel`.
+  ///
+  /// Strict `==` against the raw token, no `trim`, no `toLowerCase`:
+  /// trim already happens in `Recipe._parseTags`, and Dart's Turkish
+  /// İ/I case folding is locale-dependent, which is exactly the class of
+  /// bug tokens exist to remove.
+  List<Recipe> _apply(List<Recipe> source, String? activeToken) {
+    if (activeToken == null) return source;
+    return source.where((r) => r.tagTokens.contains(activeToken)).toList();
   }
 
   @override
@@ -1452,7 +1442,8 @@ class _DiscoverySection extends ConsumerWidget {
     // strip iterates over — bound explicitly so tapping a chip and
     // re-running [_apply] flows straight through to the ListView.
     final filteredRecipes = _apply(recipes, active)
-      ..sort((a, b) => b.tags.length.compareTo(a.tags.length));
+      ..sort((a, b) => b.tagTokens.length.compareTo(a.tagTokens.length));
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1461,18 +1452,17 @@ class _DiscoverySection extends ConsumerWidget {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            itemCount: _filters.length,
+            itemCount: kRecipeFilterTokens.length,
             separatorBuilder: (_, __) => const SizedBox(width: 8),
             itemBuilder: (context, index) {
-              final label = _filters[index];
-              final selected = label == active;
+              final token = kRecipeFilterTokens[index];
               return _DiscoveryFilterChip(
-                label: label,
-                selected: selected,
+                label: recipeTagLabel(l10n, token) ?? token,
+                selected: token == active,
                 onTap: () {
                   // Phase 49 · subtle tactile feedback on chip toggles.
                   AppHaptics.secondaryTap();
-                  ref.read(filterChipsProvider.notifier).toggle(label);
+                  ref.read(filterChipsProvider.notifier).toggle(token);
                 },
               );
             },
