@@ -2469,24 +2469,6 @@
   "@profileFieldGoal": {
     "description": "Profile info tile label"
   },
-  "profileWeightKg": "{value} kg",
-  "@profileWeightKg": {
-    "description": "Weight value with its unit. {value} is the stored metric weight.",
-    "placeholders": {
-      "value": {
-        "type": "int"
-      }
-    }
-  },
-  "profileHeightCm": "{value} cm",
-  "@profileHeightCm": {
-    "description": "Height value with its unit. {value} is the stored metric height.",
-    "placeholders": {
-      "value": {
-        "type": "int"
-      }
-    }
-  },
   "profileEdit": "Edit",
   "@profileEdit": {
     "description": "Button opening the profile edit sheet"
@@ -6895,5 +6877,17 @@
   "unitSystemImperial": "Imperial",
   "@unitSystemImperial": {
     "description": "The imperial option: feet, inches and pounds."
+  },
+  "languageWelcomeTo": "Welcome to",
+  "@languageWelcomeTo": {
+    "description": "Line above the FormAI wordmark on the language screen. It runs straight into the brand name, so it must not end with punctuation."
+  },
+  "languageTagline": "Your AI Fitness Coach",
+  "@languageTagline": {
+    "description": "One-line positioning under the wordmark on the language screen."
+  },
+  "languageContinue": "Continue",
+  "@languageContinue": {
+    "description": "Primary button on the language screen. Shorter than the onboarding DEVAM ET because this button carries a chevron beside it."
   }
 }

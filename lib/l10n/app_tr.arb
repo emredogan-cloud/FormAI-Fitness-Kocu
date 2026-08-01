@@ -577,8 +577,6 @@
   "profileFieldWeight": "KİLO",
   "profileFieldHeight": "BOY",
   "profileFieldGoal": "HEDEF",
-  "profileWeightKg": "{value} kg",
-  "profileHeightCm": "{value} cm",
   "profileEdit": "Düzenle",
   "profileStatStreak": "SERİ",
   "profileStatCompleted": "TAMAMLANAN",
@@ -1471,5 +1469,8 @@
   "profileUnitsTitle": "Ölçü Birimi",
   "profileUnitsCurrent": "Şu an: {system}",
   "unitSystemMetric": "Metrik",
-  "unitSystemImperial": "Emperyal"
+  "unitSystemImperial": "Emperyal",
+  "languageWelcomeTo": "Hoş geldin",
+  "languageTagline": "Yapay zekâ fitness koçun",
+  "languageContinue": "Devam"
 }

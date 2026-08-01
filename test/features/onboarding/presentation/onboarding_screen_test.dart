@@ -71,7 +71,9 @@ Future<void> _pumpToWelcome(
     WidgetTester tester, SharedPreferences prefs) async {
   await tester.pumpWidget(_hostOnboarding(prefs));
   await tester.pump();
-  await tester.tap(find.text('DEVAM ET'));
+  // The language step's own CTA — `languageContinue`, not the wizard's
+  // shared `onbContinueCta`. It is shorter because it carries a chevron.
+  await tester.tap(find.text('Devam'));
   // Not pumpAndSettle: the welcome hero runs a looping glow, so the
   // tree never settles. One pump past the 480 ms scene transition is
   // what "the next screen is up" actually means here.

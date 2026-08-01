@@ -29,6 +29,39 @@ String localeEndonym(Locale locale) {
   }
 }
 
+/// The language's name in English, for the second line of a picker row.
+///
+/// Pairs with [localeEndonym]: the endonym is what a speaker of that
+/// language looks for, the English name is what everyone else can read.
+String localeEnglishName(Locale locale) {
+  switch (locale.languageCode) {
+    case 'en':
+      return 'English'; // i18n-ignore — language name, in English by design
+    case 'tr':
+    default:
+      return 'Turkish'; // i18n-ignore — language name, in English by design
+  }
+}
+
+/// The flag shown beside a language in the picker.
+///
+/// A flag is a country and a language is not, which is why the first
+/// version of this screen deliberately had none. The founder's design
+/// puts them back, and for two languages with one overwhelmingly
+/// associated country each that reads as a recognisable cue rather than
+/// a claim. If a future locale has no such country — Spanish, Arabic —
+/// the honest answer is a globe, not a coin flip between two flags.
+String localeFlagEmoji(Locale locale) {
+  switch (locale.languageCode) {
+    case 'en':
+      return '\u{1F1FA}\u{1F1F8}'; // i18n-ignore — flag glyph
+    case 'tr':
+      return '\u{1F1F9}\u{1F1F7}'; // i18n-ignore — flag glyph
+    default:
+      return '\u{1F310}'; // i18n-ignore — globe, for a language with no one flag
+  }
+}
+
 /// What the app would resolve to if the user had never chosen.
 ///
 /// Reads the platform directly rather than `Localizations.localeOf`,
