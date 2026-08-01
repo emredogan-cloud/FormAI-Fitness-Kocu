@@ -62,14 +62,110 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('CANLI FORM ANALİZİ'), findsOneWidget);
-    expect(find.text('Her tekrarını izliyorum.'), findsOneWidget);
-    // Every card carries a verifiable claim, not an adjective.
     expect(
-      find.textContaining('Tamamen cihazında çalışır'),
+      find.textContaining('Her tekrarını izliyorum.', findRichText: true),
+      findsOneWidget,
+    );
+    // Every card carries a verifiable claim, not an adjective. Phase 6
+    // polish moved it from a check-marked line into the assurance card,
+    // so the claim is asserted rather than the widget that carried it.
+    expect(
+      find.textContaining('Tüm analiz tamamen cihazında çalışır'),
       findsOneWidget,
     );
     expect(find.text('DEVAM'), findsOneWidget);
   });
+
+  testWidgets(
+    'nothing readable on a card is baked into its artwork — the stat '
+    'chips render in the user language',
+    (tester) async {
+      // `showcase_ai_coach.webp` used to ship "JOINT TRACKING", "POWER
+      // OUTPUT" and "RANGE OF MOTION" inside the image, which a Turkish
+      // user read in English during their first minute in the app. The
+      // asset was re-cropped and the chips rebuilt in Flutter; this is
+      // what stops them drifting back into a future asset.
+      await _pump(tester);
+      await tester.tap(find.text('DEVAM'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Antrenman Serisi'), findsOneWidget);
+      expect(find.text('Güç Çıkışı'), findsOneWidget);
+      expect(find.text('Kalori'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'the brand gradient paints the accent fragment only, not the whole '
+    'headline',
+    (tester) async {
+      // A ShaderMask is the obvious reach for "gradient text" and paints
+      // every glyph in the paragraph — which would have turned "Her
+      // tekrarını izliyorum." entirely purple-to-lime and lost the
+      // emphasis the design is built on. The gradient is a `foreground`
+      // shader on one span; this asserts it stayed that way.
+      await _pump(tester);
+
+      final title = tester.widget<RichText>(
+        find.byWidgetPredicate(
+          (w) =>
+              w is RichText &&
+              w.text.toPlainText().contains('Her tekrarını izliyorum.'),
+        ),
+      );
+      final spans = <TextSpan>[];
+      void walk(InlineSpan s) {
+        if (s is! TextSpan) return;
+        spans.add(s);
+        for (final c in s.children ?? const <InlineSpan>[]) {
+          walk(c);
+        }
+      }
+
+      walk(title.text);
+      final painted = spans.where((s) => s.style?.foreground != null).toList();
+      expect(painted, hasLength(1));
+      expect(painted.single.text, 'izliyorum.');
+      // And the rest of the sentence is still there, unpainted.
+      expect(
+        spans.where((s) => s.text != null && s.style?.foreground == null),
+        isNotEmpty,
+      );
+    },
+  );
+
+  test(
+    'every headline actually contains its accent fragment, in every locale',
+    () async {
+      // `splitHighlighted` fails soft: a fragment a translation dropped
+      // is simply not found, and the headline renders unstyled. That is
+      // the right failure mode at runtime and a silent one in review —
+      // the design degrades and nothing complains. This is what
+      // complains. It fires the moment somebody edits a title in one ARB
+      // and forgets its accent, which is the whole reason the accent is
+      // a separate key.
+      for (final code in AppLocalizations.supportedLocales) {
+        final l = await AppLocalizations.delegate.load(code);
+        final pairs = <String, (String, String)>{
+          'form': (l.showcaseFormTitle, l.showcaseFormTitleAccent),
+          'coach': (l.showcaseCoachTitle, l.showcaseCoachTitleAccent),
+          'plan': (l.showcasePlanTitle, l.showcasePlanTitleAccent),
+          'nutrition': (
+            l.showcaseNutritionTitle,
+            l.showcaseNutritionTitleAccent,
+          ),
+        };
+        pairs.forEach((name, p) {
+          expect(
+            p.$1.contains(p.$2),
+            isTrue,
+            reason: '[${code.languageCode}] $name: "${p.$1}" does not '
+                'contain its accent "${p.$2}"',
+          );
+        });
+      }
+    },
+  );
 
   testWidgets('Atla is available on the FIRST card', (tester) async {
     await _pump(tester);

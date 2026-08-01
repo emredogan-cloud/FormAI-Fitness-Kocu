@@ -8,7 +8,7 @@
 //   2. a layout that only fits Turkish overflows here instead of in a
 //      German store review.
 //
-// 1475 members covered.
+// 1517 members covered.
 
 import 'package:flutter/widgets.dart';
 import 'package:sixpack_ai/core/utils/pseudo_locale.dart';
@@ -3883,6 +3883,189 @@ class PseudoAppLocalizations extends AppLocalizations {
   String get legalPrivacyLabel => pseudoLocalize(_inner.legalPrivacyLabel);
 
   @override
+  String get showcaseFormTitleAccent =>
+      pseudoLocalize(_inner.showcaseFormTitleAccent);
+
+  @override
+  String get showcaseCoachTitleAccent =>
+      pseudoLocalize(_inner.showcaseCoachTitleAccent);
+
+  @override
+  String get showcasePlanTitleAccent =>
+      pseudoLocalize(_inner.showcasePlanTitleAccent);
+
+  @override
+  String get showcaseNutritionTitleAccent =>
+      pseudoLocalize(_inner.showcaseNutritionTitleAccent);
+
+  @override
+  String get showcaseHeroFormAnalysis =>
+      pseudoLocalize(_inner.showcaseHeroFormAnalysis);
+
+  @override
+  String get showcaseHeroFormAnalysisSub =>
+      pseudoLocalize(_inner.showcaseHeroFormAnalysisSub);
+
+  @override
+  String get showcaseHeroFormScore =>
+      pseudoLocalize(_inner.showcaseHeroFormScore);
+
+  @override
+  String get showcaseHeroRepsTracked =>
+      pseudoLocalize(_inner.showcaseHeroRepsTracked);
+
+  @override
+  String get showcaseHeroTrainingStreak =>
+      pseudoLocalize(_inner.showcaseHeroTrainingStreak);
+
+  @override
+  String get showcaseHeroStreakUnit =>
+      pseudoLocalize(_inner.showcaseHeroStreakUnit);
+
+  @override
+  String get showcaseHeroPowerOutput =>
+      pseudoLocalize(_inner.showcaseHeroPowerOutput);
+
+  @override
+  String get showcaseHeroCalories =>
+      pseudoLocalize(_inner.showcaseHeroCalories);
+
+  @override
+  String get showcaseHeroExcellent =>
+      pseudoLocalize(_inner.showcaseHeroExcellent);
+
+  @override
+  String get showcaseHeroPlanDays =>
+      pseudoLocalize(_inner.showcaseHeroPlanDays);
+
+  @override
+  String get showcaseHeroPlanDaysSub =>
+      pseudoLocalize(_inner.showcaseHeroPlanDaysSub);
+
+  @override
+  String get showcaseHeroYourGoal =>
+      pseudoLocalize(_inner.showcaseHeroYourGoal);
+
+  @override
+  String get showcaseHeroYourGoalSub =>
+      pseudoLocalize(_inner.showcaseHeroYourGoalSub);
+
+  @override
+  String get showcaseHeroYourTime =>
+      pseudoLocalize(_inner.showcaseHeroYourTime);
+
+  @override
+  String get showcaseHeroYourTimeSub =>
+      pseudoLocalize(_inner.showcaseHeroYourTimeSub);
+
+  @override
+  String get showcaseFormCardTitle =>
+      pseudoLocalize(_inner.showcaseFormCardTitle);
+
+  @override
+  String get showcaseFormCardBody =>
+      pseudoLocalize(_inner.showcaseFormCardBody);
+
+  @override
+  String get showcaseCoachCardTitle =>
+      pseudoLocalize(_inner.showcaseCoachCardTitle);
+
+  @override
+  String get showcaseCoachCardBody =>
+      pseudoLocalize(_inner.showcaseCoachCardBody);
+
+  @override
+  String get showcasePlanCardTitle =>
+      pseudoLocalize(_inner.showcasePlanCardTitle);
+
+  @override
+  String get showcasePlanCardBody =>
+      pseudoLocalize(_inner.showcasePlanCardBody);
+
+  @override
+  String get showcaseNutritionCardTitle =>
+      pseudoLocalize(_inner.showcaseNutritionCardTitle);
+
+  @override
+  String get showcaseNutritionCardBody =>
+      pseudoLocalize(_inner.showcaseNutritionCardBody);
+
+  @override
+  String get showcaseFormFeature1 =>
+      pseudoLocalize(_inner.showcaseFormFeature1);
+
+  @override
+  String get showcaseFormFeature1Sub =>
+      pseudoLocalize(_inner.showcaseFormFeature1Sub);
+
+  @override
+  String get showcaseFormFeature2 =>
+      pseudoLocalize(_inner.showcaseFormFeature2);
+
+  @override
+  String get showcaseFormFeature2Sub =>
+      pseudoLocalize(_inner.showcaseFormFeature2Sub);
+
+  @override
+  String get showcaseFormFeature3 =>
+      pseudoLocalize(_inner.showcaseFormFeature3);
+
+  @override
+  String get showcaseFormFeature3Sub =>
+      pseudoLocalize(_inner.showcaseFormFeature3Sub);
+
+  @override
+  String get showcaseCoachFeature1 =>
+      pseudoLocalize(_inner.showcaseCoachFeature1);
+
+  @override
+  String get showcaseCoachFeature1Sub =>
+      pseudoLocalize(_inner.showcaseCoachFeature1Sub);
+
+  @override
+  String get showcaseCoachFeature2 =>
+      pseudoLocalize(_inner.showcaseCoachFeature2);
+
+  @override
+  String get showcaseCoachFeature2Sub =>
+      pseudoLocalize(_inner.showcaseCoachFeature2Sub);
+
+  @override
+  String get showcaseCoachFeature3 =>
+      pseudoLocalize(_inner.showcaseCoachFeature3);
+
+  @override
+  String get showcaseCoachFeature3Sub =>
+      pseudoLocalize(_inner.showcaseCoachFeature3Sub);
+
+  @override
+  String get showcaseNutritionFeature1 =>
+      pseudoLocalize(_inner.showcaseNutritionFeature1);
+
+  @override
+  String get showcaseNutritionFeature1Sub =>
+      pseudoLocalize(_inner.showcaseNutritionFeature1Sub);
+
+  @override
+  String get showcaseNutritionFeature2 =>
+      pseudoLocalize(_inner.showcaseNutritionFeature2);
+
+  @override
+  String get showcaseNutritionFeature2Sub =>
+      pseudoLocalize(_inner.showcaseNutritionFeature2Sub);
+
+  @override
+  String get showcaseNutritionFeature3 =>
+      pseudoLocalize(_inner.showcaseNutritionFeature3);
+
+  @override
+  String get showcaseNutritionFeature3Sub =>
+      pseudoLocalize(_inner.showcaseNutritionFeature3Sub);
+
+  @override
+  String get showcaseEmblemDays => pseudoLocalize(_inner.showcaseEmblemDays);
+
+  @override
   String get showcaseSkip => pseudoLocalize(_inner.showcaseSkip);
 
   @override
@@ -3895,9 +4078,6 @@ class PseudoAppLocalizations extends AppLocalizations {
   String get showcaseFormBody => pseudoLocalize(_inner.showcaseFormBody);
 
   @override
-  String get showcaseFormProof => pseudoLocalize(_inner.showcaseFormProof);
-
-  @override
   String get showcaseCoachEyebrow =>
       pseudoLocalize(_inner.showcaseCoachEyebrow);
 
@@ -3908,9 +4088,6 @@ class PseudoAppLocalizations extends AppLocalizations {
   String get showcaseCoachBody => pseudoLocalize(_inner.showcaseCoachBody);
 
   @override
-  String get showcaseCoachProof => pseudoLocalize(_inner.showcaseCoachProof);
-
-  @override
   String get showcasePlanEyebrow => pseudoLocalize(_inner.showcasePlanEyebrow);
 
   @override
@@ -3918,9 +4095,6 @@ class PseudoAppLocalizations extends AppLocalizations {
 
   @override
   String get showcasePlanBody => pseudoLocalize(_inner.showcasePlanBody);
-
-  @override
-  String get showcasePlanProof => pseudoLocalize(_inner.showcasePlanProof);
 
   @override
   String get showcaseNutritionEyebrow =>
@@ -3933,10 +4107,6 @@ class PseudoAppLocalizations extends AppLocalizations {
   @override
   String get showcaseNutritionBody =>
       pseudoLocalize(_inner.showcaseNutritionBody);
-
-  @override
-  String get showcaseNutritionProof =>
-      pseudoLocalize(_inner.showcaseNutritionProof);
 
   @override
   String get nameCaptureIntro => pseudoLocalize(_inner.nameCaptureIntro);
@@ -5235,5 +5405,5 @@ class PseudoAppLocalizations extends AppLocalizations {
   /// Number of members this wrapper covers. The test suite asserts
   /// it still matches the generated class, so a new ARB key cannot
   /// slip past pseudo mode unnoticed.
-  static const int coveredMembers = 1475;
+  static const int coveredMembers = 1517;
 }

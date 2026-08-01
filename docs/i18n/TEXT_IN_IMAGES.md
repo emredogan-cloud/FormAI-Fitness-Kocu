@@ -30,19 +30,44 @@ a `Text` widget. The old asset is orphaned but left in place.
 
 ## Inventory
 
-### `assets/illustrations/` — 6 files
+### `assets/illustrations/` — 9 files
 
 | asset | content | text? |
 | --- | --- | --- |
+| `language_hero.webp` | language-picker artwork | none |
 | `milestone_medal.webp` | medal glyph | none |
 | `xp_gem.webp` | gem glyph | none |
-| `showcase_ai_coach.webp` | coach illustration | none |
-| `showcase_form_analysis.webp` | pose-analysis illustration | none |
-| `showcase_nutrition.webp` | food illustration | none |
-| `showcase_plan.webp` | calendar illustration | none |
+| `showcase_ai_coach.webp` | deadlift photograph, pose mesh | **was not none — see below** |
+| `showcase_form_analysis.webp` | kettlebell photograph | none |
+| `showcase_nutrition.webp` | food photograph | none |
+| `showcase_plan.webp` | lunge photograph | none |
+| `showcase_emblem_coach.webp` | coach portrait in a ring | none |
+| `showcase_emblem_nutrition.webp` | fork-and-leaf glyph | none |
 
 The showcase cards deliberately put every word in Flutter beside the
 image rather than in it — see `feature_showcase_screen.dart`.
+
+**This audit was wrong once, and it is worth knowing how.**
+`showcase_ai_coach.webp` was recorded as carrying no text. It carried
+six English UI labels baked into the left third of the photograph —
+`JOINT TRACKING`, `12/12 ACTIVE`, `POWER OUTPUT`, `842 W`, `RANGE OF
+MOTION`, `FULL` — on a screen a Turkish user sees in their first minute
+in the app. Phase 6 polish re-cropped the asset to remove them and
+rebuilt the panels as Flutter widgets, so they translate.
+
+The lesson is not "be more careful." It is that **this inventory is a
+claim about pixels, and reading the filename is not checking it.** The
+row said "coach illustration"; the file is a photograph with a HUD over
+it. Open every asset when revising this table.
+
+Two things now defend the rule where prose could not:
+
+- `test/features/onboarding/presentation/feature_showcase_screen_test.dart`
+  asserts the coach card's stat labels render in Turkish, which is only
+  possible if they are widgets.
+- The 30-day emblem is **painted**, not bundled, precisely because the
+  supplied artwork had `30 DAYS` in it and the headline beside it says
+  `30 gün`.
 
 ### `photos/` — 54 files
 

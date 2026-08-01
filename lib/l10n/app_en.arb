@@ -5035,6 +5035,190 @@
   "@legalPrivacyLabel": {
     "description": "Link label for the privacy-policy document."
   },
+  "showcaseFormTitleAccent": "rep.",
+  "@showcaseFormTitleAccent": {
+    "description": "Fragment of showcaseFormTitle rendered in the brand gradient. Must appear verbatim inside that title; if a translation drops it the title still renders, unstyled."
+  },
+  "showcaseCoachTitleAccent": "you need me.",
+  "@showcaseCoachTitleAccent": {
+    "description": "Fragment of showcaseCoachTitle rendered in the brand gradient."
+  },
+  "showcasePlanTitleAccent": "around you.",
+  "@showcasePlanTitleAccent": {
+    "description": "Fragment of showcasePlanTitle rendered in the brand gradient."
+  },
+  "showcaseNutritionTitleAccent": "work.",
+  "@showcaseNutritionTitleAccent": {
+    "description": "Fragment of showcaseNutritionTitle rendered in the brand gradient."
+  },
+  "showcaseHeroFormAnalysis": "AI Form Analysis",
+  "@showcaseHeroFormAnalysis": {
+    "description": "Headline overlaid on the first showcase card's hero photograph."
+  },
+  "showcaseHeroFormAnalysisSub": "Real-time guidance. Stronger results.",
+  "@showcaseHeroFormAnalysisSub": {
+    "description": "Sub-headline under showcaseHeroFormAnalysis, overlaid on the hero photograph."
+  },
+  "showcaseHeroFormScore": "Form Score",
+  "@showcaseHeroFormScore": {
+    "description": "Label on a demonstration stat chip overlaid on a showcase hero. Illustrative, not the user's data."
+  },
+  "showcaseHeroRepsTracked": "Reps Tracked",
+  "@showcaseHeroRepsTracked": {
+    "description": "Label on a demonstration stat chip overlaid on a showcase hero."
+  },
+  "showcaseHeroTrainingStreak": "Training Streak",
+  "@showcaseHeroTrainingStreak": {
+    "description": "Label on a demonstration stat chip overlaid on a showcase hero."
+  },
+  "showcaseHeroStreakUnit": "days",
+  "@showcaseHeroStreakUnit": {
+    "description": "Unit after the training-streak count on a demonstration stat chip."
+  },
+  "showcaseHeroPowerOutput": "Power Output",
+  "@showcaseHeroPowerOutput": {
+    "description": "Label on a demonstration stat chip overlaid on a showcase hero."
+  },
+  "showcaseHeroCalories": "Calories",
+  "@showcaseHeroCalories": {
+    "description": "Label on a demonstration stat chip overlaid on a showcase hero."
+  },
+  "showcaseHeroExcellent": "Excellent",
+  "@showcaseHeroExcellent": {
+    "description": "Qualitative rating beside the demonstration form score on a showcase hero."
+  },
+  "showcaseHeroPlanDays": "30 DAYS",
+  "@showcaseHeroPlanDays": {
+    "description": "Title of the first chip overlaid on the plan showcase hero."
+  },
+  "showcaseHeroPlanDaysSub": "Structured plan",
+  "@showcaseHeroPlanDaysSub": {
+    "description": "Subtitle under showcaseHeroPlanDays."
+  },
+  "showcaseHeroYourGoal": "YOUR GOAL",
+  "@showcaseHeroYourGoal": {
+    "description": "Title of the second chip overlaid on the plan showcase hero."
+  },
+  "showcaseHeroYourGoalSub": "Personalized just for you",
+  "@showcaseHeroYourGoalSub": {
+    "description": "Subtitle under showcaseHeroYourGoal."
+  },
+  "showcaseHeroYourTime": "YOUR TIME",
+  "@showcaseHeroYourTime": {
+    "description": "Title of the third chip overlaid on the plan showcase hero."
+  },
+  "showcaseHeroYourTimeSub": "Flexible and realistic",
+  "@showcaseHeroYourTimeSub": {
+    "description": "Subtitle under showcaseHeroYourTime."
+  },
+  "showcaseFormCardTitle": "Your privacy matters",
+  "@showcaseFormCardTitle": {
+    "description": "Title of the assurance card on the form-analysis showcase card."
+  },
+  "showcaseFormCardBody": "All analysis runs entirely on your device. Your video never leaves your phone.",
+  "@showcaseFormCardBody": {
+    "description": "Body of the assurance card on the form-analysis showcase card. Legally load-bearing: only claim on-device processing while that is true."
+  },
+  "showcaseCoachCardTitle": "Here for you. Always.",
+  "@showcaseCoachCardTitle": {
+    "description": "Title of the assurance card on the AI-coach showcase card."
+  },
+  "showcaseCoachCardBody": "Private, secure and always by your side. Your data stays with you.",
+  "@showcaseCoachCardBody": {
+    "description": "Body of the assurance card on the AI-coach showcase card."
+  },
+  "showcasePlanCardTitle": "No equipment needed",
+  "@showcasePlanCardTitle": {
+    "description": "Title of the assurance card on the 30-day plan showcase card."
+  },
+  "showcasePlanCardBody": "Works at home, in a hotel, anywhere.",
+  "@showcasePlanCardBody": {
+    "description": "Body of the assurance card on the 30-day plan showcase card."
+  },
+  "showcaseNutritionCardTitle": "Hundreds of recipes",
+  "@showcaseNutritionCardTitle": {
+    "description": "Title of the assurance card on the nutrition showcase card."
+  },
+  "showcaseNutritionCardBody": "All filtered against your goal.",
+  "@showcaseNutritionCardBody": {
+    "description": "Body of the assurance card on the nutrition showcase card."
+  },
+  "showcaseFormFeature1": "Real-time AI",
+  "@showcaseFormFeature1": {
+    "description": "Feature tile title, form-analysis showcase card."
+  },
+  "showcaseFormFeature1Sub": "form analysis",
+  "@showcaseFormFeature1Sub": {
+    "description": "Feature tile subtitle under showcaseFormFeature1."
+  },
+  "showcaseFormFeature2": "100% Private",
+  "@showcaseFormFeature2": {
+    "description": "Feature tile title, form-analysis showcase card."
+  },
+  "showcaseFormFeature2Sub": "on-device only",
+  "@showcaseFormFeature2Sub": {
+    "description": "Feature tile subtitle under showcaseFormFeature2."
+  },
+  "showcaseFormFeature3": "Better form",
+  "@showcaseFormFeature3": {
+    "description": "Feature tile title, form-analysis showcase card."
+  },
+  "showcaseFormFeature3Sub": "better results",
+  "@showcaseFormFeature3Sub": {
+    "description": "Feature tile subtitle under showcaseFormFeature3."
+  },
+  "showcaseCoachFeature1": "Training",
+  "@showcaseCoachFeature1": {
+    "description": "Feature tile title, AI-coach showcase card."
+  },
+  "showcaseCoachFeature1Sub": "Personalized workouts",
+  "@showcaseCoachFeature1Sub": {
+    "description": "Feature tile subtitle under showcaseCoachFeature1."
+  },
+  "showcaseCoachFeature2": "Nutrition",
+  "@showcaseCoachFeature2": {
+    "description": "Feature tile title, AI-coach showcase card."
+  },
+  "showcaseCoachFeature2Sub": "Smart guidance for your goals",
+  "@showcaseCoachFeature2Sub": {
+    "description": "Feature tile subtitle under showcaseCoachFeature2."
+  },
+  "showcaseCoachFeature3": "Motivation",
+  "@showcaseCoachFeature3": {
+    "description": "Feature tile title, AI-coach showcase card."
+  },
+  "showcaseCoachFeature3Sub": "Stay consistent, stay inspired",
+  "@showcaseCoachFeature3Sub": {
+    "description": "Feature tile subtitle under showcaseCoachFeature3."
+  },
+  "showcaseNutritionFeature1": "Calorie targets",
+  "@showcaseNutritionFeature1": {
+    "description": "Feature tile title, nutrition showcase card."
+  },
+  "showcaseNutritionFeature1Sub": "Calculated for you",
+  "@showcaseNutritionFeature1Sub": {
+    "description": "Feature tile subtitle under showcaseNutritionFeature1."
+  },
+  "showcaseNutritionFeature2": "Macro balance",
+  "@showcaseNutritionFeature2": {
+    "description": "Feature tile title, nutrition showcase card."
+  },
+  "showcaseNutritionFeature2Sub": "Perfectly balanced macros",
+  "@showcaseNutritionFeature2Sub": {
+    "description": "Feature tile subtitle under showcaseNutritionFeature2."
+  },
+  "showcaseNutritionFeature3": "Smart recipes",
+  "@showcaseNutritionFeature3": {
+    "description": "Feature tile title, nutrition showcase card."
+  },
+  "showcaseNutritionFeature3Sub": "Personalized to your taste",
+  "@showcaseNutritionFeature3Sub": {
+    "description": "Feature tile subtitle under showcaseNutritionFeature3."
+  },
+  "showcaseEmblemDays": "DAYS",
+  "@showcaseEmblemDays": {
+    "description": "Unit inside the 30-day emblem on the plan showcase card. Rendered in Flutter, not baked into the artwork, so it translates."
+  },
   "showcaseSkip": "Skip",
   "@showcaseSkip": {
     "description": "Skip control on the post-paywall feature showcase."
@@ -5051,10 +5235,6 @@
   "@showcaseFormBody": {
     "description": "Showcase card body: live form analysis."
   },
-  "showcaseFormProof": "Runs entirely on your device — your video never leaves it.",
-  "@showcaseFormProof": {
-    "description": "Showcase card proof line: live form analysis. A verifiable claim, not an adjective."
-  },
   "showcaseCoachEyebrow": "YOUR OWN AI COACH",
   "@showcaseCoachEyebrow": {
     "description": "Showcase card eyebrow: AI coach."
@@ -5066,10 +5246,6 @@
   "showcaseCoachBody": "Message a coach who knows your plan, your history and your goal, any time.",
   "@showcaseCoachBody": {
     "description": "Showcase card body: AI coach."
-  },
-  "showcaseCoachProof": "Training, nutrition, motivation — ask about any of it.",
-  "@showcaseCoachProof": {
-    "description": "Showcase card proof line: AI coach."
   },
   "showcasePlanEyebrow": "A PROGRAM BUILT FOR YOU",
   "@showcasePlanEyebrow": {
@@ -5083,10 +5259,6 @@
   "@showcasePlanBody": {
     "description": "Showcase card body: personal plan."
   },
-  "showcasePlanProof": "No equipment needed — works at home, in a hotel, anywhere.",
-  "@showcasePlanProof": {
-    "description": "Showcase card proof line: personal plan."
-  },
   "showcaseNutritionEyebrow": "NUTRITION",
   "@showcaseNutritionEyebrow": {
     "description": "Showcase card eyebrow: nutrition."
@@ -5098,10 +5270,6 @@
   "showcaseNutritionBody": "Your calorie and macro targets are calculated, and recipes are suggested to match your taste and your diet.",
   "@showcaseNutritionBody": {
     "description": "Showcase card body: nutrition."
-  },
-  "showcaseNutritionProof": "Hundreds of recipes — all filtered against your goal.",
-  "@showcaseNutritionProof": {
-    "description": "Showcase card proof line: nutrition."
   },
   "nameCaptureIntro": "Hi! I'm Form — your personal AI coach. 👋",
   "@nameCaptureIntro": {
