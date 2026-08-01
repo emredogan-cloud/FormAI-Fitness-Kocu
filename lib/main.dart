@@ -9,6 +9,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'core/providers/locale_provider.dart';
 import 'core/routing/app_router.dart';
 import 'core/services/analytics_service.dart';
 import 'core/services/app_preferences.dart';
@@ -638,6 +639,10 @@ class _FormAIAppState extends ConsumerState<FormAIApp> {
       if (!mounted) return;
       _reportExperimentBucket();
       unawaited(ref.read(featureFlagsProvider).refresh());
+      // Roadmap Phase 6 · a reinstalled account gets its language back.
+      // Only fires on a device that has never been asked, so it can
+      // never override a local choice — see [adoptAccountLocale].
+      unawaited(adoptAccountLocale(ref));
     });
   }
 
@@ -686,9 +691,16 @@ class _FormAIAppState extends ConsumerState<FormAIApp> {
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       debugShowCheckedModeBanner: false,
       // Phase 2 (P-Risk) · localization foundation. Delegates wired from
-      // the generated AppLocalizations. See [_supportedLocales] for why
-      // this build declares Turkish only, and [_onLocaleResolved] for
-      // the resolution policy.
+      // the generated AppLocalizations; [_onLocaleResolved] holds the
+      // resolution policy.
+      //
+      // Roadmap Phase 6 · `locale` is the user's explicit choice and is
+      // null until they make one, which is what makes the device the
+      // default. Both paths still run through the callback — Flutter
+      // hands it whichever locale it is resolving from — so the
+      // tree-less surfaces are told the answer exactly once, in one
+      // place, however it was arrived at.
+      locale: ref.watch(localeProvider),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: _supportedLocales,
       localeResolutionCallback: _onLocaleResolved,
@@ -721,12 +733,10 @@ class _FormAIAppState extends ConsumerState<FormAIApp> {
 
 /// The locales this build actually ships.
 ///
-/// Store honesty · TR-ONLY for launch. The generated
-/// `AppLocalizations.supportedLocales` also lists `en`, and declaring it
-/// before the English copy is reviewed would put a part-translated
-/// hybrid on English devices and an untrue language claim on the store
-/// listing. Phase 6 adds `en` here — one list, one edit.
-const List<Locale> _supportedLocales = [Locale('tr')];
+/// Roadmap Phase 6 · English is now declared. The list it aliases lives
+/// next to the picker that renders it, so "what we ship" and "what the
+/// user can choose" cannot drift apart.
+const List<Locale> _supportedLocales = kSupportedLocales;
 
 /// Applied wherever the app hands a `MaterialApp` its locale policy:
 /// resolve, tell the tree-less surfaces, return.
