@@ -1068,6 +1068,60 @@
   "@workoutDayDoneBody": {
     "description": "Manual screen day-complete body"
   },
+  "workoutManualModeTitle": "Camera-free mode",
+  "@workoutManualModeTitle": {
+    "description": "Title of the banner at the top of the camera-free workout screen."
+  },
+  "workoutManualModeBody": "You count the reps. Your progress is saved as normal.",
+  "@workoutManualModeBody": {
+    "description": "Body of the camera-free banner. States the trade-off plainly — an app that quietly drops its headline feature is what erodes trust."
+  },
+  "workoutRepsUnit": "REPS",
+  "@workoutRepsUnit": {
+    "description": "Unit under the rep counter on the camera-free workout screen."
+  },
+  "workoutTipWithText": "Tip: {tip}",
+  "@workoutTipWithText": {
+    "description": "Form reminder shown under the exercise card. {tip} is the exercise's own short tip, which comes from the catalogue and is not translated here.",
+    "placeholders": {
+      "tip": {
+        "type": "String"
+      }
+    }
+  },
+  "workoutSetShort": "SET {number}",
+  "@workoutSetShort": {
+    "description": "Label under a step in the set-progress track, e.g. SET 2.",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "workoutRestSecondsUnit": "seconds",
+  "@workoutRestSecondsUnit": {
+    "description": "Unit under the rest countdown."
+  },
+  "workoutRestCardTitle": "Good things take rest.",
+  "@workoutRestCardTitle": {
+    "description": "Title of the encouragement card on the rest screen."
+  },
+  "workoutRestCardBody": "Rest well now, crush the next set.",
+  "@workoutRestCardBody": {
+    "description": "Body of the encouragement card on the rest screen."
+  },
+  "workoutRestTimeLabel": "REST TIME",
+  "@workoutRestTimeLabel": {
+    "description": "Label on the rest-duration stat tile."
+  },
+  "workoutSetProgressLabel": "SET PROGRESS",
+  "@workoutSetProgressLabel": {
+    "description": "Label on the set-progress stat tile."
+  },
+  "workoutContinueSession": "CONTINUE WORKOUT",
+  "@workoutContinueSession": {
+    "description": "Primary action on the rest screen. Skips the remaining rest and starts the next set."
+  },
   "workoutCompleteSet": "COMPLETE SET",
   "@workoutCompleteSet": {
     "description": "Manual screen set action"
@@ -1083,10 +1137,6 @@
   "workoutResting": "REST",
   "@workoutResting": {
     "description": "Manual screen rest state"
-  },
-  "workoutManualModeBanner": "Camera-free mode — you count the reps. Your progress is saved as normal.",
-  "@workoutManualModeBanner": {
-    "description": "Manual mode honesty banner"
   },
   "tutorialEyebrowSetup": "SETUP",
   "@tutorialEyebrowSetup": {

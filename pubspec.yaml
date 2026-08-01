@@ -232,6 +232,12 @@ flutter:
     # PNG source). ExerciseGuidePlayer routes these via Image.asset
     # when the exercise slug is in ExerciseMediaRegistry._localImageSlugs.
     - "photos/exercises/"
+    # Phase 6 polish · per-exercise workout backgrounds. Resolved from the
+    # asset manifest at runtime by WorkoutBackgroundRegistry, so a new file
+    # dropped in here is used on the next build with no code change. The
+    # directory ships a README rather than being empty, because Flutter
+    # fails the build on a declared directory that does not exist.
+    - "photos/workout_backgrounds/"
     # Tier 2-A · bundled 64-px WebP placeholders for the 298 meal photos.
     # ~700 B each, ~200 KB total. Used by `RecipeImage` as the bottom
     # layer behind `CachedImage`/`CachedNetworkImage` so the recipe-card

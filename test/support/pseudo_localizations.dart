@@ -8,7 +8,7 @@
 //   2. a layout that only fits Turkish overflows here instead of in a
 //      German store review.
 //
-// 1517 members covered.
+// 1527 members covered.
 
 import 'package:flutter/widgets.dart';
 import 'package:sixpack_ai/core/utils/pseudo_locale.dart';
@@ -885,6 +885,40 @@ class PseudoAppLocalizations extends AppLocalizations {
   String get workoutDayDoneBody => pseudoLocalize(_inner.workoutDayDoneBody);
 
   @override
+  String get workoutManualModeTitle =>
+      pseudoLocalize(_inner.workoutManualModeTitle);
+
+  @override
+  String get workoutManualModeBody =>
+      pseudoLocalize(_inner.workoutManualModeBody);
+
+  @override
+  String get workoutRepsUnit => pseudoLocalize(_inner.workoutRepsUnit);
+
+  @override
+  String get workoutRestSecondsUnit =>
+      pseudoLocalize(_inner.workoutRestSecondsUnit);
+
+  @override
+  String get workoutRestCardTitle =>
+      pseudoLocalize(_inner.workoutRestCardTitle);
+
+  @override
+  String get workoutRestCardBody => pseudoLocalize(_inner.workoutRestCardBody);
+
+  @override
+  String get workoutRestTimeLabel =>
+      pseudoLocalize(_inner.workoutRestTimeLabel);
+
+  @override
+  String get workoutSetProgressLabel =>
+      pseudoLocalize(_inner.workoutSetProgressLabel);
+
+  @override
+  String get workoutContinueSession =>
+      pseudoLocalize(_inner.workoutContinueSession);
+
+  @override
   String get workoutCompleteSet => pseudoLocalize(_inner.workoutCompleteSet);
 
   @override
@@ -895,10 +929,6 @@ class PseudoAppLocalizations extends AppLocalizations {
 
   @override
   String get workoutResting => pseudoLocalize(_inner.workoutResting);
-
-  @override
-  String get workoutManualModeBanner =>
-      pseudoLocalize(_inner.workoutManualModeBanner);
 
   @override
   String get tutorialEyebrowSetup =>
@@ -4786,6 +4816,14 @@ class PseudoAppLocalizations extends AppLocalizations {
       pseudoLocalize(_inner.suggestionLightMealBody(kcal));
 
   @override
+  String workoutTipWithText(String tip) =>
+      pseudoLocalize(_inner.workoutTipWithText(tip));
+
+  @override
+  String workoutSetShort(int number) =>
+      pseudoLocalize(_inner.workoutSetShort(number));
+
+  @override
   String unlockAfterSessions(int count) =>
       pseudoLocalize(_inner.unlockAfterSessions(count));
 
@@ -5405,5 +5443,5 @@ class PseudoAppLocalizations extends AppLocalizations {
   /// Number of members this wrapper covers. The test suite asserts
   /// it still matches the generated class, so a new ARB key cannot
   /// slip past pseudo mode unnoticed.
-  static const int coveredMembers = 1517;
+  static const int coveredMembers = 1527;
 }
