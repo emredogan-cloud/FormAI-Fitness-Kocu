@@ -1263,6 +1263,8 @@
   "billingPeriodMonth": "ay",
   "billingPeriodYear": "yıl",
   "billingPeriodQuarter": "3 ay",
+  "billingPeriodWeek": "hafta",
+  "planDurationWeeks": "{count} Hafta",
   "planDurationMonths": "{count} Ay",
   "paywallPerPeriod": "/ {period}",
   "paywallPricesUnavailable": "Fiyatlar yüklenemedi.",

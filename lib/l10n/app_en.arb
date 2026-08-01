@@ -5518,6 +5518,19 @@
   "@billingPeriodQuarter": {
     "description": "Billing period used inside the auto-renewal disclosure."
   },
+  "billingPeriodWeek": "week",
+  "@billingPeriodWeek": {
+    "description": "Billing period used inside the auto-renewal disclosure."
+  },
+  "planDurationWeeks": "{count, plural, =1{1 Week} other{{count} Weeks}}",
+  "@planDurationWeeks": {
+    "description": "Plan card title for the weekly subscription.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "planDurationMonths": "{count, plural, =1{1 Month} other{{count} Months}}",
   "@planDurationMonths": {
     "description": "Plan card title, e.g. 1 / 3 / 12 months.",

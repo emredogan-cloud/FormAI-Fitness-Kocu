@@ -16,6 +16,7 @@ import '../../../core/services/connectivity_service.dart';
 import '../../../core/theme/theme_extension.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/legal_urls.dart';
+import '../../../core/utils/price_format.dart';
 import '../../../core/utils/text_span_split.dart';
 import '../../../core/widgets/skeleton_loader.dart';
 import '../../../l10n/app_localizations.dart';
@@ -31,7 +32,7 @@ class PaywallScreen extends ConsumerStatefulWidget {
   ConsumerState<PaywallScreen> createState() => _PaywallScreenState();
 }
 
-enum _Plan { monthly, yearly, quarterly }
+enum _Plan { monthly, yearly, quarterly, weekly }
 
 /// Store-honesty pass · returns the package's introductory offer ONLY
 /// when it is a genuinely free trial (intro price == 0). Every piece of
@@ -59,31 +60,9 @@ String _trialLengthLabel(AppLocalizations l10n, IntroductoryPrice intro) {
   };
 }
 
-/// Scales a store-formatted price string to [total] while preserving its
-/// currency symbol/prefix and Turkish grouping (thousands ".", decimals ",").
-/// Example: `("₺179,99", 2159.88)` → `"₺2.159,88"`. Returns null when
-/// [source] carries no parseable amount, so the caller omits the strikethrough
-/// rather than fabricating one.
-String? _scalePriceString(String? source, double total) {
-  if (source == null || source.isEmpty) return null;
-  final m = RegExp(r'[0-9][0-9.,\s]*').firstMatch(source);
-  if (m == null) return null;
-  final prefix = source.substring(0, m.start);
-  final suffix = source.substring(m.end);
-  final fixed = total.toStringAsFixed(2); // e.g. "2159.88"
-  final dot = fixed.indexOf('.');
-  final intPart = fixed.substring(0, dot);
-  final dec = fixed.substring(dot + 1);
-  final grouped = StringBuffer();
-  for (var i = 0; i < intPart.length; i++) {
-    if (i > 0 && (intPart.length - i) % 3 == 0) grouped.write('.');
-    grouped.write(intPart[i]);
-  }
-  return '$prefix$grouped,$dec$suffix';
-}
-
 /// Billing-period label for the renewal disclosure line.
 String _periodLabelOf(AppLocalizations l10n, _Plan plan) => switch (plan) {
+      _Plan.weekly => l10n.billingPeriodWeek,
       _Plan.monthly => l10n.billingPeriodMonth,
       _Plan.yearly => l10n.billingPeriodYear,
       _Plan.quarterly => l10n.billingPeriodQuarter,
@@ -620,6 +599,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     // "monthly-equivalent" strikethrough + savings %. Computed from the live
     // RC price — never an invented anchor (Apple 2.3.1 / TR reference-price law).
     final monthly = _packageForPlan(_Plan.monthly, offerings);
+    final third = _thirdPlan(offerings);
     return SizedBox(
       height: 214,
       child: Row(
@@ -649,10 +629,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           const SizedBox(width: 8),
           Expanded(
             child: _PlanCard(
-              plan: _Plan.quarterly,
-              isSelected: _selected == _Plan.quarterly,
-              onTap: () => setState(() => _selected = _Plan.quarterly),
-              package: _packageForPlan(_Plan.quarterly, offerings),
+              plan: third,
+              isSelected: _selected == third,
+              onTap: () => setState(() => _selected = third),
+              package: _packageForPlan(third, offerings),
               monthlyPackage: monthly,
               isLoading: isLoading,
             ),
@@ -844,11 +824,27 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     final current = offerings?.current;
     if (current == null) return null;
     return switch (plan) {
+      _Plan.weekly => current.weekly,
       _Plan.monthly => current.monthly,
       _Plan.yearly => current.annual,
       _Plan.quarterly => current.threeMonth,
     };
   }
+
+  /// Phase 6 polish · which plan fills the third card.
+  ///
+  /// The founder's target lineup is weekly / monthly / yearly; the store
+  /// today sells monthly / quarterly / yearly. Rather than hardcode one
+  /// of those and be wrong for a release cycle, the card follows the
+  /// store: it is the weekly plan from the moment a weekly package
+  /// appears in the current offering, and the quarterly plan until then.
+  ///
+  /// So adding `formai_pro_weekly` in Play Console + RevenueCat changes
+  /// this screen with **no app release**, and pulling it changes it
+  /// back. Neither direction can strand the user on a card whose SKU
+  /// does not exist, which is the failure mode a hardcoded lineup has.
+  _Plan _thirdPlan(Offerings? offerings) =>
+      offerings?.current?.weekly != null ? _Plan.weekly : _Plan.quarterly;
 
   Future<void> _purchase() async {
     if (_busy) return;
@@ -1385,9 +1381,16 @@ class _PlanCard extends StatelessWidget {
   /// equivalent" strikethrough + savings % on the annual/quarterly cards.
   final Package? monthlyPackage;
 
-  /// Number of monthly cycles this plan bills for (0 = the monthly card
-  /// itself, which shows no savings framing).
+  /// Number of monthly cycles this plan bills for (0 = no savings
+  /// framing at all).
+  ///
+  /// Monthly is the baseline, so it cannot save against itself. Weekly
+  /// is 0 for a different reason: it is the convenience plan and costs
+  /// *more* per month than monthly does (4.33 × ₺100 > ₺400), so any
+  /// "savings" line on that card would be a fabrication in the one
+  /// direction store policy cares about.
   int get _monthsCovered => switch (plan) {
+        _Plan.weekly => 0,
         _Plan.monthly => 0,
         _Plan.quarterly => 3,
         _Plan.yearly => 12,
@@ -1409,11 +1412,12 @@ class _PlanCard extends StatelessWidget {
     final full = monthly * months;
     if (self >= full) return (struck: null, percent: null);
     final percent = ((1 - self / full) * 100).round();
-    // Format the monthly-equivalent total by borrowing the currency symbol +
-    // grouping from the live monthly priceString (e.g. "₺179,99" → "₺2.159,88").
-    // No intl / locale-data dependency; falls back to null on an unexpected
-    // format so a strikethrough is never guessed.
-    final struck = _scalePriceString(monthlyStr, full);
+    // Format the monthly-equivalent total by borrowing the currency symbol
+    // AND the number system from the live monthly priceString — "₺179,99"
+    // → "₺2.159,88", "$9.99" → "$119.88". No intl / locale-data dependency;
+    // falls back to null on an unexpected format so a strikethrough is
+    // never guessed. See core/utils/price_format.dart.
+    final struck = scaleStorePrice(monthlyStr, full);
     return (struck: struck, percent: percent <= 0 ? null : percent);
   }
 
@@ -1440,6 +1444,7 @@ class _PlanCard extends StatelessWidget {
   bool get _isHighlighted => plan == _Plan.yearly;
 
   String _title(AppLocalizations l10n) => switch (plan) {
+        _Plan.weekly => l10n.planDurationWeeks(1),
         _Plan.monthly => l10n.planDurationMonths(1),
         _Plan.yearly => l10n.planDurationMonths(12),
         _Plan.quarterly => l10n.planDurationMonths(3),

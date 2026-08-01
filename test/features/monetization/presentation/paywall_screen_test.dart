@@ -104,6 +104,58 @@ Offerings _offeringsWithAnnual({
   return Offerings({'default': offering}, current: offering);
 }
 
+/// A full three-tier offering. [weeklyPrice] null means the store has no
+/// weekly SKU yet — the state the app ships in — so the third plan card
+/// falls back to quarterly.
+Offerings _offeringsWithLineup({
+  String? weeklyPrice,
+  double weeklyAmount = 100,
+  String monthlyPrice = '₺400,00',
+  double monthlyAmount = 400,
+  String annualPrice = '₺1.200,00',
+  double annualAmount = 1200,
+  String quarterlyPrice = '₺1.000,00',
+  String currency = 'TRY',
+}) {
+  const ctx = PresentedOfferingContext('default', null, null);
+  Package pkg(String id, PackageType type, double price, String priceString) {
+    return Package(
+      id,
+      type,
+      StoreProduct(id, id, id, price, priceString, currency),
+      ctx,
+    );
+  }
+
+  final monthly =
+      pkg(r'$rc_monthly', PackageType.monthly, monthlyAmount, monthlyPrice);
+  final annual =
+      pkg(r'$rc_annual', PackageType.annual, annualAmount, annualPrice);
+  final quarterly = weeklyPrice == null
+      ? pkg(r'$rc_three_month', PackageType.threeMonth, 1000, quarterlyPrice)
+      : null;
+  final weekly = weeklyPrice == null
+      ? null
+      : pkg(r'$rc_weekly', PackageType.weekly, weeklyAmount, weeklyPrice);
+
+  final offering = Offering(
+    'default',
+    'Default offering',
+    const <String, Object>{},
+    [
+      monthly,
+      annual,
+      if (quarterly != null) quarterly,
+      if (weekly != null) weekly
+    ],
+    weekly: weekly,
+    monthly: monthly,
+    threeMonth: quarterly,
+    annual: annual,
+  );
+  return Offerings({'default': offering}, current: offering);
+}
+
 void main() {
   testWidgets(
     'loading / null-offerings state still renders the plan cards + CTA',
@@ -372,6 +424,71 @@ void main() {
       expect(find.textContaining('₺', findRichText: true), findsNothing);
       // The trial length still comes from the SKU, in the user's language.
       expect(find.text('7 gün ücretsiz dene'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'the third plan card is quarterly while the store has no weekly SKU',
+    (tester) async {
+      // Phase 6 polish · the founder's target lineup is weekly / monthly
+      // / yearly; the store sells monthly / quarterly / yearly today.
+      // The card resolves against the live offering, so neither state
+      // can strand a user on a card whose SKU does not exist.
+      await tester.pumpWidget(_wrapPaywall(
+        seededState: SubscriptionState(
+          offerings: _offeringsWithLineup(weeklyPrice: null),
+        ),
+      ));
+      await tester.pump();
+      expect(find.text('3 Ay'), findsOneWidget);
+      expect(find.text('1 Hafta'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'publishing a weekly SKU switches the third card with no app release',
+    (tester) async {
+      await tester.pumpWidget(_wrapPaywall(
+        seededState: SubscriptionState(
+          offerings: _offeringsWithLineup(weeklyPrice: '₺100,00'),
+        ),
+      ));
+      await tester.pump();
+
+      expect(find.text('1 Hafta'), findsOneWidget);
+      expect(find.text('3 Ay'), findsNothing);
+      // The weekly price is the store's, rendered verbatim.
+      expect(find.text('₺100,00'), findsOneWidget);
+      // Weekly costs MORE per month than monthly, so it carries no
+      // savings framing — the one strikethrough on screen belongs to
+      // the annual card: ₺400 × 12 = ₺4.800,00.
+      expect(find.text('₺4.800,00'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'a USD storefront gets US separators in the derived strikethrough',
+    (tester) async {
+      // The regression: the monthly-equivalent anchor hardcoded Turkish
+      // grouping, so a US user saw "$10.00" on one card and "$120,00"
+      // struck through on the next. Same screen, two number systems.
+      await tester.pumpWidget(_wrapPaywall(
+        seededState: SubscriptionState(
+          offerings: _offeringsWithLineup(
+            monthlyPrice: r'$10.00',
+            monthlyAmount: 10,
+            annualPrice: r'$50.00',
+            annualAmount: 50,
+            quarterlyPrice: r'$25.00',
+            currency: 'USD',
+          ),
+        ),
+      ));
+      await tester.pump();
+
+      expect(find.text(r'$120.00'), findsOneWidget);
+      expect(find.text(r'$120,00'), findsNothing);
+      expect(find.textContaining('₺', findRichText: true), findsNothing);
     },
   );
 
