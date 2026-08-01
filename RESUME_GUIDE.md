@@ -3,7 +3,7 @@
 Read this first. It is written so a session with no memory of the
 previous one can continue without re-analysing the repository.
 
-**Last updated:** 2026-08-01, end of the Phase 6 polish sprint.
+**Last updated:** 2026-08-01, end of Phase 7.
 
 ---
 
@@ -23,99 +23,111 @@ one `PHASE_NN_COMPLETION_REPORT.md`. Final deliverable at the very end:
 | 4 · Feature flags + disclosure | done | `PHASE_04_COMPLETION_REPORT.md` |
 | 5 · i18n | done except 2 device surfaces | `PHASE_05_COMPLETION_REPORT.md` |
 | 6 · English launch | done | `PHASE_06_COMPLETION_REPORT.md` |
-| **6p · polish sprint** | **12 of 12 done** | `PHASE_06_POLISH_REPORT.md` |
-| 7 · Content & AI localization | **blocked on founder approval** | plan: `PHASE_07_NUTRITION_I18N_PLAN.md` |
+| 6p · polish sprint | 12 of 12 done | `PHASE_06_POLISH_REPORT.md` |
+| **7 · Content & AI localization** | **done** | `PHASE_07_COMPLETION_REPORT.md` |
+| 8 · es / fr / de + RTL | next | roadmap only |
 
-**Branch:** `main`. **Build:** `1.0.0+28`. **Tip:** `8e44e1a`.
+**Branch:** `main`. **Build:** `1.0.0+29`.
 
 ---
 
 ## 2. Start here
 
-### 2.0 The polish sprint is DONE — do not restart it
+### 2.0 Phase 7 is DONE — do not restart it
 
-All twelve founder items landed. `PHASE_06_POLISH_REPORT.md` is the
-record; its §6 is the only list that still needs anybody.
+`PHASE_07_COMPLETION_REPORT.md` is the record. **Migrations 013, 014 and
+015 are applied to production**, 392 recipes are 100 % translated, and
+the whole content pipeline is committed and re-runnable.
 
-**Phase 7 is deliberately not started.** The founder asked for a plan
-first and to stop for approval. The plan is
-`PHASE_07_NUTRITION_I18N_PLAN.md` — read it before writing any nutrition
-code, because its §2 argues that most of the work is *not* translation
-and doing the translation first means doing it twice.
+**Phase 8 is next** and is a content project, not an engineering one, for
+recipes: the resolver is locale-agnostic and the audit loops over
+`kShippedLocales`, so adding `es` means adding a `PERSONAS` entry, a
+`SCAFFOLD` entry and 392 rows of copy. **The exercise catalogue is a
+different story** — 138 rows are still Turkish-only and their
+instructional images carry burned-in text in two languages. See §8.
 
-**Three things are waiting on the founder, not on engineering:**
+### 2.0.1 The three things Phase 7 deliberately did NOT do
 
-1. **"Install via USB" on the Redmi Note 12** lapsed mid-session
-   (`INSTALL_FAILED_USER_RESTRICTED`). The last build was never walked.
-   Re-enable it, `adb install -r`, and re-check the six surfaces in the
-   polish report §5 table. Everything is green in CI; this closes the
-   loop honestly rather than fixing anything.
-2. **The USD weekly price.** `docs/store/PRICING_SETUP.md` §2 — the
-   target ladder is inverted in USD ($2/wk is $8.67/mo against a $10/mo
-   plan), so nobody would buy monthly. TRY is fine.
-3. **Play Console + RevenueCat**, same document §3–§4.
+1. **`016_drop_legacy_tags.sql` is not written.** It drops
+   `recipes.tags` and trims the `MALZEMELER:` half out of
+   `instructions`. Both are safe only after a release carrying the
+   013/014 readers has been live long enough that the old client is
+   gone. Writing it now invites somebody to apply it now.
+2. **No device walk.** The Note 12 was not connected and the connected
+   Redmi is PIN-locked. Six specific surfaces still need eyes — Phase 7
+   report §9 lists them.
+3. **The English has not been read by a native speaker.** 392 recipes of
+   reviewed draft. The gate proves no Turkish survives; it cannot prove
+   the English reads well.
 
-**Two patterns from this sprint worth reusing:**
+### 2.0.2 How to run the content tooling
 
-- **A fixed design canvas for anything drawn onto a photograph.** The
-  showcase heroes lay their panels out in a 400×300 box that is then
-  scaled to the hero, with the text scaler switched off inside it. No
-  translation length and no device width can push a panel out of frame,
-  because the frame it must fit is the canvas. See
-  `feature_showcase_screen.dart`.
-- **Resolve assets from the asset manifest, not a hand-kept list.**
-  `WorkoutBackgroundRegistry` means dropping a correctly-named file into
-  the directory is the entire procedure. `ExerciseMediaRegistry` next to
-  it is the old pattern and still needs a code edit per file.
+Everything is idempotent and everything writes a file a human reads
+before it is applied. Nothing here talks to the database.
 
-**Asset trick worth reusing:** the supplied artwork is additive neon on a
-solid black plate and renders as a black tile over any non-black
-background. Key brightness to alpha (`a = max(r,g,b)`, RGB unchanged) and
-it blends.
+```bash
+# validate a proposal batch without writing anything
+dart run tool/recipe_pipeline/pipeline.dart \
+    --proposals tool/recipe_pipeline/proposals/western.json \
+    --catalogue <live_catalogue.json> --dry-run
+
+# regenerate the proposal files from their Python briefs
+python3 tool/recipe_pipeline/proposals/western.py
+python3 tool/recipe_pipeline/proposals/international.py
+
+# rebuild the English catalogue SQL
+python3 tool/recipe_pipeline/translations/ingredients_en.py > out.sql
+python3 tool/recipe_pipeline/translations/build_recipe_en.py \
+    --catalogue <dump.json> > out.sql
+
+# the gate, and its ratchet
+dart run tool/recipe_translation_audit.dart
+dart run tool/recipe_translation_audit.dart --list
+dart run tool/recipe_translation_audit.dart --update-baseline
+
+# the closest thing to a device walk without a device
+flutter test --tags live \
+    test/features/nutrition/live_catalogue_read_path_test.dart
+```
+
+`<live_catalogue.json>` and `<dump.json>` are dumps of the `recipes` /
+`recipe_ingredients` tables. The introspection recipe is §7 below.
 
 ### 2.1 What Phase 6 left for someone else
 
 **English screenshots and feature graphic**, and pasting
 `docs/store/LISTING_EN.md` into Play Console → Manage translations. The
-listing copy is written. See its "Still outstanding" section.
-
-**A native-speaker read of the English.** It is a reviewed, internally
-consistent draft, not proofread copy. The store listing is the highest-
-leverage hour.
+listing copy is written.
 
 **Play Console pricing** — `docs/store/PRICING_SETUP.md` is the whole
-procedure now, including the USD ladder problem. See §2.0 items 2–3.
+procedure, including the USD ladder problem.
 
 **Two device surfaces still unverified**, both carried from Phase 5:
-the paywall interior (auth-gated; adb sign-in taps still do not
-register) and a clean-install onboarding — which now also means seeing
-the language step as an actual first screen. Both need `adb uninstall`
-or a working sign-in, and both destroy the session everything else
-depends on, so do them last.
+the paywall interior (auth-gated) and a clean-install onboarding. Both
+destroy the session everything else depends on, so do them last.
 
-### 2.2 Then Phase 7 — after approval
-
-`PHASE_07_NUTRITION_I18N_PLAN.md` is written and measured against the
-live catalogue. It is not started and must not be started without the
-founder saying so.
-
-The unit toggle that used to be flagged here is **done** — Settings
-exposes Metric/Imperial and storage stays metric.
+**Meal and workout photographs.** `docs/nutrition/MEAL_IMAGE_REQUESTS*.md`
+and `WORKOUT_BACKGROUND_IMAGE_REQUESTS.md`. Nothing is broken while those
+directories are empty — both fall back to real photography, and both
+resolve from the asset manifest, so dropping a correctly-named file in is
+the entire procedure.
 
 ## 3. Current numbers
 
 ```
 analyze                     0 issues
-tests                       940
+tests                       1051
 hardcoded-string gate       0 in 0 files  (allowlist 244, printed per entry)
-ARB                         1527 keys · tr 100% · en 100% · all referenced
+ARB                         1532 keys · tr 100% · en 100% · all referenced
+recipe catalogue            392 rows · en 392/392 · 2242 ingredient rows
+recipe translation audit    0 findings · baseline armed at 392
 locales shipped             tr, en
 pseudo-locale sweep         18 surfaces × 3 viewports, scrolled through
 English sweep               17 funnel + 5 app surfaces × 2 text scales
 RTL sweep                   16 surfaces
-CI                          green @ 8e44e1a
-build                       1.0.0+28 · APK 134.5 MB · AAB 114.6 MB
-device walk                 Redmi Note 12, tr+en, dark+light, 8 defects fixed
+CI                          green
+build                       1.0.0+29 · APK 134.5 MB
+device walk                 NOT DONE for Phase 7 — see the report §9
 working tree                clean except pre-existing untracked founder files
 ```
 
@@ -128,12 +140,13 @@ before this session started. It is **not ours** — leave it.
 
 ```bash
 flutter analyze                                   # must be 0 — CI fails on infos too
-flutter test                                      # 915
+flutter test                                      # 1051
 dart format --output=none --set-exit-if-changed lib test tool
 dart run tool/check_hardcoded_strings.dart        # ratchet, currently 0
 dart run tool/check_hardcoded_strings.dart --list # every flagged line
 dart run tool/arb_coverage.dart --strict          # parity, plurals, EN audit
 dart run tool/gen_pseudo_localizations.dart --check
+dart run tool/recipe_translation_audit.dart       # the CATALOGUE, not the UI
 ```
 
 All of these are CI steps. `flutter analyze` exits 1 on **info**-level lints,
@@ -198,7 +211,29 @@ which is how CI was red for four commits before this session noticed.
     social-proof privacy claim read as a complete, shorter, false
     sentence. Use `ellipsis` so an overflow looks like one.
 14. **Never source `.env.local`.** It is freeform notes, not dotenv, and
-   sourcing it *executes* `flutter build apk`.
+   sourcing it *executes* `flutter build apk`. The Supabase CLI also
+   parses `./.env.local` as dotenv and fails on it, which is why the CLI
+   is always run from a scratch dir holding a copy of `supabase/`.
+15. **Dart's `caseSensitive: false` does not fold `Ç→ç`.** A regex meant
+   to match a Turkish proper noun case-insensitively silently misses the
+   title-cased form. Fold explicitly.
+16. **The Turkish fold (`I→ı`) is wrong for English text.** Applying it
+   to a string that is supposed to be English turns `INGREDIENTS` into
+   `ıngredıents`. The right fold depends on which language you are
+   reading, not on which language the app is in.
+17. **Scrub a term list longest-first.** `köfte` removed before
+   `çiğ köfte` can match leaves a bare `çiğ` behind and reports it as an
+   untranslated word.
+18. **Substring matching on short Turkish words is a trap.** `un`
+   (flour) is inside `olgun` and `limonun`; `bal` (honey) starts
+   `balık`, `balığı` and `balzamik`; `hindi` (turkey) starts
+   `hindistan cevizi`; `su` (water) starts `sucuk`. Match at a word
+   start and keep an explicit not-followed-by list.
+19. **A recipe seed must be idempotent by a stable id.** Ids are derived
+   from the proposal slug via `uuid_generate_v5`, so re-running after an
+   edit updates instead of duplicating the catalogue — and the duplicate
+   check has to exclude the batch's own earlier rows, or the second run
+   rejects everything the first one wrote.
 
 ---
 
@@ -247,22 +282,84 @@ which is how CI was red for four commits before this session noticed.
 - **The gate is bilingual.** An English literal in `lib/` is as wrong as
   a Turkish one.
 
+## 6c. Architecture decisions from Phase 7
+
+- **A tag TOKEN belongs in the database; a tag LABEL belongs in ARB.**
+  The moment one column tries to be both, the catalogue cannot be
+  translated without breaking navigation. `recipe_tags` keeps label
+  columns anyway — they are what the audit checks and what the pipeline
+  writes, not what the app reads.
+- **One recipe, one language.** `resolveRecipeLanguage` decides per ROW,
+  not per field. An English title over Turkish steps reads as a bug
+  rather than as untranslated content, and it is exactly the state a
+  half-finished translation pass leaves rows in. Ingredient names are
+  part of that decision.
+- **The fallback is Turkish, never English.** `title` is `not null` on
+  every row; `title_en` may not exist. Falling back to a possibly-null
+  column produces blank cards.
+- **`locale_scope` orders, it never filters.** Filtering is one line
+  shorter and looks obviously correct; it halves the catalogue for
+  everyone. Three ranks, not two — a recipe scoped to another language
+  still appears, last.
+- **A quantity never passes through a translation.** The `INGREDIENTS:`
+  half of every `instructions_en` is ASSEMBLED from `recipe_ingredients`,
+  which is what migration 014 was for. Only method steps are authored by
+  hand. That makes "never translate a unit" a property of the pipeline
+  rather than a rule somebody has to remember.
+- **A unit is NAMED, never converted.** `yemek kaşığı` → `tbsp`, not
+  `15 ml`. `unit_system.dart` is where conversion belongs and a value
+  converted during translation cannot be converted back.
+- **`halal` is never derived; `pork_free` is.** Halal depends on how an
+  animal was slaughtered, which no ingredient name records. Conflating
+  them is what makes an app untrustworthy in a market.
+- **An unrecognised ingredient silences the whole recipe.** A missing
+  `vegan` flag costs one filter; a wrong one serves a vegan yoghurt.
+- **The model never writes to the database, and a rejected proposal is
+  deleted rather than repaired.** Repairing means another pass over
+  output already known to be wrong.
+- **Two copies of a mapping are acceptable only when something proves
+  they agree.** The unit glossary is in Dart and in Python because one is
+  a Flutter app and the other is a build script;
+  `test/tool/unit_glossary_parity_test.dart` is what makes that safe.
+- **The cross-check between independent sources is where the defects
+  are.** Every Phase 7 finding in pre-existing content came from
+  comparing two things nobody had compared: hand tags against derived
+  flags, English names against Turkish ones, a new macro rule against an
+  old catalogue.
+
 ---
 
 ## 7. Migrations
 
-`001`–`012` applied to production and verified live (history, RLS on 9
-tables, seeded flags matching compiled defaults, anon read 200 / write
-401).
+`001`–`015` applied to production and verified live.
 
-**`012_user_locale.sql` is written and NOT applied.** It adds `locale`
-to `user_metrics` for the reinstall carry-over. The app degrades
-correctly without it.
+Phase 7 added three, each independently shippable and each a no-op for
+existing clients until the one after it lands:
+
+- **`013_recipe_tag_tokens.sql`** — `recipe_tags` registry,
+  `recipes.tag_tokens` + GIN index, backfill from the Turkish `tags`
+  column. `tags` deliberately left in place.
+- **`014_recipe_ingredients.sql`** — the structured ingredient table plus
+  `recipe_ingredient_coverage`. `instructions` deliberately keeps its
+  `MALZEMELER:` half.
+- **`015_recipe_origin_and_diet.sql`** — `cuisine`, `diet_flags`,
+  `locale_scope`.
+
+**`016_drop_legacy_tags.sql` is NOT written**, on purpose. See §2.0.1.
+
+Seed and patch files live in `supabase/sql/phase07_*.sql` and are all
+re-runnable.
 
 Supabase CLI notes: run it from a scratch dir holding a copy of
-`supabase/`; the direct DB host is IPv6-only so use the **session
-pooler**; there is no `psql` on this box — a venv with `psycopg2` is the
-introspection tool.
+`supabase/` (it parses the repo's `.env.local` as dotenv and fails); the
+direct DB host is IPv6-only so use the **session pooler** at
+`aws-0-eu-west-1.pooler.supabase.com:5432` with user
+`postgres.<project-ref>`; there is no `psql` on this box — a venv with
+`psycopg2` is the introspection tool, and the DB password is in
+`.env.local` (read it, never source it).
+
+`supabase functions deploy coach-chat --no-verify-jwt` is how the edge
+function ships; it needs the same scratch-dir treatment.
 
 ---
 
@@ -287,11 +384,19 @@ introspection tool.
   the manifest-driven `WorkoutBackgroundRegistry` beside it.
 - **51 of 138 exercises have no background of their own** and render
   their category's art. Prompts are in the request doc.
-- **Content is not translated.** Migration 011 added the columns;
-  nothing is written to them. Exercise names and tips render in Turkish
-  inside the English app — visible on the workout screen. Phase 7, and
-  `PHASE_07_NUTRITION_I18N_PLAN.md` §2 explains why the tag split has to
-  come first.
+- **The EXERCISE catalogue is still Turkish.** Migration 011 localised
+  both tables and Phase 7 only did recipes. 138 exercise rows with
+  `name`, `description` and `short_tip` render in Turkish inside the
+  English app, visible on the workout screen. The same resolution layer
+  from `recipe_localization.dart` serves them — but the instructional
+  images carry burned-in text in two languages, which is a content
+  project of its own.
+- **Nine recipes make no dietary claim.** Granola (×8) and Thai green
+  curry paste (×1) are genuinely two different foods sold under one name,
+  so the classifier stays silent rather than guessing. That is correct,
+  not a gap.
+- **Phase 7's nutrition surfaces have never been seen on a device.**
+  Six of them, listed in `PHASE_07_COMPLETION_REPORT.md` §9.
 - **`Positioned` with explicit `left:`/`right:`** remains in a few
   decorative overlays. `PositionedDirectional` when next touched.
 - **Google Sign-In is broken** and is a founder-side Google Cloud SHA-1
@@ -335,6 +440,23 @@ PHASE_07_NUTRITION_I18N_PLAN.md        the plan; NOT started
 
 lib/features/workout/data/workout_background_registry.dart  manifest-driven art
 tool/coach_eval.md                     the 12 scenarios, now in both languages
+
+tool/recipe_translation_audit.dart     the CATALOGUE gate — titles, steps, ingredients
+tool/recipe_translation_baseline.json  its ratchet; en coverage may rise, never fall
+tool/recipe_pipeline/ingredient_parser.dart   MALZEMELER: → rows; reports, never guesses
+tool/recipe_pipeline/diet_classifier.dart     ingredient → diet flags, TR and EN tables
+tool/recipe_pipeline/recipe_proposal.dart     the deterministic validator
+tool/recipe_pipeline/pipeline.dart            generate → validate → cost → review → seed
+tool/recipe_pipeline/proposals/*.py           the 100 authored recipes, as briefs
+tool/recipe_pipeline/translations/*.py        the glossaries and the assembler
+
+lib/features/nutrition/domain/recipe_localization.dart   one recipe, one language
+lib/features/nutrition/domain/recipe_tag_token.dart      token → label + style
+lib/features/nutrition/domain/models/recipe_ingredient.dart  localizedUnit lives here
+lib/features/nutrition/data/recipe_image_registry.dart   manifest-driven meal art
+
+test/features/nutrition/live_catalogue_read_path_test.dart  --tags live; needs .env
+docs/nutrition/                        every review sheet the tooling generates
 ```
 
 ---

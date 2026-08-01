@@ -1,7 +1,7 @@
 # FormAI — Project Progress Summary
 
 **Spec:** `TESTERS_COMMUNITY_PRODUCT_ROADMAP.md` (18 phases / 5 waves)
-**As of:** 2026-08-01 · Phase 6 polish sprint **complete** · build **1.0.0+28**
+**As of:** 2026-08-01 · Phase 7 **complete** · build **1.0.0+29**
 
 ---
 
@@ -74,27 +74,42 @@
 
 ---
 
+### Phase 7 — Content & AI Localization ✅
+*Build 1.0.0+29 · 1051 tests · CI green · `PHASE_07_COMPLETION_REPORT.md`*
+- **FormAI is no longer an English app with a Turkish pantry.** 392 recipes, 100 % translated: title, method steps, all 2,242 ingredient rows and their prep-state notes.
+- **Most of the work was not translation**, as the plan predicted. A tag was a query key and display copy at the same time (migration 013 split it), ingredients were prose inside a text column (014 gave them a table), and the catalogue was culturally Turkish (015 gave it cuisine, diet flags and locale scope). All three applied to production and verified live.
+- **100 new recipes** — 60 western bodybuilding, 40 international — authored in both languages through a pipeline whose model never writes to the database and whose rejected proposals are deleted rather than repaired.
+- **The gate rejected seven of the first hundred**, all correctly. Three came from one check that classifies each ingredient's English and Turkish name independently and requires them to agree — the only thing that catches a mistranslated ingredient. Without it a casein pudding would have shipped labelled `dairy_free`.
+- **Every cross-check found a defect in content that was already there.** The dietitian's hand tags versus the derived diet flags found a recipe tagged Vegan containing 10 g of honey, live since Phase 24. The pipeline's macro rule versus the old catalogue found six recipes whose stated calories are 11–16 % away from their own macros. Four recipes had been unreachable from every category screen since they were seeded.
+- **`tool/recipe_translation_audit.dart`** now guards the catalogue the way the ARB gates guard the UI, ratcheting and wired into CI — and it found four bugs in itself while proving the first batch, including one where the check meant to prove 199 recipes were translated reported all of them as untranslated.
+- **The coach can only name food the app actually has**, in the reader's language, verified live against the deployed function in both.
+- **No device walk.** The primary device is not connected and the connected one is PIN-locked. A live read-path test covers the data half and found a real defect on its first run: every ingredient name was translated and none of the prep-state notes were.
+
+---
+
 # 2. Currently Working On
 
-**Nothing. The sprint is closed and Phase 7 is blocked on founder
-approval**, as asked.
+**Nothing. Phase 7 is closed.** `PHASE_07_COMPLETION_REPORT.md` §9 is
+what it did not do and why.
 
-`PHASE_06_POLISH_REPORT.md` §6 is the founder-action list:
+Founder-side, carried and still open:
 
-1. **Re-enable "Install via USB"** on the Redmi Note 12 — it lapsed
-   mid-session, so the final build was never walked. Everything is green
-   in CI; this closes #12 honestly.
+1. **Walk the nutrition surfaces on a device.** Six specific surfaces are
+   listed in the Phase 7 report §9. Needs the Redmi Note 12 connected
+   with "Install via USB" re-enabled.
 2. **Decide the USD weekly price**, then do Play Console + RevenueCat per
    `docs/store/PRICING_SETUP.md`.
-3. **Generate workout backgrounds** at your own pace. Nothing is broken
-   while the directory is empty.
-4. **Read `PHASE_07_NUTRITION_I18N_PLAN.md`** and approve or redirect.
+3. **Generate the meal and workout photographs** at your own pace, from
+   `docs/nutrition/MEAL_IMAGE_REQUESTS*.md` and
+   `WORKOUT_BACKGROUND_IMAGE_REQUESTS.md`. Nothing is broken while those
+   directories are empty — both fall back to real photography.
+4. **A native-speaker read of the English**, now covering 392 recipes as
+   well as the UI and the store listing.
 
 # 3. Remaining Roadmap
 
 ### Wave 2 — Global Reach *(continues)*
-- **Phase 7 — Content & AI Localization.** Localize what the user actually consumes — exercise names, coaching cues, plans, recipes, and the AI's cultural frame — so English FormAI is native, not translated.
-- **Phase 8 — Spanish, French, German & RTL Readiness.** Turn localization from a project into a repeatable capability and reach the markets the testers named.
+- **Phase 8 — Spanish, French, German & RTL Readiness.** Turn localization from a project into a repeatable capability and reach the markets the testers named. The recipe half is now a content cost rather than an engineering one: the resolver is locale-agnostic and the audit loops over `kShippedLocales`. **The exercise catalogue is not** — 138 rows of `name`, `description` and `short_tip` are still Turkish-only, and their instructional images carry burned-in text in two languages.
 
 ### Wave 3 — Measurable Progress & Universal Access
 - **Phase 9 — Performance Analytics I.** Body metrics and trends: let users see their body change over time.
@@ -117,31 +132,33 @@ approval**, as asked.
 
 ```
 Wave 1 — Production-Access Commitments   ✅ Complete   (Phases 1–4 + 3b)
-Wave 2 — Global Reach                    🔄 In Progress (5, 6 + polish done; 7 awaiting approval)
+Wave 2 — Global Reach                    🔄 In Progress (5, 6, 7 done; 8 next)
 Wave 3 — Measurable Progress & Access    ⏳ Not Started (Phases 9–11)
 Wave 4 — Community & Content Engine      ⏳ Not Started (Phases 12–14)
 Wave 5 — Scale, Depth & Platform         ⏳ Not Started (Phases 15–17)
 ```
 
-**Phases complete:** 8 of 18 (0, 1, 2, 3, 3b, 4, 5, 6) + the Phase 6 polish sprint · two device surfaces still carried forward: the paywall interior and a clean-install onboarding
+**Phases complete:** 9 of 18 (0, 1, 2, 3, 3b, 4, 5, 6, 7) + the Phase 6 polish sprint · device surfaces still carried forward: the paywall interior, a clean-install onboarding, and the six Phase 7 nutrition surfaces
 
 ### Current quality state
 
 | | |
 |---|---|
-| **Build** | 1.0.0+28 · APK 134.5 MB · AAB 114.6 MB |
-| **Tests** | **940 passing** (baseline was 330) |
+| **Build** | 1.0.0+29 · APK 134.5 MB |
+| **Tests** | **1051 passing** (baseline was 330) |
 | **`flutter analyze`** | **0 issues** |
 | **`dart format`** | clean |
 | **CI** | **GREEN** (CI + Secret Scan) |
 | **Hardcoded-string gate** | **0 in 0 files** · 244 allowlisted, reported per entry |
-| **ARB** | **1527 keys** · `tr` 100% · `en` 100% · all referenced in `lib/` |
+| **ARB** | **1532 keys** · `tr` 100% · `en` 100% · all referenced in `lib/` |
+| **Recipe catalogue** | **392 recipes** · `en` 392/392 · 2242 ingredient rows · audit 0 findings |
 | **Locales shipped** | `tr`, `en` |
 
 ### Standing constraints
 
 - **CI Flutter is 3.44.8, local is 3.41.9.** Local green is not proof; only CI is a reliable gate.
-- **Migrations 001–012 are all applied to production** and verified live.
+- **Migrations 001–015 are all applied to production** and verified live. `016_drop_legacy_tags.sql` is deliberately unwritten — it drops `recipes.tags` and trims `instructions`, and both are safe only after a release carrying the new readers has been live long enough that the old client is gone.
 - The local release build is upload-key signed, so device installs need `adb uninstall` first (loses session, requires a full onboarding re-walk).
 - **MIUI's "Install via USB" lapses.** `INSTALL_FAILED_USER_RESTRICTED` is not a signing problem and no adb flag works around it; it needs a Mi-account re-authorization on the handset.
-- **A green gate is a claim about its own heuristics.** Two sprints running, a rule written to catch a class of bug failed to fire on that exact bug. Probe every widening with a synthetic file under `lib/`.
+- **A green gate is a claim about its own heuristics.** Three phases running now. Phase 7's translation audit found four bugs in itself while proving its first batch — including one where the check meant to prove 199 recipes were translated reported every one of them as untranslated. Probe every widening.
+- **The cross-check between two independent sources is where the defects are.** Every one of Phase 7's findings in pre-existing content came from comparing two things that had never been compared: hand tags against derived diet flags, English ingredient names against Turkish ones, the new macro rule against the old catalogue.
