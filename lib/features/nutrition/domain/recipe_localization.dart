@@ -34,6 +34,8 @@
 /// is Turkish is the same defect one layer down.
 library;
 
+import 'models/recipe.dart';
+
 /// The language every recipe is authored in and falls back to.
 const String kRecipeFallbackLanguage = 'tr';
 
@@ -96,3 +98,36 @@ String? localizedRecipeField(
 }
 
 bool _hasText(dynamic value) => value is String && value.trim().isNotEmpty;
+
+/// Orders [recipes] so the ones authored for [language] lead.
+///
+/// This is the entire mechanism behind `recipes.locale_scope`, and the
+/// property that matters is what it does **not** do: nothing is removed.
+/// An English reader sees overnight oats first and menemen further down;
+/// a Turkish reader sees the reverse. Both see all of it.
+///
+/// Filtering by locale was the obvious implementation and is a trap — it
+/// halves the catalogue for everyone, and a user who has heard of a dish
+/// and cannot find it concludes the app does not have it.
+///
+/// Stable: recipes with the same scope keep their incoming order, so the
+/// caller's own sort (macro fit, id, relevance) survives underneath.
+List<Recipe> sortRecipesForLocale(List<Recipe> recipes, String language) {
+  final indexed = recipes.indexed.toList()
+    ..sort((a, b) {
+      final rank = _localeRank(a.$2, language) - _localeRank(b.$2, language);
+      return rank != 0 ? rank : a.$1 - b.$1;
+    });
+  return indexed.map((entry) => entry.$2).toList(growable: false);
+}
+
+/// 0 for a recipe authored for this language, 1 for one authored for
+/// nobody in particular, 2 for one authored for a different language.
+///
+/// Three ranks rather than two: a recipe scoped to *another* language
+/// still appears, just last. That is what keeps "it orders, it does not
+/// filter" true for the case the rule was written for.
+int _localeRank(Recipe recipe, String language) {
+  if (recipe.localeScope.isEmpty) return 1;
+  return recipe.localeScope.contains(language) ? 0 : 2;
+}

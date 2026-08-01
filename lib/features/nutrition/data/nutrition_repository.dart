@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/utils/app_copy.dart';
 import '../domain/models/recipe.dart';
+import '../domain/recipe_localization.dart';
 
 /// Thin data-access layer over the Supabase `recipes` table. Kept
 /// intentionally small — the calorie / macro math lives in
@@ -162,7 +163,12 @@ class NutritionRepository {
       query = query.eq('meal_type', categoryToken);
     }
     final rows = await query.order('id', ascending: true);
-    return _decode(rows);
+    // Phase 7 · `locale_scope` leads, it does not filter. A category
+    // screen returns its complete bucket, so this is where the ordering
+    // belongs; the paginated catalogue fetch deliberately keeps its
+    // stable `id` order, because re-ranking each page in isolation would
+    // interleave scopes rather than group them.
+    return sortRecipesForLocale(_decode(rows), _language);
   }
 
   /// The one place a raw PostgREST row becomes a [Recipe], so the locale

@@ -209,24 +209,37 @@ class DailyMenuNotifier extends AsyncNotifier<List<PlannedMeal>> {
     return score;
   }
 
-  /// Diet filter over the curated `tags` text[] column. Ketojenik also
-  /// accepts a real macro signal (carbs ≤ 15 g) so untagged low-carb
-  /// rows still qualify. Empty result → caller falls back.
+  /// Diet filter over `recipes.diet_flags`.
+  ///
+  /// Phase 7 · this used to substring-match the Turkish `tags` column —
+  /// `tags.any((t) => t.contains('vegan'))` — which had two problems.
+  /// It could not survive translation, and it trusted a hand-applied
+  /// category label as a dietary claim. Migration 015 derives the flags
+  /// from the ingredient list instead, and the cross-check between the
+  /// two found a recipe tagged Vegan that contains 10 g of honey.
+  ///
+  /// A recipe with **no** flags makes no claim — an ingredient the
+  /// classifier did not recognise silences it — and is excluded from
+  /// every diet filter rather than being assumed safe.
+  ///
+  /// Ketojenik keeps its macro signal: there is no `keto` flag, because
+  /// keto is a macro ratio rather than an ingredient property, and
+  /// carbs ≤ 15 g is the real measurement.
+  ///
+  /// Empty result → caller falls back to the unfiltered list, which is
+  /// the pre-existing behaviour and is deliberate: a menu generator that
+  /// returns nothing is worse than one that returns something. Note this
+  /// means the fallback can serve a non-vegan meal to a vegan when the
+  /// catalogue has no vegan option for a slot — see the caller.
   List<Recipe> _dietFiltered(List<Recipe> recipes, String diet) {
     bool matches(Recipe r) {
-      final tags = r.tags.map((t) => t.toLowerCase()).toList();
       switch (diet) {
         case 'vegan':
-          return tags.any((t) => t.contains('vegan'));
+          return r.dietFlags.contains('vegan');
         case 'vejetaryen':
-          return tags.any(
-            (t) =>
-                t.contains('vegan') ||
-                t.contains('vejetaryen') ||
-                t.contains('vegetarian'),
-          );
+          return r.dietFlags.contains('vegetarian');
         case 'ketojenik':
-          return tags.any((t) => t.contains('keto')) || r.carbs <= 15;
+          return r.carbs <= 15;
         default:
           return true;
       }

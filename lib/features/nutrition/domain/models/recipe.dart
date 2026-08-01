@@ -26,6 +26,9 @@ class Recipe {
     this.tagTokens = const [],
     this.ingredients = const [],
     this.ingredientRows = const [],
+    this.cuisine,
+    this.dietFlags = const [],
+    this.localeScope = const [],
     this.language = kRecipeFallbackLanguage,
   });
 
@@ -97,6 +100,27 @@ class Recipe {
   /// `domain/recipe_ingredient_lines.dart` is what tells the two apart.
   final List<RecipeIngredient> ingredientRows;
 
+  /// Phase 7 · culinary origin — `turkish`, `american`, `japanese`.
+  /// Null on a row seeded before migration 015.
+  final String? cuisine;
+
+  /// Phase 7 · `vegan`, `vegetarian`, `pork_free`, `gluten_free`,
+  /// `dairy_free`, `halal`.
+  ///
+  /// **Empty means no claim, not "safe for everything."** An ingredient
+  /// the classifier did not recognise silences the whole recipe, which
+  /// is why every consumer must test for the flag it needs rather than
+  /// for the absence of a contradicting one.
+  final List<String> dietFlags;
+
+  /// Phase 7 · the languages this recipe leads for. Empty is the common
+  /// case and means "no preference".
+  ///
+  /// This **orders** results and must never filter them: hiding recipes
+  /// by locale halves the catalogue for every user. See
+  /// `015_recipe_origin_and_diet.sql`.
+  final List<String> localeScope;
+
   /// The language every copy field on this instance is written in.
   ///
   /// Not necessarily the language the user picked: a row that is not
@@ -151,6 +175,9 @@ class Recipe {
       // Phase 7 · same tolerant parser; `tag_tokens` is a text[] with
       // exactly the two driver shapes `tags` has.
       tagTokens: _parseTags(json['tag_tokens']),
+      cuisine: json['cuisine'] as String?,
+      dietFlags: _parseTags(json['diet_flags']),
+      localeScope: _parseTags(json['locale_scope']),
       // Phase 57 · `_parseTags` does the right thing for any
       // PG text[] column. Reuses the same tolerant parser instead of
       // duplicating the array-literal logic.

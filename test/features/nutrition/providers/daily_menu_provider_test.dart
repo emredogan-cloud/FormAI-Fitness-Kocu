@@ -22,7 +22,7 @@ Recipe _recipe({
   required String mealType,
   required int calories,
   int protein = 20,
-  List<String> tags = const [],
+  List<String> dietFlags = const [],
 }) {
   return Recipe(
     id: id,
@@ -33,7 +33,7 @@ Recipe _recipe({
     carbs: 40,
     fat: 12,
     prepTimeMinutes: 15,
-    tags: tags,
+    dietFlags: dietFlags,
   );
 }
 
@@ -59,13 +59,12 @@ void main() {
       id: 'meat-main',
       mealType: 'main',
       calories: 600,
-      tags: ['Yüksek Protein'],
     ),
     _recipe(
       id: 'vegan-main',
       mealType: 'main',
       calories: 550,
-      tags: ['Vegan'],
+      dietFlags: ['vegan', 'vegetarian'],
     ),
     _recipe(
       id: 'meat-breakfast',
@@ -76,13 +75,13 @@ void main() {
       id: 'vegan-breakfast',
       mealType: 'breakfast',
       calories: 420,
-      tags: ['Vegan'],
+      dietFlags: ['vegan', 'vegetarian'],
     ),
   ];
 
   test(
-      'vegan preference → every planned meal carries a vegan tag when the '
-      'catalogue has vegan candidates (P1-11: a vegan used to get meat '
+      'vegan preference → every planned meal carries the vegan flag when '
+      'the catalogue has vegan candidates (P1-11: a vegan used to get meat '
       'mains because dietPreference was never read)', () async {
     final container = await _container(
       catalogue: catalogue,
@@ -96,15 +95,15 @@ void main() {
     expect(plan, isNotEmpty);
     for (final meal in plan) {
       expect(
-        meal.recipe.tags.any((t) => t.toLowerCase().contains('vegan')),
+        meal.recipe.dietFlags.contains('vegan'),
         isTrue,
-        reason: '${meal.recipe.id} planned for a vegan without a vegan tag',
+        reason: '${meal.recipe.id} planned for a vegan without the flag',
       );
     }
   });
 
   test(
-      'diet filter degrades gracefully: no matching tags in the catalogue '
+      'diet filter degrades gracefully: no matching flags in the catalogue '
       '→ falls back to the full pool instead of an empty plan', () async {
     final noVegan = [
       _recipe(id: 'main-1', mealType: 'main', calories: 600),
@@ -122,8 +121,8 @@ void main() {
   });
 
   test(
-      'ketojenik accepts a real low-carb macro signal even without a keto '
-      'tag', () async {
+      'ketojenik selects on the macro, because keto is a ratio and not an '
+      'ingredient property', () async {
     final keto = [
       Recipe(
         id: 'low-carb-main',
@@ -136,11 +135,20 @@ void main() {
         prepTimeMinutes: 20,
       ),
       _recipe(id: 'carby-main', mealType: 'main', calories: 500),
-      _recipe(
-          id: 'keto-breakfast',
-          mealType: 'breakfast',
-          calories: 400,
-          tags: ['Keto']),
+      // Phase 7 · there is no `keto` diet flag. Keto is a macro ratio,
+      // not an ingredient property, so the filter measures carbs and
+      // this row qualifies on 40 g only if the filter is broken.
+      _recipe(id: 'carby-breakfast', mealType: 'breakfast', calories: 400),
+      Recipe(
+        id: 'keto-breakfast',
+        title: 'keto-breakfast',
+        mealType: 'breakfast',
+        calories: 400,
+        protein: 30,
+        carbs: 8,
+        fat: 26,
+        prepTimeMinutes: 10,
+      ),
     ];
     final container = await _container(
       catalogue: keto,
@@ -154,8 +162,7 @@ void main() {
     expect(mains, isNotEmpty);
     for (final meal in mains) {
       expect(
-        meal.recipe.carbs <= 15 ||
-            meal.recipe.tags.any((t) => t.toLowerCase().contains('keto')),
+        meal.recipe.carbs <= 15,
         isTrue,
         reason: '${meal.recipe.id} is not keto-eligible',
       );
