@@ -54,7 +54,11 @@ class LanguageStep extends ConsumerWidget {
         gradient: RadialGradient(
           center: Alignment(0, -0.55),
           radius: 1.2,
-          colors: [Color(0xFF15082E), Color(0xFF07040D)],
+          // Near-black, like the reference. The first version was
+          // noticeably purple, which made the hero's plate read as a
+          // black tile sitting on top of the screen rather than a glow
+          // rising out of it.
+          colors: [Color(0xFF120826), Color(0xFF000000)],
         ),
       ),
       child: SafeArea(
@@ -213,8 +217,14 @@ class _LanguagePill extends StatelessWidget {
 /// A bundled image rather than a painter: it is a piece of brand
 /// artwork with a glow, a particle field and a two-tone rim, and a
 /// hand-rolled `CustomPainter` approximation of that would look like an
-/// approximation. Re-encoded to 720² WebP (40 KB) from the 1.3 MB source
-/// so the first screen in the app does not cost a megabyte to draw.
+/// approximation. Re-encoded to a 720² WebP from the 1.3 MB source so
+/// the first screen in the app does not cost a megabyte to draw.
+///
+/// The source is additive neon on a solid black plate, which on a device
+/// rendered as a black tile sitting on the gradient. The re-encode keys
+/// brightness to alpha — for artwork like this, brightness IS opacity —
+/// so the glow blends into whatever is behind it and every step of the
+/// falloff survives.
 class _NeonHero extends StatelessWidget {
   const _NeonHero();
 
