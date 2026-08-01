@@ -424,6 +424,11 @@ class _AnalysisCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    // The ring is sized from the type it holds, not the other way round.
+    // At 72 px fixed, the 1.3 text scale the app honours wrapped "%82"
+    // onto a second line and overflowed the box by 32 px — a graphic
+    // that contains text has to grow with it.
+    final ring = 72 * MediaQuery.textScalerOf(context).scale(1);
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
       decoration: BoxDecoration(
@@ -441,14 +446,14 @@ class _AnalysisCard extends StatelessWidget {
       child: Row(
         children: [
           SizedBox(
-            width: 72,
-            height: 72,
+            width: ring,
+            height: ring,
             child: Stack(
               alignment: Alignment.center,
               children: [
                 SizedBox(
-                  width: 72,
-                  height: 72,
+                  width: ring,
+                  height: ring,
                   child: CircularProgressIndicator(
                     value: 0.82,
                     strokeWidth: 5,

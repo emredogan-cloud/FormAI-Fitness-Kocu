@@ -1012,13 +1012,22 @@ class _ReportHeroCard extends StatelessWidget {
                     children: [
                       _PulsingDot(),
                       SizedBox(width: 5),
-                      Text(
-                        AppLocalizations.of(context).onbAiReady,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.2,
+                      // Flexible, because the pill sits beside an 84 px
+                      // avatar inside a 320 px card: a longer word for
+                      // "AI READY" has nowhere to go and overflowed by
+                      // 32 px the moment the sweep started painting
+                      // below the fold.
+                      Flexible(
+                        child: Text(
+                          AppLocalizations.of(context).onbAiReady,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.2,
+                          ),
                         ),
                       ),
                     ],

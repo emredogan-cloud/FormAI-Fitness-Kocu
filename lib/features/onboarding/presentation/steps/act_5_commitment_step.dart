@@ -222,12 +222,18 @@ class _PrePaywallSummaryStepState extends ConsumerState<PrePaywallSummaryStep>
                                 const Icon(Icons.rocket_launch_rounded,
                                     color: AppColors.neon, size: 15),
                                 const SizedBox(width: 6),
-                                Text(
-                                  l10n.earlyAccessBadge,
-                                  style: const TextStyle(
-                                    color: AppColors.neon,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w800,
+                                // Same reason as the report card's AI
+                                // pill: a centred Row gives its Text no
+                                // room to wrap, so a longer language
+                                // overflows rather than reflows.
+                                Flexible(
+                                  child: Text(
+                                    l10n.earlyAccessBadge,
+                                    style: const TextStyle(
+                                      color: AppColors.neon,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w800,
+                                    ),
                                   ),
                                 ),
                                 const Text(

@@ -55,6 +55,44 @@ Future<void> pumpPseudo(
   await tester.pump(settle);
 }
 
+/// Drags every scrollable on screen to its end, collecting any layout
+/// error the newly-painted content raises.
+///
+/// Blind spot #5, found in Phase 6. A `RenderFlex` reports its overflow
+/// from `paint`, and a viewport only paints what is inside its visible
+/// area plus a 250 px cache extent. So a broken widget that sits far
+/// enough down a scroll view is silently clean.
+///
+/// That makes inflation actively counterproductive: the welcome hero's
+/// progress badge overflowed by 32 px at a 1.3 text scale in BOTH
+/// Turkish and English, and the pseudo sweep passed — the +40 % copy
+/// above it had pushed the badge 328 px below the fold, out of the cache
+/// extent, where nothing painted it. The English sweep caught it because
+/// English is shorter and left the badge only 17 px down.
+///
+/// A sweep that only ever looks at the top of a scroll view is testing
+/// the part of the screen least likely to be wrong.
+Future<void> scrollThrough(WidgetTester tester, List<Object> errors) async {
+  final scrollable = find.byType(Scrollable);
+  if (scrollable.evaluate().isEmpty) return;
+  final target = scrollable.first;
+
+  // Bounded rather than "until we reach the end": a surface with an
+  // auto-scrolling carousel never reports a stable extent, and a test
+  // that can hang is worse than one that covers 8 screens' worth.
+  for (var step = 0; step < 8; step++) {
+    final position = tester.state<ScrollableState>(target).position;
+    if (position.pixels >= position.maxScrollExtent) break;
+    await tester.drag(target, const Offset(0, -400));
+    await tester.pump(const Duration(milliseconds: 120));
+    for (var e = tester.takeException();
+        e != null;
+        e = tester.takeException()) {
+      errors.add(e);
+    }
+  }
+}
+
 /// The three-way sweep every localised screen gets: the reference phone,
 /// the narrowest supported phone, and the reference phone at the largest
 /// text size the app is expected to honour.
@@ -99,6 +137,7 @@ Future<void> sweepPseudoLayouts(
         error = tester.takeException()) {
       errors.add(error);
     }
+    await scrollThrough(tester, errors);
     expect(
       errors,
       isEmpty,
@@ -140,6 +179,7 @@ Future<void> sweepRtlLayout(
       error = tester.takeException()) {
     errors.add(error);
   }
+  await scrollThrough(tester, errors);
   expect(
     errors,
     isEmpty,
