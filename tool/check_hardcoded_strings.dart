@@ -214,13 +214,36 @@ final _interpolation = RegExp(r'\$\{[^}]*\}|\$\w+');
 /// the literal then failed both the Turkish test and the label test and
 /// was skipped anyway — the gate still reported zero. A synthetic probe
 /// caught that; the real files would not have.
+///
+/// Blind spot #7, found on a device during the Phase 6 polish walk, in
+/// the same rule that was written for #6. The hook screen's readiness
+/// ring rendered `%82` inside the English app, from the literal
+/// `Text('%82')`.
+///
+/// The rule below only fired when the string contained an
+/// *interpolation*, on the reasoning that a bare `%` is a unit rather
+/// than an ordering decision. That reasoning is sound and the test built
+/// from it was too narrow: `%82` has a value for the symbol to sit
+/// before. The value is simply written out. A number hardcoded next to a
+/// `%` is exactly as locale-ordered as an interpolated one, and rather
+/// more likely to be wrong, because nothing about it looks like copy.
+///
+/// So the signal is now "a `%` adjacent to a value", where a value is an
+/// interpolation *or* a literal run of digits. Still a signal, still not
+/// an un-exclusion — `'100% cotton'`, with the symbol attached to a
+/// number, is caught deliberately; `'50 % '` with nothing adjacent is
+/// not.
 bool _hasLocaleOrderedSymbol(String value) {
   final withoutValues = value.replaceAll(_interpolation, '');
-  // A bare "%" on its own is a unit, not an ordering decision. It only
-  // matters when there is a value for it to sit before or after.
-  if (withoutValues.trim() == value.trim()) return false;
-  return withoutValues.contains('%');
+  // An interpolation next to the symbol: "%$value" / "$value%".
+  if (withoutValues.trim() != value.trim() && withoutValues.contains('%')) {
+    return true;
+  }
+  // A literal number next to the symbol: "%82" / "82%".
+  return _percentAgainstDigits.hasMatch(value);
 }
+
+final RegExp _percentAgainstDigits = RegExp(r'%\s?[0-9]|[0-9]\s?%');
 
 bool _isPureComposition(String value) =>
     !_onlyInterpolation.hasMatch(value.replaceAll(_interpolation, ''));
@@ -263,8 +286,14 @@ List<Violation> _findViolations(String source) {
     if (_diagnostic.hasMatch(context)) continue;
     for (final match in _literal.allMatches(rawLine)) {
       final value = match.group(1) ?? match.group(2) ?? '';
-      if (_isTechnical(value)) continue;
       final ordered = _hasLocaleOrderedSymbol(value);
+      // The ordering signal outranks the technical exclusion, and that
+      // ordering is not cosmetic. `%82` is matched whole by the "pure
+      // punctuation / numbers" pattern, so it was discarded as technical
+      // before the ordering rule was ever consulted — which is how the
+      // hook screen shipped `%82` to English users with the gate at zero
+      // and a rule in this file written specifically to catch it.
+      if (!ordered && _isTechnical(value)) continue;
       if (!ordered && _isPureComposition(value)) continue;
       if (!ordered &&
           !_turkishSignal.hasMatch(value) &&

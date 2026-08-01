@@ -7064,6 +7064,15 @@
   "@metricBmi": {
     "description": "Body-mass-index label on the AI report. An ARB key rather than a literal because not every language uses the English acronym — Turkish also writes VKİ — and that is a per-locale call."
   },
+  "onbReadinessValue": "{percent}%",
+  "@onbReadinessValue": {
+    "description": "Readiness figure inside the hook screen ring. Illustrative, not user data. The KEY exists because the symbol goes after the number in English and before it in Turkish — it was a hardcoded \"%82\" and shipped that way to English users.",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "onbReadinessLabel": "READINESS",
   "@onbReadinessLabel": {
     "description": "Label under the percentage ring on the welcome hero's analysis card."

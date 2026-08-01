@@ -425,7 +425,8 @@ class _AnalysisCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     // The ring is sized from the type it holds, not the other way round.
-    // At 72 px fixed, the 1.3 text scale the app honours wrapped "%82"
+    // At 72 px fixed, the 1.3 text scale the app honours wrapped the
+    // figure
     // onto a second line and overflowed the box by 32 px — a graphic
     // that contains text has to grow with it.
     final ring = 72 * MediaQuery.textScalerOf(context).scale(1);
@@ -461,27 +462,36 @@ class _AnalysisCard extends StatelessWidget {
                     valueColor: const AlwaysStoppedAnimation(Color(0xFF39FF14)),
                   ),
                 ),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '%82',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
+                // The figure is a localised string now, so its width is
+                // no longer fixed — a longer language pushed it onto a
+                // second line and out of the ring. It scales inside the
+                // ring instead, so the ring stays a ring.
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        l10n.onbReadinessValue(82),
+                        maxLines: 1,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
-                    ),
-                    Text(
-                      AppLocalizations.of(context).onbReadinessLabel,
-                      style: TextStyle(
-                        color: Colors.white54,
-                        fontSize: 8,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1,
+                      Text(
+                        AppLocalizations.of(context).onbReadinessLabel,
+                        maxLines: 1,
+                        style: TextStyle(
+                          color: Colors.white54,
+                          fontSize: 8,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
