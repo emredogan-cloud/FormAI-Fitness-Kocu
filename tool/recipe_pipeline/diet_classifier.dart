@@ -116,6 +116,10 @@ const Map<String, Set<IngredientKind>> _overrides = {
   'hindistancevizi': {IngredientKind.plant},
   // Tuna. `bal` is honey and starts `balığı`.
   'ton balığı': {IngredientKind.fish},
+  // Corn tortillas are maize, not wheat. The English table already knew;
+  // the two disagreeing is what the pipeline's cross-language check
+  // exists to surface, and it did.
+  'mısır tortilla': {IngredientKind.plant},
   // Fermented wheat AND yoghurt. Matching only the wheat would have
   // claimed `dairy_free` on tarhana soup.
   'tarhana': {IngredientKind.gluten, IngredientKind.dairy},
@@ -170,6 +174,9 @@ const Map<IngredientKind, List<String>> _terms = {
     'çipura',
     'uskumru',
     'sardalya',
+    'morina',
+    'ançüez',
+    'alabalık',
   ],
   IngredientKind.dairy: [
     'süt',
@@ -186,6 +193,7 @@ const Map<IngredientKind, List<String>> _terms = {
     'krema',
     'whey',
     'kaymak',
+    'kazein',
   ],
   IngredientKind.egg: ['yumurta'],
   IngredientKind.honey: ['bal'],
@@ -310,6 +318,8 @@ const Map<IngredientKind, List<String>> _terms = {
     'şurup',
     'toz',
     'rende',
+    'baharat',
+    'cajun',
     'kapari',
     'turp',
     'enginar',
@@ -346,12 +356,285 @@ const Map<String, List<String>> _notFollowedBy = {
   'su': ['cuk'],
 };
 
+/// The same tables in English, for the recipes §5.2 and §5.3 author in
+/// English first.
+///
+/// This exists for a second reason worth more than the first: every new
+/// recipe carries both a `name_tr` and a `name_en`, so classifying each
+/// independently and requiring the two to **agree** catches a
+/// mistranslated ingredient. "tereyağı" rendered as "olive oil" passes
+/// every other check in the pipeline and fails this one.
+const Map<IngredientKind, List<String>> _englishTerms = {
+  IngredientKind.meat: [
+    'beef',
+    'chicken',
+    'turkey',
+    'lamb',
+    'steak',
+    'mince',
+    'ground beef',
+    'bacon',
+    'ham',
+    'sausage',
+    'pork',
+    'salami',
+    'pepperoni',
+    'jerky',
+    'meatball',
+    'brisket',
+    'sirloin',
+    'chorizo',
+    'prosciutto',
+    'veal',
+    'venison',
+    'duck',
+    'broth',
+    'stock',
+  ],
+  IngredientKind.fish: [
+    'salmon',
+    'tuna',
+    'cod',
+    'anchov',
+    'shrimp',
+    'prawn',
+    'mackerel',
+    'sardine',
+    'trout',
+    'halibut',
+    'tilapia',
+    'squid',
+    'mussel',
+    'crab',
+    'fish',
+  ],
+  IngredientKind.dairy: [
+    'milk',
+    'yogurt',
+    'yoghurt',
+    'cheese',
+    'butter',
+    'cream',
+    'whey',
+    'casein',
+    'kefir',
+    'ghee',
+    'ricotta',
+    'feta',
+    'mozzarella',
+    'parmesan',
+    'cheddar',
+    'halloumi',
+    'quark',
+    'skyr',
+    'paneer',
+  ],
+  IngredientKind.egg: ['egg'],
+  IngredientKind.honey: ['honey'],
+  IngredientKind.gluten: [
+    'wheat',
+    'bread',
+    'pasta',
+    'noodle',
+    'flour',
+    'barley',
+    'rye',
+    'bulgur',
+    'couscous',
+    'semolina',
+    'breadcrumb',
+    'tortilla',
+    'wrap',
+    'pita',
+    'bagel',
+    'crouton',
+    'cracker',
+    'oat',
+    'seitan',
+    'farro',
+    'spelt',
+    'cereal',
+    'granola',
+    'pastry',
+    'dough',
+    'bun',
+    'roll',
+  ],
+  IngredientKind.plant: [
+    'oil',
+    'salt',
+    'pepper',
+    'onion',
+    'garlic',
+    'lemon',
+    'lime',
+    'tomato',
+    'walnut',
+    'carrot',
+    'cucumber',
+    'sugar',
+    'mint',
+    'potato',
+    'tahini',
+    'avocado',
+    'lettuce',
+    'banana',
+    'water',
+    'parsley',
+    'cinnamon',
+    'cumin',
+    'thyme',
+    'oregano',
+    'vanilla',
+    'chia',
+    'rice',
+    'molasses',
+    'coconut',
+    'chickpea',
+    'cocoa',
+    'peanut',
+    'eggplant',
+    'aubergine',
+    'strawberr',
+    'lentil',
+    'quinoa',
+    'chocolate',
+    'leek',
+    'mushroom',
+    'berr',
+    'almond',
+    'blackberr',
+    'blueberr',
+    'raspberr',
+    'date',
+    'maple',
+    'hummus',
+    'raisin',
+    'grape',
+    'broccoli',
+    'bean',
+    'apple',
+    'ice',
+    'cabbage',
+    'cauliflower',
+    'beet',
+    'jam',
+    'baking powder',
+    'sunflower',
+    'sesame',
+    'soy sauce',
+    'pea protein',
+    'ginger',
+    'spinach',
+    'asparagus',
+    'fig',
+    'celery',
+    'nutmeg',
+    'vinegar',
+    'pea',
+    'salsa',
+    'apricot',
+    'tofu',
+    'corn',
+    'watermelon',
+    'kiwi',
+    'starch',
+    'basil',
+    'rosemary',
+    'mustard',
+    'dill',
+    'arugula',
+    'rocket',
+    'zucchini',
+    'courgette',
+    'squash',
+    'vegetable',
+    'syrup',
+    'powder',
+    'zest',
+    'caper',
+    'radish',
+    'artichoke',
+    'okra',
+    'pomegranate',
+    'orange',
+    'peach',
+    'pear',
+    'cherry',
+    'plum',
+    'melon',
+    'kale',
+    'pepper flake',
+    'edamame',
+    'tempeh',
+    'sriracha',
+    'salsa',
+    'guacamole',
+    'hemp',
+    'flax',
+    'pumpkin',
+    'pistachio',
+    'cashew',
+    'hazelnut',
+    'pecan',
+    'nutritional yeast',
+    'seaweed',
+    'nori',
+    'kimchi',
+    'sweet potato',
+  ],
+};
+
+const Map<String, Set<IngredientKind>> _englishOverrides = {
+  // Plant milks and butters contain the dairy word.
+  'almond milk': {IngredientKind.plant},
+  'oat milk': {IngredientKind.plant, IngredientKind.gluten},
+  'soy milk': {IngredientKind.plant},
+  'coconut milk': {IngredientKind.plant},
+  'rice milk': {IngredientKind.plant},
+  'cashew milk': {IngredientKind.plant},
+  'peanut butter': {IngredientKind.plant},
+  'almond butter': {IngredientKind.plant},
+  'cocoa butter': {IngredientKind.plant},
+  'coconut butter': {IngredientKind.plant},
+  'nut butter': {IngredientKind.plant},
+  // Not wheat.
+  'rice flour': {IngredientKind.plant},
+  'almond flour': {IngredientKind.plant},
+  'corn flour': {IngredientKind.plant},
+  'coconut flour': {IngredientKind.plant},
+  'chickpea flour': {IngredientKind.plant},
+  'corn tortilla': {IngredientKind.plant},
+  // Plant proteins.
+  'pea protein': {IngredientKind.plant},
+  'soy protein': {IngredientKind.plant},
+  'plant protein': {IngredientKind.plant},
+  'vegetable broth': {IngredientKind.plant},
+  'vegetable stock': {IngredientKind.plant},
+  // Not eggs.
+  'eggplant': {IngredientKind.plant},
+  // The name is meat; the food is not.
+  'beefsteak tomato': {IngredientKind.plant},
+  'tuna steak': {IngredientKind.fish},
+  'salmon steak': {IngredientKind.fish},
+  'swordfish steak': {IngredientKind.fish},
+};
+
+const Map<String, List<String>> _englishNotFollowedBy = {
+  // `egg` starts `eggplant`; `pea` starts `peanut` and `pear`;
+  // `date` starts nothing else here but `bean` starts `beans` (fine).
+  'egg': ['plant'],
+  'pea': ['nut', 'r', 'ch'],
+  'fish': [],
+};
+
 final Map<String, RegExp> _patternCache = {};
 
-RegExp _pattern(String term) => _patternCache.putIfAbsent(term, () {
+RegExp _pattern(String term, Map<String, List<String>> guards) =>
+    _patternCache.putIfAbsent('$term|${guards.hashCode}', () {
       final folded = RegExp.escape(_fold(term));
-      final excluded = _notFollowedBy[term];
-      final tail = excluded == null
+      final excluded = guards[term];
+      final tail = excluded == null || excluded.isEmpty
           ? ''
           : '(?!${excluded.map(RegExp.escape).join('|')})';
       return RegExp('(?<![a-zçğıiöşü])$folded$tail', unicode: true);
@@ -359,18 +642,47 @@ RegExp _pattern(String term) => _patternCache.putIfAbsent(term, () {
 
 /// Every kind [name] carries. Empty means unrecognised, which blocks
 /// every derived flag on every recipe using it.
+///
+/// Tries Turkish first and English second, because the authored
+/// catalogue is Turkish and the terms there are more specific. A name
+/// recognised by neither is unrecognised.
 Set<IngredientKind> classifyIngredient(String name) {
+  final turkish = _classify(name, _overrides, _terms, _notFollowedBy);
+  if (turkish.isNotEmpty) return turkish;
+  return _classify(
+      name, _englishOverrides, _englishTerms, _englishNotFollowedBy);
+}
+
+/// Classifies against the English tables only.
+///
+/// Exposed so the pipeline can check a proposal's `name_en` and
+/// `name_tr` **independently** and require them to agree — the one check
+/// that catches "tereyağı" translated as "olive oil".
+Set<IngredientKind> classifyEnglishIngredient(String name) =>
+    _classify(name, _englishOverrides, _englishTerms, _englishNotFollowedBy);
+
+/// Classifies against the Turkish tables only. See
+/// [classifyEnglishIngredient].
+Set<IngredientKind> classifyTurkishIngredient(String name) =>
+    _classify(name, _overrides, _terms, _notFollowedBy);
+
+Set<IngredientKind> _classify(
+  String name,
+  Map<String, Set<IngredientKind>> overrides,
+  Map<IngredientKind, List<String>> terms,
+  Map<String, List<String>> guards,
+) {
   final folded = _fold(name);
-  for (final entry in _overrides.entries) {
-    if (_pattern(entry.key).hasMatch(folded)) return entry.value;
+  for (final entry in overrides.entries) {
+    if (_pattern(entry.key, guards).hasMatch(folded)) return entry.value;
   }
   for (final unknowable in _knownUnknowable) {
-    if (_pattern(unknowable).hasMatch(folded)) return const {};
+    if (_pattern(unknowable, guards).hasMatch(folded)) return const {};
   }
   final kinds = <IngredientKind>{};
-  for (final entry in _terms.entries) {
+  for (final entry in terms.entries) {
     for (final term in entry.value) {
-      if (_pattern(term).hasMatch(folded)) {
+      if (_pattern(term, guards).hasMatch(folded)) {
         kinds.add(entry.key);
         break;
       }

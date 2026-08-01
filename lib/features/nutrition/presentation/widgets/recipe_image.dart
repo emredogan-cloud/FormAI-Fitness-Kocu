@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/cached_image.dart';
+import '../../data/recipe_image_registry.dart';
 
 /// Phase 2-A.5 · meal image with bundled LQIP placeholder.
 ///
@@ -32,6 +33,7 @@ class RecipeImage extends StatelessWidget {
     super.key,
     required this.url,
     this.slug,
+    this.mealType,
     this.fit = BoxFit.cover,
     this.alignment = Alignment.center,
     this.memCacheHeight = 600,
@@ -50,6 +52,15 @@ class RecipeImage extends StatelessWidget {
   /// stripped. Callers with a denormalised `slug` column can pass it
   /// in to skip the URL parse.
   final String? slug;
+
+  /// Roadmap Phase 7 · the recipe's `meal_type`, used to pick a cover
+  /// photograph when neither the network image nor a bundled LQIP
+  /// resolves.
+  ///
+  /// The 100 recipes Phase 7 authors have `image_url` pointing at a file
+  /// nobody has generated yet. Without this the tile paints a gradient;
+  /// with it, it paints food. See [RecipeImageRegistry].
+  final String? mealType;
 
   final BoxFit fit;
   final Alignment alignment;
@@ -80,7 +91,11 @@ class RecipeImage extends StatelessWidget {
     final resolvedSlug = _resolvedSlug;
     // No slug → no LQIP layer possible → behave like a bare CachedImage.
     // This is the Unsplash-legacy path and the empty-string-url guard.
-    if (resolvedSlug == null) {
+    final localFallback = RecipeImageRegistry.fallbackFor(
+      slug: resolvedSlug,
+      mealType: mealType,
+    );
+    if (resolvedSlug == null && localFallback == null) {
       return CachedImage(
         url: url,
         fit: fit,
@@ -93,33 +108,51 @@ class RecipeImage extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
+        // Phase 7 · bottom-most: the recipe's own bundled photograph if
+        // one exists, else its meal type's cover. Painted under the LQIP
+        // rather than instead of it, so a migrated recipe still gets its
+        // own blurred placeholder and only the 100 new rows — whose
+        // photographs are not generated yet — see the cover.
+        if (localFallback != null)
+          Image.asset(
+            localFallback,
+            fit: fit,
+            alignment: alignment,
+            gaplessPlayback: true,
+            errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+          ),
         // Bottom: bundled LQIP. Decodes at 64 px (we're blurring it
         // anyway via upscale); on missing asset, falls back to a
         // transparent SizedBox so the CachedImage below remains the
         // primary visual.
-        Image.asset(
-          'assets/lqip/meals/$resolvedSlug.webp',
-          fit: fit,
-          alignment: alignment,
-          cacheHeight: 64,
-          gaplessPlayback: true,
-          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-        ),
+        if (resolvedSlug != null)
+          Image.asset(
+            'assets/lqip/meals/$resolvedSlug.webp',
+            fit: fit,
+            alignment: alignment,
+            cacheHeight: 64,
+            gaplessPlayback: true,
+            errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+          ),
         // Top: full-quality streamed image. On error, render an empty
-        // box so the LQIP underneath stays visible — UNLESS the caller
-        // passed an explicit fallback (e.g. branded gradient) AND the
-        // LQIP is also missing, in which case there's nothing under us.
-        // We can't synchronously detect "LQIP exists on disk", so the
-        // policy is: if caller provided errorBuilder, defer to caller
-        // (their fallback covers the LQIP — same visual as today). If
-        // not, fall back to transparent so the LQIP shines through.
+        // box so whatever is underneath stays visible — UNLESS there is
+        // nothing underneath, in which case the caller's fallback (a
+        // branded gradient) is the only thing left to paint.
+        //
+        // Phase 7 · `localFallback` counts as "underneath", and takes
+        // precedence over the caller's fallback deliberately: a
+        // photograph of the wrong breakfast is a better tile than a
+        // correct gradient, and every one of the 100 new recipes hits
+        // this path until its photograph is generated.
         CachedImage(
           url: url,
           fit: fit,
           alignment: alignment,
           memCacheHeight: memCacheHeight,
           memCacheWidth: memCacheWidth,
-          errorBuilder: errorBuilder ?? (_, __, ___) => const SizedBox.shrink(),
+          errorBuilder: localFallback != null
+              ? (_, __, ___) => const SizedBox.shrink()
+              : (errorBuilder ?? (_, __, ___) => const SizedBox.shrink()),
         ),
       ],
     );

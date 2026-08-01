@@ -1,0 +1,4003 @@
+[
+ {
+  "slug": "overnight-protein-oats",
+  "title_en": "Overnight Protein Oats",
+  "title_tr": "Gecelik Protein Yulafı",
+  "meal_type": "breakfast",
+  "cuisine": "american",
+  "calories": 470,
+  "protein": 38,
+  "carbs": 52,
+  "fat": 12,
+  "prep_time_minutes": 10,
+  "tag_tokens": [
+   "high_protein",
+   "budget_friendly"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "rolled oats",
+    "name_tr": "yulaf ezmesi",
+    "quantity": 60,
+    "unit": "g"
+   },
+   {
+    "name_en": "milk",
+    "name_tr": "süt",
+    "quantity": 200,
+    "unit": "ml"
+   },
+   {
+    "name_en": "vanilla whey protein powder",
+    "name_tr": "vanilyalı whey protein tozu",
+    "quantity": 30,
+    "unit": "g"
+   },
+   {
+    "name_en": "chia seeds",
+    "name_tr": "chia tohumu",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "blueberries",
+    "name_tr": "yaban mersini",
+    "quantity": 80,
+    "unit": "g"
+   },
+   {
+    "name_en": "honey",
+    "name_tr": "bal",
+    "quantity": 1,
+    "unit": "tatlı kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Stir the oats, milk, protein powder and chia seeds together in a jar.",
+   "Seal the jar and refrigerate overnight, or for at least 6 hours.",
+   "Top with blueberries and honey before eating."
+  ],
+  "steps_tr": [
+   "Yulaf, süt, protein tozu ve chia tohumunu bir kavanozda karıştırın.",
+   "Kavanozu kapatıp bir gece, en az 6 saat buzdolabında bekletin.",
+   "Yemeden önce üzerine yaban mersini ve bal ekleyin."
+  ],
+  "image_prompt": "Overnight oats in a glass jar on a bright kitchen counter, topped with fresh blueberries and a drizzle of honey, morning light, shallow depth of field, food photography"
+ },
+ {
+  "slug": "egg-white-veggie-scramble",
+  "title_en": "Egg White Veggie Scramble",
+  "title_tr": "Sebzeli Yumurta Akı",
+  "meal_type": "breakfast",
+  "cuisine": "american",
+  "calories": 240,
+  "protein": 32,
+  "carbs": 10,
+  "fat": 8,
+  "prep_time_minutes": 12,
+  "tag_tokens": [
+   "high_protein",
+   "low_calorie"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "egg whites",
+    "name_tr": "yumurta akı",
+    "quantity": 250,
+    "unit": "ml"
+   },
+   {
+    "name_en": "whole egg",
+    "name_tr": "bütün yumurta",
+    "quantity": 1
+   },
+   {
+    "name_en": "spinach",
+    "name_tr": "ıspanak",
+    "quantity": 60,
+    "unit": "g"
+   },
+   {
+    "name_en": "mushrooms",
+    "name_tr": "mantar",
+    "quantity": 60,
+    "unit": "g"
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 1,
+    "unit": "tatlı kaşığı"
+   },
+   {
+    "name_en": "salt and pepper",
+    "name_tr": "tuz ve karabiber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Warm the olive oil in a non-stick pan over medium heat.",
+   "Cook the mushrooms until they release their water and start to brown.",
+   "Add the spinach and cook until it wilts.",
+   "Pour in the egg whites and the whole egg, then fold gently until set.",
+   "Season with salt and pepper and serve straight away."
+  ],
+  "steps_tr": [
+   "Zeytinyağını yapışmaz bir tavada orta ateşte ısıtın.",
+   "Mantarları suyunu salıp hafif kızarana kadar pişirin.",
+   "Ispanağı ekleyip solana kadar pişirin.",
+   "Yumurta akı ve bütün yumurtayı ekleyip donana kadar yavaşça çevirin.",
+   "Tuz ve karabiberle tatlandırıp hemen servis edin."
+  ],
+  "image_prompt": "Fluffy egg white scramble with spinach and mushrooms in a black skillet, overhead shot, natural window light, clean modern kitchen"
+ },
+ {
+  "slug": "banana-protein-pancakes",
+  "title_en": "Banana Protein Pancakes",
+  "title_tr": "Muzlu Protein Pankek",
+  "meal_type": "breakfast",
+  "cuisine": "american",
+  "calories": 505,
+  "protein": 40,
+  "carbs": 55,
+  "fat": 14,
+  "prep_time_minutes": 15,
+  "tag_tokens": [
+   "high_protein",
+   "bulking"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "ripe banana",
+    "name_tr": "olgun muz",
+    "quantity": 1
+   },
+   {
+    "name_en": "eggs",
+    "name_tr": "yumurta",
+    "quantity": 2
+   },
+   {
+    "name_en": "rolled oats",
+    "name_tr": "yulaf ezmesi",
+    "quantity": 40,
+    "unit": "g"
+   },
+   {
+    "name_en": "vanilla whey protein powder",
+    "name_tr": "vanilyalı whey protein tozu",
+    "quantity": 30,
+    "unit": "g"
+   },
+   {
+    "name_en": "baking powder",
+    "name_tr": "kabartma tozu",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "coconut oil",
+    "name_tr": "hindistancevizi yağı",
+    "quantity": 1,
+    "unit": "tatlı kaşığı"
+   },
+   {
+    "name_en": "maple syrup",
+    "name_tr": "akçaağaç şurubu",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Blend the banana, eggs, oats, protein powder and baking powder smooth.",
+   "Rest the batter for 5 minutes so the oats soften.",
+   "Cook spoonfuls in a lightly oiled pan over medium-low heat, about 2 minutes a side.",
+   "Stack and finish with maple syrup."
+  ],
+  "steps_tr": [
+   "Muz, yumurta, yulaf, protein tozu ve kabartma tozunu pürüzsüz olana kadar blenderdan geçirin.",
+   "Yulafların yumuşaması için hamuru 5 dakika dinlendirin.",
+   "Hafif yağlanmış tavada kısık-orta ateşte, her yüzü yaklaşık 2 dakika olacak şekilde pişirin.",
+   "Üst üste dizip akçaağaç şurubu gezdirin."
+  ],
+  "image_prompt": "Stack of golden protein pancakes with banana slices and maple syrup running down the side, warm morning light, rustic wooden table"
+ },
+ {
+  "slug": "greek-yogurt-power-bowl",
+  "title_en": "Greek Yogurt Power Bowl",
+  "title_tr": "Süzme Yoğurtlu Güç Kasesi",
+  "meal_type": "breakfast",
+  "cuisine": "american",
+  "calories": 415,
+  "protein": 34,
+  "carbs": 38,
+  "fat": 14,
+  "prep_time_minutes": 5,
+  "tag_tokens": [
+   "high_protein",
+   "toning"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "Greek yogurt",
+    "name_tr": "süzme yoğurt",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "mixed berries",
+    "name_tr": "karışık orman meyvesi",
+    "quantity": 30,
+    "unit": "g"
+   },
+   {
+    "name_en": "walnuts",
+    "name_tr": "ceviz",
+    "quantity": 20,
+    "unit": "g"
+   },
+   {
+    "name_en": "chia seeds",
+    "name_tr": "chia tohumu",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "honey",
+    "name_tr": "bal",
+    "quantity": 1,
+    "unit": "tatlı kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Spoon the Greek yogurt into a wide bowl.",
+   "Scatter the berries, walnuts and chia seeds across the top.",
+   "Finish with honey and eat immediately."
+  ],
+  "steps_tr": [
+   "Süzme yoğurdu geniş bir kaseye alın.",
+   "Üzerine orman meyvelerini, cevizi ve chia tohumunu serpin.",
+   "Balı gezdirip hemen tüketin."
+  ],
+  "image_prompt": "Thick Greek yogurt bowl topped with mixed berries, walnuts and chia seeds, overhead flat lay, bright airy styling, marble surface"
+ },
+ {
+  "slug": "peanut-butter-protein-toast",
+  "title_en": "Peanut Butter Protein Toast",
+  "title_tr": "Fıstık Ezmeli Protein Tost",
+  "meal_type": "breakfast",
+  "cuisine": "american",
+  "calories": 460,
+  "protein": 26,
+  "carbs": 44,
+  "fat": 20,
+  "prep_time_minutes": 6,
+  "tag_tokens": [
+   "high_protein",
+   "budget_friendly"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "wholemeal bread",
+    "name_tr": "tam buğday ekmeği",
+    "quantity": 2,
+    "unit": "dilim"
+   },
+   {
+    "name_en": "peanut butter",
+    "name_tr": "doğal fıstık ezmesi",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "banana",
+    "name_tr": "muz",
+    "quantity": 1
+   },
+   {
+    "name_en": "eggs",
+    "name_tr": "yumurta",
+    "quantity": 2
+   },
+   {
+    "name_en": "cinnamon",
+    "name_tr": "tarçın",
+    "quantity": 1,
+    "unit": "çimdik"
+   }
+  ],
+  "steps_en": [
+   "Toast the bread until it is golden and firm.",
+   "Boil or fry the eggs to your liking while the bread toasts.",
+   "Spread the peanut butter across both slices.",
+   "Lay banana slices over the top, dust with cinnamon, and serve the eggs alongside."
+  ],
+  "steps_tr": [
+   "Ekmeği altın rengi ve sert olana kadar kızartın.",
+   "Ekmek kızarırken yumurtaları dilediğiniz gibi haşlayın veya pişirin.",
+   "Fıstık ezmesini iki dilime de sürün.",
+   "Üzerine muz dilimlerini dizin, tarçın serpin ve yumurtaları yanında servis edin."
+  ],
+  "image_prompt": "Two slices of wholemeal toast with peanut butter and banana slices, eggs on the side, morning kitchen light, casual food photography"
+ },
+ {
+  "slug": "cottage-cheese-berry-bowl",
+  "title_en": "Cottage Cheese Berry Bowl",
+  "title_tr": "Süzme Peynirli Meyve Kasesi",
+  "meal_type": "breakfast",
+  "cuisine": "american",
+  "calories": 260,
+  "protein": 30,
+  "carbs": 22,
+  "fat": 6,
+  "prep_time_minutes": 5,
+  "tag_tokens": [
+   "high_protein",
+   "low_calorie"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "cottage cheese",
+    "name_tr": "süzme peynir",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "strawberries",
+    "name_tr": "çilek",
+    "quantity": 100,
+    "unit": "g"
+   },
+   {
+    "name_en": "honey",
+    "name_tr": "bal",
+    "quantity": 1,
+    "unit": "tatlı kaşığı"
+   },
+   {
+    "name_en": "almonds",
+    "name_tr": "badem",
+    "quantity": 10,
+    "unit": "g"
+   }
+  ],
+  "steps_en": [
+   "Spoon the cottage cheese into a bowl.",
+   "Halve the strawberries and arrange them over the cheese.",
+   "Scatter the almonds and drizzle the honey over the top."
+  ],
+  "steps_tr": [
+   "Süzme peyniri bir kaseye alın.",
+   "Çilekleri ikiye bölüp peynirin üzerine dizin.",
+   "Bademleri serpip balı gezdirin."
+  ],
+  "image_prompt": "Cottage cheese bowl with halved strawberries and sliced almonds, overhead shot, soft daylight, minimal white ceramic bowl"
+ },
+ {
+  "slug": "savory-oats-with-egg",
+  "title_en": "Savory Oats with Egg",
+  "title_tr": "Yumurtalı Tuzlu Yulaf",
+  "meal_type": "breakfast",
+  "cuisine": "american",
+  "calories": 450,
+  "protein": 28,
+  "carbs": 48,
+  "fat": 16,
+  "prep_time_minutes": 15,
+  "tag_tokens": [
+   "high_protein",
+   "budget_friendly"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "rolled oats",
+    "name_tr": "yulaf ezmesi",
+    "quantity": 60,
+    "unit": "g"
+   },
+   {
+    "name_en": "vegetable stock",
+    "name_tr": "sebze suyu",
+    "quantity": 250,
+    "unit": "ml"
+   },
+   {
+    "name_en": "eggs",
+    "name_tr": "yumurta",
+    "quantity": 2
+   },
+   {
+    "name_en": "cheddar cheese",
+    "name_tr": "çedar peyniri",
+    "quantity": 30,
+    "unit": "g"
+   },
+   {
+    "name_en": "spring onion",
+    "name_tr": "yeşil soğan",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "salt and pepper",
+    "name_tr": "tuz ve karabiber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Simmer the oats in the stock for 6 minutes, stirring, until creamy.",
+   "Stir the cheddar through until it melts.",
+   "Fry the eggs in a separate pan.",
+   "Top the oats with the eggs, scatter the spring onion and season."
+  ],
+  "steps_tr": [
+   "Yulafı sebze suyunda 6 dakika, karıştırarak, kremamsı olana kadar pişirin.",
+   "Çedar peynirini eriyene kadar karıştırın.",
+   "Yumurtaları ayrı bir tavada pişirin.",
+   "Yulafın üzerine yumurtaları koyun, yeşil soğanı serpip tatlandırın."
+  ],
+  "image_prompt": "Savory oatmeal in a deep bowl topped with two fried eggs and sliced spring onions, steam rising, moody kitchen light"
+ },
+ {
+  "slug": "protein-french-toast",
+  "title_en": "Protein French Toast",
+  "title_tr": "Proteinli Fransız Tostu",
+  "meal_type": "breakfast",
+  "cuisine": "american",
+  "calories": 510,
+  "protein": 42,
+  "carbs": 50,
+  "fat": 16,
+  "prep_time_minutes": 12,
+  "tag_tokens": [
+   "high_protein",
+   "bulking"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "wholemeal bread",
+    "name_tr": "tam buğday ekmeği",
+    "quantity": 3,
+    "unit": "dilim"
+   },
+   {
+    "name_en": "eggs",
+    "name_tr": "yumurta",
+    "quantity": 2
+   },
+   {
+    "name_en": "milk",
+    "name_tr": "süt",
+    "quantity": 120,
+    "unit": "ml"
+   },
+   {
+    "name_en": "vanilla whey protein powder",
+    "name_tr": "vanilyalı whey protein tozu",
+    "quantity": 25,
+    "unit": "g"
+   },
+   {
+    "name_en": "cinnamon",
+    "name_tr": "tarçın",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "butter",
+    "name_tr": "tereyağı",
+    "quantity": 1,
+    "unit": "tatlı kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Whisk the eggs, milk, protein powder and cinnamon in a shallow dish.",
+   "Soak each slice of bread for 20 seconds a side.",
+   "Fry in the butter over medium heat until golden, about 2 minutes a side."
+  ],
+  "steps_tr": [
+   "Yumurta, süt, protein tozu ve tarçını geniş bir kapta çırpın.",
+   "Her ekmek dilimini iki yüzünde 20 saniye bekletin.",
+   "Tereyağında orta ateşte, her yüzü yaklaşık 2 dakika, altın rengi olana kadar kızartın."
+  ],
+  "image_prompt": "Golden protein French toast dusted with cinnamon on a white plate, morning light, close-up food photography"
+ },
+ {
+  "slug": "turkey-bacon-breakfast-wrap",
+  "title_en": "Turkey and Egg Breakfast Wrap",
+  "title_tr": "Hindili Yumurtalı Kahvaltı Dürümü",
+  "meal_type": "breakfast",
+  "cuisine": "american",
+  "calories": 425,
+  "protein": 36,
+  "carbs": 34,
+  "fat": 16,
+  "prep_time_minutes": 12,
+  "tag_tokens": [
+   "high_protein"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "wholemeal tortilla",
+    "name_tr": "tam buğday tortilla",
+    "quantity": 1
+   },
+   {
+    "name_en": "sliced turkey breast",
+    "name_tr": "dilimli hindi göğsü",
+    "quantity": 60,
+    "unit": "g"
+   },
+   {
+    "name_en": "eggs",
+    "name_tr": "yumurta",
+    "quantity": 2
+   },
+   {
+    "name_en": "cheddar cheese",
+    "name_tr": "çedar peyniri",
+    "quantity": 30,
+    "unit": "g"
+   },
+   {
+    "name_en": "baby spinach",
+    "name_tr": "taze ıspanak",
+    "quantity": 30,
+    "unit": "g"
+   },
+   {
+    "name_en": "salt and pepper",
+    "name_tr": "tuz ve karabiber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Scramble the eggs in a hot pan and season them.",
+   "Warm the tortilla for 20 seconds a side in the same pan.",
+   "Lay the turkey, eggs, cheese and spinach down the middle.",
+   "Fold the ends in, roll tightly, and slice in half."
+  ],
+  "steps_tr": [
+   "Yumurtaları kızgın tavada karıştırıp tatlandırın.",
+   "Tortillayı aynı tavada her yüzü 20 saniye olacak şekilde ısıtın.",
+   "Hindiyi, yumurtayı, peyniri ve ıspanağı ortaya dizin.",
+   "Uçlarını kapatıp sıkıca sarın ve ikiye kesin."
+  ],
+  "image_prompt": "Breakfast wrap sliced in half showing scrambled egg, turkey and spinach filling, on parchment paper, bright natural light"
+ },
+ {
+  "slug": "blueberry-protein-smoothie",
+  "title_en": "Blueberry Protein Smoothie",
+  "title_tr": "Yaban Mersinli Protein Smoothie",
+  "meal_type": "breakfast",
+  "cuisine": "american",
+  "calories": 340,
+  "protein": 35,
+  "carbs": 32,
+  "fat": 8,
+  "prep_time_minutes": 5,
+  "tag_tokens": [
+   "high_protein",
+   "low_calorie"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "vanilla whey protein powder",
+    "name_tr": "vanilyalı whey protein tozu",
+    "quantity": 30,
+    "unit": "g"
+   },
+   {
+    "name_en": "almond milk",
+    "name_tr": "badem sütü",
+    "quantity": 250,
+    "unit": "ml"
+   },
+   {
+    "name_en": "frozen blueberries",
+    "name_tr": "dondurulmuş yaban mersini",
+    "quantity": 100,
+    "unit": "g"
+   },
+   {
+    "name_en": "Greek yogurt",
+    "name_tr": "süzme yoğurt",
+    "quantity": 100,
+    "unit": "g"
+   },
+   {
+    "name_en": "almond butter",
+    "name_tr": "badem ezmesi",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Put every ingredient into a blender.",
+   "Blend on high for 40 seconds until completely smooth.",
+   "Pour into a tall glass and drink cold."
+  ],
+  "steps_tr": [
+   "Tüm malzemeleri blendera koyun.",
+   "40 saniye yüksek hızda, tamamen pürüzsüz olana kadar çekin.",
+   "Uzun bir bardağa döküp soğuk için."
+  ],
+  "image_prompt": "Deep purple blueberry protein smoothie in a tall glass with condensation, scattered blueberries beside it, bright clean styling"
+ },
+ {
+  "slug": "smoked-salmon-bagel-stack",
+  "title_en": "Smoked Salmon and Egg Plate",
+  "title_tr": "Füme Somonlu Yumurta Tabağı",
+  "meal_type": "breakfast",
+  "cuisine": "american",
+  "calories": 400,
+  "protein": 34,
+  "carbs": 26,
+  "fat": 18,
+  "prep_time_minutes": 10,
+  "tag_tokens": [
+   "high_protein",
+   "toning"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "smoked salmon",
+    "name_tr": "füme somon",
+    "quantity": 80,
+    "unit": "g"
+   },
+   {
+    "name_en": "eggs",
+    "name_tr": "yumurta",
+    "quantity": 2
+   },
+   {
+    "name_en": "rye bread",
+    "name_tr": "çavdar ekmeği",
+    "quantity": 2,
+    "unit": "dilim"
+   },
+   {
+    "name_en": "cream cheese",
+    "name_tr": "krem peynir",
+    "quantity": 30,
+    "unit": "g"
+   },
+   {
+    "name_en": "dill",
+    "name_tr": "dereotu",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "black pepper",
+    "name_tr": "karabiber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Poach or soft-boil the eggs for 6 minutes.",
+   "Toast the rye bread and spread it with the cream cheese.",
+   "Lay the smoked salmon over the bread and set the eggs alongside.",
+   "Finish with dill and a grind of black pepper."
+  ],
+  "steps_tr": [
+   "Yumurtaları 6 dakika poşe edin veya rafadan haşlayın.",
+   "Çavdar ekmeğini kızartıp krem peyniri sürün.",
+   "Somonu ekmeğin üzerine dizin, yumurtaları yanına koyun.",
+   "Dereotu ve taze çekilmiş karabiberle bitirin."
+  ],
+  "image_prompt": "Plate of smoked salmon on rye toast with soft-boiled eggs and fresh dill, overhead, cool daylight, scandinavian styling"
+ },
+ {
+  "slug": "apple-cinnamon-protein-oatmeal",
+  "title_en": "Apple Cinnamon Protein Oatmeal",
+  "title_tr": "Elmalı Tarçınlı Protein Yulafı",
+  "meal_type": "breakfast",
+  "cuisine": "american",
+  "calories": 440,
+  "protein": 32,
+  "carbs": 56,
+  "fat": 10,
+  "prep_time_minutes": 12,
+  "tag_tokens": [
+   "high_protein",
+   "budget_friendly"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "rolled oats",
+    "name_tr": "yulaf ezmesi",
+    "quantity": 60,
+    "unit": "g"
+   },
+   {
+    "name_en": "milk",
+    "name_tr": "süt",
+    "quantity": 250,
+    "unit": "ml"
+   },
+   {
+    "name_en": "apple",
+    "name_tr": "elma",
+    "quantity": 1
+   },
+   {
+    "name_en": "vanilla whey protein powder",
+    "name_tr": "vanilyalı whey protein tozu",
+    "quantity": 25,
+    "unit": "g"
+   },
+   {
+    "name_en": "cinnamon",
+    "name_tr": "tarçın",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "walnuts",
+    "name_tr": "ceviz",
+    "quantity": 10,
+    "unit": "g"
+   }
+  ],
+  "steps_en": [
+   "Dice the apple and simmer it with the oats and milk for 7 minutes.",
+   "Take the pan off the heat and stir the protein powder through — adding it to boiling milk makes it grainy.",
+   "Stir in the cinnamon, top with walnuts and serve warm."
+  ],
+  "steps_tr": [
+   "Elmayı küp doğrayıp yulaf ve sütle 7 dakika pişirin.",
+   "Tencereyi ateşten alın ve protein tozunu karıştırın — kaynayan süte eklemek tozu topaklandırır.",
+   "Tarçını ekleyin, üzerine ceviz serpip ılık servis edin."
+  ],
+  "image_prompt": "Creamy oatmeal with diced apple, cinnamon and walnuts in a rustic bowl, warm autumn light, cozy styling"
+ },
+ {
+  "slug": "high-protein-breakfast-burrito",
+  "title_en": "High-Protein Breakfast Burrito",
+  "title_tr": "Yüksek Proteinli Kahvaltı Burritosu",
+  "meal_type": "breakfast",
+  "cuisine": "american",
+  "calories": 580,
+  "protein": 44,
+  "carbs": 52,
+  "fat": 22,
+  "prep_time_minutes": 18,
+  "tag_tokens": [
+   "high_protein",
+   "bulking"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "large wholemeal tortilla",
+    "name_tr": "büyük tam buğday tortilla",
+    "quantity": 1
+   },
+   {
+    "name_en": "eggs",
+    "name_tr": "yumurta",
+    "quantity": 3
+   },
+   {
+    "name_en": "black beans",
+    "name_tr": "siyah fasulye",
+    "quantity": 80,
+    "unit": "g"
+   },
+   {
+    "name_en": "lean ground beef",
+    "name_tr": "yağsız dana kıyma",
+    "quantity": 60,
+    "unit": "g"
+   },
+   {
+    "name_en": "cheddar cheese",
+    "name_tr": "çedar peyniri",
+    "quantity": 30,
+    "unit": "g"
+   },
+   {
+    "name_en": "salsa",
+    "name_tr": "salsa sos",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "cumin, salt, pepper",
+    "name_tr": "kimyon, tuz, karabiber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Brown the ground beef with the cumin until no pink remains.",
+   "Add the black beans and warm them through.",
+   "Scramble the eggs in a second pan and season them.",
+   "Warm the tortilla, load it with the beef, beans, eggs, cheese and salsa, then roll it tight."
+  ],
+  "steps_tr": [
+   "Kıymayı kimyonla, pembelik kalmayana kadar kavurun.",
+   "Siyah fasulyeyi ekleyip ısınmasını bekleyin.",
+   "Yumurtaları ikinci bir tavada karıştırıp tatlandırın.",
+   "Tortillayı ısıtın; kıyma, fasulye, yumurta, peynir ve salsa sosu koyup sıkıca sarın."
+  ],
+  "image_prompt": "Breakfast burrito cut open showing eggs, beef, black beans and melted cheese, wrapped in foil, warm diner lighting"
+ },
+ {
+  "slug": "protein-chia-pudding",
+  "title_en": "Vanilla Protein Chia Pudding",
+  "title_tr": "Vanilyalı Protein Chia Puding",
+  "meal_type": "breakfast",
+  "cuisine": "american",
+  "calories": 370,
+  "protein": 30,
+  "carbs": 26,
+  "fat": 16,
+  "prep_time_minutes": 8,
+  "tag_tokens": [
+   "high_protein",
+   "toning"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "chia seeds",
+    "name_tr": "chia tohumu",
+    "quantity": 3,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "almond milk",
+    "name_tr": "badem sütü",
+    "quantity": 250,
+    "unit": "ml"
+   },
+   {
+    "name_en": "vanilla whey protein powder",
+    "name_tr": "vanilyalı whey protein tozu",
+    "quantity": 30,
+    "unit": "g"
+   },
+   {
+    "name_en": "raspberries",
+    "name_tr": "ahududu",
+    "quantity": 80,
+    "unit": "g"
+   },
+   {
+    "name_en": "maple syrup",
+    "name_tr": "akçaağaç şurubu",
+    "quantity": 1,
+    "unit": "tatlı kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Whisk the chia seeds, almond milk and protein powder in a jar.",
+   "Whisk again after 5 minutes so the seeds do not clump at the bottom.",
+   "Refrigerate for at least 4 hours, then top with raspberries and maple syrup."
+  ],
+  "steps_tr": [
+   "Chia tohumu, badem sütü ve protein tozunu bir kavanozda çırpın.",
+   "5 dakika sonra tekrar çırpın; tohumlar dipte topaklanmasın.",
+   "En az 4 saat buzdolabında bekletin, sonra ahududu ve akçaağaç şurubuyla servis edin."
+  ],
+  "image_prompt": "Layered chia pudding in a glass jar topped with fresh raspberries, soft natural light, clean minimal styling"
+ },
+ {
+  "slug": "chicken-and-rice-bowl",
+  "title_en": "Chicken and Rice Bowl",
+  "title_tr": "Tavuklu Pilav Kasesi",
+  "meal_type": "lunch",
+  "cuisine": "american",
+  "calories": 580,
+  "protein": 52,
+  "carbs": 62,
+  "fat": 14,
+  "prep_time_minutes": 25,
+  "tag_tokens": [
+   "high_protein",
+   "bulking"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "chicken breast",
+    "name_tr": "tavuk göğsü",
+    "quantity": 180,
+    "unit": "g"
+   },
+   {
+    "name_en": "white rice",
+    "name_tr": "pirinç",
+    "quantity": 80,
+    "unit": "g",
+    "note_en": "dry weight",
+    "note_tr": "kuru ölçü"
+   },
+   {
+    "name_en": "broccoli",
+    "name_tr": "brokoli",
+    "quantity": 100,
+    "unit": "g"
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "paprika",
+    "name_tr": "toz kırmızı biber",
+    "quantity": 1,
+    "unit": "tatlı kaşığı"
+   },
+   {
+    "name_en": "salt and pepper",
+    "name_tr": "tuz ve karabiber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Rinse the rice and simmer it in twice its volume of water for 15 minutes.",
+   "Season the chicken with the paprika, salt and pepper.",
+   "Sear the chicken in the olive oil over medium-high heat, 5 minutes a side, then rest it for 3 minutes.",
+   "Steam the broccoli for 4 minutes so it keeps its bite.",
+   "Slice the chicken and build the bowl: rice, broccoli, chicken."
+  ],
+  "steps_tr": [
+   "Pirinci yıkayıp iki katı suda 15 dakika pişirin.",
+   "Tavuğu toz kırmızı biber, tuz ve karabiberle tatlandırın.",
+   "Tavuğu zeytinyağında orta-yüksek ateşte her yüzü 5 dakika mühürleyin, sonra 3 dakika dinlendirin.",
+   "Brokoliyi diri kalması için 4 dakika buharda pişirin.",
+   "Tavuğu dilimleyip kaseyi kurun: pilav, brokoli, tavuk."
+  ],
+  "image_prompt": "Meal prep bowl with sliced grilled chicken, white rice and steamed broccoli, overhead shot, clean gym-kitchen aesthetic"
+ },
+ {
+  "slug": "tuna-avocado-wrap",
+  "title_en": "Tuna Avocado Wrap",
+  "title_tr": "Ton Balıklı Avokado Dürüm",
+  "meal_type": "lunch",
+  "cuisine": "american",
+  "calories": 470,
+  "protein": 38,
+  "carbs": 34,
+  "fat": 20,
+  "prep_time_minutes": 10,
+  "tag_tokens": [
+   "high_protein",
+   "budget_friendly"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "wholemeal tortilla",
+    "name_tr": "tam buğday tortilla",
+    "quantity": 1
+   },
+   {
+    "name_en": "canned tuna",
+    "name_tr": "ton balığı",
+    "quantity": 150,
+    "unit": "g",
+    "note_en": "drained",
+    "note_tr": "suyu süzülmüş"
+   },
+   {
+    "name_en": "avocado",
+    "name_tr": "avokado",
+    "quantity": 1
+   },
+   {
+    "name_en": "lettuce",
+    "name_tr": "marul",
+    "quantity": 2,
+    "unit": "yaprak"
+   },
+   {
+    "name_en": "lemon juice",
+    "name_tr": "limon suyu",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "salt and pepper",
+    "name_tr": "tuz ve karabiber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Mash the avocado with the lemon juice, salt and pepper.",
+   "Fold the drained tuna through the avocado.",
+   "Spread the mixture down the middle of the tortilla and lay the lettuce over it.",
+   "Roll it tightly and cut it on the diagonal."
+  ],
+  "steps_tr": [
+   "Avokadoyu limon suyu, tuz ve karabiberle ezin.",
+   "Suyu süzülmüş ton balığını avokadoya karıştırın.",
+   "Karışımı tortillanın ortasına yayıp üzerine marulu dizin.",
+   "Sıkıca sarıp çapraz kesin."
+  ],
+  "image_prompt": "Tuna avocado wrap cut on the diagonal showing the filling, on a wooden board with lemon halves, bright natural light"
+ },
+ {
+  "slug": "beef-and-sweet-potato-bowl",
+  "title_en": "Beef and Sweet Potato Bowl",
+  "title_tr": "Dana Etli Tatlı Patates Kasesi",
+  "meal_type": "lunch",
+  "cuisine": "american",
+  "calories": 595,
+  "protein": 46,
+  "carbs": 58,
+  "fat": 20,
+  "prep_time_minutes": 30,
+  "tag_tokens": [
+   "high_protein",
+   "bulking"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "lean ground beef",
+    "name_tr": "yağsız dana kıyma",
+    "quantity": 160,
+    "unit": "g"
+   },
+   {
+    "name_en": "sweet potato",
+    "name_tr": "tatlı patates",
+    "quantity": 250,
+    "unit": "g"
+   },
+   {
+    "name_en": "green beans",
+    "name_tr": "taze fasulye",
+    "quantity": 80,
+    "unit": "g"
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "garlic",
+    "name_tr": "sarımsak",
+    "quantity": 1,
+    "unit": "diş"
+   },
+   {
+    "name_en": "cumin, salt, pepper",
+    "name_tr": "kimyon, tuz, karabiber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Cube the sweet potato, toss it in half the oil, and roast at 200 degrees for 25 minutes.",
+   "Brown the beef with the garlic and cumin in the rest of the oil.",
+   "Steam the green beans for 5 minutes.",
+   "Combine everything in a bowl and season to taste."
+  ],
+  "steps_tr": [
+   "Tatlı patatesi küp doğrayın, yağın yarısıyla karıştırıp 200 derecede 25 dakika fırınlayın.",
+   "Kıymayı sarımsak ve kimyonla kalan yağda kavurun.",
+   "Taze fasulyeyi 5 dakika buharda pişirin.",
+   "Hepsini bir kasede birleştirip tuz ve karabiberle tatlandırın."
+  ],
+  "image_prompt": "Bowl of ground beef with roasted sweet potato cubes and green beans, overhead, warm rustic styling"
+ },
+ {
+  "slug": "grilled-chicken-caesar-salad",
+  "title_en": "Grilled Chicken Caesar Salad",
+  "title_tr": "Izgara Tavuklu Sezar Salata",
+  "meal_type": "lunch",
+  "cuisine": "american",
+  "calories": 455,
+  "protein": 44,
+  "carbs": 20,
+  "fat": 22,
+  "prep_time_minutes": 20,
+  "tag_tokens": [
+   "high_protein",
+   "toning"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "chicken breast",
+    "name_tr": "tavuk göğsü",
+    "quantity": 160,
+    "unit": "g"
+   },
+   {
+    "name_en": "romaine lettuce",
+    "name_tr": "marul",
+    "quantity": 150,
+    "unit": "g"
+   },
+   {
+    "name_en": "parmesan cheese",
+    "name_tr": "parmesan peyniri",
+    "quantity": 25,
+    "unit": "g"
+   },
+   {
+    "name_en": "Greek yogurt",
+    "name_tr": "süzme yoğurt",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "dijon mustard",
+    "name_tr": "dijon hardalı",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "lemon juice",
+    "name_tr": "limon suyu",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Grill the chicken for 6 minutes a side and rest it.",
+   "Whisk the yogurt, mustard, lemon juice and olive oil into a dressing.",
+   "Tear the lettuce into a bowl and toss it through the dressing.",
+   "Slice the chicken over the top and finish with grated parmesan."
+  ],
+  "steps_tr": [
+   "Tavuğu her yüzü 6 dakika ızgarada pişirip dinlendirin.",
+   "Yoğurt, hardal, limon suyu ve zeytinyağını çırparak sos yapın.",
+   "Marulu elle koparıp kaseye alın ve sosla harmanlayın.",
+   "Tavuğu üzerine dilimleyip rendelenmiş parmesanla bitirin."
+  ],
+  "image_prompt": "Caesar salad with sliced grilled chicken and shaved parmesan in a wide bowl, overhead, fresh bright styling"
+ },
+ {
+  "slug": "turkey-quinoa-power-bowl",
+  "title_en": "Turkey Quinoa Power Bowl",
+  "title_tr": "Hindili Kinoa Güç Kasesi",
+  "meal_type": "lunch",
+  "cuisine": "american",
+  "calories": 515,
+  "protein": 45,
+  "carbs": 48,
+  "fat": 16,
+  "prep_time_minutes": 25,
+  "tag_tokens": [
+   "high_protein",
+   "toning"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "ground turkey",
+    "name_tr": "hindi kıyma",
+    "quantity": 160,
+    "unit": "g"
+   },
+   {
+    "name_en": "quinoa",
+    "name_tr": "kinoa",
+    "quantity": 70,
+    "unit": "g",
+    "note_en": "dry weight",
+    "note_tr": "kuru ölçü"
+   },
+   {
+    "name_en": "cherry tomatoes",
+    "name_tr": "cherry domates",
+    "quantity": 80,
+    "unit": "g"
+   },
+   {
+    "name_en": "cucumber",
+    "name_tr": "salatalık",
+    "quantity": 60,
+    "unit": "g"
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "lemon juice",
+    "name_tr": "limon suyu",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "salt and pepper",
+    "name_tr": "tuz ve karabiber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Rinse the quinoa and simmer it for 15 minutes, then fluff it.",
+   "Brown the ground turkey in the olive oil and season it.",
+   "Halve the tomatoes and dice the cucumber.",
+   "Toss everything together with the lemon juice."
+  ],
+  "steps_tr": [
+   "Kinoayı yıkayıp 15 dakika haşlayın, sonra çatalla kabartın.",
+   "Hindi kıymasını zeytinyağında kavurup tatlandırın.",
+   "Domatesleri ikiye bölün, salatalığı küp doğrayın.",
+   "Hepsini limon suyuyla harmanlayın."
+  ],
+  "image_prompt": "Quinoa bowl with ground turkey, cherry tomatoes and cucumber, overhead flat lay, fresh mediterranean colours"
+ },
+ {
+  "slug": "salmon-poke-style-bowl",
+  "title_en": "Salmon Rice Bowl",
+  "title_tr": "Somonlu Pirinç Kasesi",
+  "meal_type": "lunch",
+  "cuisine": "american",
+  "calories": 605,
+  "protein": 42,
+  "carbs": 60,
+  "fat": 22,
+  "prep_time_minutes": 20,
+  "tag_tokens": [
+   "high_protein",
+   "bulking"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "salmon fillet",
+    "name_tr": "somon fileto",
+    "quantity": 160,
+    "unit": "g"
+   },
+   {
+    "name_en": "sushi rice",
+    "name_tr": "pirinç",
+    "quantity": 80,
+    "unit": "g",
+    "note_en": "dry weight",
+    "note_tr": "kuru ölçü"
+   },
+   {
+    "name_en": "avocado",
+    "name_tr": "avokado",
+    "quantity": 1
+   },
+   {
+    "name_en": "edamame",
+    "name_tr": "edamame",
+    "quantity": 50,
+    "unit": "g"
+   },
+   {
+    "name_en": "soy sauce",
+    "name_tr": "soya sosu",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "sesame seeds",
+    "name_tr": "susam",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Cook the rice and let it cool to room temperature.",
+   "Sear the salmon for 3 minutes a side, leaving the centre pink.",
+   "Slice the avocado and warm the edamame.",
+   "Build the bowl, pour over the soy sauce and scatter the sesame seeds."
+  ],
+  "steps_tr": [
+   "Pirinci pişirip oda sıcaklığına gelene kadar soğutun.",
+   "Somonu her yüzü 3 dakika, ortası pembe kalacak şekilde mühürleyin.",
+   "Avokadoyu dilimleyin, edamameyi ısıtın.",
+   "Kaseyi kurun, soya sosunu gezdirip susamı serpin."
+  ],
+  "image_prompt": "Salmon rice bowl with sliced avocado, edamame and sesame seeds, overhead, vibrant colours, dark ceramic bowl"
+ },
+ {
+  "slug": "chicken-burrito-bowl",
+  "title_en": "Chicken Burrito Bowl",
+  "title_tr": "Tavuklu Burrito Kasesi",
+  "meal_type": "lunch",
+  "cuisine": "american",
+  "calories": 585,
+  "protein": 48,
+  "carbs": 62,
+  "fat": 16,
+  "prep_time_minutes": 25,
+  "tag_tokens": [
+   "high_protein",
+   "budget_friendly"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "chicken breast",
+    "name_tr": "tavuk göğsü",
+    "quantity": 170,
+    "unit": "g"
+   },
+   {
+    "name_en": "brown rice",
+    "name_tr": "esmer pirinç",
+    "quantity": 80,
+    "unit": "g",
+    "note_en": "dry weight",
+    "note_tr": "kuru ölçü"
+   },
+   {
+    "name_en": "black beans",
+    "name_tr": "siyah fasulye",
+    "quantity": 100,
+    "unit": "g"
+   },
+   {
+    "name_en": "sweetcorn",
+    "name_tr": "mısır",
+    "quantity": 60,
+    "unit": "g"
+   },
+   {
+    "name_en": "salsa",
+    "name_tr": "salsa sos",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "cumin, salt, pepper",
+    "name_tr": "kimyon, tuz, karabiber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Cook the brown rice for 25 minutes.",
+   "Dice the chicken, season it with cumin, and sear it in the oil.",
+   "Warm the beans and sweetcorn together in a small pan.",
+   "Layer the rice, beans, corn and chicken, and spoon the salsa over."
+  ],
+  "steps_tr": [
+   "Esmer pirinci 25 dakika pişirin.",
+   "Tavuğu küp doğrayın, kimyonla tatlandırıp yağda mühürleyin.",
+   "Fasulye ve mısırı küçük bir tavada birlikte ısıtın.",
+   "Pilavı, fasulyeyi, mısırı ve tavuğu katlayın, üzerine salsa sosu gezdirin."
+  ],
+  "image_prompt": "Burrito bowl with brown rice, black beans, corn and diced chicken, overhead, colourful and generous"
+ },
+ {
+  "slug": "protein-pasta-bolognese",
+  "title_en": "Protein Pasta Bolognese",
+  "title_tr": "Proteinli Makarna Bolonez",
+  "meal_type": "lunch",
+  "cuisine": "american",
+  "calories": 615,
+  "protein": 48,
+  "carbs": 70,
+  "fat": 16,
+  "prep_time_minutes": 30,
+  "tag_tokens": [
+   "high_protein",
+   "bulking"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "wholemeal pasta",
+    "name_tr": "tam buğday makarna",
+    "quantity": 90,
+    "unit": "g",
+    "note_en": "dry weight",
+    "note_tr": "kuru ölçü"
+   },
+   {
+    "name_en": "lean ground beef",
+    "name_tr": "yağsız dana kıyma",
+    "quantity": 160,
+    "unit": "g"
+   },
+   {
+    "name_en": "passata",
+    "name_tr": "şekersiz domates sosu",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "onion",
+    "name_tr": "kuru soğan",
+    "quantity": 1
+   },
+   {
+    "name_en": "garlic",
+    "name_tr": "sarımsak",
+    "quantity": 1,
+    "unit": "diş"
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "oregano, salt, pepper",
+    "name_tr": "kekik, tuz, karabiber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Boil the pasta in salted water until al dente.",
+   "Soften the diced onion and garlic in the olive oil.",
+   "Brown the beef, then add the passata and oregano.",
+   "Simmer the sauce for 12 minutes and toss the drained pasta through it."
+  ],
+  "steps_tr": [
+   "Makarnayı tuzlu suda diri kalacak şekilde haşlayın.",
+   "Doğranmış soğan ve sarımsağı zeytinyağında yumuşatın.",
+   "Kıymayı kavurun, sonra domates sosu ve kekiği ekleyin.",
+   "Sosu 12 dakika pişirip süzülmüş makarnayı içinde harmanlayın."
+  ],
+  "image_prompt": "Wholemeal pasta with rich bolognese sauce in a deep bowl, fresh oregano on top, warm italian-american styling"
+ },
+ {
+  "slug": "shrimp-and-quinoa-salad",
+  "title_en": "Shrimp and Quinoa Salad",
+  "title_tr": "Karidesli Kinoa Salatası",
+  "meal_type": "lunch",
+  "cuisine": "american",
+  "calories": 410,
+  "protein": 38,
+  "carbs": 38,
+  "fat": 12,
+  "prep_time_minutes": 20,
+  "tag_tokens": [
+   "high_protein",
+   "low_calorie"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "shrimp",
+    "name_tr": "karides",
+    "quantity": 160,
+    "unit": "g",
+    "note_en": "peeled",
+    "note_tr": "temizlenmiş"
+   },
+   {
+    "name_en": "quinoa",
+    "name_tr": "kinoa",
+    "quantity": 60,
+    "unit": "g",
+    "note_en": "dry weight",
+    "note_tr": "kuru ölçü"
+   },
+   {
+    "name_en": "cucumber",
+    "name_tr": "salatalık",
+    "quantity": 80,
+    "unit": "g"
+   },
+   {
+    "name_en": "cherry tomatoes",
+    "name_tr": "cherry domates",
+    "quantity": 60,
+    "unit": "g"
+   },
+   {
+    "name_en": "parsley",
+    "name_tr": "maydanoz",
+    "quantity": 1,
+    "unit": "avuç"
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "lemon juice",
+    "name_tr": "limon suyu",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Simmer the quinoa for 15 minutes and cool it.",
+   "Sear the shrimp for 2 minutes a side until they turn opaque.",
+   "Dice the cucumber, halve the tomatoes and chop the parsley.",
+   "Toss everything with the olive oil and lemon juice."
+  ],
+  "steps_tr": [
+   "Kinoayı 15 dakika haşlayıp soğutun.",
+   "Karidesleri her yüzü 2 dakika, rengi dönene kadar pişirin.",
+   "Salatalığı küp doğrayın, domatesleri ikiye bölün, maydanozu kıyın.",
+   "Hepsini zeytinyağı ve limon suyuyla harmanlayın."
+  ],
+  "image_prompt": "Quinoa salad with seared shrimp, cucumber and cherry tomatoes, bright overhead shot, summery styling"
+ },
+ {
+  "slug": "turkey-club-lettuce-wraps",
+  "title_en": "Turkey Club Lettuce Wraps",
+  "title_tr": "Hindili Marul Sarma",
+  "meal_type": "lunch",
+  "cuisine": "american",
+  "calories": 320,
+  "protein": 36,
+  "carbs": 12,
+  "fat": 14,
+  "prep_time_minutes": 12,
+  "tag_tokens": [
+   "high_protein",
+   "low_calorie"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "sliced turkey breast",
+    "name_tr": "dilimli hindi göğsü",
+    "quantity": 150,
+    "unit": "g"
+   },
+   {
+    "name_en": "large lettuce leaves",
+    "name_tr": "büyük marul yaprağı",
+    "quantity": 6,
+    "unit": "yaprak"
+   },
+   {
+    "name_en": "avocado",
+    "name_tr": "avokado",
+    "quantity": 1
+   },
+   {
+    "name_en": "tomato",
+    "name_tr": "domates",
+    "quantity": 1
+   },
+   {
+    "name_en": "Greek yogurt",
+    "name_tr": "süzme yoğurt",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "dijon mustard",
+    "name_tr": "dijon hardalı",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Mix the Greek yogurt and mustard into a dressing.",
+   "Lay the lettuce leaves out flat and spread the dressing across them.",
+   "Layer the turkey, sliced avocado and sliced tomato inside.",
+   "Fold each leaf into a parcel."
+  ],
+  "steps_tr": [
+   "Süzme yoğurt ve hardalı karıştırarak sos yapın.",
+   "Marul yapraklarını düz serip sosu üzerlerine sürün.",
+   "İçine hindiyi, dilimlenmiş avokadoyu ve domatesi dizin.",
+   "Her yaprağı paket gibi katlayın."
+  ],
+  "image_prompt": "Lettuce wraps filled with turkey, avocado and tomato on a white plate, fresh and light, overhead"
+ },
+ {
+  "slug": "cottage-cheese-tuna-jacket",
+  "title_en": "Tuna and Cottage Cheese Jacket Potato",
+  "title_tr": "Ton Balıklı Süzme Peynirli Fırın Patates",
+  "meal_type": "lunch",
+  "cuisine": "american",
+  "calories": 470,
+  "protein": 42,
+  "carbs": 58,
+  "fat": 8,
+  "prep_time_minutes": 45,
+  "tag_tokens": [
+   "high_protein",
+   "budget_friendly"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "baking potato",
+    "name_tr": "fırınlık patates",
+    "quantity": 300,
+    "unit": "g"
+   },
+   {
+    "name_en": "canned tuna",
+    "name_tr": "ton balığı",
+    "quantity": 120,
+    "unit": "g",
+    "note_en": "drained",
+    "note_tr": "suyu süzülmüş"
+   },
+   {
+    "name_en": "cottage cheese",
+    "name_tr": "süzme peynir",
+    "quantity": 120,
+    "unit": "g"
+   },
+   {
+    "name_en": "spring onion",
+    "name_tr": "yeşil soğan",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "salt and pepper",
+    "name_tr": "tuz ve karabiber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Pierce the potato and bake it at 200 degrees for 45 minutes.",
+   "Fold the drained tuna into the cottage cheese and season it.",
+   "Split the potato open and pile the mixture in.",
+   "Scatter the spring onion over the top."
+  ],
+  "steps_tr": [
+   "Patatesi çatalla delip 200 derecede 45 dakika fırınlayın.",
+   "Suyu süzülmüş ton balığını süzme peynire karıştırıp tatlandırın.",
+   "Patatesi ortadan yarıp karışımı içine doldurun.",
+   "Üzerine yeşil soğan serpin."
+  ],
+  "image_prompt": "Split jacket potato loaded with tuna and cottage cheese, spring onions on top, rustic plate, homely lighting"
+ },
+ {
+  "slug": "chicken-pesto-pasta-salad",
+  "title_en": "Chicken Pesto Pasta Salad",
+  "title_tr": "Pestolu Tavuklu Makarna Salatası",
+  "meal_type": "lunch",
+  "cuisine": "american",
+  "calories": 605,
+  "protein": 44,
+  "carbs": 58,
+  "fat": 22,
+  "prep_time_minutes": 25,
+  "tag_tokens": [
+   "high_protein",
+   "bulking"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "wholemeal pasta",
+    "name_tr": "tam buğday makarna",
+    "quantity": 90,
+    "unit": "g",
+    "note_en": "dry weight",
+    "note_tr": "kuru ölçü"
+   },
+   {
+    "name_en": "chicken breast",
+    "name_tr": "tavuk göğsü",
+    "quantity": 160,
+    "unit": "g"
+   },
+   {
+    "name_en": "basil pesto",
+    "name_tr": "fesleğen pesto",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "cherry tomatoes",
+    "name_tr": "cherry domates",
+    "quantity": 80,
+    "unit": "g"
+   },
+   {
+    "name_en": "rocket",
+    "name_tr": "roka",
+    "quantity": 30,
+    "unit": "g"
+   },
+   {
+    "name_en": "salt and pepper",
+    "name_tr": "tuz ve karabiber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Boil the pasta, drain it and run it under cold water.",
+   "Grill the chicken for 6 minutes a side, then slice it.",
+   "Toss the pasta with the pesto until every piece is coated.",
+   "Fold in the halved tomatoes, rocket and chicken."
+  ],
+  "steps_tr": [
+   "Makarnayı haşlayın, süzün ve soğuk sudan geçirin.",
+   "Tavuğu her yüzü 6 dakika ızgarada pişirip dilimleyin.",
+   "Makarnayı pesto ile her tanesi kaplanana kadar harmanlayın.",
+   "İkiye bölünmüş domatesleri, rokayı ve tavuğu ekleyin."
+  ],
+  "image_prompt": "Cold pasta salad with pesto, sliced chicken, cherry tomatoes and rocket, overhead, fresh summer picnic styling"
+ },
+ {
+  "slug": "steak-and-egg-plate",
+  "title_en": "Steak and Egg Plate",
+  "title_tr": "Bonfileli Yumurta Tabağı",
+  "meal_type": "lunch",
+  "cuisine": "american",
+  "calories": 510,
+  "protein": 54,
+  "carbs": 6,
+  "fat": 30,
+  "prep_time_minutes": 20,
+  "tag_tokens": [
+   "high_protein",
+   "bulking"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "beef sirloin",
+    "name_tr": "dana bonfile",
+    "quantity": 180,
+    "unit": "g"
+   },
+   {
+    "name_en": "eggs",
+    "name_tr": "yumurta",
+    "quantity": 3
+   },
+   {
+    "name_en": "rocket",
+    "name_tr": "roka",
+    "quantity": 60,
+    "unit": "g"
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "salt and black pepper",
+    "name_tr": "tuz ve karabiber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Bring the steak to room temperature and season it heavily.",
+   "Sear it in a very hot pan, 3 minutes a side for medium-rare.",
+   "Rest the steak for 5 minutes — cutting it early loses the juices.",
+   "Fry the eggs in the same pan and serve everything over the rocket."
+  ],
+  "steps_tr": [
+   "Bonfileyi oda sıcaklığına getirip bolca tuzlayın.",
+   "Çok kızgın tavada, orta-az pişmiş için her yüzü 3 dakika mühürleyin.",
+   "Eti 5 dakika dinlendirin — erken kesmek suyunu kaybettirir.",
+   "Yumurtaları aynı tavada pişirip her şeyi rokanın üzerinde servis edin."
+  ],
+  "image_prompt": "Sliced medium-rare steak with fried eggs and rocket on a dark plate, dramatic side lighting, steakhouse styling"
+ },
+ {
+  "slug": "baked-salmon-asparagus",
+  "title_en": "Baked Salmon with Sweet Potato and Asparagus",
+  "title_tr": "Fırında Somon, Tatlı Patates ve Kuşkonmaz",
+  "meal_type": "dinner",
+  "cuisine": "american",
+  "calories": 575,
+  "protein": 44,
+  "carbs": 46,
+  "fat": 24,
+  "prep_time_minutes": 30,
+  "tag_tokens": [
+   "high_protein",
+   "bulking"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "salmon fillet",
+    "name_tr": "somon fileto",
+    "quantity": 180,
+    "unit": "g"
+   },
+   {
+    "name_en": "sweet potato",
+    "name_tr": "tatlı patates",
+    "quantity": 220,
+    "unit": "g"
+   },
+   {
+    "name_en": "asparagus",
+    "name_tr": "kuşkonmaz",
+    "quantity": 100,
+    "unit": "g"
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "lemon",
+    "name_tr": "limon",
+    "quantity": 1
+   },
+   {
+    "name_en": "salt, pepper, dill",
+    "name_tr": "tuz, karabiber, dereotu",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Cube the sweet potato and roast at 200 degrees for 20 minutes.",
+   "Add the salmon and asparagus to the tray, drizzle with oil and season.",
+   "Roast for a further 12 minutes until the salmon flakes.",
+   "Squeeze the lemon over everything before serving."
+  ],
+  "steps_tr": [
+   "Tatlı patatesi küp doğrayıp 200 derecede 20 dakika fırınlayın.",
+   "Somonu ve kuşkonmazı tepsiye ekleyin, yağı gezdirip tatlandırın.",
+   "Somon lif lif ayrılana kadar 12 dakika daha fırınlayın.",
+   "Servis etmeden önce limonu üzerine sıkın."
+  ],
+  "image_prompt": "Sheet pan with roasted salmon fillet, sweet potato cubes and asparagus, lemon wedges, overhead, warm oven-fresh lighting"
+ },
+ {
+  "slug": "garlic-butter-chicken-thighs",
+  "title_en": "Garlic Butter Chicken and Greens",
+  "title_tr": "Sarımsaklı Tereyağlı Tavuk ve Yeşillik",
+  "meal_type": "dinner",
+  "cuisine": "american",
+  "calories": 490,
+  "protein": 48,
+  "carbs": 16,
+  "fat": 26,
+  "prep_time_minutes": 30,
+  "tag_tokens": [
+   "high_protein",
+   "toning"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "chicken thigh",
+    "name_tr": "tavuk but",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "green beans",
+    "name_tr": "taze fasulye",
+    "quantity": 150,
+    "unit": "g"
+   },
+   {
+    "name_en": "mushrooms",
+    "name_tr": "mantar",
+    "quantity": 100,
+    "unit": "g"
+   },
+   {
+    "name_en": "butter",
+    "name_tr": "tereyağı",
+    "quantity": 15,
+    "unit": "g"
+   },
+   {
+    "name_en": "garlic",
+    "name_tr": "sarımsak",
+    "quantity": 3,
+    "unit": "diş"
+   },
+   {
+    "name_en": "thyme, salt, pepper",
+    "name_tr": "kekik, tuz, karabiber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Season the chicken and sear it skin-side down for 7 minutes.",
+   "Turn it, add the butter, garlic and thyme, and baste for 5 minutes.",
+   "Lift the chicken out and rest it.",
+   "Cook the mushrooms and green beans in the same pan for 6 minutes."
+  ],
+  "steps_tr": [
+   "Tavuğu tatlandırıp derili tarafı altta 7 dakika mühürleyin.",
+   "Çevirin, tereyağı, sarımsak ve kekiği ekleyip 5 dakika yağıyla besleyin.",
+   "Tavuğu alıp dinlendirin.",
+   "Mantar ve taze fasulyeyi aynı tavada 6 dakika pişirin."
+  ],
+  "image_prompt": "Golden chicken thighs in a cast iron pan with garlic butter, mushrooms and green beans, moody warm lighting"
+ },
+ {
+  "slug": "lean-beef-stir-fry",
+  "title_en": "Lean Beef Stir Fry",
+  "title_tr": "Yağsız Dana Etli Sote",
+  "meal_type": "dinner",
+  "cuisine": "american",
+  "calories": 555,
+  "protein": 46,
+  "carbs": 52,
+  "fat": 18,
+  "prep_time_minutes": 20,
+  "tag_tokens": [
+   "high_protein",
+   "bulking"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "beef sirloin",
+    "name_tr": "dana bonfile",
+    "quantity": 180,
+    "unit": "g"
+   },
+   {
+    "name_en": "jasmine rice",
+    "name_tr": "yasemin pirinci",
+    "quantity": 80,
+    "unit": "g",
+    "note_en": "dry weight",
+    "note_tr": "kuru ölçü"
+   },
+   {
+    "name_en": "bell pepper",
+    "name_tr": "renkli biber",
+    "quantity": 80,
+    "unit": "g"
+   },
+   {
+    "name_en": "broccoli",
+    "name_tr": "brokoli",
+    "quantity": 80,
+    "unit": "g"
+   },
+   {
+    "name_en": "soy sauce",
+    "name_tr": "soya sosu",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "sesame oil",
+    "name_tr": "susam yağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "grated ginger",
+    "name_tr": "zencefil rende",
+    "quantity": 1,
+    "unit": "tatlı kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Cook the rice and keep it warm.",
+   "Slice the beef thinly against the grain.",
+   "Sear the beef in a very hot wok for 90 seconds and lift it out.",
+   "Stir-fry the vegetables with the ginger, return the beef, and add the soy sauce.",
+   "Serve over the rice."
+  ],
+  "steps_tr": [
+   "Pirinci pişirip sıcak tutun.",
+   "Eti liflerine dik ince dilimleyin.",
+   "Eti çok kızgın wokta 90 saniye mühürleyip çıkarın.",
+   "Sebzeleri zencefille soteleyin, eti geri koyup soya sosunu ekleyin.",
+   "Pilavın üzerinde servis edin."
+  ],
+  "image_prompt": "Beef stir fry with peppers and broccoli in a wok over jasmine rice, steam and wok hei, dramatic kitchen lighting"
+ },
+ {
+  "slug": "turkey-meatballs-marinara",
+  "title_en": "Turkey Meatballs in Marinara",
+  "title_tr": "Domates Soslu Hindi Köftesi",
+  "meal_type": "dinner",
+  "cuisine": "american",
+  "calories": 440,
+  "protein": 46,
+  "carbs": 24,
+  "fat": 18,
+  "prep_time_minutes": 35,
+  "tag_tokens": [
+   "high_protein",
+   "toning"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "ground turkey",
+    "name_tr": "hindi kıyma",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "egg",
+    "name_tr": "yumurta",
+    "quantity": 1
+   },
+   {
+    "name_en": "breadcrumbs",
+    "name_tr": "galeta unu",
+    "quantity": 20,
+    "unit": "g"
+   },
+   {
+    "name_en": "passata",
+    "name_tr": "şekersiz domates sosu",
+    "quantity": 300,
+    "unit": "g"
+   },
+   {
+    "name_en": "garlic",
+    "name_tr": "sarımsak",
+    "quantity": 2,
+    "unit": "diş"
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "basil, salt, pepper",
+    "name_tr": "fesleğen, tuz, karabiber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Mix the turkey, egg, breadcrumbs and seasoning and roll into balls.",
+   "Brown the meatballs in the olive oil on all sides.",
+   "Add the garlic and passata and simmer for 18 minutes.",
+   "Finish with torn basil."
+  ],
+  "steps_tr": [
+   "Hindi kıymasını, yumurtayı, galeta ununu ve baharatları karıştırıp köfte yapın.",
+   "Köfteleri zeytinyağında her tarafı kızarana kadar mühürleyin.",
+   "Sarımsağı ve domates sosunu ekleyip 18 dakika pişirin.",
+   "Elle koparılmış fesleğenle bitirin."
+  ],
+  "image_prompt": "Turkey meatballs simmering in rich marinara sauce with fresh basil, cast iron skillet, rustic italian styling"
+ },
+ {
+  "slug": "cod-with-roasted-vegetables",
+  "title_en": "Baked Cod with Roasted Vegetables",
+  "title_tr": "Fırında Morina ve Sebzeler",
+  "meal_type": "dinner",
+  "cuisine": "american",
+  "calories": 390,
+  "protein": 40,
+  "carbs": 30,
+  "fat": 12,
+  "prep_time_minutes": 30,
+  "tag_tokens": [
+   "high_protein",
+   "low_calorie"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "cod fillet",
+    "name_tr": "morina fileto",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "courgette",
+    "name_tr": "kabak",
+    "quantity": 150,
+    "unit": "g"
+   },
+   {
+    "name_en": "bell pepper",
+    "name_tr": "renkli biber",
+    "quantity": 150,
+    "unit": "g"
+   },
+   {
+    "name_en": "cherry tomatoes",
+    "name_tr": "cherry domates",
+    "quantity": 100,
+    "unit": "g"
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "lemon",
+    "name_tr": "limon",
+    "quantity": 1
+   },
+   {
+    "name_en": "oregano, salt, pepper",
+    "name_tr": "kekik, tuz, karabiber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Cut the vegetables into chunks and roast at 200 degrees for 18 minutes.",
+   "Lay the cod on top, season it and add the lemon slices.",
+   "Return to the oven for 12 minutes until the fish is opaque."
+  ],
+  "steps_tr": [
+   "Sebzeleri iri doğrayıp 200 derecede 18 dakika fırınlayın.",
+   "Morinayı üzerine yerleştirin, tatlandırın ve limon dilimlerini ekleyin.",
+   "Balık matlaşana kadar 12 dakika daha fırınlayın."
+  ],
+  "image_prompt": "Baked white fish fillet on a bed of roasted courgette, peppers and cherry tomatoes, lemon slices, mediterranean styling"
+ },
+ {
+  "slug": "chicken-fajita-skillet",
+  "title_en": "Chicken Fajita Skillet",
+  "title_tr": "Tavuklu Fajita Tavası",
+  "meal_type": "dinner",
+  "cuisine": "american",
+  "calories": 465,
+  "protein": 46,
+  "carbs": 34,
+  "fat": 16,
+  "prep_time_minutes": 25,
+  "tag_tokens": [
+   "high_protein",
+   "budget_friendly"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "chicken breast",
+    "name_tr": "tavuk göğsü",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "bell pepper",
+    "name_tr": "renkli biber",
+    "quantity": 150,
+    "unit": "g"
+   },
+   {
+    "name_en": "onion",
+    "name_tr": "kuru soğan",
+    "quantity": 1
+   },
+   {
+    "name_en": "corn tortillas",
+    "name_tr": "mısır tortilla",
+    "quantity": 2
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "smoked paprika",
+    "name_tr": "füme toz biber",
+    "quantity": 2,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "cumin, salt, pepper",
+    "name_tr": "kimyon, tuz, karabiber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Slice the chicken, peppers and onion into strips.",
+   "Toss the chicken with the paprika and cumin.",
+   "Sear the chicken in a hot skillet for 6 minutes, then lift it out.",
+   "Char the peppers and onion for 5 minutes, return the chicken, and serve with warm tortillas."
+  ],
+  "steps_tr": [
+   "Tavuğu, biberleri ve soğanı şerit şerit doğrayın.",
+   "Tavuğu toz biber ve kimyonla harmanlayın.",
+   "Tavuğu kızgın tavada 6 dakika mühürleyip çıkarın.",
+   "Biber ve soğanı 5 dakika kavurun, tavuğu geri koyun ve ısıtılmış tortillayla servis edin."
+  ],
+  "image_prompt": "Sizzling fajita skillet with charred peppers, onions and sliced chicken, warm tortillas beside, smoky atmosphere"
+ },
+ {
+  "slug": "shepherds-pie-protein",
+  "title_en": "Protein Shepherd's Pie",
+  "title_tr": "Proteinli Çoban Güveci",
+  "meal_type": "dinner",
+  "cuisine": "american",
+  "calories": 590,
+  "protein": 48,
+  "carbs": 54,
+  "fat": 20,
+  "prep_time_minutes": 45,
+  "tag_tokens": [
+   "high_protein",
+   "bulking"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "lean ground beef",
+    "name_tr": "yağsız dana kıyma",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "potato",
+    "name_tr": "patates",
+    "quantity": 300,
+    "unit": "g"
+   },
+   {
+    "name_en": "peas",
+    "name_tr": "bezelye",
+    "quantity": 80,
+    "unit": "g"
+   },
+   {
+    "name_en": "carrot",
+    "name_tr": "havuç",
+    "quantity": 1
+   },
+   {
+    "name_en": "onion",
+    "name_tr": "kuru soğan",
+    "quantity": 1
+   },
+   {
+    "name_en": "milk",
+    "name_tr": "süt",
+    "quantity": 60,
+    "unit": "ml"
+   },
+   {
+    "name_en": "thyme, salt, pepper",
+    "name_tr": "kekik, tuz, karabiber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Boil the potatoes for 18 minutes, then mash them with the milk.",
+   "Soften the diced onion and carrot, then brown the beef with them.",
+   "Stir in the peas and thyme and spread the mixture in a baking dish.",
+   "Top with the mash and bake at 200 degrees for 20 minutes."
+  ],
+  "steps_tr": [
+   "Patatesleri 18 dakika haşlayıp sütle püre yapın.",
+   "Doğranmış soğan ve havucu yumuşatın, sonra kıymayı ekleyip kavurun.",
+   "Bezelye ve kekiği karıştırıp karışımı fırın kabına yayın.",
+   "Üzerini püreyle kapatıp 200 derecede 20 dakika pişirin."
+  ],
+  "image_prompt": "Golden-topped shepherd's pie in a ceramic baking dish, one portion served, homely warm lighting"
+ },
+ {
+  "slug": "blackened-chicken-quinoa",
+  "title_en": "Blackened Chicken with Quinoa",
+  "title_tr": "Baharatlı Tavuk ve Kinoa",
+  "meal_type": "dinner",
+  "cuisine": "american",
+  "calories": 500,
+  "protein": 50,
+  "carbs": 44,
+  "fat": 14,
+  "prep_time_minutes": 25,
+  "tag_tokens": [
+   "high_protein",
+   "toning"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "chicken breast",
+    "name_tr": "tavuk göğsü",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "quinoa",
+    "name_tr": "kinoa",
+    "quantity": 70,
+    "unit": "g",
+    "note_en": "dry weight",
+    "note_tr": "kuru ölçü"
+   },
+   {
+    "name_en": "spinach",
+    "name_tr": "ıspanak",
+    "quantity": 100,
+    "unit": "g"
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "cajun spice",
+    "name_tr": "cajun baharatı",
+    "quantity": 2,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "lemon",
+    "name_tr": "limon",
+    "quantity": 1
+   }
+  ],
+  "steps_en": [
+   "Simmer the quinoa for 15 minutes and fluff it.",
+   "Coat the chicken heavily in the cajun spice.",
+   "Sear it in a very hot pan for 5 minutes a side until the crust is dark.",
+   "Wilt the spinach in the same pan and serve with the quinoa and lemon."
+  ],
+  "steps_tr": [
+   "Kinoayı 15 dakika haşlayıp kabartın.",
+   "Tavuğu bolca cajun baharatına bulayın.",
+   "Çok kızgın tavada her yüzü 5 dakika, kabuk koyulaşana kadar pişirin.",
+   "Ispanağı aynı tavada soldurup kinoa ve limonla servis edin."
+  ],
+  "image_prompt": "Blackened chicken breast sliced over quinoa with wilted spinach, lemon wedge, dark dramatic plating"
+ },
+ {
+  "slug": "tofu-teriyaki-rice",
+  "title_en": "Teriyaki Tofu Rice Bowl",
+  "title_tr": "Teriyaki Tofulu Pirinç Kasesi",
+  "meal_type": "dinner",
+  "cuisine": "american",
+  "calories": 530,
+  "protein": 30,
+  "carbs": 66,
+  "fat": 16,
+  "prep_time_minutes": 25,
+  "tag_tokens": [
+   "high_protein",
+   "budget_friendly"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "firm tofu",
+    "name_tr": "katı tofu",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "jasmine rice",
+    "name_tr": "yasemin pirinci",
+    "quantity": 80,
+    "unit": "g",
+    "note_en": "dry weight",
+    "note_tr": "kuru ölçü"
+   },
+   {
+    "name_en": "broccoli",
+    "name_tr": "brokoli",
+    "quantity": 100,
+    "unit": "g"
+   },
+   {
+    "name_en": "soy sauce",
+    "name_tr": "soya sosu",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "maple syrup",
+    "name_tr": "akçaağaç şurubu",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "sesame oil",
+    "name_tr": "susam yağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "sesame seeds",
+    "name_tr": "susam",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Press the tofu for 10 minutes to drive the water out, then cube it.",
+   "Cook the rice and steam the broccoli.",
+   "Fry the tofu in the sesame oil until every side is golden.",
+   "Add the soy sauce and maple syrup and let them reduce onto the tofu.",
+   "Serve over the rice with the sesame seeds."
+  ],
+  "steps_tr": [
+   "Tofuyu suyunu vermesi için 10 dakika presleyin, sonra küp doğrayın.",
+   "Pirinci pişirin, brokoliyi buharda haşlayın.",
+   "Tofuyu susam yağında her yüzü altın rengi olana kadar kızartın.",
+   "Soya sosu ve akçaağaç şurubunu ekleyip tofunun üzerinde koyulaştırın.",
+   "Pilavın üzerinde susamla servis edin."
+  ],
+  "image_prompt": "Glazed teriyaki tofu cubes over rice with broccoli and sesame seeds, glossy sauce, overhead, vibrant"
+ },
+ {
+  "slug": "stuffed-peppers-turkey",
+  "title_en": "Turkey Stuffed Peppers",
+  "title_tr": "Hindi Kıymalı Biber Dolması",
+  "meal_type": "dinner",
+  "cuisine": "american",
+  "calories": 420,
+  "protein": 40,
+  "carbs": 34,
+  "fat": 14,
+  "prep_time_minutes": 45,
+  "tag_tokens": [
+   "high_protein",
+   "low_calorie"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "bell peppers",
+    "name_tr": "dolmalık biber",
+    "quantity": 3
+   },
+   {
+    "name_en": "ground turkey",
+    "name_tr": "hindi kıyma",
+    "quantity": 180,
+    "unit": "g"
+   },
+   {
+    "name_en": "brown rice",
+    "name_tr": "esmer pirinç",
+    "quantity": 60,
+    "unit": "g",
+    "note_en": "dry weight",
+    "note_tr": "kuru ölçü"
+   },
+   {
+    "name_en": "passata",
+    "name_tr": "şekersiz domates sosu",
+    "quantity": 150,
+    "unit": "g"
+   },
+   {
+    "name_en": "onion",
+    "name_tr": "kuru soğan",
+    "quantity": 1
+   },
+   {
+    "name_en": "cumin, salt, pepper",
+    "name_tr": "kimyon, tuz, karabiber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Cook the rice for 20 minutes.",
+   "Brown the turkey with the diced onion and cumin.",
+   "Fold the rice and half the passata through the meat.",
+   "Fill the hollowed peppers, pour the rest of the passata around them, and bake at 190 degrees for 30 minutes."
+  ],
+  "steps_tr": [
+   "Pirinci 20 dakika pişirin.",
+   "Hindi kıymasını doğranmış soğan ve kimyonla kavurun.",
+   "Pirinci ve domates sosunun yarısını etin içine karıştırın.",
+   "İçi boşaltılmış biberleri doldurun, kalan sosu etrafına dökün ve 190 derecede 30 dakika pişirin."
+  ],
+  "image_prompt": "Stuffed bell peppers in a baking dish with tomato sauce, one cut open showing the filling, warm rustic lighting"
+ },
+ {
+  "slug": "chili-con-carne-protein",
+  "title_en": "High-Protein Chili con Carne",
+  "title_tr": "Yüksek Proteinli Chili con Carne",
+  "meal_type": "dinner",
+  "cuisine": "american",
+  "calories": 535,
+  "protein": 46,
+  "carbs": 52,
+  "fat": 16,
+  "prep_time_minutes": 40,
+  "tag_tokens": [
+   "high_protein",
+   "bulking"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "lean ground beef",
+    "name_tr": "yağsız dana kıyma",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "kidney beans",
+    "name_tr": "kırmızı barbunya",
+    "quantity": 150,
+    "unit": "g"
+   },
+   {
+    "name_en": "chopped tomatoes",
+    "name_tr": "doğranmış domates",
+    "quantity": 300,
+    "unit": "g"
+   },
+   {
+    "name_en": "onion",
+    "name_tr": "kuru soğan",
+    "quantity": 1
+   },
+   {
+    "name_en": "garlic",
+    "name_tr": "sarımsak",
+    "quantity": 2,
+    "unit": "diş"
+   },
+   {
+    "name_en": "chili powder",
+    "name_tr": "toz acı biber",
+    "quantity": 2,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "cumin, salt, pepper",
+    "name_tr": "kimyon, tuz, karabiber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Soften the onion and garlic, then brown the beef with them.",
+   "Add the chili powder and cumin and cook for 1 minute to bloom them.",
+   "Add the tomatoes and beans and simmer for 25 minutes.",
+   "Season and serve — it is better the next day."
+  ],
+  "steps_tr": [
+   "Soğan ve sarımsağı yumuşatın, sonra kıymayı ekleyip kavurun.",
+   "Toz acı biber ve kimyonu ekleyip kokusu çıkması için 1 dakika pişirin.",
+   "Domates ve barbunyayı ekleyip 25 dakika kısık ateşte pişirin.",
+   "Tatlandırıp servis edin — ertesi gün daha lezzetlidir."
+  ],
+  "image_prompt": "Deep bowl of chili con carne with kidney beans, steam rising, rustic wooden table, warm hearty lighting"
+ },
+ {
+  "slug": "sheet-pan-chicken-veg",
+  "title_en": "Sheet Pan Chicken and Vegetables",
+  "title_tr": "Tek Tepsi Tavuk ve Sebze",
+  "meal_type": "dinner",
+  "cuisine": "american",
+  "calories": 505,
+  "protein": 46,
+  "carbs": 40,
+  "fat": 18,
+  "prep_time_minutes": 35,
+  "tag_tokens": [
+   "high_protein",
+   "budget_friendly"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "chicken breast",
+    "name_tr": "tavuk göğsü",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "potato",
+    "name_tr": "patates",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "courgette",
+    "name_tr": "kabak",
+    "quantity": 120,
+    "unit": "g"
+   },
+   {
+    "name_en": "carrot",
+    "name_tr": "havuç",
+    "quantity": 120,
+    "unit": "g"
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "rosemary, salt, pepper",
+    "name_tr": "biberiye, tuz, karabiber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Cut the potato and carrot into chunks and roast at 200 degrees for 15 minutes.",
+   "Add the chicken and courgette, drizzle with oil and season.",
+   "Roast for a further 20 minutes, turning once."
+  ],
+  "steps_tr": [
+   "Patates ve havucu iri doğrayıp 200 derecede 15 dakika fırınlayın.",
+   "Tavuğu ve kabağı ekleyin, yağı gezdirip tatlandırın.",
+   "Bir kez çevirerek 20 dakika daha fırınlayın."
+  ],
+  "image_prompt": "Sheet pan of roasted chicken breast with potatoes, carrots and courgette, herbs scattered, overhead, homely"
+ },
+ {
+  "slug": "seared-tuna-steak-greens",
+  "title_en": "Seared Tuna Steak with Greens",
+  "title_tr": "Mühürlenmiş Ton Balığı ve Yeşillikler",
+  "meal_type": "dinner",
+  "cuisine": "american",
+  "calories": 375,
+  "protein": 48,
+  "carbs": 14,
+  "fat": 14,
+  "prep_time_minutes": 15,
+  "tag_tokens": [
+   "high_protein",
+   "low_calorie"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "tuna steak",
+    "name_tr": "ton balığı bifteği",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "rocket",
+    "name_tr": "roka",
+    "quantity": 120,
+    "unit": "g"
+   },
+   {
+    "name_en": "cucumber",
+    "name_tr": "salatalık",
+    "quantity": 80,
+    "unit": "g"
+   },
+   {
+    "name_en": "soy sauce",
+    "name_tr": "soya sosu",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "sesame oil",
+    "name_tr": "susam yağı",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "sesame seeds",
+    "name_tr": "susam",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Rub the tuna with half the sesame oil and season it.",
+   "Sear it in a screaming-hot pan for 90 seconds a side — the centre should stay ruby.",
+   "Rest it for 2 minutes, then slice it thinly.",
+   "Dress the rocket and cucumber with the soy sauce and remaining oil, and lay the tuna over."
+  ],
+  "steps_tr": [
+   "Ton balığını susam yağının yarısıyla ovup tatlandırın.",
+   "Çok kızgın tavada her yüzü 90 saniye mühürleyin — ortası pembe kalmalı.",
+   "2 dakika dinlendirip ince dilimleyin.",
+   "Roka ve salatalığı soya sosu ve kalan yağla harmanlayıp balığı üzerine dizin."
+  ],
+  "image_prompt": "Sliced seared tuna steak with ruby centre over rocket salad, sesame seeds, dark slate plate, elegant plating"
+ },
+ {
+  "slug": "casein-protein-pudding",
+  "title_en": "Casein Protein Pudding",
+  "title_tr": "Kazeinli Protein Puding",
+  "meal_type": "snack",
+  "cuisine": "american",
+  "calories": 240,
+  "protein": 32,
+  "carbs": 14,
+  "fat": 6,
+  "prep_time_minutes": 5,
+  "tag_tokens": [
+   "high_protein",
+   "toning"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "casein protein powder",
+    "name_tr": "kazein protein tozu",
+    "quantity": 35,
+    "unit": "g"
+   },
+   {
+    "name_en": "milk",
+    "name_tr": "süt",
+    "quantity": 180,
+    "unit": "ml"
+   },
+   {
+    "name_en": "cocoa powder",
+    "name_tr": "kakao tozu",
+    "quantity": 1,
+    "unit": "tatlı kaşığı"
+   },
+   {
+    "name_en": "almonds",
+    "name_tr": "badem",
+    "quantity": 10,
+    "unit": "g"
+   }
+  ],
+  "steps_en": [
+   "Whisk the casein, milk and cocoa until it thickens — casein sets on its own, no gelatine needed.",
+   "Chill for 20 minutes.",
+   "Top with chopped almonds."
+  ],
+  "steps_tr": [
+   "Kazeini, sütü ve kakaoyu koyulaşana kadar çırpın — kazein kendi başına kıvam alır, jelatine gerek yok.",
+   "20 dakika buzdolabında bekletin.",
+   "Üzerine doğranmış badem serpin."
+  ],
+  "image_prompt": "Thick chocolate casein pudding in a small glass, chopped almonds on top, moody dark styling"
+ },
+ {
+  "slug": "protein-energy-balls",
+  "title_en": "Peanut Protein Energy Balls",
+  "title_tr": "Fıstık Ezmeli Protein Topları",
+  "meal_type": "snack",
+  "cuisine": "american",
+  "calories": 380,
+  "protein": 20,
+  "carbs": 34,
+  "fat": 18,
+  "prep_time_minutes": 15,
+  "tag_tokens": [
+   "high_protein",
+   "budget_friendly"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "rolled oats",
+    "name_tr": "yulaf ezmesi",
+    "quantity": 60,
+    "unit": "g"
+   },
+   {
+    "name_en": "peanut butter",
+    "name_tr": "doğal fıstık ezmesi",
+    "quantity": 60,
+    "unit": "g"
+   },
+   {
+    "name_en": "vanilla whey protein powder",
+    "name_tr": "vanilyalı whey protein tozu",
+    "quantity": 25,
+    "unit": "g"
+   },
+   {
+    "name_en": "maple syrup",
+    "name_tr": "akçaağaç şurubu",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "chia seeds",
+    "name_tr": "chia tohumu",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Mix everything in a bowl until it holds together.",
+   "Roll into 10 balls with wet hands so the mixture does not stick.",
+   "Refrigerate for 30 minutes before eating."
+  ],
+  "steps_tr": [
+   "Tüm malzemeleri bir kapta topaklanana kadar karıştırın.",
+   "Islak elle 10 top yapın; böylece karışım elinize yapışmaz.",
+   "Yemeden önce 30 dakika buzdolabında bekletin."
+  ],
+  "image_prompt": "Peanut protein energy balls on parchment paper, one bitten open showing texture, natural light, homely"
+ },
+ {
+  "slug": "cottage-cheese-crackers",
+  "title_en": "Cottage Cheese and Rye Crackers",
+  "title_tr": "Süzme Peynirli Çavdar Kraker",
+  "meal_type": "snack",
+  "cuisine": "american",
+  "calories": 255,
+  "protein": 22,
+  "carbs": 24,
+  "fat": 8,
+  "prep_time_minutes": 5,
+  "tag_tokens": [
+   "high_protein",
+   "budget_friendly"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "cottage cheese",
+    "name_tr": "süzme peynir",
+    "quantity": 150,
+    "unit": "g"
+   },
+   {
+    "name_en": "rye crackers",
+    "name_tr": "çavdar kraker",
+    "quantity": 4
+   },
+   {
+    "name_en": "tomato",
+    "name_tr": "domates",
+    "quantity": 1
+   },
+   {
+    "name_en": "black pepper",
+    "name_tr": "karabiber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Spoon the cottage cheese onto the crackers.",
+   "Lay a slice of tomato on each one.",
+   "Grind black pepper over the top."
+  ],
+  "steps_tr": [
+   "Süzme peyniri krakerlerin üzerine koyun.",
+   "Her birinin üzerine bir dilim domates yerleştirin.",
+   "Üzerine taze çekilmiş karabiber öğütün."
+  ],
+  "image_prompt": "Rye crackers topped with cottage cheese and tomato slices on a wooden board, simple clean styling"
+ },
+ {
+  "slug": "greek-yogurt-protein-dip",
+  "title_en": "Greek Yogurt Protein Dip with Veg",
+  "title_tr": "Yoğurtlu Protein Dip ve Sebzeler",
+  "meal_type": "snack",
+  "cuisine": "american",
+  "calories": 205,
+  "protein": 22,
+  "carbs": 16,
+  "fat": 6,
+  "prep_time_minutes": 8,
+  "tag_tokens": [
+   "high_protein",
+   "low_calorie"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "Greek yogurt",
+    "name_tr": "süzme yoğurt",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "garlic",
+    "name_tr": "sarımsak",
+    "quantity": 1,
+    "unit": "diş"
+   },
+   {
+    "name_en": "lemon juice",
+    "name_tr": "limon suyu",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "dill",
+    "name_tr": "dereotu",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "carrot sticks",
+    "name_tr": "havuç çubukları",
+    "quantity": 100,
+    "unit": "g"
+   },
+   {
+    "name_en": "cucumber sticks",
+    "name_tr": "salatalık çubukları",
+    "quantity": 100,
+    "unit": "g"
+   }
+  ],
+  "steps_en": [
+   "Crush the garlic and stir it into the yogurt with the lemon juice.",
+   "Chop the dill finely and fold it through.",
+   "Cut the vegetables into sticks and serve them alongside."
+  ],
+  "steps_tr": [
+   "Sarımsağı ezip limon suyuyla birlikte yoğurda karıştırın.",
+   "Dereotunu ince kıyıp karışıma ekleyin.",
+   "Sebzeleri çubuk çubuk doğrayıp yanında servis edin."
+  ],
+  "image_prompt": "Bowl of herbed yogurt dip surrounded by carrot and cucumber sticks, overhead, fresh bright styling"
+ },
+ {
+  "slug": "tuna-cucumber-boats",
+  "title_en": "Tuna Cucumber Boats",
+  "title_tr": "Ton Balıklı Salatalık Kayıkları",
+  "meal_type": "snack",
+  "cuisine": "american",
+  "calories": 235,
+  "protein": 28,
+  "carbs": 8,
+  "fat": 10,
+  "prep_time_minutes": 10,
+  "tag_tokens": [
+   "high_protein",
+   "low_calorie"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "canned tuna",
+    "name_tr": "ton balığı",
+    "quantity": 120,
+    "unit": "g",
+    "note_en": "drained",
+    "note_tr": "suyu süzülmüş"
+   },
+   {
+    "name_en": "cucumber",
+    "name_tr": "salatalık",
+    "quantity": 1
+   },
+   {
+    "name_en": "Greek yogurt",
+    "name_tr": "süzme yoğurt",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "lemon juice",
+    "name_tr": "limon suyu",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "salt and pepper",
+    "name_tr": "tuz ve karabiber",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Halve the cucumber lengthways and scoop out the seeds.",
+   "Mix the tuna with the yogurt, lemon juice and seasoning.",
+   "Spoon the mixture into the hollowed cucumber and cut into lengths."
+  ],
+  "steps_tr": [
+   "Salatalığı uzunlamasına ikiye bölüp çekirdeklerini kaşıkla çıkarın.",
+   "Ton balığını yoğurt, limon suyu ve baharatlarla karıştırın.",
+   "Karışımı salatalığın içine doldurup parçalara ayırın."
+  ],
+  "image_prompt": "Cucumber halves filled with tuna salad, cut into portions, on a white plate, fresh light styling"
+ },
+ {
+  "slug": "hard-boiled-eggs-hummus",
+  "title_en": "Boiled Eggs with Hummus",
+  "title_tr": "Haşlanmış Yumurta ve Humus",
+  "meal_type": "snack",
+  "cuisine": "american",
+  "calories": 350,
+  "protein": 24,
+  "carbs": 18,
+  "fat": 20,
+  "prep_time_minutes": 12,
+  "tag_tokens": [
+   "high_protein",
+   "budget_friendly"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "eggs",
+    "name_tr": "yumurta",
+    "quantity": 3
+   },
+   {
+    "name_en": "hummus",
+    "name_tr": "humus",
+    "quantity": 80,
+    "unit": "g"
+   },
+   {
+    "name_en": "paprika",
+    "name_tr": "toz kırmızı biber",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "olive oil",
+    "name_tr": "zeytinyağı",
+    "quantity": 1,
+    "unit": "tatlı kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Boil the eggs for 8 minutes, then cool them in cold water.",
+   "Peel and halve them.",
+   "Spread the hummus on a plate, arrange the eggs on it and finish with the paprika and olive oil."
+  ],
+  "steps_tr": [
+   "Yumurtaları 8 dakika haşlayıp soğuk suda soğutun.",
+   "Kabuklarını soyup ikiye bölün.",
+   "Humusu tabağa yayın, yumurtaları üzerine dizin ve toz kırmızı biber ile zeytinyağıyla bitirin."
+  ],
+  "image_prompt": "Halved boiled eggs on a swoosh of hummus dusted with paprika, drizzle of olive oil, overhead, mediterranean styling"
+ },
+ {
+  "slug": "protein-rice-cakes",
+  "title_en": "Rice Cakes with Almond Butter",
+  "title_tr": "Badem Ezmeli Pirinç Patlağı",
+  "meal_type": "snack",
+  "cuisine": "american",
+  "calories": 330,
+  "protein": 12,
+  "carbs": 34,
+  "fat": 16,
+  "prep_time_minutes": 4,
+  "tag_tokens": [
+   "budget_friendly",
+   "toning"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "rice cakes",
+    "name_tr": "pirinç patlağı",
+    "quantity": 3
+   },
+   {
+    "name_en": "almond butter",
+    "name_tr": "badem ezmesi",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "banana",
+    "name_tr": "muz",
+    "quantity": 1
+   },
+   {
+    "name_en": "cinnamon",
+    "name_tr": "tarçın",
+    "quantity": 1,
+    "unit": "çimdik"
+   }
+  ],
+  "steps_en": [
+   "Spread the almond butter over the rice cakes.",
+   "Lay banana slices across each one.",
+   "Dust with cinnamon."
+  ],
+  "steps_tr": [
+   "Badem ezmesini pirinç patlaklarına sürün.",
+   "Her birinin üzerine muz dilimleri dizin.",
+   "Tarçın serpin."
+  ],
+  "image_prompt": "Rice cakes topped with almond butter and banana slices, dusted with cinnamon, bright minimal styling"
+ },
+ {
+  "slug": "turkey-cheese-roll-ups",
+  "title_en": "Turkey and Cheese Roll-Ups",
+  "title_tr": "Hindili Peynirli Rulo",
+  "meal_type": "snack",
+  "cuisine": "american",
+  "calories": 260,
+  "protein": 30,
+  "carbs": 4,
+  "fat": 14,
+  "prep_time_minutes": 5,
+  "tag_tokens": [
+   "high_protein",
+   "low_calorie"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "sliced turkey breast",
+    "name_tr": "dilimli hindi göğsü",
+    "quantity": 120,
+    "unit": "g"
+   },
+   {
+    "name_en": "cheddar cheese",
+    "name_tr": "çedar peyniri",
+    "quantity": 60,
+    "unit": "g"
+   },
+   {
+    "name_en": "lettuce",
+    "name_tr": "marul",
+    "quantity": 4,
+    "unit": "yaprak"
+   },
+   {
+    "name_en": "dijon mustard",
+    "name_tr": "dijon hardalı",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Lay the turkey slices out flat and spread them with the mustard.",
+   "Put a strip of cheese and a lettuce leaf on each.",
+   "Roll them up tightly and pin with a cocktail stick if needed."
+  ],
+  "steps_tr": [
+   "Hindi dilimlerini düz serip üzerlerine hardalı sürün.",
+   "Her birine bir şerit peynir ve bir marul yaprağı koyun.",
+   "Sıkıca sarın, gerekirse kürdanla tutturun."
+  ],
+  "image_prompt": "Turkey and cheese roll-ups arranged on a plate, cross-section visible, clean simple styling"
+ },
+ {
+  "slug": "chocolate-protein-shake",
+  "title_en": "Chocolate Protein Shake",
+  "title_tr": "Çikolatalı Protein Shake",
+  "meal_type": "snack",
+  "cuisine": "american",
+  "calories": 395,
+  "protein": 40,
+  "carbs": 32,
+  "fat": 12,
+  "prep_time_minutes": 3,
+  "tag_tokens": [
+   "high_protein",
+   "bulking"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "chocolate whey protein powder",
+    "name_tr": "çikolatalı whey protein tozu",
+    "quantity": 35,
+    "unit": "g"
+   },
+   {
+    "name_en": "milk",
+    "name_tr": "süt",
+    "quantity": 300,
+    "unit": "ml"
+   },
+   {
+    "name_en": "banana",
+    "name_tr": "muz",
+    "quantity": 1
+   },
+   {
+    "name_en": "peanut butter",
+    "name_tr": "doğal fıstık ezmesi",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Put everything in a blender with a handful of ice.",
+   "Blend for 30 seconds until smooth and frothy.",
+   "Drink within 10 minutes — it separates as it sits."
+  ],
+  "steps_tr": [
+   "Her şeyi bir avuç buzla birlikte blendera koyun.",
+   "Pürüzsüz ve köpüklü olana kadar 30 saniye çekin.",
+   "10 dakika içinde için — beklerse ayrışır."
+  ],
+  "image_prompt": "Chocolate protein shake in a shaker glass with frothy top, banana and peanut butter beside it, gym-kitchen styling"
+ },
+ {
+  "slug": "edamame-sea-salt",
+  "title_en": "Sea Salt Edamame",
+  "title_tr": "Deniz Tuzlu Edamame",
+  "meal_type": "snack",
+  "cuisine": "american",
+  "calories": 210,
+  "protein": 18,
+  "carbs": 16,
+  "fat": 8,
+  "prep_time_minutes": 8,
+  "tag_tokens": [
+   "high_protein",
+   "low_calorie"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "edamame",
+    "name_tr": "edamame",
+    "quantity": 200,
+    "unit": "g",
+    "note_en": "in the pod",
+    "note_tr": "kabuklu"
+   },
+   {
+    "name_en": "sesame oil",
+    "name_tr": "susam yağı",
+    "quantity": 1,
+    "unit": "tatlı kaşığı"
+   },
+   {
+    "name_en": "sea salt",
+    "name_tr": "deniz tuzu",
+    "to_taste": true
+   }
+  ],
+  "steps_en": [
+   "Boil the edamame in salted water for 5 minutes.",
+   "Drain and toss them with the sesame oil.",
+   "Scatter sea salt over and eat them straight from the pod."
+  ],
+  "steps_tr": [
+   "Edamameyi tuzlu suda 5 dakika haşlayın.",
+   "Süzüp susam yağıyla harmanlayın.",
+   "Üzerine deniz tuzu serpip kabuğundan yiyin."
+  ],
+  "image_prompt": "Bowl of glistening edamame pods with sea salt flakes, dark ceramic bowl, izakaya styling"
+ },
+ {
+  "slug": "protein-trail-mix",
+  "title_en": "Protein Trail Mix",
+  "title_tr": "Proteinli Kuruyemiş Karışımı",
+  "meal_type": "snack",
+  "cuisine": "american",
+  "calories": 410,
+  "protein": 16,
+  "carbs": 28,
+  "fat": 26,
+  "prep_time_minutes": 3,
+  "tag_tokens": [
+   "bulking",
+   "budget_friendly"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "almonds",
+    "name_tr": "badem",
+    "quantity": 30,
+    "unit": "g"
+   },
+   {
+    "name_en": "walnuts",
+    "name_tr": "ceviz",
+    "quantity": 20,
+    "unit": "g"
+   },
+   {
+    "name_en": "pumpkin seeds",
+    "name_tr": "kabak çekirdeği",
+    "quantity": 20,
+    "unit": "g"
+   },
+   {
+    "name_en": "raisins",
+    "name_tr": "kuru üzüm",
+    "quantity": 25,
+    "unit": "g"
+   },
+   {
+    "name_en": "dark chocolate",
+    "name_tr": "bitter çikolata",
+    "quantity": 15,
+    "unit": "g"
+   }
+  ],
+  "steps_en": [
+   "Chop the dark chocolate into rough pieces.",
+   "Mix everything together in a jar.",
+   "Portion it out before eating — trail mix is easy to over-eat from the bag."
+  ],
+  "steps_tr": [
+   "Bitter çikolatayı iri parçalar hâlinde doğrayın.",
+   "Hepsini bir kavanozda karıştırın.",
+   "Yemeden önce porsiyonlayın — karışım paketten yenince fazla kaçar."
+  ],
+  "image_prompt": "Trail mix of almonds, walnuts, pumpkin seeds, raisins and dark chocolate in a glass jar, warm natural light"
+ },
+ {
+  "slug": "apple-almond-butter-slices",
+  "title_en": "Apple with Almond Butter",
+  "title_tr": "Badem Ezmeli Elma Dilimleri",
+  "meal_type": "snack",
+  "cuisine": "american",
+  "calories": 295,
+  "protein": 8,
+  "carbs": 30,
+  "fat": 16,
+  "prep_time_minutes": 4,
+  "tag_tokens": [
+   "low_calorie",
+   "budget_friendly"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "apple",
+    "name_tr": "elma",
+    "quantity": 1
+   },
+   {
+    "name_en": "almond butter",
+    "name_tr": "badem ezmesi",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "chia seeds",
+    "name_tr": "chia tohumu",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "cinnamon",
+    "name_tr": "tarçın",
+    "quantity": 1,
+    "unit": "çimdik"
+   }
+  ],
+  "steps_en": [
+   "Core the apple and cut it into rounds.",
+   "Spread the almond butter over each slice.",
+   "Sprinkle the chia seeds and cinnamon over the top."
+  ],
+  "steps_tr": [
+   "Elmanın çekirdek evini çıkarıp halka halka dilimleyin.",
+   "Her dilime badem ezmesi sürün.",
+   "Üzerine chia tohumu ve tarçın serpin."
+  ],
+  "image_prompt": "Apple rounds spread with almond butter and sprinkled with chia seeds, overhead on a light board, fresh and clean"
+ },
+ {
+  "slug": "protein-brownie-bites",
+  "title_en": "Protein Brownie Bites",
+  "title_tr": "Protein Brownie Topları",
+  "meal_type": "dessert",
+  "cuisine": "american",
+  "calories": 335,
+  "protein": 22,
+  "carbs": 30,
+  "fat": 14,
+  "prep_time_minutes": 25,
+  "tag_tokens": [
+   "high_protein",
+   "toning"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "oat flour",
+    "name_tr": "yulaf unu",
+    "quantity": 60,
+    "unit": "g"
+   },
+   {
+    "name_en": "chocolate whey protein powder",
+    "name_tr": "çikolatalı whey protein tozu",
+    "quantity": 30,
+    "unit": "g"
+   },
+   {
+    "name_en": "cocoa powder",
+    "name_tr": "kakao tozu",
+    "quantity": 20,
+    "unit": "g"
+   },
+   {
+    "name_en": "eggs",
+    "name_tr": "yumurta",
+    "quantity": 2
+   },
+   {
+    "name_en": "Greek yogurt",
+    "name_tr": "süzme yoğurt",
+    "quantity": 60,
+    "unit": "g"
+   },
+   {
+    "name_en": "maple syrup",
+    "name_tr": "akçaağaç şurubu",
+    "quantity": 2,
+    "unit": "yemek kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Whisk the eggs, yogurt and maple syrup together.",
+   "Fold in the oat flour, protein powder and cocoa without overmixing.",
+   "Spoon into a lined tin and bake at 175 degrees for 18 minutes.",
+   "Let them cool fully before cutting — protein bakes are fragile hot."
+  ],
+  "steps_tr": [
+   "Yumurta, yoğurt ve akçaağaç şurubunu birlikte çırpın.",
+   "Yulaf ununu, protein tozunu ve kakaoyu fazla karıştırmadan ekleyin.",
+   "Yağlı kâğıt serili kaba döküp 175 derecede 18 dakika pişirin.",
+   "Kesmeden önce tamamen soğutun — proteinli hamurlar sıcakken dağılır."
+  ],
+  "image_prompt": "Fudgy protein brownie bites cut into squares on parchment, dusted with cocoa, moody dark food photography"
+ },
+ {
+  "slug": "frozen-yogurt-bark",
+  "title_en": "Frozen Protein Yogurt Bark",
+  "title_tr": "Donmuş Protein Yoğurt Kırığı",
+  "meal_type": "dessert",
+  "cuisine": "american",
+  "calories": 250,
+  "protein": 24,
+  "carbs": 20,
+  "fat": 8,
+  "prep_time_minutes": 10,
+  "tag_tokens": [
+   "high_protein",
+   "low_calorie"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "Greek yogurt",
+    "name_tr": "süzme yoğurt",
+    "quantity": 300,
+    "unit": "g"
+   },
+   {
+    "name_en": "vanilla whey protein powder",
+    "name_tr": "vanilyalı whey protein tozu",
+    "quantity": 25,
+    "unit": "g"
+   },
+   {
+    "name_en": "mixed berries",
+    "name_tr": "karışık orman meyvesi",
+    "quantity": 80,
+    "unit": "g"
+   },
+   {
+    "name_en": "dark chocolate",
+    "name_tr": "bitter çikolata",
+    "quantity": 15,
+    "unit": "g"
+   },
+   {
+    "name_en": "honey",
+    "name_tr": "bal",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Stir the protein powder and honey through the yogurt.",
+   "Spread it 1 cm thick on a lined tray.",
+   "Scatter the berries and chopped chocolate over the surface.",
+   "Freeze for 4 hours, then snap into shards."
+  ],
+  "steps_tr": [
+   "Protein tozunu ve balı yoğurda karıştırın.",
+   "Yağlı kâğıt serili tepsiye 1 cm kalınlığında yayın.",
+   "Yüzeye orman meyvelerini ve doğranmış çikolatayı serpin.",
+   "4 saat dondurup parçalara kırın."
+  ],
+  "image_prompt": "Frozen yogurt bark broken into shards with berries and chocolate pieces, on a cold marble slab, bright styling"
+ },
+ {
+  "slug": "protein-cheesecake-jar",
+  "title_en": "No-Bake Protein Cheesecake Jar",
+  "title_tr": "Pişirmesiz Protein Cheesecake",
+  "meal_type": "dessert",
+  "cuisine": "american",
+  "calories": 350,
+  "protein": 30,
+  "carbs": 26,
+  "fat": 14,
+  "prep_time_minutes": 15,
+  "tag_tokens": [
+   "high_protein",
+   "toning"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "cottage cheese",
+    "name_tr": "süzme peynir",
+    "quantity": 150,
+    "unit": "g"
+   },
+   {
+    "name_en": "Greek yogurt",
+    "name_tr": "süzme yoğurt",
+    "quantity": 80,
+    "unit": "g"
+   },
+   {
+    "name_en": "vanilla whey protein powder",
+    "name_tr": "vanilyalı whey protein tozu",
+    "quantity": 25,
+    "unit": "g"
+   },
+   {
+    "name_en": "rye crackers",
+    "name_tr": "çavdar kraker",
+    "quantity": 2
+   },
+   {
+    "name_en": "butter",
+    "name_tr": "tereyağı",
+    "quantity": 1,
+    "unit": "tatlı kaşığı"
+   },
+   {
+    "name_en": "strawberries",
+    "name_tr": "çilek",
+    "quantity": 60,
+    "unit": "g"
+   }
+  ],
+  "steps_en": [
+   "Blend the cottage cheese, yogurt and protein powder completely smooth — cottage cheese has to lose its texture entirely.",
+   "Crush the crackers and mix them with the melted butter for the base.",
+   "Layer the base and the filling in a jar.",
+   "Chill for 2 hours and top with sliced strawberries."
+  ],
+  "steps_tr": [
+   "Süzme peynir, yoğurt ve protein tozunu tamamen pürüzsüz olana kadar blenderdan geçirin — peynirin dokusu tamamen kaybolmalı.",
+   "Krakerleri ezip erimiş tereyağıyla karıştırarak taban yapın.",
+   "Kavanozda tabanı ve kremayı katmanlayın.",
+   "2 saat soğutup üzerine dilimlenmiş çilek koyun."
+  ],
+  "image_prompt": "Layered protein cheesecake in a glass jar with biscuit base and strawberries on top, soft natural light"
+ },
+ {
+  "slug": "banana-protein-ice-cream",
+  "title_en": "Banana Protein Ice Cream",
+  "title_tr": "Muzlu Protein Dondurma",
+  "meal_type": "dessert",
+  "cuisine": "american",
+  "calories": 340,
+  "protein": 28,
+  "carbs": 44,
+  "fat": 6,
+  "prep_time_minutes": 5,
+  "tag_tokens": [
+   "high_protein",
+   "low_calorie"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "frozen bananas",
+    "name_tr": "dondurulmuş muz",
+    "quantity": 2
+   },
+   {
+    "name_en": "vanilla whey protein powder",
+    "name_tr": "vanilyalı whey protein tozu",
+    "quantity": 30,
+    "unit": "g"
+   },
+   {
+    "name_en": "almond milk",
+    "name_tr": "badem sütü",
+    "quantity": 60,
+    "unit": "ml"
+   },
+   {
+    "name_en": "peanut butter",
+    "name_tr": "doğal fıstık ezmesi",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Blend the frozen banana, protein powder and almond milk until it turns creamy.",
+   "Add the almond milk slowly — too much and it becomes a smoothie.",
+   "Swirl the peanut butter through and eat immediately."
+  ],
+  "steps_tr": [
+   "Dondurulmuş muzu, protein tozunu ve badem sütünü kremamsı olana kadar blenderdan geçirin.",
+   "Badem sütünü yavaş ekleyin — fazlası karışımı smoothie yapar.",
+   "Fıstık ezmesini içinde dalgalandırıp hemen tüketin."
+  ],
+  "image_prompt": "Scoops of creamy banana protein ice cream in a bowl with a peanut butter swirl, frosty texture, bright styling"
+ },
+ {
+  "slug": "chocolate-avocado-mousse",
+  "title_en": "Chocolate Avocado Mousse",
+  "title_tr": "Çikolatalı Avokado Mus",
+  "meal_type": "dessert",
+  "cuisine": "american",
+  "calories": 350,
+  "protein": 8,
+  "carbs": 30,
+  "fat": 22,
+  "prep_time_minutes": 10,
+  "tag_tokens": [
+   "toning",
+   "low_calorie"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "ripe avocado",
+    "name_tr": "olgun avokado",
+    "quantity": 1
+   },
+   {
+    "name_en": "cocoa powder",
+    "name_tr": "kakao tozu",
+    "quantity": 25,
+    "unit": "g"
+   },
+   {
+    "name_en": "maple syrup",
+    "name_tr": "akçaağaç şurubu",
+    "quantity": 3,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "almond milk",
+    "name_tr": "badem sütü",
+    "quantity": 60,
+    "unit": "ml"
+   },
+   {
+    "name_en": "sea salt",
+    "name_tr": "deniz tuzu",
+    "quantity": 1,
+    "unit": "çimdik"
+   }
+  ],
+  "steps_en": [
+   "Blend the avocado, cocoa, maple syrup and almond milk until glossy.",
+   "Add the pinch of salt — it is what stops it tasting flat.",
+   "Chill for 30 minutes before serving."
+  ],
+  "steps_tr": [
+   "Avokado, kakao, akçaağaç şurubu ve badem sütünü parlak bir kıvam alana kadar çekin.",
+   "Bir tutam tuz ekleyin — tadın yavan kalmasını engelleyen budur.",
+   "Servis etmeden önce 30 dakika soğutun."
+  ],
+  "image_prompt": "Glossy dark chocolate avocado mousse in a small glass with a mint leaf, dramatic dark styling"
+ },
+ {
+  "slug": "protein-mug-cake",
+  "title_en": "Chocolate Protein Mug Cake",
+  "title_tr": "Çikolatalı Protein Kupa Kek",
+  "meal_type": "dessert",
+  "cuisine": "american",
+  "calories": 330,
+  "protein": 28,
+  "carbs": 28,
+  "fat": 12,
+  "prep_time_minutes": 5,
+  "tag_tokens": [
+   "high_protein",
+   "budget_friendly"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "chocolate whey protein powder",
+    "name_tr": "çikolatalı whey protein tozu",
+    "quantity": 30,
+    "unit": "g"
+   },
+   {
+    "name_en": "oat flour",
+    "name_tr": "yulaf unu",
+    "quantity": 20,
+    "unit": "g"
+   },
+   {
+    "name_en": "egg",
+    "name_tr": "yumurta",
+    "quantity": 1
+   },
+   {
+    "name_en": "milk",
+    "name_tr": "süt",
+    "quantity": 60,
+    "unit": "ml"
+   },
+   {
+    "name_en": "baking powder",
+    "name_tr": "kabartma tozu",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   },
+   {
+    "name_en": "cocoa powder",
+    "name_tr": "kakao tozu",
+    "quantity": 1,
+    "unit": "tatlı kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Whisk everything directly in a large mug until no lumps remain.",
+   "Microwave on high for 60 seconds.",
+   "Stop at 60 seconds even if it looks wet — protein cake goes rubbery the moment it is overcooked."
+  ],
+  "steps_tr": [
+   "Her şeyi doğrudan büyük bir kupada topak kalmayana kadar çırpın.",
+   "Mikrodalgada yüksek ayarda 60 saniye pişirin.",
+   "Islak görünse bile 60 saniyede durun — proteinli kek fazla pişince anında lastikleşir."
+  ],
+  "image_prompt": "Chocolate protein mug cake risen above the rim of a white mug, spoon beside it, cozy kitchen lighting"
+ },
+ {
+  "slug": "protein-rice-pudding",
+  "title_en": "Cinnamon Protein Rice Pudding",
+  "title_tr": "Tarçınlı Protein Sütlaç",
+  "meal_type": "dessert",
+  "cuisine": "american",
+  "calories": 390,
+  "protein": 24,
+  "carbs": 56,
+  "fat": 8,
+  "prep_time_minutes": 30,
+  "tag_tokens": [
+   "high_protein",
+   "budget_friendly"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "rice",
+    "name_tr": "pirinç",
+    "quantity": 70,
+    "unit": "g"
+   },
+   {
+    "name_en": "milk",
+    "name_tr": "süt",
+    "quantity": 400,
+    "unit": "ml"
+   },
+   {
+    "name_en": "vanilla whey protein powder",
+    "name_tr": "vanilyalı whey protein tozu",
+    "quantity": 25,
+    "unit": "g"
+   },
+   {
+    "name_en": "honey",
+    "name_tr": "bal",
+    "quantity": 1,
+    "unit": "yemek kaşığı"
+   },
+   {
+    "name_en": "cinnamon",
+    "name_tr": "tarçın",
+    "quantity": 1,
+    "unit": "çay kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Simmer the rice in the milk for 25 minutes, stirring often.",
+   "Take it off the heat and let it cool for 5 minutes.",
+   "Stir the protein powder in off the heat — boiling it makes it grainy.",
+   "Finish with honey and cinnamon."
+  ],
+  "steps_tr": [
+   "Pirinci sütte 25 dakika, sık sık karıştırarak pişirin.",
+   "Ateşten alıp 5 dakika soğumaya bırakın.",
+   "Protein tozunu ateşten uzakta karıştırın — kaynatmak tozu topaklandırır.",
+   "Bal ve tarçınla bitirin."
+  ],
+  "image_prompt": "Creamy rice pudding in a bowl dusted with cinnamon, warm comforting lighting, rustic ceramic"
+ },
+ {
+  "slug": "berry-protein-parfait",
+  "title_en": "Berry Protein Parfait",
+  "title_tr": "Meyveli Protein Parfe",
+  "meal_type": "dessert",
+  "cuisine": "american",
+  "calories": 295,
+  "protein": 26,
+  "carbs": 30,
+  "fat": 8,
+  "prep_time_minutes": 8,
+  "tag_tokens": [
+   "high_protein",
+   "low_calorie"
+  ],
+  "locale_scope": [
+   "en"
+  ],
+  "ingredients": [
+   {
+    "name_en": "Greek yogurt",
+    "name_tr": "süzme yoğurt",
+    "quantity": 200,
+    "unit": "g"
+   },
+   {
+    "name_en": "vanilla whey protein powder",
+    "name_tr": "vanilyalı whey protein tozu",
+    "quantity": 20,
+    "unit": "g"
+   },
+   {
+    "name_en": "mixed berries",
+    "name_tr": "karışık orman meyvesi",
+    "quantity": 100,
+    "unit": "g"
+   },
+   {
+    "name_en": "rolled oats",
+    "name_tr": "yulaf ezmesi",
+    "quantity": 20,
+    "unit": "g"
+   },
+   {
+    "name_en": "honey",
+    "name_tr": "bal",
+    "quantity": 1,
+    "unit": "tatlı kaşığı"
+   }
+  ],
+  "steps_en": [
+   "Stir the protein powder through the yogurt until smooth.",
+   "Toast the oats in a dry pan for 3 minutes until they smell nutty.",
+   "Layer the yogurt, berries and oats twice over in a glass.",
+   "Finish with honey."
+  ],
+  "steps_tr": [
+   "Protein tozunu yoğurda pürüzsüz olana kadar karıştırın.",
+   "Yulafı kuru tavada 3 dakika, kokusu çıkana kadar kavurun.",
+   "Bardağa yoğurt, meyve ve yulafı iki kat hâlinde dizin.",
+   "Balla bitirin."
+  ],
+  "image_prompt": "Layered berry parfait in a tall glass showing distinct yogurt, berry and oat layers, bright airy styling"
+ }
+]

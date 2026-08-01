@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/services/app_preferences.dart';
 import '../../../core/utils/app_logger.dart';
 import '../data/nutrition_repository.dart';
+import '../data/recipe_image_registry.dart';
 import '../domain/models/macro_target.dart';
 import '../domain/models/planned_meal.dart';
 import '../domain/models/recipe.dart';
@@ -41,8 +44,17 @@ class FilterChipsNotifier extends Notifier<String?> {
 /// Supabase-backed recipe repository. Exposed separately so UI layers
 /// that need more than the basic `fetchRecipes()` (filtered queries,
 /// pagination, future CRUD) can reach it directly.
+///
+/// Phase 7 · reading the repository is also what warms
+/// [RecipeImageRegistry]. Every nutrition surface goes through here to
+/// get its recipes, so this is the one place that reliably runs before a
+/// tile is painted — and the registry is safe to leave cold, so a
+/// missing warm-up degrades to the meal-type cover rather than failing.
 final nutritionRepositoryProvider = Provider<NutritionRepository>(
-  (ref) => NutritionRepository(),
+  (ref) {
+    unawaited(RecipeImageRegistry.warmUp());
+    return NutritionRepository();
+  },
 );
 
 /// Phase 48 · paginated recipe catalogue.

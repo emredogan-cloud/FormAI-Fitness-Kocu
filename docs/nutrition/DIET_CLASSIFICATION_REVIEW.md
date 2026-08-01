@@ -11,8 +11,8 @@ derived — it depends on how an animal was slaughtered, which
 no ingredient name records.
 
 ```
-recipes read        292
-classified          284
+recipes read        352
+classified          344
 no claim made       8
 ```
 
@@ -20,11 +20,11 @@ no claim made       8
 
 | flag | recipes |
 | --- | --- |
-| `pork_free` | 284 |
-| `vegetarian` | 191 |
-| `gluten_free` | 172 |
-| `dairy_free` | 134 |
-| `vegan` | 44 |
+| `pork_free` | 344 |
+| `vegetarian` | 221 |
+| `gluten_free` | 213 |
+| `dairy_free` | 163 |
+| `vegan` | 50 |
 
 ## Ingredients the classifier does not recognise
 

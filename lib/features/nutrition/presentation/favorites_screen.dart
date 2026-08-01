@@ -209,7 +209,8 @@ class _FavoriteRow extends ConsumerWidget {
                 child: SizedBox(
                   width: 64,
                   height: 64,
-                  child: _Thumb(imageUrl: recipe.imageUrl),
+                  child: _Thumb(
+                      imageUrl: recipe.imageUrl, mealType: recipe.mealType),
                 ),
               ),
               const SizedBox(width: 12),
@@ -264,8 +265,16 @@ class _FavoriteRow extends ConsumerWidget {
 }
 
 class _Thumb extends StatelessWidget {
-  const _Thumb({required this.imageUrl});
+  const _Thumb({
+    required this.imageUrl,
+    this.mealType,
+  });
   final String? imageUrl;
+
+  /// Phase 7 · the recipe's meal type, so a tile whose photograph has
+  /// not been generated yet falls back to that type's cover image
+  /// rather than a branded gradient. See RecipeImageRegistry.
+  final String? mealType;
 
   @override
   Widget build(BuildContext context) {
@@ -278,6 +287,10 @@ class _Thumb extends StatelessWidget {
     if (src == null || src.isEmpty) return fallback;
     return RecipeImage(
       url: src,
+      // Phase 7 · lets the tile fall back to its meal type's cover
+      // photograph rather than a gradient when the recipe's own image
+      // has not been generated yet. See RecipeImageRegistry.
+      mealType: mealType,
       fit: BoxFit.cover,
       memCacheHeight: 200,
       errorBuilder: (_, __, ___) => fallback,

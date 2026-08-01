@@ -71,7 +71,8 @@ class RecipeDetailScreen extends StatelessWidget {
               _ShareRecipeButton(recipe: recipe),
             ],
             flexibleSpace: FlexibleSpaceBar(
-              background: _HeroImage(imageUrl: recipe.imageUrl),
+              background: _HeroImage(
+                  imageUrl: recipe.imageUrl, mealType: recipe.mealType),
             ),
           ),
           SliverToBoxAdapter(
@@ -146,8 +147,16 @@ class RecipeDetailScreen extends StatelessWidget {
 }
 
 class _HeroImage extends StatelessWidget {
-  const _HeroImage({required this.imageUrl});
+  const _HeroImage({
+    required this.imageUrl,
+    this.mealType,
+  });
   final String? imageUrl;
+
+  /// Phase 7 · the recipe's meal type, so a tile whose photograph has
+  /// not been generated yet falls back to that type's cover image
+  /// rather than a branded gradient. See RecipeImageRegistry.
+  final String? mealType;
 
   @override
   Widget build(BuildContext context) {
@@ -155,6 +164,7 @@ class _HeroImage extends StatelessWidget {
     final image = (url != null && url.isNotEmpty)
         ? RecipeImage(
             url: url,
+            mealType: mealType,
             fit: BoxFit.cover,
             memCacheHeight: 800,
             errorBuilder: (_, __, ___) => _fallback(),
