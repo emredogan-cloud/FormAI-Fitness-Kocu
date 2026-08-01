@@ -132,6 +132,27 @@ class RecipeIngredient {
 /// names had been translated and the units had not, because they live in
 /// a different column and nothing had ever needed to read them in
 /// English before.
+///
+/// ## Why the names are literals and not ARB keys
+///
+/// The hardcoded-string gate flags all twelve, and it is right to. They
+/// are kept here anyway, marked, for a reason the gate cannot see:
+///
+///   * This is a **measurement glossary**, not product copy. There is one
+///     correct English word for `yemek kaşığı` and no decision to make.
+///     `docs/i18n/README.md` already carves out data identity for exactly
+///     this shape of thing.
+///   * `RecipeIngredient` is a pure model with no `BuildContext` and no
+///     `AppLocalizations`, and the recipe pipeline — which has to render
+///     the same line to build `instructions_en` — is a command-line tool
+///     with no Flutter at all. Routing this through ARB would leave the
+///     tool needing its own copy, which is how two copies become three.
+///
+/// There is already a second copy, in
+/// `tool/recipe_pipeline/translations/build_recipe_en.py`, because that
+/// script is Python. `test/tool/unit_glossary_parity_test.dart` reads
+/// both files and fails when they disagree — two copies are acceptable
+/// only when something proves they agree.
 String? localizedUnit(
   String? unit,
   num? quantity, {
@@ -140,35 +161,56 @@ String? localizedUnit(
   if (unit == null || unit.isEmpty) return null;
   if (languageCode == 'tr') return unit;
 
+  final entry = kUnitGlossaryEn[unit];
+  // An unknown unit renders as written. Dropping it would silently
+  // remove an amount; guessing at it would silently change one.
+  if (entry == null) return unit;
   final plural = quantity != null && quantity > 1;
-  return switch (unit) {
-    // Metric abbreviations are already international.
-    'g' || 'kg' || 'ml' || 'l' => unit,
-    // The classifier English does without.
-    'adet' => null,
-    'yemek kaşığı' => 'tbsp',
-    'çay kaşığı' => 'tsp',
-    'tatlı kaşığı' => 'dessertspoon',
-    'kaşık' => plural ? 'spoons' : 'spoon',
-    'su bardağı' || 'bardak' => plural ? 'glasses' : 'glass',
-    'fincan' => plural ? 'small cups' : 'small cup',
-    'dilim' => plural ? 'slices' : 'slice',
-    'diş' => plural ? 'cloves' : 'clove',
-    'demet' => plural ? 'bunches' : 'bunch',
-    'dal' => plural ? 'sprigs' : 'sprig',
-    'yaprak' => plural ? 'leaves' : 'leaf',
-    'tutam' || 'çimdik' => plural ? 'pinches' : 'pinch',
-    'avuç' => plural ? 'handfuls' : 'handful',
-    'paket' => plural ? 'packets' : 'packet',
-    'kutu' => plural ? 'cans' : 'can',
-    'porsiyon' => plural ? 'portions' : 'portion',
-    'ölçek' => plural ? 'scoops' : 'scoop',
-    'baş' => plural ? 'heads' : 'head',
-    'top' => plural ? 'balls' : 'ball',
-    // An unknown unit renders as written. Dropping it would silently
-    // remove an amount; guessing at it would silently change one.
-    _ => unit,
-  };
+  return plural ? entry.plural : entry.singular;
+}
+
+/// Turkish kitchen unit → its English name, singular and plural.
+///
+/// A measurement glossary, not copy — see [localizedUnit]'s doc for why
+/// this is not in ARB. A null [UnitName.singular] means the unit renders
+/// as nothing: Turkish counts with a classifier (`10 adet zeytin`) and
+/// English does not.
+// i18n-ignore — measurement glossary, mirrored by a parity test
+const Map<String, UnitName> kUnitGlossaryEn = {
+  // Metric abbreviations are already international.
+  'g': UnitName('g', 'g'), // i18n-ignore
+  'kg': UnitName('kg', 'kg'), // i18n-ignore
+  'ml': UnitName('ml', 'ml'), // i18n-ignore
+  'l': UnitName('l', 'l'), // i18n-ignore
+  'adet': UnitName(null, null), // i18n-ignore
+  'yemek kaşığı': UnitName('tbsp', 'tbsp'), // i18n-ignore
+  'çay kaşığı': UnitName('tsp', 'tsp'), // i18n-ignore
+  'tatlı kaşığı': UnitName('dessertspoon', 'dessertspoon'), // i18n-ignore
+  'kaşık': UnitName('spoon', 'spoons'), // i18n-ignore
+  'su bardağı': UnitName('glass', 'glasses'), // i18n-ignore
+  'bardak': UnitName('glass', 'glasses'), // i18n-ignore
+  'fincan': UnitName('small cup', 'small cups'), // i18n-ignore
+  'dilim': UnitName('slice', 'slices'), // i18n-ignore
+  'diş': UnitName('clove', 'cloves'), // i18n-ignore
+  'demet': UnitName('bunch', 'bunches'), // i18n-ignore
+  'dal': UnitName('sprig', 'sprigs'), // i18n-ignore
+  'yaprak': UnitName('leaf', 'leaves'), // i18n-ignore
+  'tutam': UnitName('pinch', 'pinches'), // i18n-ignore
+  'çimdik': UnitName('pinch', 'pinches'), // i18n-ignore
+  'avuç': UnitName('handful', 'handfuls'), // i18n-ignore
+  'paket': UnitName('packet', 'packets'), // i18n-ignore
+  'kutu': UnitName('can', 'cans'), // i18n-ignore
+  'porsiyon': UnitName('portion', 'portions'), // i18n-ignore
+  'ölçek': UnitName('scoop', 'scoops'), // i18n-ignore
+  'baş': UnitName('head', 'heads'), // i18n-ignore
+  'top': UnitName('ball', 'balls'), // i18n-ignore
+};
+
+/// One glossary entry. Null on both fields means "render nothing".
+class UnitName {
+  const UnitName(this.singular, this.plural);
+  final String? singular;
+  final String? plural;
 }
 
 /// Formats a stored quantity the way a recipe writes it.

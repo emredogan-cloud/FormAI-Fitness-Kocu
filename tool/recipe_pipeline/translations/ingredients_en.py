@@ -404,10 +404,87 @@ def main():
             "note_en = coalesce(note_en, %s) where name_tr = '%s';"
             % (en, note, tr)
         )
+    # Prep-state notes. Only where the glossary did not already write a
+    # substitution note for that ingredient — "chorizo works" is worth
+    # more to a shopper than "sliced".
+    for note_tr, note_en in sorted(NOTES_EN.items()):
+        out.append(
+            "update public.recipe_ingredients set note_en = '%s' "
+            "where note_tr = '%s' and (note_en is null or note_en = note_tr);"
+            % (note_en.replace("'", "''"), note_tr.replace("'", "''"))
+        )
+
     out += ["", "commit;", ""]
     print("\n".join(out))
     print(f"-- {len(GLOSSARY)} ingredients", file=sys.stderr)
 
+
+
+# ─── prep-state notes ────────────────────────────────────────────────
+#
+# The parenthetical the ingredient parser lifted off each line —
+# "(doğranmış)", "(kuru ölçü)", "(poşe suyu için)". 49 distinct values
+# across ~330 rows, and every one of them was still Turkish inside the
+# English ingredient list until the live read-path check caught it.
+#
+# Separate from GLOSSARY because a note belongs to the LINE, not to the
+# ingredient: the same walnuts are "(kırılmış)" in one recipe and whole
+# in another. The ingredient glossary's own notes are substitutions and
+# are keyed by name; these are prep state and are keyed by note.
+#
+# Where a glossary entry already wrote a substitution note, that wins —
+# "chorizo works" is worth more to a shopper than "sliced".
+NOTES_EN = {
+    "doğranmış": "chopped",
+    "dilimlenmiş": "sliced",
+    "ezilmiş": "crushed",
+    "küp": "cubed",
+    "suyu": "juice only",
+    "kırılmış": "broken into pieces",
+    "rendelenmiş": "grated",
+    "kuşbaşı": "cut into chunks",
+    "kuru ölçü": "dry weight",
+    "ince dilim": "thinly sliced",
+    "küp doğranmış": "cut into cubes",
+    "dilim": "sliced",
+    "parçalanmış": "broken up",
+    "parmak": "cut into fingers",
+    "rende": "grated",
+    "kıyılmış": "finely chopped",
+    "dilimli": "sliced",
+    "suyu süzülmüş": "drained",
+    "didilmiş": "shredded",
+    "ince doğranmış": "finely chopped",
+    "yarım ay dilim": "cut into half-moons",
+    "parmak doğranmış": "cut into fingers",
+    "çekirdeksiz": "stoned",
+    "iri kırılmış": "roughly broken",
+    "biraz": "a little",
+    "kruton": "as croutons",
+    "didiklenmiş": "shredded",
+    "uzunlamasına ikiye": "halved lengthways",
+    "kabuk rendesi ve suyu": "zest and juice",
+    "ince": "thin",
+    "iri doğranmış": "roughly chopped",
+    "haşlanmış": "boiled",
+    "önceden dondurulmuş": "frozen ahead",
+    "kabuklu, 1 cm dilim": "skin on, 1 cm slices",
+    "soğutulmuş": "chilled",
+    "ikiye bölünmüş": "halved",
+    "ince kıyılmış": "finely chopped",
+    "veya yulaf sütü": "or oat milk",
+    "pişmiş": "cooked",
+    "suyu ve kabuğu rendesi": "juice and grated zest",
+    "yağsız": "fat-free",
+    "derili": "skin on",
+    "çekirdeksiz, doğranmış": "stoned and chopped",
+    "kavanoz": "jar",
+    "poşe suyu için": "for the poaching water",
+    "suyu ile, ~400g": "with its liquid, about 400 g",
+    "şekersiz": "unsweetened",
+    "püre": "puréed",
+    "yeşil ve siyah": "green and black",
+}
 
 if __name__ == "__main__":
     main()
