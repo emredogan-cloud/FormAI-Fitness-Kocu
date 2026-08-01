@@ -219,11 +219,17 @@ class BadgesScreen extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
               sliver: SliverGrid.builder(
                 itemCount: badges.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                   mainAxisSpacing: 14,
                   crossAxisSpacing: 14,
-                  childAspectRatio: 0.82,
+                  // Divided by the text scale, so the cell grows as its
+                  // contents do. A fixed ratio meant the tile height was
+                  // pinned while the medallion, label, subtitle and pill
+                  // inside it all scaled — eleven tiles overflowed at the
+                  // 1.3 scale the app promises to honour.
+                  childAspectRatio:
+                      0.82 / MediaQuery.textScalerOf(context).scale(1),
                 ),
                 itemBuilder: (context, index) =>
                     _BadgeTile(data: badges[index]),

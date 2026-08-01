@@ -440,13 +440,18 @@ class _SuggestionCta extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  data.ctaLabel!,
-                  style: TextStyle(
-                    color: data.accent,
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.4,
+                // Flexible: the pill is min-width and its label is the
+                // only thing that can give. Without it the CTA ran 53 px
+                // past the card at a 1.3 text scale.
+                Flexible(
+                  child: Text(
+                    data.ctaLabel!,
+                    style: TextStyle(
+                      color: data.accent,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.4,
+                    ),
                   ),
                 ),
                 if (data.ctaRoute != null) ...[
