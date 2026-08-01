@@ -1,7 +1,7 @@
 # FormAI — Project Progress Summary
 
 **Spec:** `TESTERS_COMMUNITY_PRODUCT_ROADMAP.md` (18 phases / 5 waves)
-**As of:** 2026-08-01 · commit `12ab365` · build **1.0.0+25**
+**As of:** 2026-08-01 · end of Phase 6 · build **1.0.0+26**
 
 ---
 
@@ -45,82 +45,55 @@
 - Discovery hub listing every capability — nothing hidden, and every locked row offers an immediate manual override.
 - Migrations `009`, `010` — **not applied to prod**.
 
-### Phase 5 — Internationalization Infrastructure 🔄 *engineering complete, device sweep ~1/3*
+### Phase 5 — Internationalization Infrastructure ✅ *device sweep done except 2 surfaces*
 *Build 1.0.0+25 · 850 tests · CI green · `PHASE_05_COMPLETION_REPORT.md`*
 - Hardcoded-string gate at **0 in 0 files**; ARB **1390 keys, 100% referenced and 100% resolved**.
 - Pseudo-locale sweep (18 surfaces × 3 viewports) and RTL sweep (16 surfaces) in CI; the pseudo sweep found six real overflows on its first run.
 - `docs/i18n/` — pipeline runbook, glossary, text-in-images inventory, adding-a-locale.
-- See section 2 for what remains.
+
+### Phase 6 — English Launch & Language Preference ✅
+*Build 1.0.0+26 · 899 tests · CI green · `PHASE_06_COMPLETION_REPORT.md`*
+- **FormAI is no longer a Turkish app.** `tr` and `en` both ship; the user picks at onboarding step 0 and in Settings, the change applies live with no restart, and it survives a reinstall through `user_metrics.locale`.
+- The picker applies the language **as you tap it**, so its own title and CTA flip — the only feedback that works for someone who cannot read the current language.
+- **English coach persona authored, not translated**, with the prompt scaffolding and the summariser moved with it: the summary becomes the coach's memory, so summarising in the wrong language poisons every later turn.
+- The English draft was normalised to **American English** — 24 keys said "programme" and ten said "program" — and the rule is written into `GLOSSARY.md`.
+- **The phase's real yield was defects.** Two more gate blind spots (ASCII Turkish, and `%` placement), one sweep blind spot (overflow is reported from paint, so anything below a viewport's cache extent was silently clean), **69 untranslated strings in shipped screens**, and **five layout overflows that were broken in Turkish too** — nothing had looked.
+- See section 2 for what is founder-side.
 
 ---
 
 # 2. Currently Working On
 
-## Phase 5 — Internationalization Infrastructure
+Phase 6 is complete. **Phase 7 — Content & AI Localization** is next and
+has not started.
 
-**Goal:** extract every user-visible string into ARB, make the app locale-parametric end to end, and make reintroducing hardcoded strings structurally impossible — **while shipping zero visible change to Turkish users.**
+## What Phase 6 handed off
 
-### Finished inside this phase
+Three of these are founder decisions, not engineering.
 
-**Infrastructure (complete)**
-- `tool/check_hardcoded_strings.dart` — ratchet gate with a committed per-file baseline; fails only when a file's count rises. Enforced in CI.
-- `tool/arb_coverage.dart` — key counts, missing keys per locale, unused keys, placeholder parity.
-- `lib/core/utils/unit_system.dart` — exact metric/imperial conversion, fully unit-tested.
-- `lib/core/utils/pseudo_locale.dart` — bracketing + 40% inflation, placeholders passed through verbatim.
-- `localeResolutionCallback` scaffolding in `main.dart`; `locale` parameter threaded into the coach-chat edge function.
-- Migration `011_content_localization_schema.sql` (schema only) — **not applied to prod**.
+| Item | Who | Why it matters |
+|---|---|---|
+| Apply `012_user_locale.sql` | founder / ops | The app degrades correctly without it — the sync fails, a breadcrumb is logged, the local preference still works. Only the reinstall carry-over of the language choice is lost. |
+| **Name the paid tier** | founder | The copy sells "Premium" in 13 keys and "Pro" in 6; RevenueCat's product is `FormAI Pro`; a plan badge says "PRO required". A user can be sold Premium and then told they need PRO — both appear on the profile tab at once. |
+| English screenshots + feature graphic, and pasting `docs/store/LISTING_EN.md` into Play Console | founder | The copy is written. Turkish frames cannot be reused under an English listing. |
+| A native-speaker read of the English | founder | It is a reviewed, internally consistent draft, not proofread copy. The listing is the highest-leverage hour. |
+| **The unit toggle** | engineering, unscheduled | `unit_system.dart` converts and is tested, but nothing exposes it. A US user reading `178 cm` looks like a bug rather than a gap. This matters more to an English launch than any Phase 7 item. |
 
-**Extraction (~19 slices, each committed and CI-verified separately)**
-- Core widgets, auth, feedback, survey, help centre, referral, progress, badges, suggestions, churn, premium welcome, nutrition, workout widgets, manual workout, camera tutorial.
-- Domain/service layer: pose analyzers, voice coach, badge catalogue, notifications, progressive disclosure.
+## Two device surfaces still unverified
 
-**Two structural findings worth recording**
+Both carried from Phase 5, both blocked the same way — they destroy the
+session the rest of a sweep depends on, so they go last.
 
-1. **The gate was measuring a subset and reporting it as the total.** It scanned only `/presentation/`. Extracting the camera tutorial to zero would have left its most-read line — the live "can I see you?" framing hint, six Turkish strings in `domain/` — untranslated behind a green gate. Scope widened to all of `lib/`: the count moved **701 → 1131 with nothing regressed**. The blind spot held ~540 literals: every analyzer's form warnings, the whole voice coach, notification bodies, badge names, FAQ answers, tips.
-
-2. **A recurring architectural split.** Four subsystems now separate *what was decided* from *what to say about it*: `FramingIssue` → hint, `CoachLine` → text, `BadgeDefinition` → title, `Capability`/`UnlockHint` → copy. The mechanism differs per subsystem by constraint, not by pattern — `CoachLine` is an enum with exhaustive switches; badge IDs stay strings because they are persisted and keyed on by the XP calculator, so exhaustiveness is bought in a test instead.
-
-### Remaining in Phase 5
-
-Engineering is done. What is left is a **device sweep**, and it is the
-only reason this phase is not closed.
-
-| Item | Status |
-|---|---|
-| Extraction (283 → 0 this session) | ✅ gate reports 0 in 0 files |
-| Pseudo-locale wiring + layout sweep | ✅ 18 surfaces × 3 viewports, in CI |
-| RTL readiness | ✅ 16 surfaces, in CI |
-| ICU plural audit | ✅ 19 English messages converted; audit reports the rest |
-| Translation pipeline docs | ✅ `docs/i18n/` |
-| `PHASE_05_COMPLETION_REPORT.md` | ✅ |
-| **Device walk of phases 1–5** | 🔄 **all but two surfaces.** Done: dashboard, plan detail, live camera workout, rest overlay, exit dialog, nutrition tab, nutrition onboarding sheet, progress, profile, discovery hub (incl. a live manual unlock), help centre (incl. search + empty state), badges, paywall auth gate, auth screen. Remaining: the paywall **interior** (auth-gated; adb sign-in taps do not register) and a **clean-install onboarding** (needs `adb uninstall`, which destroys the session). |
-| ARB → TMS round trip | deferred to Phase 6 — there is no second locale to round-trip yet |
-| Image goldens | **deliberately not done.** The pseudo + RTL sweeps cover the same failure class; goldens add font-rendering fragility between CI and a workstation. Reasoning in `docs/i18n/README.md`. |
-
-**Four defects found this phase that no test could have caught:** a
-plan-screen heading rendering `Closure: (AppLocalizations) => String`
-(an interpolation that called a tear-off); the live workout HUD showing
-`UNKNOWN` beside the rep counter (a raw enum name); a selected nutrition
-card overlapping its own subtitle; and the badge strip clipping
-"30 Gün Şampiyonu" to "30 Gün Şampiy". The first came from widening the
-scanner, the other three from a real screen.
-
-Two of those share a root cause worth remembering: **`FittedBox` does
-not make text fit.** It lays its child out unbounded, so the text never
-wraps, and if the natural width already exceeds the slot the scale does
-not save it — the result is a mid-word clip with no ellipsis.
-
-### Two deviations to flag
-
-- **Allowlist (194 literals, reported per entry on every run).** `lib/features/admin/` (96) is staff-only and router-gated. `workout_repository.dart` (98) is the seeded exercise catalogue — data identity mirroring database rows, which Phase 7 localises through migration 011's columns; putting it in ARB would fork the catalogue.
-- **The roadmap's success criterion "all 330 existing tests green, unmodified" has not held literally.** Roughly eight assertions changed where an API genuinely changed — e.g. `expect(r.formWarning, 'Kolları tam yukarı uzat!')` became `expect(r.formWarning, CoachLine.armsFullyExtended)`. In each case the test was pinning wording as a proxy for a decision and now pins the decision directly. No assertion was weakened or deleted to make a test pass.
-
----
+- **The paywall interior.** Auth-gated; adb sign-in taps still do not
+  register. The gate itself is verified live; the interior has 27 widget
+  tests. Missing is visual confirmation.
+- **A clean-install onboarding**, which now also means seeing the
+  language step as an actual first screen. Six widget tests and the
+  English sweep cover it; glass does not.
 
 # 3. Remaining Roadmap
 
 ### Wave 2 — Global Reach *(continues)*
-- **Phase 6 — English Launch & Language Preference.** Ship the first non-Turkish language end to end and give every user explicit control over it.
 - **Phase 7 — Content & AI Localization.** Localize what the user actually consumes — exercise names, coaching cues, plans, recipes, and the AI's cultural frame — so English FormAI is native, not translated.
 - **Phase 8 — Spanish, French, German & RTL Readiness.** Turn localization from a project into a repeatable capability and reach the markets the testers named.
 
@@ -145,28 +118,29 @@ not save it — the result is a mid-word clip with no ellipsis.
 
 ```
 Wave 1 — Production-Access Commitments   ✅ Complete   (Phases 1–4 + 3b)
-Wave 2 — Global Reach                    🔄 In Progress (Phase 5 engineering done)
+Wave 2 — Global Reach                    🔄 In Progress (Phases 5–6 done)
 Wave 3 — Measurable Progress & Access    ⏳ Not Started (Phases 9–11)
 Wave 4 — Community & Content Engine      ⏳ Not Started (Phases 12–14)
 Wave 5 — Scale, Depth & Platform         ⏳ Not Started (Phases 15–17)
 ```
 
-**Phases complete:** 6 of 18 (0, 1, 2, 3, 3b, 4) · Phase 5 engineering complete, device sweep done except the paywall interior and a clean-install onboarding
+**Phases complete:** 8 of 18 (0, 1, 2, 3, 3b, 4, 5, 6) · two device surfaces carried forward: the paywall interior and a clean-install onboarding
 
 ### Current quality state
 
 | | |
 |---|---|
-| **Build** | 1.0.0+23 |
-| **Tests** | **790 passing** (baseline was 330) |
+| **Build** | 1.0.0+26 |
+| **Tests** | **899 passing** (baseline was 330) |
 | **`flutter analyze`** | **0 issues** |
 | **`dart format`** | clean |
-| **CI** | **GREEN** on `4f11b7b` (CI + Secret Scan) |
-| **Hardcoded-string gate** | 1004 in 66 files, ratcheting down · 194 allowlisted, reported per entry |
-| **ARB** | 434 keys · `tr` 100% · 428 referenced in `lib/` |
+| **CI** | **GREEN** (CI + Secret Scan) |
+| **Hardcoded-string gate** | **0 in 0 files** · 244 allowlisted, reported per entry |
+| **ARB** | **1454 keys** · `tr` 100% · `en` 100% · all referenced in `lib/` |
+| **Locales shipped** | `tr`, `en` |
 
 ### Standing constraints
 
 - **CI Flutter is 3.44.8, local is 3.41.9.** Local green is not proof; only CI is a reliable gate.
-- **Migrations 008–011 are written but not applied to production** — founder decision required.
+- **Migrations 008–012 are written; 008–011 are applied, `012_user_locale.sql` is not.** The app degrades correctly without 012 — only the reinstall carry-over of the language choice is lost.
 - The local release build is upload-key signed, so device installs need `adb uninstall` first (loses session, requires a full onboarding re-walk).

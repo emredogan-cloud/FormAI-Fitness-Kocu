@@ -16,7 +16,7 @@ Settings — with the change applying live and surviving a reinstall.
 
 | Roadmap item | State |
 | --- | --- |
-| Full English localization (R3.1) | 1453 keys, 100% both ways, reviewed |
+| Full English localization (R3.1) | 1454 keys, 100% both ways, reviewed |
 | Language picker as onboarding step 0 (R3.2, C29) | done |
 | Language row in Settings (R3.2) | done |
 | Smart default + override memory | done — device default, explicit choice wins, carried by `user_metrics.locale` |
@@ -136,6 +136,24 @@ and left the ring 17 px down.
 `scrollThrough` now drags every sweep to the end of its content. That
 alone surfaced two more overflows immediately.
 
+### Blind spot #6 — `%` placement is a language decision
+
+Found on the device, not by a test. The progress tab rendered `%0` in
+the English app because five screens built their percentage as
+`'%$value'`, and Turkish writes the symbol before the number while
+English writes it after.
+
+The gate's composition rule was right that there is no *word* to
+translate in `'%$value'`. It was wrong that there is nothing to
+localise: the order is the localisation.
+
+The first fix attempt did not work, and the way it failed is the lesson.
+Un-excluding the literal from "pure composition" was not enough — it
+then failed the Turkish test and the label test and was skipped anyway,
+and the gate still reported zero. It had to become a positive *signal*.
+A synthetic probe caught that; the real files, all now clean, would not
+have.
+
 ### Five layout defects, none of them English-specific
 
 Every one of these was broken in Turkish too. Nothing had looked.
@@ -180,11 +198,11 @@ live.**
 
 ## 4. Tests
 
-**+47 tests** (849 → 896), against a roadmap minimum of +25.
+**+50 tests** (849 → 899), against a roadmap minimum of +25.
 
 | Suite | What it holds |
 | --- | --- |
-| `test/core/providers/locale_provider_test.dart` (10) | the default, the never-chosen/chose-Turkish distinction, persistence, decode of an unshipped or corrupted value, endonyms, the idempotence guard |
+| `test/core/providers/locale_provider_test.dart` (13) | the default, the never-chosen/chose-Turkish distinction, persistence, decode of an unshipped or corrupted value, endonyms, the idempotence guard, and `deviceLocale()` including the ordered list Android actually sends |
 | `test/features/onboarding/presentation/language_step_test.dart` (6) | every language offered and named in itself, the device pre-selected without being stored, tapping re-renders the screen, the tap is what persists, continuing without tapping leaves the device in charge |
 | `test/i18n/english_locale_sweep_test.dart` (17) | 17 funnel surfaces rendered in English at 393×851, ×1.0 and ×1.3 — no overflow, no Turkish |
 | `test/i18n/english_app_sweep_test.dart` (5) | the same, for five post-onboarding screens |
@@ -239,10 +257,64 @@ differently, which is the point: the gate has now been wrong four times.
 
 ## 6. Device validation
 
-Redmi `AYXSUKIVJVPZ7HPZ` (M1908C3JGG, Android 11, 1080×2340, tap
-scaling ×1.17), build `1.0.0+26`.
+Redmi `AYXSUKIVJVPZ7HPZ` (M1908C3JGG, Android 11, 1080×2340), build
+`1.0.0+26`. Device language: Turkish, so every English render below is
+an override rather than a default — which is the harder case.
 
-_Filled in below by the device pass._
+The `uiautomator` semantics tree is the read surface, not screenshots:
+Flutter paints to a canvas, so `content-desc` is what a screen reader
+would get and therefore what is actually asserted.
+
+### Walked
+
+| Surface | Result |
+| --- | --- |
+| Profile → Settings, Turkish | `Dil / Türkçe` row present; `Tema`, `Sistem`/`Açık`/`Koyu` all localized |
+| Language sheet, Turkish | `Uygulama dili` · `Cihaz dili — Şu anda Türkçe` · `Türkçe` · `English` |
+| **Tap English** | sheet re-rendered in English **without closing** — `App language`, `Device language`, same process, no restart |
+| Profile, English | `SETTINGS`, `Theme — Currently: Dark`, `Language — English`, `My favorites`, nav `Training / Nutrition / Progress / Profile` |
+| Training tab, English | `Weekly goal`, `Your personal training program`, `START`, `Talk to Form, your AI coach`, `online` |
+| Nutrition tab, English | `1272 kcal left`, `Protein / Carbs / Fat`, `Add now`, `Sat 1 August` |
+| Progress tab, English | `Lv 1 · Novice · 0 XP`, `PROGRAM COMPLETION`, `0%`, `You're doing great — keep going! 💪`, `Don't break your streak!` |
+| **Reset to Device language** | back to Turkish immediately; `Cihaz dili — Şu anda Türkçe` |
+| Restart after reset | still Turkish — the preference persisted |
+
+Newly extracted keys confirmed rendering live in both languages:
+`navNutrition`, `navProfile`, `levelShort` (`Sv 1` → `Lv 1`),
+`themeTileTitle`, `macroProteinChip`, `macroCarbChip`, `nutritionAddNow`,
+`progressCompletionLabel`, `progressKeepGoing`, `progressDontBreakStreak`,
+`coachStatusOnline`, `commonCopy`, `referralCodeLabel`.
+
+### Found on the device, fixed, re-verified on `1.0.0+26`
+
+1. **"Device language — Currently English"** on a Turkish phone with
+   English selected. The row described the choice it exists to undo. It
+   was reading `Localizations.localeOf`, which returns the *active*
+   locale and therefore the override. Now `deviceLocale()` asks the
+   platform. Re-verified: reads `Currently Türkçe` while the app is in
+   English.
+2. **`%0` on the progress tab.** Five screens built their percentage as
+   `'%$value'`; Turkish puts the symbol before the number, English after.
+   Every ARB percent key was already correct — these five never went
+   through ARB. Now `percentValue`. Re-verified: reads `0%`.
+
+### Confirmed but not fixed
+
+**`Izgara Bonfile ve Közlenmiş Sebze`** — a Turkish recipe name inside
+the English nutrition tab. This is the known limitation working exactly
+as documented: content lives in Supabase and is Phase 7's job. Worth
+having seen rather than assumed, because it is the most visible seam an
+English user will hit.
+
+### Not reachable in this pass
+
+- **The paywall interior** — still auth-gated, and adb sign-in still
+  does not register (carried from Phase 5; the gate itself is verified).
+- **Clean-install onboarding in English**, including the language step
+  as an actual first screen. Requires `adb uninstall`, which destroys
+  the session the rest of this sweep depended on. The step is covered by
+  six widget tests and by the English sweep at two text scales; what is
+  missing is visual confirmation on glass.
 
 ---
 
@@ -250,10 +322,10 @@ _Filled in below by the device pass._
 
 ```
 flutter analyze                                   0 issues
-flutter test                                      896
+flutter test                                      899
 dart format --output=none --set-exit-if-changed   clean
 dart run tool/check_hardcoded_strings.dart        0 in 0 files (allowlist 244)
-dart run tool/arb_coverage.dart --strict          1453 keys · tr 100% · en 100%
+dart run tool/arb_coverage.dart --strict          1454 keys · tr 100% · en 100%
 dart run tool/gen_pseudo_localizations.dart --check  up to date
 ```
 
