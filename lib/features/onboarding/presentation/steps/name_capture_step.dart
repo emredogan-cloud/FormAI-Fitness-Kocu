@@ -206,14 +206,7 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
     // one-line personalised greeting while the composing dots show. The
     // beat lasts at least one composing cadence, at most the LLM timeout;
     // a null reply keeps the scripted fallback. Onboarding cannot stall.
-    final llm = onboardingCoachReply(
-      // Prompt scaffolding, not UI copy — never rendered. Per-locale
-      // prompts are Phase 7's job; `onboardingCoachReply` already
-      // threads the locale to the server-side persona registry.
-      'Kullanıcı adını söyledi: "$name". Ona adıyla hitap ederek tek cümlelik ' // i18n-ignore
-      'sıcak bir hoş geldin ver. Soru sorma, uzatma — bir sonraki adıma ben ' // i18n-ignore
-      'geçeceğim.', // i18n-ignore
-    );
+    final llm = onboardingCoachReply(onboardingNamePrompt(name));
     Future.wait<dynamic>([llm, Future<void>.delayed(_composingBeat)])
         .then((results) {
       if (!mounted || _nameAckReady) return;
@@ -250,11 +243,7 @@ class _NameCaptureStepState extends ConsumerState<NameCaptureStep>
     // referencing the user's name AND what they said tires them most.
     // Scripted _ackText stays as the instant fallback.
     final llm = onboardingCoachReply(
-      // Prompt scaffolding, not UI copy — see above.
-      'Kullanıcının adı: "$_capturedName". "Şu an seni en çok ne yoruyor?" ' // i18n-ignore
-      'sorusuna "${choice.userBubble}" diye cevap verdi. Bunu duyduğunu ' // i18n-ignore
-      'hissettiren, adıyla hitap eden, 1-2 cümlelik empatik ve umut veren ' // i18n-ignore
-      'bir yanıt ver. Soru sorma.', // i18n-ignore
+      onboardingReframePrompt(_capturedName, choice.userBubble),
     );
     Future.wait<dynamic>([llm, Future<void>.delayed(_composingBeat)])
         .then((results) {

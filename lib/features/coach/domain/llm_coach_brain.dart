@@ -2,6 +2,7 @@ import 'coach_brain.dart';
 import 'coach_context.dart';
 import 'rule_based_coach_brain.dart';
 import '../../../l10n/app_localizations.dart';
+import '../providers/coach_providers.dart' show coachLocale;
 
 /// Transport for one coach turn. Returns the model's reply, or `null` on ANY
 /// failure (offline, timeout, function not deployed, model error) so the brain
@@ -57,10 +58,14 @@ class LlmCoachBrain implements CoachBrain {
         ? history.sublist(history.length - maxTurnsSent)
         : history;
     try {
-      final reply =
-          await transport(ctx.toPromptContext(), recent, message).timeout(
-        timeout,
-      );
+      // The context block follows the app's language, not the device's,
+      // for the same reason the persona does: an English persona handed
+      // a Turkish profile block makes the model pick a language per turn.
+      final reply = await transport(
+        ctx.toPromptContext(locale: coachLocale),
+        recent,
+        message,
+      ).timeout(timeout);
       final trimmed = reply?.trim();
       if (trimmed != null && trimmed.isNotEmpty) return trimmed;
     } catch (_) {

@@ -33,9 +33,24 @@ class CoachMemoryStore {
   CoachMemoryStore(this._prefs);
   final SharedPreferences _prefs;
 
-  String read() => _prefs.getString(_kCoachMemoryKey) ?? '';
+  /// The language the stored summary was written in.
+  ///
+  /// The summary is model-generated prose that gets fed back as the
+  /// coach's memory. Written in Turkish and replayed to an English
+  /// persona, it is a block of Turkish sitting in the system prompt on
+  /// every later turn — the model reads it as permission to answer in
+  /// Turkish. Discarding it on a language change costs a few turns of
+  /// memory and is the only way the language boundary can be clean.
+  static const String _kLocaleKey = 'sixpack.coach_memory_locale';
+
+  String read() {
+    if (_prefs.getString(_kLocaleKey) != coachLocale) return '';
+    return _prefs.getString(_kCoachMemoryKey) ?? '';
+  }
+
   Future<void> write(String summary) async {
     await _prefs.setString(_kCoachMemoryKey, summary.trim());
+    await _prefs.setString(_kLocaleKey, coachLocale);
   }
 }
 
@@ -157,6 +172,47 @@ Future<String?> onboardingCoachReply(String instruction) async {
     return trimmed;
   } catch (_) {
     return null;
+  }
+}
+
+/// The instruction for Form's welcome turn after the user gives a name.
+///
+/// Selected by locale, not translated for it. The whole reason the
+/// onboarding coach replied in the wrong language was that this was a
+/// Turkish string handed to an English persona: a model given an English
+/// system prompt and a Turkish user turn picks one per reply, which is
+/// what "sometimes Turkish, sometimes English" looks like from outside.
+String onboardingNamePrompt(String name) {
+  switch (coachLocale) {
+    case 'en':
+      return 'The user gave their name: "$name". Greet them warmly by ' // i18n-ignore
+          'name in ONE sentence. Do not ask a question and do not go ' // i18n-ignore
+          'long — I will move them to the next step.'; // i18n-ignore
+    case 'tr':
+    default:
+      return 'Kullanıcı adını söyledi: "$name". Ona adıyla hitap ederek tek ' // i18n-ignore
+          'cümlelik sıcak bir hoş geldin ver. Soru sorma, uzatma — bir ' // i18n-ignore
+          'sonraki adıma ben geçeceğim.'; // i18n-ignore
+  }
+}
+
+/// The instruction for Form's empathy turn after the user says what is
+/// wearing them down. [answer] is the user's own words, already in their
+/// language — so the instruction has to be too, or the turn is bilingual
+/// before the model even starts.
+String onboardingReframePrompt(String? name, String answer) {
+  switch (coachLocale) {
+    case 'en':
+      return 'The user is called "$name". Asked "what is wearing you ' // i18n-ignore
+          'down most right now?" they answered "$answer". Reply in 1-2 ' // i18n-ignore
+          'sentences that make them feel heard, address them by name, ' // i18n-ignore
+          'and leave them hopeful. Do not ask a question.'; // i18n-ignore
+    case 'tr':
+    default:
+      return 'Kullanıcının adı: "$name". "Şu an seni en çok ne yoruyor?" ' // i18n-ignore
+          'sorusuna "$answer" diye cevap verdi. Bunu duyduğunu ' // i18n-ignore
+          'hissettiren, adıyla hitap eden, 1-2 cümlelik empatik ve umut ' // i18n-ignore
+          'veren bir yanıt ver. Soru sorma.'; // i18n-ignore
   }
 }
 

@@ -88,13 +88,23 @@ class CoachContext {
   /// The system-prompt context the LLM coach is handed verbatim.
   ///
   /// PROMPT SCAFFOLDING, not UI copy — none of it is ever rendered, and
-  /// the literals below are marked `// i18n-ignore` for that reason. Per
-  /// the roadmap, per-locale prompting is Phase 7's job: the persona
-  /// blocks live server-side keyed by the `locale` parameter the
-  /// coach-chat request already threads, and the context block follows
-  /// the persona rather than the UI. Localising it here would split that
-  /// decision across two layers.
-  String toPromptContext() {
+  /// the literals below are marked `// i18n-ignore` for that reason.
+  ///
+  /// It is nevertheless PER-LOCALE, and that was a bug for a while. The
+  /// original note here said per-locale prompting was Phase 7's job.
+  /// Phase 6 shipped English and made that wrong: an English user's coach
+  /// was handed an English persona and then a Turkish profile block, and
+  /// a model given two languages picks one per turn. That is exactly the
+  /// "sometimes Turkish, sometimes English" the founder reported.
+  ///
+  /// Turkish keeps its original wording byte for byte — it is the shipped,
+  /// working path and there is no reason to risk its quality. English is
+  /// a parallel block, not a translation of a translation.
+  String toPromptContext({String locale = 'tr'}) {
+    return locale == 'en' ? _promptContextEn() : _promptContextTr();
+  }
+
+  String _promptContextTr() {
     final b = StringBuffer();
     b.writeln('Kullanıcı profili:'); // i18n-ignore
     if (firstName.isNotEmpty) b.writeln('- İsim: $firstName'); // i18n-ignore
@@ -131,6 +141,47 @@ class CoachContext {
       b.writeln(
           '- Kamera kurulumunu az önce tamamladı; henüz ilk seansını ' // i18n-ignore
           'yapmadı.'); // i18n-ignore
+    }
+    return b.toString().trim();
+  }
+
+  String _promptContextEn() {
+    final b = StringBuffer();
+    b.writeln('User profile:'); // i18n-ignore
+    if (firstName.isNotEmpty) b.writeln('- Name: $firstName'); // i18n-ignore
+    if (goalLabel != null) b.writeln('- Goal: $goalLabel'); // i18n-ignore
+    if (age != null) b.writeln('- Age: $age'); // i18n-ignore
+    if (heightCm != null) b.writeln('- Height: $heightCm cm');
+    if (weightKg != null) b.writeln('- Weight: $weightKg kg');
+    final bmiV = bmi;
+    if (bmiV != null) b.writeln('- BMI: ${bmiV.toStringAsFixed(1)}');
+    if (activityLabel != null) b.writeln('- Activity: $activityLabel');
+    if (hasEquipment != null) {
+      b.writeln('- Equipment: ${hasEquipment! ? 'yes' : 'no'}'); // i18n-ignore
+    }
+    b.writeln('Progress:'); // i18n-ignore
+    b.writeln('- Streak: $streakDays days'); // i18n-ignore
+    b.writeln('- Completed: $completedDays/$totalDays days'); // i18n-ignore
+    b.writeln('- Level: $level ($xp XP), Badges: $badgeCount');
+    if (todayDayNumber != null) {
+      b.writeln('- Today is day $todayDayNumber ' // i18n-ignore
+          '(${todayIsCompleted ? 'completed' : '$todayExerciseCount exercises, ' // i18n-ignore
+              'not done yet'})'); // i18n-ignore
+    }
+    if (todayExerciseNames.isNotEmpty) {
+      b.writeln(
+          "- Today's exercises: ${todayExerciseNames.join(', ')}"); // i18n-ignore
+    }
+    if (lastSessionLine != null) b.writeln('- $lastSessionLine');
+    if (workoutMode == 'manual') {
+      b.writeln(
+          '- Workout mode: camera-free (the user counts their own reps; ' // i18n-ignore
+          'no form analysis)'); // i18n-ignore
+    }
+    if (firstCameraSession) {
+      b.writeln(
+          '- Just finished camera setup; has not done a first session ' // i18n-ignore
+          'yet.'); // i18n-ignore
     }
     return b.toString().trim();
   }

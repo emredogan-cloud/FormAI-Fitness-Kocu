@@ -194,6 +194,7 @@ const SCAFFOLD: Record<string, {
   contextHeader: string;
   noContext: string;
   memoryHeader: string;
+  languageDirective: string;
 }> = {
   tr: {
     summarizer: SUMMARIZER,
@@ -204,6 +205,10 @@ const SCAFFOLD: Record<string, {
     contextHeader: "KULLANICI BAĞLAMI (gerçek veriler)",
     noContext: "Kullanıcı bağlamı henüz yok; genel ama dürüst rehberlik ver.",
     memoryHeader: "ÖNCEKİ KONUŞMALARDAN NOTLAR (koçun hafızası)",
+    languageDirective:
+      "ÇIKTI DİLİ: Yanıtını YALNIZCA Türkçe yaz. Yukarıdaki bağlamda ya " +
+      "da konuşma geçmişinde başka bir dil geçse bile — kullanıcı sana " +
+      "başka bir dilde yazsa bile — Türkçe cevap ver.",
   },
   en: {
     summarizer: SUMMARIZER_EN,
@@ -215,6 +220,11 @@ const SCAFFOLD: Record<string, {
     noContext:
       "No user context yet; give general but honest guidance.",
     memoryHeader: "NOTES FROM EARLIER CONVERSATIONS (the coach's memory)",
+    languageDirective:
+      "OUTPUT LANGUAGE: write your reply in English ONLY. Even if the " +
+      "context above or the conversation history contains another " +
+      "language — even if the user writes to you in another language — " +
+      "answer in English.",
   },
 };
 
@@ -341,6 +351,19 @@ serve(async (req) => {
           : scaffold.noContext,
         priorSummary ? `\n${scaffold.memoryHeader}:\n${priorSummary}` : "",
       ].join(""),
+    },
+    // LAST, and deliberately so. The client now sends the persona, the
+    // profile block and the onboarding instructions all in one language,
+    // but the conversation HISTORY is whatever the user has accumulated
+    // — including turns from before they switched language. A model
+    // handed a mixed thread mirrors whichever language it saw most
+    // recently, which is how the same user got Turkish on one turn and
+    // English on the next. This block is short, sits at the end where it
+    // carries the most weight, and states the answer language as a rule
+    // rather than leaving it to be inferred.
+    {
+      type: "text",
+      text: scaffold.languageDirective,
     },
   ];
 
