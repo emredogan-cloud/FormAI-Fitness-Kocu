@@ -23,10 +23,9 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 const MODEL = Deno.env.get("COACH_MODEL") ?? "claude-haiku-4-5-20251001";
 const MAX_TOKENS = Number(Deno.env.get("COACH_MAX_TOKENS") ?? "700");
 
-// The definitive production persona. Static across every user and turn, so it
+// The Turkish production persona. Static across every user and turn, so it
 // is marked cacheable below — Anthropic prompt caching then serves it at a
-// fraction of the input cost on repeat turns. Written in Turkish because "Form"
-// only ever speaks Turkish to the user.
+// fraction of the input cost on repeat turns.
 const PERSONA = `Sen "Form"sun — FormAI uygulamasının kişisel fitness koçu.
 Sıradan bir yapay zekâ asistanı DEĞİLSİN; kullanıcıyı her gün takip eden,
 onu tanıyan gerçek bir koç gibi davranırsın. Kendini asla "yapay zekâ",
@@ -75,21 +74,88 @@ GÜVENLİK (çok önemli):
 
 Amacın: kullanıcıyı bugünkü doğru adıma yönlendirmek ve onu yolda tutmak.`;
 
-// Roadmap Phase 5 (AI work) · per-locale persona registry.
+// Roadmap Phase 6 · the English Form. Written, not translated — see the
+// note on [PERSONAS]. A few things are deliberately NOT literal
+// renderings of the Turkish:
 //
-// One entry today. Phase 7 adds `en`, `es`, `fr`, `de` here — each a
-// hand-written persona, NOT a machine translation of the Turkish one.
-// Form's voice is a brand asset and raw MT flattens exactly the things
-// that make it a voice: the directness, the second-person warmth, the
-// refusal to sound like an assistant. A translated persona would still
-// read as a translation, and the coach is the one surface where that
-// would be obvious to every user.
+//   • The Turkish persona says "yalnızca Türk alfabesindeki karakterleri
+//     kullan" to stop the model reaching for ASCII lookalikes. English
+//     has no such failure mode, so that line is gone rather than
+//     mistranslated into something meaningless.
+//   • "Sıcak" is warm-as-in-a-person, not warm-as-in-friendly-support-
+//     agent. English gets "on the user's side", which is the same idea
+//     in a language where "warm" has drifted toward customer service.
+//   • The forbidden-promise example is re-picked for the market: a US
+//     reader recognises "lose 10 pounds in 2 weeks" as the shape of a
+//     scam claim; a literal "10 kilos" would not land the same way.
 //
-// Selection happens server-side so a new language ships without an app
-// release — the whole reason the client threads `locale` a phase before
-// anything reads it.
+// The guardrails are identical in force and wording where it matters:
+// no invented history, no invented set/rep numbers, no medical advice,
+// no diagnosis, no exaggerated promises.
+const PERSONA_EN = `You are "Form" — the personal fitness coach inside the
+FormAI app. You are NOT a general-purpose AI assistant; you behave like a real
+coach who follows this person day to day and knows them. Never introduce
+yourself as an "AI", an "assistant", a "model" or "ChatGPT". You are Form.
+
+WHO YOU ARE:
+- On the user's side, motivating, and professional. Firm when it helps them,
+  never sharp.
+- Emotionally literate: you notice how they are doing and hear them out first.
+- Not robotic. Natural, fluent English, spoken like a person. Emoji sparingly.
+
+TRUTHFULNESS (the most important rule):
+- Use ONLY what is in the context block and the conversation history below.
+- NEVER invent past conversations, measurements, statistics or events
+  ("last week you said…", "most users quit on day 3" are FORBIDDEN unless
+  they are in the context).
+- If you do not know something, say so plainly and point to where in the app
+  they can find it.
+- Take numbers verbatim from the context. No rounding, no inventing.
+- Use exercise names exactly as the context gives them. If the context does
+  NOT carry set and rep counts, do not invent them — say "follow the sets and
+  reps in your plan", or state clearly that you are giving general advice.
+
+HOW TO ANSWER:
+- Always in English.
+- For conversational or emotional questions: short and natural, 2-4 sentences,
+  plain prose.
+- For answers that are genuinely a list — a plan, a workout, a meal — use
+  structure: short emoji-headed sections with bullets. For example:
+  🏋 Today's workout
+  • Push-ups — 3x12
+  • Plank — 3x40s
+  💡 Coach's tip
+  Keep your elbows close to your body.
+- You may **bold** the words that matter. Two or three sections at most;
+  scannability is the point. No walls of text.
+- NEVER cut a reply off mid-thought — if it is going to be long, write a
+  shorter one from the start.
+- End with one clear next step.
+
+SAFETY (critical):
+- Do NOT give medical advice. If pain, injury, illness or medication comes up:
+  tell them not to push through it, and to speak to a health professional.
+- No diagnosis, no dosages, no dangerous or extreme exercise suggestions.
+- Do not sound certain about things you are not, and make no exaggerated
+  promises ("lose 10 pounds in 2 weeks" and anything like it is forbidden).
+
+Your job: point them at the right next step today, and keep them going.`;
+
+// Roadmap Phase 5 (AI work) · per-locale persona registry, filled in by
+// Phase 6.
+//
+// Every entry is a HAND-WRITTEN persona, never a machine translation of
+// the Turkish one. Form's voice is a brand asset and raw MT flattens
+// exactly the things that make it a voice: the directness, the
+// second-person warmth, the refusal to sound like an assistant. A
+// translated persona still reads as a translation, and the coach is the
+// one surface where every user would notice.
+//
+// Selection happens server-side, so `es`, `fr` and `de` ship without an
+// app release — the whole reason the client threads `locale`.
 const PERSONAS: Record<string, string> = {
   tr: PERSONA,
+  en: PERSONA_EN,
 };
 
 // Minimal instruction for the rolling-summary mode. Deliberately persona-free
@@ -102,6 +168,55 @@ beslenme tarzı, güçlü/zayıf yönler, tekrarlayan hatalar, motivasyon durumu
 kısıtlar (sakatlık, ekipman, zaman). Geçici gevezelikleri atla. UYDURMA.
 En fazla 8 kısa madde, her madde "- " ile başlasın, toplam 120 kelimeyi geçme.
 Sadece maddeleri yaz, başka hiçbir şey yazma.`;
+
+const SUMMARIZER_EN = `Below is a conversation between a fitness coach and a
+user, plus (if present) the previous note summary. Update the durable facts the
+coach should REMEMBER about this user: goals, habits, preferred training and
+eating style, strengths and weaknesses, recurring mistakes, motivation, and
+constraints (injury, equipment, time). Skip small talk. DO NOT INVENT.
+At most 8 short bullets, each starting with "- ", 120 words total maximum.
+Write only the bullets, nothing else.`;
+
+// Everything the model is handed that is prose rather than persona.
+//
+// The summary is the reason this matters more than it looks: it is
+// written by the model, stored on the device, and fed BACK in as the
+// coach's memory on later turns. Summarise an English conversation with
+// the Turkish summariser and every future English reply is grounded in
+// Turkish notes under a Turkish heading — the coach starts quoting
+// itself in the wrong language.
+const SCAFFOLD: Record<string, {
+  summarizer: string;
+  coach: string;
+  user: string;
+  priorSummary: string;
+  newConversation: string;
+  contextHeader: string;
+  noContext: string;
+  memoryHeader: string;
+}> = {
+  tr: {
+    summarizer: SUMMARIZER,
+    coach: "Koç",
+    user: "Kullanıcı",
+    priorSummary: "ÖNCEKİ ÖZET",
+    newConversation: "YENİ KONUŞMA",
+    contextHeader: "KULLANICI BAĞLAMI (gerçek veriler)",
+    noContext: "Kullanıcı bağlamı henüz yok; genel ama dürüst rehberlik ver.",
+    memoryHeader: "ÖNCEKİ KONUŞMALARDAN NOTLAR (koçun hafızası)",
+  },
+  en: {
+    summarizer: SUMMARIZER_EN,
+    coach: "Coach",
+    user: "User",
+    priorSummary: "PREVIOUS SUMMARY",
+    newConversation: "NEW CONVERSATION",
+    contextHeader: "USER CONTEXT (real data)",
+    noContext:
+      "No user context yet; give general but honest guidance.",
+    memoryHeader: "NOTES FROM EARLIER CONVERSATIONS (the coach's memory)",
+  },
+};
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -150,12 +265,19 @@ serve(async (req) => {
     return json({ error: "bad_request" }, 400);
   }
 
-  // Roadmap Phase 5 · persona selection seam. One locale today; adding
-  // a language in Phase 7 is a new entry in this map plus its persona
-  // block, with no client change — which is the entire reason the
-  // parameter is threaded a phase early.
+  // Roadmap Phase 5 built this seam; Phase 6 is the first call that
+  // actually turns. Adding a language is a new PERSONAS entry plus a
+  // SCAFFOLD entry, with no app release — which is the entire reason
+  // the client has been threading `locale` since a phase before
+  // anything read it.
+  //
+  // An unknown locale falls back to Turkish rather than to English: a
+  // locale we do not have a persona for is a locale whose UI is already
+  // resolving to Turkish, and the coach must not be the one surface
+  // speaking a different language from the rest of the app.
   const locale = (payload.locale ?? "tr").toString().slice(0, 8);
-  const personaLocale = locale.startsWith("tr") ? "tr" : "tr";
+  const personaLocale = locale.startsWith("en") ? "en" : "tr";
+  const scaffold = SCAFFOLD[personaLocale];
 
   const contextBlock = (payload.context ?? "").toString().slice(0, 4000);
   const history = Array.isArray(payload.turns) ? payload.turns : [];
@@ -177,18 +299,21 @@ serve(async (req) => {
   if (payload.mode === "summarize") {
     if (messages.length === 0) return json({ error: "empty_turns" }, 400);
     const transcript = messages
-      .map((m) => `${m.role === "assistant" ? "Koç" : "Kullanıcı"}: ${m.content}`)
+      .map((m) =>
+        `${m.role === "assistant" ? scaffold.coach : scaffold.user}: ${m.content}`
+      )
       .join("\n");
     const body = {
       model: MODEL,
       max_tokens: 250,
-      system: [{ type: "text", text: SUMMARIZER }],
+      system: [{ type: "text", text: scaffold.summarizer }],
       messages: [
         {
           role: "user",
           content: priorSummary
-            ? `ÖNCEKİ ÖZET:\n${priorSummary}\n\nYENİ KONUŞMA:\n${transcript}`
-            : `YENİ KONUŞMA:\n${transcript}`,
+            ? `${scaffold.priorSummary}:\n${priorSummary}\n\n` +
+              `${scaffold.newConversation}:\n${transcript}`
+            : `${scaffold.newConversation}:\n${transcript}`,
         },
       ],
     };
@@ -212,11 +337,9 @@ serve(async (req) => {
       type: "text",
       text: [
         contextBlock
-          ? `KULLANICI BAĞLAMI (gerçek veriler):\n${contextBlock}`
-          : "Kullanıcı bağlamı henüz yok; genel ama dürüst rehberlik ver.",
-        priorSummary
-          ? `\nÖNCEKİ KONUŞMALARDAN NOTLAR (koçun hafızası):\n${priorSummary}`
-          : "",
+          ? `${scaffold.contextHeader}:\n${contextBlock}`
+          : scaffold.noContext,
+        priorSummary ? `\n${scaffold.memoryHeader}:\n${priorSummary}` : "",
       ].join(""),
     },
   ];

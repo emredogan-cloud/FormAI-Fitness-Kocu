@@ -88,14 +88,17 @@ bool get _llmEnabled {
 
 /// Roadmap Phase 5 (AI work) · the locale sent with every coach request.
 ///
-/// Hardcoded to Turkish for now — the app has exactly one supported
-/// locale until Phase 6 — but sent as data rather than assumed, so the
-/// server owns persona selection and Phase 7 can add languages with no
-/// app release. It is deliberately a constant rather than a read of the
-/// device locale: the persona must follow the app's language, not the
-/// phone's, or a Turkish user on an English handset gets an English
-/// coach inside a Turkish app.
-const String coachLocale = 'tr';
+/// Reads [AppCopy], not the device: the persona must follow the app's
+/// language, not the phone's, or a Turkish user on an English handset
+/// gets an English coach inside a Turkish app. `AppCopy.locale` is set
+/// by `main.dart`'s locale-resolution callback, so it is the app's
+/// answer whether it came from an explicit choice or from the device.
+///
+/// Phase 6 is where this stopped being a constant. The server owns
+/// persona selection, so a language added there ships without an app
+/// release — which is why the parameter has been on the wire since a
+/// phase before anything read it.
+String get coachLocale => AppCopy.locale.languageCode;
 
 /// Calls the `coach-chat` Supabase Edge Function (which holds the model key
 /// server-side). Returns the reply text, or `null` on any non-2xx / shape
@@ -120,11 +123,7 @@ Future<String?> _invokeCoachChat(
           .toList(),
       'message': message,
       if (memory.isNotEmpty) 'summary': memory,
-      // Roadmap Phase 5 (AI work) · thread the locale now so the server
-      // can select a per-locale persona in Phase 7 without an app
-      // release. Sending it before it is used is the point: by the time
-      // non-Turkish personas exist, every client already in the wild is
-      // telling the server which one to use.
+      // The server keys its persona and its prompt scaffolding on this.
       'locale': coachLocale,
     },
   );
@@ -144,12 +143,11 @@ Future<String?> onboardingCoachReply(String instruction) async {
   if (!_llmEnabled) return null;
   try {
     final reply = await _invokeCoachChat(
-      // Prompt scaffolding, not UI copy — it is never rendered. Per-locale
-      // prompts are Phase 7's job (the roadmap keeps persona blocks
-      // server-side, keyed by the `locale` parameter this call already
-      // threads).
-      'Bağlam: uygulamanın tanışma (onboarding) sohbeti. Kullanıcı seni yeni ' // i18n-ignore
-          'tanıyor. Tek mesajlık, kısa ve samimi bir yanıt ver.', // i18n-ignore
+      // Prompt scaffolding, not UI copy — it is never rendered, which is
+      // why it carries no ARB key. It is still per-locale: the persona
+      // answers in the app's language, and a Turkish instruction inside
+      // an English conversation pulls the reply back toward Turkish.
+      _onboardingContextPrompt(),
       const [],
       instruction,
       '',
@@ -159,6 +157,24 @@ Future<String?> onboardingCoachReply(String instruction) async {
     return trimmed;
   } catch (_) {
     return null;
+  }
+}
+
+/// The context line handed to the coach for the onboarding chat.
+///
+/// Not an ARB key: nothing here reaches a screen. It is selected by
+/// locale rather than translated for it — an instruction written in the
+/// language you want back is worth more than an accurate translation.
+String _onboardingContextPrompt() {
+  switch (coachLocale) {
+    case 'en':
+      return 'Context: the app\'s introductory onboarding chat. The user ' // i18n-ignore
+          'is meeting you for the first time. Reply once, briefly and ' // i18n-ignore
+          'warmly.'; // i18n-ignore
+    case 'tr':
+    default:
+      return 'Bağlam: uygulamanın tanışma (onboarding) sohbeti. Kullanıcı seni yeni ' // i18n-ignore
+          'tanıyor. Tek mesajlık, kısa ve samimi bir yanıt ver.'; // i18n-ignore
   }
 }
 
@@ -181,6 +197,12 @@ Future<String?> _invokeCoachSummarize(
                 })
             .toList(),
         if (priorSummary.isNotEmpty) 'summary': priorSummary,
+        // The summariser is per-locale too, and this one matters more
+        // than it looks: its output is stored and fed back as the
+        // coach's memory. Summarise an English conversation with the
+        // Turkish summariser and every later English reply is grounded
+        // in Turkish notes.
+        'locale': coachLocale,
       },
     );
     final data = res.data;
