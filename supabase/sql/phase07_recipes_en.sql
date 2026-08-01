@@ -2468,6 +2468,1233 @@ METHOD:
 2. Add 600 ml of water and simmer for 8 minutes.
 3. Beat the egg with the lemon juice and add it to the soup in a thin stream, stirring constantly.
 4. Season with salt and mint and serve.' where id = '6b43b796-865e-43cf-a678-5c370dc4c570';
+update public.recipes set title_en = 'Sugar-Free Chocolate Yogurt Mousse', instructions_en = 'INGREDIENTS:
+- 200 g strained yogurt (Turkish süzme; Greek yogurt is the same thing)
+- 1 tbsp unsweetened cocoa
+- 15 g vanilla protein powder
+- 1 banana
+- 1 pinch cinnamon
+
+METHOD:
+1. Whisk the cocoa and protein powder into the yogurt.
+2. Fold the banana through.
+3. Transfer to a bowl.
+4. Finish with cinnamon and serve cold.' where id = '8f406bf5-a009-43f6-a97c-b44dcdd4e370';
+update public.recipes set title_en = 'Syrup-Soaked Oat Balls', instructions_en = 'INGREDIENTS:
+- 60 g rolled oats
+- 1 tbsp honey
+- 30 ml water
+- 30 g sugar
+- 15 g desiccated coconut
+- 1 tbsp tahini
+
+METHOD:
+1. Make a light syrup with the water and sugar and let it cool to warm.
+2. Knead the oats, tahini and honey together.
+3. Roll into balls and dip them in the syrup.
+4. Coat in desiccated coconut and serve.' where id = '13cf5b2f-1cfc-4305-8183-993f1d7b8660';
+update public.recipes set title_en = 'Onion and Tomato Soup', instructions_en = 'INGREDIENTS:
+- 2 large onion
+- 2 ripe tomato
+- 1 tbsp butter
+- 1 slice wholemeal bread
+- 500 ml water
+- salt
+
+METHOD:
+1. Fry the onions in the butter for 5 minutes until caramelised.
+2. Add the tomatoes and water and simmer for 7 minutes.
+3. Add the salt and divide between bowls.
+4. Set the croutons on top and serve.' where id = '18d40545-b0b2-45bd-ae6e-16e1f935709a';
+update public.recipes set title_en = 'Beef Sauté with Onions', instructions_en = 'INGREDIENTS:
+- 150 g diced beef
+- 2 large onion
+- 1 tbsp tomato paste
+- 10 ml olive oil
+- 1 tsp chilli flakes
+- salt
+
+METHOD:
+1. Fry the beef in the olive oil for 4 minutes.
+2. Add the onions and cook for 5 minutes more until caramelised.
+3. Add the tomato paste, chilli flakes and 50 ml of water.
+4. Cover, cook for 4 minutes, season with salt and serve.' where id = '2892d52a-3754-4afb-8d6d-d1005b391fb4';
+update public.recipes set title_en = 'Quick Chicken Sauté with Onions', instructions_en = 'INGREDIENTS:
+- 200 g chicken breast
+- 2 large onion
+- 10 ml olive oil
+- 1 tbsp tomato paste
+- salt and black pepper
+
+METHOD:
+1. Fry the onions in the olive oil for 4 minutes until caramelised.
+2. Add the chicken and cook for 5 minutes until it is no longer pink.
+3. Add the tomato paste and 50 ml of hot water.
+4. Cover, cook for 5 minutes more and serve.' where id = '5af46c91-1243-497b-b956-77d313c763f1';
+update public.recipes set title_en = 'Köfte with Onions', instructions_en = 'INGREDIENTS:
+- 200 g köfte mix (packet seasoning mix for Turkish meatballs)
+- 2 large onion
+- 5 ml olive oil
+- 1 tbsp tomato paste
+- 1 tsp cumin
+- salt
+
+METHOD:
+1. Roll the köfte into balls and fry them in a pan for 4 minutes.
+2. Add the onions and cook for 4 minutes more until caramelised.
+3. Add the tomato paste and 100 ml of water and simmer for 4 minutes.
+4. Season with cumin and salt and serve.' where id = '1e237e15-2a91-488c-ad30-09dd4364b0ac';
+update public.recipes set title_en = 'Lettuce and Onion Salad', instructions_en = 'INGREDIENTS:
+- 2 handfuls lettuce
+- 1 small red onion
+- 1 tomato
+- 5 ml olive oil
+- 1/2 lemon
+- salt
+
+METHOD:
+1. Gather the lettuce, onion and tomato in a bowl.
+2. Add the olive oil, lemon and salt.
+3. Toss lightly and serve.' where id = '3771c575-d15e-479d-99b2-5dbcba096545';
+update public.recipes set title_en = 'Fried Potatoes with Onion', instructions_en = 'INGREDIENTS:
+- 2 medium potato
+- 1 small onion
+- 10 ml olive oil
+- 1 pinch chilli flakes
+- salt
+
+METHOD:
+1. Cook the potatoes in the olive oil over medium heat for 8 minutes.
+2. Add the onion and fry for 3 minutes more, stirring.
+3. Scatter the salt and chilli flakes.
+4. Serve hot.' where id = '380efa78-7e00-4038-85e2-d04098a858f8';
+update public.recipes set title_en = 'Cold Sliced Chicken Breast', instructions_en = 'INGREDIENTS:
+- 120 g cooked chicken breast
+- 1 green pepper
+- 1/2 lemon
+- 5 ml olive oil
+- a few sprigs of fresh parsley
+- salt
+
+METHOD:
+1. Arrange the chicken slices on a plate.
+2. Set the peppers to one side.
+3. Drizzle the olive oil and lemon juice over.
+4. Serve with salt and parsley.' where id = '8c613f1a-fd95-46df-b994-496c4d5b1185';
+update public.recipes set title_en = 'Simple Potatoes with Sucuk', instructions_en = 'INGREDIENTS:
+- 3 potato
+- 60 g sucuk (Turkish beef sausage; chorizo or any cured spiced sausage works)
+- 1 small onion
+- 5 ml olive oil
+- 1 tsp chilli flakes
+- salt
+
+METHOD:
+1. Fry the potatoes in the olive oil for 7 minutes.
+2. Add the sucuk slices and cook for 2 minutes more.
+3. Add the onion and fry for 3 minutes.
+4. Serve with salt and chilli flakes.' where id = 'd01efbcc-70aa-47a1-9e4e-3a2478d97e2d';
+update public.recipes set title_en = 'Bulgur with Sucuk and Egg', instructions_en = 'INGREDIENTS:
+- 60 g coarse bulgur
+- 50 g sucuk (Turkish beef sausage; chorizo or any cured spiced sausage works)
+- 2 eggs
+- 1 small onion
+- 5 ml olive oil
+- salt and black pepper
+
+METHOD:
+1. Chop the onion and fry it in the olive oil, add the sucuk slices and fry for 1 minute more.
+2. Add the bulgur and stir, then pour in 180 ml of hot water and the salt.
+3. Cover and cook for 12 minutes, take it off the heat and let it steam for 5 minutes.
+4. Set the quickly fried eggs on top and serve with black pepper.' where id = '58d43640-2c47-4f30-9cb7-dff3c9e13fe3';
+update public.recipes set title_en = 'Oats with Milk', instructions_en = 'INGREDIENTS:
+- 50 g rolled oats
+- 250 ml milk
+- 1 dessertspoon honey
+- 1 pinch cinnamon
+
+METHOD:
+1. Bring the oats and milk to the boil in a pan over medium heat.
+2. Cook for 4 minutes more, stirring as it thickens.
+3. Transfer to a bowl and add the honey and cinnamon.
+4. Serve hot.' where id = '66dfb3f4-3e52-480b-95b1-8aa20b8cdde9';
+update public.recipes set title_en = 'Cottage Cheese with Blackberries', instructions_en = 'INGREDIENTS:
+- 150 g cottage cheese
+- 80 g fresh blackberries
+- 1 dessertspoon honey
+- 5 g flaked almonds
+
+METHOD:
+1. Spoon the cottage cheese into a bowl.
+2. Scatter the blackberries over it.
+3. Drizzle the honey in a thin ribbon.
+4. Scatter the flaked almonds over and serve immediately.' where id = '1bd24999-8e32-4c38-9883-4a2fbe144f63';
+update public.recipes set title_en = 'Avocado with Cottage Cheese', instructions_en = 'INGREDIENTS:
+- 1/2 avocado
+- 80 g cottage cheese
+- 1/2 lemon
+- 5 ml olive oil
+- a few fresh mint leaves
+- salt
+
+METHOD:
+1. Hollow out the avocado around the stone.
+2. Fill the hollow with the cottage cheese.
+3. Drizzle the lemon and olive oil over.
+4. Serve with salt and mint.' where id = '4ab3110d-4f84-44d3-979a-b131609c8a5a';
+update public.recipes set title_en = 'Cottage Cheese Toastie', instructions_en = 'INGREDIENTS:
+- 2 slices wholemeal bread
+- 80 g cottage cheese
+- 5 g butter
+- 1 slice tomato
+- a few fresh mint leaves
+- salt
+
+METHOD:
+1. Spread the cottage cheese over the inner faces of the bread.
+2. Add the tomato and mint and season with salt.
+3. Grease the pan with butter.
+4. Cook in a covered pan for 3 minutes until both sides are golden.' where id = '7d15cf47-aca0-4111-9e67-0652638b2d62';
+update public.recipes set title_en = 'Strained Yogurt and Beyaz Peynir Plate', instructions_en = 'INGREDIENTS:
+- 100 g strained yogurt (Turkish süzme; Greek yogurt is the same thing)
+- 60 g beyaz peynir (Turkish brined white cheese; feta works)
+- 1 tbsp honey
+- 15 g walnuts
+- 1 pinch cinnamon
+
+METHOD:
+1. Spoon the yogurt into a bowl.
+2. Set the beyaz peynir to one side.
+3. Add the walnuts and honey.
+4. Finish with cinnamon and serve.' where id = '79cdb494-b6a5-4b3c-a482-cdb2d59f846b';
+update public.recipes set title_en = 'Strained Yogurt Strawberry Bowl', instructions_en = 'INGREDIENTS:
+- 200 g strained yogurt (Turkish süzme; Greek yogurt is the same thing)
+- 100 g fresh strawberries
+- 1 dessertspoon honey
+- 15 g granola
+
+METHOD:
+1. Spoon the yogurt into a bowl.
+2. Lay the strawberries on top.
+3. Scatter the granola.
+4. Drizzle the honey and serve cold.' where id = '021fe947-fd5b-40ec-b054-124465d8253c';
+update public.recipes set title_en = 'Frozen Strained Yogurt Bars', instructions_en = 'INGREDIENTS:
+- 200 g strained yogurt (Turkish süzme; Greek yogurt is the same thing)
+- 100 g fresh strawberries
+- 1 tbsp honey
+- 15 g granola
+
+METHOD:
+1. Mix the yogurt, strawberries and honey together.
+2. Spread it into a flat dish 1 cm thick.
+3. Scatter the granola over the top.
+4. Freeze for 5 minutes, cut into bars and serve.' where id = 'fdfde1c9-7339-4a2d-b570-1b31e2400459';
+update public.recipes set title_en = 'Strained Yogurt Fruit Parfait', instructions_en = 'INGREDIENTS:
+- 250 g strained yogurt (Turkish süzme; Greek yogurt is the same thing)
+- 60 g unsweetened granola
+- 80 g fresh strawberries
+- 30 g raspberries
+- 10 g honey
+
+METHOD:
+1. Put a layer of strained yogurt in the bottom of a tall glass.
+2. Add a layer of granola.
+3. Scatter the strawberries and raspberries.
+4. Repeat the layers, drizzle a ribbon of honey on top and serve.' where id = '2989f227-5166-4852-ac18-2fc78d42f1d7';
+update public.recipes set title_en = 'Strained Yogurt Protein Bowl', instructions_en = 'INGREDIENTS:
+- 250 g strained yogurt (Turkish süzme; Greek yogurt is the same thing)
+- 30 g vanilla whey protein powder
+- 80 g strawberries
+- 20 g blueberries
+- 15 g almonds
+- 10 g chia seeds
+- 5 g honey
+
+METHOD:
+1. Stir the protein powder through the strained yogurt until smooth.
+2. Spread the mixture over the base of a wide bowl.
+3. Arrange the fruit, almonds and chia seeds on top.
+4. Drizzle a thin ribbon of honey over last and serve immediately.' where id = '966ee5cd-c207-4bed-af4b-d35a3eefc93d';
+update public.recipes set title_en = 'Strained Yogurt Protein Smoothie', instructions_en = 'INGREDIENTS:
+- 200 g strained yogurt (Turkish süzme; Greek yogurt is the same thing)
+- 1 banana
+- 200 ml milk
+- 15 g vanilla protein powder
+- 1 tbsp honey
+
+METHOD:
+1. Put all the ingredients in a blender.
+2. Blend on high for 60 seconds until smooth.
+3. Pour into a tall glass.
+4. Drink immediately.' where id = '9e2132b7-b994-4791-8ce6-b06f2b81ed16';
+update public.recipes set title_en = 'Strained Yogurt with Peanuts', instructions_en = 'INGREDIENTS:
+- 200 g strained yogurt (Turkish süzme; Greek yogurt is the same thing)
+- 30 g roasted peanuts
+- 1 dessertspoon honey
+- 1 pinch cinnamon
+
+METHOD:
+1. Spoon the yogurt into a bowl.
+2. Lay the peanuts on top.
+3. Drizzle the honey over.
+4. Scatter cinnamon and serve.' where id = '4b346b34-6e9a-48cd-90f5-900ad61e6c76';
+update public.recipes set title_en = 'Tahini and Grape Molasses on Bread', instructions_en = 'INGREDIENTS:
+- 2 slices wholemeal bread
+- 2 tbsp tahini
+- 1 tbsp grape molasses (Turkish pekmez; date or pomegranate molasses substitute)
+- 1 pinch cinnamon
+
+METHOD:
+1. Warm the bread slices lightly.
+2. Mix the tahini and grape molasses in a bowl until smooth.
+3. Spread the mixture over the bread slices.
+4. Scatter cinnamon over and serve immediately.' where id = 'e22861f2-b90b-440e-b8d8-a5c9824bee93';
+update public.recipes set title_en = 'Carrot Sticks with Tahini Dip', instructions_en = 'INGREDIENTS:
+- 2 carrot
+- 1 tbsp tahini
+- 1 tbsp grape molasses (Turkish pekmez; date or pomegranate molasses substitute)
+- 1 tbsp water
+
+METHOD:
+1. Mix the tahini, grape molasses and water until smooth.
+2. Cut the carrots into fingers.
+3. Arrange them on a plate and set the dip beside them in a bowl.
+4. Serve immediately.' where id = '5b81219f-6f9c-4934-8143-c1b32a7a4c76';
+update public.recipes set title_en = 'Lettuce Salad with Tahini Dressing', instructions_en = 'INGREDIENTS:
+- 2 handfuls lettuce
+- 1 tbsp tahini
+- 1/2 lemon
+- 1 tbsp water
+- 1 clove garlic
+- salt
+
+METHOD:
+1. Whisk the tahini, lemon, water, garlic and salt together.
+2. Stir until the dressing is smooth.
+3. Put the lettuce in a bowl.
+4. Drizzle the dressing over, toss and serve.' where id = 'd427f819-3360-4282-a386-bedfea039db5';
+update public.recipes set title_en = 'Tahini and Grape Molasses Balls', instructions_en = 'INGREDIENTS:
+- 80 g rolled oats
+- 2 tbsp tahini
+- 2 tbsp grape molasses (Turkish pekmez; date or pomegranate molasses substitute)
+- 15 g desiccated coconut
+
+METHOD:
+1. Knead the oats, tahini and grape molasses together.
+2. Rest the mixture for 1 minute.
+3. Roll into walnut-sized balls and coat them in desiccated coconut.
+4. Chill for 5 minutes and serve.' where id = 'ca57151b-64ff-40be-a7ac-4d08ce00f885';
+update public.recipes set title_en = 'Simple Yogurt with Tahini', instructions_en = 'INGREDIENTS:
+- 200 g strained yogurt (Turkish süzme; Greek yogurt is the same thing)
+- 1 tbsp tahini
+- 1 tbsp honey
+- 1 pinch cinnamon
+
+METHOD:
+1. Spoon the yogurt into a bowl.
+2. Spread the tahini and honey over it.
+3. Finish with cinnamon and serve.' where id = '10e48528-dff4-41fe-a5a2-2bef4b5c2089';
+update public.recipes set title_en = 'Cinnamon Strained Yogurt', instructions_en = 'INGREDIENTS:
+- 200 g strained yogurt (Turkish süzme; Greek yogurt is the same thing)
+- 1 dessertspoon honey
+- 1 tsp cinnamon
+- 10 g walnuts
+
+METHOD:
+1. Spoon the yogurt into a bowl.
+2. Add the honey and walnuts on top.
+3. Finish with cinnamon and serve cold.' where id = '4064b55c-a0fb-4f6f-a0a0-3bf31ed21872';
+update public.recipes set title_en = 'Cinnamon Oat Dessert', instructions_en = 'INGREDIENTS:
+- 50 g rolled oats
+- 200 ml milk
+- 1 tbsp honey
+- 1 tsp cinnamon
+- 15 g walnuts
+
+METHOD:
+1. Bring the oats and milk to the boil in a pan over medium heat.
+2. Add the cinnamon and cook for 3 minutes more.
+3. Transfer to a bowl and drizzle the honey over.
+4. Finish with walnuts and serve hot.' where id = 'b742477e-1837-4611-90c3-ad825e7d0f4e';
+update public.recipes set title_en = 'Cinnamon Egg Toast', instructions_en = 'INGREDIENTS:
+- 2 slices wholemeal bread
+- 1 eggs
+- 60 ml milk
+- 1 tsp cinnamon
+- 10 g butter
+- 1 tbsp honey
+
+METHOD:
+1. Whisk the eggs, milk and cinnamon together.
+2. Dip the bread slices in the mixture.
+3. Fry in the butter for 2 minutes until both sides are golden.
+4. Drizzle the honey over and serve.' where id = '1e6d1313-bad2-41e4-88eb-8f30ac9b0cfe';
+update public.recipes set title_en = 'Pan-Fried Leek with Eggs', instructions_en = 'INGREDIENTS:
+- 1 large leek
+- 2 eggs
+- 1 small onion
+- 10 ml olive oil
+- salt and black pepper
+
+METHOD:
+1. Fry the onion and leek in the olive oil for 5 minutes.
+2. Add 50 ml of water, cover and cook for 4 minutes.
+3. Crack the eggs over the top and season.
+4. Serve once the eggs have set.' where id = '4be347eb-04c3-4a5c-8eb3-98cd092012b9';
+update public.recipes set title_en = 'Pan-Fried Cauliflower Patties', instructions_en = 'INGREDIENTS:
+- 200 g cooked cauliflower
+- 50 g flour
+- 1 eggs
+- 1 small onion
+- 5 ml olive oil
+- salt
+
+METHOD:
+1. Knead the cauliflower, flour, egg, onion and salt together.
+2. Shape the mixture into walnut-sized patties.
+3. Cook each side for 4 minutes in an oiled pan.
+4. Drain on kitchen paper and serve.' where id = 'a92b439c-e426-46e3-8a50-1b37b719ba81';
+update public.recipes set title_en = 'Simple Pan-Fried Vegetables', instructions_en = 'INGREDIENTS:
+- 1 courgette (zucchini)
+- 1 aubergine (eggplant)
+- 1 green pepper
+- 5 ml olive oil
+- 1 tsp dried oregano
+- salt
+
+METHOD:
+1. Fry the aubergine slices in the olive oil for 4 minutes.
+2. Add the courgette and pepper and sauté for 4 minutes more.
+3. Scatter the salt and oregano.
+4. Serve hot.' where id = '0ddb2482-c3f0-4d3f-b5bf-96b5eb925e98';
+update public.recipes set title_en = 'Chicken Lettuce Wraps', instructions_en = 'INGREDIENTS:
+- 120 g poached chicken breast
+- 6 large lettuce leaf
+- 1/2 carrot
+- 1/4 red onion
+- 1 tbsp tahini
+- 1 dessertspoon soy sauce
+- 5 ml lemon juice
+
+METHOD:
+1. Whisk the tahini, soy sauce and lemon juice thoroughly in a bowl.
+2. Toss the chicken, carrot and onion through the dressing.
+3. Put 2 tbsp of the mixture on each lettuce leaf.
+4. Roll the leaves up and serve immediately.' where id = '96108507-1627-4de5-9ef8-66e1105d506b';
+update public.recipes set title_en = 'Chicken Breast Salad', instructions_en = 'INGREDIENTS:
+- 150 g cooked chicken breast
+- 2 handfuls lettuce
+- 1 tomato
+- 1 cucumber
+- 10 ml olive oil
+- 1/2 lemon
+
+METHOD:
+1. Combine the lettuce, tomato and cucumber in a bowl.
+2. Lay the chicken over the top.
+3. Dress with the olive oil, lemon juice and salt.
+4. Serve immediately.' where id = 'eff745bb-4187-46e3-a883-44449700ed7d';
+update public.recipes set title_en = 'Pan-Fried Chicken Breast', instructions_en = 'INGREDIENTS:
+- 200 g chicken breast
+- 5 ml olive oil
+- 1 clove garlic
+- 1/2 lemon
+- salt
+- black pepper
+
+METHOD:
+1. Flatten the chicken breast and marinate it with the spices, garlic and lemon for 5 minutes.
+2. Cook each side for 3 minutes in a hot pan with the olive oil.
+3. Cover and rest for 2 minutes.
+4. Serve hot.' where id = '5bb75f53-c831-413c-830e-7fe4afa4b44d';
+update public.recipes set title_en = 'Simple Chicken Sandwich', instructions_en = 'INGREDIENTS:
+- 100 g cooked chicken breast
+- 2 slices wholemeal bread
+- 1 leaf lettuce
+- 1 slice tomato
+- 1 tbsp strained yogurt (Turkish süzme; Greek yogurt is the same thing)
+- salt
+
+METHOD:
+1. Spread the yogurt over the inner faces of the bread.
+2. Lay out the lettuce, tomato and chicken.
+3. Season with salt and close it.
+4. Cut in half and serve.' where id = 'de34dfa9-3e83-42f3-9679-5cd1a569da4e';
+update public.recipes set title_en = 'Chicken Schnitzel', instructions_en = 'INGREDIENTS:
+- 150 g chicken fillet
+- 1 eggs
+- 50 g breadcrumbs
+- 5 ml olive oil
+- salt
+- black pepper
+
+METHOD:
+1. Flatten the chicken fillet and season it with salt and black pepper.
+2. Coat it in egg, then in breadcrumbs.
+3. Fry each side for 4 minutes in an oiled pan.
+4. Drain on kitchen paper and serve.' where id = '895f1c0c-caf8-4911-b64a-5a99d6e3b37d';
+update public.recipes set title_en = 'Chicken Şiş', instructions_en = 'INGREDIENTS:
+- 200 g chicken breast
+- 1 green pepper
+- 1 small onion
+- 5 ml olive oil
+- 1 clove garlic
+- salt
+
+METHOD:
+1. Marinate the chicken with the olive oil, garlic and salt for 5 minutes.
+2. Thread the chicken, pepper and onion onto skewers.
+3. Cook each side for 3 minutes in a hot griddle pan.
+4. Serve hot.' where id = '2660a36f-fe54-44f5-a1ba-9a2ff4bcbc4b';
+update public.recipes set title_en = 'Chicken Sauté with Pilaf', instructions_en = 'INGREDIENTS:
+- 150 g chicken breast
+- 60 g rice
+- 1 small onion
+- 1 tbsp tomato paste
+- 10 ml olive oil
+- salt and black pepper
+
+METHOD:
+1. Cook the rice in a pan with 200 ml of hot water for 12 minutes, without butter.
+2. In the same time, fry the chicken in the olive oil for 4 minutes.
+3. Add the onion and tomato paste and cook for 4 minutes more.
+4. Plate the pilaf, spoon the sauté over it and serve.' where id = 'c2ce2e7d-4bf1-4cc3-a292-9f05a2e726da';
+update public.recipes set title_en = 'Chicken and Rice Soup', instructions_en = 'INGREDIENTS:
+- 60 g rice
+- 500 ml chicken stock
+- 1 eggs
+- 1 tbsp butter
+- 1/2 lemon
+- salt
+
+METHOD:
+1. Rinse the rice, add it to the chicken stock and simmer for 12 minutes.
+2. Beat the egg with the lemon juice and add it slowly to the soup.
+3. Add the butter while it is still hot.
+4. Season with salt and serve.' where id = 'd9f725aa-73f9-474d-bd97-13288ba1384f';
+update public.recipes set title_en = 'Chicken and Potato Pot', instructions_en = 'INGREDIENTS:
+- 150 g chicken breast
+- 2 potato
+- 1 small onion
+- 1 tbsp tomato paste
+- 5 ml olive oil
+- salt
+
+METHOD:
+1. Fry the chicken in the olive oil for 4 minutes.
+2. Add the onion and potato and cook for 3 minutes more.
+3. Add the tomato paste and 200 ml of hot water.
+4. Cover and cook for 8 minutes.' where id = 'e51ebfe0-8a9f-4ecc-9b90-bae1f5892dcd';
+update public.recipes set title_en = 'Chicken Bulgur Pilaf', instructions_en = 'INGREDIENTS:
+- 80 g coarse bulgur
+- 150 g chicken breast
+- 1 small onion
+- 1 tbsp butter
+- salt and black pepper
+
+METHOD:
+1. Fry the chicken in the butter for 4 minutes.
+2. Add the onion and cook for 2 minutes more.
+3. Add the bulgur and fry for 1 minute, then add 200 ml of hot water and the spices.
+4. Cover, cook for 10 minutes and let it rest.' where id = 'a2c4a9da-a6dc-4158-a5fb-18e3b5ab99dc';
+update public.recipes set title_en = 'Chicken Bulgur Salad', instructions_en = 'INGREDIENTS:
+- 80 g coarse bulgur
+- 120 g cooked chicken breast
+- 1 tomato
+- 1 cucumber
+- 10 ml olive oil
+- 1/2 lemon
+
+METHOD:
+1. Soak the bulgur in hot water for 10 minutes and drain it.
+2. Combine the chicken, vegetables and bulgur in a bowl.
+3. Add the olive oil and lemon juice and toss.
+4. Season with salt and serve cold.' where id = '07b866c4-6291-48a7-81cf-127b0cc3c467';
+update public.recipes set title_en = 'Chicken Erişte Soup', instructions_en = 'INGREDIENTS:
+- 80 g erişte (Turkish egg noodles; tagliatelle works)
+- 100 g cooked chicken breast
+- 500 ml chicken stock
+- 1 small carrot
+- 5 g butter
+- salt
+
+METHOD:
+1. Put the chicken stock in a pan, add the carrot and simmer for 4 minutes.
+2. Add the erişte and cook for 6 minutes more.
+3. Add the chicken pieces and warm for 2 minutes.
+4. Season with butter and salt and serve.' where id = 'cf7aa6c1-9c6f-4036-9ace-87d9f8f26e59';
+update public.recipes set title_en = 'Chicken and Cauliflower Sauté', instructions_en = 'INGREDIENTS:
+- 150 g chicken breast
+- 200 g cauliflower
+- 1 small onion
+- 5 ml olive oil
+- 1 tbsp tomato paste
+- salt
+
+METHOD:
+1. Fry the chicken in the olive oil for 4 minutes.
+2. Add the onion and cauliflower and sauté for 4 minutes.
+3. Add the tomato paste and 100 ml of water.
+4. Cover, cook for 6 minutes, season with salt and serve.' where id = '412b2c63-d96d-465b-b8bb-fe8a0b5e470e';
+update public.recipes set title_en = 'Chicken Karnıyarık', instructions_en = 'INGREDIENTS:
+- 2 aubergine (eggplant)
+- 150 g ground chicken
+- 1 small onion
+- 1 tbsp tomato paste
+- 5 ml olive oil
+- salt
+
+METHOD:
+1. Fry the ground chicken in the olive oil for 4 minutes.
+2. Add the onion and tomato paste and cook for 3 minutes more.
+3. Split the aubergines open and fill them with the mixture.
+4. Cook covered in 200 ml of hot water for 5 minutes.' where id = 'ff50cbf4-8a0e-44f2-a058-0bda1e47ce4d';
+update public.recipes set title_en = 'Chicken and Mushroom Sauté', instructions_en = 'INGREDIENTS:
+- 150 g chicken breast
+- 150 g mushrooms
+- 1 small onion
+- 10 ml olive oil
+- 1 tbsp tomato paste
+- salt
+
+METHOD:
+1. Fry the chicken in the olive oil for 4 minutes.
+2. Add the onion and mushrooms and sauté for 4 minutes.
+3. Add the tomato paste and 50 ml of water.
+4. Cover, cook for 4 minutes, season with salt and serve.' where id = '52e45221-39ed-47c8-b65b-350237332a3e';
+update public.recipes set title_en = 'Chicken and Potato Salad', instructions_en = 'INGREDIENTS:
+- 2 boiled potato
+- 100 g cooked chicken breast
+- 100 g strained yogurt (Turkish süzme; Greek yogurt is the same thing)
+- 1 small onion
+- 1 tbsp chopped parsley
+- salt
+
+METHOD:
+1. Gather the potato, chicken and onion in a bowl.
+2. Add the yogurt and salt and mix.
+3. Garnish with parsley.
+4. Serve cold.' where id = 'a0978e93-3fec-4361-babf-192a9ff611a2';
+update public.recipes set title_en = 'Chicken and Vegetable Soup', instructions_en = 'INGREDIENTS:
+- 100 g cooked chicken breast
+- 1 potato
+- 1 carrot
+- 1 small onion
+- 500 ml chicken stock
+- salt
+
+METHOD:
+1. Add the onion, carrot and potato to the chicken stock and simmer for 8 minutes.
+2. Add the chicken and cook for 4 minutes more.
+3. Season with salt.
+4. Divide between bowls and serve.' where id = '5b16d059-a49a-4a9e-8a1b-e611ec01e603';
+update public.recipes set title_en = 'Chicken and Oat Wrap', instructions_en = 'INGREDIENTS:
+- 2 large wholemeal lavash (thin flatbread; a large wholemeal tortilla works)
+- 180 g grilled chicken breast
+- 60 g rolled oats
+- 1/2 avocado
+- 30 g cheddar cheese
+- 1 tbsp hummus
+- lettuce, tomato and cucumber
+
+METHOD:
+1. Cook the oats to a porridge with a little water and cool them.
+2. Warm the lavash lightly in a pan.
+3. Layer the hummus, oat porridge, chicken, avocado and cheese in turn.
+4. Add the vegetables, roll tightly, cut in two and serve.' where id = '20d9ceab-4c86-460e-8007-033092c595b9';
+update public.recipes set title_en = 'Beef and Green Bean Stew', instructions_en = 'INGREDIENTS:
+- 200 g green beans
+- 100 g diced beef
+- 1 small onion
+- 1 tbsp tomato paste
+- 5 ml olive oil
+- salt
+
+METHOD:
+1. Fry the beef in the olive oil for 4 minutes.
+2. Add the onion and tomato paste and cook for 2 minutes more.
+3. Add the beans and 150 ml of hot water.
+4. Cover, cook for 8 minutes, season with salt and serve.' where id = '18d212ed-568d-4642-89bb-2da2e976db4e';
+update public.recipes set title_en = 'Potato Köfte in a Pot', instructions_en = 'INGREDIENTS:
+- 200 g köfte mix (packet seasoning mix for Turkish meatballs)
+- 2 potato
+- 1 small onion
+- 1 tbsp tomato paste
+- 10 ml olive oil
+- salt
+
+METHOD:
+1. Roll the köfte into balls and fry them in the olive oil for 4 minutes.
+2. Add the potato and onion and cook for 3 minutes more.
+3. Add the tomato paste and 200 ml of hot water.
+4. Cover and cook for 8 minutes.' where id = '298a2857-2595-417f-af81-b338b5add691';
+update public.recipes set title_en = 'Pot Eggs with Vegetables', instructions_en = 'INGREDIENTS:
+- 2 eggs
+- 1 potato
+- 1 green pepper
+- 1 tomato
+- 10 ml olive oil
+- salt
+
+METHOD:
+1. Fry the potatoes in the olive oil for 6 minutes.
+2. Add the pepper and tomato and cook for 3 minutes more.
+3. Crack the eggs over the top and season.
+4. Cover, cook for 2 minutes and serve.' where id = '7efa29c2-9833-4074-87db-d4f5ba74ec42';
+update public.recipes set title_en = 'Chicken Sauté in a Pot', instructions_en = 'INGREDIENTS:
+- 200 g diced chicken breast
+- 1 small onion
+- 1 long green pepper (Turkish sivri; any mild long pepper works)
+- 2 tbsp tomato paste
+- 10 ml olive oil
+- salt, black pepper and chilli flakes
+
+METHOD:
+1. Chop the onion and pepper small and sauté them in the olive oil for 2 minutes.
+2. Add the diced chicken and fry for 4 minutes until sealed all over.
+3. Add the tomato paste, the spices and 100 ml of hot water and stir.
+4. Cover and cook over low heat for 8 minutes.' where id = '67834090-0185-42a7-8925-492e44b53f59';
+update public.recipes set title_en = 'Bread with Butter and Honey', instructions_en = 'INGREDIENTS:
+- 2 slices wholemeal bread
+- 15 g butter
+- 1 tbsp honey
+
+METHOD:
+1. Toast the bread slices lightly.
+2. Spread the butter on while they are hot.
+3. Drizzle the honey over and serve.' where id = '8f4eb6cc-f675-4723-ba5a-d1e62ea1bce0';
+update public.recipes set title_en = 'Butter and Lemon Pasta', instructions_en = 'INGREDIENTS:
+- 100 g pasta
+- 15 g butter
+- 1/2 lemon
+- salt and black pepper
+
+METHOD:
+1. Boil the pasta in salted water and drain it.
+2. Melt the butter in the same pan.
+3. Add the lemon juice and zest and stir.
+4. Return the pasta, season and serve.' where id = 'b60d8c64-6d4d-4754-839e-e122280f6693';
+update public.recipes set title_en = 'Tofu Stir Fry with Brown Rice', instructions_en = 'INGREDIENTS:
+- 180 g firm tofu
+- 70 g brown rice
+- 1 small head of broccoli
+- 1 red pepper
+- 1 carrot
+- 2 tbsp low-salt soy sauce
+- 10 ml sesame oil
+- 1 clove garlic
+- grated ginger
+
+METHOD:
+1. Cook the brown rice for 25 minutes.
+2. Cube the tofu and fry it in the sesame oil until every side is golden.
+3. Add the vegetables and garlic to the pan and toss over high heat for 4 minutes.
+4. Add the soy sauce and ginger and cook for 2 minutes more.
+5. Spoon it and its sauce over the rice and serve.' where id = '2039017c-b2fc-44d3-ac05-a325326d00a4';
+update public.recipes set title_en = 'Tuna Pasta Salad', instructions_en = 'INGREDIENTS:
+- 100 g cooked pasta
+- 1 can tuna
+- 1 tomato
+- 1 cucumber
+- 10 ml olive oil
+- 1/2 lemon
+
+METHOD:
+1. Combine the pasta, tuna and vegetables in a bowl.
+2. Add the olive oil and lemon juice.
+3. Season with salt and black pepper.
+4. Serve immediately.' where id = 'ed6622d5-b21b-4f28-86f1-154d6ef83cf7';
+update public.recipes set title_en = 'Mixed Vegetable and Beef Stew', instructions_en = 'INGREDIENTS:
+- 1 aubergine (eggplant)
+- 1 courgette (zucchini)
+- 1 potato
+- 100 g ground beef
+- 1 tbsp tomato paste
+- 5 ml olive oil
+
+METHOD:
+1. Fry the ground beef in the olive oil for 4 minutes.
+2. Add the potato and cook for 3 minutes more, then add the tomato paste.
+3. Add the aubergine and courgette with 150 ml of hot water.
+4. Cover, cook for 6 minutes, season with salt and serve.' where id = '4a55cc97-dd46-444f-b962-c1c82660f282';
+update public.recipes set title_en = 'Oats with Raisins', instructions_en = 'INGREDIENTS:
+- 50 g rolled oats
+- 250 ml milk
+- 30 g raisins
+- 1 dessertspoon honey
+- 1 pinch cinnamon
+
+METHOD:
+1. Bring the oats, milk and raisins to the boil in a pan.
+2. Cook for 4 minutes until it thickens.
+3. Transfer to a bowl.
+4. Finish with honey and cinnamon and serve.' where id = '7e1dbee0-d866-4a64-90fd-5f9c6bc1b745';
+update public.recipes set title_en = 'Vegetarian Quinoa Power Bowl', instructions_en = 'INGREDIENTS:
+- 80 g quinoa
+- 100 g cooked chickpeas
+- 1 carrot
+- 50 g red cabbage
+- 1/2 avocado
+- 15 ml tahini
+- 1 juice of one lemon
+- fresh parsley, salt and black pepper
+
+METHOD:
+1. Boil the quinoa in plenty of water for 15 minutes and drain it.
+2. Whisk the tahini, lemon juice and 2 tbsp of water into a dressing.
+3. Arrange the quinoa, chickpeas, carrot, cabbage and avocado in a bowl.
+4. Drizzle the tahini dressing over and serve with parsley.' where id = '22efb9fa-874d-46d8-903b-782ec1e3be41';
+update public.recipes set title_en = 'Bulgur Pilaf with Yogurt', instructions_en = 'INGREDIENTS:
+- 80 g coarse bulgur
+- 1 small onion
+- 200 g strained yogurt (Turkish süzme; Greek yogurt is the same thing)
+- 1 tbsp butter
+- 1 tsp dried mint
+- 1 pinch salt
+
+METHOD:
+1. Chop the onion small and fry it in the butter for 2 minutes.
+2. Add the bulgur and fry for 1 minute more, then add 200 ml of hot water and the salt.
+3. Cover and cook over low heat for 12 minutes, take it off the heat and let it steam for 5 minutes.
+4. Plate the pilaf, set the yogurt beside it and scatter dried mint over the top.' where id = '9a482323-a32e-4a11-be56-0f93892aa34c';
+update public.recipes set title_en = 'Chocolate Yogurt Mousse', instructions_en = 'INGREDIENTS:
+- 200 g strained yogurt (Turkish süzme; Greek yogurt is the same thing)
+- 1 tbsp unsweetened cocoa
+- 1 tbsp honey
+- 15 g dark chocolate
+- 1 pinch cinnamon
+
+METHOD:
+1. Sift the cocoa into the yogurt and whisk.
+2. Fold the honey through.
+3. Transfer to a bowl and scatter the chocolate over.
+4. Finish with cinnamon and serve cold.' where id = '30dd1542-694c-41c6-b366-aa3bcb322c01';
+update public.recipes set title_en = 'Strawberry Yogurt Mousse', instructions_en = 'INGREDIENTS:
+- 200 g strained yogurt (Turkish süzme; Greek yogurt is the same thing)
+- 100 g fresh strawberries
+- 1 tbsp honey
+- 10 g sugar
+
+METHOD:
+1. Crush the strawberries with the sugar into a purée.
+2. Fold the honey and strawberry purée into the yogurt.
+3. Divide between bowls.
+4. Garnish with a whole strawberry and serve cold.' where id = '6958c745-30c2-4f24-bad4-17ede84cb2c2';
+update public.recipes set title_en = 'Yogurt Granola Parfait', instructions_en = 'INGREDIENTS:
+- 200 g strained yogurt (Turkish süzme; Greek yogurt is the same thing)
+- 40 g unsweetened granola
+- 60 g strawberries
+- 10 g honey
+- 1/2 dessertspoon vanilla extract
+
+METHOD:
+1. Stir the vanilla extract through the yogurt.
+2. Put a layer of yogurt in the bottom of a tall glass.
+3. Add granola and strawberries and repeat the layers.
+4. Drizzle honey on top and serve immediately.' where id = '1aceab71-1e65-4b3a-9b99-b34b9c21abaf';
+update public.recipes set title_en = 'Carrot and Yogurt Snack', instructions_en = 'INGREDIENTS:
+- 2 carrot
+- 150 g strained yogurt (Turkish süzme; Greek yogurt is the same thing)
+- 1 clove garlic
+- 5 ml olive oil
+- 1 tbsp chopped parsley
+- salt
+
+METHOD:
+1. Sauté the carrots in the olive oil for 3 minutes.
+2. Cool them and stir them into the yogurt.
+3. Mix in the garlic, salt and parsley.
+4. Serve cold.' where id = '58977a4e-5f05-43ee-a46f-0f5dde8acd25';
+update public.recipes set title_en = 'Cauliflower Yogurt Salad', instructions_en = 'INGREDIENTS:
+- 200 g cooked cauliflower
+- 100 g strained yogurt (Turkish süzme; Greek yogurt is the same thing)
+- 1 clove garlic
+- 5 ml olive oil
+- a few sprigs of fresh parsley
+- salt
+
+METHOD:
+1. Combine the cauliflower and yogurt in a bowl.
+2. Add the garlic and salt and mix.
+3. Garnish with parsley.
+4. Drizzle olive oil over and serve cold.' where id = '01b44deb-8b04-4002-90f4-48ace32a515c';
+update public.recipes set title_en = 'Lentil Soup with Yogurt', instructions_en = 'INGREDIENTS:
+- 100 g cooked red lentils
+- 200 g strained yogurt (Turkish süzme; Greek yogurt is the same thing)
+- 1 clove garlic
+- 1 tbsp butter
+- 1 tsp chilli flakes
+- salt
+
+METHOD:
+1. Simmer the lentils in 400 ml of water for 6 minutes and blend smooth.
+2. Stir the garlic and salt through the yogurt.
+3. Divide the soup between bowls and spoon the yogurt into the middle.
+4. Bloom the chilli flakes in the butter and drizzle it over.' where id = '55b6c6b7-35d1-420c-be5e-b4968ce3c530';
+update public.recipes set title_en = 'Beetroot Yogurt Salad', instructions_en = 'INGREDIENTS:
+- 1 cooked beetroot
+- 100 g strained yogurt (Turkish süzme; Greek yogurt is the same thing)
+- 1 clove garlic
+- 5 ml olive oil
+- 15 g walnuts
+- salt
+
+METHOD:
+1. Combine the beetroot and yogurt in a bowl.
+2. Add the garlic and salt.
+3. Drizzle olive oil over.
+4. Garnish with walnuts and serve.' where id = 'c1c6d1cf-c67a-4d7b-bc5d-72ad1b6b9a03';
+update public.recipes set title_en = 'Potato Yogurt Salad', instructions_en = 'INGREDIENTS:
+- 2 boiled potato
+- 150 g strained yogurt (Turkish süzme; Greek yogurt is the same thing)
+- 1 clove garlic
+- 5 ml olive oil
+- 1 tbsp chopped parsley
+- salt
+
+METHOD:
+1. Add the garlic, salt and olive oil to the yogurt and mix.
+2. Fold the potato through.
+3. Garnish with parsley.
+4. Serve cold.' where id = 'ab7afeaa-a33a-4e68-85d9-149b89887c8d';
+update public.recipes set title_en = 'Aubergine and Yogurt Dip', instructions_en = 'INGREDIENTS:
+- 1 roasted aubergine (eggplant, charred over flame)
+- 100 g strained yogurt (Turkish süzme; Greek yogurt is the same thing)
+- 1 clove garlic
+- 5 ml olive oil
+- 1 tbsp chopped parsley
+- salt
+
+METHOD:
+1. Peel the roasted aubergine and mash it.
+2. Add the yogurt, garlic and salt and mix.
+3. Drizzle the olive oil over.
+4. Garnish with parsley and serve.' where id = '2a402024-f9a6-4e2e-b035-a00fcc3b52b8';
+update public.recipes set title_en = 'Rice Soup with Yogurt', instructions_en = 'INGREDIENTS:
+- 60 g rice
+- 200 g yogurt
+- 1 eggs
+- 500 ml water
+- 1 tbsp butter
+- 1 tsp dried mint
+
+METHOD:
+1. Add the rice to the water and simmer for 12 minutes.
+2. Stir the egg into the yogurt and add it to the soup in a thin stream.
+3. Melt the butter and bloom the mint in it.
+4. Drizzle it over the soup and serve.' where id = '438928e0-1c5a-4b8e-9f1c-c50294e2f2eb';
+update public.recipes set title_en = 'Rice Salad with Yogurt', instructions_en = 'INGREDIENTS:
+- 80 g cooked rice
+- 100 g strained yogurt (Turkish süzme; Greek yogurt is the same thing)
+- 1 cucumber
+- 1 small onion
+- 5 ml olive oil
+- a few sprigs of fresh parsley
+
+METHOD:
+1. Combine the rice, cucumber and onion in a bowl.
+2. Add the yogurt and olive oil.
+3. Season with salt and toss with the parsley.
+4. Serve cold.' where id = 'e9d5aff9-1f9a-4cb9-a1a4-e32028a59bbd';
+update public.recipes set title_en = 'Simple Chicken Sauté with Yogurt', instructions_en = 'INGREDIENTS:
+- 200 g chicken breast
+- 150 g strained yogurt (Turkish süzme; Greek yogurt is the same thing)
+- 1 clove garlic
+- 5 ml olive oil
+- salt and black pepper
+
+METHOD:
+1. Fry the chicken in the olive oil for 5 minutes.
+2. Add the garlic and fry for 1 minute.
+3. Add 50 ml of hot water for a sauce, cover and cook for 5 minutes.
+4. Stir the yogurt in after taking it off the heat and serve.' where id = 'ff397aa1-0a09-4ecc-8238-b97e86884361';
+update public.recipes set title_en = 'Cucumber Yogurt Snack', instructions_en = 'INGREDIENTS:
+- 200 g strained yogurt (Turkish süzme; Greek yogurt is the same thing)
+- 1 cucumber
+- 1 clove garlic
+- 5 ml olive oil
+- 1 tsp dried mint
+- 1 pinch salt
+
+METHOD:
+1. Grate the cucumber and drain it lightly.
+2. Add the crushed garlic, salt and mint to the yogurt and mix.
+3. Fold the cucumber into the yogurt.
+4. Drizzle olive oil over and serve.' where id = '222645a3-d8f9-4eca-b9b5-481c7dfcca05';
+update public.recipes set title_en = 'Chicken Sandwich with Yogurt', instructions_en = 'INGREDIENTS:
+- 100 g cooked chicken breast
+- 2 slices wholemeal bread
+- 2 tbsp strained yogurt (Turkish süzme; Greek yogurt is the same thing)
+- 1 leaf lettuce
+- 1 slice tomato
+- salt
+
+METHOD:
+1. Spread the yogurt over the inner faces of the bread.
+2. Lay out the lettuce, tomato and chicken.
+3. Season with salt and close it.
+4. Cut in half and serve.' where id = '78feafca-ed22-49b1-8c64-c68d44843708';
+update public.recipes set title_en = 'Egg Salad with Yogurt', instructions_en = 'INGREDIENTS:
+- 2 boiled egg
+- 100 g strained yogurt (Turkish süzme; Greek yogurt is the same thing)
+- 1 tbsp chopped parsley
+- salt and black pepper
+
+METHOD:
+1. Mash the boiled eggs with a fork.
+2. Add the strained yogurt, the seasoning and the parsley and mix.
+3. Transfer to a plate and scatter a little more parsley over if you like.
+4. Serve cold.' where id = '098bd57b-7ef4-4efc-9cd0-d18dd4b78050';
+update public.recipes set title_en = 'High-Protein Cheesecake Bites', instructions_en = 'INGREDIENTS:
+- 120 g fat-free cottage cheese
+- 100 g strained yogurt (Turkish süzme; Greek yogurt is the same thing)
+- 20 g vanilla whey protein powder
+- 30 g rolled oats
+- 10 g honey
+- 5 g coconut oil
+- 60 g strawberries
+
+METHOD:
+1. Press the oats and coconut oil into the base of a mini muffin tin.
+2. Blend the cottage cheese, yogurt, protein powder and honey until smooth.
+3. Spoon the mixture into the tin.
+4. Rest in the fridge for 30 minutes.
+5. Set a slice of strawberry on each bite and serve.' where id = '369d92a1-04b8-4a1d-8e05-846308e0ebaf';
+update public.recipes set title_en = 'High-Protein Chocolate Pudding', instructions_en = 'INGREDIENTS:
+- 1 scoop chocolate protein powder
+- 1/2 avocado
+- almond milk
+
+METHOD:
+1. Blend the protein powder, avocado and almond milk together.
+2. Chill in the fridge.' where id = '3d7181e0-2292-41b0-ad95-ffb2aeef7b64';
+update public.recipes set title_en = 'High-Protein Yogurt Mousse', instructions_en = 'INGREDIENTS:
+- 200 g strained yogurt (Turkish süzme; Greek yogurt is the same thing)
+- 15 g vanilla protein powder
+- 1 tbsp honey
+- 15 g granola
+- 1 pinch cinnamon
+
+METHOD:
+1. Whisk the protein powder into the yogurt.
+2. Fold the honey through to a thick mousse.
+3. Transfer to a bowl and scatter the granola.
+4. Finish with cinnamon and serve cold.' where id = '7a7869e8-1095-4d2b-a4f3-92e3d059affc';
+update public.recipes set title_en = 'Oat Chocolate Cookies', instructions_en = 'INGREDIENTS:
+- 50 g rolled oats
+- 30 g flour
+- 15 g dark chocolate
+- 1 eggs
+- 1 tbsp honey
+- 5 g butter
+
+METHOD:
+1. Knead all the ingredients together in a bowl.
+2. Spoon cookie shapes onto non-stick baking paper.
+3. Bake at 180°C for 10 minutes (or 3 minutes a side in a pan).
+4. Serve once cooled.' where id = '9ba42b13-178c-4fc3-9592-dcebd59090fd';
+update public.recipes set title_en = 'Oat Banana Cookies', instructions_en = 'INGREDIENTS:
+- 50 g rolled oats
+- 1 ripe banana
+- 15 g dark chocolate
+- 15 g walnuts
+- 1 pinch cinnamon
+
+METHOD:
+1. Mix all the ingredients in a bowl.
+2. Spoon onto non-stick baking paper.
+3. Bake at 180°C for 10 minutes (or 4 minutes on one side in a pan).
+4. Serve once cooled.' where id = '1ba72b0d-c758-4079-b003-046a53116e0e';
+update public.recipes set title_en = 'Oat Milk Soup', instructions_en = 'INGREDIENTS:
+- 50 g rolled oats
+- 300 ml milk
+- 1 tbsp honey
+- 1 pinch cinnamon
+- 5 g butter
+
+METHOD:
+1. Bring the milk and oats to the boil in a pan.
+2. Add the butter and cook for 4 minutes more.
+3. Transfer to a bowl and drizzle the honey over.
+4. Finish with cinnamon and serve hot.' where id = 'cc93b1d0-d269-4c30-abb1-4b5fecf92cf8';
+update public.recipes set title_en = 'Oat and Cinnamon Smoothie', instructions_en = 'INGREDIENTS:
+- 30 g rolled oats
+- 250 ml milk
+- 1 banana
+- 1 dessertspoon honey
+- 1 tsp cinnamon
+
+METHOD:
+1. Put all the ingredients in a blender.
+2. Blend for 60 seconds until smooth.
+3. Pour into a glass.
+4. Scatter a little cinnamon over and drink.' where id = 'a15821f0-65a7-4cc2-8ccb-75cea69c8665';
+update public.recipes set title_en = 'Egg White Omelette with Turkey', instructions_en = 'INGREDIENTS:
+- 5 egg whites
+- 1 whole egg
+- 60 g sliced turkey breast
+- 1/2 red pepper
+- 1 handful parsley
+- salt and black pepper
+
+METHOD:
+1. Beat the egg whites with the whole egg and add the salt and black pepper.
+2. Sauté the turkey in a non-stick pan for 1 minute.
+3. Add the egg mixture and cook over medium heat until the edges set.
+4. Scatter the pepper and parsley, fold the omelette in half and serve.' where id = '686353d1-cb72-47af-ade0-edd250753768';
+update public.recipes set title_en = 'Egg White and Vegetable Plate', instructions_en = 'INGREDIENTS:
+- 4 egg whites
+- 1 tomato
+- 1 cucumber
+- 5 ml olive oil
+- a few fresh mint leaves
+- salt
+
+METHOD:
+1. Cook the egg whites in a non-stick pan over medium heat for 4 minutes.
+2. Plate them and arrange the tomato and cucumber alongside.
+3. Scatter the salt and mint.
+4. Drizzle olive oil over and serve.' where id = '80a4d456-d63c-47a5-9d33-c26834a78b0d';
+update public.recipes set title_en = 'Egg and Avocado Plate', instructions_en = 'INGREDIENTS:
+- 2 boiled egg
+- 1/2 avocado
+- 5 olives
+- 5 ml olive oil
+- 1 slice bread
+- a few fresh mint leaves
+
+METHOD:
+1. Peel the eggs and cut them in half.
+2. Arrange the avocado slices and olives on a plate.
+3. Add the eggs and drizzle olive oil over.
+4. Serve with a slice of bread and mint.' where id = 'b14140b0-f7a7-47b4-9fcd-65adb196fa7f';
+update public.recipes set title_en = 'Egg and Cheese Sandwich', instructions_en = 'INGREDIENTS:
+- 2 slices wholemeal bread
+- 1 boiled egg
+- 40 g beyaz peynir (Turkish brined white cheese; feta works)
+- 1 leaf lettuce
+- 1 slice tomato
+- salt
+
+METHOD:
+1. Crumble the cheese and spread it over the inner faces of the bread.
+2. Lay out the egg slices and tomato.
+3. Add the lettuce leaf and close it.
+4. Season with salt and serve.' where id = '71901285-763d-4e14-985b-f95817427b07';
+update public.recipes set title_en = 'Egg and Tomato Sandwich', instructions_en = 'INGREDIENTS:
+- 2 slices wholemeal bread
+- 1 boiled egg
+- 1 slice tomato
+- 5 ml olive oil
+- a few fresh mint leaves
+- salt
+
+METHOD:
+1. Brush the inner faces of the bread with olive oil.
+2. Lay out the egg and tomato.
+3. Season with salt and garnish with mint.
+4. Close, cut in half and serve.' where id = 'f26ca644-1885-43c5-a598-82d9700694a4';
+update public.recipes set title_en = 'Erişte with Egg', instructions_en = 'INGREDIENTS:
+- 80 g erişte (Turkish egg noodles; tagliatelle works)
+- 2 eggs
+- 1 small onion
+- 5 ml butter
+- salt and black pepper
+
+METHOD:
+1. Boil the erişte in salted water for 8 minutes and drain it.
+2. Fry the onion in the butter for 2 minutes.
+3. Crack the eggs in and cook them, stirring, with the onion.
+4. Fold in the erişte, season and serve.' where id = 'ba909998-425f-4e53-b349-cf1fe5ba0f67';
+update public.recipes set title_en = 'Potato and Egg Salad', instructions_en = 'INGREDIENTS:
+- 2 boiled potato
+- 2 boiled egg
+- 1 tbsp yogurt
+- 1 small onion
+- 5 ml olive oil
+- fresh parsley
+
+METHOD:
+1. Gather the potato, egg and onion in a bowl.
+2. Add the yogurt and olive oil and toss lightly.
+3. Add the salt and garnish with parsley.
+4. Serve cold.' where id = '9e8342f0-e081-4c06-a9be-39a18eee8210';
+update public.recipes set title_en = 'Pan-Fried Potatoes with Eggs', instructions_en = 'INGREDIENTS:
+- 3 potato
+- 2 eggs
+- 1 small onion
+- 10 ml olive oil
+- salt and black pepper
+
+METHOD:
+1. Fry the potatoes in the olive oil for 7 minutes.
+2. Add the onion and cook for 2 minutes more.
+3. Crack the eggs over the top and scatter the seasoning.
+4. Cook for 3 minutes until the eggs set.' where id = '9ba002a6-d615-4163-bb6a-2448124d5799';
+update public.recipes set title_en = 'Egg and Cheese Roll', instructions_en = 'INGREDIENTS:
+- 1 lavash (thin Turkish flatbread; a large tortilla works)
+- 1 boiled egg
+- 60 g beyaz peynir (Turkish brined white cheese; feta works)
+- a few sprigs of fresh parsley
+- 5 ml olive oil
+- salt
+
+METHOD:
+1. Lay the lavash out flat and spread the cheese over it.
+2. Lay out the egg slices and parsley.
+3. Add the olive oil and salt.
+4. Roll it tightly, cut in half and serve.' where id = 'c459cbcc-f22f-4d15-964c-7a96e74c2a16';
+update public.recipes set title_en = 'Simple Egg Crêpes', instructions_en = 'INGREDIENTS:
+- 1 eggs
+- 40 g flour
+- 100 ml milk
+- 5 ml butter
+- salt
+
+METHOD:
+1. Whisk the eggs, flour and milk until smooth.
+2. Pour a little batter into an oiled pan and cook the crêpes.
+3. Fry each side for 1 minute.
+4. Plate, roll up and serve.' where id = 'd9bf2b85-3a63-47c5-acdd-91125c95606c';
+update public.recipes set title_en = 'Vegetable Sauté with Eggs', instructions_en = 'INGREDIENTS:
+- 2 eggs
+- 1 small aubergine (eggplant)
+- 1 green pepper
+- 1 tomato
+- 10 ml olive oil
+- salt
+
+METHOD:
+1. Fry the aubergine in the olive oil for 4 minutes.
+2. Add the pepper and tomato and cook for 3 minutes more.
+3. Crack the eggs over the top and season with salt.
+4. Cook for 2 minutes until the eggs set and serve.' where id = 'f38694cd-f14a-4eb3-9f67-5ae004ae5c88';
+update public.recipes set title_en = 'Sucuk and Eggs', instructions_en = 'INGREDIENTS:
+- 3 eggs
+- 50 g sucuk slices (Turkish beef sausage; chorizo works)
+- 1 slice wholemeal bread
+- 1 pinch salt
+- 1 pinch black pepper
+- 5 ml vegetable oil
+
+METHOD:
+1. Fry the sucuk slices in a pan over medium heat for 1 minute.
+2. Crack the eggs over them and scatter the salt and black pepper.
+3. Cook for 3-4 minutes without stirring.
+4. Serve with wholemeal bread.' where id = '6a9bad45-86a6-4d37-86e2-10e8f37e1de2';
+update public.recipes set title_en = 'Tarhana Soup with Egg', instructions_en = 'INGREDIENTS:
+- 30 g tarhana (Turkish fermented soup base of wheat, yoghurt and vegetables; sold dried)
+- 1 eggs
+- 1 tbsp butter
+- 1 tsp chilli flakes
+- 500 ml water
+- salt
+
+METHOD:
+1. Slake the tarhana with 100 ml of cold water and bring the rest of the water to the boil.
+2. Add the loosened tarhana to the boiling water and simmer for 8 minutes.
+3. Beat the egg and add it to the soup in a thin stream, stirring constantly.
+4. Bloom the chilli flakes in the butter and drizzle it over.' where id = '91d0cb99-0c9a-493f-a6b4-d69f44b57be4';
 
 commit;
 

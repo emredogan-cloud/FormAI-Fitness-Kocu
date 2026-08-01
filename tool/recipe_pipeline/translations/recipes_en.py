@@ -1365,4 +1365,645 @@ RECIPES_EN = {
         "thin stream, stirring constantly.",
         "Season with salt and mint and serve.",
     ]),
+    "Şekersiz Çikolatalı Yoğurt Mousse": (
+        "Sugar-Free Chocolate Yogurt Mousse", [
+            "Whisk the cocoa and protein powder into the yogurt.",
+            "Fold the banana through.",
+            "Transfer to a bowl.",
+            "Finish with cinnamon and serve cold.",
+        ]),
+    "Şerbetli Yulaf Topları": ("Syrup-Soaked Oat Balls", [
+        "Make a light syrup with the water and sugar and let it cool to "
+        "warm.",
+        "Knead the oats, tahini and honey together.",
+        "Roll into balls and dip them in the syrup.",
+        "Coat in desiccated coconut and serve.",
+    ]),
+    "Soğan-Domates Çorbası": ("Onion and Tomato Soup", [
+        "Fry the onions in the butter for 5 minutes until caramelised.",
+        "Add the tomatoes and water and simmer for 7 minutes.",
+        "Add the salt and divide between bowls.",
+        "Set the croutons on top and serve.",
+    ]),
+    "Soğanlı Etli Sote": ("Beef Sauté with Onions", [
+        "Fry the beef in the olive oil for 4 minutes.",
+        "Add the onions and cook for 5 minutes more until caramelised.",
+        "Add the tomato paste, chilli flakes and 50 ml of water.",
+        "Cover, cook for 4 minutes, season with salt and serve.",
+    ]),
+    "Soğanlı Hızlı Tavuk Sote": ("Quick Chicken Sauté with Onions", [
+        "Fry the onions in the olive oil for 4 minutes until "
+        "caramelised.",
+        "Add the chicken and cook for 5 minutes until it is no longer "
+        "pink.",
+        "Add the tomato paste and 50 ml of hot water.",
+        "Cover, cook for 5 minutes more and serve.",
+    ]),
+    "Soğanlı Köfte": ("Köfte with Onions", [
+        "Roll the köfte into balls and fry them in a pan for 4 minutes.",
+        "Add the onions and cook for 4 minutes more until caramelised.",
+        "Add the tomato paste and 100 ml of water and simmer for "
+        "4 minutes.",
+        "Season with cumin and salt and serve.",
+    ]),
+    "Soğanlı Marul Salatası": ("Lettuce and Onion Salad", [
+        "Gather the lettuce, onion and tomato in a bowl.",
+        "Add the olive oil, lemon and salt.",
+        "Toss lightly and serve.",
+    ]),
+    "Soğanlı Patates Kavurma": ("Fried Potatoes with Onion", [
+        "Cook the potatoes in the olive oil over medium heat for "
+        "8 minutes.",
+        "Add the onion and fry for 3 minutes more, stirring.",
+        "Scatter the salt and chilli flakes.",
+        "Serve hot.",
+    ]),
+    "Soğuk Tavuk Göğsü Dilimleri": ("Cold Sliced Chicken Breast", [
+        "Arrange the chicken slices on a plate.",
+        "Set the peppers to one side.",
+        "Drizzle the olive oil and lemon juice over.",
+        "Serve with salt and parsley.",
+    ]),
+    "Sucuklu Sade Patates": ("Simple Potatoes with Sucuk", [
+        "Fry the potatoes in the olive oil for 7 minutes.",
+        "Add the sucuk slices and cook for 2 minutes more.",
+        "Add the onion and fry for 3 minutes.",
+        "Serve with salt and chilli flakes.",
+    ]),
+    "Sucuklu Yumurtalı Bulgur": ("Bulgur with Sucuk and Egg", [
+        "Chop the onion and fry it in the olive oil, add the sucuk slices "
+        "and fry for 1 minute more.",
+        "Add the bulgur and stir, then pour in 180 ml of hot water and "
+        "the salt.",
+        "Cover and cook for 12 minutes, take it off the heat and let it "
+        "steam for 5 minutes.",
+        "Set the quickly fried eggs on top and serve with black pepper.",
+    ]),
+    "Sütlü Yulaf Ezmesi": ("Oats with Milk", [
+        "Bring the oats and milk to the boil in a pan over medium heat.",
+        "Cook for 4 minutes more, stirring as it thickens.",
+        "Transfer to a bowl and add the honey and cinnamon.",
+        "Serve hot.",
+    ]),
+    "Süzme Peynir ve Böğürtlen": ("Cottage Cheese with Blackberries", [
+        "Spoon the cottage cheese into a bowl.",
+        "Scatter the blackberries over it.",
+        "Drizzle the honey in a thin ribbon.",
+        "Scatter the flaked almonds over and serve immediately.",
+    ]),
+    "Süzme Peynirli Avokado": ("Avocado with Cottage Cheese", [
+        "Hollow out the avocado around the stone.",
+        "Fill the hollow with the cottage cheese.",
+        "Drizzle the lemon and olive oil over.",
+        "Serve with salt and mint.",
+    ]),
+    "Süzme Peynirli Tost": ("Cottage Cheese Toastie", [
+        "Spread the cottage cheese over the inner faces of the bread.",
+        "Add the tomato and mint and season with salt.",
+        "Grease the pan with butter.",
+        "Cook in a covered pan for 3 minutes until both sides are "
+        "golden.",
+    ]),
+    "Süzme Yoğurtlu Beyaz Peynir Tabağı": (
+        "Strained Yogurt and Beyaz Peynir Plate", [
+            "Spoon the yogurt into a bowl.",
+            "Set the beyaz peynir to one side.",
+            "Add the walnuts and honey.",
+            "Finish with cinnamon and serve.",
+        ]),
+    "Süzme Yoğurtlu Çilek Kasesi": ("Strained Yogurt Strawberry Bowl", [
+        "Spoon the yogurt into a bowl.",
+        "Lay the strawberries on top.",
+        "Scatter the granola.",
+        "Drizzle the honey and serve cold.",
+    ]),
+    "Süzme Yoğurtlu Frozen Bar": ("Frozen Strained Yogurt Bars", [
+        "Mix the yogurt, strawberries and honey together.",
+        "Spread it into a flat dish 1 cm thick.",
+        "Scatter the granola over the top.",
+        "Freeze for 5 minutes, cut into bars and serve.",
+    ]),
+    "Süzme Yoğurtlu Meyve Parfe": ("Strained Yogurt Fruit Parfait", [
+        "Put a layer of strained yogurt in the bottom of a tall glass.",
+        "Add a layer of granola.",
+        "Scatter the strawberries and raspberries.",
+        "Repeat the layers, drizzle a ribbon of honey on top and serve.",
+    ]),
+    "Süzme Yoğurtlu Protein Kasesi": ("Strained Yogurt Protein Bowl", [
+        "Stir the protein powder through the strained yogurt until "
+        "smooth.",
+        "Spread the mixture over the base of a wide bowl.",
+        "Arrange the fruit, almonds and chia seeds on top.",
+        "Drizzle a thin ribbon of honey over last and serve immediately.",
+    ]),
+    "Süzme Yoğurtlu Protein Smoothie": (
+        "Strained Yogurt Protein Smoothie", [
+            "Put all the ingredients in a blender.",
+            "Blend on high for 60 seconds until smooth.",
+            "Pour into a tall glass.",
+            "Drink immediately.",
+        ]),
+    "Süzme Yoğurtlu Yer Fıstığı": ("Strained Yogurt with Peanuts", [
+        "Spoon the yogurt into a bowl.",
+        "Lay the peanuts on top.",
+        "Drizzle the honey over.",
+        "Scatter cinnamon and serve.",
+    ]),
+    "Tahin Pekmez Ekmek": ("Tahini and Grape Molasses on Bread", [
+        "Warm the bread slices lightly.",
+        "Mix the tahini and grape molasses in a bowl until smooth.",
+        "Spread the mixture over the bread slices.",
+        "Scatter cinnamon over and serve immediately.",
+    ]),
+    "Tahin Soslu Havuç Sticks": ("Carrot Sticks with Tahini Dip", [
+        "Mix the tahini, grape molasses and water until smooth.",
+        "Cut the carrots into fingers.",
+        "Arrange them on a plate and set the dip beside them in a bowl.",
+        "Serve immediately.",
+    ]),
+    "Tahin Soslu Marul Salatası": ("Lettuce Salad with Tahini Dressing", [
+        "Whisk the tahini, lemon, water, garlic and salt together.",
+        "Stir until the dressing is smooth.",
+        "Put the lettuce in a bowl.",
+        "Drizzle the dressing over, toss and serve.",
+    ]),
+    "Tahin-Pekmez Topları": ("Tahini and Grape Molasses Balls", [
+        "Knead the oats, tahini and grape molasses together.",
+        "Rest the mixture for 1 minute.",
+        "Roll into walnut-sized balls and coat them in desiccated "
+        "coconut.",
+        "Chill for 5 minutes and serve.",
+    ]),
+    "Tahinli Sade Yoğurt": ("Simple Yogurt with Tahini", [
+        "Spoon the yogurt into a bowl.",
+        "Spread the tahini and honey over it.",
+        "Finish with cinnamon and serve.",
+    ]),
+    "Tarçınlı Süzme Yoğurt": ("Cinnamon Strained Yogurt", [
+        "Spoon the yogurt into a bowl.",
+        "Add the honey and walnuts on top.",
+        "Finish with cinnamon and serve cold.",
+    ]),
+    "Tarçınlı Yulaf Tatlısı": ("Cinnamon Oat Dessert", [
+        "Bring the oats and milk to the boil in a pan over medium heat.",
+        "Add the cinnamon and cook for 3 minutes more.",
+        "Transfer to a bowl and drizzle the honey over.",
+        "Finish with walnuts and serve hot.",
+    ]),
+    "Tarçınlı Yumurta Tostu": ("Cinnamon Egg Toast", [
+        "Whisk the eggs, milk and cinnamon together.",
+        "Dip the bread slices in the mixture.",
+        "Fry in the butter for 2 minutes until both sides are golden.",
+        "Drizzle the honey over and serve.",
+    ]),
+    "Tava Pırasası Yumurtalı": ("Pan-Fried Leek with Eggs", [
+        "Fry the onion and leek in the olive oil for 5 minutes.",
+        "Add 50 ml of water, cover and cook for 4 minutes.",
+        "Crack the eggs over the top and season.",
+        "Serve once the eggs have set.",
+    ]),
+    "Tavada Karnabahar Köftesi": ("Pan-Fried Cauliflower Patties", [
+        "Knead the cauliflower, flour, egg, onion and salt together.",
+        "Shape the mixture into walnut-sized patties.",
+        "Cook each side for 4 minutes in an oiled pan.",
+        "Drain on kitchen paper and serve.",
+    ]),
+    "Tavada Sade Sebze Atıştırmalığı": ("Simple Pan-Fried Vegetables", [
+        "Fry the aubergine slices in the olive oil for 4 minutes.",
+        "Add the courgette and pepper and sauté for 4 minutes more.",
+        "Scatter the salt and oregano.",
+        "Serve hot.",
+    ]),
+    "Tavuk Göğsü Marul Sarma": ("Chicken Lettuce Wraps", [
+        "Whisk the tahini, soy sauce and lemon juice thoroughly in a "
+        "bowl.",
+        "Toss the chicken, carrot and onion through the dressing.",
+        "Put 2 tbsp of the mixture on each lettuce leaf.",
+        "Roll the leaves up and serve immediately.",
+    ]),
+    "Tavuk Göğsü Salatası": ("Chicken Breast Salad", [
+        "Combine the lettuce, tomato and cucumber in a bowl.",
+        "Lay the chicken over the top.",
+        "Dress with the olive oil, lemon juice and salt.",
+        "Serve immediately.",
+    ]),
+    "Tavuk Göğsü Tava": ("Pan-Fried Chicken Breast", [
+        "Flatten the chicken breast and marinate it with the spices, "
+        "garlic and lemon for 5 minutes.",
+        "Cook each side for 3 minutes in a hot pan with the olive oil.",
+        "Cover and rest for 2 minutes.",
+        "Serve hot.",
+    ]),
+    "Tavuk Göğsülü Sade Sandviç": ("Simple Chicken Sandwich", [
+        "Spread the yogurt over the inner faces of the bread.",
+        "Lay out the lettuce, tomato and chicken.",
+        "Season with salt and close it.",
+        "Cut in half and serve.",
+    ]),
+    "Tavuk Şinitzel": ("Chicken Schnitzel", [
+        "Flatten the chicken fillet and season it with salt and black "
+        "pepper.",
+        "Coat it in egg, then in breadcrumbs.",
+        "Fry each side for 4 minutes in an oiled pan.",
+        "Drain on kitchen paper and serve.",
+    ]),
+    "Tavuk Şiş": ("Chicken Şiş", [
+        "Marinate the chicken with the olive oil, garlic and salt for "
+        "5 minutes.",
+        "Thread the chicken, pepper and onion onto skewers.",
+        "Cook each side for 3 minutes in a hot griddle pan.",
+        "Serve hot.",
+    ]),
+    "Tavuk Sote ve Pilav": ("Chicken Sauté with Pilaf", [
+        "Cook the rice in a pan with 200 ml of hot water for 12 minutes, "
+        "without butter.",
+        "In the same time, fry the chicken in the olive oil for "
+        "4 minutes.",
+        "Add the onion and tomato paste and cook for 4 minutes more.",
+        "Plate the pilaf, spoon the sauté over it and serve.",
+    ]),
+    "Tavuk Suyu Pirinç Çorbası": ("Chicken and Rice Soup", [
+        "Rinse the rice, add it to the chicken stock and simmer for "
+        "12 minutes.",
+        "Beat the egg with the lemon juice and add it slowly to the "
+        "soup.",
+        "Add the butter while it is still hot.",
+        "Season with salt and serve.",
+    ]),
+    "Tavuk-Patates Tencere": ("Chicken and Potato Pot", [
+        "Fry the chicken in the olive oil for 4 minutes.",
+        "Add the onion and potato and cook for 3 minutes more.",
+        "Add the tomato paste and 200 ml of hot water.",
+        "Cover and cook for 8 minutes.",
+    ]),
+    "Tavuklu Bulgur Pilavı": ("Chicken Bulgur Pilaf", [
+        "Fry the chicken in the butter for 4 minutes.",
+        "Add the onion and cook for 2 minutes more.",
+        "Add the bulgur and fry for 1 minute, then add 200 ml of hot "
+        "water and the spices.",
+        "Cover, cook for 10 minutes and let it rest.",
+    ]),
+    "Tavuklu Bulgur Salatası": ("Chicken Bulgur Salad", [
+        "Soak the bulgur in hot water for 10 minutes and drain it.",
+        "Combine the chicken, vegetables and bulgur in a bowl.",
+        "Add the olive oil and lemon juice and toss.",
+        "Season with salt and serve cold.",
+    ]),
+    "Tavuklu Erişte Çorbası": ("Chicken Erişte Soup", [
+        "Put the chicken stock in a pan, add the carrot and simmer for "
+        "4 minutes.",
+        "Add the erişte and cook for 6 minutes more.",
+        "Add the chicken pieces and warm for 2 minutes.",
+        "Season with butter and salt and serve.",
+    ]),
+    "Tavuklu Karnabahar Sote": ("Chicken and Cauliflower Sauté", [
+        "Fry the chicken in the olive oil for 4 minutes.",
+        "Add the onion and cauliflower and sauté for 4 minutes.",
+        "Add the tomato paste and 100 ml of water.",
+        "Cover, cook for 6 minutes, season with salt and serve.",
+    ]),
+    "Tavuklu Karnıyarık": ("Chicken Karnıyarık", [
+        "Fry the ground chicken in the olive oil for 4 minutes.",
+        "Add the onion and tomato paste and cook for 3 minutes more.",
+        "Split the aubergines open and fill them with the mixture.",
+        "Cook covered in 200 ml of hot water for 5 minutes.",
+    ]),
+    "Tavuklu Mantar Sote": ("Chicken and Mushroom Sauté", [
+        "Fry the chicken in the olive oil for 4 minutes.",
+        "Add the onion and mushrooms and sauté for 4 minutes.",
+        "Add the tomato paste and 50 ml of water.",
+        "Cover, cook for 4 minutes, season with salt and serve.",
+    ]),
+    "Tavuklu Patates Salatası": ("Chicken and Potato Salad", [
+        "Gather the potato, chicken and onion in a bowl.",
+        "Add the yogurt and salt and mix.",
+        "Garnish with parsley.",
+        "Serve cold.",
+    ]),
+    "Tavuklu Sebze Çorbası": ("Chicken and Vegetable Soup", [
+        "Add the onion, carrot and potato to the chicken stock and simmer "
+        "for 8 minutes.",
+        "Add the chicken and cook for 4 minutes more.",
+        "Season with salt.",
+        "Divide between bowls and serve.",
+    ]),
+    "Tavuklu Yulaflı Wrap": ("Chicken and Oat Wrap", [
+        "Cook the oats to a porridge with a little water and cool them.",
+        "Warm the lavash lightly in a pan.",
+        "Layer the hummus, oat porridge, chicken, avocado and cheese in "
+        "turn.",
+        "Add the vegetables, roll tightly, cut in two and serve.",
+    ]),
+    "Taze Fasulye Etli": ("Beef and Green Bean Stew", [
+        "Fry the beef in the olive oil for 4 minutes.",
+        "Add the onion and tomato paste and cook for 2 minutes more.",
+        "Add the beans and 150 ml of hot water.",
+        "Cover, cook for 8 minutes, season with salt and serve.",
+    ]),
+    "Tencerede Patates Köftesi": ("Potato Köfte in a Pot", [
+        "Roll the köfte into balls and fry them in the olive oil for "
+        "4 minutes.",
+        "Add the potato and onion and cook for 3 minutes more.",
+        "Add the tomato paste and 200 ml of hot water.",
+        "Cover and cook for 8 minutes.",
+    ]),
+    "Tencerede Sebzeli Yumurta": ("Pot Eggs with Vegetables", [
+        "Fry the potatoes in the olive oil for 6 minutes.",
+        "Add the pepper and tomato and cook for 3 minutes more.",
+        "Crack the eggs over the top and season.",
+        "Cover, cook for 2 minutes and serve.",
+    ]),
+    "Tencerede Tavuk Sote": ("Chicken Sauté in a Pot", [
+        "Chop the onion and pepper small and sauté them in the olive oil "
+        "for 2 minutes.",
+        "Add the diced chicken and fry for 4 minutes until sealed all "
+        "over.",
+        "Add the tomato paste, the spices and 100 ml of hot water and "
+        "stir.",
+        "Cover and cook over low heat for 8 minutes.",
+    ]),
+    "Tereyağlı Bal Ekmek": ("Bread with Butter and Honey", [
+        "Toast the bread slices lightly.",
+        "Spread the butter on while they are hot.",
+        "Drizzle the honey over and serve.",
+    ]),
+    "Tereyağlı Limonlu Makarna": ("Butter and Lemon Pasta", [
+        "Boil the pasta in salted water and drain it.",
+        "Melt the butter in the same pan.",
+        "Add the lemon juice and zest and stir.",
+        "Return the pasta, season and serve.",
+    ]),
+    "Tofu Soteli Kahverengi Pirinç": ("Tofu Stir Fry with Brown Rice", [
+        "Cook the brown rice for 25 minutes.",
+        "Cube the tofu and fry it in the sesame oil until every side is "
+        "golden.",
+        "Add the vegetables and garlic to the pan and toss over high heat "
+        "for 4 minutes.",
+        "Add the soy sauce and ginger and cook for 2 minutes more.",
+        "Spoon it and its sauce over the rice and serve.",
+    ]),
+    "Ton Balıklı Makarna Salatası": ("Tuna Pasta Salad", [
+        "Combine the pasta, tuna and vegetables in a bowl.",
+        "Add the olive oil and lemon juice.",
+        "Season with salt and black pepper.",
+        "Serve immediately.",
+    ]),
+    "Türlü Sebze Etli": ("Mixed Vegetable and Beef Stew", [
+        "Fry the ground beef in the olive oil for 4 minutes.",
+        "Add the potato and cook for 3 minutes more, then add the tomato "
+        "paste.",
+        "Add the aubergine and courgette with 150 ml of hot water.",
+        "Cover, cook for 6 minutes, season with salt and serve.",
+    ]),
+    "Üzümlü Yulaf": ("Oats with Raisins", [
+        "Bring the oats, milk and raisins to the boil in a pan.",
+        "Cook for 4 minutes until it thickens.",
+        "Transfer to a bowl.",
+        "Finish with honey and cinnamon and serve.",
+    ]),
+    "Vejetaryen Quinoa Power Bowl": ("Vegetarian Quinoa Power Bowl", [
+        "Boil the quinoa in plenty of water for 15 minutes and drain it.",
+        "Whisk the tahini, lemon juice and 2 tbsp of water into a "
+        "dressing.",
+        "Arrange the quinoa, chickpeas, carrot, cabbage and avocado in a "
+        "bowl.",
+        "Drizzle the tahini dressing over and serve with parsley.",
+    ]),
+    "Yoğurtlu Bulgur Pilavı": ("Bulgur Pilaf with Yogurt", [
+        "Chop the onion small and fry it in the butter for 2 minutes.",
+        "Add the bulgur and fry for 1 minute more, then add 200 ml of hot "
+        "water and the salt.",
+        "Cover and cook over low heat for 12 minutes, take it off the "
+        "heat and let it steam for 5 minutes.",
+        "Plate the pilaf, set the yogurt beside it and scatter dried mint "
+        "over the top.",
+    ]),
+    "Yoğurtlu Çikolata Mousse": ("Chocolate Yogurt Mousse", [
+        "Sift the cocoa into the yogurt and whisk.",
+        "Fold the honey through.",
+        "Transfer to a bowl and scatter the chocolate over.",
+        "Finish with cinnamon and serve cold.",
+    ]),
+    "Yoğurtlu Çilek Mousse": ("Strawberry Yogurt Mousse", [
+        "Crush the strawberries with the sugar into a purée.",
+        "Fold the honey and strawberry purée into the yogurt.",
+        "Divide between bowls.",
+        "Garnish with a whole strawberry and serve cold.",
+    ]),
+    "Yoğurtlu Granola Parfe": ("Yogurt Granola Parfait", [
+        "Stir the vanilla extract through the yogurt.",
+        "Put a layer of yogurt in the bottom of a tall glass.",
+        "Add granola and strawberries and repeat the layers.",
+        "Drizzle honey on top and serve immediately.",
+    ]),
+    "Yoğurtlu Havuç Atıştırması": ("Carrot and Yogurt Snack", [
+        "Sauté the carrots in the olive oil for 3 minutes.",
+        "Cool them and stir them into the yogurt.",
+        "Mix in the garlic, salt and parsley.",
+        "Serve cold.",
+    ]),
+    "Yoğurtlu Karnabahar Salatası": ("Cauliflower Yogurt Salad", [
+        "Combine the cauliflower and yogurt in a bowl.",
+        "Add the garlic and salt and mix.",
+        "Garnish with parsley.",
+        "Drizzle olive oil over and serve cold.",
+    ]),
+    "Yoğurtlu Mercimek Çorbası": ("Lentil Soup with Yogurt", [
+        "Simmer the lentils in 400 ml of water for 6 minutes and blend "
+        "smooth.",
+        "Stir the garlic and salt through the yogurt.",
+        "Divide the soup between bowls and spoon the yogurt into the "
+        "middle.",
+        "Bloom the chilli flakes in the butter and drizzle it over.",
+    ]),
+    "Yoğurtlu Pancar Salatası": ("Beetroot Yogurt Salad", [
+        "Combine the beetroot and yogurt in a bowl.",
+        "Add the garlic and salt.",
+        "Drizzle olive oil over.",
+        "Garnish with walnuts and serve.",
+    ]),
+    "Yoğurtlu Patates Salatası": ("Potato Yogurt Salad", [
+        "Add the garlic, salt and olive oil to the yogurt and mix.",
+        "Fold the potato through.",
+        "Garnish with parsley.",
+        "Serve cold.",
+    ]),
+    "Yoğurtlu Patlıcan Ezmesi": ("Aubergine and Yogurt Dip", [
+        "Peel the roasted aubergine and mash it.",
+        "Add the yogurt, garlic and salt and mix.",
+        "Drizzle the olive oil over.",
+        "Garnish with parsley and serve.",
+    ]),
+    "Yoğurtlu Pirinç Çorbası": ("Rice Soup with Yogurt", [
+        "Add the rice to the water and simmer for 12 minutes.",
+        "Stir the egg into the yogurt and add it to the soup in a thin "
+        "stream.",
+        "Melt the butter and bloom the mint in it.",
+        "Drizzle it over the soup and serve.",
+    ]),
+    "Yoğurtlu Pirinç Salatası": ("Rice Salad with Yogurt", [
+        "Combine the rice, cucumber and onion in a bowl.",
+        "Add the yogurt and olive oil.",
+        "Season with salt and toss with the parsley.",
+        "Serve cold.",
+    ]),
+    "Yoğurtlu Sade Tavuk Sote": ("Simple Chicken Sauté with Yogurt", [
+        "Fry the chicken in the olive oil for 5 minutes.",
+        "Add the garlic and fry for 1 minute.",
+        "Add 50 ml of hot water for a sauce, cover and cook for "
+        "5 minutes.",
+        "Stir the yogurt in after taking it off the heat and serve.",
+    ]),
+    "Yoğurtlu Salatalık Atıştırması": ("Cucumber Yogurt Snack", [
+        "Grate the cucumber and drain it lightly.",
+        "Add the crushed garlic, salt and mint to the yogurt and mix.",
+        "Fold the cucumber into the yogurt.",
+        "Drizzle olive oil over and serve.",
+    ]),
+    "Yoğurtlu Tavuk Sandviç": ("Chicken Sandwich with Yogurt", [
+        "Spread the yogurt over the inner faces of the bread.",
+        "Lay out the lettuce, tomato and chicken.",
+        "Season with salt and close it.",
+        "Cut in half and serve.",
+    ]),
+    "Yoğurtlu Yumurta Salatası": ("Egg Salad with Yogurt", [
+        "Mash the boiled eggs with a fork.",
+        "Add the strained yogurt, the seasoning and the parsley and mix.",
+        "Transfer to a plate and scatter a little more parsley over if "
+        "you like.",
+        "Serve cold.",
+    ]),
+    "Yüksek Protein Cheesecake Isırıkları": (
+        "High-Protein Cheesecake Bites", [
+            "Press the oats and coconut oil into the base of a mini "
+            "muffin tin.",
+            "Blend the cottage cheese, yogurt, protein powder and honey "
+            "until smooth.",
+            "Spoon the mixture into the tin.",
+            "Rest in the fridge for 30 minutes.",
+            "Set a slice of strawberry on each bite and serve.",
+        ]),
+    "Yüksek Proteinli Çikolatalı Puding (Sporcu Tatlısı)": (
+        "High-Protein Chocolate Pudding", [
+            "Blend the protein powder, avocado and almond milk together.",
+            "Chill in the fridge.",
+        ]),
+    "Yüksek Proteinli Yoğurt Mousse": ("High-Protein Yogurt Mousse", [
+        "Whisk the protein powder into the yogurt.",
+        "Fold the honey through to a thick mousse.",
+        "Transfer to a bowl and scatter the granola.",
+        "Finish with cinnamon and serve cold.",
+    ]),
+    "Yulaflı Çikolata Cookie": ("Oat Chocolate Cookies", [
+        "Knead all the ingredients together in a bowl.",
+        "Spoon cookie shapes onto non-stick baking paper.",
+        "Bake at 180°C for 10 minutes (or 3 minutes a side in a pan).",
+        "Serve once cooled.",
+    ]),
+    "Yulaflı Muzlu Cookie": ("Oat Banana Cookies", [
+        "Mix all the ingredients in a bowl.",
+        "Spoon onto non-stick baking paper.",
+        "Bake at 180°C for 10 minutes (or 4 minutes on one side in a "
+        "pan).",
+        "Serve once cooled.",
+    ]),
+    "Yulaflı Süt Çorbası": ("Oat Milk Soup", [
+        "Bring the milk and oats to the boil in a pan.",
+        "Add the butter and cook for 4 minutes more.",
+        "Transfer to a bowl and drizzle the honey over.",
+        "Finish with cinnamon and serve hot.",
+    ]),
+    "Yulaflı Tarçınlı Smoothie": ("Oat and Cinnamon Smoothie", [
+        "Put all the ingredients in a blender.",
+        "Blend for 60 seconds until smooth.",
+        "Pour into a glass.",
+        "Scatter a little cinnamon over and drink.",
+    ]),
+    "Yumurta Akı Omleti ve Hindi Eti": (
+        "Egg White Omelette with Turkey", [
+            "Beat the egg whites with the whole egg and add the salt and "
+            "black pepper.",
+            "Sauté the turkey in a non-stick pan for 1 minute.",
+            "Add the egg mixture and cook over medium heat until the "
+            "edges set.",
+            "Scatter the pepper and parsley, fold the omelette in half "
+            "and serve.",
+        ]),
+    "Yumurta Akı ve Sebze Tabağı": ("Egg White and Vegetable Plate", [
+        "Cook the egg whites in a non-stick pan over medium heat for "
+        "4 minutes.",
+        "Plate them and arrange the tomato and cucumber alongside.",
+        "Scatter the salt and mint.",
+        "Drizzle olive oil over and serve.",
+    ]),
+    "Yumurta-Avokado Tabağı": ("Egg and Avocado Plate", [
+        "Peel the eggs and cut them in half.",
+        "Arrange the avocado slices and olives on a plate.",
+        "Add the eggs and drizzle olive oil over.",
+        "Serve with a slice of bread and mint.",
+    ]),
+    "Yumurta-Peynirli Sandviç": ("Egg and Cheese Sandwich", [
+        "Crumble the cheese and spread it over the inner faces of the "
+        "bread.",
+        "Lay out the egg slices and tomato.",
+        "Add the lettuce leaf and close it.",
+        "Season with salt and serve.",
+    ]),
+    "Yumurtalı Domates Sandviç": ("Egg and Tomato Sandwich", [
+        "Brush the inner faces of the bread with olive oil.",
+        "Lay out the egg and tomato.",
+        "Season with salt and garnish with mint.",
+        "Close, cut in half and serve.",
+    ]),
+    "Yumurtalı Erişte": ("Erişte with Egg", [
+        "Boil the erişte in salted water for 8 minutes and drain it.",
+        "Fry the onion in the butter for 2 minutes.",
+        "Crack the eggs in and cook them, stirring, with the onion.",
+        "Fold in the erişte, season and serve.",
+    ]),
+    "Yumurtalı Patates Salatası": ("Potato and Egg Salad", [
+        "Gather the potato, egg and onion in a bowl.",
+        "Add the yogurt and olive oil and toss lightly.",
+        "Add the salt and garnish with parsley.",
+        "Serve cold.",
+    ]),
+    "Yumurtalı Patates Tava": ("Pan-Fried Potatoes with Eggs", [
+        "Fry the potatoes in the olive oil for 7 minutes.",
+        "Add the onion and cook for 2 minutes more.",
+        "Crack the eggs over the top and scatter the seasoning.",
+        "Cook for 3 minutes until the eggs set.",
+    ]),
+    "Yumurtalı Peynirli Roll": ("Egg and Cheese Roll", [
+        "Lay the lavash out flat and spread the cheese over it.",
+        "Lay out the egg slices and parsley.",
+        "Add the olive oil and salt.",
+        "Roll it tightly, cut in half and serve.",
+    ]),
+    "Yumurtalı Sade Krep": ("Simple Egg Crêpes", [
+        "Whisk the eggs, flour and milk until smooth.",
+        "Pour a little batter into an oiled pan and cook the crêpes.",
+        "Fry each side for 1 minute.",
+        "Plate, roll up and serve.",
+    ]),
+    "Yumurtalı Sebze Sote": ("Vegetable Sauté with Eggs", [
+        "Fry the aubergine in the olive oil for 4 minutes.",
+        "Add the pepper and tomato and cook for 3 minutes more.",
+        "Crack the eggs over the top and season with salt.",
+        "Cook for 2 minutes until the eggs set and serve.",
+    ]),
+    "Yumurtalı Sucuklu Tava": ("Sucuk and Eggs", [
+        "Fry the sucuk slices in a pan over medium heat for 1 minute.",
+        "Crack the eggs over them and scatter the salt and black pepper.",
+        "Cook for 3-4 minutes without stirring.",
+        "Serve with wholemeal bread.",
+    ]),
+    "Yumurtalı Tarhana Çorbası": ("Tarhana Soup with Egg", [
+        "Slake the tarhana with 100 ml of cold water and bring the rest "
+        "of the water to the boil.",
+        "Add the loosened tarhana to the boiling water and simmer for "
+        "8 minutes.",
+        "Beat the egg and add it to the soup in a thin stream, stirring "
+        "constantly.",
+        "Bloom the chilli flakes in the butter and drizzle it over.",
+    ]),
 }

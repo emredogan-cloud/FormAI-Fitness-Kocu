@@ -1,6 +1,6 @@
 {
   "note": "Roadmap Phase 7 · per-locale recipe translation coverage. Ratchets upward only. Regenerate with --update-baseline after a translation batch lands.",
   "coverage": {
-    "en": 294
+    "en": 392
   }
 }
