@@ -99,3 +99,38 @@ Do not soften, strengthen, or drop these. Each has a written
 | `paywallTrialOpening`, `paywallTrialCancelNote`, `paywallCancelAnytime` | Trial and cancellation terms. Only ever shown when the store SKU really carries a trial. |
 | `showcaseFormProof`, `socialProofPrivacyBody` | "Runs entirely on your device — your video never leaves it." A factual claim about the app's behaviour. It is true; keep it true. |
 | `onbGoalFeedback` | Carries "Sonuçlar bireysel çabaya ve tutarlılığa bağlıdır" — the results disclaimer. |
+
+## Food and dish names (Roadmap Phase 7)
+
+A dish keeps its name. `sucuk` translated as "Turkish sausage" loses the
+dish and still does not tell a shopper what to pick up; the substitution
+belongs in `recipe_ingredients.note_en`, where it can be specific —
+"Turkish beef sausage; chorizo or any cured spiced sausage works."
+
+The list below is enforced, not advisory: `tool/recipe_translation_audit.dart`
+scrubs these terms before it checks an `_en` column for Turkish
+characters, so a word that is NOT here and keeps its Turkish spelling
+fails the build.
+
+| term | what it is | what to buy instead |
+| --- | --- | --- |
+| sucuk | cured spiced beef sausage | chorizo, or any cured spiced sausage |
+| pastırma | air-dried spiced beef | bresaola |
+| menemen | eggs scrambled into peppers and tomato | — |
+| çılbır | poached eggs over garlic yoghurt | — |
+| çiğ köfte | bulgur-and-spice patties, no raw meat in the modern version | — |
+| tarhana | dried fermented wheat-and-yoghurt soup base | — |
+| beyaz peynir | brined white cheese | feta |
+| kaşar | semi-hard yellow cheese | mild cheddar or gouda |
+| lor | fresh whey cheese | ricotta |
+| pekmez | grape molasses | date or pomegranate molasses |
+| bazlama | thick flatbread | pita or naan |
+| lavaş | thin flatbread | large tortilla |
+| mantı | small filled dumplings | any small filled pasta |
+| köfte | seasoned meat (or lentil) patties | — |
+| ezogelin | red lentil and bulgur soup | — |
+| lokma | syrup-soaked fried dough | — |
+| pide, börek, gözleme, baklava, künefe, sütlaç, helva | — | — |
+
+**Not on the list and Turkish-spelled is a bug, not a style choice.** The
+gate reports it by name.

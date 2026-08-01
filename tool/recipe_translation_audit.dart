@@ -63,6 +63,12 @@ const List<String> kNeverTranslated = [
   'kısır',
   'köfte',
   'çiğ köfte',
+  'çılbır',
+  'lokma',
+  'tulumba',
+  'ezogelin',
+  'hamsi',
+  'irmik helvası',
   'pastırma',
   'kaşar',
   'beyaz peynir',
@@ -410,17 +416,34 @@ List<String> _missing(List<String> source, List<String> target) {
 
 /// Turkish-only characters in [text], minus anything inside a
 /// never-translate term. Returns the offending words.
+///
+/// The fold is explicit rather than `caseSensitive: false`, because Dart's
+/// case-insensitive regex does not reliably fold Ç→ç and Ğ→ğ — which meant
+/// a title-cased proper noun ("Çılbır") survived the scrub and was reported
+/// as untranslated. Same fold the diet classifier uses, and the same reason:
+/// Turkish casing is where locale-dependent behaviour bites.
 List<String> _turkishResidue(String text) {
-  var scrubbed = text;
-  for (final term in kNeverTranslated) {
-    scrubbed = scrubbed.replaceAll(
-      RegExp(RegExp.escape(term), caseSensitive: false),
-      '',
-    );
+  var scrubbed = _fold(text);
+  // Longest first. `köfte` and `çiğ köfte` are both on the list, and
+  // scrubbing the short one first leaves a bare `çiğ` behind that then
+  // reports as untranslated Turkish.
+  final terms = [...kNeverTranslated]
+    ..sort((a, b) => b.length.compareTo(a.length));
+  for (final term in terms) {
+    scrubbed = scrubbed.replaceAll(_fold(term), ' ');
   }
   return scrubbed
-      .split(RegExp(r'[\s,.;:!?()\[\]"]+'))
+      .split(RegExp(r'[\s,.;:!?()\[\]"\u2014\u2013-]+'))
       .where((word) => _turkishOnly.hasMatch(word))
       .toSet()
       .toList();
 }
+
+/// `İ` → `i` explicitly; everything else through `toLowerCase`.
+///
+/// Deliberately NOT the classifier's fold, which also maps `I` → `ı`.
+/// That rule is right for reading Turkish and wrong here: this scrubs
+/// text that is supposed to be English, and it turned `INGREDIENTS` into
+/// `ıngredıents` — 199 recipes reported as untranslated by the check
+/// meant to prove they were translated.
+String _fold(String value) => value.replaceAll('İ', 'i').toLowerCase();
