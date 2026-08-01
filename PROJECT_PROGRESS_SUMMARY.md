@@ -1,7 +1,7 @@
 # FormAI — Project Progress Summary
 
 **Spec:** `TESTERS_COMMUNITY_PRODUCT_ROADMAP.md` (18 phases / 5 waves)
-**As of:** 2026-08-01 · end of Phase 6 · build **1.0.0+26**
+**As of:** 2026-08-01 · Phase 6 polish sprint, half done · build **1.0.0+27**
 
 ---
 
@@ -64,8 +64,19 @@
 
 # 2. Currently Working On
 
-Phase 6 is complete. **Phase 7 — Content & AI Localization** is next and
-has not started.
+**The Phase 6 polish sprint — six of twelve founder items done.**
+`PHASE_06_POLISH_REPORT.md` §3 is the authoritative list and
+`RESUME_GUIDE.md` §2.0 is the pick-up point. **Phase 7 is blocked** until
+the remaining six land.
+
+Done: Premium rename · migration 012 applied and verified · metric/
+imperial in Settings · language picker rebuilt to the reference · the AI
+coach's four language leaks · tour-then-popup ordering.
+
+Not started: paywall regional pricing (highest value — a revenue path) ·
+four showcase screens · camera-free workout + rest redesign · workout
+background images and the request doc · the Phase 7 nutrition
+localization plan · the full two-language device sweep.
 
 ## What Phase 6 handed off
 
@@ -73,11 +84,10 @@ Three of these are founder decisions, not engineering.
 
 | Item | Who | Why it matters |
 |---|---|---|
-| Apply `012_user_locale.sql` | founder / ops | The app degrades correctly without it — the sync fails, a breadcrumb is logged, the local preference still works. Only the reinstall carry-over of the language choice is lost. |
-| **Name the paid tier** | founder | The copy sells "Premium" in 13 keys and "Pro" in 6; RevenueCat's product is `FormAI Pro`; a plan badge says "PRO required". A user can be sold Premium and then told they need PRO — both appear on the profile tab at once. |
+| **Play Console regional pricing** | founder | The app renders whatever the store reports, so the target pricing is a Play change, not an app change. Blocks verifying the paywall item. |
 | English screenshots + feature graphic, and pasting `docs/store/LISTING_EN.md` into Play Console | founder | The copy is written. Turkish frames cannot be reused under an English listing. |
 | A native-speaker read of the English | founder | It is a reviewed, internally consistent draft, not proofread copy. The listing is the highest-leverage hour. |
-| **The unit toggle** | engineering, unscheduled | `unit_system.dart` converts and is tested, but nothing exposes it. A US user reading `178 cm` looks like a bug rather than a gap. This matters more to an English launch than any Phase 7 item. |
+| **Unlock the Redmi `AYXSUKIVJVPZ7HPZ`** | founder | PIN-locked. adb can install to it but nothing can drive its UI. All device work moved to the Redmi Note 12. |
 
 ## Two device surfaces still unverified
 
@@ -130,17 +140,17 @@ Wave 5 — Scale, Depth & Platform         ⏳ Not Started (Phases 15–17)
 
 | | |
 |---|---|
-| **Build** | 1.0.0+26 |
-| **Tests** | **899 passing** (baseline was 330) |
+| **Build** | 1.0.0+27 |
+| **Tests** | **915 passing** (baseline was 330) |
 | **`flutter analyze`** | **0 issues** |
 | **`dart format`** | clean |
 | **CI** | **GREEN** (CI + Secret Scan) |
 | **Hardcoded-string gate** | **0 in 0 files** · 244 allowlisted, reported per entry |
-| **ARB** | **1454 keys** · `tr` 100% · `en` 100% · all referenced in `lib/` |
+| **ARB** | **1473 keys** · `tr` 100% · `en` 100% · all referenced in `lib/` |
 | **Locales shipped** | `tr`, `en` |
 
 ### Standing constraints
 
 - **CI Flutter is 3.44.8, local is 3.41.9.** Local green is not proof; only CI is a reliable gate.
-- **Migrations 008–012 are written; 008–011 are applied, `012_user_locale.sql` is not.** The app degrades correctly without 012 — only the reinstall carry-over of the language choice is lost.
+- **Migrations 001–012 are all applied to production** and verified live.
 - The local release build is upload-key signed, so device installs need `adb uninstall` first (loses session, requires a full onboarding re-walk).

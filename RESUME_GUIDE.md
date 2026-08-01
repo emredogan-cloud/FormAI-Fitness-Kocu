@@ -3,7 +3,7 @@
 Read this first. It is written so a session with no memory of the
 previous one can continue without re-analysing the repository.
 
-**Last updated:** 2026-08-01, end of Phase 6.
+**Last updated:** 2026-08-01, mid Phase 6 polish sprint.
 
 ---
 
@@ -22,29 +22,64 @@ one `PHASE_NN_COMPLETION_REPORT.md`. Final deliverable at the very end:
 | 3b · Phase-3 leftovers | done | `PHASE_3B_COMPLETION_REPORT.md` |
 | 4 · Feature flags + disclosure | done | `PHASE_04_COMPLETION_REPORT.md` |
 | 5 · i18n | done except 2 device surfaces | `PHASE_05_COMPLETION_REPORT.md` |
-| **6 · English launch** | **done** — see §2.1 for what is founder-side | `PHASE_06_COMPLETION_REPORT.md` |
+| **6 · English launch** | done | `PHASE_06_COMPLETION_REPORT.md` |
+| **6p · polish sprint** | **6 of 12 done — READ §2.0** | `PHASE_06_POLISH_REPORT.md` |
 | 7 · Content & AI localization | **not started** | — |
 
-**Branch:** `main`. **Build:** `1.0.0+26`.
+**Branch:** `main`. **Build:** `1.0.0+27`.
 
 ---
 
 ## 2. Start here
 
-### 2.1 What Phase 6 left for someone else
+### 2.0 The polish sprint is HALF DONE — start here
 
-**Migration 012 is written but not applied.** `supabase/migrations/
-012_user_locale.sql` adds `locale` to `user_metrics`. The app degrades
-correctly without it — the sync fails, a breadcrumb is logged, the local
-preference still works — but the reinstall carry-over does nothing until
-it runs. See §7 for how to run the CLI on this box.
+`PHASE_06_POLISH_REPORT.md` §3 is the authoritative list. Six of the
+founder's twelve items are done and verified; six are not started. The
+user asked that ALL of them land before Phase 7, so **Phase 7 is
+blocked** until they do.
 
-**The Premium/Pro naming split needs a product decision.** The copy sells
-"Premium" in 13 keys and "Pro" in 6, the RevenueCat product is
-`FormAI Pro`, and a plan badge says "PRO required". A user can be sold
-Premium and then told they need PRO. It is visible on one screen at once
-in the profile tab. Recorded in `docs/i18n/GLOSSARY.md`; it touches the
-store listing, so it is not an engineering call.
+**Done:** Premium rename · migration 012 applied · metric/imperial in
+Settings · language picker rebuilt · the coach's four language leaks ·
+tour-then-popup ordering.
+
+**Not done, in the order I would take them:**
+
+1. **Paywall regional pricing.** Highest value — it is a revenue path.
+   `paywall_screen.dart` already renders `storeProduct.priceString`
+   verbatim, which IS region-correct, so "English users see Turkish
+   prices" is most likely missing US pricing on the Play products rather
+   than a client bug. The one client-side suspect is
+   `_scalePriceString` (paywall_screen.dart:67), which hand-rolls
+   thousands/decimal separators for Turkish conventions and its own doc
+   comment admits it is only accidentally right for a `$` price. Target
+   pricing and the recommendations the founder asked for are in the
+   polish report §4.
+2. **Four showcase screens** — references in `photos/new-image/`:
+   `I-watch-every-rap.png`, `I'm-Form-I'm-here-whenever-you-need-me.png`,
+   `30-days-built-around-you.png`, `the-other-half-of-the-work.png`.
+   Current implementation is `feature_showcase_screen.dart`.
+3. **Camera-free workout + rest** — `workout-screen-camerasız.png` and
+   `workout-dinlenme-molası.png`, assets in `assets/new-assets/`. UI
+   should fill ~90% of the screen; minimal padding.
+4. **Workout background images** + `WORKOUT_BACKGROUND_IMAGE_REQUESTS.md`
+   (exercise name, destination path, filename, GPT Image prompt per gap).
+   Resolution must be automatic once files land — no code change.
+5. **Phase 7 nutrition localization plan** — the full brief is in the
+   founder's message; nothing written yet.
+6. **Full two-language device sweep**, then the AAB.
+
+**How to convert a reference image into a screen here:** the language
+picker (`steps/language_step.dart`) is the worked example from this
+sprint — read its class doc for how the two "departures from the mock"
+were decided and why they are written down rather than silently taken.
+
+**Asset trick worth reusing:** the supplied artwork is additive neon on
+a solid black plate and renders as a black tile over any non-black
+background. Key brightness to alpha (`a = max(r,g,b)`, RGB unchanged)
+and it blends. The one-liner is in the polish report §2.
+
+### 2.1 What Phase 6 left for someone else### 2.1 What Phase 6 left for someone else
 
 **English screenshots and feature graphic**, and pasting
 `docs/store/LISTING_EN.md` into Play Console → Manage translations. The
@@ -53,6 +88,9 @@ listing copy is written. See its "Still outstanding" section.
 **A native-speaker read of the English.** It is a reviewed, internally
 consistent draft, not proofread copy. The store listing is the highest-
 leverage hour.
+
+**Play Console regional pricing** for the three subscription products —
+see §2.0 item 1.
 
 **Two device surfaces still unverified**, both carried from Phase 5:
 the paywall interior (auth-gated; adb sign-in taps still do not
@@ -73,15 +111,15 @@ looks like a bug rather than a gap.
 
 ```
 analyze                     0 issues
-tests                       899
+tests                       915
 hardcoded-string gate       0 in 0 files  (allowlist 244, printed per entry)
-ARB                         1454 keys · tr 100% · en 100% · all referenced
+ARB                         1473 keys · tr 100% · en 100% · all referenced
 locales shipped             tr, en
 pseudo-locale sweep         18 surfaces × 3 viewports, now scrolled through
 English sweep               17 funnel + 5 app surfaces × 2 text scales
 RTL sweep                   16 surfaces
 CI                          green
-build                       1.0.0+26 · APK 133.8 MB
+build                       1.0.0+27 · APK 134.0 MB
 working tree                clean except pre-existing untracked founder files
 ```
 
@@ -94,7 +132,7 @@ before this session started. It is **not ours** — leave it.
 
 ```bash
 flutter analyze                                   # must be 0 — CI fails on infos too
-flutter test                                      # 899
+flutter test                                      # 915
 dart format --output=none --set-exit-if-changed lib test tool
 dart run tool/check_hardcoded_strings.dart        # ratchet, currently 0
 dart run tool/check_hardcoded_strings.dart --list # every flagged line
@@ -205,7 +243,7 @@ which is how CI was red for four commits before this session noticed.
 
 ## 7. Migrations
 
-`001`–`011` applied to production and verified live (history, RLS on 9
+`001`–`012` applied to production and verified live (history, RLS on 9
 tables, seeded flags matching compiled defaults, anon read 200 / write
 401).
 
@@ -281,10 +319,15 @@ tool/coach_eval.md                     the 12 scenarios, now in both languages
 
 ## 10. Devices
 
+- **Redmi Note 12 `jfzxugsgnnvsrsg6`** (22095RA98C, Android 13,
+  1080×2408) — **the primary from now on.** Unlocked, `1.0.0+27`
+  clean-installed, device language Turkish. All Phase-6-polish device
+  work was done here.
 - **Redmi `AYXSUKIVJVPZ7HPZ`** (M1908C3JGG, Android 11, 1080×2340,
   **×1.17** for taps read off a screenshot; `uiautomator` dumps are
-  already in real coordinates) — the primary. Online, `1.0.0+26`
-  installed, device language Turkish.
+  already in real coordinates) — **PIN-LOCKED.** adb can install to it
+  (`1.0.0+27` is on it) but nothing can drive its UI until the founder
+  unlocks it.
 - **Huawei `89U4C18908003735`** (ANE-LX1, Android 9, 1080×2280, ×1.14,
   animation scale 0.5) — **no network**, so guest sign-in cannot
   complete and it only covers offline surfaces. It does exercise the
