@@ -766,4 +766,603 @@ RECIPES_EN = {
         "Cook for 3 minutes more and transfer to a bowl.",
         "Finish with honey and cinnamon and serve hot.",
     ]),
+    "Bonfileli Salata": ("Beef Fillet Salad", [
+        "Combine the rocket, tomato and cucumber in a bowl.",
+        "Lay the beef fillet over the top.",
+        "Add the olive oil and lemon juice.",
+        "Season with salt and serve.",
+    ]),
+    "Karadeniz Kuymak": ("Black Sea Kuymak", [
+        "Melt the butter in a pan.",
+        "Add the cornflour and toast for 3 minutes.",
+        "Add the water a little at a time, stirring until it thickens.",
+        "Add the cheese and serve once it pulls into strands.",
+    ]),
+    "Karamel Soslu Yoğurt": ("Yogurt with Caramel Sauce", [
+        "Caramelise the sugar in a pan over medium heat.",
+        "Add the butter, milk and salt and stir until smooth.",
+        "Let the sauce cool.",
+        "Drizzle it over the yogurt and serve.",
+    ]),
+    "Karides Stir-Fry ve Yasemin Pirinci": (
+        "Shrimp Stir Fry with Jasmine Rice", [
+            "Cook the rice for 12 minutes according to the packet.",
+            "Sauté the shrimp with the garlic and ginger for 2 minutes.",
+            "Add the vegetables and toss over high heat for 3 minutes.",
+            "Add the soy sauce and sesame oil and cook for 1 minute more.",
+            "Spoon over the rice and serve.",
+        ]),
+    "Karışık Zeytin ve Peynir Tabağı": ("Mixed Olive and Cheese Plate", [
+        "Arrange the olives on a plate.",
+        "Set the beyaz peynir to one side.",
+        "Scatter olive oil and oregano over the top.",
+        "Serve.",
+    ]),
+    "Karpuzlu Beyaz Peynir": ("Watermelon with Beyaz Peynir", [
+        "Arrange the watermelon cubes on a plate.",
+        "Set the cubes of beyaz peynir to one side.",
+        "Garnish with mint and serve.",
+    ]),
+    "Kaşar Peynirli Tava Tost": ("Kaşar Pan Toastie", [
+        "Lay the kaşar cheese between the bread slices.",
+        "Grease one side of the pan with butter.",
+        "Cook in a covered pan for 3 minutes until both sides are golden.",
+        "Serve with black pepper.",
+    ]),
+    "Kırmızı Mercimek Çorbası ve Tam Buğday Ekmeği": (
+        "Red Lentil Soup with Wholemeal Bread", [
+            "Fry the onion and garlic in the olive oil for 2 minutes.",
+            "Add the grated carrot and cook for 2 minutes more.",
+            "Add the lentils and vegetable stock and simmer over low heat "
+            "for 20 minutes.",
+            "Blend it smooth and season with cumin and salt.",
+            "Serve hot with the bread.",
+        ]),
+    "Kıymalı Patates Yemeği": ("Beef and Potato Stew", [
+        "Fry the ground beef in the olive oil for 4 minutes.",
+        "Add the onion and potato and cook for 4 minutes more.",
+        "Add the tomato paste and 150 ml of hot water.",
+        "Cover, cook for 6 minutes, season with salt and serve.",
+    ]),
+    "Kıymalı Sade Makarna": ("Simple Pasta with Ground Beef", [
+        "Boil the pasta in salted water and drain it.",
+        "Fry the onion in the olive oil for 2 minutes.",
+        "Add the beef and cook for 4 minutes until it changes colour, "
+        "then add the tomato paste.",
+        "Toss the pasta through the sauce and serve.",
+    ]),
+    "Kıymalı Yüksek Protein Makarna": ("High-Protein Beef Pasta", [
+        "Boil the pasta according to the packet.",
+        "Fry the onion and garlic in the olive oil.",
+        "Add the beef and cook until it changes colour.",
+        "Add the tomato sauce and simmer over low heat for 10 minutes.",
+        "Toss the pasta through the sauce, scatter parmesan and basil "
+        "over and serve.",
+    ]),
+    "Kıymalı Yumurta Tava": ("Pan Eggs with Ground Beef", [
+        "Fry the onion in the olive oil for 2 minutes.",
+        "Add the beef and cook for 4 minutes until it changes colour, "
+        "then add the tomato paste.",
+        "Crack the eggs over the top and season with salt.",
+        "Cook for 4 minutes more until the eggs set.",
+    ]),
+    "Klasik Mercimek Çorbası": ("Classic Lentil Soup", [
+        "Sauté the onion and carrot in the butter for 3 minutes.",
+        "Add the lentils and 500 ml of water and bring to the boil.",
+        "Blend it smooth and add the salt.",
+        "Finish with chilli flakes and serve.",
+    ]),
+    "Kuru Kayısı Yulaflı Süt": ("Oats with Milk and Dried Apricots", [
+        "Bring the oats and milk to the boil in a pan over medium heat.",
+        "Add the apricots and cook for 4 minutes more.",
+        "Transfer to a bowl and drizzle the honey over.",
+        "Finish with cinnamon and serve hot.",
+    ]),
+    "Levrek Tava": ("Pan-Fried Sea Bass", [
+        "Season the sea bass with salt and dust it in flour.",
+        "Warm the olive oil in a pan.",
+        "Fry the sea bass for 4 minutes until both sides are golden.",
+        "Serve with lemon and parsley.",
+    ]),
+    "Limon Soslu Roka Salatası": ("Rocket Salad with Lemon Dressing", [
+        "Put the rocket in a bowl.",
+        "Whisk the lemon, olive oil and salt together.",
+        "Drizzle the dressing over the rocket.",
+        "Finish with walnuts and mint and serve.",
+    ]),
+    "Limon-Bal Yoğurt": ("Lemon Honey Yogurt", [
+        "Add the lemon juice to the yogurt and whisk.",
+        "Stir the honey through.",
+        "Finish with grated lemon zest and serve.",
+    ]),
+    "Limonlu Bal Sıcak Süt": ("Hot Milk with Honey and Lemon", [
+        "Warm the milk over medium heat without letting it boil.",
+        "Add the honey and lemon juice.",
+        "Stir and pour into a glass.",
+        "Finish with cinnamon and serve hot.",
+    ]),
+    "Limonlu Yoğurt Bar": ("Frozen Lemon Yogurt Bars", [
+        "Stir the lemon zest, juice and honey through the yogurt.",
+        "Spread it into a flat dish.",
+        "Scatter the granola over the top.",
+        "Freeze for 5 minutes and serve as bars.",
+    ]),
+    "Lor Peynirli Bal Ekmek": ("Lor Cheese and Honey on Bread", [
+        "Mash the lor cheese in a bowl with a fork.",
+        "Add the honey and cinnamon and mix.",
+        "Spread the mixture over the bread slices.",
+        "Serve immediately.",
+    ]),
+    "Lor Peynirli Domates Tabağı": ("Tomato and Lor Cheese Plate", [
+        "Arrange the tomato slices on a plate.",
+        "Set the lor cheese in the middle.",
+        "Add the olives and drizzle olive oil over.",
+        "Serve with oregano and salt.",
+    ]),
+    "Mantarlı Sade Omlet": ("Simple Mushroom Omelette", [
+        "Sauté the mushrooms in the butter for 3 minutes.",
+        "Beat the eggs with the milk and add the seasoning.",
+        "Pour the mixture over the mushrooms.",
+        "Cook for 3 minutes until the eggs set.",
+    ]),
+    "Mantarlı Tavuk Sote": ("Chicken and Mushroom Sauté", [
+        "Fry the chicken in the olive oil for 4 minutes.",
+        "Add the onion and mushrooms and cook for 4 minutes more.",
+        "Add the tomato paste and 50 ml of water.",
+        "Cover, cook for 4 minutes, season with salt and serve.",
+    ]),
+    "Maydanozlu Sade Omlet": ("Simple Parsley Omelette", [
+        "Beat the eggs with the milk and add the seasoning and parsley.",
+        "Warm the olive oil in a pan.",
+        "Pour the mixture in, drawing the set edges into the middle as "
+        "they cook.",
+        "Fold in half once the eggs have set and serve.",
+    ]),
+    "Maydanozlu Yumurta Salatası": ("Egg Salad with Parsley", [
+        "Put the eggs in a bowl.",
+        "Add the yogurt, vinegar, olive oil and salt and mix.",
+        "Fold the parsley through.",
+        "Serve cold.",
+    ]),
+    "Menemen Klasik": ("Classic Menemen", [
+        "Sauté the onion and pepper in the olive oil for 2 minutes.",
+        "Add the grated tomato and cook for 4 minutes until the liquid "
+        "reduces.",
+        "Crack the eggs in without beating them and scatter the "
+        "seasoning.",
+        "Serve immediately once the eggs have set.",
+    ]),
+    "Mercimek Köftesi Wrap": ("Lentil Köfte Wrap", [
+        "Warm the lavash lightly in a pan.",
+        "Spread a layer of hummus over each one.",
+        "Lay out the lettuce, tomato, onion and lentil köfte.",
+        "Finish with parsley and lemon juice, roll tightly and serve.",
+    ]),
+    "Mercimekli Erişte": ("Erişte with Lentils", [
+        "Boil the erişte in salted water and drain it.",
+        "Fry the onion in the olive oil for 2 minutes.",
+        "Add the lentils and warm for 2 minutes, then fold in the "
+        "erişte.",
+        "Season with mint and serve.",
+    ]),
+    "Meyveli Süzme Yoğurt": ("Strained Yogurt with Fruit", [
+        "Spread the yogurt over the base of a wide bowl.",
+        "Arrange the fruit over the yogurt.",
+        "Drizzle the honey in a thin ribbon.",
+        "Scatter the oats over and serve immediately.",
+    ]),
+    "Meyveli Vegan Smoothie Kasesi": ("Vegan Fruit Smoothie Bowl", [
+        "Blend the banana, blackberries, almond milk and protein powder "
+        "until smooth.",
+        "Transfer to a wide bowl.",
+        "Scatter the chia seeds, granola and coconut over the top.",
+        "Add more fresh fruit if you like and serve immediately.",
+    ]),
+    "Mikrodalgada Çikolatalı Kek": ("Microwave Chocolate Mug Cake", [
+        "Mix all the ingredients in a mug.",
+        "Work it into a smooth batter.",
+        "Microwave at 800 W for 2 minutes.",
+        "Rest for 1 minute and serve.",
+    ]),
+    "Mikrodalgada Tarçınlı Elma": ("Microwave Cinnamon Apple", [
+        "Put the apple cubes in a microwave-safe bowl.",
+        "Add the honey, cinnamon and butter.",
+        "Cook at 800 W for 4 minutes.",
+        "Stir and serve.",
+    ]),
+    "Mısır Gevrekli Süt": ("Corn Flakes with Milk", [
+        "Put the corn flakes in a bowl.",
+        "Pour the cold milk over.",
+        "Add the banana slices and serve immediately.",
+    ]),
+    "Mücver Tava": ("Courgette Fritters", [
+        "Squeeze the liquid out of the grated courgette.",
+        "Knead it with the flour, egg, cheese and dill.",
+        "Spoon the batter into an oiled pan and shape the fritters.",
+        "Cook each side for 3 minutes and serve.",
+    ]),
+    "Muz-Tahin Sandviç": ("Banana Tahini Sandwich", [
+        "Spread the tahini over the bread slices.",
+        "Lay the banana slices on.",
+        "Drizzle the grape molasses over.",
+        "Close, cut in half and serve.",
+    ]),
+    "Muzlu Sıcak Yulaf Lapası": ("Hot Banana Porridge", [
+        "Bring the oats and milk to the boil in a pan over medium heat.",
+        "Stir for 3 minutes until it thickens.",
+        "Transfer to a bowl and lay the banana on top.",
+        "Finish with honey and cinnamon and serve hot.",
+    ]),
+    "Muzlu Vegan Dondurma": ("Vegan Banana Ice Cream", [
+        "Blend the frozen banana slices until creamy.",
+        "Add the cocoa powder and vanilla and blend for 15 seconds more.",
+        "Transfer to a serving bowl.",
+        "Scatter the desiccated coconut over and serve immediately.",
+    ]),
+    "Muzlu Yoğurt Tatlısı": ("Banana Yogurt Dessert", [
+        "Spoon the yogurt into a bowl.",
+        "Lay the banana slices on top.",
+        "Add the honey and walnuts.",
+        "Finish with cinnamon and serve cold.",
+    ]),
+    "Nohutlu Kinoa Buddha Kasesi": ("Chickpea Quinoa Buddha Bowl", [
+        "Boil the quinoa and cool it.",
+        "Make a dressing with the tahini, lemon juice and 2 tbsp of "
+        "water.",
+        "Layer the quinoa, chickpeas, carrot, cabbage and avocado in a "
+        "bowl.",
+        "Drizzle the tahini dressing over and serve.",
+    ]),
+    "Patates Çorbası": ("Potato Soup", [
+        "Fry the onion and carrot in the butter for 2 minutes.",
+        "Add the potato and water and simmer for 10 minutes.",
+        "Blend it smooth.",
+        "Season with salt and serve.",
+    ]),
+    "Patates Pofuduk": ("Fluffy Potato Cakes", [
+        "Knead the potato, flour, egg, onion and salt together.",
+        "Shape the mixture into small rounds.",
+        "Cook each side for 4 minutes in a non-stick pan.",
+        "Serve hot.",
+    ]),
+    "Pekmezli Hurma Pudingi": ("Date Pudding with Grape Molasses", [
+        "Slake the rice flour with 50 ml of cold milk.",
+        "Bring the remaining milk to the boil and add the dates.",
+        "Add the rice flour mixture and stir for 6 minutes until it "
+        "thickens.",
+        "Divide between bowls and finish with grape molasses and "
+        "walnuts.",
+    ]),
+    "Pekmezli Süt Tatlısı": ("Milk Pudding with Grape Molasses", [
+        "Slake the cornstarch with 50 ml of cold milk.",
+        "Bring the remaining milk to the boil in a pan, add the starch "
+        "mixture and cook for 4 minutes until it thickens.",
+        "Divide between bowls and drizzle the grape molasses over.",
+        "Finish with walnuts and cinnamon.",
+    ]),
+    "Pekmezli Yoğurt Mousse": ("Yogurt Mousse with Grape Molasses", [
+        "Add the sugar to the yogurt and whisk.",
+        "Fold the grape molasses through.",
+        "Marble it in the bowl.",
+        "Finish with walnuts and serve cold.",
+    ]),
+    "Pırasa Köftesi": ("Leek Fritters", [
+        "Squeeze the liquid out of the leek.",
+        "Knead it with the flour, egg, cheese and salt.",
+        "Spoon the batter into an oiled pan and shape the fritters.",
+        "Cook each side for 3 minutes and serve.",
+    ]),
+    "Pırasalı Pilav": ("Leek Pilaf", [
+        "Sauté the leek in the butter for 4 minutes.",
+        "Add the rice with the olive oil and fry for 1 minute.",
+        "Add 200 ml of hot water and the salt and cover.",
+        "Cook over low heat for 12 minutes and serve with black pepper.",
+    ]),
+    "Pratik Aşure": ("Quick Aşure", [
+        "Put all the ingredients in a pan with 200 ml of water.",
+        "Add the sugar and simmer over medium heat for 8 minutes.",
+        "Divide between bowls.",
+        "Finish with cinnamon and serve once cooled.",
+    ]),
+    "Pratik İmam Bayıldı": ("Quick İmam Bayıldı", [
+        "Fry the aubergines in the olive oil for 4 minutes and lift them "
+        "out.",
+        "Sauté the onion and garlic in the same pan for 3 minutes and add "
+        "the tomato.",
+        "Return the aubergines and cook for 4 minutes more.",
+        "Garnish with parsley and serve.",
+    ]),
+    "Pratik Karnıyarık": ("Quick Karnıyarık", [
+        "Fry the ground beef in the olive oil for 4 minutes.",
+        "Add the onion and tomato paste and cook for 3 minutes more.",
+        "Split the aubergines open and fill them with the mixture.",
+        "Cook covered in 200 ml of hot water for 5 minutes and serve with "
+        "parsley.",
+    ]),
+    "Pratik Muhallebi": ("Quick Muhallebi", [
+        "Slake the rice flour with 50 ml of cold milk.",
+        "Warm the remaining milk in a pan and add the sugar.",
+        "Add the rice flour mixture and stir for 6 minutes until it "
+        "thickens.",
+        "Add the vanilla, divide between bowls and finish with cinnamon.",
+    ]),
+    "Pratik Nohut Yemeği": ("Quick Chickpea Stew", [
+        "Fry the onion in the olive oil for 2 minutes.",
+        "Add the tomato paste and fry for 1 minute.",
+        "Add the chickpeas and 200 ml of hot water and simmer for "
+        "8 minutes.",
+        "Season with cumin and salt and serve.",
+    ]),
+    "Pratik Patates Köftesi": ("Quick Potato Patties", [
+        "Knead the potato, flour, egg and onion together.",
+        "Shape the mixture into walnut-sized patties.",
+        "Cook in an oiled pan for 5 minutes until golden all over.",
+        "Serve hot.",
+    ]),
+    "Pratik Sütlaç": ("Quick Sütlaç", [
+        "Bring the rice and milk to the boil in a pan over medium heat.",
+        "Slake the rice flour with a little water and add it.",
+        "Add the sugar and stir for 6 minutes until it thickens.",
+        "Divide between bowls and finish with cinnamon.",
+    ]),
+    "Pratik Yoğurtlu Mantı": ("Quick Mantı with Yogurt", [
+        "Boil the mantı in salted water according to the packet.",
+        "Stir the garlic and salt through the yogurt.",
+        "Melt the butter and bloom the chilli flakes in it.",
+        "Plate the mantı and pour the yogurt and butter sauce over.",
+    ]),
+    "Pratik Yumurtalı Pişi": ("Quick Pişi with Egg", [
+        "Cook the pişi dough in an oiled pan for 4 minutes until both "
+        "sides are golden.",
+        "Crack the eggs into the same pan and season with salt.",
+        "Split the pişi open and fill it with the cheese and egg.",
+        "Serve hot.",
+    ]),
+    "Pratik Yumurtalı Salata": ("Quick Egg Salad", [
+        "Put the lettuce and tomato in a bowl.",
+        "Lay the egg slices over the top.",
+        "Add the olive oil, lemon and salt.",
+        "Toss lightly and serve.",
+    ]),
+    "Protein Omlet & Avokado": ("Protein Omelette with Avocado", [
+        "Beat the eggs.",
+        "Add the spinach and cheese and make an omelette.",
+        "Serve with sliced avocado alongside.",
+    ]),
+    "Protein Pankek Yığını": ("Protein Pancake Stack", [
+        "Blend all the ingredients until smooth.",
+        "Cook each pancake in a non-stick pan over medium heat for "
+        "2 minutes a side.",
+        "Stack the pancakes.",
+        "Top with blueberries and honey and serve.",
+    ]),
+    "Reçelli Tam Buğday Tost": ("Wholemeal Toast with Jam", [
+        "Toast the bread slices.",
+        "Spread the butter on while they are hot.",
+        "Spread the jam over and serve immediately.",
+    ]),
+    "Reçelli Yoğurt Kasesi": ("Yogurt Bowl with Jam", [
+        "Spoon the yogurt into a bowl.",
+        "Set the jam on top.",
+        "Scatter the granola over and serve immediately.",
+    ]),
+    "Roka Salatası ve Izgara Tavuk": ("Rocket Salad with Grilled Chicken", [
+        "Season the chicken with salt and black pepper.",
+        "Cook each side for 4 minutes in a hot griddle pan.",
+        "Arrange the rocket and tomato on a plate.",
+        "Slice the chicken over the top and serve with olive oil and "
+        "lemon.",
+    ]),
+    "Roka ve Ceviz Salatası": ("Rocket and Walnut Salad", [
+        "Put the rocket in a bowl.",
+        "Add the walnuts and cheese on top.",
+        "Drizzle the olive oil and lemon over.",
+        "Season with salt and serve.",
+    ]),
+    "Sade Bonfile Sote": ("Simple Beef Fillet Sauté", [
+        "Fry the beef fillet in the olive oil for 4 minutes.",
+        "Add the onion and cook for 2 minutes more.",
+        "Add the tomato paste and fry for 1 minute.",
+        "Season with salt and black pepper and serve.",
+    ]),
+    "Sade Bulgurlu Salata": ("Simple Bulgur Salad", [
+        "Soak the bulgur in hot water for 10 minutes and drain it.",
+        "Combine the vegetables and parsley in a bowl.",
+        "Add the bulgur and toss with the olive oil.",
+        "Season with salt and serve.",
+    ]),
+    "Sade Domates Salatası": ("Simple Tomato Salad", [
+        "Combine the tomato and onion in a bowl.",
+        "Add the olive oil and the seasoning.",
+        "Toss lightly and serve.",
+    ]),
+    "Sade Hindi Etli Pilav": ("Simple Turkey Pilaf", [
+        "Fry the turkey in the olive oil for 4 minutes, add the onion and "
+        "cook for 2 minutes more.",
+        "Fry the rice in the butter for 1 minute.",
+        "Add 200 ml of hot water and the salt and cover.",
+        "Cook over low heat for 12 minutes and let it rest.",
+    ]),
+    "Sade İncir Tatlısı": ("Simple Fig Dessert", [
+        "Simmer the figs in the milk for 6 minutes.",
+        "Lift the figs onto a plate.",
+        "Reduce the milk for 2 minutes more and pour it over the figs.",
+        "Finish with walnuts, honey and cinnamon and serve.",
+    ]),
+    "Sade Izgara Köfte": ("Simple Grilled Köfte", [
+        "Knead the ground beef, onion and spices together.",
+        "Shape the köfte.",
+        "Grease a hot griddle pan with the olive oil.",
+        "Cook each side for 4 minutes and serve.",
+    ]),
+    "Sade Köfte Tava": ("Simple Pan Köfte", [
+        "Roll the köfte and toss them in the spices.",
+        "Cook each side for 4 minutes in an oiled pan.",
+        "Cover and rest for 2 minutes.",
+        "Serve hot.",
+    ]),
+    "Sade Köy Ekmeği ve Tereyağı": ("Village Bread with Butter", [
+        "Warm the bread slices lightly.",
+        "Spread the butter on while they are hot.",
+        "Scatter a pinch of salt over and serve.",
+    ]),
+    "Sade Mercimek Yemeği": ("Simple Lentil Stew", [
+        "Fry the onion in the olive oil for 2 minutes.",
+        "Add the tomato paste and fry for 1 minute more.",
+        "Add the lentils and 200 ml of water and simmer for 8 minutes.",
+        "Season with cumin and salt.",
+    ]),
+    "Sade Mıhlama": ("Simple Mıhlama", [
+        "Melt the butter in a pan, add the cornflour and toast for "
+        "2 minutes.",
+        "Add the water slowly, stirring constantly.",
+        "Add the cheese and cook for 3 minutes more until it melts.",
+        "Serve hot.",
+    ]),
+    "Sade Mısır Salatası": ("Simple Sweetcorn Salad", [
+        "Combine the sweetcorn, pepper and onion in a bowl.",
+        "Add the olive oil and lemon juice.",
+        "Toss with salt.",
+        "Serve cold.",
+    ]),
+    "Sade Pancar Salatası": ("Simple Beetroot Salad", [
+        "Arrange the beetroot slices on a plate.",
+        "Lay the onions over them.",
+        "Drizzle the olive oil and lemon over.",
+        "Serve with parsley and salt.",
+    ]),
+    "Sade Patates Püresi": ("Simple Mashed Potato", [
+        "Boil the potatoes and drain them.",
+        "Add the butter and milk.",
+        "Mash until smooth.",
+        "Serve with salt and black pepper.",
+    ]),
+    "Sade Patates Tavası": ("Simple Pan-Fried Potatoes", [
+        "Fry the potatoes in an oiled pan for 8 minutes.",
+        "Turn them and cook for 4 minutes more.",
+        "Scatter salt, chilli flakes and oregano over.",
+        "Serve hot.",
+    ]),
+    "Sade Pirinç Sütü Tatlısı": ("Simple Rice Milk Pudding", [
+        "Bring the rice and milk to the boil in a pan over medium heat.",
+        "Add the sugar and vanilla.",
+        "Stir for 8 minutes until it thickens.",
+        "Divide between bowls and finish with cinnamon.",
+    ]),
+    "Sade Sucuklu Krep": ("Simple Sucuk Crêpes", [
+        "Whisk the eggs, flour, milk and salt together.",
+        "Fry the sucuk slices in a pan for 1 minute and lift them out.",
+        "Cook the crêpes in an oiled pan and lay the sucuk on top.",
+        "Roll the crêpe up and serve.",
+    ]),
+    "Sade Süt Helvası": ("Simple Milk Halva", [
+        "Toast the flour in the butter for 5 minutes until golden.",
+        "Warm the milk and sugar in a separate pan and add them to the "
+        "flour.",
+        "Stir for 4 minutes until it thickens.",
+        "Press into a mould, scatter walnuts over and serve.",
+    ]),
+    "Sade Tahin Mousse": ("Simple Tahini Mousse", [
+        "Whisk the tahini into the yogurt.",
+        "Fold the grape molasses through and marble it.",
+        "Transfer to a bowl.",
+        "Finish with walnuts and cinnamon and serve.",
+    ]),
+    "Sade Tahıl Bar": ("Simple Grain Bars", [
+        "Combine all the ingredients in a bowl.",
+        "Spread the mixture onto a flat dish and press it to 1 cm thick.",
+        "Rest in the fridge for 5 minutes.",
+        "Cut into bars and serve.",
+    ]),
+    "Sade Un Helvası": ("Simple Flour Halva", [
+        "Toast the pine nuts in the butter for 1 minute.",
+        "Add the flour and toast for 5 minutes until golden.",
+        "Warm the water and sugar in a separate pan and stir them into "
+        "the halva.",
+        "Rest once it thickens, press into a mould and serve.",
+    ]),
+    "Sade Yumurtalı Ekmek": ("Simple Eggs with Bread", [
+        "Melt the butter in a pan.",
+        "Crack the eggs in and cook over medium heat for 3 minutes.",
+        "Scatter the salt and black pepper.",
+        "Serve with the bread.",
+    ]),
+    "Sade Yumurtalı Süt Tatlısı": ("Simple Egg Custard", [
+        "Whisk the egg with the sugar and vanilla.",
+        "Warm the milk and add it slowly to the egg mixture.",
+        "Return it to the pan and stir over medium heat for 6 minutes "
+        "until it thickens.",
+        "Divide between bowls and finish with cinnamon.",
+    ]),
+    "Salam ve Sade Tabak": ("Salami Plate", [
+        "Arrange the salami and cheese on a plate.",
+        "Slice the tomato and set it to one side.",
+        "Add the olives and put the slice of bread in the middle.",
+        "Serve immediately.",
+    ]),
+    "Salatalık Sticks ve Yoğurt Sosu": ("Cucumber Sticks with Yogurt Dip", [
+        "Stir the garlic, mint and salt through the yogurt.",
+        "Arrange the cucumber sticks on a plate.",
+        "Put the dip in the middle and serve immediately.",
+    ]),
+    "Salatalık ve Beyaz Peynir": ("Cucumber and Beyaz Peynir", [
+        "Arrange the cucumber slices on a plate.",
+        "Set the beyaz peynir to one side.",
+        "Drizzle the olive oil over.",
+        "Garnish with mint and serve.",
+    ]),
+    "Salçalı Tavada Yumurta": ("Pan Eggs in Tomato Paste Sauce", [
+        "Fry the onion in the olive oil for 2 minutes.",
+        "Add the tomato paste and 50 ml of water and cook for 2 minutes "
+        "more.",
+        "Crack the eggs over the top and scatter the seasoning.",
+        "Cover, cook for 3 minutes and serve.",
+    ]),
+    "Salçalı Yumurtalı Köfte": ("Köfte and Eggs in Tomato Sauce", [
+        "Roll the köfte into balls and fry them in a pan for 4 minutes.",
+        "Add the onion and tomato paste and cook with 100 ml of water.",
+        "Crack the eggs onto the sauce and season.",
+        "Cover and cook for 3 minutes until the eggs set.",
+    ]),
+    "Sarımsaklı Cacık": ("Garlic Cacık", [
+        "Drain the liquid from the cucumber.",
+        "Stir the cucumber, garlic, cold water, mint and salt through the "
+        "yogurt.",
+        "Rest in the fridge for 5 minutes.",
+        "Serve cold.",
+    ]),
+    "Sebzeli Bulgur Pilavı": ("Bulgur Pilaf with Vegetables", [
+        "Sauté the vegetables in the olive oil for 3 minutes.",
+        "Add the bulgur and fry for 1 minute.",
+        "Add 200 ml of hot water and the salt and cover.",
+        "Cook over low heat for 12 minutes and let it rest.",
+    ]),
+    "Sebzeli Ev Çorbası": ("Homestyle Vegetable Soup", [
+        "Sauté the onion and garlic in the olive oil for 2 minutes until "
+        "they colour.",
+        "Add the diced carrot, courgette and celery and fry for "
+        "3 minutes more.",
+        "Add the vegetable stock and cook over low heat for 20 minutes.",
+        "Add the thyme, salt and black pepper and serve hot.",
+    ]),
+    "Sebzeli Mercimek Çorbası": ("Lentil Soup with Vegetables", [
+        "Fry the onion and garlic in the olive oil for 2 minutes.",
+        "Add the diced carrot and courgette and cook for 3 minutes.",
+        "Add the lentils and vegetable stock and simmer over low heat for "
+        "25 minutes.",
+        "Blend it smooth, season with cumin and salt and serve hot.",
+    ]),
+    "Sebzeli Pratik Köfte": ("Quick Vegetable Köfte", [
+        "Knead the köfte mix and the vegetables together.",
+        "Shape into balls and cook in the olive oil for 6 minutes.",
+        "Turn them and cook for 4 minutes more.",
+        "Serve hot.",
+    ]),
+    "Şehriye Çorbası Yumurtalı": ("Orzo Soup with Egg", [
+        "Toast the orzo in the butter for 1 minute.",
+        "Add 600 ml of water and simmer for 8 minutes.",
+        "Beat the egg with the lemon juice and add it to the soup in a "
+        "thin stream, stirring constantly.",
+        "Season with salt and mint and serve.",
+    ]),
 }
