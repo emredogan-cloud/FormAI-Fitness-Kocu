@@ -1,7 +1,7 @@
 # FormAI — Project Progress Summary
 
 **Spec:** `TESTERS_COMMUNITY_PRODUCT_ROADMAP.md` (18 phases / 5 waves)
-**As of:** 2026-08-01 · Phase 6 polish sprint, half done · build **1.0.0+27**
+**As of:** 2026-08-01 · Phase 6 polish sprint **complete** · build **1.0.0+28**
 
 ---
 
@@ -62,44 +62,33 @@
 
 ---
 
+### Phase 6 polish sprint — twelve founder items ✅
+*Build 1.0.0+28 · 940 tests · CI green · `PHASE_06_POLISH_REPORT.md`*
+- **Premium naming, migration 012, Metric/Imperial, the language picker, the coach's four language leaks, tour-before-popup** — the first six, delivered earlier in the sprint.
+- **Paywall pricing.** The struck-through anchor hardcoded Turkish separators, so a US user saw `$9.99` beside `$119,88`; separators now come off the store's own string. The third plan card resolves against the live offering, so publishing `$rc_weekly` switches the paywall with **no app release**. `docs/store/PRICING_SETUP.md` carries the founder-side half — including that the target USD ladder is inverted ($2/wk = $8.67/mo against a $10/mo plan).
+- **The four showcase screens**, rebuilt to the references. Found that `showcase_ai_coach.webp` shipped six English UI labels baked into the photograph while `TEXT_IN_IMAGES.md` recorded it as clean — the audit had read the filename, not the pixels.
+- **Camera-free workout and rest**, rebuilt, filling the display instead of floating in the middle of it.
+- **A background for all 138 exercises**, resolved from the asset manifest rather than a hand-kept list — dropping a correctly-named file in is the entire procedure. 51 still on category art, with prompts in `WORKOUT_BACKGROUND_IMAGE_REQUESTS.md`.
+- **Phase 7 nutrition plan** written against the live catalogue, not started.
+- **A two-language device walk found eight defects** that 934 tests and five gates were green across — a rest day labelled "Req.", "PREMIUM" white on white in light mode, a privacy claim cut mid-sentence, two badges ellipsised in English, two loader phrases cross-fading on top of each other, and `%82` in the English app. That last one had a rule written specifically to catch it; it failed for two independent reasons, and only a synthetic probe found the second.
+
+---
+
 # 2. Currently Working On
 
-**The Phase 6 polish sprint — six of twelve founder items done.**
-`PHASE_06_POLISH_REPORT.md` §3 is the authoritative list and
-`RESUME_GUIDE.md` §2.0 is the pick-up point. **Phase 7 is blocked** until
-the remaining six land.
+**Nothing. The sprint is closed and Phase 7 is blocked on founder
+approval**, as asked.
 
-Done: Premium rename · migration 012 applied and verified · metric/
-imperial in Settings · language picker rebuilt to the reference · the AI
-coach's four language leaks · tour-then-popup ordering.
+`PHASE_06_POLISH_REPORT.md` §6 is the founder-action list:
 
-Not started: paywall regional pricing (highest value — a revenue path) ·
-four showcase screens · camera-free workout + rest redesign · workout
-background images and the request doc · the Phase 7 nutrition
-localization plan · the full two-language device sweep.
-
-## What Phase 6 handed off
-
-Three of these are founder decisions, not engineering.
-
-| Item | Who | Why it matters |
-|---|---|---|
-| **Play Console regional pricing** | founder | The app renders whatever the store reports, so the target pricing is a Play change, not an app change. Blocks verifying the paywall item. |
-| English screenshots + feature graphic, and pasting `docs/store/LISTING_EN.md` into Play Console | founder | The copy is written. Turkish frames cannot be reused under an English listing. |
-| A native-speaker read of the English | founder | It is a reviewed, internally consistent draft, not proofread copy. The listing is the highest-leverage hour. |
-| **Unlock the Redmi `AYXSUKIVJVPZ7HPZ`** | founder | PIN-locked. adb can install to it but nothing can drive its UI. All device work moved to the Redmi Note 12. |
-
-## Two device surfaces still unverified
-
-Both carried from Phase 5, both blocked the same way — they destroy the
-session the rest of a sweep depends on, so they go last.
-
-- **The paywall interior.** Auth-gated; adb sign-in taps still do not
-  register. The gate itself is verified live; the interior has 27 widget
-  tests. Missing is visual confirmation.
-- **A clean-install onboarding**, which now also means seeing the
-  language step as an actual first screen. Six widget tests and the
-  English sweep cover it; glass does not.
+1. **Re-enable "Install via USB"** on the Redmi Note 12 — it lapsed
+   mid-session, so the final build was never walked. Everything is green
+   in CI; this closes #12 honestly.
+2. **Decide the USD weekly price**, then do Play Console + RevenueCat per
+   `docs/store/PRICING_SETUP.md`.
+3. **Generate workout backgrounds** at your own pace. Nothing is broken
+   while the directory is empty.
+4. **Read `PHASE_07_NUTRITION_I18N_PLAN.md`** and approve or redirect.
 
 # 3. Remaining Roadmap
 
@@ -128,25 +117,25 @@ session the rest of a sweep depends on, so they go last.
 
 ```
 Wave 1 — Production-Access Commitments   ✅ Complete   (Phases 1–4 + 3b)
-Wave 2 — Global Reach                    🔄 In Progress (Phases 5–6 done)
+Wave 2 — Global Reach                    🔄 In Progress (5, 6 + polish done; 7 awaiting approval)
 Wave 3 — Measurable Progress & Access    ⏳ Not Started (Phases 9–11)
 Wave 4 — Community & Content Engine      ⏳ Not Started (Phases 12–14)
 Wave 5 — Scale, Depth & Platform         ⏳ Not Started (Phases 15–17)
 ```
 
-**Phases complete:** 8 of 18 (0, 1, 2, 3, 3b, 4, 5, 6) · two device surfaces carried forward: the paywall interior and a clean-install onboarding
+**Phases complete:** 8 of 18 (0, 1, 2, 3, 3b, 4, 5, 6) + the Phase 6 polish sprint · two device surfaces still carried forward: the paywall interior and a clean-install onboarding
 
 ### Current quality state
 
 | | |
 |---|---|
-| **Build** | 1.0.0+27 |
-| **Tests** | **915 passing** (baseline was 330) |
+| **Build** | 1.0.0+28 · APK 134.5 MB · AAB 114.6 MB |
+| **Tests** | **940 passing** (baseline was 330) |
 | **`flutter analyze`** | **0 issues** |
 | **`dart format`** | clean |
 | **CI** | **GREEN** (CI + Secret Scan) |
 | **Hardcoded-string gate** | **0 in 0 files** · 244 allowlisted, reported per entry |
-| **ARB** | **1473 keys** · `tr` 100% · `en` 100% · all referenced in `lib/` |
+| **ARB** | **1527 keys** · `tr` 100% · `en` 100% · all referenced in `lib/` |
 | **Locales shipped** | `tr`, `en` |
 
 ### Standing constraints
@@ -154,3 +143,5 @@ Wave 5 — Scale, Depth & Platform         ⏳ Not Started (Phases 15–17)
 - **CI Flutter is 3.44.8, local is 3.41.9.** Local green is not proof; only CI is a reliable gate.
 - **Migrations 001–012 are all applied to production** and verified live.
 - The local release build is upload-key signed, so device installs need `adb uninstall` first (loses session, requires a full onboarding re-walk).
+- **MIUI's "Install via USB" lapses.** `INSTALL_FAILED_USER_RESTRICTED` is not a signing problem and no adb flag works around it; it needs a Mi-account re-authorization on the handset.
+- **A green gate is a claim about its own heuristics.** Two sprints running, a rule written to catch a class of bug failed to fire on that exact bug. Probe every widening with a synthetic file under `lib/`.
