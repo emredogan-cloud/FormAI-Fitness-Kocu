@@ -252,6 +252,91 @@ class _OutcomeLine extends StatelessWidget {
   }
 }
 
+/// Roadmap Phase 12 (C21) · the profile card.
+///
+/// Deliberately the same shape as [ShareOutcomeTemplate] — it takes
+/// already-formatted lines and does no arithmetic of its own, so there
+/// is exactly one place in the app where a number becomes a string and
+/// this is not it.
+///
+/// The difference from the outcome card is the order: a name is the
+/// subject here, so it is the large type and the handle sits under it,
+/// where a handle sits everywhere else.
+class ShareProfileTemplate extends StatelessWidget {
+  const ShareProfileTemplate({
+    super.key,
+    required this.displayName,
+    required this.handle,
+    required this.lines,
+    this.format = ShareFormat.story,
+  });
+
+  /// The name as the user typed it. Not localized and not localizable.
+  final String displayName;
+
+  /// Without the leading '@' — the template adds it, because the '@' is
+  /// part of how a handle is written rather than part of the handle.
+  final String handle;
+
+  /// (label, value) pairs, already localized and **already filtered by
+  /// the profile's own visibility flags**. A user who turned stats off
+  /// has said they do not want their numbers out there, and putting
+  /// them on a shareable image would contradict that on the one surface
+  /// where it cannot be taken back.
+  final List<(String, String)> lines;
+
+  final ShareFormat format;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = format == ShareFormat.story ? storySize : squareSize;
+    final story = format == ShareFormat.story;
+    return _BrandFrame(
+      size: size,
+      child: Padding(
+        padding:
+            EdgeInsets.symmetric(horizontal: 80, vertical: story ? 96 : 64),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const _BrandHeader(),
+            const Spacer(),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                displayName,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: _brandText,
+                  fontSize: story ? 88 : 70,
+                  fontWeight: FontWeight.w900,
+                  height: 1.05,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '@$handle', // i18n-ignore — a handle
+              style: const TextStyle(
+                color: _brandAccent,
+                fontSize: 36,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            SizedBox(height: story ? 64 : 40),
+            for (final line in lines) ...[
+              _OutcomeLine(label: line.$1, value: line.$2),
+              const SizedBox(height: 22),
+            ],
+            const Spacer(),
+            const _BrandFooter(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// "Badge" template — fired from the badge unlock dialog share CTA.
 ///
 /// "FormAI'da [Badge Name] rozetini kazandım!"

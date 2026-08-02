@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/services/share_service.dart';
 import '../../../core/theme/neon_surface.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../progress/providers/badge_unlocks_provider.dart';
+import '../../progress/providers/streak_provider.dart';
+import '../../progress/providers/xp_provider.dart';
+import '../../workout/data/session_log_repository.dart';
 import '../data/community_repository.dart';
+import '../domain/models/community_models.dart';
 import 'profile_editor_screen.dart';
 
 /// Roadmap Phase 12 (R6, C24) · the way in to community.
@@ -249,14 +255,64 @@ class _Profile extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 16),
-        Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: NeonPill(
-            label: l10n.profileEdit,
-            onTap: () => _openEditor(context, ref, profile),
-          ),
+        Row(
+          children: [
+            Flexible(
+              child: NeonPill(
+                label: l10n.profileEdit,
+                onTap: () => _openEditor(context, ref, profile),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Flexible(
+              child: NeonPill(
+                label: l10n.profileShare,
+                color: NeonSurface.purple,
+                onTap: () => _shareCard(context, ref, profile),
+              ),
+            ),
+          ],
         ),
       ],
+    );
+  }
+
+  /// Builds the card's lines and hands them to the share service.
+  ///
+  /// The filtering rule lives in [profileCardStats]; this only turns
+  /// the kinds it returns into localized label/value pairs.
+  Future<void> _shareCard(
+    BuildContext context,
+    WidgetRef ref,
+    CommunityProfile profile,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+    final lines = [
+      for (final stat in profileCardStats(profile.visibility))
+        switch (stat) {
+          ProfileCardStat.level => (
+              l10n.profileCardLevel,
+              '${ref.read(currentLevelProvider)}',
+            ),
+          ProfileCardStat.workouts => (
+              l10n.profileCardWorkouts,
+              '${ref.read(sessionLogsProvider).value?.length ?? 0}',
+            ),
+          ProfileCardStat.streak => (
+              l10n.profileCardStreak,
+              '${ref.read(currentStreakProvider)}',
+            ),
+          ProfileCardStat.badges => (
+              l10n.profileCardBadges,
+              '${ref.read(unlockedBadgesProvider).length}',
+            ),
+        },
+    ];
+    await ShareService.instance.shareProfileCard(
+      context: context,
+      displayName: profile.displayName,
+      handle: profile.handle,
+      lines: lines,
     );
   }
 }

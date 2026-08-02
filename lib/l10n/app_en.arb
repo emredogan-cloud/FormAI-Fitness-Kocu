@@ -8388,5 +8388,25 @@
   "feedReactionFire": "On fire",
   "@feedReactionFire": {
     "description": "Reaction label."
+  },
+  "profileShare": "Share card",
+  "@profileShare": {
+    "description": "Button that renders the profile as a shareable image."
+  },
+  "profileCardLevel": "Level",
+  "@profileCardLevel": {
+    "description": "Label on the shared profile card."
+  },
+  "profileCardWorkouts": "Workouts",
+  "@profileCardWorkouts": {
+    "description": "Label on the shared profile card — sessions completed."
+  },
+  "profileCardStreak": "Day streak",
+  "@profileCardStreak": {
+    "description": "Label on the shared profile card."
+  },
+  "profileCardBadges": "Badges",
+  "@profileCardBadges": {
+    "description": "Label on the shared profile card."
   }
 }

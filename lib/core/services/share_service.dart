@@ -99,6 +99,55 @@ class ShareService {
     }
   }
 
+  /// Roadmap Phase 12 (C21) · renders the profile card and hands it to
+  /// the OS share-sheet.
+  ///
+  /// [lines] must already be filtered by the profile's visibility flags
+  /// — this method does not know what they are and will render whatever
+  /// it is given. The share text carries the name rather than the
+  /// handle, because a handle is only findable inside this app and a
+  /// caption that points somewhere the reader cannot go is noise.
+  Future<bool> shareProfileCard({
+    required BuildContext context,
+    required String displayName,
+    required String handle,
+    required List<(String, String)> lines,
+    ShareFormat format = ShareFormat.story,
+  }) async {
+    final analytics = AnalyticsService.instance;
+    final l10n = AppLocalizations.of(context);
+    unawaited(analytics.shareInitiated(surface: 'profile'));
+    try {
+      final bytes = await _captureWidget(
+        context: context,
+        widget: ShareProfileTemplate(
+          displayName: displayName,
+          handle: handle,
+          lines: lines,
+          format: format,
+        ),
+        format: format,
+      );
+      if (!context.mounted) return false;
+      final file = await _persistTemp(bytes, prefix: 'formai_profile');
+      final result = await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path)],
+          text: '$displayName${_brandHashtagSuffix(l10n)}',
+        ),
+      );
+      if (result.status == ShareResultStatus.success) {
+        unawaited(analytics.shareCompleted(surface: 'profile'));
+        unawaited(analytics.profileShared(surface: 'profile'));
+      }
+      return true;
+    } catch (e, st) {
+      AppLogger.error('shareProfileCard failed', e,
+          stackTrace: st, category: 'share');
+      return false;
+    }
+  }
+
   /// Renders the "Progress" template (program completion %) and hands
   /// it to the OS share-sheet. Fires `share_initiated` immediately and
   /// `share_completed` only when the user actually picks a destination

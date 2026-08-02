@@ -1780,5 +1780,10 @@
   "feedSomeone": "Biri",
   "feedReactionCheer": "Güzel",
   "feedReactionStrong": "Güçlü",
-  "feedReactionFire": "Alev"
+  "feedReactionFire": "Alev",
+  "profileShare": "Kartı paylaş",
+  "profileCardLevel": "Seviye",
+  "profileCardWorkouts": "Antrenman",
+  "profileCardStreak": "Gün serisi",
+  "profileCardBadges": "Rozet"
 }

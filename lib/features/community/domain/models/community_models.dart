@@ -301,6 +301,30 @@ enum ActivityKind {
   }
 }
 
+/// A stat a shared profile card may carry.
+///
+/// The card's contents are a pure function of the owner's visibility
+/// flags — see [profileCardStats] — rather than an inline condition at
+/// the share button, because "what may leave the device as an image" is
+/// exactly the kind of rule that should be readable and tested in one
+/// place instead of inferred from a widget.
+enum ProfileCardStat { level, workouts, streak, badges }
+
+/// Which stats [visibility] permits on a shared card, in card order.
+///
+/// A user who turned stats off has said they do not want their numbers
+/// out there. An image is the one surface where that cannot be taken
+/// back afterwards, so it is the last place to make an exception. An
+/// empty result is valid: name, handle and branding is still a card.
+List<ProfileCardStat> profileCardStats(ProfileVisibility visibility) => [
+      if (visibility.showStats) ...[
+        ProfileCardStat.level,
+        ProfileCardStat.workouts,
+        ProfileCardStat.streak,
+      ],
+      if (visibility.showBadges) ProfileCardStat.badges,
+    ];
+
 /// One event in a squad's feed.
 class ActivityEvent {
   const ActivityEvent({
