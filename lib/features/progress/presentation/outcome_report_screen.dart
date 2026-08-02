@@ -13,7 +13,7 @@ import '../../../core/routing/app_router.dart';
 import '../../../core/services/data_export_service.dart';
 import '../../../core/services/share_service.dart';
 import '../../../core/utils/unit_system.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/neon_surface.dart';
 import '../../../l10n/app_localizations.dart';
 import '../domain/outcome_report.dart';
 import '../../workout/data/session_log_repository.dart';
@@ -55,9 +55,9 @@ class OutcomeReportScreen extends ConsumerWidget {
     final report = ref.watch(outcomeReportProvider);
 
     return Scaffold(
-      backgroundColor: _kBg,
+      backgroundColor: NeonSurface.bg,
       appBar: AppBar(
-        backgroundColor: _kBg,
+        backgroundColor: NeonSurface.bg,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         foregroundColor: Colors.white,
@@ -71,23 +71,14 @@ class OutcomeReportScreen extends ConsumerWidget {
         ),
       ),
       body: report == null
-          ? const Center(child: CircularProgressIndicator(color: _kPurple))
+          ? const Center(
+              child: CircularProgressIndicator(color: NeonSurface.purple))
           : report.isSubstantive
               ? _Report(report: report)
               : const _NotYet(),
     );
   }
 }
-
-const Color _kBg = Color(0xFF000000);
-const Color _kCard = Color(0xFF0B0B10);
-const Color _kHairline = Color(0x17FFFFFF);
-const Color _kMuted = Color(0x8CFFFFFF);
-const Color _kFaint = Color(0x5CFFFFFF);
-const Color _kLime = Color(0xFFB8FF33);
-const Color _kPurple = AppColors.neon;
-const List<Color> _kBrandSweep = [_kPurple, _kLime];
-const double _kGutter = 16;
 
 class _NotYet extends StatelessWidget {
   const _NotYet();
@@ -115,7 +106,7 @@ class _NotYet extends StatelessWidget {
               l10n.outcomeReportEmptyBody,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                color: _kMuted,
+                color: NeonSurface.muted,
                 fontSize: 13.5,
                 height: 1.45,
               ),
@@ -141,7 +132,8 @@ class _Report extends ConsumerWidget {
     final minutes = report.totalActiveTime.inMinutes;
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(_kGutter, 4, _kGutter, 40),
+      padding: const EdgeInsets.fromLTRB(
+          NeonSurface.gutter, 4, NeonSurface.gutter, 40),
       children: [
         Text(
           reportWindow(
@@ -149,7 +141,7 @@ class _Report extends ConsumerWidget {
             dates.format(report.windowStart),
             dates.format(report.windowEnd),
           ),
-          style: const TextStyle(color: _kFaint, fontSize: 13),
+          style: const TextStyle(color: NeonSurface.faint, fontSize: 13),
         ),
         const SizedBox(height: 16),
         _CompletionCard(report: report),
@@ -184,25 +176,25 @@ class _Report extends ConsumerWidget {
           const SizedBox(height: 10),
           Text(
             l10n.outcomeReportCameraFree(report.cameraFreeSessions),
-            style: const TextStyle(color: _kFaint, fontSize: 12.5),
+            style: const TextStyle(color: NeonSurface.faint, fontSize: 12.5),
           ),
         ],
         const SizedBox(height: 24),
         _SectionHeader(l10n.outcomeReportSectionBody),
         const SizedBox(height: 10),
         if (!report.hasBodyData)
-          _SoftCard(
+          NeonCard(
             child: Text(
               l10n.outcomeReportNoBody,
               style: const TextStyle(
-                color: _kMuted,
+                color: NeonSurface.muted,
                 fontSize: 13.5,
                 height: 1.5,
               ),
             ),
           )
         else
-          _SoftCard(
+          NeonCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -283,7 +275,7 @@ class _CompletionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: _kPurple.withValues(alpha: 0.22),
+            color: NeonSurface.purple.withValues(alpha: 0.22),
             blurRadius: 26,
             spreadRadius: -6,
           ),
@@ -293,7 +285,7 @@ class _CompletionCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           gradient: const LinearGradient(
-            colors: _kBrandSweep,
+            colors: NeonSurface.brandSweep,
             begin: AlignmentDirectional.topStart,
             end: AlignmentDirectional.bottomEnd,
           ),
@@ -356,7 +348,7 @@ class _CompletionRing extends StatelessWidget {
             value: value,
             strokeWidth: 6,
             backgroundColor: Colors.white.withValues(alpha: 0.10),
-            valueColor: const AlwaysStoppedAnimation(_kLime),
+            valueColor: const AlwaysStoppedAnimation(NeonSurface.lime),
           ),
         ),
       ),
@@ -411,7 +403,7 @@ class _StatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _SoftCard(
+    return NeonCard(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -422,7 +414,7 @@ class _StatTile extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              color: _kFaint,
+              color: NeonSurface.faint,
               fontSize: 11.5,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.6,
@@ -460,7 +452,7 @@ class _EnergyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return _SoftCard(
+    return NeonCard(
       child: Row(
         children: [
           Expanded(
@@ -471,7 +463,7 @@ class _EnergyCard extends StatelessWidget {
                 Text(
                   l10n.outcomeReportKcalLabel,
                   style: const TextStyle(
-                    color: _kFaint,
+                    color: NeonSurface.faint,
                     fontSize: 11.5,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.6,
@@ -490,7 +482,7 @@ class _EnergyCard extends StatelessWidget {
                 Text(
                   l10n.outcomeReportKcalNote,
                   style: const TextStyle(
-                    color: _kFaint,
+                    color: NeonSurface.faint,
                     fontSize: 12,
                     height: 1.4,
                   ),
@@ -528,7 +520,7 @@ class _Timeline extends StatelessWidget {
       ));
     }
     if (rows.isEmpty) return const SizedBox.shrink();
-    return _SoftCard(
+    return NeonCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -578,30 +570,9 @@ class _TimelineRow extends StatelessWidget {
         const SizedBox(width: 10),
         Text(
           when,
-          style: const TextStyle(color: _kFaint, fontSize: 12),
+          style: const TextStyle(color: NeonSurface.faint, fontSize: 12),
         ),
       ],
-    );
-  }
-}
-
-class _SoftCard extends StatelessWidget {
-  const _SoftCard({required this.child, this.padding});
-
-  final Widget child;
-  final EdgeInsets? padding;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: padding ?? const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _kCard,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: _kHairline),
-      ),
-      child: child,
     );
   }
 }
@@ -629,10 +600,12 @@ class _ExportRowState extends ConsumerState<_ExportRow> {
       alignment: AlignmentDirectional.centerStart,
       child: TextButton.icon(
         onPressed: _busy ? null : _openSheet,
-        icon: const Icon(Icons.ios_share_rounded, size: 18, color: _kLime),
+        icon: const Icon(Icons.ios_share_rounded,
+            size: 18, color: NeonSurface.lime),
         label: Text(
           l10n.outcomeReportExport,
-          style: const TextStyle(color: _kLime, fontWeight: FontWeight.w700),
+          style: const TextStyle(
+              color: NeonSurface.lime, fontWeight: FontWeight.w700),
         ),
       ),
     );
@@ -646,9 +619,9 @@ class _ExportRowState extends ConsumerState<_ExportRow> {
       builder: (sheetContext) => Container(
         width: double.infinity,
         decoration: const BoxDecoration(
-          color: _kCard,
+          color: NeonSurface.card,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          border: Border(top: BorderSide(color: _kHairline)),
+          border: Border(top: BorderSide(color: NeonSurface.hairline)),
         ),
         padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
         child: SafeArea(
@@ -668,8 +641,8 @@ class _ExportRowState extends ConsumerState<_ExportRow> {
               const SizedBox(height: 10),
               Text(
                 l10n.outcomeReportExportBody,
-                style:
-                    const TextStyle(color: _kMuted, fontSize: 14, height: 1.5),
+                style: const TextStyle(
+                    color: NeonSurface.muted, fontSize: 14, height: 1.5),
               ),
               const SizedBox(height: 18),
               _ExportAction(
@@ -758,7 +731,7 @@ class _ExportAction extends StatelessWidget {
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
           foregroundColor: Colors.white,
-          side: const BorderSide(color: _kHairline),
+          side: const BorderSide(color: NeonSurface.hairline),
           padding: const EdgeInsets.symmetric(vertical: 14),
         ),
         child: Text(label),
@@ -782,7 +755,7 @@ class _PhotosRow extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final count = ref.watch(progressPhotosProvider).value?.length ?? 0;
     return Material(
-      color: _kCard,
+      color: NeonSurface.card,
       borderRadius: BorderRadius.circular(18),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -791,11 +764,12 @@ class _PhotosRow extends ConsumerWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: _kHairline),
+            border: Border.all(color: NeonSurface.hairline),
           ),
           child: Row(
             children: [
-              const Icon(Icons.photo_camera_outlined, color: _kLime, size: 22),
+              const Icon(Icons.photo_camera_outlined,
+                  color: NeonSurface.lime, size: 22),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
@@ -818,12 +792,13 @@ class _PhotosRow extends ConsumerWidget {
                       count == 0
                           ? l10n.photosPrivacyAtCapture
                           : l10n.photosCount(count),
-                      style: const TextStyle(color: _kFaint, fontSize: 12.5),
+                      style: const TextStyle(
+                          color: NeonSurface.faint, fontSize: 12.5),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded, color: _kFaint),
+              const Icon(Icons.chevron_right_rounded, color: NeonSurface.faint),
             ],
           ),
         ),
@@ -871,10 +846,12 @@ class _ShareRowState extends ConsumerState<_ShareRow> {
       alignment: AlignmentDirectional.centerStart,
       child: TextButton.icon(
         onPressed: _busy ? null : _openOptions,
-        icon: const Icon(Icons.share_outlined, size: 18, color: _kLime),
+        icon:
+            const Icon(Icons.share_outlined, size: 18, color: NeonSurface.lime),
         label: Text(
           l10n.outcomeReportShare,
-          style: const TextStyle(color: _kLime, fontWeight: FontWeight.w700),
+          style: const TextStyle(
+              color: NeonSurface.lime, fontWeight: FontWeight.w700),
         ),
       ),
     );
@@ -897,9 +874,9 @@ class _ShareRowState extends ConsumerState<_ShareRow> {
         builder: (sheetContext, setSheetState) => Container(
           width: double.infinity,
           decoration: const BoxDecoration(
-            color: _kCard,
+            color: NeonSurface.card,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-            border: Border(top: BorderSide(color: _kHairline)),
+            border: Border(top: BorderSide(color: NeonSurface.hairline)),
           ),
           padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
           child: SafeArea(
@@ -920,7 +897,7 @@ class _ShareRowState extends ConsumerState<_ShareRow> {
                 Text(
                   l10n.outcomeReportShareBody,
                   style: const TextStyle(
-                      color: _kMuted, fontSize: 14, height: 1.5),
+                      color: NeonSurface.muted, fontSize: 14, height: 1.5),
                 ),
                 const SizedBox(height: 8),
                 if (widget.report.hasBodyData)
@@ -946,7 +923,7 @@ class _ShareRowState extends ConsumerState<_ShareRow> {
                   child: FilledButton(
                     onPressed: () => Navigator.of(sheetContext).pop(true),
                     style: FilledButton.styleFrom(
-                      backgroundColor: _kPurple,
+                      backgroundColor: NeonSurface.purple,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
@@ -1072,7 +1049,7 @@ class _ShareToggle extends StatelessWidget {
       contentPadding: EdgeInsets.zero,
       value: value,
       onChanged: onChanged,
-      activeThumbColor: _kPurple,
+      activeThumbColor: NeonSurface.purple,
       title: Text(
         label,
         style: const TextStyle(color: Colors.white, fontSize: 14.5),

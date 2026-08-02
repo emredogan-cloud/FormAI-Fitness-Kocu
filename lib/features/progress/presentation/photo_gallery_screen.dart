@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/neon_surface.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/progress_photo_repository.dart';
 import '../domain/models/progress_photo.dart';
@@ -58,11 +59,11 @@ class _PhotoGalleryScreenState extends ConsumerState<PhotoGalleryScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: _kCard,
+        backgroundColor: NeonSurface.card,
         title: Text(l10n.photosDeleteConfirmTitle,
             style: const TextStyle(color: Colors.white)),
         content: Text(l10n.photosDeleteConfirmBody,
-            style: const TextStyle(color: _kMuted)),
+            style: const TextStyle(color: NeonSurface.muted)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -91,9 +92,9 @@ class _PhotoGalleryScreenState extends ConsumerState<PhotoGalleryScreen> {
     final photos = ref.watch(progressPhotosProvider);
 
     return Scaffold(
-      backgroundColor: _kBg,
+      backgroundColor: NeonSurface.bg,
       appBar: AppBar(
-        backgroundColor: _kBg,
+        backgroundColor: NeonSurface.bg,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         foregroundColor: Colors.white,
@@ -122,11 +123,6 @@ class _PhotoGalleryScreenState extends ConsumerState<PhotoGalleryScreen> {
   }
 }
 
-const Color _kBg = Color(0xFF000000);
-const Color _kCard = Color(0xFF0B0B10);
-const Color _kMuted = Color(0x8CFFFFFF);
-const Color _kFaint = Color(0x5CFFFFFF);
-
 class _Empty extends StatelessWidget {
   const _Empty({required this.onAdd});
 
@@ -141,7 +137,8 @@ class _Empty extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.photo_camera_outlined, size: 44, color: _kFaint),
+            const Icon(Icons.photo_camera_outlined,
+                size: 44, color: NeonSurface.faint),
             const SizedBox(height: 18),
             Text(
               l10n.photosEmptyTitle,
@@ -156,8 +153,8 @@ class _Empty extends StatelessWidget {
             Text(
               l10n.photosEmptyBody,
               textAlign: TextAlign.center,
-              style:
-                  const TextStyle(color: _kMuted, fontSize: 13.5, height: 1.5),
+              style: const TextStyle(
+                  color: NeonSurface.muted, fontSize: 13.5, height: 1.5),
             ),
           ],
         ),
@@ -192,8 +189,8 @@ class _Grouped extends ConsumerWidget {
             padding: const EdgeInsets.only(top: 10),
             child: Text(
               l10n.photosCompareNeedsTwo,
-              style:
-                  const TextStyle(color: _kFaint, fontSize: 12.5, height: 1.4),
+              style: const TextStyle(
+                  color: NeonSurface.faint, fontSize: 12.5, height: 1.4),
             ),
           ),
         for (final pose in PhotoPose.values)
@@ -215,7 +212,8 @@ class _Grouped extends ConsumerWidget {
                   ),
                   Text(
                     l10n.photosCount(group.length),
-                    style: const TextStyle(color: _kFaint, fontSize: 12.5),
+                    style: const TextStyle(
+                        color: NeonSurface.faint, fontSize: 12.5),
                   ),
                   // Two of the same pose is what a comparison needs. The
                   // action is absent rather than disabled below that —
@@ -285,7 +283,7 @@ class _Tile extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Container(color: _kCard),
+                  Container(color: NeonSurface.card),
                   if (path != null)
                     Image.file(
                       File(path!),
@@ -319,7 +317,7 @@ class _Tile extends StatelessWidget {
             DateFormat.MMMd(localeTag).format(photo.recordedAt),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: _kMuted, fontSize: 12),
+            style: const TextStyle(color: NeonSurface.muted, fontSize: 12),
           ),
         ],
       ),

@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/providers/unit_system_provider.dart';
 import '../../../core/services/analytics_service.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/neon_surface.dart';
 import '../../../core/utils/unit_system.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/body_metrics_repository.dart';
@@ -94,19 +94,6 @@ enum _Range {
 // Sampled from `photos/new-image/your-body.png`. Local to this screen
 // while it is the only one wearing them.
 
-const Color _kBg = Color(0xFF000000);
-const Color _kCard = Color(0xFF0B0B10);
-const Color _kCardDeep = Color(0xFF08070E);
-const Color _kHairline = Color(0x17FFFFFF);
-const Color _kMuted = Color(0x8CFFFFFF);
-const Color _kFaint = Color(0x5CFFFFFF);
-
-/// The reference's yellow-green. See the class doc for why this is not
-/// [AppColors.neonGreen].
-const Color _kLime = Color(0xFFB8FF33);
-const Color _kPurple = AppColors.neon;
-const List<Color> _kBrandSweep = [_kPurple, _kLime];
-
 const String _kIconTrend = 'assets/body_metrics/icon_trend.png';
 const String _kIconFlame = 'assets/body_metrics/icon_flame.png';
 const String _kIconTarget = 'assets/body_metrics/icon_target.png';
@@ -115,7 +102,6 @@ const String _kArtDumbbell = 'assets/body_metrics/art_dumbbell.png';
 
 /// 16 dp each side of a 360 dp phone leaves the cards 91 % of the width,
 /// which is what the reference measures.
-const double _kGutter = 16;
 
 class _BodyMetricsScreenState extends ConsumerState<BodyMetricsScreen> {
   _Range _range = _Range.month;
@@ -140,9 +126,9 @@ class _BodyMetricsScreenState extends ConsumerState<BodyMetricsScreen> {
     }
 
     return Scaffold(
-      backgroundColor: _kBg,
+      backgroundColor: NeonSurface.bg,
       appBar: AppBar(
-        backgroundColor: _kBg,
+        backgroundColor: NeonSurface.bg,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         foregroundColor: Colors.white,
@@ -178,7 +164,7 @@ class _BodyMetricsScreenState extends ConsumerState<BodyMetricsScreen> {
             ),
       body: entriesAsync.when(
         loading: () => const Center(
-          child: CircularProgressIndicator(color: _kPurple),
+          child: CircularProgressIndicator(color: NeonSurface.purple),
         ),
         // A read that could not reach the network still has the local
         // copy, so the repository never surfaces an error here. If one
@@ -240,146 +226,6 @@ class _BodyMetricsScreenState extends ConsumerState<BodyMetricsScreen> {
 // Chrome
 // ---------------------------------------------------------------------
 
-/// A card with a 1.4 dp gradient rim and a soft bloom behind it, or a
-/// plain hairline when [gradient] is false.
-///
-/// The rim is a filled box with a 1.4 dp inset child rather than a
-/// `Border`, because Flutter cannot stroke a border with a shader.
-class _NeonCard extends StatelessWidget {
-  const _NeonCard({
-    required this.child,
-    this.gradient = false,
-    this.padding = const EdgeInsets.all(16),
-    this.fill = _kCard,
-  });
-
-  static const double radius = 20;
-
-  final Widget child;
-  final bool gradient;
-  final EdgeInsets padding;
-  final Color fill;
-
-  @override
-  Widget build(BuildContext context) {
-    if (!gradient) {
-      return Container(
-        width: double.infinity,
-        padding: padding,
-        decoration: BoxDecoration(
-          color: fill,
-          borderRadius: BorderRadius.circular(radius),
-          border: Border.all(color: _kHairline),
-        ),
-        child: child,
-      );
-    }
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(radius),
-        boxShadow: [
-          BoxShadow(
-            color: _kPurple.withValues(alpha: 0.22),
-            blurRadius: 26,
-            spreadRadius: -6,
-          ),
-        ],
-      ),
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(radius),
-          gradient: const LinearGradient(
-            colors: _kBrandSweep,
-            begin: AlignmentDirectional.topStart,
-            end: AlignmentDirectional.bottomEnd,
-          ),
-        ),
-        padding: const EdgeInsets.all(1.4),
-        child: Container(
-          padding: padding,
-          decoration: BoxDecoration(
-            color: fill,
-            borderRadius: BorderRadius.circular(radius - 1.4),
-          ),
-          child: child,
-        ),
-      ),
-    );
-  }
-}
-
-/// The small outlined actions — "View insights", "Set a target",
-/// "View all". Text plus a chevron, in the accent, on a hairline pill.
-class _NeonPill extends StatelessWidget {
-  const _NeonPill({
-    required this.label,
-    required this.onTap,
-    this.bordered = true,
-  });
-
-  /// Every pill on this screen is lime; the reference has no other
-  /// colour for a secondary action.
-  static const Color color = _kLime;
-
-  final String label;
-  final VoidCallback onTap;
-  final bool bordered;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(999),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(999),
-          onTap: onTap,
-          child: Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: bordered ? 14 : 4,
-              vertical: bordered ? 9 : 4,
-            ),
-            decoration: bordered
-                ? BoxDecoration(
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(color: color.withValues(alpha: 0.65)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: color.withValues(alpha: 0.16),
-                        blurRadius: 14,
-                        spreadRadius: -3,
-                      ),
-                    ],
-                  )
-                : null,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: color,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Icon(Icons.chevron_right_rounded, color: color, size: 18),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 /// The bottom action. A gradient rim over a dark fill, not a filled
 /// gradient — the reference's button is an outline, and a solid one at
 /// this width dominates the screen it sits on.
@@ -400,12 +246,12 @@ class _AddMeasurementButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(999),
             boxShadow: [
               BoxShadow(
-                color: _kPurple.withValues(alpha: 0.38),
+                color: NeonSurface.purple.withValues(alpha: 0.38),
                 blurRadius: 26,
                 spreadRadius: -4,
               ),
               BoxShadow(
-                color: _kLime.withValues(alpha: 0.22),
+                color: NeonSurface.lime.withValues(alpha: 0.22),
                 blurRadius: 26,
                 spreadRadius: -6,
               ),
@@ -415,7 +261,7 @@ class _AddMeasurementButton extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(999),
               gradient: const LinearGradient(
-                colors: _kBrandSweep,
+                colors: NeonSurface.brandSweep,
                 begin: AlignmentDirectional.centerStart,
                 end: AlignmentDirectional.centerEnd,
               ),
@@ -490,7 +336,7 @@ class _EmptyState extends StatelessWidget {
               l10n.bodyMetricsEmptyBody,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                color: _kMuted,
+                color: NeonSurface.muted,
                 fontSize: 13.5,
                 height: 1.45,
               ),
@@ -589,7 +435,8 @@ class _LoadedState extends ConsumerState<_Loaded> {
       // 16 margin, and 96 left the last history row's delete button
       // sitting underneath it — reachable only by scrolling past the end
       // of a list that had already ended. Found on the device.
-      padding: const EdgeInsets.fromLTRB(_kGutter, 4, _kGutter, 140),
+      padding: const EdgeInsets.fromLTRB(
+          NeonSurface.gutter, 4, NeonSurface.gutter, 140),
       children: [
         if (tracked.length > 1) ...[
           _MeasureSelector(
@@ -637,7 +484,7 @@ class _LoadedState extends ConsumerState<_Loaded> {
             ),
             if (ordered.length > _collapsedEntries)
               Flexible(
-                child: _NeonPill(
+                child: NeonPill(
                   bordered: false,
                   label: _allEntries
                       ? l10n.bodyMetricsHistoryShowLess
@@ -699,7 +546,9 @@ class _MeasureSelector extends StatelessWidget {
             button: true,
             selected: selected,
             child: Material(
-              color: selected ? _kPurple.withValues(alpha: 0.16) : _kCard,
+              color: selected
+                  ? NeonSurface.purple.withValues(alpha: 0.16)
+                  : NeonSurface.card,
               borderRadius: BorderRadius.circular(999),
               clipBehavior: Clip.antiAlias,
               child: InkWell(
@@ -711,14 +560,14 @@ class _MeasureSelector extends StatelessWidget {
                     borderRadius: BorderRadius.circular(999),
                     border: Border.all(
                       color: selected
-                          ? _kPurple.withValues(alpha: 0.75)
-                          : _kHairline,
+                          ? NeonSurface.purple.withValues(alpha: 0.75)
+                          : NeonSurface.hairline,
                     ),
                   ),
                   child: Text(
                     measureLabel(l10n, measure),
                     style: TextStyle(
-                      color: selected ? Colors.white : _kMuted,
+                      color: selected ? Colors.white : NeonSurface.muted,
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                     ),
@@ -761,7 +610,7 @@ class _RangeSelector extends StatelessWidget {
       height: 46,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: _kHairline),
+        border: Border.all(color: NeonSurface.hairline),
       ),
       child: Row(
         children: [
@@ -802,7 +651,7 @@ class _RangeSegment extends StatelessWidget {
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
       style: TextStyle(
-        color: selected ? Colors.white : _kMuted,
+        color: selected ? Colors.white : NeonSurface.muted,
         fontSize: 14.5,
         fontWeight: FontWeight.w800,
       ),
@@ -822,12 +671,12 @@ class _RangeSegment extends StatelessWidget {
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: _kPurple.withValues(alpha: 0.45),
+                        color: NeonSurface.purple.withValues(alpha: 0.45),
                         blurRadius: 18,
                         spreadRadius: -4,
                       ),
                       BoxShadow(
-                        color: _kLime.withValues(alpha: 0.30),
+                        color: NeonSurface.lime.withValues(alpha: 0.30),
                         blurRadius: 18,
                         spreadRadius: -5,
                       ),
@@ -837,7 +686,7 @@ class _RangeSegment extends StatelessWidget {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(14),
                       gradient: const LinearGradient(
-                        colors: _kBrandSweep,
+                        colors: NeonSurface.brandSweep,
                         begin: AlignmentDirectional.centerStart,
                         end: AlignmentDirectional.centerEnd,
                       ),
@@ -857,7 +706,7 @@ class _RangeSegment extends StatelessWidget {
                   decoration: BoxDecoration(
                     border: divided
                         ? const Border(
-                            left: BorderSide(color: _kHairline),
+                            left: BorderSide(color: NeonSurface.hairline),
                           )
                         : null,
                   ),
@@ -898,9 +747,9 @@ class _TrendCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final reading = latest;
-    return _NeonCard(
+    return NeonCard(
       gradient: true,
-      fill: _kCardDeep,
+      fill: NeonSurface.cardDeep,
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -934,7 +783,7 @@ class _TrendCard extends StatelessWidget {
                 // out at its full intrinsic width, and the pseudo-locale
                 // sweep put this one 42 px off a 320 px card.
                 Flexible(
-                  child: _NeonPill(
+                  child: NeonPill(
                     label: l10n.bodyMetricsInsightsCta,
                     onTap: onInsights,
                   ),
@@ -973,9 +822,9 @@ class _TrendCard extends StatelessWidget {
               targetValue: target,
               targetLabel: l10n.bodyMetricsTargetLineLabel,
               height: 200,
-              strokeGradient: _kBrandSweep,
+              strokeGradient: NeonSurface.brandSweep,
               endDotColor: Colors.white,
-              axisColor: _kFaint,
+              axisColor: NeonSurface.faint,
               gridColor: Colors.white.withValues(alpha: 0.09),
               valueLabel: (value) => formatMeasure(
                 value,
@@ -1029,7 +878,7 @@ class _BigReading extends StatelessWidget {
           Text(
             unit,
             style: const TextStyle(
-              color: _kMuted,
+              color: NeonSurface.muted,
               fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
@@ -1092,7 +941,7 @@ class _DeltaLine extends StatelessWidget {
             summary.direction == TrendDirection.rising
                 ? Icons.arrow_upward_rounded
                 : Icons.arrow_downward_rounded,
-            color: _kLime,
+            color: NeonSurface.lime,
             size: 17,
           ),
           const SizedBox(width: 4),
@@ -1103,7 +952,7 @@ class _DeltaLine extends StatelessWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              color: _kLime,
+              color: NeonSurface.lime,
               fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
@@ -1126,7 +975,7 @@ class _HintStrip extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.025),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _kPurple.withValues(alpha: 0.30)),
+        border: Border.all(color: NeonSurface.purple.withValues(alpha: 0.30)),
       ),
       child: Row(
         children: [
@@ -1167,7 +1016,7 @@ class _ChartPlaceholder extends StatelessWidget {
       height: 150,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        border: Border.all(color: _kHairline),
+        border: Border.all(color: NeonSurface.hairline),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Padding(
@@ -1175,7 +1024,7 @@ class _ChartPlaceholder extends StatelessWidget {
         child: Text(
           message,
           textAlign: TextAlign.center,
-          style: const TextStyle(color: _kMuted, fontSize: 13),
+          style: const TextStyle(color: NeonSurface.muted, fontSize: 13),
         ),
       ),
     );
@@ -1200,7 +1049,7 @@ class _TargetCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    return _NeonCard(
+    return NeonCard(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -1214,7 +1063,7 @@ class _TargetCard extends ConsumerWidget {
                 Text(
                   l10n.bodyMetricsTargetTitle,
                   style: const TextStyle(
-                    color: _kMuted,
+                    color: NeonSurface.muted,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),
@@ -1240,7 +1089,7 @@ class _TargetCard extends ConsumerWidget {
                   Text(
                     l10n.bodyMetricsTargetHint,
                     style: const TextStyle(
-                      color: _kFaint,
+                      color: NeonSurface.faint,
                       fontSize: 12.5,
                       height: 1.35,
                     ),
@@ -1254,7 +1103,7 @@ class _TargetCard extends ConsumerWidget {
           // its full intrinsic width, and "Set a target" is not the
           // longest this button gets.
           Flexible(
-            child: _NeonPill(
+            child: NeonPill(
               label: target == null
                   ? l10n.bodyMetricsTargetSet
                   : l10n.bodyMetricsTargetChange,
@@ -1280,7 +1129,7 @@ class _ConsistencyCard extends ConsumerWidget {
     final adherence = ref.watch(adherenceProvider);
     final planned = adherence.weekPlanned;
 
-    return _NeonCard(
+    return NeonCard(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1335,7 +1184,7 @@ class _ConsistencyCard extends ConsumerWidget {
                         ),
                       ),
                       const VerticalDivider(
-                        color: _kHairline,
+                        color: NeonSurface.hairline,
                         width: 25,
                         thickness: 1,
                       ),
@@ -1356,7 +1205,7 @@ class _ConsistencyCard extends ConsumerWidget {
                               l10n.adherenceLongestStreak(
                                   adherence.longestStreak),
                               style: const TextStyle(
-                                color: _kMuted,
+                                color: NeonSurface.muted,
                                 fontSize: 12.5,
                                 height: 1.3,
                               ),
@@ -1401,10 +1250,12 @@ class _WeekDots extends StatelessWidget {
               height: 15,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color:
-                    i < completed ? _kPurple : _kPurple.withValues(alpha: 0.10),
+                color: i < completed
+                    ? NeonSurface.purple
+                    : NeonSurface.purple.withValues(alpha: 0.10),
                 border: Border.all(
-                  color: _kPurple.withValues(alpha: i < completed ? 1 : 0.55),
+                  color: NeonSurface.purple
+                      .withValues(alpha: i < completed ? 1 : 0.55),
                   width: 1.4,
                 ),
               ),
@@ -1435,7 +1286,7 @@ class _AdherenceFigure extends StatelessWidget {
         Text(
           label,
           style: const TextStyle(
-            color: _kMuted,
+            color: NeonSurface.muted,
             fontSize: 12,
             fontWeight: FontWeight.w600,
           ),
@@ -1499,7 +1350,7 @@ class _EntryRow extends StatelessWidget {
     ].join(' · ');
 
     return Material(
-      color: _kCard,
+      color: NeonSurface.card,
       borderRadius: BorderRadius.circular(18),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -1508,7 +1359,7 @@ class _EntryRow extends StatelessWidget {
           padding: const EdgeInsetsDirectional.fromSTEB(12, 10, 6, 10),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: _kHairline),
+            border: Border.all(color: NeonSurface.hairline),
           ),
           child: Row(
             children: [
@@ -1517,11 +1368,12 @@ class _EntryRow extends StatelessWidget {
                 height: 42,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: _kPurple.withValues(alpha: 0.55)),
+                  border: Border.all(
+                      color: NeonSurface.purple.withValues(alpha: 0.55)),
                 ),
                 child: const Icon(
                   Icons.event_note_rounded,
-                  color: _kPurple,
+                  color: NeonSurface.purple,
                   size: 21,
                 ),
               ),
@@ -1547,7 +1399,8 @@ class _EntryRow extends StatelessWidget {
                         subtitle,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: _kFaint, fontSize: 12),
+                        style: const TextStyle(
+                            color: NeonSurface.faint, fontSize: 12),
                       ),
                     ],
                   ],
@@ -1571,7 +1424,7 @@ class _EntryRow extends StatelessWidget {
               ],
               IconButton(
                 icon: const Icon(Icons.delete_outline_rounded, size: 20),
-                color: _kMuted,
+                color: NeonSurface.muted,
                 tooltip: l10n.bodyMetricsDelete,
                 onPressed: onDelete,
               ),
@@ -1597,9 +1450,9 @@ Future<void> _showDarkSheet(BuildContext context, Widget child) {
     builder: (_) => Container(
       width: double.infinity,
       decoration: const BoxDecoration(
-        color: _kCard,
+        color: NeonSurface.card,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border(top: BorderSide(color: _kHairline)),
+        border: Border(top: BorderSide(color: NeonSurface.hairline)),
       ),
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
       child: SafeArea(top: false, child: child),
@@ -1618,7 +1471,8 @@ Widget _sheetTitle(String text) => Text(
 
 Widget _sheetBody(String text) => Text(
       text,
-      style: const TextStyle(color: _kMuted, fontSize: 14, height: 1.5),
+      style:
+          const TextStyle(color: NeonSurface.muted, fontSize: 14, height: 1.5),
     );
 
 /// The longer reading of the trend — the sentence, the plateau note and
@@ -1661,7 +1515,7 @@ void _showInsightsSheet(
                 child: Text(
                   l10n.bodyMetricsGoalCardTitle,
                   style: const TextStyle(
-                    color: _kFaint,
+                    color: NeonSurface.faint,
                     fontSize: 12.5,
                     fontWeight: FontWeight.w700,
                   ),
@@ -1673,7 +1527,7 @@ void _showInsightsSheet(
                   goalWeekLabel(l10n, reconciliation),
                   textAlign: TextAlign.end,
                   style: const TextStyle(
-                    color: _kFaint,
+                    color: NeonSurface.faint,
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
@@ -1781,9 +1635,9 @@ class _TargetSheetState extends ConsumerState<_TargetSheet> {
       ),
       child: Container(
         decoration: const BoxDecoration(
-          color: _kCard,
+          color: NeonSurface.card,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          border: Border(top: BorderSide(color: _kHairline)),
+          border: Border(top: BorderSide(color: NeonSurface.hairline)),
         ),
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
         child: Column(
@@ -1802,16 +1656,16 @@ class _TargetSheetState extends ConsumerState<_TargetSheet> {
                   const TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
                 labelText: l10n.bodyMetricsTargetTitle,
-                labelStyle: const TextStyle(color: _kMuted),
+                labelStyle: const TextStyle(color: NeonSurface.muted),
                 suffixText: weightUnitLabel(system),
-                suffixStyle: const TextStyle(color: _kMuted),
+                suffixStyle: const TextStyle(color: NeonSurface.muted),
                 errorText:
                     _invalid ? _rangeError(l10n, system, localeTag) : null,
                 enabledBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: _kHairline),
+                  borderSide: BorderSide(color: NeonSurface.hairline),
                 ),
                 focusedBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: _kPurple),
+                  borderSide: BorderSide(color: NeonSurface.purple),
                 ),
                 border: const OutlineInputBorder(),
                 isDense: true,
@@ -1828,14 +1682,14 @@ class _TargetSheetState extends ConsumerState<_TargetSheet> {
                     },
                     child: Text(
                       l10n.bodyMetricsTargetRemove,
-                      style: const TextStyle(color: _kMuted),
+                      style: const TextStyle(color: NeonSurface.muted),
                     ),
                   ),
                 const Spacer(),
                 FilledButton(
                   onPressed: _save,
                   style: FilledButton.styleFrom(
-                    backgroundColor: _kPurple,
+                    backgroundColor: NeonSurface.purple,
                     foregroundColor: Colors.white,
                   ),
                   child: Text(l10n.bodyMetricsEntrySave),
