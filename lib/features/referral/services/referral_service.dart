@@ -96,6 +96,34 @@ class ReferralService {
     }
   }
 
+  /// Roadmap Phase 12 (C47) · the user id behind the code this device
+  /// redeemed, or null.
+  ///
+  /// Read from `referrals` rather than returned by the RPC, because the
+  /// RPC returns void in migration 007 and that migration is applied in
+  /// production. The `referrals_self_read` policy already lets an
+  /// invitee read their own row, so the id is reachable as it stands —
+  /// changing the function's signature to hand it back would be a
+  /// migration bought for one round-trip.
+  ///
+  /// Null on any failure, including a missing table: this only ever
+  /// feeds an optional offer, and an offer that does not appear is a
+  /// smaller wrong than an error a user cannot act on.
+  Future<String?> redeemedReferrerId() async {
+    try {
+      final rows =
+          await _client.from('referrals').select('referrer_id').limit(1);
+      if (rows.isEmpty) return null;
+      return (rows.first as Map)['referrer_id'] as String?;
+    } catch (e) {
+      AppLogger.warning(
+        'referrer lookup failed: $e',
+        category: 'referral',
+      );
+      return null;
+    }
+  }
+
   /// Reads the redeemed code (if any). Used to gate the in-app "redeem"
   /// CTA so the form disappears after the first successful redemption.
   String? get redeemedCode => _prefs.getString(_kRedeemedKey);

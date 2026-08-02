@@ -8408,5 +8408,25 @@
   "profileCardBadges": "Badges",
   "@profileCardBadges": {
     "description": "Label on the shared profile card."
+  },
+  "communityEntrySubtitle": "Profile, friends and squads",
+  "@communityEntrySubtitle": {
+    "description": "Subtitle on the Progress-tab row that opens Community."
+  },
+  "referralFriendTitle": "Add them as a friend?",
+  "@referralFriendTitle": {
+    "description": "Title of the dialog offered after a referral code is redeemed."
+  },
+  "referralFriendBody": "You joined through someone's invite. We can send them a friend request so you can see each other's progress.",
+  "@referralFriendBody": {
+    "description": "Body of the referral friend-request offer. Deliberately does not name the referrer."
+  },
+  "referralFriendSend": "Send request",
+  "@referralFriendSend": {
+    "description": "Confirm button on the referral friend-request offer."
+  },
+  "referralFriendDecline": "Not now",
+  "@referralFriendDecline": {
+    "description": "Dismiss button on the referral friend-request offer."
   }
 }

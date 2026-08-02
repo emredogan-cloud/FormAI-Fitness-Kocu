@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../community/presentation/referral_friend_bridge.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/routing/app_router.dart';
@@ -45,6 +47,8 @@ class _ReferralLandingScreenState extends ConsumerState<ReferralLandingScreen> {
     });
     try {
       await ref.read(referralServiceProvider).redeem(widget.code);
+      // Roadmap Phase 12 (C47) — see `maybeOfferReferralFriend`.
+      if (mounted) await maybeOfferReferralFriend(context, ref);
       AnalyticsService.instance
           .referralRedeemed(referrerCode: widget.code.toUpperCase());
       if (!mounted) return;

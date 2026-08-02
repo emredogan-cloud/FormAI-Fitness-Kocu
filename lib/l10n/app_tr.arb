@@ -1785,5 +1785,10 @@
   "profileCardLevel": "Seviye",
   "profileCardWorkouts": "Antrenman",
   "profileCardStreak": "Gün serisi",
-  "profileCardBadges": "Rozet"
+  "profileCardBadges": "Rozet",
+  "communityEntrySubtitle": "Profil, arkadaşlar ve takımlar",
+  "referralFriendTitle": "Arkadaş olarak ekleyelim mi?",
+  "referralFriendBody": "Birinin davetiyle katıldın. İstersen ona arkadaşlık isteği gönderelim, böylece birbirinizin ilerlemesini görebilirsiniz.",
+  "referralFriendSend": "İstek gönder",
+  "referralFriendDecline": "Şimdi değil"
 }

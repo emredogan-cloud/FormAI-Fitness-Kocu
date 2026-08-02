@@ -3,6 +3,8 @@ import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../community/presentation/referral_friend_bridge.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -573,6 +575,10 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     final service = ref.read(referralServiceProvider);
     try {
       await service.redeem(code);
+      // Roadmap Phase 12 (C47) · the referral already recorded who
+      // invited whom; this offers to make that link mutual. Fails
+      // quiet in every case — see `maybeOfferReferralFriend`.
+      if (context.mounted) await maybeOfferReferralFriend(context, ref);
       if (!context.mounted) return;
       _toast(
         context,

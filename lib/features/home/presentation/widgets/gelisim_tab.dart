@@ -231,6 +231,8 @@ class GelisimTab extends ConsumerWidget {
               streak: streak,
               totalKcal: badgeKcal,
             ),
+            const SizedBox(height: 22),
+            const _CommunityRow(),
           ],
         ),
       ),
@@ -1927,6 +1929,76 @@ class _BadgesSection extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Roadmap Phase 12 (C21) · the way into community.
+///
+/// One row at the foot of the Progress tab, under the badges, rather
+/// than a fifth item in the bottom navigation. The phase's rule is that
+/// a user who never touches community sees no change, and a new tab is
+/// a change to everybody's app the moment it ships. A row under the
+/// badges is not — and it is the right neighbour, because a profile is
+/// mostly the badges plus a name.
+///
+/// It is shown unconditionally, including when the schema is not
+/// applied. The destination reports that state in a sentence, which is
+/// a better answer than a row that silently is not there.
+class _CommunityRow extends StatelessWidget {
+  const _CommunityRow();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Material(
+      color: Colors.white.withValues(alpha: 0.04),
+      borderRadius: BorderRadius.circular(18),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => context.push(AppRoutes.community),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.09)),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.groups_rounded, color: _neon, size: 22),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.communityTitle,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      l10n.communityEntrySubtitle,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.55),
+                        fontSize: 12.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: Colors.white.withValues(alpha: 0.4),
+                size: 22,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
