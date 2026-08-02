@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../core/services/analytics_service.dart';
 
 import '../../../core/theme/neon_surface.dart';
 import '../../../l10n/app_localizations.dart';
@@ -212,6 +216,12 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
         messenger.showSnackBar(SnackBar(content: Text(l10n.profileSaveFailed)));
         setState(() => _busy = false);
         return;
+      }
+      // Only the first save is a creation. An edit is a different
+      // behaviour and counting it as a creation would inflate the one
+      // number this phase is judged on.
+      if (widget.existing == null) {
+        unawaited(AnalyticsService.instance.profileCreated());
       }
       messenger.showSnackBar(SnackBar(content: Text(l10n.profileSaved)));
       navigator.pop(true);

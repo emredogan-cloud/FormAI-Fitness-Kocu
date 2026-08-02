@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../core/services/analytics_service.dart';
 
 import '../../../core/theme/neon_surface.dart';
 import '../../../l10n/app_localizations.dart';
@@ -107,6 +111,9 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
     await ref
         .read(communityRepositoryProvider)
         .respondToFriend(otherUserId: other, accept: accept);
+    // Fired on accept, never on send: an unanswered request is not a
+    // friendship, and counting it as one overstates the feature.
+    if (accept) unawaited(AnalyticsService.instance.friendAdded());
     ref.invalidate(myFriendshipsProvider);
     if (mounted) setState(() => _busy = false);
   }

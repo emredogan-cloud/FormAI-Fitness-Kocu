@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+
+import '../../../core/services/analytics_service.dart';
 
 import '../../../core/theme/neon_surface.dart';
 import '../../../l10n/app_localizations.dart';
@@ -56,6 +60,12 @@ class _SquadFeedScreenState extends ConsumerState<SquadFeedScreen> {
     await ref
         .read(communityRepositoryProvider)
         .react(eventId: event.id, reaction: next);
+    // Taking one back does not fire: the question is how much
+    // encouragement the feed produces, and an undo is not a negative
+    // amount of it.
+    if (next != null) {
+      unawaited(AnalyticsService.instance.feedReaction(reaction: next.token));
+    }
     if (!mounted) return;
     setState(() => _events = _load());
   }

@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../core/services/analytics_service.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/theme/neon_surface.dart';
@@ -131,6 +135,7 @@ class _SquadScreenState extends ConsumerState<SquadScreen> {
           name: name.trim(),
           inviteCode: _newInviteCode(),
         );
+    if (created != null) unawaited(AnalyticsService.instance.squadCreated());
     ref.invalidate(mySquadsProvider);
     if (!mounted) return;
     messenger.showSnackBar(SnackBar(
@@ -183,6 +188,7 @@ class _SquadScreenState extends ConsumerState<SquadScreen> {
       // and for an unknown code, so a null here means the schema is not
       // applied — which the entry point has already reported.
       message = id == null ? l10n.squadJoinFailed : l10n.squadJoined;
+      if (id != null) unawaited(AnalyticsService.instance.squadJoined());
       ref.invalidate(mySquadsProvider);
     } catch (e) {
       // The three outcomes the function distinguishes. Matched on the

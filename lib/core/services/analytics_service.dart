@@ -600,6 +600,53 @@ class AnalyticsService {
     return _capture('goal_reconciliation_viewed', {'pace': pace});
   }
 
+  // ─── Roadmap Phase 12 (C21, C22) · community ────────────────────────
+  //
+  // No name, no handle, no bio, no squad name, no user id, no counts of
+  // who is friends with whom leaves the device here. The phase's
+  // success criteria ask "how many people create a profile, add a
+  // friend, join a squad, and does a squad change retention" — every
+  // one of those is answerable from a bare count, and the identities
+  // are exactly the part a product-analytics vendor has no business
+  // holding. Same rule the body-metrics block above is written to.
+
+  /// The user saved a profile for the first time.
+  Future<void> profileCreated() => _capture('profile_created', const {});
+
+  /// A profile was opened. [own] separates "checking my own card" from
+  /// "looking at somebody else's", which are different behaviours and
+  /// would otherwise average into a meaningless number.
+  Future<void> profileViewed({required bool own}) {
+    return _capture('profile_viewed', {'own': own});
+  }
+
+  /// A profile card image was shared. [surface] is the stable token for
+  /// where it came from (`profile`).
+  Future<void> profileShared({required String surface}) {
+    return _capture('profile_shared', {'surface': surface});
+  }
+
+  /// A friend request was accepted — by either side. Fired on accept
+  /// rather than on send, because a sent request that is never answered
+  /// is not a friendship and counting it as one would overstate the
+  /// feature every time.
+  Future<void> friendAdded() => _capture('friend_added', const {});
+
+  /// A squad was created by this user.
+  Future<void> squadCreated() => _capture('squad_created', const {});
+
+  /// This user joined an existing squad via an invite code.
+  Future<void> squadJoined() => _capture('squad_joined', const {});
+
+  /// A reaction was given on a feed event. [reaction] is the stable
+  /// token (`cheer`, `strong`, `fire`), never the localised label.
+  /// Taking a reaction back does not fire — the question is how much
+  /// encouragement the feed produces, and an undo is not a negative
+  /// amount of it.
+  Future<void> feedReaction({required String reaction}) {
+    return _capture('feed_reaction', {'reaction': reaction});
+  }
+
   // NOTE · App Tracking Transparency was deliberately REMOVED. The app's
   // PrivacyInfo.xcprivacy declares `NSPrivacyTracking = false` and the
   // published privacy policy states no cross-app tracking occurs — so
