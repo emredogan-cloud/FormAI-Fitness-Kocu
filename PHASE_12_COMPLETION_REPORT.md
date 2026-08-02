@@ -1,8 +1,8 @@
 # Phase 12 — Community I: Identity & Squads
 
 **Status:** 🔄 **IN PROGRESS** — the foundation is in; the feature surfaces are not.
-**Date:** 2026-08-02 · **Build:** `1.0.0+32` · **Commits:** `0c18f5c`, `059f531`
-**Tests:** 1298 (1258 at phase start) · **`flutter analyze`:** 0 · **CI:** green
+**Date:** 2026-08-02 · **Build:** `1.0.0+32` · **Commits:** `0c18f5c` → `1e208b7`
+**Tests:** 1307 (1258 at phase start) · **`flutter analyze`:** 0 · **CI:** green
 
 > This file is the live record, updated as work lands rather than
 > written at the end — the same shape Phase 10's report had while it was
@@ -23,13 +23,14 @@ for — the social accountability layer that makes fitness habits stick.
 | — | **Domain rules** (visibility, friendship, squad) | — | ✅ shipped, 26 tests |
 | — | **RLS static gate** | testing §  | ✅ shipped, probed |
 | — | **Repository** (`community_repository.dart`) | — | ✅ shipped |
-| 1 | Public user profile | C24, R6 | ⬜ not started |
+| — | **Shared neon surface** (`neon_surface.dart`) | — | ✅ extracted |
+| 1 | Public user profile | C24, R6 | ✅ shipped, 9 tests |
 | 2 | Profile card sharing | C24 | ⬜ not started |
 | 3 | Friends | C22 | ⬜ not started |
 | 4 | Squads | C22 | ⬜ not started |
 | 5 | Activity feed | C22 | ⬜ not started |
 | 6 | Referral → friend bridge | C47 | ⬜ not started |
-| 7 | Privacy & safety foundation | — | 🔶 schema done, UI not |
+| 7 | Privacy & safety foundation | — | 🔶 schema + visibility UI done; block/report UI not |
 
 The foundation landed first deliberately: the roadmap calls RLS "the
 highest-risk area in the roadmap", and a screen built on a schema that
@@ -153,7 +154,43 @@ Decisions worth repeating out of the file:
 - **`moderation_state` is approved-or-nothing**: a null, a typo or a
   later build's new state all hide a profile rather than publish it.
 
-### 3.4 The RLS gate, and what it is not
+### 3.4 The profile — `community_screen.dart`, `profile_editor_screen.dart`
+
+Three states, and the order they are checked in is the feature: schema
+unapplied → no profile → a profile. The first is where most users are
+today, and it says the feature is off rather than showing an error; the
+second is the opt-in default and leads with the promise rather than an
+instruction.
+
+**"Nothing is visible until you switch it on" is now written three
+times** — the migration's `default false`, `ProfileVisibility.private`,
+and an editor that never moves a flag on the user's behalf. Three
+expressions of one rule, because each layer can be reached without the
+others.
+
+Smaller calls worth keeping: badges and stats disable when the profile is
+not findable but are **not cleared**, so going private for a week returns
+settings rather than a reset; the handle field folds uppercase rather
+than rejecting it; a profile awaiting moderation says so, or somebody
+spends a week wondering why their friend cannot find them; and the delete
+confirmation names what is *not* lost, which is what stops somebody
+keeping a profile out of fear.
+
+### 3.5 The shared neon surface
+
+`lib/core/theme/neon_surface.dart`. "Your body", the outcome report and
+the photo gallery each carried a private copy of the same seven colours,
+and community would have been the fourth. Three copies is a coincidence;
+four is a decision. Tokens plus `NeonCard` and `NeonPill` — the outcome
+report's `_SoftCard` turned out to be exactly `NeonCard`'s non-gradient
+case, so this is a deduplication rather than a new abstraction.
+
+Deliberately **not** a `ThemeExtension`: an extension resolves off the
+ambient theme, which is precisely what these screens have decided not to
+do. Purely mechanical — the 269 tests over those screens, including the
+pseudo-locale, English and RTL sweeps, pass unchanged.
+
+### 3.6 The RLS gate, and what it is not
 
 `test/features/community/rls_policy_test.dart` **executes no SQL** and
 says so in its own header. The roadmap asks for penetration tests that
@@ -190,7 +227,10 @@ too until a probe says otherwise.
 
 In this order. Each is a commit.
 
-### 4.1 Screens — `lib/features/community/presentation/`
+### 4.1 Screens — friends, squad, feed
+
+The profile is done (`community_screen.dart`, `profile_editor_screen.dart`).
+Three remain. — `lib/features/community/presentation/`
 
 Profile, friends, squad, feed. The design language is settled: dark-only
 neon on black like the outcome report and "Your body", `_NeonCard` and
@@ -263,7 +303,16 @@ tool/check_directional_layout.dart     177 · no regressions
 CI                                     green
 ```
 
-**+40 tests so far**: 26 on the domain rules, 14 on the RLS shape.
+**+49 tests so far**: 26 on the domain rules, 14 on the RLS shape, 9 on
+the community screen.
+
+One CI incident, and it was process rather than code: `059f531` went red
+because the hardcoded-string gate was skipped after a commit that only
+touched a repository. A Postgres error fragment (`'does not exist'` — two
+lowercase words with a space) is exactly what `_labelShape` catches, and
+one second of gate would have found it. `RESUME_GUIDE.md` §4 now opens
+with the instruction to run every gate before every push, and gotcha 28
+names the miss.
 
 ---
 
