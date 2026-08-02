@@ -183,7 +183,10 @@
 # 2. Currently Working On
 
 **Phase 10 — Performance Analytics II** (visual outcomes and shareable
-reports).
+reports). **3 of 7 features shipped** — the outcome-report aggregation
+core, the report screen with its milestone timeline, and the GDPR/KVKK
+data export. `PHASE_10_COMPLETION_REPORT.md` §4 says what remains and in
+what order. Nothing in the phase has been walked on a device yet.
 
 Founder-side, carried and still open:
 
@@ -238,12 +241,12 @@ Wave 5 — Scale, Depth & Platform         ⏳ Not Started (Phases 15–17)
 | | |
 |---|---|
 | **Build** | 1.0.0+31 · APK 136.2 MB · AAB 115.5 MB |
-| **Tests** | **1189 passing** (baseline was 330) |
+| **Tests** | **1235 passing** (baseline was 330) |
 | **`flutter analyze`** | **0 issues** |
 | **`dart format`** | clean |
 | **CI** | **GREEN** (CI + Secret Scan) |
 | **Hardcoded-string gate** | **0 in 0 files** · 246 allowlisted · rendered-argument signal added |
-| **ARB** | **1613 keys** · `tr` 100% · `en` 100% · all referenced in `lib/` |
+| **ARB** | **1650 keys** · `tr` 100% · `en` 100% · all referenced in `lib/` |
 | **Recipe catalogue** | **392 recipes** · `en` 392/392 · 2242 ingredient rows · audit 0 findings |
 | **Locales shipped** | `tr`, `en` |
 
