@@ -1,8 +1,8 @@
 # Phase 12 — Community I: Identity & Squads
 
 **Status:** 🔄 **IN PROGRESS** — the foundation is in; the feature surfaces are not.
-**Date:** 2026-08-02 · **Build:** `1.0.0+32` · **Commits:** `0c18f5c` → `1e208b7`
-**Tests:** 1307 (1258 at phase start) · **`flutter analyze`:** 0 · **CI:** green
+**Date:** 2026-08-02 · **Build:** `1.0.0+32` · **Commits:** `0c18f5c` → `841d872`
+**Tests:** 1311 (1258 at phase start) · **`flutter analyze`:** 0 · **CI:** green
 
 > This file is the live record, updated as work lands rather than
 > written at the end — the same shape Phase 10's report had while it was
@@ -26,11 +26,11 @@ for — the social accountability layer that makes fitness habits stick.
 | — | **Shared neon surface** (`neon_surface.dart`) | — | ✅ extracted |
 | 1 | Public user profile | C24, R6 | ✅ shipped, 9 tests |
 | 2 | Profile card sharing | C24 | ⬜ not started |
-| 3 | Friends | C22 | ⬜ not started |
+| 3 | Friends | C22 | ✅ shipped, 8 tests |
 | 4 | Squads | C22 | ⬜ not started |
 | 5 | Activity feed | C22 | ⬜ not started |
 | 6 | Referral → friend bridge | C47 | ⬜ not started |
-| 7 | Privacy & safety foundation | — | 🔶 schema + visibility UI done; block/report UI not |
+| 7 | Privacy & safety foundation | — | ✅ schema, visibility UI, block, report |
 
 The foundation landed first deliberately: the roadmap calls RLS "the
 highest-risk area in the roadmap", and a screen built on a schema that
@@ -176,7 +176,35 @@ spends a week wondering why their friend cannot find them; and the delete
 confirmation names what is *not* lost, which is what stops somebody
 keeping a profile out of fear.
 
-### 3.5 The shared neon surface
+### 3.5 Friends — `friends_screen.dart`
+
+Three lists rather than one with a status chip: one list buries the only
+rows needing a decision under the rows that do not. Incoming is first
+because it is the only section that is somebody else waiting on you.
+
+Writing it surfaced a redundancy worth recording — the "Friends" section
+header repeats the screen's own title, so it now appears only when there
+is another section to be distinguished from. On a screen with nothing but
+friends it was the same word twice. A test caught it by not being able
+to tell the two apart.
+
+**The screen says less than it knows in two places, on purpose.** A
+handle that does not exist and a handle whose owner has not published
+produce the same message, because distinguishing them confirms a handle
+is taken. Adding somebody who has blocked you says "you can't add this
+person" rather than naming the block.
+
+Block and report sit in the overflow on every friend row — the roadmap
+asks for one tap from any profile, and somebody who needs them should not
+be hunting a settings screen while upset. The block confirmation states
+both halves of what a block does, symmetric and silent, because both are
+the design rather than side effects.
+
+`currentCommunityUserIdProvider` was extracted here: the screen had been
+reaching into the repository for identity, which meant constructing a
+Supabase client to answer "which side of this friendship am I on".
+
+### 3.6 The shared neon surface
 
 `lib/core/theme/neon_surface.dart`. "Your body", the outcome report and
 the photo gallery each carried a private copy of the same seven colours,
@@ -190,7 +218,7 @@ ambient theme, which is precisely what these screens have decided not to
 do. Purely mechanical — the 269 tests over those screens, including the
 pseudo-locale, English and RTL sweeps, pass unchanged.
 
-### 3.6 The RLS gate, and what it is not
+### 3.7 The RLS gate, and what it is not
 
 `test/features/community/rls_policy_test.dart` **executes no SQL** and
 says so in its own header. The roadmap asks for penetration tests that
@@ -227,10 +255,15 @@ too until a probe says otherwise.
 
 In this order. Each is a commit.
 
-### 4.1 Screens — friends, squad, feed
+### 4.1 Screens — squad and feed
 
-The profile is done (`community_screen.dart`, `profile_editor_screen.dart`).
-Three remain. — `lib/features/community/presentation/`
+Profile and friends are done. Two remain, and they are one unit: a squad
+without a feed is a list of names, and the feed is squad-scoped by
+construction.
+
+Squad creation ≤ 3 taps and joining via a single link are the roadmap's
+constraints. `join_squad()` and `CommunityRepository.joinSquad` already
+exist; the screen is what is missing. — `lib/features/community/presentation/`
 
 Profile, friends, squad, feed. The design language is settled: dark-only
 neon on black like the outcome report and "Your body", `_NeonCard` and
@@ -303,8 +336,10 @@ tool/check_directional_layout.dart     177 · no regressions
 CI                                     green
 ```
 
-**+49 tests so far**: 26 on the domain rules, 14 on the RLS shape, 9 on
-the community screen.
+**+53 tests so far**: 26 on the domain rules, 14 on the RLS shape, 9 on
+the community screen, 8 on friends (including that an outgoing request
+never offers its sender an Accept button, and that a declined row
+appears in no list).
 
 One CI incident, and it was process rather than code: `059f531` went red
 because the hardcoded-string gate was skipped after a commit that only
