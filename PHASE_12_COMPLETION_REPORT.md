@@ -1,8 +1,8 @@
 # Phase 12 — Community I: Identity & Squads
 
 **Status:** 🔄 **IN PROGRESS** — the foundation is in; the feature surfaces are not.
-**Date:** 2026-08-02 · **Build:** `1.0.0+32` · **Commits:** `0c18f5c` → `841d872`
-**Tests:** 1311 (1258 at phase start) · **`flutter analyze`:** 0 · **CI:** green
+**Date:** 2026-08-02 · **Build:** `1.0.0+32` · **Commits:** `0c18f5c` → `b52c0dd`
+**Tests:** 1316 (1258 at phase start) · **`flutter analyze`:** 0 · **CI:** green
 
 > This file is the live record, updated as work lands rather than
 > written at the end — the same shape Phase 10's report had while it was
@@ -27,8 +27,8 @@ for — the social accountability layer that makes fitness habits stick.
 | 1 | Public user profile | C24, R6 | ✅ shipped, 9 tests |
 | 2 | Profile card sharing | C24 | ⬜ not started |
 | 3 | Friends | C22 | ✅ shipped, 8 tests |
-| 4 | Squads | C22 | ⬜ not started |
-| 5 | Activity feed | C22 | ⬜ not started |
+| 4 | Squads | C22 | ✅ shipped, 5 tests |
+| 5 | Activity feed | C22 | ✅ shipped |
 | 6 | Referral → friend bridge | C47 | ⬜ not started |
 | 7 | Privacy & safety foundation | — | ✅ schema, visibility UI, block, report |
 
@@ -204,7 +204,35 @@ the design rather than side effects.
 reaching into the repository for identity, which meant constructing a
 Supabase client to answer "which side of this friendship am I on".
 
-### 3.6 The shared neon surface
+### 3.6 Squads and the feed — `squad_screen.dart`, `squad_feed_screen.dart`
+
+Shipped together because a squad without a feed is a list of names.
+
+Every row reads "7 of 12" rather than "7 members", so the ceiling is
+never a surprise at the moment somebody tries to invite a friend. The
+invite code drops `I`, `O`, `0` and `1` — it gets read aloud and typed
+off a screenshot, and those are the pairs people get wrong. Uniqueness
+comes from the table's constraint rather than a lookup, because
+check-then-insert races.
+
+Writing the join flow surfaced that **`Squad.cannotJoin` was tested and
+wired to nothing.** `join_squad()` is idempotent, so it returns the same
+value whether the caller just joined or was already a member — only the
+client can tell those apart, which is exactly what that method is for.
+
+**The feed shows presence, not ranking**, per the roadmap: no positions,
+no totals compared between people, no ordering but time. Ranking arrives
+in Phase 13 and putting it here would spend that phase's design budget
+early. Three reactions, no text field, nothing to moderate. A zero count
+is absent rather than rendered as "0" — a row of zeroes reads as nobody
+caring, which is the wrong note for a feed whose job is encouragement.
+
+A squad member whose profile is private still has events in the feed,
+because the policy scopes events by squad rather than by profile
+visibility. Their line reads "Someone": a blank name looks broken, and
+"Someone" is true.
+
+### 3.7 The shared neon surface
 
 `lib/core/theme/neon_surface.dart`. "Your body", the outcome report and
 the photo gallery each carried a private copy of the same seven colours,
@@ -218,7 +246,7 @@ ambient theme, which is precisely what these screens have decided not to
 do. Purely mechanical — the 269 tests over those screens, including the
 pseudo-locale, English and RTL sweeps, pass unchanged.
 
-### 3.7 The RLS gate, and what it is not
+### 3.8 The RLS gate, and what it is not
 
 `test/features/community/rls_policy_test.dart` **executes no SQL** and
 says so in its own header. The roadmap asks for penetration tests that
@@ -255,15 +283,15 @@ too until a probe says otherwise.
 
 In this order. Each is a commit.
 
-### 4.1 Screens — squad and feed
+### 4.1 The community tab
 
-Profile and friends are done. Two remain, and they are one unit: a squad
-without a feed is a list of names, and the feed is squad-scoped by
-construction.
-
-Squad creation ≤ 3 taps and joining via a single link are the roadmap's
-constraints. `join_squad()` and `CommunityRepository.joinSquad` already
-exist; the screen is what is missing. — `lib/features/community/presentation/`
+All four screens exist and are routed, but **nothing in the app navigates
+to `/community` yet**. That is deliberate for now — the roadmap's rule is
+that a user who never touches community sees no change — but the entry
+point is the next decision: a fifth bottom-nav tab changes the app for
+everybody, while a row on the Profile tab does not. The latter is
+probably right, and it is a founder-facing call rather than a technical
+one. — `lib/features/community/presentation/`
 
 Profile, friends, squad, feed. The design language is settled: dark-only
 neon on black like the outcome report and "Your body", `_NeonCard` and
@@ -336,10 +364,10 @@ tool/check_directional_layout.dart     177 · no regressions
 CI                                     green
 ```
 
-**+53 tests so far**: 26 on the domain rules, 14 on the RLS shape, 9 on
+**+58 tests so far**: 26 on the domain rules, 14 on the RLS shape, 9 on
 the community screen, 8 on friends (including that an outgoing request
 never offers its sender an Accept button, and that a declined row
-appears in no list).
+appears in no list), 5 on squads.
 
 One CI incident, and it was process rather than code: `059f531` went red
 because the hardcoded-string gate was skipped after a commit that only
