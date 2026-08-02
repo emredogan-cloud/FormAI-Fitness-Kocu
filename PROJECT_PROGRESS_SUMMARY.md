@@ -162,7 +162,7 @@ Wave 5 — Scale, Depth & Platform         ⏳ Not Started (Phases 15–17)
 | | |
 |---|---|
 | **Build** | 1.0.0+29 · APK 134.5 MB |
-| **Tests** | **1069 passing** (baseline was 330) |
+| **Tests** | **1070 passing** (baseline was 330) |
 | **`flutter analyze`** | **0 issues** |
 | **`dart format`** | clean |
 | **CI** | **GREEN** (CI + Secret Scan) |

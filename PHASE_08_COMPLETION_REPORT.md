@@ -16,7 +16,7 @@ Covers R3.1 (full scope) · C13 · C14.
 | C13 · RTL sweep past the paywall | ✅ 5 nutrition surfaces, was funnel-only |
 | C13 · direction-neutrality gate in CI | ✅ ratchet armed at 177 |
 | C13 · convert the 177 directional call sites | ⏳ ratchet holds the line; conversion is incremental |
-| C13 · `CustomPainter` direction audit (18 painters) | ⏳ not started |
+| C13 · `CustomPainter` direction audit (18 painters) | ✅ 2 defects found and fixed |
 | R3.1 · `es` / `fr` / `de` UI (1,534 ARB keys × 3) | ⏳ not started |
 | R3.1 · `es` / `fr` / `de` recipes (392 rows × 3) | ⏳ not started |
 | R3.1 · exercise catalogue (138 rows, still Turkish-only) | ⏳ not started |
@@ -28,7 +28,7 @@ Covers R3.1 (full scope) · C13 · C14.
 
 ```
 analyze              0 issues
-tests                1069   (1064 at the start of the phase)
+tests                1070   (1064 at the start of the phase)
 directional gate     177 in 43 files · baseline armed
 CI                   green
 locales shipped      tr, en
@@ -69,7 +69,35 @@ changes nothing. There is no debt there at all.
 What is real: **121 directional `Alignment.*Left/*Right`** and **55
 `Positioned(left:/right:)`**, most of them decorative overlays.
 
-### 2.3 A gate the layout sweeps cannot be
+### 2.3 Two painters laid out localized copy left-to-right, always
+
+Eighteen `CustomPainter`s. Two were wrong, and the line between those
+two and the other sixteen is the useful part.
+
+A painter has no `BuildContext`, so it cannot read the ambient direction
+— it has to be handed one. Both `TextPainter`s in `lib/` were built with
+a hardcoded `TextDirection.ltr`, and both lay out **ARB copy, not
+tokens**: the tutorial's joint labels, which arrive as
+`jointLabels(AppLocalizations.of(context))`, and the 12-week
+trajectory's axis labels. In Arabic or Hebrew that resolves bidi
+wrongly. Both now take `Directionality.of(context)`.
+
+**The geometry deliberately did not move with it**, for two different
+reasons that must not be conflated:
+
+- `PosePainter._project` mirrors x on `cameraLensDirection == front`.
+  That is the selfie mirror. Tying it to reading direction would draw
+  the skeleton flipped against the body it is tracking and put the
+  coaching on the wrong limb — a correctness bug wearing a layout bug's
+  clothes.
+- The trajectory curve plots twelve weeks against time. A time axis is
+  not text; mirroring it would say the user gets worse.
+
+The other sixteen are radial or particle work — rings, arcs, hexes,
+sparkles, scrims — with no direction to assume. The two Google logo
+painters must not mirror at all: it is a brand mark.
+
+### 2.4 A gate the layout sweeps cannot be
 
 `tool/check_directional_layout.dart`, wired into CI.
 
@@ -85,16 +113,19 @@ a gate that fails on day one against 177 pre-existing call sites is a
 gate somebody disables in week one. The baseline is per-file; converting
 a screen lowers it and nothing raises it.
 
-It flags six kinds: directional `Alignment`, `TextAlign.left/right`,
+It flags seven kinds: directional `Alignment`, `TextAlign.left/right`,
 `EdgeInsets.only(left:/right:)`, **asymmetric** `fromLTRB`,
-`Positioned(left:/right:)`, and nothing else. `// rtl-ignore` with a
+`Positioned(left:/right:)`, a hardcoded `textDirection:` on a
+`TextPainter` (§2.3's defect class), and nothing else. `// rtl-ignore` with a
 reason is the escape, for a position that is genuinely absolute.
 
 **Probed before it was trusted**, per the rule two phases of blind gates
-earned. A synthetic file under `lib/` carrying all six violation kinds
-produced exactly eight findings; the four correct forms
-(`AlignmentDirectional`, `PositionedDirectional`, `EdgeInsetsDirectional`,
-symmetric `fromLTRB`) and an `// rtl-ignore` line stayed clean. A gate
+earned. A synthetic file under `lib/` carrying every violation kind flags each
+of them and nothing else; the correct forms (`AlignmentDirectional`,
+`PositionedDirectional`, `EdgeInsetsDirectional`, symmetric `fromLTRB`,
+an ambient `textDirection:`) and an `// rtl-ignore` line stay clean.
+The §2.3 rule was probed the same way after the two fixes landed, and
+the total staying at 177 is what proves they did. A gate
 that reports zero because its regex never matches is the failure mode
 this repo has hit twice.
 
@@ -102,24 +133,20 @@ this repo has hit twice.
 
 ## 3. What is next, in order
 
-1. **The 18 `CustomPainter`s.** `_AreaLinePainter`, `_HexBadgePainter`,
-   `_GaugeArcPainter`, `pose_painter` and the rest. A painter receives no
-   `Directionality` and paints from `x = 0` regardless, so each needs
-   reading rather than sweeping. The roadmap names this explicitly.
-2. **Convert the 121 alignments and 55 positioned**, screen by screen,
+1. **Convert the 121 alignments and 55 positioned**, screen by screen,
    lowering the baseline as each goes. Decorative overlays may legitimately
    keep an absolute side — that is what `// rtl-ignore` is for, with the
    reason written down.
-3. **The translation-quality monitor** — flag ARB values whose length
+2. **The translation-quality monitor** — flag ARB values whose length
    deviates > 50 % from the template. Cheap, and it wants to exist before
    three languages of copy land, not after.
-4. **`es` / `fr` / `de`.** This is the large one and it is content, not
+3. **`es` / `fr` / `de`.** This is the large one and it is content, not
    engineering: 1,534 ARB keys and 392 recipe rows per language, plus the
    138 Turkish-only exercise rows that no locale has yet. The rails are
    built — `kShippedLocales`, the locale-agnostic resolver, the audit
    that loops over locales — so the engineering cost is a `supportedLocales`
    entry, a persona and a scaffold entry per language.
-5. **Per-locale coach personas**, authored not translated, server-side —
+4. **Per-locale coach personas**, authored not translated, server-side —
    the Phase 6 decision, which means a language ships without an app
    release.
 
@@ -139,7 +166,7 @@ ship, or whether one reviewed language beats three unreviewed ones.
 
 ```bash
 flutter analyze                                   # 0
-flutter test                                      # 1069
+flutter test                                      # 1070
 dart run tool/check_directional_layout.dart       # 177, no regressions
 dart run tool/check_directional_layout.dart --list
 dart run tool/check_directional_layout.dart --baseline

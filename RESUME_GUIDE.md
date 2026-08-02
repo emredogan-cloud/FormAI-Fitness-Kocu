@@ -133,7 +133,7 @@ the entire procedure.
 
 ```
 analyze                     0 issues
-tests                       1069
+tests                       1070
 hardcoded-string gate       0 in 0 files  (allowlist 244, printed per entry)
 ARB                         1534 keys · tr 100% · en 100% · all referenced
 recipe catalogue            392 rows · en 392/392 · 2242 ingredient rows
@@ -157,7 +157,7 @@ before this session started. It is **not ours** — leave it.
 
 ```bash
 flutter analyze                                   # must be 0 — CI fails on infos too
-flutter test                                      # 1069
+flutter test                                      # 1070
 dart format --output=none --set-exit-if-changed lib test tool
 dart run tool/check_hardcoded_strings.dart        # ratchet, currently 0
 dart run tool/check_hardcoded_strings.dart --list # every flagged line
