@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/providers/locale_provider.dart';
 import '../../../core/services/app_preferences.dart';
 import '../../../core/utils/app_logger.dart';
 import '../data/nutrition_repository.dart';
@@ -50,10 +51,29 @@ class FilterChipsNotifier extends Notifier<String?> {
 /// get its recipes, so this is the one place that reliably runs before a
 /// tile is painted — and the registry is safe to leave cold, so a
 /// missing warm-up degrades to the meal-type cover rather than failing.
+///
+/// Phase 7 device walk · watching [localeProvider] is what makes the
+/// language picker's "applies live" promise true for *content* and not
+/// only for chrome.
+///
+/// The repository resolves each row's language at decode time, so rows
+/// it has already returned keep whatever language they were fetched in.
+/// Switching to English therefore left every recipe title, ingredient
+/// and instruction in Turkish until the app was restarted — English
+/// chrome wrapped around a Turkish catalogue, which is the exact
+/// half-translated state `resolveRecipeLanguage` refuses to produce one
+/// row at a time. Rebuilding here cascades: every recipe provider below
+/// reads this one, so none of them needs its own locale listener.
+///
+/// The language is passed in rather than left to the repository's own
+/// `AppCopy.locale` read, so the dependency is visible in the provider
+/// graph instead of hiding behind a global. `null` still means
+/// device-follow and still falls through to [AppCopy].
 final nutritionRepositoryProvider = Provider<NutritionRepository>(
   (ref) {
+    final locale = ref.watch(localeProvider);
     unawaited(RecipeImageRegistry.warmUp());
-    return NutritionRepository();
+    return NutritionRepository(languageCode: locale?.languageCode);
   },
 );
 
@@ -107,6 +127,28 @@ final categoryRecipesProvider =
   );
 });
 
+/// Phase 7 device walk · the recipes behind one discovery chip,
+/// server-side filtered.
+///
+/// The chips used to narrow whatever pages of [recipesProvider] happened
+/// to be resident, which meant the answer depended on how far the user
+/// had scrolled *before* tapping — 12 high-protein recipes on open, 175
+/// after scrolling the whole catalogue, and no way to get from the first
+/// number to the second because a 12-card grid never scrolls far enough
+/// to page. Same failure [categoryRecipesProvider] was added for, one
+/// screen over.
+///
+/// Keyed on the token so Riverpod memoizes each chip independently and
+/// re-tapping a chip the user already visited is free. Deliberately NOT
+/// folded into [recipesProvider]: favourites, the daily menu and the
+/// next-best-meal engine all read that provider, and none of them should
+/// change because a chip is selected on another screen.
+final tagFilteredRecipesProvider =
+    FutureProvider.family<List<Recipe>, String>((ref, token) {
+  final repo = ref.watch(nutritionRepositoryProvider);
+  return repo.fetchRecipesByTagToken(token);
+});
+
 /// Notifier that owns the accumulated recipe list + pagination cursor.
 /// `build()` loads page 1; subsequent `loadMore()` calls append the
 /// next page. The notifier is stateful (it holds the current offset
@@ -120,7 +162,16 @@ class PaginatedRecipesNotifier extends AsyncNotifier<List<Recipe>> {
 
   @override
   Future<List<Recipe>> build() async {
-    final repo = ref.read(nutritionRepositoryProvider);
+    // `watch`, not `read`: the repository rebuilds when the language
+    // changes, and this notifier holds the decoded rows that carry it.
+    // Page 1 is re-fetched in the new language and the cursor resets,
+    // which is what "the picker applies live" has to mean for content.
+    // `watch`, not `read`: the repository rebuilds when the language
+    // changes, and this notifier holds the decoded rows that carry it.
+    // Page 1 is re-fetched in the new language and the cursor resets,
+    // which is what "the picker applies live" has to mean for content.
+    final repo = ref.watch(nutritionRepositoryProvider);
+    _hasMore = true;
     final firstPage = await repo.fetchRecipes(from: 0, limit: _pageSize);
     _hasMore = firstPage.length >= _pageSize;
     return firstPage;

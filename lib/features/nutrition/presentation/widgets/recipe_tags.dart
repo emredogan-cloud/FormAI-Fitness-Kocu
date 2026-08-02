@@ -1,8 +1,39 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/theme_extension.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/models/recipe.dart';
 import '../../domain/recipe_tag_token.dart';
+
+/// The label colour for a chip filled with `tint` at 18 % alpha.
+///
+/// Phase 7 device walk · the label was `Colors.white` regardless of
+/// theme. Over a dark surface an 18 % tint is dark and white reads
+/// perfectly; over a white one the same fill is a pastel and white on it
+/// measured **1.24:1 to 1.32:1** on the device — the labels were ghosts.
+/// This is the "PREMIUM white on white" defect the Phase 6 device walk
+/// found, on the surfaces Phase 7 added.
+///
+/// Light mode keeps the tag's own hue and drops its lightness to 0.22,
+/// which is the highest value at which every one of the six tints clears
+/// 4.5:1 against its own fill — the neon yellow `toning` is the binding
+/// constraint at 5.22:1. Keeping the hue matters: the colour is how the
+/// six categories are told apart at a glance.
+///
+/// [onImagery] is the exception and has to be passed explicitly. The
+/// nutrition tab's compact card `Positioned`s its badge over the recipe
+/// photograph, and a photograph does not change with the app's theme —
+/// so that badge stays white in both, and swapping it for a dark label
+/// because the *scaffold* went light would be reasoning about the wrong
+/// backdrop.
+Color recipeTagLabelColor(
+  BuildContext context,
+  Color tint, {
+  bool onImagery = false,
+}) {
+  if (onImagery || context.isDarkMode) return Colors.white;
+  return HSLColor.fromColor(tint).withLightness(0.22).toColor();
+}
 
 /// Neon-flavoured badge painted behind recipe thumbnails and under
 /// detail titles. Each tag is a `(icon, label, tint)` triple; the
@@ -16,6 +47,7 @@ class RecipeTagBadge extends StatelessWidget {
     required this.label,
     required this.tint,
     this.compact = false,
+    this.onImagery = false,
   });
 
   final String icon;
@@ -25,6 +57,10 @@ class RecipeTagBadge extends StatelessWidget {
   /// `compact = true` renders smaller type + padding so the badge
   /// fits neatly on the discovery card's narrow footer.
   final bool compact;
+
+  /// True when the badge is painted over a photograph rather than over
+  /// the scaffold. See [recipeTagLabelColor].
+  final bool onImagery;
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +91,7 @@ class RecipeTagBadge extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: Colors.white,
+                color: recipeTagLabelColor(context, tint, onImagery: onImagery),
                 fontSize: fontSize,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 0.2,
@@ -77,11 +113,15 @@ class RecipeTagsStrip extends StatelessWidget {
     required this.recipe,
     this.maxTags = 2,
     this.compact = false,
+    this.onImagery = false,
   });
 
   final Recipe recipe;
   final int maxTags;
   final bool compact;
+
+  /// Forwarded to [RecipeTagBadge.onImagery].
+  final bool onImagery;
 
   @override
   Widget build(BuildContext context) {
@@ -97,6 +137,7 @@ class RecipeTagsStrip extends StatelessWidget {
             label: tag.label,
             tint: tag.tint,
             compact: compact,
+            onImagery: onImagery,
           ),
       ],
     );

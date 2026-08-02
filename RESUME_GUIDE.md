@@ -3,7 +3,7 @@
 Read this first. It is written so a session with no memory of the
 previous one can continue without re-analysing the repository.
 
-**Last updated:** 2026-08-01, end of Phase 7.
+**Last updated:** 2026-08-02, Phase 7 closed including its device walk.
 
 ---
 
@@ -24,7 +24,7 @@ one `PHASE_NN_COMPLETION_REPORT.md`. Final deliverable at the very end:
 | 5 · i18n | done except 2 device surfaces | `PHASE_05_COMPLETION_REPORT.md` |
 | 6 · English launch | done | `PHASE_06_COMPLETION_REPORT.md` |
 | 6p · polish sprint | 12 of 12 done | `PHASE_06_POLISH_REPORT.md` |
-| **7 · Content & AI localization** | **done** | `PHASE_07_COMPLETION_REPORT.md` |
+| **7 · Content & AI localization** | **done + device walk** | `PHASE_07_COMPLETION_REPORT.md` |
 | 8 · es / fr / de + RTL | next | roadmap only |
 
 **Branch:** `main`. **Build:** `1.0.0+29`.
@@ -36,8 +36,9 @@ one `PHASE_NN_COMPLETION_REPORT.md`. Final deliverable at the very end:
 ### 2.0 Phase 7 is DONE — do not restart it
 
 `PHASE_07_COMPLETION_REPORT.md` is the record. **Migrations 013, 014 and
-015 are applied to production**, 392 recipes are 100 % translated, and
-the whole content pipeline is committed and re-runnable.
+015 are applied to production**, 392 recipes are 100 % translated, the
+whole content pipeline is committed and re-runnable, and **the device
+walk is done** — see §9 of that report for the six defects it found.
 
 **Phase 8 is next** and is a content project, not an engineering one, for
 recipes: the resolver is locale-agnostic and the audit loops over
@@ -53,10 +54,7 @@ instructional images carry burned-in text in two languages. See §8.
    `instructions`. Both are safe only after a release carrying the
    013/014 readers has been live long enough that the old client is
    gone. Writing it now invites somebody to apply it now.
-2. **No device walk.** The Note 12 was not connected and the connected
-   Redmi is PIN-locked. Six specific surfaces still need eyes — Phase 7
-   report §9 lists them.
-3. **The English has not been read by a native speaker.** 392 recipes of
+2. **The English has not been read by a native speaker.** 392 recipes of
    reviewed draft. The gate proves no Turkish survives; it cannot prove
    the English reads well.
 
@@ -120,9 +118,9 @@ the entire procedure.
 
 ```
 analyze                     0 issues
-tests                       1051
+tests                       1064
 hardcoded-string gate       0 in 0 files  (allowlist 244, printed per entry)
-ARB                         1532 keys · tr 100% · en 100% · all referenced
+ARB                         1534 keys · tr 100% · en 100% · all referenced
 recipe catalogue            392 rows · en 392/392 · 2242 ingredient rows
 recipe translation audit    0 findings · baseline armed at 392
 locales shipped             tr, en
@@ -131,7 +129,7 @@ English sweep               17 funnel + 5 app surfaces × 2 text scales
 RTL sweep                   16 surfaces
 CI                          green
 build                       1.0.0+29 · APK 134.5 MB
-device walk                 NOT DONE for Phase 7 — see the report §9
+device walk                 DONE for Phase 7 — 6 defects found, fixed, re-verified
 working tree                clean except pre-existing untracked founder files
 ```
 
@@ -144,7 +142,7 @@ before this session started. It is **not ours** — leave it.
 
 ```bash
 flutter analyze                                   # must be 0 — CI fails on infos too
-flutter test                                      # 1051
+flutter test                                      # 1064
 dart format --output=none --set-exit-if-changed lib test tool
 dart run tool/check_hardcoded_strings.dart        # ratchet, currently 0
 dart run tool/check_hardcoded_strings.dart --list # every flagged line
@@ -233,7 +231,42 @@ which is how CI was red for four commits before this session noticed.
    `balık`, `balığı` and `balzamik`; `hindi` (turkey) starts
    `hindistan cevizi`; `su` (water) starts `sucuk`. Match at a word
    start and keep an explicit not-followed-by list.
-19. **A recipe seed must be idempotent by a stable id.** Ids are derived
+19. **`isKeyguardShowing=true` does not mean PIN-locked.** It is also
+    what an asleep phone reports. Wake it and call `wm dismiss-keyguard`
+    before concluding anything; `locksettings get-disabled` and
+    `settings get secure lockscreen.password_type` distinguish a
+    non-secure keyguard from a real credential. This one line cost two
+    phases of "physically unverifiable" device work.
+20. **A client-side filter over a paginated list lies, and scrolling
+    does not fix it.** The filtered view is short, so it never reaches
+    the bottom that triggers the next page — the wrong count is stable,
+    which is what makes it convincing. Push the predicate into Postgres.
+    This has now been the same bug twice: the category screen in Phase
+    83, the discovery chips in Phase 7.
+21. **A test written from the code's own assumption agrees with it.**
+    `recipe_detail_screen_test.dart` asserted `find.text('LUNCH')` inside
+    a `Locale('tr')` host and passed for as long as the bug existed. When
+    a test encodes a raw token, a hardcoded colour or an untranslated
+    string as *expected*, it is pinning a defect, not guarding against
+    one.
+22. **`Colors.white` on a `tint.withValues(alpha: 0.18)` fill is a
+    light-mode bug every time.** Over a dark scaffold the fill is dark
+    and white is right; over a light one it is a pastel and the label
+    measures ~1.3:1. Third occurrence in this app. When a badge sits on a
+    *photograph* the theme is the wrong thing to branch on — the backdrop
+    does not change — so that case needs its own explicit flag.
+23. **A parse marker embedded in content is per-language.** Phase 7 made
+    `instructions` bilingual, so a splitter that knew only `MALZEMELER:`
+    silently matched nothing on English rows and fell through to a
+    render-the-whole-blob branch. Localise the *marker list*, never the
+    marker.
+24. **"Applies live" has to include content, not just chrome.** The
+    language picker flipped every ARB string instantly and left the whole
+    recipe catalogue in the old language until restart, because the
+    repository resolves language at decode time and nothing invalidated
+    the rows already fetched. Anything that caches server data keyed by
+    locale needs to watch `localeProvider`.
+25. **A recipe seed must be idempotent by a stable id.** Ids are derived
    from the proposal slug via `uuid_generate_v5`, so re-running after an
    edit updates instead of duplicating the catalogue — and the duplicate
    check has to exclude the batch's own earlier rows, or the second run
@@ -399,8 +432,12 @@ function ships; it needs the same scratch-dir treatment.
   curry paste (×1) are genuinely two different foods sold under one name,
   so the classifier stays silent rather than guessing. That is correct,
   not a gap.
-- **Phase 7's nutrition surfaces have never been seen on a device.**
-  Six of them, listed in `PHASE_07_COMPLETION_REPORT.md` §9.
+- **The "See all" pill measures 3.03:1 in light mode** — legible but
+  below AA for its size. Pre-dates Phase 7; contrast is Phase 11's remit,
+  so it is logged there rather than spot-fixed.
+- **A locally-built `--debug` APK renders the bottom-nav labels as an
+  oversized clipped "For…".** Release is correct in both languages and
+  both themes; not diagnosed further.
 - **`Positioned` with explicit `left:`/`right:`** remains in a few
   decorative overlays. `PositionedDirectional` when next touched.
 - **Google Sign-In is broken** and is a founder-side Google Cloud SHA-1
@@ -473,9 +510,24 @@ docs/nutrition/                        every review sheet the tooling generates
   work was done here.
 - **Redmi `AYXSUKIVJVPZ7HPZ`** (M1908C3JGG, Android 11, 1080×2340,
   **×1.17** for taps read off a screenshot; `uiautomator` dumps are
-  already in real coordinates) — **PIN-LOCKED.** adb can install to it
-  (`1.0.0+27` is on it) but nothing can drive its UI until the founder
-  unlocks it.
+  already in real coordinates) — **FULLY USABLE. It was never
+  PIN-locked.** Phases 5 and 7 both recorded it as locked on the strength
+  of `isKeyguardShowing=true`, which is equally what an asleep phone
+  reports. Two of the three Phase 7 device gaps were this misreading. To
+  drive it:
+
+  ```bash
+  adb -s AYXSUKIVJVPZ7HPZ shell input keyevent KEYCODE_WAKEUP
+  adb -s AYXSUKIVJVPZ7HPZ shell wm dismiss-keyguard
+  # isKeyguardShowing / mInputRestricted / mDreamingLockscreen all go false
+  ```
+
+  `locksettings get-disabled` → `false` and `settings get secure
+  lockscreen.password_type` → `null` is how you tell a non-secure
+  keyguard from a real PIN **before** concluding a device is unusable.
+  `install -r` works; the whole Phase 7 walk ran here on `1.0.0+29`.
+  It currently holds a **clean install awaiting onboarding** — the walk
+  ended with an uninstall/reinstall cycle to swap a debug build back out.
 - **Huawei `89U4C18908003735`** (ANE-LX1, Android 9, 1080×2280, ×1.14,
   animation scale 0.5) — **no network**, so guest sign-in cannot
   complete and it only covers offline surfaces. It does exercise the

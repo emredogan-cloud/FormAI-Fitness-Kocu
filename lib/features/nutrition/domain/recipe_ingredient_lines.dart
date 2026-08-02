@@ -88,10 +88,20 @@ List<String> ingredientsFromInstructions(String? instructions) {
 
 /// Parse markers embedded in stored recipe text, NOT UI copy. Localising
 /// these would stop them matching the row being parsed.
-final RegExp _ingredientHeader =
-    RegExp(r'^malzemeler\s*:?\s*$', caseSensitive: false); // i18n-ignore
+///
+/// Phase 7 device walk · both languages' markers, because the blob is in
+/// the *recipe's* language. `build_recipe_en.py` writes `INGREDIENTS:` /
+/// `METHOD:`, so an English row reaching this fallback matched nothing,
+/// fell through to the comma-split heuristic and produced junk or an
+/// empty list. No live row reaches it today — all 392 carry structured
+/// rows — but this path exists precisely for the database that has not
+/// been migrated, and that database now holds English too.
+final RegExp _ingredientHeader = RegExp(
+  r'^(malzemeler|ingredients)\s*:?\s*$',
+  caseSensitive: false,
+); // i18n-ignore
 final RegExp _methodHeader = RegExp(
-  r'^(yapılışı|yapılış|hazırlanışı|hazırlanış|tarif)\s*:?\s*$',
+  r'^(yapılışı|yapılış|hazırlanışı|hazırlanış|tarif|method|instructions)\s*:?\s*$',
   caseSensitive: false,
 ); // i18n-ignore
 

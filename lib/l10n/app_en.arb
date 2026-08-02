@@ -872,6 +872,10 @@
   "@mealSnackUpper": {
     "description": "Meal slot, uppercase timeline label"
   },
+  "mealDessertUpper": "DESSERT",
+  "@mealDessertUpper": {
+    "description": "Meal slot, uppercase timeline label. The daily-plan timeline has four slots and never shows this one; the recipe detail pill reads `recipes.meal_type`, which has five values."
+  },
   "menuLoadError": "Today's menu could not be loaded.",
   "@menuLoadError": {
     "description": "Meal plan load failure"
@@ -5108,6 +5112,15 @@
   "showcaseHeroFormScore": "Form Score",
   "@showcaseHeroFormScore": {
     "description": "Label on a demonstration stat chip overlaid on a showcase hero. Illustrative, not the user's data."
+  },
+  "showcaseHeroFormScoreValue": "{percent}%",
+  "@showcaseHeroFormScoreValue": {
+    "description": "The demonstration form score on the showcase hero chip. The figure is illustrative, but the percent sign leads the number in Turkish and trails it in English, so the whole value is a string rather than a literal.",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
   },
   "showcaseHeroRepsTracked": "Reps Tracked",
   "@showcaseHeroRepsTracked": {

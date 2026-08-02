@@ -66,26 +66,25 @@ class _DiscoverRecipesScreenState extends ConsumerState<DiscoverRecipesScreen> {
 
   void _onScroll() {
     if (!_scrollController.hasClients) return;
+    // Phase 7 device walk · a filtered view is already the complete
+    // bucket, so there is no next page to ask for.
+    if (ref.read(filterChipsProvider) != null) return;
     final position = _scrollController.position;
     if (position.pixels + _loadMoreThreshold >= position.maxScrollExtent) {
       ref.read(recipesProvider.notifier).loadMore();
     }
   }
 
-  /// Phase 7 · exact-match on the selected [kRecipeFilterTokens] token, not
-  /// on a Turkish display label. Trim is already done inside
-  /// `Recipe._parseTags`, and `toLowerCase` is deliberately avoided —
-  /// Turkish İ/I case folding is locale-dependent, which is the class of
-  /// bug the token split removes at the root.
-  List<Recipe> _apply(List<Recipe> source, String? activeToken) {
-    if (activeToken == null) return source;
-    return source.where((r) => r.tagTokens.contains(activeToken)).toList();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final recipesAsync = ref.watch(recipesProvider);
     final activeFilter = ref.watch(filterChipsProvider);
+    // Phase 7 device walk · a chip filters in Postgres, against the whole
+    // catalogue. Filtering the resident pages client-side made the result
+    // a function of how far the user had scrolled first — see
+    // `NutritionRepository.fetchRecipesByTagToken`.
+    final recipesAsync = activeFilter == null
+        ? ref.watch(recipesProvider)
+        : ref.watch(tagFilteredRecipesProvider(activeFilter));
     // Phase 53F · drop the hardcoded `0xFF0B0B12` Scaffold + AppBar.
     final scheme = context.colors;
     return Scaffold(
@@ -115,13 +114,24 @@ class _DiscoverRecipesScreenState extends ConsumerState<DiscoverRecipesScreen> {
           );
           return ErrorCard(
             message: AppLocalizations.of(context).recipesLoadError,
-            onRetry: () => ref.invalidate(recipesProvider),
+            onRetry: () => activeFilter == null
+                ? ref.invalidate(recipesProvider)
+                : ref.invalidate(tagFilteredRecipesProvider(activeFilter)),
           );
         },
         data: (recipes) {
-          final filtered = _apply(recipes, activeFilter)
-            ..sort((a, b) => b.tagTokens.length.compareTo(a.tagTokens.length));
-          final hasMore = ref.read(recipesProvider.notifier).hasMore;
+          // A filtered bucket arrives already ordered by `locale_scope`;
+          // re-ranking it by tag count would throw that away, and every
+          // row carries the selected token anyway. The unpaginated
+          // catalogue keeps its stable `id` order, so it is the one that
+          // needs the "most-tagged first" ranking.
+          final filtered = activeFilter != null
+              ? recipes
+              : (List<Recipe>.of(recipes)
+                ..sort((a, b) =>
+                    b.tagTokens.length.compareTo(a.tagTokens.length)));
+          final hasMore = activeFilter == null &&
+              ref.read(recipesProvider.notifier).hasMore;
           return CustomScrollView(
             controller: _scrollController,
             slivers: [

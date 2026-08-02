@@ -263,6 +263,20 @@ void main() {
       expect(recipeIngredientLines(recipe), ['2 yumurta', '1 dilim ekmek']);
     });
 
+    test('Phase 7 device walk · reads the English INGREDIENTS blob too', () {
+      // `build_recipe_en.py` writes `INGREDIENTS:` / `METHOD:`. The
+      // scanner knew only the Turkish spellings, so an English row that
+      // reached this fallback matched no header and dropped through to
+      // the comma-split heuristic.
+      expect(
+        ingredientsFromInstructions(
+          'INGREDIENTS:\n- 150 g mozzarella\n- 200 g tomatoes\n\n'
+          'METHOD:\n1. Slice them to the same thickness.',
+        ),
+        ['150 g mozzarella', '200 g tomatoes'],
+      );
+    });
+
     test('reads a single-sentence recipe by splitting on commas', () {
       expect(
         ingredientsFromInstructions('2 yumurta, 1 dilim peynir, 1 avokado.'),

@@ -1432,30 +1432,28 @@ class _DiscoverySection extends ConsumerWidget {
   const _DiscoverySection({required this.recipes});
   final List<Recipe> recipes;
 
-  /// Phase 7 · the chips were five Turkish strings compared against
-  /// `recipe.tags`, so the filter and the label were the same value and
-  /// neither could be translated without breaking the other. They are
-  /// now [kRecipeFilterTokens] — identity — resolved to copy at render
-  /// through `recipeTagLabel`.
-  ///
-  /// Strict `==` against the raw token, no `trim`, no `toLowerCase`:
-  /// trim already happens in `Recipe._parseTags`, and Dart's Turkish
-  /// İ/I case folding is locale-dependent, which is exactly the class of
-  /// bug tokens exist to remove.
-  List<Recipe> _apply(List<Recipe> source, String? activeToken) {
-    if (activeToken == null) return source;
-    return source.where((r) => r.tagTokens.contains(activeToken)).toList();
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final active = ref.watch(filterChipsProvider);
+    // Phase 7 device walk · a selected chip reads its own server-side
+    // bucket rather than narrowing the pages of `recipesProvider` that
+    // happen to be resident. Filtering the resident pages made the strip
+    // answer "how far have you scrolled?" instead of "what does the
+    // catalogue have?" — see `NutritionRepository.fetchRecipesByTagToken`.
+    final filteredAsync =
+        active == null ? null : ref.watch(tagFilteredRecipesProvider(active));
     // Prioritise tagged recipes first so curated content floats to the
-    // start of the strip. `filteredRecipes` is what the horizontal
-    // strip iterates over — bound explicitly so tapping a chip and
-    // re-running [_apply] flows straight through to the ListView.
-    final filteredRecipes = _apply(recipes, active)
-      ..sort((a, b) => b.tagTokens.length.compareTo(a.tagTokens.length));
+    // start of the strip. A filtered bucket arrives ordered by
+    // `locale_scope` and every row carries the token, so it is left as
+    // the repository returned it.
+    final filteredRecipes = active == null
+        ? (List<Recipe>.of(recipes)
+          ..sort((a, b) => b.tagTokens.length.compareTo(a.tagTokens.length)))
+        : (filteredAsync!.value ?? const <Recipe>[]);
+    // Without this the bucket's in-flight moment renders as "no recipes
+    // match", which is a different and more discouraging claim than
+    // "still looking".
+    final isLoadingFilter = filteredAsync?.isLoading ?? false;
     final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1482,7 +1480,18 @@ class _DiscoverySection extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 12),
-        if (filteredRecipes.isEmpty)
+        if (isLoadingFilter)
+          const SizedBox(
+            height: 180,
+            child: Center(
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          )
+        else if (filteredRecipes.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             // Roadmap Phase 2 (C37) · was a bare sentence in a box with
@@ -1887,6 +1896,9 @@ class _CompactDiscoveryCard extends StatelessWidget {
                   recipe: recipe,
                   maxTags: 1,
                   compact: true,
+                  // Painted over the photograph, above the gradient —
+                  // its backdrop is the image, not the scaffold.
+                  onImagery: true,
                 ),
               ),
               Padding(

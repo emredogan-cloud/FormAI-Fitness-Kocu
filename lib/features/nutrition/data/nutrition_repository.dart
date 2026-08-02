@@ -171,6 +171,33 @@ class NutritionRepository {
     return sortRecipesForLocale(_decode(rows), _language);
   }
 
+  /// Phase 7 device walk · server-side fetch behind one discovery chip.
+  ///
+  /// The chips filtered the *paginated* catalogue client-side, which is
+  /// the same page-1-blindness [fetchRecipesByCategory] was written to
+  /// fix one screen earlier. A chip tapped before the user has scrolled
+  /// only ever saw the 20 rows resident at that moment, and the short
+  /// filtered grid never grew tall enough for `_onScroll` to ask for
+  /// another page — so the count stayed wrong for as long as the user
+  /// looked at it. On the live 392-recipe catalogue that read "12 tarif
+  /// bulundu" for a token with 175 rows, and "1" for vegan, which has 12.
+  ///
+  /// Same predicate as the budget bucket — `tag_tokens @> ARRAY[token]`,
+  /// served by the GIN index migration 013 added — and the same
+  /// complete-bucket shape. A bucket is a fraction of the catalogue and
+  /// the user re-taps chips constantly; threading a cursor through a
+  /// filter that resets on every tap buys nothing.
+  Future<List<Recipe>> fetchRecipesByTagToken(String token) async {
+    await _throwIfOffline();
+    final rows = await _client
+        .from(_table)
+        .select(_selectWithIngredients)
+        .contains('tag_tokens', [token]).order('id', ascending: true);
+    // Phase 7 · a complete bucket, so this is where `locale_scope`
+    // ordering belongs — same reasoning as the category fetch above.
+    return sortRecipesForLocale(_decode(rows), _language);
+  }
+
   /// The one place a raw PostgREST row becomes a [Recipe], so the locale
   /// is applied exactly once per fetch instead of once per call site.
   List<Recipe> _decode(List<Map<String, dynamic>> rows) {

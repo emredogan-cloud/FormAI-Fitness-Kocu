@@ -356,6 +356,29 @@ class _MealTypePill extends StatelessWidget {
   const _MealTypePill({required this.mealType});
   final String mealType;
 
+  /// Phase 7 device walk · `recipes.meal_type` is identity, not copy.
+  /// This pill used to render `mealType.toUpperCase()`, so a Turkish
+  /// reader got the English word `SNACK` sitting directly above a fully
+  /// translated title, tag strip and ingredient list — the same
+  /// token-painted-at-the-user defect the `recipe_tags` split was for,
+  /// one screen further in.
+  ///
+  /// The labels already existed for the daily-plan timeline; the fifth
+  /// value, `dessert`, is new here because the timeline has four slots
+  /// and the catalogue has five meal types.
+  ///
+  /// An unrecognised value falls through to the raw token rather than
+  /// disappearing: a visibly wrong pill is what got this one noticed,
+  /// and a silently absent one would not have been.
+  String _label(AppLocalizations l10n) => switch (mealType.toLowerCase()) {
+        'breakfast' => l10n.mealBreakfastUpper,
+        'lunch' => l10n.mealLunchUpper,
+        'dinner' => l10n.mealDinnerUpper,
+        'snack' => l10n.mealSnackUpper,
+        'dessert' => l10n.mealDessertUpper,
+        _ => mealType.toUpperCase(),
+      };
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -366,9 +389,11 @@ class _MealTypePill extends StatelessWidget {
         border: Border.all(color: _neon.withValues(alpha: 0.55)),
       ),
       child: Text(
-        mealType.toUpperCase(),
-        style: const TextStyle(
-          color: Colors.white,
+        _label(AppLocalizations.of(context)),
+        style: TextStyle(
+          // Same 18 %-tint-plus-white-label problem as the tag badges:
+          // 1.32:1 on a light scaffold. See recipeTagLabelColor.
+          color: recipeTagLabelColor(context, _neon),
           fontSize: 10,
           fontWeight: FontWeight.w900,
           letterSpacing: 1.6,
@@ -594,14 +619,30 @@ class _InstructionsSection extends StatelessWidget {
   /// stop it matching the row it is parsing. The *display* heading is
   /// localised in [_headingFor]; the marker that finds it is data, and
   /// moves with the content in Phase 7.
+  ///
+  /// Phase 7 device walk · which is exactly why the English markers have
+  /// to be listed too. `build_recipe_en.py` writes `INGREDIENTS:` and
+  /// `METHOD:` into `instructions_en`, neither of which was here, so an
+  /// English recipe matched no header at all, fell through to the
+  /// unstructured branch and printed the raw blob — the ingredient list
+  /// once in [_IngredientsSection] and again underneath it. A row is one
+  /// language (`resolveRecipeLanguage`), so a blob only ever carries one
+  /// of these pairs and matching against all of them cannot cross them.
   static const List<String> _sectionHeaders = [
     'MALZEMELER:', // i18n-ignore
     'HAZIRLANIŞI:', // i18n-ignore
     'YAPILIŞ:', // i18n-ignore — two of the oldest seed rows spell it so
+    'INGREDIENTS:', // i18n-ignore
+    'METHOD:', // i18n-ignore
   ];
 
-  /// The one header whose block [_IngredientsSection] can replace.
-  static const String _ingredientHeader = 'MALZEMELER:'; // i18n-ignore
+  /// The headers whose block [_IngredientsSection] can replace — one per
+  /// shipped language, because the blob is in the recipe's language and
+  /// not in the app's.
+  static const Set<String> _ingredientHeaders = {
+    'MALZEMELER:', // i18n-ignore
+    'INGREDIENTS:', // i18n-ignore
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -669,7 +710,7 @@ class _InstructionsSection extends StatelessWidget {
       blocks.add(_InstructionBlock(
         heading: _headingFor(context, matches[i].header),
         body: body,
-        isIngredients: matches[i].header == _ingredientHeader,
+        isIngredients: _ingredientHeaders.contains(matches[i].header),
       ));
     }
     return blocks;
@@ -678,9 +719,11 @@ class _InstructionsSection extends StatelessWidget {
   String _headingFor(BuildContext context, String raw) {
     switch (raw) {
       case 'MALZEMELER:': // i18n-ignore
+      case 'INGREDIENTS:': // i18n-ignore
         return AppLocalizations.of(context).recipeIngredients;
       case 'HAZIRLANIŞI:': // i18n-ignore
       case 'YAPILIŞ:': // i18n-ignore
+      case 'METHOD:': // i18n-ignore
         return AppLocalizations.of(context).recipeInstructions;
       default:
         return raw;

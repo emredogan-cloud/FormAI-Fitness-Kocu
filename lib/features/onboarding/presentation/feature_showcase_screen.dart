@@ -54,7 +54,10 @@ import '../../../l10n/app_localizations.dart';
 ///    this app (RC-17 paywall, RC-18 Başla).
 ///
 /// 3. **The stat chips are illustrative and must stay obviously so.**
-///    "92%", "842 W", "12 days" are a demonstration of the product's
+///    Illustrative is not the same as untranslatable: the form score
+///    reads `92%` in English and `%92` in Turkish, because where the
+///    sign sits is orthography and not part of the made-up figure.
+///    "92", "842 W", "12 days" are a demonstration of the product's
 ///    surfaces, not a claim about this user, who at this point in the
 ///    funnel has trained exactly zero times. They sit inside the framed
 ///    photograph — the visual language of a screenshot — and never on the
@@ -895,9 +898,12 @@ class _FormScoreChip extends StatelessWidget {
         children: [
           _ChipLabel(l10n.showcaseHeroFormScore),
           const SizedBox(height: 2),
-          const Text(
-            '92%', // i18n-ignore — illustrative figure, not copy
-            style: TextStyle(
+          Text(
+            // The 92 is illustrative; where the `%` sits is not. Turkish
+            // writes `%92`, and this chip sat two rows above `%100 Gizli`
+            // getting it right — the same screen, both conventions.
+            l10n.showcaseHeroFormScoreValue(92),
+            style: const TextStyle(
               color: AppColors.neonGreen,
               fontSize: 22,
               fontWeight: FontWeight.w900,

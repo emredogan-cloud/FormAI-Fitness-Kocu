@@ -1,9 +1,14 @@
 # Phase 7 — Content & AI Localization
 
 **Build:** `1.0.0+29` · **Branch:** `main`
-**Status: complete.** Migrations 013–015 are applied to production and
-verified live. The catalogue is 392 recipes, 100 % translated, and the
-coach can only recommend food the app actually has.
+**Status: complete, device walk included.** Migrations 013–015 are applied
+to production and verified live. The catalogue is 392 recipes, 100 %
+translated, and the coach can only recommend food the app actually has.
+
+**Updated 2026-08-02:** the device walk §9 said was impossible is **done**
+— the "PIN-locked" Redmi only had its screen off. It found six defects,
+all fixed and re-verified on the device. §9 is now the walk's record
+rather than its excuse.
 
 Plan: `PHASE_07_NUTRITION_I18N_PLAN.md`. Every numbered section below
 maps to a section of it.
@@ -30,12 +35,13 @@ maps to a section of it.
 
 ```
 analyze              0 issues
-tests                1051   (940 at the start of the phase)
+tests                1064   (940 at the start of the phase, 1051 before the walk)
 hardcoded gate       0 in 0 files
-ARB                  1532 keys · tr 100% · en 100%
+ARB                  1534 keys · tr 100% · en 100%
 recipe audit         0 findings · en 392/392 · baseline armed
 CI                   green
 build                1.0.0+29 · APK 134.5 MB
+device walk          DONE — 6 defects found and fixed, see §9
 ```
 
 Live, read back from production after the last write:
@@ -329,29 +335,133 @@ screen. It is why the check exists.
 
 ---
 
-## 9. What is not done, and why
+## 9. The device walk — done, 2026-08-02
 
-**No device walk.** The Redmi Note 12 — the primary validation device —
-is not connected. The device that *is* connected (`AYXSUKIVJVPZ7HPZ`, the
-Android 11 Redmi) reports `isKeyguardShowing=true` and is PIN-locked, as
-it has been since Phase 5. adb can install to it and cannot drive it.
-This is a physical limitation, not a skipped step, and the live read-path
-test above is the substitute — it covers the data half of what a walk
-would find and none of the layout half.
+**The Redmi was never PIN-locked.** It reported `isKeyguardShowing=true`
+because its **screen was off**. `input keyevent KEYCODE_WAKEUP` followed
+by `wm dismiss-keyguard` unlocks it — the keyguard is non-secure, and
+`locksettings get-disabled` returning `false` with a null
+`lockscreen.password_type` says so. Two phases of "physically
+unverifiable" were a wrong reading of one dumpsys line. It is a working
+validation device and §10 of `RESUME_GUIDE.md` has been corrected.
 
-**What a walk still needs to check** (the surfaces this phase changed):
+All six surfaces walked, in **both languages**, **both themes**, on
+`1.0.0+29`. The walk found **six defects**, all fixed, rebuilt,
+reinstalled and re-verified on the device.
 
-1. The nutrition tab's discovery chips in English — five chips, longer
-   labels than the Turkish they replaced.
-2. A recipe detail screen in English — the new ingredients section, and
-   that the instructions block no longer repeats it.
-3. The daily menu with an English catalogue — five distinct meals a day
-   for fourteen days with no repeat is §9's actual user-facing test.
-4. A recipe tile whose photograph does not exist yet, confirming it shows
-   its meal-type cover rather than a gradient.
-5. The favourites shopping-list export and the share sheet, in English.
-6. The coach answering "what should I eat for breakfast" and naming a
-   recipe that exists.
+| § 9 item | verdict |
+| --- | --- |
+| 1 · discovery chips in English | ✅ five chips — but see D2 |
+| 2 · recipe detail in English | ✅ after D5 |
+| 3 · daily menu, English catalogue | ✅ four distinct slots, both languages |
+| 4 · tile with no photograph | ✅ meal-type cover, never a gradient |
+| 5 · shopping-list export + share sheet | ✅ |
+| 6 · coach naming a real recipe | ✅ same four recipes, each language |
+
+### What it found
+
+**D1 · `92%` in the Turkish app.** `feature_showcase_screen.dart` painted
+the literal `'92%'` on the form-score chip, marked `i18n-ignore` as an
+"illustrative figure". The figure is illustrative; **where the percent
+sign sits is orthography**. Turkish writes `%92`, and `%100 Gizli` two
+rows below it on the same screen got that right. Now
+`showcaseHeroFormScoreValue`, following the `act5StatOnDevice` precedent.
+
+**D2 · a discovery chip answered "how far have you scrolled?"** The chips
+filtered the *resident* pages of the paginated catalogue client-side. Tap
+"Yüksek Protein" on open — the first chip, above the fold, the natural
+first action — and it reported **12 recipes. The catalogue has 175.**
+Scrolling did not fix it: a 12-card grid never reaches the bottom that
+triggers the next page, so the wrong number stayed wrong for as long as
+the user looked at it. Measured on the live catalogue:
+
+```
+                  on open   true
+high_protein         12      175
+low_calorie           3       81
+bulking               6       62
+toning                3       54
+vegan                 1       12
+```
+
+`fetchRecipesByCategory`'s own doc comment describes this exact bug —
+Phase 83 fixed it for the category screen and nobody carried the fix
+across. Phase 7 then added a fifth chip and grew the catalogue from ~35
+rows to 392, which is what turned a latent bug into "this app has one
+vegan recipe". Now `fetchRecipesByTagToken` — the same
+`tag_tokens @> ARRAY[token]` predicate on the same GIN index migration
+013 added.
+
+**D3 · the meal-type pill painted a database token at the user.** A
+Turkish reader saw **`SNACK`** sitting above a fully translated title, tag
+strip and ingredient list. The labels already existed for the daily-plan
+timeline; `dessert` was missing because the timeline has four slots and
+the catalogue has five meal types. The screen's own test asserted
+`find.text('LUNCH')` inside a `Locale('tr')` host — **the test was
+pinning the defect in place.**
+
+**D4 · the language picker did not apply to content.** Phase 6's
+load-bearing decision is that the picker applies live. It applied to
+chrome only: switching to English left every recipe title, ingredient and
+instruction in Turkish until the app was restarted, because the
+repository resolves language at decode time and nothing invalidated the
+rows already fetched. The next-best-meal card read **"Tavuklu Souvlaki
+Kasesi" under the English sentence "You're falling short on protein."**
+That is the half-translated state `resolveRecipeLanguage` refuses to
+produce one row at a time, reproduced across the whole catalogue.
+`nutritionRepositoryProvider` now watches `localeProvider`.
+
+**D5 · English recipes printed their ingredients twice.** `_split` knew
+`MALZEMELER:` / `HAZIRLANIŞI:` / `YAPILIŞ:`. `build_recipe_en.py` writes
+`INGREDIENTS:` / `METHOD:`. An English blob therefore matched no header,
+fell through to the unstructured branch and printed the raw blob whole —
+the ingredient list from the structured rows, then the identical list
+again underneath. This is §9 item 2, and it was failing. The same
+Turkish-only gap existed in `recipe_ingredient_lines.dart`, the
+documented fallback for an un-migrated client; fixed there too, though no
+live row reaches it.
+
+**D6 · the tag badges were white on white in light mode.** Every badge
+and the meal-type pill drew `Colors.white` on `tint` at 18 % alpha. Over
+the dark scaffold that fill is dark and white is right; over the light one
+it is a pastel. Measured on the device: **1.32:1, 1.24:1, 1.32:1** — the
+labels were ghosts. This is the "PREMIUM white on white" defect the Phase
+6 walk found, recurring on the surfaces Phase 7 added. Light mode now
+keeps each tag's hue at lightness 0.22, the highest value at which all six
+tints clear 4.5:1 against their own fill; re-measured on the device at
+**9.43:1 to 12.20:1**, with dark mode unchanged at 13–16:1.
+
+The one exception is explicit: the nutrition tab `Positioned`s its badge
+**over the photograph**, and a photograph does not change with the app's
+theme, so that call site passes `onImagery: true` and stays white. Getting
+that wrong would have been reasoning about the wrong backdrop.
+
+### Carried, not fixed
+
+**The "See all" pill measures 3.03:1 in light mode** — pale purple on
+pale lavender. It is legible but below AA for its size, it predates Phase
+7, and contrast is Phase 11's explicit remit. Spot-fixing one colour
+outside a systematic pass invites an inconsistent palette. Logged for
+Phase 11.
+
+**A locally-built debug APK renders the bottom-nav labels as an oversized
+clipped "For…".** Seen only on `--debug`, which is not a shipping
+artifact; the release build renders `Antrenman / Beslenme / Gelişim /
+Profil` and `Training / Nutrition / Progress / Profile` correctly, checked
+in both languages and both themes. No Flutter exception in logcat. Not
+diagnosed further — the debug build existed only to reach the
+premium-gated daily menu, via the `kDebugMode` dev-pro override.
+
+### What the walk cost, and what that says
+
+Six defects on surfaces that 1,051 tests, six CI gates and a live
+read-path test were all green across. Four of them — D2, D3, D5, D6 —
+are **the same defect class the codebase had already solved somewhere
+else**: a page-1-blind filter, a token painted as copy, a Turkish-only
+parse marker, a white label on a pale fill. Each fix existed; none had
+been carried to the surface Phase 7 changed. The device is where that
+shows up, because a test written from the same assumption as the code
+agrees with it.
 
 **`016_drop_legacy_tags.sql` is not written.** It drops `recipes.tags`
 and trims the `MALZEMELER:` half out of `instructions`. Both are safe
