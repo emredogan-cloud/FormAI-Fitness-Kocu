@@ -314,6 +314,15 @@ before this session started. It is **not ours** — leave it.
 
 ## 4. How to verify anything
 
+**Run ALL of these before every push, not the ones you changed code
+near.** CI went red once in Phase 12 because the hardcoded-string gate
+was skipped after a commit that only touched a repository — the tests
+and the formatter were run and passed, and the gate would have caught a
+Postgres error fragment in one second. A subset is not a check.
+
+Note `dart format` too: CI runs it over **`.`**, not `lib test tool`.
+
+
 ```bash
 flutter analyze                                   # must be 0 — CI fails on infos too
 flutter test                                      # 1070
@@ -457,13 +466,19 @@ which is how CI was red for four commits before this session noticed.
    wants that; on a screen about small changes over time it silently
    destroyed the tenth the user typed. Read *why* a default exists
    before inheriting it.
-28. **A rendered argument is a signal the shape rules cannot supply.**
+28. **Running a subset of the gates is not running the gates.** CI went
+   red in Phase 12 after a commit where the tests and the formatter were
+   run and the hardcoded-string gate was not. It takes one second and it
+   caught a Postgres error fragment (`'does not exist'` — two lowercase
+   words with a space, exactly what `_labelShape` is for). §4 lists them
+   all; run them all.
+29. **A rendered argument is a signal the shape rules cannot supply.**
    `'dakika'` and `'padding'` are the same shape — one lowercase word —
    so the hardcoded-string gate's identifier exclusion swallowed every
    lowercase label in the app. What separates them is the parameter they
    are passed to. Signal, not un-exclusion, and the probe caught the
    first draft over-reaching twice.
-29. **A recipe seed must be idempotent by a stable id.** Ids are derived
+30. **A recipe seed must be idempotent by a stable id.** Ids are derived
    from the proposal slug via `uuid_generate_v5`, so re-running after an
    edit updates instead of duplicating the catalogue — and the duplicate
    check has to exclude the batch's own earlier rows, or the second run
