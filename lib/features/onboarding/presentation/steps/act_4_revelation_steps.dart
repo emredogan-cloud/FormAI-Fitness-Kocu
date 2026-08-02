@@ -1261,6 +1261,7 @@ class _TransformationProjectionState extends State<_TransformationProjection>
                   progress: _draw.value,
                   startLabel: l10n.reportTrajectoryStart,
                   endLabel: l10n.reportTrajectoryEnd,
+                  textDirection: Directionality.of(context),
                 ),
                 size: const Size(double.infinity, 110),
               ),
@@ -1296,6 +1297,7 @@ class _TrajectoryPainter extends CustomPainter {
     required this.progress,
     required this.startLabel,
     required this.endLabel,
+    required this.textDirection,
   });
 
   final double progress;
@@ -1304,6 +1306,15 @@ class _TrajectoryPainter extends CustomPainter {
   /// the widget above and handed down — a painter has no context.
   final String startLabel;
   final String endLabel;
+
+  /// Roadmap Phase 8 (C13) · handed down for the same reason the labels
+  /// are. These are ARB strings, and a hardcoded `TextDirection.ltr`
+  /// resolves Arabic and Hebrew bidi wrongly.
+  ///
+  /// The *curve* is deliberately not mirrored with it. It plots twelve
+  /// weeks against time, and a time axis is not text — flipping it would
+  /// say the user gets worse.
+  final TextDirection textDirection;
 
   static const double _padX = 28;
   static const double _padTop = 16;
@@ -1431,7 +1442,7 @@ class _TrajectoryPainter extends CustomPainter {
           letterSpacing: 1.4,
         ),
       ),
-      textDirection: TextDirection.ltr,
+      textDirection: textDirection,
     )..layout();
     final dx = align == _LabelAlign.right ? anchor.dx - tp.width : anchor.dx;
     tp.paint(canvas, Offset(dx, anchor.dy));
@@ -1441,7 +1452,8 @@ class _TrajectoryPainter extends CustomPainter {
   bool shouldRepaint(_TrajectoryPainter old) =>
       old.progress != progress ||
       old.startLabel != startLabel ||
-      old.endLabel != endLabel;
+      old.endLabel != endLabel ||
+      old.textDirection != textDirection;
 }
 
 enum _LabelAlign { left, right }

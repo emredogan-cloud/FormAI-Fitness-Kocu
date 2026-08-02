@@ -108,6 +108,7 @@ class PracticeRepStage extends StatelessWidget {
                               cameraLensDirection: lens,
                               trackedJoints:
                                   jointLabels(AppLocalizations.of(context)),
+                              textDirection: Directionality.of(context),
                             ),
                           ),
                       ],

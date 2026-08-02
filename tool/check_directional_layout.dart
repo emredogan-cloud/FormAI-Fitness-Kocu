@@ -33,6 +33,11 @@
 //     positive rate of zero — the fastest way to get a gate muted.
 //     Asymmetric ones ARE flagged.
 //   * `Alignment.center`, `.topCenter`, `.bottomCenter` — no direction.
+//   * A painter's *geometry*. The pose skeleton mirrors on the camera
+//     lens, not on the reading direction — mirroring it to match a
+//     locale would put the coaching on the wrong limb. The trajectory
+//     curve plots time, and flipping a time axis says the user gets
+//     worse. Only the TEXT inside a painter is direction-sensitive.
 //   * Anything on a line carrying `// rtl-ignore` with a reason.
 
 import 'dart:convert';
@@ -64,6 +69,14 @@ final _fromLtrb = RegExp(
 );
 
 final _textAlign = RegExp(r'\bTextAlign\.(left|right)\b');
+
+/// A `TextPainter` built with a hardcoded direction. A `CustomPainter`
+/// has no `BuildContext`, so the ambient direction has to be passed in
+/// from the widget above; hardcoding `ltr` resolves Arabic and Hebrew
+/// bidi wrongly for text that is ARB copy. Two painters were doing this
+/// — the tutorial joint labels and the 12-week trajectory axis.
+final _hardcodedTextDirection =
+    RegExp(r'textDirection:\s*TextDirection\.(ltr|rtl)\b');
 
 class _Finding {
   _Finding(this.file, this.line, this.text, this.kind);
@@ -98,6 +111,10 @@ List<_Finding> _scan() {
       }
       if (_textAlign.hasMatch(line)) {
         findings.add(_Finding(rel, i + 1, line.trim(), 'textAlign'));
+      }
+      if (_hardcodedTextDirection.hasMatch(line)) {
+        findings
+            .add(_Finding(rel, i + 1, line.trim(), 'hardcodedTextDirection'));
       }
       if (_edgeOnly.hasMatch(line)) {
         findings.add(_Finding(rel, i + 1, line.trim(), 'edgeInsetsOnly'));

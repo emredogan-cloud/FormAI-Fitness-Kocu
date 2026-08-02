@@ -195,10 +195,22 @@ class TutorialPosePainter extends PosePainter {
     required super.rotation,
     required super.cameraLensDirection,
     required this.trackedJoints,
+    required this.textDirection,
   });
 
-  /// Joint → Turkish label, e.g. `PoseLandmarkType.leftKnee: 'Diz'`.
+  /// Joint → localized label, e.g. `PoseLandmarkType.leftKnee: 'Diz'`.
   final Map<PoseLandmarkType, String> trackedJoints;
+
+  /// Roadmap Phase 8 (C13) · the ambient direction, passed in because a
+  /// [CustomPainter] has no `BuildContext` to read it from.
+  ///
+  /// These labels are ARB copy, not tokens. Laying them out with a
+  /// hardcoded `TextDirection.ltr` resolves Arabic and Hebrew bidi
+  /// wrongly — and the *projection* above must not move with it, because
+  /// that mirror is driven by the camera lens and mirroring a skeleton to
+  /// match a reading direction would put the coaching on the wrong limb.
+  /// Text direction and landmark direction are different things here.
+  final TextDirection textDirection;
 
   static const Color _labelColor = Color(0xFF39FF14);
 
@@ -230,7 +242,7 @@ class TutorialPosePainter extends PosePainter {
           letterSpacing: 0.4,
         ),
       ),
-      textDirection: TextDirection.ltr,
+      textDirection: textDirection,
     )..layout();
 
     const gap = 12.0;
@@ -281,6 +293,7 @@ class TutorialPosePainter extends PosePainter {
   bool shouldRepaint(covariant PosePainter oldDelegate) {
     if (oldDelegate is! TutorialPosePainter) return true;
     if (!mapEquals(oldDelegate.trackedJoints, trackedJoints)) return true;
+    if (oldDelegate.textDirection != textDirection) return true;
     return super.shouldRepaint(oldDelegate);
   }
 }

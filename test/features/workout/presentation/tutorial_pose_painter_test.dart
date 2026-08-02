@@ -52,6 +52,7 @@ TutorialPosePainter _painter(
     PoseLandmarkType.leftKnee: 'Diz',
   },
   Size imageSize = const Size(480, 640),
+  TextDirection textDirection = TextDirection.ltr,
 }) =>
     TutorialPosePainter(
       pose: pose,
@@ -59,6 +60,7 @@ TutorialPosePainter _painter(
       rotation: InputImageRotation.rotation0deg,
       cameraLensDirection: CameraLensDirection.front,
       trackedJoints: tracked,
+      textDirection: textDirection,
     );
 
 /// Rasterises the painter so `paint()` genuinely executes — a painter
@@ -173,6 +175,24 @@ void main() {
         cameraLensDirection: CameraLensDirection.front,
       );
       expect(_painter(pose).shouldRepaint(plain), isTrue);
+    });
+
+    test(
+        'Roadmap Phase 8 (C13) · repaints when the reading direction '
+        'changes', () {
+      // The joint labels are ARB copy laid out by a TextPainter, and a
+      // CustomPainter has no BuildContext — so the ambient direction is
+      // handed in. It used to be hardcoded `TextDirection.ltr`, which
+      // resolves Arabic and Hebrew bidi wrongly. If a refactor drops the
+      // field, this is what notices.
+      final pose = _fullBody();
+      final ltr = _painter(pose);
+      final rtl = _painter(pose, textDirection: TextDirection.rtl);
+      expect(rtl.shouldRepaint(ltr), isTrue);
+      expect(ltr.shouldRepaint(ltr), isFalse);
+      // And both directions still rasterise without throwing.
+      _paint(ltr);
+      _paint(rtl);
     });
   });
 }
