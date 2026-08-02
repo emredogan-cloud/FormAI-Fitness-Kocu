@@ -1,12 +1,9 @@
 # Phase 10 — Performance Analytics II: Visual Outcomes & Reports
 
-**Status:** 🔄 **IN PROGRESS** — 3 of 7 features shipped.
-**Date:** 2026-08-02 · **Build:** `1.0.0+31` · **Commits:** `f671f72`, `272d23d`
-**Tests:** 1235 (was 1189 at phase start) · **`flutter analyze`:** 0 · **CI:** green
-
-> This file is the live record. It is updated as features land rather
-> than written at the end, so a session that picks the phase up mid-way
-> knows exactly what exists and what does not. **§4 is where to resume.**
+**Status:** ✅ **COMPLETE** — 7 of 7 features shipped, device walked.
+**Date:** 2026-08-02 · **Build:** `1.0.0+32`
+**Commits:** `f671f72`, `272d23d`, `adc86bf`, `fd53c96`, `e9ac79a`, `d060ef5`
+**Tests:** 1258 (1189 at phase start) · **`flutter analyze`:** 0 · **CI:** green
 
 ---
 
@@ -19,29 +16,31 @@ listing's promise of "measurable results" literally true.
 
 | # | feature | roadmap | state |
 | --- | --- | --- | --- |
-| 1 | Progress photos, on-device | C2 | ⬜ not started |
-| 2 | Before/after comparison | C2 | ⬜ not started |
-| 3 | **30-day outcome report** | C39, P6 | ✅ **shipped** |
-| 4 | **Milestone timeline** | C4 | ✅ **shipped** (inside the report) |
-| 5 | Shareable report card | C4 | ⬜ not started |
-| 6 | **Data export / portability** | C48 | ✅ **shipped** |
-| 7 | Monthly recap notification | — | ⬜ not started |
+| 1 | Progress photos, on-device | C2 | ✅ shipped |
+| 2 | Before/after comparison | C2 | ✅ shipped |
+| 3 | 30-day outcome report | C39, P6 | ✅ shipped |
+| 4 | Milestone timeline | C4 | ✅ shipped |
+| 5 | Shareable report card | C4 | ✅ shipped |
+| 6 | Data export / portability | C48 | ✅ shipped |
+| 7 | Monthly recap | — | ✅ shipped |
+
+Plus the two the roadmap lists outside the feature table: migration
+`018` (metadata only, written and deliberately not applied) and the
+account-deletion contract extension.
 
 ---
 
-## 3. What shipped
+## 3. The aggregation core
 
-### 3.1 The aggregation core — `outcome_report.dart`
+`outcome_report.dart` is the spine everything else reads from — one
+typed value the report screen, the share card and a future LLM narrative
+all consume without re-deriving it.
 
-The spine everything else reads from: one typed value that the report
-screen, a future share image and a future LLM narrative can all consume
-without any of them re-deriving it.
-
-**Pure.** No `BuildContext`, no providers, no `DateTime.now()` — the
-moment is passed in. That is what makes 21 unit tests possible without a
-`ProviderContainer`, and what stops the report depending on wall-clock
-time. `outcome_report_provider.dart` is the only impure edge, and it is
-plumbing only.
+**Pure.** No `BuildContext`, no providers, no `DateTime.now()`; the
+moment is passed in. That is what makes 25 unit tests possible without a
+`ProviderContainer` and what stops the report depending on wall-clock
+time. `outcome_report_provider.dart` is the only impure edge and it is
+plumbing.
 
 Three rules, inherited from Phase 9 and enforced by tests:
 
@@ -54,190 +53,326 @@ Three rules, inherited from Phase 9 and enforced by tests:
   over data that exists — which is also what keeps the artifact inside
   the store's rules on quantified outcome promises.
 
-Two decisions worth their comments:
+Two decisions worth their comments: the deltas use the first and last
+reading rather than the smoothed trend line, because this report sits
+above an entry list and has to agree with it; and badges carry no unlock
+timestamp anywhere in the app, so the timeline places them at the last
+session rather than inventing a date.
 
-- **The deltas use the first and last reading, not the smoothed trend
-  line.** A chart is about the shape of a month; this report sits above
-  an entry list and has to agree with it.
-- **Badges carry no unlock timestamp anywhere in the app** — they are
-  derived predicates over current state, not dated rows. The timeline
-  places them at the last session rather than inventing a date, and the
-  copy says "earned" rather than "earned on". Storing unlock dates is a
-  migration this phase does not need in order to be useful.
+## 4. The report screen
 
-### 3.2 The report screen — `outcome_report_screen.dart`
+Reachable from the Progress tab under "Your body" — the card above says
+what changed, this says what it took. The entry card renders nothing
+until there are two sessions, reading `isSubstantive` off the report
+rather than re-deriving the threshold.
 
-Reachable from the Progress tab, directly under "Your body" — the card
-above says what changed, this says what it took. The entry card renders
-nothing until there are two sessions, reading `isSubstantive` off the
-report rather than re-deriving the threshold, so the card and the screen
-cannot disagree about whether there is anything to show.
-
-**Dark-only**, like the polish sprint's "Your body" rebuild, for a reason
-specific to this artifact: the roadmap asks for a keepsake that will be
-screenshotted, and the one thing a screenshot must not do is arrive in
-whichever theme the reader happened to have on.
+**Dark-only**, for a reason specific to this artifact: the roadmap asks
+for a keepsake that will be screenshotted, and the one thing a
+screenshot must not do is arrive in whichever theme the reader happened
+to have on.
 
 Three refusals, each with a test:
 
-1. **It never grades a body.** A delta is stated as two ends — "Waist —
-   92 cm to 89 cm" — rather than as a signed difference, because a signed
-   difference is one formatting decision away from reading like a score.
-   A movement inside the instrument's own accuracy reads as "unchanged"
-   rather than as `0.1 kg`, because that number is the error bar.
+1. **It never grades a body.** A delta is stated as two ends — "Weight —
+   84.2 kg to 82.4 kg" — rather than as a signed difference, which is one
+   formatting decision away from reading like a score. A movement inside
+   the instrument's own accuracy reads as "unchanged" rather than as
+   `0.1 kg`, because that number is the error bar.
 2. **It never reports a section it cannot support.** No readings gives a
-   sentence saying so, framed as a fact rather than a lapse: *"You didn't
-   log a measurement this month, so there's nothing to compare. The
-   sessions above happened either way."*
+   sentence saying so, framed as a fact rather than a lapse.
 3. **It never claims a session it did not see.** The energy figure
-   carries a tilde and a footnote calling itself an estimate, because it
-   is derived from completed days rather than measured.
+   carries a tilde and a footnote calling itself an estimate.
 
 A fourth, quieter one: the report names how many sessions were counted by
 hand rather than by the camera, and only when that number is not zero.
-It is there so a camera-free user's report reads as equal rather than
-lesser — and the only way to be sure it does is to be able to see the
-split.
+A camera-free user's report should read as equal rather than lesser, and
+the only way to be sure it does is to be able to see the split.
 
-### 3.3 Portability — `data_export_service.dart`
+## 5. Progress photos — the privacy position is structural
 
-JSON and RFC-4180 CSV, delivered through the OS share sheet from the temp
-directory — so an export the user cancels does not become a permanent
-second copy of their data sitting in app storage. Offered at the bottom
-of the report rather than buried in Settings, because that is the screen
-where "can I keep this?" is a real question rather than a legal checkbox.
+`ProgressPhotoRepository` has **no Supabase client, no `http`, no bucket,
+no upload path** — not behind a flag, not behind a Pro gate, not in an
+unreachable branch. The absence *is* the guarantee: a feature flag that
+could be flipped to upload a photograph is a feature that uploads
+photographs, and the only version of "your photos stay on your phone" a
+user can verify is the one where the code to send them does not exist.
 
-**Serialisation is pure; delivery is not.** Split deliberately: there is
-no server-side copy to fall back on, so a CSV that quotes wrong is a
-corrupted file in somebody's hands. Twelve tests, most aimed at the note
-field — the only text a user types, and therefore the only one carrying
-the commas, quotes and newlines that break a naive `join(',')`.
+`progress_photo_privacy_test.dart` is the release gate the roadmap makes
+a shipping condition, and it asserts the same thing twice on purpose:
 
-Storage units always, with a `units` field saying so. A file that
-silently converted to pounds because imperial happened to be selected
-would not merge with one taken a month later.
+- **The source scan** fails on any networking symbol or import. This is
+  the load-bearing half — it proves there is no path, where a mock can
+  only prove the paths a test happens to exercise.
+- **The behavioural half** drives the whole write/read/delete cycle
+  under an `HttpOverrides` that throws on every request, which catches a
+  transitive upload the scan would miss.
+
+**Probed before being trusted.** A flag-guarded upload added to the
+repository fails the scan with the right message. A first probe using
+`Supabase` failed at *compile* time instead — which is a stronger
+outcome, but meant the scan itself had not run, so it was re-probed with
+`Uri.parse`, which compiles.
+
+Images live in the app-private documents directory, never the gallery: a
+progress photo in the camera roll syncs to a cloud the user did not
+choose and appears in a picker they hand to somebody else. The index
+stores a file **name**, because the documents path is not stable across
+installs and on iOS changes between launches.
+
+### The ghost overlay is the feature
+
+Week two taken from a different distance at a different angle shows the
+photographer moving rather than the person changing. The previous photo
+of the *same pose* is drawn over the viewfinder at 0.35 — faint enough
+to guide, strong enough not to make people frame the photograph instead
+of themselves. Same pose only: overlaying a front photo while somebody
+lines up a side shot tells them to stand wrong.
+
+The privacy line sits on the camera screen itself, per the roadmap's
+explicit UX requirement, because somebody deciding whether to photograph
+their own body is deciding *now*. The camera cache copy is deleted after
+the bytes are saved — `takePicture` writes to a directory this feature
+makes no promises about.
+
+### Comparison is a wipe, not a side-by-side
+
+Two photographs at half width each are two small photographs. One frame
+with a draggable divider keeps the body at the size it was shot at, and
+the eye compares the same region instead of tracking between two. Both
+ends are user-selectable rather than pinned to first-and-latest —
+somebody who took a bad photo on day one should not be stuck comparing
+against it forever.
+
+The divider and its captions are deliberately **not** direction-mirrored
+and say so in the code: the split comes from `localPosition.dx`, so
+mirroring would send it away from the finger dragging it. Same call
+Phase 8 made about the trend chart's time axis.
+
+## 6. The share card asks every time
+
+`ShareOutcomeTemplate` renders at 1080×1920 and 1080×1080 beside the
+existing progress and badge templates. Every line arrives already
+formatted — the screen has the locale, the units and the report, and
+re-deriving any of it in the template would be a second place for the
+numbers to disagree with what the user just read.
+
+**The options sheet is not a settings screen.** Nothing it holds is
+remembered: every switch is off when it opens, every time. That is the
+difference between "the user opted in" and "the user opted in once,
+months ago, and has forgotten". Sessions, minutes and reps are always on
+the card — they are the report's substance and disclose nothing about a
+body — and everything that does is a decision made in the moment.
+
+The photograph is the sharpest case and the roadmap's rule is that it is
+never auto-included. It is off, it is last, it only appears as an option
+when photos exist, and it is asked again next time. It is also the one
+path in the whole photo feature by which an image can leave the handset,
+which is why the consent is per-share rather than persisted.
+
+`precacheImage` before the capture is not an optimisation: the off-screen
+render gets two frames and 32 ms, and an undecoded image would simply be
+absent — a card that silently drops the photograph somebody deliberately
+opted in to is worse than one that fails.
+
+## 7. Portability, and the monthly recap
+
+`data_export_service.dart` — JSON and RFC-4180 CSV through the OS share
+sheet, from the temp directory so an export the user cancels does not
+become a permanent second copy of their data. Serialisation is pure and
+delivery is not, split deliberately: there is no server-side copy to fall
+back on, so a CSV that quotes wrong is a corrupted file in somebody's
+hands. Twelve tests, most aimed at the note field — the only text a user
+types, and therefore the only one carrying the commas, quotes and
+newlines that break a naive `join(',')`.
+
+**The recap is the same card wearing a different sentence.** A recap row
+and a report row on the same tab would be two controls doing the same
+thing — the defect class the Phase 9 walk found and the polish sprint
+fixed. `OutcomeReportCard` reads `isRecapDue` and changes its title,
+subtitle and glyph instead.
+
+`isRecapDue` is keyed to the user's **own** start date rather than the
+wall calendar, because "your month" means the thirty days they trained.
+Three-day window rather than one: the card only appears when the app is
+opened, and a single-day window means anybody who skips a day never sees
+one.
+
+The notification rides the weigh-in reminder's switch rather than adding
+a second one. `_nextInstanceOfDayOfMonth` clamps to the month's length,
+because somebody who started on the 31st has no 31st in February and a
+naive rollover would drift their recap to the 3rd.
+
+## 8. Migration 018, and account deletion
+
+**The roadmap's migration number is wrong and this is worth recording.**
+It specifies `014_progress_photos_meta.sql`. 014 is Phase 7's
+`recipe_ingredients`, applied to production; 013 and 015 are Phase 7's
+too; 016 is reserved for the deliberately unwritten `drop_legacy_tags`,
+described by that exact filename in four documents; 017 is Phase 9's
+body metrics. **It is written as `018`.**
+
+Metadata only: when, which pose, and a hash of the local filename. No
+bytes, no path, no thumbnail, no dimensions, no EXIF, no bucket
+reference. `cloud_ref` is nullable and stays null unless an opt-in
+backup is ever built — which belongs in a separate service, never as a
+branch inside the repository. Four RLS policies rather than one
+`for all`, because a photograph is the most sensitive row this schema
+holds and "which operations is a user allowed" should be legible one
+line at a time.
+
+**Written and deliberately NOT applied**, like 017. The feature is
+complete without it; applying it is an independent, safe step whenever
+the founder wants the cross-device notice.
+
+**Account deletion reaches the handset.** `on delete cascade` removes the
+server rows and `prefs.clear()` drops the index, but neither touches the
+documents directory — so without an explicit call, deleting an account
+would leave a stranger's progress photos on the phone for whoever signs
+in next. `AuthController.deleteAccount` now calls `deleteEverything()`,
+non-fatally (the account is already gone server-side; a filesystem error
+must not turn a completed deletion into a reported failure), and a test
+pins that it still does.
 
 ---
 
-## 4. Where to resume
+## 9. Physical device validation
 
-### 4.1 The migration number in the roadmap is wrong
+**Device:** Redmi `AYXSUKIVJVPZ7HPZ` (M1908C3JGG, Android 11, 1080×2340),
+app language English, `install -r` over `+31`.
 
-The roadmap specifies **`014_progress_photos_meta.sql`**. `014` is taken —
-it is Phase 7's `recipe_ingredients`. Migrations `001`–`015` are applied
-to production, `016` is reserved for the unwritten `drop_legacy_tags`,
-and `017_body_metrics.sql` is written but not applied.
+Two full program days were driven to completion first — the report needs
+two sessions before it renders anything, and walking an empty state
+proves nothing. 36 and 40 driven interactions respectively, from the
+view hierarchy rather than blind taps.
 
-**The photo metadata migration is `018`.** Anyone starting feature 1
-should write it as `018_progress_photos_meta.sql` and not spend twenty
-minutes rediscovering this.
+| surface | result |
+| --- | --- |
+| Camera-free workout, day progress | ✅ semantics read `17%, EXERCISE 1 / 6` |
+| Progress tab · report entry card | ✅ `Your 30 days · 2 of 30 days` |
+| Outcome report · completion + stats | ✅ 2 sessions, 4 minutes, 273 reps, 1 day |
+| Outcome report · energy footnote | ✅ `~500 kcal` + "an estimate… not a measurement" |
+| Outcome report · camera-free line | ✅ "2 of these you counted yourself" |
+| Outcome report · body delta | ✅ `Weight — 84.2 kg to 82.4 kg`, both ends, no sign |
+| Outcome report · timeline | ✅ four rows, chronological, badge named not id'd |
+| Photo gallery · empty state | ✅ privacy line, not an instruction |
+| Photo capture · permission + preview | ✅ front camera, pose selector, privacy line |
+| Photo capture · ghost overlay | ✅ previous frame visible under the preview |
+| Photo gallery · grouped by pose | ✅ `Front · 2 photos`, Compare appears at two |
+| Before/after · wipe | ✅ divider, handle, Earlier/Later, both pickers |
+| Share options sheet | ✅ three toggles, all off, "nothing unless you switch it on" |
 
-### 4.2 Progress photos (feature 1) — the largest remaining piece
+### The defect the walk found
 
-Needs, in order:
+**Two photos taken the same day rendered two identical chips.** Both
+pickers read "Aug 2, 2026" and there was no way to tell which was which
+— the two-controls-saying-the-same-thing class again, third time in
+three phases.
 
-1. `lib/features/progress/data/progress_photo_repository.dart` —
-   app-private local storage via `path_provider`, no cloud upload. The
-   `camera` package is already a dependency (the workout screen uses it),
-   so there is no new plugin to add.
-2. `photo_capture_screen.dart` with a ghost overlay of the previous photo
-   for repeatable framing.
-3. `018_progress_photos_meta.sql` — **metadata only**. `recorded_at`,
-   `local_path_hash`, optional `cloud_ref`. Image bytes never leave the
-   device unless the user opts in.
-4. The privacy line stated **at capture time**, not in a policy.
-5. **The network-assertion test the roadmap makes a release gate**: prove
-   photo bytes are never transmitted without explicit opt-in. This is the
-   one test in the phase that must exist before the feature ships, not
-   after.
-6. The account-deletion contract extension — photos and exports removed
-   with the account (`006_delete_user.sql`).
+The information was there and the formatter was discarding it:
+`ProgressPhoto.recordedAt` is a *moment*, deliberately unlike
+`BodyMetric.recordedOn` which is a day, and `DateFormat.yMMMd` throws the
+time away. The time is now added to every chip in the row rather than
+only the colliding ones — a row where some carry a time and others do
+not reads as a rendering fault — via `add_jm()`, so it stays one
+locale-aware pattern rather than two strings joined by hand.
 
-### 4.3 Before/after comparison (feature 2)
-
-Pure Flutter once feature 1 exists; a slider compare over two dated
-photos. Blocked only by there being no photos yet.
-
-### 4.4 Shareable report card (feature 5)
-
-`OutcomeReport` is already the right shape to render from — that was the
-point of building it first. Needs a template in `share_templates.dart`
-beside the existing ones, at 1080×1920 and 1080×1080, plus per-metric
-opt-in controls defaulting conservative (**photos off**).
-
-### 4.5 Monthly recap (feature 7)
-
-The lighter recurring version. The notification service and the weekly
-retrospective card are both already in place; this is a schedule and a
-second card rather than new machinery.
-
-### 4.6 The AI narrative
-
-The roadmap asks for an LLM-authored summary grounded strictly in logged
-data. `OutcomeReport` is deliberately serialisable into a prompt. The
-existing anti-fabrication persona rules apply, and the store-compliance
-rule against quantified outcome promises applies harder here than
-anywhere — the narrative must describe what happened, never project.
-
-### 4.7 Not yet walked on a device
-
-Everything in §3 is covered by widget and unit tests but **has not been
-seen on a handset**. The polish sprint's lesson stands: the device found
-five defects that 1,183 tests and seven gates were green across. The
-report screen in particular has a dense stat grid and a timeline whose
-row count varies, which is exactly the shape that overflows.
+Rebuilt, reinstalled and re-verified on the handset: `Aug 2 8:32 PM` and
+`Aug 2 8:35 PM`.
 
 ---
 
-## 5. Verification
+## 10. Artifacts
+
+```
+APK   build/app/outputs/flutter-apk/app-release.apk     136.7 MB   136,689,671 B
+AAB   build/app/outputs/bundle/release/app-release.aab  115.8 MB   115,759,265 B
+
+package        com.emredogan.formaifit
+versionCode    32
+versionName    1.0.0
+minSdk         24        targetSdk 36        compileSdk 36
+```
+
+Built from `d060ef5`, after every gate was green and after the device
+defect in §9 was fixed.
+
+## 11. Verification
 
 ```
 flutter analyze                        0 issues
-flutter test                           1235 passing  (1189 at phase start)
+flutter test                           1258 passing  (1189 at phase start)
 dart format                            clean
 tool/check_hardcoded_strings.dart      0 in 0 files
-tool/arb_coverage.dart --strict        1650 keys · tr 100% · en 100% · all referenced
+tool/arb_coverage.dart --strict        1687 keys · tr 100% · en 100% · all referenced
 tool/gen_pseudo_localizations.dart     up to date
 tool/check_directional_layout.dart     177 · no regressions
 CI                                     green
 ```
 
-**+46 tests** this phase so far: 21 on the aggregation, 13 on the screen
-(most of them about missing sections), 12 on the export format.
+**+69 tests this phase**: 25 on the aggregation and the recap trigger, 13
+on the report screen, 12 on the export format, 10 on photo privacy and
+the deletion contract, 6 on the gallery, 3 on the comparison.
 
 ### What the tests caught before a device could
 
 - `CrossAxisAlignment.stretch` on a `Row` inside a `ListView` hands
   infinite height to its children. `IntrinsicHeight` is what "stretch"
   was reaching for.
-- The completion card and the section header rendered the same string
+- The completion card and a section header rendered the same string
   twice — one label doing two jobs.
-- `pumpAndSettle` hangs on the report's loading spinner, the same trap
-  Phase 9 recorded. The suite uses bounded pumps.
+- `pumpAndSettle` hangs on a loading spinner, the trap Phase 9 recorded.
+  Every suite here uses bounded pumps.
 - Re-pumping a `ProviderScope` whose only change is the value inside an
   override reuses the element tree, so a two-scenario test needs an
-  explicit unmount between them. Second time this has bitten.
+  explicit unmount. Third time this has bitten.
+- Photos that exist with no pose having two showed no Compare button and
+  no explanation, which reads as a missing feature rather than a
+  threshold.
 
 ---
 
-## 6. Architectural decisions
+## 12. Architectural decisions
 
 1. **The aggregation is a pure function, not a provider.** Providers are
-   plumbing; the arithmetic is the part that needs to be provably right,
-   and the only way to test it against a fixed calendar is to hand it the
-   date.
+   plumbing; the arithmetic needs to be provably right, and the only way
+   to test it against a fixed calendar is to hand it the date.
 2. **Copy is a separate file from the maths**, following
-   `body_metrics_copy.dart`. The tone of this artifact is the hard part,
-   and somebody reviewing whether the report is kind should be able to
-   read one file end to end without arithmetic in between.
+   `body_metrics_copy.dart`. Somebody reviewing whether the report is
+   kind should be able to read one file end to end.
 3. **A delta is two ends, never a signed difference.** The roadmap asks
-   for "no body-shape judgement anywhere"; stating both ends is what makes
-   that structural rather than a matter of wording.
+   for no body-shape judgement anywhere; stating both ends makes that
+   structural rather than a matter of wording.
 4. **The threshold for "there is a report here" lives on the report.**
-   `isSubstantive` is read by both the entry card and the screen, so they
+   `isSubstantive` is read by the entry card and the screen, so they
    cannot drift apart.
-5. **Export is two CSVs, not one.** Sessions and measurements share
-   nothing but a person; flattening them would mean a column set that is
-   mostly empty on every row.
-6. **A badge that has outlived its copy drops its timeline row** rather
-   than rendering an id at a person. Ids are persisted; copy is not.
+5. **The privacy promise is the absence of code, not a setting.** No
+   upload path exists, and a test refuses to let one appear.
+6. **The photo index is metadata; the bytes are files.** Megabytes in a
+   synchronously-loaded preferences blob would slow every launch forever.
+7. **Export is two CSVs, not one.** Sessions and measurements share
+   nothing but a person.
+8. **Share consent is per-share, never persisted.** "Opted in once,
+   months ago, and has forgotten" is not consent.
+9. **The recap reuses the report card rather than adding a second one.**
+   Two controls that do the same thing is a defect this codebase has
+   already shipped twice.
+10. **A badge that has outlived its copy drops its timeline row** rather
+    than rendering an id at a person. Ids are persisted; copy is not.
+
+---
+
+## 13. Carried forward
+
+- **The AI narrative** the roadmap sketches (an LLM-authored summary
+  grounded strictly in logged data) is **not built**. `OutcomeReport` is
+  deliberately pure and serialisable so it can be prompt input, and the
+  anti-fabrication persona rules plus the store-compliance rule against
+  quantified outcome promises both apply harder here than anywhere. It is
+  a coach-side change rather than a Phase 10 screen, and it is recorded
+  here rather than silently dropped.
+- **Migration 018 is written and not applied**, by design. See §8.
+- **On-device visual change detection between photos** (the roadmap's
+  optional, descriptive, non-judgemental variant) is not built. The
+  descriptive-not-judgemental constraint is the whole difficulty and it
+  needs a model this app does not ship; building a body-rating by
+  accident is the one outcome this phase was most careful to avoid.

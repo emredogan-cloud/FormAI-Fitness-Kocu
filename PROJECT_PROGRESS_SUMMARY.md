@@ -1,7 +1,7 @@
 # FormAI — Project Progress Summary
 
 **Spec:** `TESTERS_COMMUNITY_PRODUCT_ROADMAP.md` (18 phases / 5 waves)
-**As of:** 2026-08-02 · Phase 8 **closed as split** (RTL done, languages deferred by founder) · Phase 9 **complete** · **pre-Phase-10 polish sprint complete, device walk included** · build **1.0.0+31** · **Phase 10 in progress**
+**As of:** 2026-08-02 · Phase 8 **closed as split** · Phase 9 **complete** · pre-Phase-10 polish sprint complete · **Phase 10 complete, device walk included** · **Phase 11 ⏸ deferred by founder** · build **1.0.0+32** · **Wave 4 starts at Phase 12**
 
 ---
 
@@ -180,27 +180,51 @@
 
 ---
 
+### Phase 10 — Performance Analytics II: Visual Outcomes & Reports ✅
+*Build 1.0.0+32 · 1258 tests · CI green · `PHASE_10_COMPLETION_REPORT.md`*
+- **The store listing's "measurable results" is now literally true.** A
+  30-day outcome report aggregating sessions, minutes, reps, energy,
+  streaks, badges and body deltas — pure, testable, and the single source
+  the screen, the share card and any future narrative all read from.
+- **Progress photos, and the promise is structural.**
+  `ProgressPhotoRepository` has no Supabase client, no `http`, no bucket,
+  no upload path — not behind a flag. The absence *is* the guarantee, and
+  a release-gate test scans the source for any networking symbol as well
+  as driving the whole cycle with every socket refused. Probed with a
+  flag-guarded upload before being trusted.
+- **The ghost overlay is the feature, not decoration.** Week two shot
+  from a different distance shows the photographer moving rather than the
+  person changing. Same pose only, 0.35 opacity.
+- **Every refusal is tested.** No body grading (a delta is two ends, never
+  a signed difference); no section it cannot support; no unhedged calorie
+  claim; no photo on a share card unless switched on *that time*.
+- **The device found one defect** across 1,252 tests and seven gates: two
+  photos taken the same day rendered two identical picker chips.
+  `recordedAt` is a moment and the formatter was throwing the time away —
+  the two-controls-saying-the-same-thing class, third time in three
+  phases.
+- **Migration 018, not the roadmap's 014** (014 is Phase 7's). Metadata
+  only; written and deliberately unapplied. Account deletion now reaches
+  the handset, which neither the RPC nor `prefs.clear()` could.
+
+---
+
 # 2. Currently Working On
 
-**Phase 10 — Performance Analytics II** (visual outcomes and shareable
-reports). **3 of 7 features shipped** — the outcome-report aggregation
-core, the report screen with its milestone timeline, and the GDPR/KVKK
-data export. `PHASE_10_COMPLETION_REPORT.md` §4 says what remains and in
-what order. Nothing in the phase has been walked on a device yet.
+**Phase 12 — Community I: Identity & Squads.** Wave 4's opener, started
+immediately after Phase 10 closed and Phase 11 was marked deferred.
 
 Founder-side, carried and still open:
 
 1. **Play Console + RevenueCat**, per `docs/store/PRICING_SETUP.md` §3–§4.
-   The price is **decided**: $3.99 / $9.99 / $49.99 USD with yearly as
-   Most Popular, Turkish pricing unchanged at ₺100 / ₺400 / ₺1200. No app
-   release is needed — nothing compiles a price — but the `formai_pro_weekly`
-   SKU has to be created before the weekly card can appear.
-2. **Generate the meal and workout photographs** at your own pace, from
-   `docs/nutrition/MEAL_IMAGE_REQUESTS*.md` and
-   `WORKOUT_BACKGROUND_IMAGE_REQUESTS.md`. Nothing is broken while those
-   directories are empty — both fall back to real photography.
-3. **A native-speaker read of the English**, now covering 392 recipes as
-   well as the UI and the store listing.
+2. **Generate the meal, workout and exercise photographs**, per
+   `docs/nutrition/MEAL_IMAGE_REQUESTS*.md`,
+   `WORKOUT_BACKGROUND_IMAGE_REQUESTS.md` and
+   `EXERCISE_IMAGE_REGENERATION_GUIDE.html`.
+3. **A native-speaker read of the English.**
+4. **Apply migrations 017 and 018** whenever cross-device carry is
+   wanted. Both are written, both are deliberately unapplied, and both
+   features are complete without them.
 
 # 3. Remaining Roadmap
 
@@ -209,8 +233,8 @@ Founder-side, carried and still open:
 
 ### Wave 3 — Measurable Progress & Universal Access
 - **Phase 9 — Performance Analytics I.** ✅ **complete** — Body metrics and trends. Followed by a six-task polish sprint (`PRE_PHASE10_POLISH_REPORT.md`).
-- **Phase 10 — Performance Analytics II.** 🔄 **in progress** — Visual outcomes and shareable reports; make the store-listing promise of measurable results literally true.
-- **Phase 11 — Accessibility Program.** Usable with visual, motor, auditory and cognitive differences, established as a standing definition-of-done.
+- **Phase 10 — Performance Analytics II.** ✅ **complete** — Visual outcomes and shareable reports; the store-listing promise of measurable results is now literally true.
+- **Phase 11 — Accessibility Program.** ⏸ **Deferred by founder** (2026-08-02). Usable with visual, motor, auditory and cognitive differences, established as a standing definition-of-done. **Full scope preserved in the roadmap — this is a pause, not a cut.** Wave 4 starts at Phase 12 instead.
 
 ### Wave 4 — Community & Content Engine
 - **Phase 12 — Community I: Identity & Squads.** An identity worth showing and a small group worth showing up for.
@@ -229,8 +253,8 @@ Founder-side, carried and still open:
 ```
 Wave 1 — Production-Access Commitments   ✅ Complete   (Phases 1–4 + 3b)
 Wave 2 — Global Reach                    ✅ Complete   (5, 6, 7 done; 8 RTL done, languages ⏸ deferred)
-Wave 3 — Measurable Progress & Access    🔄 In Progress (9 + polish done; 10 running, 11 not)
-Wave 4 — Community & Content Engine      ⏳ Not Started (Phases 12–14)
+Wave 3 — Measurable Progress & Access    ✅ Complete   (9, polish, 10 done; 11 ⏸ deferred)
+Wave 4 — Community & Content Engine      🔄 In Progress (12 running; 13–14 not)
 Wave 5 — Scale, Depth & Platform         ⏳ Not Started (Phases 15–17)
 ```
 
