@@ -1,7 +1,7 @@
 # FormAI — Project Progress Summary
 
 **Spec:** `TESTERS_COMMUNITY_PRODUCT_ROADMAP.md` (18 phases / 5 waves)
-**As of:** 2026-08-02 · Phase 8 **closed as split** (RTL done, languages deferred by founder) · Phase 9 **complete, device walk included** · build **1.0.0+30** · **awaiting founder approval before Phase 10**
+**As of:** 2026-08-02 · Phase 8 **closed as split** (RTL done, languages deferred by founder) · Phase 9 **complete** · **pre-Phase-10 polish sprint complete, device walk included** · build **1.0.0+31** · **Phase 10 in progress**
 
 ---
 
@@ -144,10 +144,45 @@
 
 ---
 
+---
+
+### Pre-Phase-10 polish sprint — six founder tasks ✅
+*Build 1.0.0+31 · 1189 tests · CI green · `PRE_PHASE10_POLISH_REPORT.md`*
+- **The founder's report was right and the cause was a stale reader.** An
+  earlier performance change moved the per-second rest tick into its own
+  provider and left `restSecondsRemaining` holding the rest *duration*.
+  The camera screen was moved across; the camera-free screen was not, so
+  it showed the same "40" for forty seconds with the ring at full. Its
+  own test seeded that field and asserted on it — written from the code's
+  assumption, green for as long as the bug lived.
+- **"Your body" rebuilt to the founder's reference.** Neon on black,
+  cards at 91 % width, the comps' artwork cut out of the PNGs with the
+  black converted to alpha. The six comps could not be shipped as images:
+  every one has English text in the pixels, which is the exact problem
+  Task 1 exists to fix elsewhere.
+- **Blind spot #8, and it had been hiding four leaks.** `'dakika'` and
+  `'padding'` are the same shape — one lowercase word — so the
+  hardcoded-string gate's identifier exclusion discarded every lowercase
+  label in the app while reporting zero. The gate now reads the parameter
+  the literal is passed to. On its first honest run it found a fifth leak
+  nobody was looking for: the sign-in email field labelled `E-posta`,
+  with `authEmailLabel` already sitting unused in the ARB.
+- **The device found what the suite could not, again.** Five defects
+  across 1,183 tests and seven green gates — including the trend card
+  claiming "vs 30 days ago" beside a sheet saying "over the last 13
+  days", which was a claim about a weight the app has never been told.
+- **All 87 exercise images carry burned-in text**, and they are
+  infographics rather than captioned photos — the filmstrips carry the
+  coaching content itself. `EXERCISE_IMAGE_REGENERATION_GUIDE.html` has a
+  prompt for each, plus the media strategy: 9 holds and 59 single-plane
+  movements are right as stills; 19 ballistic and locomotive ones need a
+  loop, because the information is the path and a frame cannot carry one.
+
+---
+
 # 2. Currently Working On
 
-**Nothing — Phase 9 is closed and awaiting founder approval before
-Phase 10** (Performance Analytics II: visual outcomes and shareable
+**Phase 10 — Performance Analytics II** (visual outcomes and shareable
 reports).
 
 Founder-side, carried and still open:
@@ -170,8 +205,8 @@ Founder-side, carried and still open:
 - **Phase 8's content half.** ⏸ Spanish, French, German; multilingual recipe and exercise content; new coach personas; per-locale ASO and store listings; regional pricing; the translation-quality monitor; the documented market-selection method. **Full scope preserved — this is a pause, not a cut.** The recipe half is a content cost rather than an engineering one: the resolver is locale-agnostic and the audit loops over `kShippedLocales`. **The exercise catalogue is not** — 138 rows of `name`, `description` and `short_tip` are still Turkish-only, and their instructional images carry burned-in text in two languages.
 
 ### Wave 3 — Measurable Progress & Universal Access
-- **Phase 9 — Performance Analytics I.** ✅ **complete** — Body metrics and trends.
-- **Phase 10 — Performance Analytics II.** Visual outcomes and shareable reports; make the store-listing promise of measurable results literally true.
+- **Phase 9 — Performance Analytics I.** ✅ **complete** — Body metrics and trends. Followed by a six-task polish sprint (`PRE_PHASE10_POLISH_REPORT.md`).
+- **Phase 10 — Performance Analytics II.** 🔄 **in progress** — Visual outcomes and shareable reports; make the store-listing promise of measurable results literally true.
 - **Phase 11 — Accessibility Program.** Usable with visual, motor, auditory and cognitive differences, established as a standing definition-of-done.
 
 ### Wave 4 — Community & Content Engine
@@ -191,7 +226,7 @@ Founder-side, carried and still open:
 ```
 Wave 1 — Production-Access Commitments   ✅ Complete   (Phases 1–4 + 3b)
 Wave 2 — Global Reach                    ✅ Complete   (5, 6, 7 done; 8 RTL done, languages ⏸ deferred)
-Wave 3 — Measurable Progress & Access    🔄 In Progress (9 done; 10–11 not)
+Wave 3 — Measurable Progress & Access    🔄 In Progress (9 + polish done; 10 running, 11 not)
 Wave 4 — Community & Content Engine      ⏳ Not Started (Phases 12–14)
 Wave 5 — Scale, Depth & Platform         ⏳ Not Started (Phases 15–17)
 ```
@@ -202,13 +237,13 @@ Wave 5 — Scale, Depth & Platform         ⏳ Not Started (Phases 15–17)
 
 | | |
 |---|---|
-| **Build** | 1.0.0+30 · APK 135.8 MB |
-| **Tests** | **1183 passing** (baseline was 330) |
+| **Build** | 1.0.0+31 · APK 136.2 MB · AAB 115.5 MB |
+| **Tests** | **1189 passing** (baseline was 330) |
 | **`flutter analyze`** | **0 issues** |
 | **`dart format`** | clean |
 | **CI** | **GREEN** (CI + Secret Scan) |
-| **Hardcoded-string gate** | **0 in 0 files** · 244 allowlisted, reported per entry |
-| **ARB** | **1600 keys** · `tr` 100% · `en` 100% · all referenced in `lib/` |
+| **Hardcoded-string gate** | **0 in 0 files** · 246 allowlisted · rendered-argument signal added |
+| **ARB** | **1613 keys** · `tr` 100% · `en` 100% · all referenced in `lib/` |
 | **Recipe catalogue** | **392 recipes** · `en` 392/392 · 2242 ingredient rows · audit 0 findings |
 | **Locales shipped** | `tr`, `en` |
 
