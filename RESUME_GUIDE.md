@@ -6,8 +6,9 @@ previous one can continue without re-analysing the repository.
 **Last updated:** 2026-08-02, **Phase 10 closed** (device walk included)
 — build `1.0.0+32`. Phase 8 stays closed as a split (RTL done, three
 languages deferred). **Phase 11 is DEFERRED BY FOUNDER — do not
-implement it.** **Phase 12 is IN PROGRESS: the schema, the rules and
-their gate are in; the screens are not. Read §2.0.0f.**
+implement it.** **Phase 12 is BUILT and blocked on one founder decision
+— whether to apply migration `019`. Read §2.0.0f before touching any of
+it, and do not rebuild what is already there.**
 
 ---
 
@@ -189,35 +190,59 @@ the 1.3 text-scale sweeps in CI; reduce-motion in `SpotlightTour`), and
 the one known contrast defect — the "See all" pill at **3.03:1 in light
 mode** — is still open and still Phase 11's remit.
 
-### 2.0.0f Phase 12 is IN PROGRESS — read §4 of its report first
+### 2.0.0f Phase 12 is BUILT — it is blocked on ONE founder decision
 
-`PHASE_12_COMPLETION_REPORT.md` is a **live** record. **§4 "Where to
-resume" is the section to read**, and it is ordered: repositories,
-screens, share template, referral bridge, event hooks, analytics.
+**Everything the roadmap lists for Phase 12 is implemented.** Do not
+rebuild any of it. `PHASE_12_COMPLETION_REPORT.md` §4 is the section to
+read, and it now says one thing:
 
-Shipped: `019_social_profiles.sql` (eight tables, RLS throughout,
-written and NOT applied), the pure domain rules with 26 tests, and a
-static RLS gate with 14.
+> **`supabase/migrations/019_social_profiles.sql` is written, argued,
+> statically gated and NOT applied.** Until the founder applies it,
+> every community screen honestly reads "Community isn't switched on
+> yet", and the live RLS penetration pass cannot be run at all.
 
-Five things that save re-deriving:
+Shipped: the migration, the pure domain rules (26 tests), the static RLS
+gate (14), the repository, four screens (profile, friends, squads, feed),
+the feed writer, the profile card share, the referral→friend bridge, the
+entry point, and seven analytics events. 69 new tests; build 1.0.0+33.
+
+Things that save re-deriving:
 
 - **The migration is `019`, not the roadmap's `015`.** 015 is Phase 7's
   `recipe_origin_and_diet`. 013–015 applied, 016 reserved, 017 body
-  metrics, 018 progress photos.
-- **`019` is written and NOT applied**, like 017 and 018. Every
-  repository therefore needs an honest "community is not available"
-  path for a missing relation — do not let it surface as an error tile.
+  metrics, 018 progress photos, 019 social. **017, 018 and 019 are all
+  written and NOT applied.**
 - **A block beats ownership beats publication**, in that order, in
-  `ProfileVisibility.resolve`. And `blocks` is readable only by the
-  blocker: the blocked user must not be able to discover the block.
+  `ProfileVisibility.resolve`. `blocks` is readable only by the blocker:
+  the blocked user must not discover the block.
 - **`rls_policy_test.dart` executes no SQL and says so.** It checks the
-  SHAPE — RLS enabled, no `using (true)`, every policy has `auth.uid()`,
-  blocks checked both ways. **The live penetration pass is still owed**
-  and is listed in the report's §4.7.
-- **The dark neon card widgets are now wanted in three places**
-  (`outcome_report_screen.dart`, the photo screens, and the community
-  screens next). Lift them into a shared widget rather than copying a
-  third time.
+  SHAPE. The live penetration pass is still owed — see the report §4.2.
+  Its own block-direction regex was wrong once, on a correct migration.
+- **The feed's backfill guard is a clock, not a predicate, and that was
+  earned.** Two structural rules were tried and both were defeated by an
+  async detail: `markSessionDayAwarded` is unawaited (so a backlog
+  splits across passes), and badges unlock a microtask after the
+  workouts they came from (so the first quiet pass is not proof). See
+  the report §3.7 before "simplifying" it back.
+- **Community screens use `lib/core/theme/neon_surface.dart`.** It was
+  extracted when the third screen wanted it. It is deliberately not a
+  `ThemeExtension` — the reasoning is in its class doc.
+- **`CommunityRepository`'s constructor reads `Supabase.instance`**, so
+  a test that subclasses it must pass `client:` or it asserts.
+- **A uiautomator dump with no text nodes is not an empty screen.** The
+  community unavailable state dumps blank and screenshots correctly.
+
+### 2.0.0g What Phase 12 deliberately did NOT build
+
+Not loose ends — decisions, recorded in the report §4.3:
+
+1. **Avatars.** An image upload is a moderation surface, and this
+   phase's whole position is that it carries no free content to
+   moderate. The schema's `moderation_state` column is ready for it.
+2. **Coach squad awareness.** Belongs with the coach's copy engine, and
+   the coach has no squad-shaped input yet.
+3. **Ranking of any kind.** The feed shows presence, not position. The
+   roadmap puts ranking in Phase 13 on purpose.
 
 ### 2.0.1 The three things Phase 7 deliberately did NOT do
 

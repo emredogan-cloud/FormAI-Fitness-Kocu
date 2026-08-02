@@ -1,8 +1,8 @@
 # Phase 12 — Community I: Identity & Squads
 
 **Status:** 🔄 **IN PROGRESS** — the foundation is in; the feature surfaces are not.
-**Date:** 2026-08-02 · **Build:** `1.0.0+32` · **Commits:** `0c18f5c` → `b52c0dd`
-**Tests:** 1316 (1258 at phase start) · **`flutter analyze`:** 0 · **CI:** green
+**Date:** 2026-08-02 · **Build:** `1.0.0+32` · **Commits:** `0c18f5c` → `f00925d`
+**Tests:** 1327 (1258 at phase start) · **`flutter analyze`:** 0 · **CI:** green
 
 > This file is the live record, updated as work lands rather than
 > written at the end — the same shape Phase 10's report had while it was
@@ -25,12 +25,14 @@ for — the social accountability layer that makes fitness habits stick.
 | — | **Repository** (`community_repository.dart`) | — | ✅ shipped |
 | — | **Shared neon surface** (`neon_surface.dart`) | — | ✅ extracted |
 | 1 | Public user profile | C24, R6 | ✅ shipped, 9 tests |
-| 2 | Profile card sharing | C24 | ⬜ not started |
+| 2 | Profile card sharing | C24 | ✅ shipped, 6 tests |
 | 3 | Friends | C22 | ✅ shipped, 8 tests |
 | 4 | Squads | C22 | ✅ shipped, 5 tests |
-| 5 | Activity feed | C22 | ✅ shipped |
-| 6 | Referral → friend bridge | C47 | ⬜ not started |
+| 5 | Activity feed | C22 | ✅ shipped + writer, 5 tests |
+| 6 | Referral → friend bridge | C47 | ✅ shipped |
 | 7 | Privacy & safety foundation | — | ✅ schema, visibility UI, block, report |
+| — | **Entry point** (Progress tab row) | — | ✅ shipped, on device |
+| — | **Analytics** (7 events) | — | ✅ shipped |
 
 The foundation landed first deliberately: the roadmap calls RLS "the
 highest-risk area in the roadmap", and a screen built on a schema that
@@ -232,7 +234,116 @@ because the policy scopes events by squad rather than by profile
 visibility. Their line reads "Someone": a blank name looks broken, and
 "Someone" is true.
 
-### 3.7 The shared neon surface
+### 3.7 What reaches the feed — `xp_award_listener.dart`
+
+The feed had no writer. It publishes from the XP listener rather than a
+listener of its own, because that is where "is this new?" is already
+answered and a second component asking it would be a second, subtly
+different answer.
+
+**The guard on what reaches a squad took three attempts, and the first
+two were wrong in ways only a test found:**
+
+1. *Per-pass* — reject a pass that credits more than one workout day.
+   `markSessionDayAwarded` is async and unawaited, so crediting XP
+   re-enters `_evaluate` before the ledger lands and a restored backlog
+   arrives as several small passes, each looking live on its own.
+2. *First-quiet-pass* — treat the first pass that credits nothing as
+   proof the ledger has caught up. Badges are derived from session logs
+   and unlock a microtask **after** the workouts they came from are
+   credited, so the quiet pass lands in the gap and the badge publishes
+   anyway.
+3. *Time since mount* — what actually distinguishes a live signal is
+   that the app was already running when it happened. Publishing is off
+   for `kFeedPublishAfterMount` (3 s). A crude clock beats a clever
+   predicate when the clever ones keep being wrong, and a workout takes
+   minutes.
+
+One line per level *reached*, not one per level crossed — a single
+workout can cross two on the early curve, and "reached 4" then "reached
+5" reads as a bug. Fire and forget, because a feed write must never
+delay the XP the user sees. No retry: a queue would eventually post
+"trained today" about a Tuesday, and a missing line is a smaller wrong
+than a false one.
+
+Both guard cases were probed by reintroducing the defect; both tests
+fail without it.
+
+### 3.8 The profile card — `share_templates.dart`, `community_models.dart`
+
+Same shape as `ShareOutcomeTemplate`: already-formatted lines, no
+arithmetic, so there stays exactly one place in the app where a number
+becomes a string. The only difference is order — a name is the subject
+here, so it is the large type and the handle sits under it.
+
+The contents are a pure function, `profileCardStats`, rather than an
+inline condition at the share button. An image is the one surface where
+a privacy choice cannot be taken back, so "what may leave the device"
+should be readable and tested in one place. `isPublic` does **not** gate
+it — a share is an act by the owner — but `showStats` and `showBadges`
+do, because they are about the numbers rather than about who may look.
+Both off is not an error: name, handle and branding is still a card.
+
+Nothing in the suite had ever pumped a share template — they were only
+exercised through the off-screen capture path — so the first attempt
+threw in `_BrandFooter` (no localizations delegate) and overflowed by
+99 924 px (no 1080×1920 surface). The harness now supplies both.
+
+### 3.9 The way in — one row on the Progress tab
+
+All four screens existed and were routed, and **nothing navigated to
+them**; the phase was unreachable. The choice was a fifth bottom-nav tab
+or a row, and the phase's own rule settles it: a user who never touches
+community must see no change, and a new tab is a change to everybody's
+app the moment it ships. Under the badges is also the right neighbour,
+because a profile is mostly the badges plus a name.
+
+Shown unconditionally, including when the schema is not applied — the
+destination reports that state in a sentence, which is a better answer
+than a row that silently is not there. Verified on device (§5).
+
+### 3.10 The referral bridge — `referral_friend_bridge.dart` (C47)
+
+`referrals` has recorded who invited whom since migration `007`, so the
+person-to-person link already exists and the work is noticing it. The
+`referrals_self_read` policy lets an invitee read their own row, so the
+referrer's id needs **no migration** — changing `redeem_referral()`'s
+signature to hand it back would be a migration bought for one
+round-trip.
+
+It is an offer, never an action. Redeeming a code is a transaction about
+a reward; silently creating a friendship out of it would be a second
+thing the user did not ask for, on a surface where they were thinking
+about something else.
+
+**The dialog does not name the referrer.** Their profile may be private,
+and resolving a name to show somebody who has not agreed to be seen is
+the exact leak the visibility flags exist to prevent.
+
+Every failure is quiet — no profile, no schema, no row, an existing
+request, a block in either direction. This rides on top of a flow that
+already succeeded, and interrupting a successful redemption with an
+error about a different feature is the wrong trade. The reasons come
+from `FriendRules.cannotRequest`, so this file is not a second opinion
+on the same question.
+
+### 3.11 Analytics — seven events, no identities
+
+No name, handle, bio, squad name or user id leaves the device. The
+phase's success criteria ask how many people create a profile, add a
+friend, join a squad, and whether a squad changes retention — every one
+is answerable from a bare count, and the identities are exactly the part
+a product-analytics vendor has no business holding. Same rule the
+Phase-9 body-metrics block is written to.
+
+`profileCreated` fires only on a first save, because an edit is a
+different behaviour and counting it as a creation would inflate the one
+number the phase is judged on. `friendAdded` fires on **accept**, never
+on send: an unanswered request is not a friendship. `feedReaction` does
+not fire on an undo — the question is how much encouragement the feed
+produces, and an undo is not a negative amount of it.
+
+### 3.12 The shared neon surface
 
 `lib/core/theme/neon_surface.dart`. "Your body", the outcome report and
 the photo gallery each carried a private copy of the same seven colours,
@@ -246,7 +357,7 @@ ambient theme, which is precisely what these screens have decided not to
 do. Purely mechanical — the 269 tests over those screens, including the
 pseudo-locale, English and RTL sweeps, pass unchanged.
 
-### 3.8 The RLS gate, and what it is not
+### 3.13 The RLS gate, and what it is not
 
 `test/features/community/rls_policy_test.dart` **executes no SQL** and
 says so in its own header. The roadmap asks for penetration tests that
@@ -281,74 +392,50 @@ too until a probe says otherwise.
 
 ## 4. Where to resume
 
-In this order. Each is a commit.
+Everything the roadmap lists for Phase 12 is built. What is left is
+either **blocked on a founder decision** or **only checkable against an
+applied schema**, and those are the same decision.
 
-### 4.1 The community tab
+### 4.1 The one thing that unblocks everything: apply `019`
 
-All four screens exist and are routed, but **nothing in the app navigates
-to `/community` yet**. That is deliberate for now — the roadmap's rule is
-that a user who never touches community sees no change — but the entry
-point is the next decision: a fifth bottom-nav tab changes the app for
-everybody, while a row on the Profile tab does not. The latter is
-probably right, and it is a founder-facing call rather than a technical
-one. — `lib/features/community/presentation/`
+`supabase/migrations/019_social_profiles.sql` is written, argued (§3.1),
+statically gated (§3.13), and **not applied**. Until it is:
 
-Profile, friends, squad, feed. The design language is settled: dark-only
-neon on black like the outcome report and "Your body", `_NeonCard` and
-the lime accent already exist in
-`lib/features/progress/presentation/outcome_report_screen.dart` and
-should be **lifted into a shared widget** rather than copied a third
-time — that is the point at which duplication becomes a decision.
+* every community screen shows "Community isn't switched on yet" — the
+  honest state, verified on device (§5);
+* the feed writer, the referral offer and the profile card cannot be
+  exercised end-to-end, because each fails quiet by design when the
+  schema is absent;
+* the live RLS penetration pass cannot be run at all.
 
-Roadmap UX constraints, all load-bearing:
+This is a founder decision, not an engineering one — it turns on a
+social surface for real users. Nothing in the app breaks either way,
+which was the point of building it that way.
 
-- **Opt-in by default, everywhere.** A user who never touches community
-  must see no change. That means no entry point on the dashboard until a
-  profile exists — the same rule `OutcomeReportCard` follows.
-- Squad creation ≤ 3 taps; joining via a single link.
-- The feed shows **presence, not ranking** in this phase. Ranking
-  arrives deliberately in Phase 13 and putting it here would spend that
-  phase's design budget early.
-- Safety controls reachable in one tap from any profile.
+### 4.2 Owed the moment `019` is applied
 
-### 4.2 Profile card share template
+- **The live RLS penetration pass.** Two real sessions attempting
+  cross-user reads on every table. §3.13 explains at length why the CI
+  gate is deliberately not this: it reads SQL text, and a policy can be
+  well-formed and still wrong.
+- **A second device walk** covering the paths that are currently dark:
+  create a profile, send and accept a request, create and join a squad,
+  react on the feed, share a card, redeem a referral and take the offer.
 
-`ShareOutcomeTemplate` in `lib/core/widgets/share_templates.dart` is the
-model to follow — it takes already-formatted lines and does no
-arithmetic. A profile card is the same shape with different content.
+### 4.3 Deliberately not built in this phase
 
-### 4.3 Referral → friend bridge (C47)
-
-`lib/features/referral/` and migration `007` already create the
-person-to-person link. The bridge is: after `redeem_referral` succeeds,
-offer a friend request to the referrer. Converting an acquisition
-mechanic into a retention one is the whole point, so it belongs at the
-moment of redemption rather than in a settings screen.
-
-### 4.4 Activity events on the existing hooks
-
-`xp_award_listener` and `badge_unlocks_provider` already fire on workout
-completion, badge unlock and level-up. Events are written from there, and
-**only when the user is in a squad** — writing events nobody can read is
-how a feature that is off still costs a round trip.
-
-### 4.5 Analytics
-
-`profileCreated/Viewed/Shared`, `friendAdded`, `squadCreated/Joined`,
-`feedReaction`. `AnalyticsService` is the pattern.
-
-### 4.6 Still owed by the phase
-
-- **The live RLS penetration pass.** Two real sessions against an applied
-  `019`, attempting cross-user reads on every table. §3.3 explains why
-  the CI gate is not this.
-- **Avatar handling** — a Storage bucket with size limits and the
-  moderation hook the schema's `moderation_state` column already expects.
-- **Coach squad awareness** ("three people in your squad trained today"),
-  which is real social proof from real data and belongs with the coach
-  rather than in a screen.
-- **Device walk**, build, and the founder-side decision on whether to
-  apply `019`.
+- **Avatars** — a Storage bucket with size limits plus the moderation
+  hook the schema's `moderation_state` column already expects. Left out
+  because an image upload is a moderation surface, and this phase's
+  whole position is that it carries no free content to moderate.
+  Building it is a phase-sized decision of its own, not a loose end.
+- **Coach squad awareness** ("three people in your squad trained
+  today") — real social proof from real data, but it belongs with the
+  coach's copy engine rather than in a community screen, and the coach
+  has no squad-shaped input yet. Recorded here so it is not lost.
+- **Ranking of any kind.** The feed shows presence, not position, and
+  the roadmap puts ranking in Phase 13 on purpose. Adding it here would
+  spend that phase's design budget early.
 
 ---
 
@@ -356,18 +443,40 @@ how a feature that is off still costs a round trip.
 
 ```
 flutter analyze                        0 issues
-flutter test                           1298 passing  (1258 at phase start)
-dart format                            clean
-tool/check_hardcoded_strings.dart      0 in 0 files
-tool/arb_coverage.dart --strict        1687 keys · tr 100% · en 100% · all referenced
+flutter test                           1327 passing  (1258 at phase start)
+dart format --set-exit-if-changed .    clean · 406 files · 0 changed
+tool/check_hardcoded_strings.dart      no regressions
+tool/arb_coverage.dart --strict        1790 keys · tr 100% · en 100% · all referenced
+tool/recipe_translation_audit.dart     no findings, coverage held
+tool/gen_pseudo_localizations.dart     up to date · 1790 members
 tool/check_directional_layout.dart     177 · no regressions
-CI                                     green
+CI                                     green through f00925d
+release APK                            1.0.0+33 · 137.3 MB
+release AAB                            1.0.0+33 · 116.0 MB
 ```
 
-**+58 tests so far**: 26 on the domain rules, 14 on the RLS shape, 9 on
-the community screen, 8 on friends (including that an outgoing request
-never offers its sender an Accept button, and that a declined row
-appears in no list), 5 on squads.
+**Device walk** — Redmi, release build 1.0.0+33, `019` not applied:
+
+| checked | result |
+| --- | --- |
+| Community row renders under the badges on the Progress tab | ✅ |
+| Row opens `/community` | ✅ |
+| Unapplied schema reads "Community isn't switched on yet" | ✅ |
+| Four tabs swept — no crash, no overflow, no Flutter error in logcat | ✅ |
+
+The uiautomator dump returns no text nodes for the unavailable state;
+the screenshot is what confirmed the copy. Worth remembering — a silent
+dump is not an empty screen.
+
+**What the walk could not reach**: every path behind an applied `019`
+(§4.2). Those are dark on this device by construction, not by omission.
+
+**+69 tests**: 26 on the domain rules, 14 on the RLS shape, 9 on the
+community screen, 8 on friends (including that an outgoing request never
+offers its sender an Accept button, and that a declined row appears in
+no list), 5 on squads, 5 on what reaches the feed, 6 on the profile
+card. The two feed-guard tests and the card's visibility filter were
+probed by reintroducing the defect.
 
 One CI incident, and it was process rather than code: `059f531` went red
 because the hardcoded-string gate was skipped after a commit that only
@@ -398,3 +507,19 @@ names the miss.
 7. **No free text in this phase.** Reactions carry most of the social
    value and none of the moderation burden — and the schema has no
    column to regret.
+8. **A crude clock beat two clever predicates.** The feed's backfill
+   guard is time-since-mount because the two structural rules that
+   preceded it were each defeated by an async detail (§3.7). When a
+   predicate has been wrong twice, the next one should be the boring
+   one.
+9. **What may leave the device as an image is a pure function.** Not an
+   `if` at the share button — `profileCardStats`, testable and readable
+   in one place, because an image is the surface where a privacy choice
+   cannot be taken back.
+10. **The referral bridge offers; it never acts.** A recorded referral
+    is a link that already exists, but turning it into a friendship is
+    a decision that belongs to the user, on a screen where they were
+    thinking about a reward.
+11. **A row, not a tab.** The entry point had to make community
+    reachable without changing the app for anybody who ignores it, and
+    a fifth bottom-nav item changes it for everybody on ship day.

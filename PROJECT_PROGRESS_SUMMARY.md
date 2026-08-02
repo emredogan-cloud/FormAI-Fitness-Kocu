@@ -1,7 +1,7 @@
 # FormAI — Project Progress Summary
 
 **Spec:** `TESTERS_COMMUNITY_PRODUCT_ROADMAP.md` (18 phases / 5 waves)
-**As of:** 2026-08-02 · Phase 8 **closed as split** · Phase 9 **complete** · pre-Phase-10 polish sprint complete · **Phase 10 complete, device walk included** · **Phase 11 ⏸ deferred by founder** · build **1.0.0+32** · **Wave 4 starts at Phase 12**
+**As of:** 2026-08-03 · Phase 8 **closed as split** · Phase 9 **complete** · pre-Phase-10 polish sprint complete · **Phase 10 complete, device walk included** · **Phase 11 ⏸ deferred by founder** · **Phase 12 built — blocked on applying migration `019`** · build **1.0.0+33**
 
 ---
 
@@ -269,13 +269,13 @@ Wave 5 — Scale, Depth & Platform         ⏳ Not Started (Phases 15–17)
 
 | | |
 |---|---|
-| **Build** | 1.0.0+31 · APK 136.2 MB · AAB 115.5 MB |
-| **Tests** | **1235 passing** (baseline was 330) |
+| **Build** | 1.0.0+33 · APK 137.3 MB · AAB 116.0 MB |
+| **Tests** | **1327 passing** (baseline was 330) |
 | **`flutter analyze`** | **0 issues** |
 | **`dart format`** | clean |
 | **CI** | **GREEN** (CI + Secret Scan) |
-| **Hardcoded-string gate** | **0 in 0 files** · 246 allowlisted · rendered-argument signal added |
-| **ARB** | **1650 keys** · `tr` 100% · `en` 100% · all referenced in `lib/` |
+| **Hardcoded-string gate** | **no regressions** · rendered-argument signal added |
+| **ARB** | **1790 keys** · `tr` 100% · `en` 100% · all referenced in `lib/` |
 | **Recipe catalogue** | **392 recipes** · `en` 392/392 · 2242 ingredient rows · audit 0 findings |
 | **Locales shipped** | `tr`, `en` |
 
@@ -286,4 +286,5 @@ Wave 5 — Scale, Depth & Platform         ⏳ Not Started (Phases 15–17)
 - The local release build is upload-key signed, so device installs need `adb uninstall` first (loses session, requires a full onboarding re-walk).
 - **MIUI's "Install via USB" lapses.** `INSTALL_FAILED_USER_RESTRICTED` is not a signing problem and no adb flag works around it; it needs a Mi-account re-authorization on the handset.
 - **A green gate is a claim about its own heuristics.** Three phases running now. Phase 7's translation audit found four bugs in itself while proving its first batch — including one where the check meant to prove 199 recipes were translated reported every one of them as untranslated. Probe every widening.
+- **Migrations 017, 018 and 019 are written and NOT applied.** 017 body metrics, 018 progress photos, 019 social profiles. Phase 12's entire community surface reads "Community isn't switched on yet" until `019` lands — honestly and without breaking anything, which was the design. Applying it is a founder decision.
 - **The cross-check between two independent sources is where the defects are.** Every one of Phase 7's findings in pre-existing content came from comparing two things that had never been compared: hand tags against derived diet flags, English ingredient names against Turkish ones, the new macro rule against the old catalogue.
