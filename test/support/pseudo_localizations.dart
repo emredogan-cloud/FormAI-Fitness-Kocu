@@ -8,7 +8,7 @@
 //   2. a layout that only fits Turkish overflows here instead of in a
 //      German store review.
 //
-// 1650 members covered.
+// 1687 members covered.
 
 import 'package:flutter/widgets.dart';
 import 'package:sixpack_ai/core/utils/pseudo_locale.dart';
@@ -5132,6 +5132,129 @@ class PseudoAppLocalizations extends AppLocalizations {
       pseudoLocalize(_inner.outcomeReportExportFailed);
 
   @override
+  String get photosTitle => pseudoLocalize(_inner.photosTitle);
+
+  @override
+  String get photosPrivacyAtCapture =>
+      pseudoLocalize(_inner.photosPrivacyAtCapture);
+
+  @override
+  String get photosEmptyTitle => pseudoLocalize(_inner.photosEmptyTitle);
+
+  @override
+  String get photosEmptyBody => pseudoLocalize(_inner.photosEmptyBody);
+
+  @override
+  String get photosAdd => pseudoLocalize(_inner.photosAdd);
+
+  @override
+  String get photosPoseFront => pseudoLocalize(_inner.photosPoseFront);
+
+  @override
+  String get photosPoseSide => pseudoLocalize(_inner.photosPoseSide);
+
+  @override
+  String get photosPoseBack => pseudoLocalize(_inner.photosPoseBack);
+
+  @override
+  String get photosCapture => pseudoLocalize(_inner.photosCapture);
+
+  @override
+  String get photosGhostHint => pseudoLocalize(_inner.photosGhostHint);
+
+  @override
+  String get photosGhostToggle => pseudoLocalize(_inner.photosGhostToggle);
+
+  @override
+  String get photosSaved => pseudoLocalize(_inner.photosSaved);
+
+  @override
+  String get photosDelete => pseudoLocalize(_inner.photosDelete);
+
+  @override
+  String get photosDeleted => pseudoLocalize(_inner.photosDeleted);
+
+  @override
+  String get photosDeleteConfirmTitle =>
+      pseudoLocalize(_inner.photosDeleteConfirmTitle);
+
+  @override
+  String get photosDeleteConfirmBody =>
+      pseudoLocalize(_inner.photosDeleteConfirmBody);
+
+  @override
+  String get photosCompare => pseudoLocalize(_inner.photosCompare);
+
+  @override
+  String get photosCompareTitle => pseudoLocalize(_inner.photosCompareTitle);
+
+  @override
+  String get photosCompareNeedsTwo =>
+      pseudoLocalize(_inner.photosCompareNeedsTwo);
+
+  @override
+  String get photosCompareEarlier =>
+      pseudoLocalize(_inner.photosCompareEarlier);
+
+  @override
+  String get photosCompareLater => pseudoLocalize(_inner.photosCompareLater);
+
+  @override
+  String get photosCameraDenied => pseudoLocalize(_inner.photosCameraDenied);
+
+  @override
+  String get photosCameraFailed => pseudoLocalize(_inner.photosCameraFailed);
+
+  @override
+  String get outcomeReportShare => pseudoLocalize(_inner.outcomeReportShare);
+
+  @override
+  String get outcomeReportShareTitle =>
+      pseudoLocalize(_inner.outcomeReportShareTitle);
+
+  @override
+  String get outcomeReportShareBody =>
+      pseudoLocalize(_inner.outcomeReportShareBody);
+
+  @override
+  String get outcomeReportShareBodyMetrics =>
+      pseudoLocalize(_inner.outcomeReportShareBodyMetrics);
+
+  @override
+  String get outcomeReportShareStreak =>
+      pseudoLocalize(_inner.outcomeReportShareStreak);
+
+  @override
+  String get outcomeReportSharePhotos =>
+      pseudoLocalize(_inner.outcomeReportSharePhotos);
+
+  @override
+  String get outcomeReportShareCta =>
+      pseudoLocalize(_inner.outcomeReportShareCta);
+
+  @override
+  String get outcomeReportShareFailed =>
+      pseudoLocalize(_inner.outcomeReportShareFailed);
+
+  @override
+  String get recapTitle => pseudoLocalize(_inner.recapTitle);
+
+  @override
+  String get recapCta => pseudoLocalize(_inner.recapCta);
+
+  @override
+  String get recapNotificationTitle =>
+      pseudoLocalize(_inner.recapNotificationTitle);
+
+  @override
+  String get recapNotificationBody =>
+      pseudoLocalize(_inner.recapNotificationBody);
+
+  @override
+  String get photosDeleteConfirmAction =>
+      pseudoLocalize(_inner.photosDeleteConfirmAction);
+
+  @override
   String retrospectiveSummary(String workouts, String minutes, String reps) =>
       pseudoLocalize(_inner.retrospectiveSummary(workouts, minutes, reps));
 
@@ -5908,8 +6031,11 @@ class PseudoAppLocalizations extends AppLocalizations {
   String outcomeReportCameraFree(int count) =>
       pseudoLocalize(_inner.outcomeReportCameraFree(count));
 
+  @override
+  String photosCount(int count) => pseudoLocalize(_inner.photosCount(count));
+
   /// Number of members this wrapper covers. The test suite asserts
   /// it still matches the generated class, so a new ARB key cannot
   /// slip past pseudo mode unnoticed.
-  static const int coveredMembers = 1650;
+  static const int coveredMembers = 1687;
 }

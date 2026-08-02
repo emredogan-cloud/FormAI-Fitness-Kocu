@@ -19,6 +19,7 @@ import '../../monetization/providers/monetization_provider.dart';
 import '../../nutrition/providers/daily_menu_provider.dart';
 import '../../nutrition/providers/nutrition_provider.dart';
 import '../../onboarding/providers/wizard_provider.dart';
+import '../../progress/data/progress_photo_repository.dart';
 import '../../progress/providers/badge_unlocks_provider.dart';
 import '../../workout/providers/workout_provider.dart';
 import '../../../l10n/app_localizations.dart';
@@ -412,6 +413,28 @@ class AuthController {
     } catch (e) {
       AppLogger.warning(
         'deleteAccount prefs.clear (non-fatal)',
+        category: 'auth',
+        data: {'error': e.toString()},
+      );
+    }
+    // Roadmap Phase 10 (C2, C48) · the half nothing above can reach.
+    //
+    // `delete_user` cascades the server rows and `prefs.clear()` drops
+    // the photo INDEX — but the photographs themselves are files in the
+    // app's private documents directory, which neither touches. Without
+    // this call, deleting an account leaves a stranger's progress photos
+    // on the handset for whoever signs in next, which is the worst
+    // possible failure of a feature whose whole promise is that the
+    // images never go anywhere.
+    //
+    // Non-fatal like the two above it: the account is already gone
+    // server-side, so a filesystem error must not turn a completed
+    // deletion into a reported failure.
+    try {
+      await _ref.read(progressPhotoRepositoryProvider).deleteEverything();
+    } catch (e) {
+      AppLogger.warning(
+        'deleteAccount progress photos (non-fatal)',
         category: 'auth',
         data: {'error': e.toString()},
       );

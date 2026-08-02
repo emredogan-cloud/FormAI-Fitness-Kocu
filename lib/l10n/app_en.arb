@@ -7820,5 +7820,158 @@
   "outcomeReportExportFailed": "Could not build the export. Nothing was sent.",
   "@outcomeReportExportFailed": {
     "description": "Snackbar when the export fails. Says explicitly that no data left the device."
+  },
+  "photosTitle": "Progress photos",
+  "@photosTitle": {
+    "description": "Title of the progress photo gallery."
+  },
+  "photosPrivacyAtCapture": "Your photos stay on this phone. We never see them.",
+  "@photosPrivacyAtCapture": {
+    "description": "Stated at capture time, on the camera screen itself — not in a policy. The roadmap makes this a UX requirement."
+  },
+  "photosEmptyTitle": "No photos yet",
+  "@photosEmptyTitle": {
+    "description": "Empty state title in the photo gallery."
+  },
+  "photosEmptyBody": "A photo every couple of weeks shows what a scale can't. They stay on this phone, and you can delete them any time.",
+  "@photosEmptyBody": {
+    "description": "Empty state body. States the privacy position and the cadence without instructing."
+  },
+  "photosAdd": "Take a photo",
+  "@photosAdd": {
+    "description": "Opens the capture flow."
+  },
+  "photosPoseFront": "Front",
+  "@photosPoseFront": {
+    "description": "Pose selector: facing the camera."
+  },
+  "photosPoseSide": "Side",
+  "@photosPoseSide": {
+    "description": "Pose selector: side on."
+  },
+  "photosPoseBack": "Back",
+  "@photosPoseBack": {
+    "description": "Pose selector: back to the camera."
+  },
+  "photosCapture": "Capture",
+  "@photosCapture": {
+    "description": "Shutter button label."
+  },
+  "photosGhostHint": "Line yourself up with the faded photo so the two compare.",
+  "@photosGhostHint": {
+    "description": "Explains the ghost overlay of the previous photo."
+  },
+  "photosGhostToggle": "Alignment guide",
+  "@photosGhostToggle": {
+    "description": "Toggles the ghost overlay on and off."
+  },
+  "photosSaved": "Saved to this phone.",
+  "@photosSaved": {
+    "description": "Snackbar after a capture. Repeats where it went, because that is the reassurance."
+  },
+  "photosDelete": "Delete this photo",
+  "@photosDelete": {
+    "description": "Tooltip on the delete control."
+  },
+  "photosDeleted": "Photo deleted.",
+  "@photosDeleted": {
+    "description": "Snackbar after deleting a photo."
+  },
+  "photosDeleteConfirmTitle": "Delete this photo?",
+  "@photosDeleteConfirmTitle": {
+    "description": "Confirmation dialog title. A photo cannot be recovered."
+  },
+  "photosDeleteConfirmBody": "It's only on this phone, so there's no copy to restore.",
+  "@photosDeleteConfirmBody": {
+    "description": "Confirmation dialog body. Explains why deletion is final — which is the same fact as the privacy promise."
+  },
+  "photosCompare": "Compare",
+  "@photosCompare": {
+    "description": "Opens the before/after comparison."
+  },
+  "photosCompareTitle": "Before and after",
+  "@photosCompareTitle": {
+    "description": "Title of the comparison screen."
+  },
+  "photosCompareNeedsTwo": "Two photos of the same pose and you can compare them here.",
+  "@photosCompareNeedsTwo": {
+    "description": "Shown when a pose has fewer than two photos."
+  },
+  "photosCompareEarlier": "Earlier",
+  "@photosCompareEarlier": {
+    "description": "Label for the older photo in a comparison."
+  },
+  "photosCompareLater": "Later",
+  "@photosCompareLater": {
+    "description": "Label for the newer photo in a comparison."
+  },
+  "photosCameraDenied": "FormAI needs the camera to take a progress photo. You can turn it on in Settings.",
+  "@photosCameraDenied": {
+    "description": "Shown when camera permission is refused."
+  },
+  "photosCameraFailed": "The camera didn't start. Nothing was saved.",
+  "@photosCameraFailed": {
+    "description": "Shown when the camera fails to initialise."
+  },
+  "photosCount": "{count, plural, =1{1 photo} other{{count} photos}}",
+  "@photosCount": {
+    "description": "Photo count on the gallery entry row.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "outcomeReportShare": "Share this",
+  "@outcomeReportShare": {
+    "description": "Opens the share sheet for the outcome report card."
+  },
+  "outcomeReportShareTitle": "What to include",
+  "@outcomeReportShareTitle": {
+    "description": "Title of the share-options sheet."
+  },
+  "outcomeReportShareBody": "You choose what goes on the card. Nothing is included unless you switch it on.",
+  "@outcomeReportShareBody": {
+    "description": "Body of the share-options sheet. States the conservative default plainly."
+  },
+  "outcomeReportShareBodyMetrics": "Body measurements",
+  "@outcomeReportShareBodyMetrics": {
+    "description": "Share toggle for weight and tape deltas."
+  },
+  "outcomeReportShareStreak": "Streak and consistency",
+  "@outcomeReportShareStreak": {
+    "description": "Share toggle for streak figures."
+  },
+  "outcomeReportSharePhotos": "Progress photos",
+  "@outcomeReportSharePhotos": {
+    "description": "Share toggle for photos. Off by default and stays off unless switched on."
+  },
+  "outcomeReportShareCta": "Create the card",
+  "@outcomeReportShareCta": {
+    "description": "Confirms the share options and renders the image."
+  },
+  "outcomeReportShareFailed": "Could not create the card. Nothing was shared.",
+  "@outcomeReportShareFailed": {
+    "description": "Snackbar when the share render fails."
+  },
+  "recapTitle": "Your month",
+  "@recapTitle": {
+    "description": "Title of the monthly recap card on the dashboard."
+  },
+  "recapCta": "See the report",
+  "@recapCta": {
+    "description": "Opens the outcome report from the recap card."
+  },
+  "recapNotificationTitle": "A month of training",
+  "@recapNotificationTitle": {
+    "description": "Title of the monthly recap notification. Rendered outside the widget tree, so it resolves through app_copy.dart."
+  },
+  "recapNotificationBody": "Your 30-day report is ready — sessions, minutes and what changed.",
+  "@recapNotificationBody": {
+    "description": "Body of the monthly recap notification."
+  },
+  "photosDeleteConfirmAction": "Delete",
+  "@photosDeleteConfirmAction": {
+    "description": "Destructive action in the photo delete confirmation dialog."
   }
 }

@@ -2,17 +2,20 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/providers/unit_system_provider.dart';
+import '../../../core/routing/app_router.dart';
 import '../../../core/services/data_export_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../l10n/app_localizations.dart';
 import '../domain/outcome_report.dart';
 import '../../workout/data/session_log_repository.dart';
 import '../data/body_metrics_repository.dart';
+import '../data/progress_photo_repository.dart';
 import '../providers/outcome_report_provider.dart';
 import '../providers/target_weight_provider.dart';
 import 'outcome_report_copy.dart';
@@ -228,6 +231,8 @@ class _Report extends ConsumerWidget {
           _Timeline(milestones: report.milestones, localeTag: localeTag),
         ],
         const SizedBox(height: 24),
+        const _PhotosRow(),
+        const SizedBox(height: 8),
         const _ExportRow(),
       ],
     );
@@ -750,6 +755,71 @@ class _ExportAction extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 14),
         ),
         child: Text(label),
+      ),
+    );
+  }
+}
+
+/// Roadmap Phase 10 (C2) · the way to the photographs.
+///
+/// On the report rather than in the Progress tab's card stack, because a
+/// progress photo is an outcome — it belongs with the sessions and the
+/// measurements that explain it, not beside the controls that produce
+/// them. It also keeps the one screen that shows a user's body reachable
+/// from exactly one place, which is easier to reason about than three.
+class _PhotosRow extends ConsumerWidget {
+  const _PhotosRow();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final count = ref.watch(progressPhotosProvider).value?.length ?? 0;
+    return Material(
+      color: _kCard,
+      borderRadius: BorderRadius.circular(18),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => context.push(AppRoutes.progressPhotos),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: _kHairline),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.photo_camera_outlined, color: _kLime, size: 22),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      l10n.photosTitle,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      // The count when there is one, and the privacy
+                      // promise when there is not — which is the line
+                      // that decides whether somebody starts.
+                      count == 0
+                          ? l10n.photosPrivacyAtCapture
+                          : l10n.photosCount(count),
+                      style: const TextStyle(color: _kFaint, fontSize: 12.5),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded, color: _kFaint),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -25,6 +25,7 @@ import '../../features/onboarding/presentation/prediction_screen.dart';
 import '../../features/progress/presentation/badges_screen.dart';
 import '../../features/progress/presentation/body_metrics_screen.dart';
 import '../../features/progress/presentation/outcome_report_screen.dart';
+import '../../features/progress/presentation/photo_gallery_screen.dart';
 import '../../features/progress/presentation/calendar_screen.dart';
 import '../../features/progress/presentation/suggestions_screen.dart';
 import '../../features/progress/providers/badge_unlocks_provider.dart';
@@ -82,6 +83,10 @@ class AppRoutes {
 
   /// Roadmap Phase 10 (C4, C39) · the 30-day outcome report.
   static const String progressReport = '/progress/report';
+
+  /// Roadmap Phase 10 (C2) · progress photos. The images never leave the
+  /// device; see `ProgressPhotoRepository`.
+  static const String progressPhotos = '/progress/photos';
   static const String nutritionDiscover = '/nutrition/discover';
 
   /// Phase 50B · internal admin panel. Gated by [isAdminProvider]; the
@@ -419,6 +424,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.progressReport,
         name: 'progressReport',
         builder: (context, state) => const OutcomeReportScreen(),
+      ),
+      // Roadmap Phase 10 (C2) · progress photos.
+      GoRoute(
+        path: AppRoutes.progressPhotos,
+        name: 'progressPhotos',
+        builder: (context, state) => const PhotoGalleryScreen(),
       ),
       GoRoute(
         path: AppRoutes.nutritionDiscover,
