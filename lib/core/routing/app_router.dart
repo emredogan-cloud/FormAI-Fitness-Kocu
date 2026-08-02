@@ -25,6 +25,7 @@ import '../../features/onboarding/presentation/prediction_screen.dart';
 import '../../features/progress/presentation/badges_screen.dart';
 import '../../features/progress/presentation/body_metrics_screen.dart';
 import '../../features/progress/presentation/outcome_report_screen.dart';
+import '../../features/community/presentation/community_screen.dart';
 import '../../features/progress/presentation/photo_gallery_screen.dart';
 import '../../features/progress/presentation/calendar_screen.dart';
 import '../../features/progress/presentation/suggestions_screen.dart';
@@ -87,6 +88,10 @@ class AppRoutes {
   /// Roadmap Phase 10 (C2) · progress photos. The images never leave the
   /// device; see `ProgressPhotoRepository`.
   static const String progressPhotos = '/progress/photos';
+
+  /// Roadmap Phase 12 (R6, C24) · identity, friends and squads. Opt-in
+  /// throughout; renders "not switched on yet" until `019` is applied.
+  static const String community = '/community';
   static const String nutritionDiscover = '/nutrition/discover';
 
   /// Phase 50B · internal admin panel. Gated by [isAdminProvider]; the
@@ -430,6 +435,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.progressPhotos,
         name: 'progressPhotos',
         builder: (context, state) => const PhotoGalleryScreen(),
+      ),
+      // Roadmap Phase 12 (R6, C24) · community.
+      GoRoute(
+        path: AppRoutes.community,
+        name: 'community',
+        builder: (context, state) => const CommunityScreen(),
       ),
       GoRoute(
         path: AppRoutes.nutritionDiscover,

@@ -7973,5 +7973,101 @@
   "photosDeleteConfirmAction": "Delete",
   "@photosDeleteConfirmAction": {
     "description": "Destructive action in the photo delete confirmation dialog."
+  },
+  "communityTitle": "Community",
+  "@communityTitle": {
+    "description": "Title of the community tab / entry point."
+  },
+  "communityUnavailable": "Community isn't switched on yet.",
+  "@communityUnavailable": {
+    "description": "Shown when migration 019 has not been applied. States a fact rather than an error."
+  },
+  "communityUnavailableBody": "Everything else in the app works exactly as it does now. This part arrives in a later update.",
+  "@communityUnavailableBody": {
+    "description": "Body under communityUnavailable. Reassures that nothing is broken."
+  },
+  "profileNoneTitle": "You don't have a profile yet",
+  "@profileNoneTitle": {
+    "description": "Shown on the community screen before a profile exists."
+  },
+  "profileNoneBody": "A profile is how friends find you. Nothing on it is visible until you switch it on, one field at a time.",
+  "@profileNoneBody": {
+    "description": "Body of the no-profile state. Leads with the privacy position."
+  },
+  "profileCreate": "Create a profile",
+  "@profileCreate": {
+    "description": "CTA that opens the profile editor."
+  },
+  "profileEdit": "Edit profile",
+  "@profileEdit": {
+    "description": "Opens the editor for an existing profile."
+  },
+  "profileDisplayName": "Display name",
+  "@profileDisplayName": {
+    "description": "Label for the display-name field."
+  },
+  "profileHandle": "Handle",
+  "@profileHandle": {
+    "description": "Label for the unique handle field."
+  },
+  "profileHandleHint": "3–20 characters: letters, numbers and underscores.",
+  "@profileHandleHint": {
+    "description": "Helper text under the handle field, stating the constraint the database enforces."
+  },
+  "profileHandleTaken": "That handle is taken.",
+  "@profileHandleTaken": {
+    "description": "Shown when the unique constraint rejects a handle."
+  },
+  "profileNameTooShort": "A display name needs at least 2 characters.",
+  "@profileNameTooShort": {
+    "description": "Validation for the display-name field."
+  },
+  "profileVisibilityTitle": "What others can see",
+  "@profileVisibilityTitle": {
+    "description": "Section header above the three visibility switches."
+  },
+  "profileVisibilityBody": "Nothing here is on until you turn it on, and you can turn any of it off again.",
+  "@profileVisibilityBody": {
+    "description": "Explains the default-private position above the switches."
+  },
+  "profileVisibilityPublic": "Let others find my profile",
+  "@profileVisibilityPublic": {
+    "description": "The is_public switch."
+  },
+  "profileVisibilityBadges": "Show my badges",
+  "@profileVisibilityBadges": {
+    "description": "The show_badges switch."
+  },
+  "profileVisibilityStats": "Show my sessions and streak",
+  "@profileVisibilityStats": {
+    "description": "The show_stats switch."
+  },
+  "profileSaved": "Profile saved.",
+  "@profileSaved": {
+    "description": "Snackbar after a successful save."
+  },
+  "profileSaveFailed": "Could not save. Nothing was changed.",
+  "@profileSaveFailed": {
+    "description": "Snackbar when the save fails."
+  },
+  "profilePendingReview": "Your name and photo are being checked. Only you can see them until that's done.",
+  "@profilePendingReview": {
+    "description": "Shown while moderation_state is pending."
+  },
+  "profileDeleteTitle": "Delete your profile?",
+  "@profileDeleteTitle": {
+    "description": "Confirmation dialog title."
+  },
+  "profileDeleteBody": "Your friends and squads go with it. Your workouts, measurements and photos are not affected.",
+  "@profileDeleteBody": {
+    "description": "Confirmation dialog body — names exactly what is and is not lost."
+  },
+  "profileDelete": "Delete profile",
+  "@profileDelete": {
+    "description": "Destructive action on the profile editor."
+  },
+  "profileDeleted": "Profile deleted.",
+  "@profileDeleted": {
+    "description": "Snackbar after deleting a profile."
   }
 }

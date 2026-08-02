@@ -8,7 +8,7 @@
 //   2. a layout that only fits Turkish overflows here instead of in a
 //      German store review.
 //
-// 1687 members covered.
+// 1710 members covered.
 
 import 'package:flutter/widgets.dart';
 import 'package:sixpack_ai/core/utils/pseudo_locale.dart';
@@ -5255,6 +5255,83 @@ class PseudoAppLocalizations extends AppLocalizations {
       pseudoLocalize(_inner.photosDeleteConfirmAction);
 
   @override
+  String get communityTitle => pseudoLocalize(_inner.communityTitle);
+
+  @override
+  String get communityUnavailable =>
+      pseudoLocalize(_inner.communityUnavailable);
+
+  @override
+  String get communityUnavailableBody =>
+      pseudoLocalize(_inner.communityUnavailableBody);
+
+  @override
+  String get profileNoneTitle => pseudoLocalize(_inner.profileNoneTitle);
+
+  @override
+  String get profileNoneBody => pseudoLocalize(_inner.profileNoneBody);
+
+  @override
+  String get profileCreate => pseudoLocalize(_inner.profileCreate);
+
+  @override
+  String get profileDisplayName => pseudoLocalize(_inner.profileDisplayName);
+
+  @override
+  String get profileHandle => pseudoLocalize(_inner.profileHandle);
+
+  @override
+  String get profileHandleHint => pseudoLocalize(_inner.profileHandleHint);
+
+  @override
+  String get profileHandleTaken => pseudoLocalize(_inner.profileHandleTaken);
+
+  @override
+  String get profileNameTooShort => pseudoLocalize(_inner.profileNameTooShort);
+
+  @override
+  String get profileVisibilityTitle =>
+      pseudoLocalize(_inner.profileVisibilityTitle);
+
+  @override
+  String get profileVisibilityBody =>
+      pseudoLocalize(_inner.profileVisibilityBody);
+
+  @override
+  String get profileVisibilityPublic =>
+      pseudoLocalize(_inner.profileVisibilityPublic);
+
+  @override
+  String get profileVisibilityBadges =>
+      pseudoLocalize(_inner.profileVisibilityBadges);
+
+  @override
+  String get profileVisibilityStats =>
+      pseudoLocalize(_inner.profileVisibilityStats);
+
+  @override
+  String get profileSaved => pseudoLocalize(_inner.profileSaved);
+
+  @override
+  String get profileSaveFailed => pseudoLocalize(_inner.profileSaveFailed);
+
+  @override
+  String get profilePendingReview =>
+      pseudoLocalize(_inner.profilePendingReview);
+
+  @override
+  String get profileDeleteTitle => pseudoLocalize(_inner.profileDeleteTitle);
+
+  @override
+  String get profileDeleteBody => pseudoLocalize(_inner.profileDeleteBody);
+
+  @override
+  String get profileDelete => pseudoLocalize(_inner.profileDelete);
+
+  @override
+  String get profileDeleted => pseudoLocalize(_inner.profileDeleted);
+
+  @override
   String retrospectiveSummary(String workouts, String minutes, String reps) =>
       pseudoLocalize(_inner.retrospectiveSummary(workouts, minutes, reps));
 
@@ -6037,5 +6114,5 @@ class PseudoAppLocalizations extends AppLocalizations {
   /// Number of members this wrapper covers. The test suite asserts
   /// it still matches the generated class, so a new ARB key cannot
   /// slip past pseudo mode unnoticed.
-  static const int coveredMembers = 1687;
+  static const int coveredMembers = 1710;
 }
