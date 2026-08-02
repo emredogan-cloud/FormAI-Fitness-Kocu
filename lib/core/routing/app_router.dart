@@ -24,6 +24,7 @@ import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/onboarding/presentation/prediction_screen.dart';
 import '../../features/progress/presentation/badges_screen.dart';
 import '../../features/progress/presentation/body_metrics_screen.dart';
+import '../../features/progress/presentation/outcome_report_screen.dart';
 import '../../features/progress/presentation/calendar_screen.dart';
 import '../../features/progress/presentation/suggestions_screen.dart';
 import '../../features/progress/providers/badge_unlocks_provider.dart';
@@ -78,6 +79,9 @@ class AppRoutes {
 
   /// Roadmap Phase 9 (C1) · weight and tape measurements over time.
   static const String progressBody = '/progress/body';
+
+  /// Roadmap Phase 10 (C4, C39) · the 30-day outcome report.
+  static const String progressReport = '/progress/report';
   static const String nutritionDiscover = '/nutrition/discover';
 
   /// Phase 50B · internal admin panel. Gated by [isAdminProvider]; the
@@ -409,6 +413,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.progressBody,
         name: 'progressBody',
         builder: (context, state) => const BodyMetricsScreen(),
+      ),
+      // Roadmap Phase 10 (C4, C39) · the 30-day outcome report.
+      GoRoute(
+        path: AppRoutes.progressReport,
+        name: 'progressReport',
+        builder: (context, state) => const OutcomeReportScreen(),
       ),
       GoRoute(
         path: AppRoutes.nutritionDiscover,

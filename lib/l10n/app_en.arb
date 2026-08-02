@@ -7595,5 +7595,230 @@
   "bodyMetricsAboutNoValence": "Nothing here is coloured good or bad. Down is the goal for one person and the opposite for another, and putting on muscle moves the same number the wrong way. The arrow says which way; you say whether that is what you wanted.",
   "@bodyMetricsAboutNoValence": {
     "description": "Second paragraph of the about sheet. Explains the deliberate absence of red/green valence colouring on this screen."
+  },
+  "outcomeReportTitle": "Your 30 days",
+  "@outcomeReportTitle": {
+    "description": "Title of the outcome report screen — the artifact that makes the store listing's promise of measurable results literally true."
+  },
+  "outcomeReportSubtitle": "{start} — {end}",
+  "@outcomeReportSubtitle": {
+    "description": "The window the report covers, under the title. Both placeholders are already-formatted dates.",
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "outcomeReportEmptyTitle": "Not enough logged yet",
+  "@outcomeReportEmptyTitle": {
+    "description": "Shown when fewer than two sessions exist. One session is a receipt, not a report."
+  },
+  "outcomeReportEmptyBody": "Two sessions and this becomes a report. Everything you log — sets, minutes, measurements — ends up here.",
+  "@outcomeReportEmptyBody": {
+    "description": "Body of the outcome report empty state. Says what logging buys rather than instructing."
+  },
+  "outcomeReportSectionEffort": "What you did",
+  "@outcomeReportSectionEffort": {
+    "description": "Section header above the session totals."
+  },
+  "outcomeReportSectionBody": "What changed",
+  "@outcomeReportSectionBody": {
+    "description": "Section header above the body measurement deltas."
+  },
+  "outcomeReportSectionStory": "The story",
+  "@outcomeReportSectionStory": {
+    "description": "Section header above the milestone timeline."
+  },
+  "outcomeReportSessions": "{count, plural, =1{1 session} other{{count} sessions}}",
+  "@outcomeReportSessions": {
+    "description": "Session count in the effort grid.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "outcomeReportMinutes": "{count, plural, =1{1 minute} other{{count} minutes}}",
+  "@outcomeReportMinutes": {
+    "description": "Active minutes in the effort grid. Excludes rest intervals.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "outcomeReportRepsValue": "{count, plural, =1{1 rep} other{{count} reps}}",
+  "@outcomeReportRepsValue": {
+    "description": "Total repetitions in the effort grid.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "outcomeReportKcal": "~{count} kcal",
+  "@outcomeReportKcal": {
+    "description": "Estimated energy in the effort grid. The tilde is load-bearing: this is a per-day estimate, not a measurement.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "outcomeReportKcalNote": "An estimate from completed sessions, not a measurement.",
+  "@outcomeReportKcalNote": {
+    "description": "Footnote under the energy figure. Says plainly that the number is derived."
+  },
+  "outcomeReportStreak": "{count, plural, =1{1 day} other{{count} days}}",
+  "@outcomeReportStreak": {
+    "description": "Longest streak in the effort grid.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "outcomeReportStreakLabel": "Best streak",
+  "@outcomeReportStreakLabel": {
+    "description": "Label under the longest-streak figure."
+  },
+  "outcomeReportSessionsLabel": "Sessions",
+  "@outcomeReportSessionsLabel": {
+    "description": "Label under the session count."
+  },
+  "outcomeReportMinutesLabel": "Active time",
+  "@outcomeReportMinutesLabel": {
+    "description": "Label under the active-minutes figure."
+  },
+  "outcomeReportRepsLabel": "Reps",
+  "@outcomeReportRepsLabel": {
+    "description": "Label under the total repetitions."
+  },
+  "outcomeReportKcalLabel": "Energy",
+  "@outcomeReportKcalLabel": {
+    "description": "Label under the estimated energy figure."
+  },
+  "outcomeReportCompletion": "{done} of {total} days",
+  "@outcomeReportCompletion": {
+    "description": "Program completion, as a count rather than a percentage.",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "outcomeReportNoBody": "You didn't log a measurement this month, so there's nothing to compare. The sessions above happened either way.",
+  "@outcomeReportNoBody": {
+    "description": "Shown in place of the body section when no two readings exist. Must not imply the user failed at anything."
+  },
+  "outcomeReportDeltaSteady": "{measure} — unchanged",
+  "@outcomeReportDeltaSteady": {
+    "description": "A body delta smaller than the instrument's own accuracy. Reported as unchanged rather than as a number, because the number would be the error bar.",
+    "placeholders": {
+      "measure": {
+        "type": "String"
+      }
+    }
+  },
+  "outcomeReportDeltaChange": "{measure} — {from} to {to}",
+  "@outcomeReportDeltaChange": {
+    "description": "A body delta. States both ends rather than a signed difference, so no arithmetic reads as a verdict.",
+    "placeholders": {
+      "measure": {
+        "type": "String"
+      },
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "outcomeReportMilestoneFirstWorkout": "Your first session",
+  "@outcomeReportMilestoneFirstWorkout": {
+    "description": "Timeline entry for the first logged workout."
+  },
+  "outcomeReportMilestoneStreak": "{count, plural, =1{A 1-day streak} other{A {count}-day streak}}",
+  "@outcomeReportMilestoneStreak": {
+    "description": "Timeline entry for the longest streak reached.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "outcomeReportMilestoneBest": "{count, plural, =1{Your best session: 1 rep} other{Your best session: {count} reps}}",
+  "@outcomeReportMilestoneBest": {
+    "description": "Timeline entry for the highest-rep session.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "outcomeReportMilestoneWeight": "You started measuring",
+  "@outcomeReportMilestoneWeight": {
+    "description": "Timeline entry for the first logged weight."
+  },
+  "outcomeReportMilestoneHalfway": "Halfway through the program",
+  "@outcomeReportMilestoneHalfway": {
+    "description": "Timeline entry for reaching the midpoint of the 30 days."
+  },
+  "outcomeReportMilestoneBadgeNamed": "Earned {badge}",
+  "@outcomeReportMilestoneBadgeNamed": {
+    "description": "Timeline entry for a badge. {badge} is the badge's own localized name.",
+    "placeholders": {
+      "badge": {
+        "type": "String"
+      }
+    }
+  },
+  "outcomeReportMilestoneComplete": "You finished all 30 days",
+  "@outcomeReportMilestoneComplete": {
+    "description": "Timeline entry for completing the program."
+  },
+  "outcomeReportCameraFree": "{count, plural, =1{1 of these you counted yourself} other{{count} of these you counted yourself}}",
+  "@outcomeReportCameraFree": {
+    "description": "Footnote naming how many sessions were logged without the camera. Present so a camera-free user's report reads as equal, not lesser.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "outcomeReportExport": "Export my data",
+  "@outcomeReportExport": {
+    "description": "Opens the data export sheet."
+  },
+  "outcomeReportExportTitle": "Take your data with you",
+  "@outcomeReportExportTitle": {
+    "description": "Title of the data export sheet."
+  },
+  "outcomeReportExportBody": "Everything this app knows about you, as a file you keep. Sessions, measurements, targets, preferences.",
+  "@outcomeReportExportBody": {
+    "description": "Body of the data export sheet."
+  },
+  "outcomeReportExportJson": "Export as JSON",
+  "@outcomeReportExportJson": {
+    "description": "Export action producing a JSON file."
+  },
+  "outcomeReportExportCsv": "Export as CSV",
+  "@outcomeReportExportCsv": {
+    "description": "Export action producing CSV files."
+  },
+  "outcomeReportExportDone": "Export ready.",
+  "@outcomeReportExportDone": {
+    "description": "Snackbar after an export is handed to the OS share sheet."
+  },
+  "outcomeReportExportFailed": "Could not build the export. Nothing was sent.",
+  "@outcomeReportExportFailed": {
+    "description": "Snackbar when the export fails. Says explicitly that no data left the device."
   }
 }

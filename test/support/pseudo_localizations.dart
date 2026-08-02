@@ -8,7 +8,7 @@
 //   2. a layout that only fits Turkish overflows here instead of in a
 //      German store review.
 //
-// 1613 members covered.
+// 1650 members covered.
 
 import 'package:flutter/widgets.dart';
 import 'package:sixpack_ai/core/utils/pseudo_locale.dart';
@@ -5039,6 +5039,99 @@ class PseudoAppLocalizations extends AppLocalizations {
       pseudoLocalize(_inner.bodyMetricsAboutNoValence);
 
   @override
+  String get outcomeReportTitle => pseudoLocalize(_inner.outcomeReportTitle);
+
+  @override
+  String get outcomeReportEmptyTitle =>
+      pseudoLocalize(_inner.outcomeReportEmptyTitle);
+
+  @override
+  String get outcomeReportEmptyBody =>
+      pseudoLocalize(_inner.outcomeReportEmptyBody);
+
+  @override
+  String get outcomeReportSectionEffort =>
+      pseudoLocalize(_inner.outcomeReportSectionEffort);
+
+  @override
+  String get outcomeReportSectionBody =>
+      pseudoLocalize(_inner.outcomeReportSectionBody);
+
+  @override
+  String get outcomeReportSectionStory =>
+      pseudoLocalize(_inner.outcomeReportSectionStory);
+
+  @override
+  String get outcomeReportKcalNote =>
+      pseudoLocalize(_inner.outcomeReportKcalNote);
+
+  @override
+  String get outcomeReportStreakLabel =>
+      pseudoLocalize(_inner.outcomeReportStreakLabel);
+
+  @override
+  String get outcomeReportSessionsLabel =>
+      pseudoLocalize(_inner.outcomeReportSessionsLabel);
+
+  @override
+  String get outcomeReportMinutesLabel =>
+      pseudoLocalize(_inner.outcomeReportMinutesLabel);
+
+  @override
+  String get outcomeReportRepsLabel =>
+      pseudoLocalize(_inner.outcomeReportRepsLabel);
+
+  @override
+  String get outcomeReportKcalLabel =>
+      pseudoLocalize(_inner.outcomeReportKcalLabel);
+
+  @override
+  String get outcomeReportNoBody => pseudoLocalize(_inner.outcomeReportNoBody);
+
+  @override
+  String get outcomeReportMilestoneFirstWorkout =>
+      pseudoLocalize(_inner.outcomeReportMilestoneFirstWorkout);
+
+  @override
+  String get outcomeReportMilestoneWeight =>
+      pseudoLocalize(_inner.outcomeReportMilestoneWeight);
+
+  @override
+  String get outcomeReportMilestoneHalfway =>
+      pseudoLocalize(_inner.outcomeReportMilestoneHalfway);
+
+  @override
+  String get outcomeReportMilestoneComplete =>
+      pseudoLocalize(_inner.outcomeReportMilestoneComplete);
+
+  @override
+  String get outcomeReportExport => pseudoLocalize(_inner.outcomeReportExport);
+
+  @override
+  String get outcomeReportExportTitle =>
+      pseudoLocalize(_inner.outcomeReportExportTitle);
+
+  @override
+  String get outcomeReportExportBody =>
+      pseudoLocalize(_inner.outcomeReportExportBody);
+
+  @override
+  String get outcomeReportExportJson =>
+      pseudoLocalize(_inner.outcomeReportExportJson);
+
+  @override
+  String get outcomeReportExportCsv =>
+      pseudoLocalize(_inner.outcomeReportExportCsv);
+
+  @override
+  String get outcomeReportExportDone =>
+      pseudoLocalize(_inner.outcomeReportExportDone);
+
+  @override
+  String get outcomeReportExportFailed =>
+      pseudoLocalize(_inner.outcomeReportExportFailed);
+
+  @override
   String retrospectiveSummary(String workouts, String minutes, String reps) =>
       pseudoLocalize(_inner.retrospectiveSummary(workouts, minutes, reps));
 
@@ -5763,8 +5856,60 @@ class PseudoAppLocalizations extends AppLocalizations {
   String bodyMetricsDeltaNoChange(int days) =>
       pseudoLocalize(_inner.bodyMetricsDeltaNoChange(days));
 
+  @override
+  String outcomeReportSubtitle(String start, String end) =>
+      pseudoLocalize(_inner.outcomeReportSubtitle(start, end));
+
+  @override
+  String outcomeReportSessions(int count) =>
+      pseudoLocalize(_inner.outcomeReportSessions(count));
+
+  @override
+  String outcomeReportMinutes(int count) =>
+      pseudoLocalize(_inner.outcomeReportMinutes(count));
+
+  @override
+  String outcomeReportRepsValue(int count) =>
+      pseudoLocalize(_inner.outcomeReportRepsValue(count));
+
+  @override
+  String outcomeReportKcal(int count) =>
+      pseudoLocalize(_inner.outcomeReportKcal(count));
+
+  @override
+  String outcomeReportStreak(int count) =>
+      pseudoLocalize(_inner.outcomeReportStreak(count));
+
+  @override
+  String outcomeReportCompletion(int done, int total) =>
+      pseudoLocalize(_inner.outcomeReportCompletion(done, total));
+
+  @override
+  String outcomeReportDeltaSteady(String measure) =>
+      pseudoLocalize(_inner.outcomeReportDeltaSteady(measure));
+
+  @override
+  String outcomeReportDeltaChange(String measure, String from, String to) =>
+      pseudoLocalize(_inner.outcomeReportDeltaChange(measure, from, to));
+
+  @override
+  String outcomeReportMilestoneStreak(int count) =>
+      pseudoLocalize(_inner.outcomeReportMilestoneStreak(count));
+
+  @override
+  String outcomeReportMilestoneBest(int count) =>
+      pseudoLocalize(_inner.outcomeReportMilestoneBest(count));
+
+  @override
+  String outcomeReportMilestoneBadgeNamed(String badge) =>
+      pseudoLocalize(_inner.outcomeReportMilestoneBadgeNamed(badge));
+
+  @override
+  String outcomeReportCameraFree(int count) =>
+      pseudoLocalize(_inner.outcomeReportCameraFree(count));
+
   /// Number of members this wrapper covers. The test suite asserts
   /// it still matches the generated class, so a new ARB key cannot
   /// slip past pseudo mode unnoticed.
-  static const int coveredMembers = 1613;
+  static const int coveredMembers = 1650;
 }

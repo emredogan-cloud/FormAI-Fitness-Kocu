@@ -21,6 +21,7 @@ import '../../../nutrition/domain/models/planned_meal.dart';
 import '../../../nutrition/providers/daily_menu_provider.dart';
 import '../../../nutrition/providers/nutrition_provider.dart';
 import '../../../progress/presentation/widgets/body_metrics_summary_card.dart';
+import '../../../progress/presentation/widgets/outcome_report_card.dart';
 import '../../../progress/presentation/widgets/weekly_retrospective_card.dart';
 import '../../../progress/providers/xp_provider.dart';
 import '../../../workout/data/session_log_repository.dart';
@@ -211,6 +212,11 @@ class GelisimTab extends ConsumerWidget {
             // the testers named first and the app could not answer.
             const BodyMetricsSummaryCard(),
             const SizedBox(height: 22),
+            // Roadmap Phase 10 (C4, C39) · the outcome report, directly
+            // under what changed. It renders nothing until there are two
+            // sessions to report on, and pads its own bottom margin so
+            // the gap collapses with it.
+            const OutcomeReportCard(),
             // Phase 52 · weekly retrospective. The card returns
             // SizedBox.shrink on non-Sundays AND self-pads its own
             // bottom margin on Sundays, so we don't need a second
