@@ -75,11 +75,21 @@ class CommunityRepository {
     }
   }
 
-  /// Postgres's undefined_table. Matched on the code rather than the
-  /// message, which is localised on some deployments.
+  /// Postgres's `undefined_table`.
+  ///
+  /// The SQLSTATE is the real check; the message match is a fallback for
+  /// deployments that surface a null code through PostgREST. Both are
+  /// wire diagnostics rather than copy — hoisted to named constants
+  /// because a `// i18n-ignore` on the expression's own line does not
+  /// survive `dart format`, which is the same reason
+  /// `auth_error_messages.dart` hoists its literals.
+  static const String _undefinedTable = '42P01'; // i18n-ignore — SQLSTATE
+  static const String _relationWord = 'relation'; // i18n-ignore — PG message
+  static const String _missingWord = 'does not exist'; // i18n-ignore — PG
+
   static bool _isMissingRelation(PostgrestException e) =>
-      e.code == '42P01' ||
-      (e.message.contains('relation') && e.message.contains('does not exist'));
+      e.code == _undefinedTable ||
+      (e.message.contains(_relationWord) && e.message.contains(_missingWord));
 
   /// Runs [body], turning a missing schema into [fallback] and letting
   /// every other failure through.
