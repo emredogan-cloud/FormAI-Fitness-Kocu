@@ -178,9 +178,24 @@ class _Grouped extends ConsumerWidget {
     final repository = ref.watch(progressPhotoRepositoryProvider);
     final localeTag = Localizations.localeOf(context).toLanguageTag();
 
+    // Photos exist but no pose has two of them, so no Compare button is
+    // offered anywhere. Saying why is better than leaving somebody to
+    // work out that the feature they came for is missing.
+    final canCompareAny = PhotoPose.values
+        .any((p) => photos.where((x) => x.pose == p).length > 1);
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 110),
       children: [
+        if (!canCompareAny)
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Text(
+              l10n.photosCompareNeedsTwo,
+              style:
+                  const TextStyle(color: _kFaint, fontSize: 12.5, height: 1.4),
+            ),
+          ),
         for (final pose in PhotoPose.values)
           if (photos.where((p) => p.pose == pose).toList() case final group
               when group.isNotEmpty) ...[

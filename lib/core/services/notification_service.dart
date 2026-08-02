@@ -44,6 +44,11 @@ class NotificationService {
 
   /// Roadmap Phase 9 (C1) · the opt-in weekly weigh-in nudge.
   static const int _weighInReminderId = 1003;
+
+  /// Roadmap Phase 10 · the monthly recap. A distinct id so it replaces
+  /// itself on reschedule rather than stacking, exactly like the three
+  /// above it.
+  static const int _monthlyRecapId = 1004;
   static const String _channelId = 'formai_daily_reminder';
   // Phase 52 · streak-protection ping fires 48 h after the last workout
   // and shares the same Android notification channel because the OS
@@ -408,6 +413,64 @@ class NotificationService {
     }
   }
 
+  /// Roadmap Phase 10 · the monthly recap.
+  ///
+  /// The lighter recurring sibling of the outcome report: one ping a
+  /// month saying the report is ready, on the [dayOfMonth] the user
+  /// started. It exists because a 30-day report nobody opens is not an
+  /// outcome — the roadmap's success criterion is that most people who
+  /// finish a program actually read theirs.
+  ///
+  /// **Deliberately monthly and deliberately quiet.** `defaultImportance`
+  /// like the weigh-in reminder, for the same reason: this is a routine,
+  /// not news, and a heads-up banner is what makes somebody switch the
+  /// app's notifications off entirely.
+  ///
+  /// `matchDateTimeComponents` has no month-of-year component in the
+  /// plugin, so this schedules the NEXT occurrence only and is
+  /// re-scheduled each time the recap is delivered or the app resolves
+  /// its reminders. That is the same "re-schedule on every state change
+  /// and let the most recent win" approach `scheduleDailyReminder`
+  /// documents, and it is more robust than a repeat rule the user's
+  /// calendar can drift away from.
+  Future<void> scheduleMonthlyRecap({
+    required int dayOfMonth,
+    required TimeOfDay time,
+  }) async {
+    await init();
+    await _plugin.cancel(id: _monthlyRecapId);
+
+    final l10n = await _copy();
+    try {
+      await _plugin.zonedSchedule(
+        id: _monthlyRecapId,
+        title: l10n.recapNotificationTitle,
+        body: l10n.recapNotificationBody,
+        scheduledDate: _nextInstanceOfDayOfMonth(dayOfMonth, time),
+        notificationDetails: NotificationDetails(
+          android: AndroidNotificationDetails(
+            _channelId,
+            l10n.notifChannelDailyName,
+            channelDescription: l10n.notifChannelDailyDesc,
+            importance: Importance.defaultImportance,
+            priority: Priority.defaultPriority,
+          ),
+          iOS: DarwinNotificationDetails(),
+        ),
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      );
+    } catch (e, st) {
+      AppLogger.error(
+        'scheduleMonthlyRecap failed',
+        e,
+        stackTrace: st,
+        category: 'notifications',
+      );
+    }
+  }
+
+  Future<void> cancelMonthlyRecap() => _plugin.cancel(id: _monthlyRecapId);
+
   Future<void> cancelWeighInReminder() async {
     await init();
     await _plugin.cancel(id: _weighInReminderId);
@@ -421,6 +484,34 @@ class NotificationService {
       scheduled = scheduled.add(const Duration(days: 1));
     }
     return scheduled;
+  }
+
+  /// The next occurrence of [dayOfMonth] at [time].
+  ///
+  /// **Clamped to the month's length**, which is the whole reason this
+  /// is not four lines. Somebody who starts a program on the 31st has no
+  /// 31st in February, and a naive `DateTime(year, 2, 31)` rolls into
+  /// March — so their monthly recap would arrive on the 3rd and then
+  /// drift. Clamping means the recap lands on the last day of a short
+  /// month and returns to its own date afterwards.
+  tz.TZDateTime _nextInstanceOfDayOfMonth(int dayOfMonth, TimeOfDay time) {
+    final now = tz.TZDateTime.now(tz.local);
+    tz.TZDateTime at(int year, int month) {
+      final lastDay = DateTime(year, month + 1, 0).day;
+      return tz.TZDateTime(
+        tz.local,
+        year,
+        month,
+        dayOfMonth.clamp(1, lastDay),
+        time.hour,
+        time.minute,
+      );
+    }
+
+    final thisMonth = at(now.year, now.month);
+    if (thisMonth.isAfter(now)) return thisMonth;
+    return at(now.month == 12 ? now.year + 1 : now.year,
+        now.month == 12 ? 1 : now.month + 1);
   }
 
   tz.TZDateTime _nextInstanceOf(TimeOfDay time) {

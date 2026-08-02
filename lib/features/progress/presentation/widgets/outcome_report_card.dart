@@ -32,6 +32,12 @@ class OutcomeReportCard extends ConsumerWidget {
 
     final l10n = AppLocalizations.of(context);
     final scheme = context.colors;
+    // Roadmap Phase 10 · the monthly recap is this card wearing a
+    // different sentence, not a second card. A recap row and a report
+    // row on the same tab would be two controls that do the same thing —
+    // the defect class the Phase 9 walk found and the polish sprint
+    // fixed.
+    final recap = report.isRecapDue;
     return Padding(
       padding: const EdgeInsets.only(bottom: 22),
       child: Material(
@@ -51,7 +57,9 @@ class OutcomeReportCard extends ConsumerWidget {
             child: Row(
               children: [
                 Icon(
-                  Icons.auto_awesome_mosaic_outlined,
+                  recap
+                      ? Icons.celebration_outlined
+                      : Icons.auto_awesome_mosaic_outlined,
                   color: scheme.primary,
                   size: 26,
                 ),
@@ -62,7 +70,7 @@ class OutcomeReportCard extends ConsumerWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        l10n.outcomeReportTitle,
+                        recap ? l10n.recapTitle : l10n.outcomeReportTitle,
                         style: TextStyle(
                           color: scheme.onSurface,
                           fontSize: 15,
@@ -71,10 +79,12 @@ class OutcomeReportCard extends ConsumerWidget {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        l10n.outcomeReportCompletion(
-                          report.daysCompleted,
-                          report.programLength,
-                        ),
+                        recap
+                            ? l10n.recapCta
+                            : l10n.outcomeReportCompletion(
+                                report.daysCompleted,
+                                report.programLength,
+                              ),
                         style: TextStyle(
                           color: scheme.onSurface.withValues(alpha: 0.65),
                           fontSize: 12.5,

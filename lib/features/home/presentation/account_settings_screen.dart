@@ -331,11 +331,20 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
           weekday: DateTime.monday,
           time: const TimeOfDay(hour: 9, minute: 0),
         );
+        // Roadmap Phase 10 · the monthly recap rides the same switch.
+        // A second toggle for "tell me about my body" would be a
+        // settings screen nobody reads, and somebody who wants the
+        // weekly weigh-in nudge wants the monthly report too.
+        await NotificationService.instance.scheduleMonthlyRecap(
+          dayOfMonth: DateTime.now().day,
+          time: const TimeOfDay(hour: 10, minute: 0),
+        );
         await prefs.setWeighInReminderEnabled(true);
         if (!mounted) return;
         _toast(AppLocalizations.of(context).accountReminderOn);
       } else {
         await NotificationService.instance.cancelWeighInReminder();
+        await NotificationService.instance.cancelMonthlyRecap();
         await prefs.setWeighInReminderEnabled(false);
         if (!mounted) return;
         _toast(AppLocalizations.of(context).accountReminderOff);

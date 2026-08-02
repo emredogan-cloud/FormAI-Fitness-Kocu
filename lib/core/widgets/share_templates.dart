@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
@@ -104,6 +106,148 @@ class ShareProgressTemplate extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Roadmap Phase 10 (C4) · the 30-day outcome report, as a share card.
+///
+/// **Every line on this card is passed in already formatted.** The
+/// template does no arithmetic, no unit conversion and no pluralisation:
+/// the screen that opens the share sheet has the locale, the unit system
+/// and the report, and re-deriving any of that here would be a second
+/// place for the numbers to disagree with the report the user just read.
+///
+/// **Nothing appears unless the user switched it on.** [lines] is
+/// whatever survived the options sheet, and [photoBytes] is null unless
+/// somebody explicitly opted a photograph in — which is never the
+/// default and is never remembered between shares. The card is the one
+/// place in this feature where an image of the user's body can leave the
+/// handset, so the consent for it is asked every single time.
+class ShareOutcomeTemplate extends StatelessWidget {
+  const ShareOutcomeTemplate({
+    super.key,
+    required this.headline,
+    required this.subline,
+    required this.lines,
+    this.photoBytes,
+    this.format = ShareFormat.story,
+  });
+
+  /// The completion count — "18 of 30 days". Already localized.
+  final String headline;
+
+  /// The window the report covers. Already formatted.
+  final String subline;
+
+  /// (label, value) pairs, already localized and already filtered by the
+  /// user's choices. Rendered in order; an empty list is valid and
+  /// leaves the card as headline plus branding.
+  final List<(String, String)> lines;
+
+  /// PNG/JPEG bytes of a progress photo, or null. Must be precached by
+  /// the caller before the capture — an off-screen render gets two
+  /// frames and will not wait for a decode.
+  final Uint8List? photoBytes;
+
+  final ShareFormat format;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = format == ShareFormat.story ? storySize : squareSize;
+    final story = format == ShareFormat.story;
+    return _BrandFrame(
+      size: size,
+      child: Padding(
+        padding:
+            EdgeInsets.symmetric(horizontal: 80, vertical: story ? 96 : 64),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const _BrandHeader(),
+            const Spacer(),
+            Text(
+              subline,
+              style: const TextStyle(
+                color: _brandSubtext,
+                fontSize: 32,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 4,
+              ),
+            ),
+            const SizedBox(height: 20),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                headline,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: _brandText,
+                  fontSize: story ? 96 : 76,
+                  fontWeight: FontWeight.w900,
+                  height: 1.05,
+                ),
+              ),
+            ),
+            if (photoBytes != null) ...[
+              SizedBox(height: story ? 48 : 28),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(28),
+                child: Image.memory(
+                  photoBytes!,
+                  width: story ? 520 : 380,
+                  height: story ? 620 : 380,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
+              ),
+            ],
+            SizedBox(height: story ? 56 : 32),
+            for (final line in lines) ...[
+              _OutcomeLine(label: line.$1, value: line.$2),
+              const SizedBox(height: 22),
+            ],
+            const Spacer(),
+            const _BrandFooter(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _OutcomeLine extends StatelessWidget {
+  const _OutcomeLine({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: _brandSubtext,
+              fontSize: 34,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        const SizedBox(width: 24),
+        Text(
+          value,
+          style: const TextStyle(
+            color: _brandText,
+            fontSize: 38,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -182,6 +182,27 @@ class OutcomeReport {
   /// about a single weight reading.
   bool get isSubstantive => sessionCount >= 2;
 
+  /// True in the few days after each 30-day block since the first
+  /// session — the window in which a monthly recap is worth surfacing.
+  ///
+  /// Keyed to the user's OWN start date rather than the calendar month,
+  /// because "your month" means the thirty days they trained, not the
+  /// thirty days the wall calendar happened to contain. Somebody who
+  /// started on the 20th gets their recap on the 20th.
+  ///
+  /// A three-day window rather than a single day: the recap surfaces on
+  /// a card the user has to open the app to see, and a one-day window
+  /// means anybody who skips a day never sees one.
+  bool get isRecapDue {
+    final first = firstSessionAt;
+    if (first == null || !isSubstantive) return false;
+    final days = windowEnd.difference(_dayOf(first)).inDays;
+    return days >= 30 && days % 30 < 3;
+  }
+
+  static DateTime _dayOf(DateTime when) =>
+      DateTime(when.year, when.month, when.day);
+
   /// True when there is nothing measured about the body in it. The
   /// report is still worth generating — sessions, minutes and streaks
   /// are outcomes too — but the layout drops a whole section, and the

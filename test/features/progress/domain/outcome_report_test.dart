@@ -323,4 +323,48 @@ void main() {
       expect(report.completionFraction, 1.0);
     });
   });
+
+  // Roadmap Phase 10 · the monthly recap's trigger. Keyed to the user's
+  // own start date rather than the wall calendar, because "your month"
+  // means the thirty days they trained.
+  group('the monthly recap', () {
+    test('is not due before thirty days have passed', () {
+      expect(
+        build(logs: {1: session(1, 20), 2: session(2, 2)}).isRecapDue,
+        isFalse,
+      );
+    });
+
+    // The first session is deliberately OUTSIDE the 30-day window in
+    // most of these, which is the realistic shape: somebody 45 days in
+    // started before the window opened. Two recent sessions keep the
+    // report substantive, so the assertion is about the recap trigger
+    // rather than about the substance threshold.
+    OutcomeReport aged(int age) => build(logs: {
+          1: session(1, age),
+          2: session(2, 5),
+          3: session(3, 1),
+        });
+
+    test('is due on the thirtieth day and for two days after', () {
+      for (final age in [30, 31, 32]) {
+        expect(aged(age).isRecapDue, isTrue,
+            reason: 'a first session $age days ago should surface a recap');
+      }
+    });
+
+    test('goes quiet again until the next block', () {
+      for (final age in [33, 40, 59]) {
+        expect(aged(age).isRecapDue, isFalse,
+            reason: 'day $age is inside a block, not at its edge');
+      }
+      expect(aged(60).isRecapDue, isTrue,
+          reason: 'the second block ends at day 60');
+    });
+
+    test('never fires on a report too thin to be worth opening', () {
+      // One session, thirty days ago. There is nothing to recap.
+      expect(build(logs: {1: session(1, 30)}).isRecapDue, isFalse);
+    });
+  });
 }

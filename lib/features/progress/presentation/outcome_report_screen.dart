@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show Uint8List;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +11,8 @@ import 'package:share_plus/share_plus.dart';
 import '../../../core/providers/unit_system_provider.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../core/services/data_export_service.dart';
+import '../../../core/services/share_service.dart';
+import '../../../core/utils/unit_system.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../l10n/app_localizations.dart';
 import '../domain/outcome_report.dart';
@@ -18,6 +21,8 @@ import '../data/body_metrics_repository.dart';
 import '../data/progress_photo_repository.dart';
 import '../providers/outcome_report_provider.dart';
 import '../providers/target_weight_provider.dart';
+import '../domain/models/progress_photo.dart';
+import 'body_metrics_copy.dart';
 import 'outcome_report_copy.dart';
 
 /// Roadmap Phase 10 (C4, C39) · the 30-day outcome report.
@@ -231,6 +236,8 @@ class _Report extends ConsumerWidget {
           _Timeline(milestones: report.milestones, localeTag: localeTag),
         ],
         const SizedBox(height: 24),
+        _ShareRow(report: report, system: system, localeTag: localeTag),
+        const SizedBox(height: 8),
         const _PhotosRow(),
         const SizedBox(height: 8),
         const _ExportRow(),
@@ -820,6 +827,255 @@ class _PhotosRow extends ConsumerWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Roadmap Phase 10 (C4) · the share card, and the consent that precedes
+/// it.
+///
+/// **The options sheet is not a settings screen.** Nothing it holds is
+/// remembered: every switch is off when it opens, every time. That is
+/// deliberate and it is the difference between "the user opted in" and
+/// "the user opted in once, months ago, and has forgotten". The sessions
+/// and minutes are always on the card — they are the report's substance
+/// and disclose nothing about a body — and everything that does is a
+/// decision made in the moment.
+///
+/// The photograph is the sharpest case: it is the only path in this
+/// whole feature by which an image of the user's body can leave the
+/// handset. It is off, it is last, and it is asked again next time.
+class _ShareRow extends ConsumerStatefulWidget {
+  const _ShareRow({
+    required this.report,
+    required this.system,
+    required this.localeTag,
+  });
+
+  final OutcomeReport report;
+  final UnitSystem system;
+  final String localeTag;
+
+  @override
+  ConsumerState<_ShareRow> createState() => _ShareRowState();
+}
+
+class _ShareRowState extends ConsumerState<_ShareRow> {
+  bool _busy = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: TextButton.icon(
+        onPressed: _busy ? null : _openOptions,
+        icon: const Icon(Icons.share_outlined, size: 18, color: _kLime),
+        label: Text(
+          l10n.outcomeReportShare,
+          style: const TextStyle(color: _kLime, fontWeight: FontWeight.w700),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openOptions() async {
+    final l10n = AppLocalizations.of(context);
+    final hasPhotos =
+        (ref.read(progressPhotosProvider).value ?? const []).isNotEmpty;
+    // Fresh every time. See the class doc.
+    var body = false;
+    var streak = false;
+    var photo = false;
+
+    final go = await showModalBottomSheet<bool>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheetState) => Container(
+          width: double.infinity,
+          decoration: const BoxDecoration(
+            color: _kCard,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            border: Border(top: BorderSide(color: _kHairline)),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.outcomeReportShareTitle,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 19,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  l10n.outcomeReportShareBody,
+                  style: const TextStyle(
+                      color: _kMuted, fontSize: 14, height: 1.5),
+                ),
+                const SizedBox(height: 8),
+                if (widget.report.hasBodyData)
+                  _ShareToggle(
+                    label: l10n.outcomeReportShareBodyMetrics,
+                    value: body,
+                    onChanged: (v) => setSheetState(() => body = v),
+                  ),
+                _ShareToggle(
+                  label: l10n.outcomeReportShareStreak,
+                  value: streak,
+                  onChanged: (v) => setSheetState(() => streak = v),
+                ),
+                if (hasPhotos)
+                  _ShareToggle(
+                    label: l10n.outcomeReportSharePhotos,
+                    value: photo,
+                    onChanged: (v) => setSheetState(() => photo = v),
+                  ),
+                const SizedBox(height: 14),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () => Navigator.of(sheetContext).pop(true),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: _kPurple,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: Text(l10n.outcomeReportShareCta),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    if (go != true || !mounted) return;
+    await _render(body: body, streak: streak, photo: photo);
+  }
+
+  Future<void> _render({
+    required bool body,
+    required bool streak,
+    required bool photo,
+  }) async {
+    setState(() => _busy = true);
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final report = widget.report;
+    final dates = DateFormat.MMMd(widget.localeTag);
+
+    // Formatted here, where the locale and the unit system are, and
+    // handed to the template already finished. See the template's doc.
+    final lines = <(String, String)>[
+      (
+        l10n.outcomeReportSessionsLabel,
+        l10n.outcomeReportSessions(report.sessionCount)
+      ),
+      (
+        l10n.outcomeReportMinutesLabel,
+        l10n.outcomeReportMinutes(report.totalActiveTime.inMinutes)
+      ),
+      (
+        l10n.outcomeReportRepsLabel,
+        l10n.outcomeReportRepsValue(report.totalReps)
+      ),
+      if (streak)
+        (
+          l10n.outcomeReportStreakLabel,
+          l10n.outcomeReportStreak(report.longestStreak)
+        ),
+      if (body)
+        for (final delta in [
+          if (report.weight case final w?) w,
+          ...report.measurements,
+        ])
+          (
+            measureLabel(l10n, delta.measure),
+            formatMeasure(delta.last, delta.measure,
+                system: widget.system, localeTag: widget.localeTag)
+          ),
+    ];
+
+    Uint8List? bytes;
+    if (photo) bytes = await _newestPhotoBytes();
+    if (!mounted) return;
+
+    final ok = await ShareService.instance.shareOutcomeReport(
+      context: context,
+      headline: l10n.outcomeReportCompletion(
+        report.daysCompleted,
+        report.programLength,
+      ),
+      subline: reportWindow(
+        l10n,
+        dates.format(report.windowStart),
+        dates.format(report.windowEnd),
+      ),
+      lines: lines,
+      photoBytes: bytes,
+    );
+    if (!mounted) return;
+    if (!ok) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.outcomeReportShareFailed)),
+      );
+    }
+    setState(() => _busy = false);
+  }
+
+  /// The newest photo of any pose, read straight off disk.
+  ///
+  /// Front by preference — it is the pose a comparison is usually of —
+  /// falling back to whatever exists, because a user who only ever takes
+  /// side photos still opted in.
+  Future<Uint8List?> _newestPhotoBytes() async {
+    final photos = ref.read(progressPhotosProvider).value ?? const [];
+    if (photos.isEmpty) return null;
+    final chosen = photos.firstWhere(
+      (p) => p.pose == PhotoPose.front,
+      orElse: () => photos.first,
+    );
+    try {
+      final repository = ref.read(progressPhotoRepositoryProvider);
+      final file = File(await repository.pathOf(chosen));
+      return file.existsSync() ? await file.readAsBytes() : null;
+    } catch (_) {
+      return null;
+    }
+  }
+}
+
+class _ShareToggle extends StatelessWidget {
+  const _ShareToggle({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String label;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return SwitchListTile.adaptive(
+      contentPadding: EdgeInsets.zero,
+      value: value,
+      onChanged: onChanged,
+      activeThumbColor: _kPurple,
+      title: Text(
+        label,
+        style: const TextStyle(color: Colors.white, fontSize: 14.5),
       ),
     );
   }

@@ -41,6 +41,64 @@ class ShareService {
   static String _brandHashtagSuffix(AppLocalizations l10n) =>
       '\n\n${l10n.shareBrandHashtags}';
 
+  /// Roadmap Phase 10 (C4) · shares the 30-day outcome report.
+  ///
+  /// Everything on the card arrives already formatted and already
+  /// filtered — see [ShareOutcomeTemplate]. This method's only two jobs
+  /// are precaching the photograph, if there is one, and telling the
+  /// truth in the failure branch.
+  ///
+  /// **The precache is not an optimisation.** `_captureWidget` gives the
+  /// off-screen tree two frames and 32 ms; an undecoded image would
+  /// simply be absent from the PNG, and a share card that silently drops
+  /// the photograph the user deliberately opted in to is worse than one
+  /// that fails.
+  Future<bool> shareOutcomeReport({
+    required BuildContext context,
+    required String headline,
+    required String subline,
+    required List<(String, String)> lines,
+    Uint8List? photoBytes,
+    ShareFormat format = ShareFormat.story,
+  }) async {
+    final analytics = AnalyticsService.instance;
+    final l10n = AppLocalizations.of(context);
+    unawaited(analytics.shareInitiated(surface: 'outcome_report'));
+    try {
+      if (photoBytes != null) {
+        await precacheImage(MemoryImage(photoBytes), context);
+        if (!context.mounted) return false;
+      }
+      final bytes = await _captureWidget(
+        context: context,
+        widget: ShareOutcomeTemplate(
+          headline: headline,
+          subline: subline,
+          lines: lines,
+          photoBytes: photoBytes,
+          format: format,
+        ),
+        format: format,
+      );
+      if (!context.mounted) return false;
+      final file = await _persistTemp(bytes, prefix: 'formai_report');
+      final result = await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path)],
+          text: '$headline${_brandHashtagSuffix(l10n)}',
+        ),
+      );
+      if (result.status == ShareResultStatus.success) {
+        unawaited(analytics.shareCompleted(surface: 'outcome_report'));
+      }
+      return true;
+    } catch (e, st) {
+      AppLogger.error('shareOutcomeReport failed', e,
+          stackTrace: st, category: 'share');
+      return false;
+    }
+  }
+
   /// Renders the "Progress" template (program completion %) and hands
   /// it to the OS share-sheet. Fires `share_initiated` immediately and
   /// `share_completed` only when the user actually picks a destination
