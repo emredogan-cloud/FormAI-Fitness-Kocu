@@ -94,6 +94,21 @@ jobs:
       - name: Pseudo-localisations wrapper is in step
         run: dart run tool/gen_pseudo_localizations.dart --check
 
+      # Roadmap Phase 8 (C13) · direction-neutrality, as a ratchet.
+      #
+      # The RTL layout sweeps assert that nothing overflows when a screen
+      # is rendered right-to-left. An `Alignment.centerLeft` does not
+      # overflow — it lays out perfectly, on the wrong side — so the
+      # sweeps cannot see it and never will. Only reading the source can,
+      # which is what this does.
+      #
+      # Ratcheting for the same reason the hardcoded-string gate does:
+      # 177 pre-existing call sites, most of them decorative overlays
+      # where mirroring is a judgement call. Converting a screen lowers
+      # the baseline; nothing raises it.
+      - name: Guard against new direction-dependent layout
+        run: dart run tool/check_directional_layout.dart
+
       - name: Run unit and widget tests (with coverage)
         run: flutter test --coverage
 
