@@ -6,7 +6,8 @@ previous one can continue without re-analysing the repository.
 **Last updated:** 2026-08-02, **Phase 10 closed** (device walk included)
 — build `1.0.0+32`. Phase 8 stays closed as a split (RTL done, three
 languages deferred). **Phase 11 is DEFERRED BY FOUNDER — do not
-implement it.** **Wave 4 starts at Phase 12, which is next.**
+implement it.** **Phase 12 is IN PROGRESS: the schema, the rules and
+their gate are in; the screens are not. Read §2.0.0f.**
 
 ---
 
@@ -33,7 +34,7 @@ one `PHASE_NN_COMPLETION_REPORT.md`. Final deliverable at the very end:
 | **9p · pre-Phase-10 polish** | **done + device walk** | `PRE_PHASE10_POLISH_REPORT.md` |
 | **10 · Visual outcomes & reports** | **done + device walk** | `PHASE_10_COMPLETION_REPORT.md` |
 | **11 · Accessibility** | ⏸ **DEFERRED BY FOUNDER** — full scope preserved | roadmap §PHASE 11 |
-| **12 · Community I** | next | — |
+| **12 · Community I** | **in progress — foundation in, screens not** | `PHASE_12_COMPLETION_REPORT.md` |
 
 **Branch:** `main`. **Build:** `1.0.0+31`.
 
@@ -188,6 +189,36 @@ the 1.3 text-scale sweeps in CI; reduce-motion in `SpotlightTour`), and
 the one known contrast defect — the "See all" pill at **3.03:1 in light
 mode** — is still open and still Phase 11's remit.
 
+### 2.0.0f Phase 12 is IN PROGRESS — read §4 of its report first
+
+`PHASE_12_COMPLETION_REPORT.md` is a **live** record. **§4 "Where to
+resume" is the section to read**, and it is ordered: repositories,
+screens, share template, referral bridge, event hooks, analytics.
+
+Shipped: `019_social_profiles.sql` (eight tables, RLS throughout,
+written and NOT applied), the pure domain rules with 26 tests, and a
+static RLS gate with 14.
+
+Five things that save re-deriving:
+
+- **The migration is `019`, not the roadmap's `015`.** 015 is Phase 7's
+  `recipe_origin_and_diet`. 013–015 applied, 016 reserved, 017 body
+  metrics, 018 progress photos.
+- **`019` is written and NOT applied**, like 017 and 018. Every
+  repository therefore needs an honest "community is not available"
+  path for a missing relation — do not let it surface as an error tile.
+- **A block beats ownership beats publication**, in that order, in
+  `ProfileVisibility.resolve`. And `blocks` is readable only by the
+  blocker: the blocked user must not be able to discover the block.
+- **`rls_policy_test.dart` executes no SQL and says so.** It checks the
+  SHAPE — RLS enabled, no `using (true)`, every policy has `auth.uid()`,
+  blocks checked both ways. **The live penetration pass is still owed**
+  and is listed in the report's §4.7.
+- **The dark neon card widgets are now wanted in three places**
+  (`outcome_report_screen.dart`, the photo screens, and the community
+  screens next). Lift them into a shared widget rather than copying a
+  third time.
+
 ### 2.0.1 The three things Phase 7 deliberately did NOT do
 
 1. **`016_drop_legacy_tags.sql` is not written.** It drops
@@ -260,7 +291,7 @@ the entire procedure.
 
 ```
 analyze                     0 issues
-tests                       1258
+tests                       1298
 hardcoded-string gate       0 in 0 files  (allowlist 246, printed per entry)
 ARB                         1687 keys · tr 100% · en 100% · all referenced
 recipe catalogue            392 rows · en 392/392 · 2242 ingredient rows

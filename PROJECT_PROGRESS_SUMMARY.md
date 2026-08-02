@@ -213,6 +213,11 @@
 
 **Phase 12 — Community I: Identity & Squads.** Wave 4's opener, started
 immediately after Phase 10 closed and Phase 11 was marked deferred.
+**The foundation is in** — `019_social_profiles.sql` (eight tables, RLS
+throughout, written and not applied), the pure visibility/friendship/
+squad rules with 26 tests, and a static RLS gate with 14 that was probed
+against three real regressions before being trusted. **The screens are
+not started**; `PHASE_12_COMPLETION_REPORT.md` §4 orders the rest.
 
 Founder-side, carried and still open:
 
