@@ -87,8 +87,7 @@ void main() {
   group('precision', () {
     testWidgets(
         'a tenth of a kilogram survives to the screen — this is the whole '
-        'point of the feature, and it was being rounded away',
-        (tester) async {
+        'point of the feature, and it was being rounded away', (tester) async {
       await pump(tester, await host(entries: [weight(0, 82.4)]));
       expect(find.textContaining('82,4 kg'), findsWidgets);
       expect(find.textContaining('82 kg'), findsNothing);
