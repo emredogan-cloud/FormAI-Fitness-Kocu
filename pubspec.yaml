@@ -6,7 +6,7 @@ publish_to: 'none'
 # +14 = first store-submission release candidate (Phase 2 of the
 # FINAL_STORE_SUBMISSION_ROADMAP). +15 was uploaded to the closed test;
 # +16 = closed-test polish Part 2 (image refresh + illustration assets).
-version: 1.0.0+30
+version: 1.0.0+31
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -238,6 +238,12 @@ flutter:
     # directory ships a README rather than being empty, because Flutter
     # fails the build on a declared directory that does not exist.
     - "photos/workout_backgrounds/"
+    # Pre-Phase-10 polish · the "Your body" screen's neon icons and the
+    # 3D dumbbell, cut out of the founder's design comps
+    # (assets/new-assets/022-025) with the black background converted to
+    # alpha. ~180 KB total. These are ARTWORK, not reference imagery:
+    # assets/new-assets/ is the comp source and is NOT bundled.
+    - "assets/body_metrics/"
     # Tier 2-A · bundled 64-px WebP placeholders for the 298 meal photos.
     # ~700 B each, ~200 KB total. Used by `RecipeImage` as the bottom
     # layer behind `CachedImage`/`CachedNetworkImage` so the recipe-card

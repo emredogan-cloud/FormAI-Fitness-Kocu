@@ -3296,6 +3296,14 @@
       }
     }
   },
+  "progressUnitMinutes": "min",
+  "@progressUnitMinutes": {
+    "description": "Unit under a duration figure on the Progress tab. Abbreviated because it sits under a large number in a narrow tile."
+  },
+  "progressUnitWorkouts": "workouts",
+  "@progressUnitWorkouts": {
+    "description": "Unit under a session count in the weekly retrospective chip row."
+  },
   "progressUnitReps": "reps",
   "@progressUnitReps": {
     "description": "Unit suffix under the weekly reps chart, lowercase"
@@ -7525,5 +7533,67 @@
   "bodyMetricsChartNeedsTwo": "Two entries and a line appears here.",
   "@bodyMetricsChartNeedsTwo": {
     "description": "Shown in the chart area when the selected measure has fewer than two points in the selected range."
+  },
+  "bodyMetricsTrendCardTitle": "{measure} trend",
+  "@bodyMetricsTrendCardTitle": {
+    "description": "Title of the chart card. {measure} is the localized measure name — Weight, Waist, Hips and so on — so the card names what it is plotting.",
+    "placeholders": {
+      "measure": {
+        "type": "String"
+      }
+    }
+  },
+  "bodyMetricsDeltaVsWindow": "{days, plural, =1{{amount} vs 1 day ago} other{{amount} vs {days} days ago}}",
+  "@bodyMetricsDeltaVsWindow": {
+    "description": "The change across the selected window, under the latest value. {amount} already carries its unit and is always unsigned — the direction is shown by an arrow icon, never by a sign or a colour.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "bodyMetricsDeltaNoChange": "{days, plural, =1{No change vs 1 day ago} other{No change vs {days} days ago}}",
+  "@bodyMetricsDeltaNoChange": {
+    "description": "Replaces bodyMetricsDeltaVsWindow when the measure has not moved across the window. A signed zero reads as a rounding artifact.",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "bodyMetricsInsightsCta": "View insights",
+  "@bodyMetricsInsightsCta": {
+    "description": "Opens the sheet holding the longer reading of the trend — the sentence, the plateau note and the target reconciliation."
+  },
+  "bodyMetricsInsightsTitle": "What the numbers say",
+  "@bodyMetricsInsightsTitle": {
+    "description": "Title of the insights sheet."
+  },
+  "bodyMetricsTargetHint": "Set a target to track your progress.",
+  "@bodyMetricsTargetHint": {
+    "description": "Supporting line on the target card while no target is set. Says what setting one buys rather than nagging."
+  },
+  "bodyMetricsHistoryViewAll": "View all",
+  "@bodyMetricsHistoryViewAll": {
+    "description": "Expands the entry list from the most recent few to every entry logged."
+  },
+  "bodyMetricsHistoryShowLess": "Show less",
+  "@bodyMetricsHistoryShowLess": {
+    "description": "Collapses the entry list back to the most recent few."
+  },
+  "bodyMetricsAboutCta": "About these numbers",
+  "@bodyMetricsAboutCta": {
+    "description": "Tooltip and title for the information button in the app bar."
+  },
+  "bodyMetricsAboutSmoothing": "The line is smoothed. A single heavy day is water and food, not your body, and plotting it raw would make a normal week look like a reversal.",
+  "@bodyMetricsAboutSmoothing": {
+    "description": "First paragraph of the about sheet. Explains why the plotted line does not pass through every logged dot."
+  },
+  "bodyMetricsAboutNoValence": "Nothing here is coloured good or bad. Down is the goal for one person and the opposite for another, and putting on muscle moves the same number the wrong way. The arrow says which way; you say whether that is what you wanted.",
+  "@bodyMetricsAboutNoValence": {
+    "description": "Second paragraph of the about sheet. Explains the deliberate absence of red/green valence colouring on this screen."
   }
 }

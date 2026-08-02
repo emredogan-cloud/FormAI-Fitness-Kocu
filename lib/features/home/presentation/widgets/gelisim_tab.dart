@@ -1162,7 +1162,7 @@ class _StatsCardsColumn extends StatelessWidget {
         _StatChartCard(
           label: AppLocalizations.of(context).progressWorkoutDuration,
           value: '$totalMinutes',
-          unit: 'dk',
+          unit: AppLocalizations.of(context).progressUnitMinutes,
           accent: _orange,
           chart: _MiniAreaLine(
             values: _normalize(weeklyMinutes),

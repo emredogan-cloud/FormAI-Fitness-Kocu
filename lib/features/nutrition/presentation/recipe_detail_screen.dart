@@ -417,7 +417,7 @@ class _MacroTilesRow extends StatelessWidget {
           child: _MacroTile(
             label: AppLocalizations.of(context).recipeCalories,
             value: '${recipe.calories}',
-            unit: 'kcal',
+            unit: 'kcal', // i18n-ignore — unit symbol, never-translate
             // Phase 53D · pull text colour from the active theme so
             // the kcal tile reads charcoal on a white card / white on
             // a dark card. The other three tiles keep their macro

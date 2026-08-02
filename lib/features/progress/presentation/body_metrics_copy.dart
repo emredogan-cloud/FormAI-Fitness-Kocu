@@ -79,6 +79,12 @@ String formatMeasure(
 String circumferenceUnitLabel(UnitSystem system) =>
     system == UnitSystem.metric ? 'cm' : 'in'; // i18n-ignore — unit symbol
 
+/// The unit symbol for whichever measure is being shown, so a caller
+/// that needs the number and its unit as separate pieces of text does
+/// not have to know which measures are weights.
+String measureUnitLabel(BodyMeasure measure, UnitSystem system) =>
+    measure.isWeight ? weightUnitLabel(system) : circumferenceUnitLabel(system);
+
 /// Re-runs a number through the locale's formatter so a decimal
 /// separator matches the language around it.
 ///

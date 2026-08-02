@@ -245,6 +245,47 @@ bool _hasLocaleOrderedSymbol(String value) {
 
 final RegExp _percentAgainstDigits = RegExp(r'%\s?[0-9]|[0-9]\s?%');
 
+/// Blind spot #8, found on a device during the pre-Phase-10 walk. The
+/// Progress tab rendered `0 dk` and a stat row reading
+/// `antrenman · dakika · tekrar` inside the English app.
+///
+/// All four are single lowercase words, and a single lowercase word is
+/// exactly the shape of a Dart identifier — so `_isTechnical`'s
+/// "identifiers / tokens" pattern discarded every one of them before any
+/// label test ran. The gate reported the file at zero for as long as the
+/// defect existed.
+///
+/// Shape alone cannot separate `'dakika'` from `'padding'`; both are one
+/// lowercase word. **Where the literal goes** can. A literal passed as
+/// `hint:`, `unit:`, `label:` or `title:` is going to be rendered — that
+/// is what those parameters mean — so the argument name is the signal.
+///
+/// Like the ordering rule, this is a positive SIGNAL rather than a
+/// removed exclusion, and it outranks `_isTechnical` for the same reason
+/// that one does: the exclusion fires first and would swallow the hit.
+/// Proven with a synthetic probe under `lib/` before being trusted, per
+/// the standing rule that a green gate is only a claim about its own
+/// heuristics.
+///
+/// The genuine unit symbols this catches — `g`, `kcal` — are
+/// never-translate per `docs/i18n/GLOSSARY.md` and carry an
+/// `// i18n-ignore` with that reason, which is the same mechanism every
+/// other non-copy literal in `lib/` uses.
+bool _isRenderedArgument(String line, int literalStart) {
+  final before = line.substring(0, literalStart);
+  return _renderingArgument.hasMatch(before);
+}
+
+/// Deliberately narrow. `message:` was in the first draft and the probe
+/// immediately flagged a Sentry breadcrumb; `prefix:`/`suffix:` flagged a
+/// temp-file name. Both name a value far more often than a rendering, so
+/// only parameters that mean "this is display text" are listed — which
+/// keeps the signal a signal rather than a second, noisier gate.
+final RegExp _renderingArgument = RegExp(
+  r'\b(hint|hintText|unit|unitLabel|label|labelText|title|subtitle|'
+  r'caption|placeholder|tooltip|suffixText|prefixText)\s*:\s*$',
+);
+
 bool _isPureComposition(String value) =>
     !_onlyInterpolation.hasMatch(value.replaceAll(_interpolation, ''));
 
@@ -287,15 +328,22 @@ List<Violation> _findViolations(String source) {
     for (final match in _literal.allMatches(rawLine)) {
       final value = match.group(1) ?? match.group(2) ?? '';
       final ordered = _hasLocaleOrderedSymbol(value);
+      // The rendered-argument signal outranks the two SHAPE exclusions —
+      // a rendered `'dakika'` is copy however much it looks like an
+      // identifier — but deliberately not the composition one. `'$count'`
+      // under `label:` is still just a number, and letting the signal
+      // outrank composition too made the probe flag three of them.
+      final rendered = _isRenderedArgument(rawLine, match.start);
       // The ordering signal outranks the technical exclusion, and that
       // ordering is not cosmetic. `%82` is matched whole by the "pure
       // punctuation / numbers" pattern, so it was discarded as technical
       // before the ordering rule was ever consulted — which is how the
       // hook screen shipped `%82` to English users with the gate at zero
       // and a rule in this file written specifically to catch it.
-      if (!ordered && _isTechnical(value)) continue;
+      if (!ordered && !rendered && _isTechnical(value)) continue;
       if (!ordered && _isPureComposition(value)) continue;
       if (!ordered &&
+          !rendered &&
           !_turkishSignal.hasMatch(value) &&
           !_looksLikeLabel(value)) {
         continue;

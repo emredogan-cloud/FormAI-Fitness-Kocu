@@ -776,6 +776,8 @@
   "muscleLegs": "Bacak",
   "muscleCardio": "Kardiyo",
   "progressWeeklyCompleted": "{done} / {total}",
+  "progressUnitMinutes": "dk",
+  "progressUnitWorkouts": "antrenman",
   "progressUnitReps": "tekrar",
   "nutritionTodayMenu": "Günün Menüsü",
   "nutritionMealCategories": "Öğün Kategorileri",
@@ -1599,5 +1601,16 @@
   "bodyMetricsReminderSubtitle": "Haftada bir hatırlatma. Sen açmadıkça kapalı.",
   "weighInReminderNotificationTitle": "Haftalık tartılma",
   "weighInReminderNotificationBody": "Aynı gün, aynı saat — çizgiyi okunur yapan şey bu.",
-  "bodyMetricsChartNeedsTwo": "İki kayıt girdiğinde burada bir çizgi belirir."
+  "bodyMetricsChartNeedsTwo": "İki kayıt girdiğinde burada bir çizgi belirir.",
+  "bodyMetricsTrendCardTitle": "{measure} eğilimi",
+  "bodyMetricsDeltaVsWindow": "{days, plural, =1{1 gün öncesine göre {amount}} other{{days} gün öncesine göre {amount}}}",
+  "bodyMetricsDeltaNoChange": "{days, plural, =1{1 gün öncesine göre değişim yok} other{{days} gün öncesine göre değişim yok}}",
+  "bodyMetricsInsightsCta": "Yorumu gör",
+  "bodyMetricsInsightsTitle": "Sayılar ne diyor",
+  "bodyMetricsTargetHint": "İlerlemeni takip etmek için bir hedef belirle.",
+  "bodyMetricsHistoryViewAll": "Tümünü gör",
+  "bodyMetricsHistoryShowLess": "Daha az göster",
+  "bodyMetricsAboutCta": "Bu sayılar hakkında",
+  "bodyMetricsAboutSmoothing": "Çizgi yumuşatılmıştır. Tek bir ağır gün su ve yemektir, vücudun değil; ham haliyle çizmek normal bir haftayı geri gidiş gibi gösterirdi.",
+  "bodyMetricsAboutNoValence": "Burada hiçbir şey iyi ya da kötü diye renklendirilmez. Aşağı gitmek biri için hedeftir, bir başkası için tam tersi; kas kazanmak da aynı sayıyı ters yöne taşır. Ok yönü gösterir; bunun istediğin şey olup olmadığını sen söylersin."
 }

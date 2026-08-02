@@ -69,6 +69,17 @@ List<_Highlight> _highlightsFor(AppLocalizations l10n) => [
       ),
     ];
 
+/// Stacks two whole ARB strings into a two-line caption.
+///
+/// The join used to be written inline as `'$first\n'  '$second'`, which
+/// put a literal containing `\n` directly under a `caption:` argument —
+/// the exact shape the hardcoded-string gate now treats as a rendering.
+/// It was never copy: a newline between two translated strings is a
+/// layout decision, not a sentence. Naming it says so once instead of
+/// twice, and keeps the gate's signal free of a false positive it would
+/// otherwise have to be taught to ignore.
+String _twoLine(String first, String second) => '$first\n$second';
+
 class SocialProofStep extends StatefulWidget {
   const SocialProofStep({super.key, required this.onContinue});
   final VoidCallback onContinue;
@@ -163,14 +174,18 @@ class _SocialProofStepState extends State<SocialProofStep> {
                           children: [
                             _StatBadge(
                               number: '130+',
-                              caption: '${l10n.act5StatExercises}\n'
-                                  '${l10n.liveFormAnalysisEyebrow}',
+                              caption: _twoLine(
+                                l10n.act5StatExercises,
+                                l10n.liveFormAnalysisEyebrow,
+                              ),
                             ),
                             const SizedBox(width: 10),
                             _StatBadge(
                               number: 'AI',
-                              caption: '${l10n.act5StatAiPowered}\n'
-                                  '${l10n.act5StatOnDevice(100)}',
+                              caption: _twoLine(
+                                l10n.act5StatAiPowered,
+                                l10n.act5StatOnDevice(100),
+                              ),
                             ),
                           ],
                         ),

@@ -123,6 +123,12 @@ class _ManualWorkoutScreenState extends ConsumerState<ManualWorkoutScreen> {
               children: [
                 _TopBar(
                   title: l10n.workoutTitle,
+                  // Day progress is real state the camera screen has
+                  // always shown and this one never did. Read off the
+                  // session rather than the async wrapper's data branch
+                  // so it stays put while the rest view swaps in.
+                  exerciseIndex: async.value?.activeExerciseIndex ?? 0,
+                  totalExercises: async.value?.activeDay?.exercises.length ?? 0,
                   onBack: () => context.pop(),
                   onSetupGuide: _showSetupGuide,
                   onCamera: _switchToCamera,
@@ -150,7 +156,6 @@ class _ManualWorkoutScreenState extends ConsumerState<ManualWorkoutScreen> {
                       }
                       if (state.isResting) {
                         return _RestView(
-                          seconds: state.restSecondsRemaining,
                           totalSeconds: (state.upcomingExercise ?? exercise)
                               .restDurationInSeconds,
                           currentSet: state.currentSet,
@@ -198,12 +203,16 @@ const List<Color> _kBrandGradient = [AppColors.neon, AppColors.neonGreen];
 class _TopBar extends StatelessWidget {
   const _TopBar({
     required this.title,
+    required this.exerciseIndex,
+    required this.totalExercises,
     required this.onBack,
     required this.onSetupGuide,
     required this.onCamera,
   });
 
   final String title;
+  final int exerciseIndex;
+  final int totalExercises;
   final VoidCallback onBack;
   final VoidCallback onSetupGuide;
   final VoidCallback onCamera;
@@ -213,47 +222,128 @@ class _TopBar extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(14, 6, 14, 8),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          _TileButton(
-            icon: Icons.arrow_back_rounded,
-            label: MaterialLocalizations.of(context).backButtonTooltip,
-            color: AppColors.neon,
-            onTap: onBack,
+          Row(
+            children: _actions(context, l10n),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.2,
+          if (totalExercises > 0) ...[
+            const SizedBox(height: 9),
+            _DayProgress(
+              index: exerciseIndex,
+              total: totalExercises,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _actions(BuildContext context, AppLocalizations l10n) {
+    return [
+      _TileButton(
+        icon: Icons.arrow_back_rounded,
+        label: MaterialLocalizations.of(context).backButtonTooltip,
+        color: AppColors.neon,
+        onTap: onBack,
+      ),
+      const SizedBox(width: 12),
+      Expanded(
+        child: Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0.2,
+          ),
+        ),
+      ),
+      // Roadmap Phase 3 feature 6 · the setup guide stays reachable
+      // from the camera-free surface too. Someone who chose manual
+      // because the camera felt daunting is exactly who benefits
+      // from being able to re-read the placement guidance without
+      // committing to a camera session first.
+      _TileButton(
+        icon: Icons.center_focus_strong_outlined,
+        label: l10n.workoutShowCameraSetup,
+        color: AppColors.neon,
+        onTap: onSetupGuide,
+      ),
+      const SizedBox(width: 8),
+      _TileButton(
+        icon: Icons.videocam_outlined,
+        label: l10n.workoutOpenCamera,
+        color: Colors.white,
+        onTap: onCamera,
+      ),
+    ];
+  }
+}
+
+/// Where this exercise sits in the day. The camera screen has carried
+/// this since Phase 3; the camera-free screen never had it, so a user
+/// who declined the camera could not tell whether they were two
+/// exercises from the end or seven. The state was there the whole time.
+///
+/// The bar is animated rather than snapped because it moves on a
+/// deliberate action — completing the last set of an exercise — and a
+/// fill that visibly advances is the acknowledgement of that action.
+class _DayProgress extends StatelessWidget {
+  const _DayProgress({required this.index, required this.total});
+
+  /// Zero-based position of the active exercise.
+  final int index;
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    final done = (index + 1).clamp(0, total);
+    final fraction = total <= 0 ? 0.0 : (done / total).clamp(0.0, 1.0);
+    final label = AppLocalizations.of(context).exerciseProgress(done, total);
+    return Semantics(
+      label: label,
+      value: '${(fraction * 100).round()}%', // i18n-ignore — a percentage
+      child: ExcludeSemantics(
+        child: Row(
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(999),
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween<double>(end: fraction),
+                  duration: const Duration(milliseconds: 420),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, value, __) => LinearProgressIndicator(
+                    value: value,
+                    minHeight: 4,
+                    backgroundColor: Colors.white.withValues(alpha: 0.10),
+                    // A gradient needs a shader; the brand's two stops
+                    // read as one colour at 4 px, so the green end is
+                    // the honest simplification.
+                    valueColor:
+                        const AlwaysStoppedAnimation(AppColors.neonGreen),
+                  ),
+                ),
               ),
             ),
-          ),
-          // Roadmap Phase 3 feature 6 · the setup guide stays reachable
-          // from the camera-free surface too. Someone who chose manual
-          // because the camera felt daunting is exactly who benefits
-          // from being able to re-read the placement guidance without
-          // committing to a camera session first.
-          _TileButton(
-            icon: Icons.center_focus_strong_outlined,
-            label: l10n.workoutShowCameraSetup,
-            color: AppColors.neon,
-            onTap: onSetupGuide,
-          ),
-          const SizedBox(width: 8),
-          _TileButton(
-            icon: Icons.videocam_outlined,
-            label: l10n.workoutOpenCamera,
-            color: Colors.white,
-            onTap: onCamera,
-          ),
-        ],
+            const SizedBox(width: 10),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.55),
+                fontSize: 10.5,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.1,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -925,24 +1015,38 @@ class _SetStep extends StatelessWidget {
 // Rest
 // ---------------------------------------------------------------------------
 
-class _RestView extends StatelessWidget {
+/// **The countdown is watched, not passed in.**
+///
+/// Tier-B.8 moved the per-second rest tick out of
+/// `WorkoutSessionState.restSecondsRemaining` and into
+/// [restCountdownProvider], so that a rest second stopped waking every
+/// workout-state listener in the app. The session field was kept, but it
+/// now holds the rest duration *frozen at rest entry* — it is the total,
+/// not the remainder.
+///
+/// The camera screen was moved to the provider; this screen was not, and
+/// went on reading the frozen field. The result shipped as a rest screen
+/// whose number never moved and whose ring never emptied: the same "40"
+/// for forty seconds. Reading the provider here is what makes the
+/// countdown a countdown, and it keeps the per-second rebuild inside
+/// this widget rather than in [ManualWorkoutScreen].
+class _RestView extends ConsumerWidget {
   const _RestView({
-    required this.seconds,
     required this.totalSeconds,
     required this.currentSet,
     required this.totalSets,
     required this.onContinue,
   });
 
-  final int seconds;
   final int totalSeconds;
   final int currentSet;
   final int totalSets;
   final VoidCallback onContinue;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    final seconds = ref.watch(restCountdownProvider);
     return Padding(
       padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
       child: Column(
@@ -1013,6 +1117,12 @@ class _RestView extends StatelessWidget {
 
 /// The countdown. The ring is the remaining fraction, so the number and
 /// the arc can never disagree.
+///
+/// The arc is tweened over exactly one second — the tick interval — so it
+/// sweeps continuously instead of stepping 1/40th of a turn once a
+/// second. `Tween(end:)` with a null `begin` lands on the first frame
+/// without animating, so entering rest does not sweep the ring in from
+/// empty.
 class _RestDial extends StatelessWidget {
   const _RestDial({
     required this.seconds,
@@ -1035,8 +1145,14 @@ class _RestDial extends StatelessWidget {
       child: ExcludeSemantics(
         child: AspectRatio(
           aspectRatio: 1,
-          child: CustomPaint(
-            painter: _RestDialPainter(fraction: fraction),
+          child: TweenAnimationBuilder<double>(
+            tween: Tween<double>(end: fraction),
+            duration: const Duration(seconds: 1),
+            curve: Curves.linear,
+            builder: (context, value, child) => CustomPaint(
+              painter: _RestDialPainter(fraction: value),
+              child: child,
+            ),
             child: Center(
               child: FittedBox(
                 fit: BoxFit.scaleDown,

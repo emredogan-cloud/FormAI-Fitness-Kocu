@@ -169,19 +169,19 @@ class WeeklyRetrospectiveCard extends ConsumerWidget {
               _StatChip(
                 icon: Icons.fitness_center,
                 label: '$weeklyCompleted',
-                hint: 'antrenman',
+                hint: AppLocalizations.of(context).progressUnitWorkouts,
               ),
               const SizedBox(width: 8),
               _StatChip(
                 icon: Icons.timer_outlined,
                 label: '$weeklyMinutes',
-                hint: 'dakika',
+                hint: AppLocalizations.of(context).progressUnitMinutes,
               ),
               const SizedBox(width: 8),
               _StatChip(
                 icon: Icons.repeat_rounded,
                 label: '$weeklyReps',
-                hint: 'tekrar',
+                hint: AppLocalizations.of(context).progressUnitReps,
               ),
             ],
           ),

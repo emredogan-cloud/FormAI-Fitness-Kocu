@@ -8,7 +8,7 @@
 //   2. a layout that only fits Turkish overflows here instead of in a
 //      German store review.
 //
-// 1600 members covered.
+// 1613 members covered.
 
 import 'package:flutter/widgets.dart';
 import 'package:sixpack_ai/core/utils/pseudo_locale.dart';
@@ -2635,6 +2635,13 @@ class PseudoAppLocalizations extends AppLocalizations {
   String get muscleCardio => pseudoLocalize(_inner.muscleCardio);
 
   @override
+  String get progressUnitMinutes => pseudoLocalize(_inner.progressUnitMinutes);
+
+  @override
+  String get progressUnitWorkouts =>
+      pseudoLocalize(_inner.progressUnitWorkouts);
+
+  @override
   String get progressUnitReps => pseudoLocalize(_inner.progressUnitReps);
 
   @override
@@ -5001,6 +5008,37 @@ class PseudoAppLocalizations extends AppLocalizations {
       pseudoLocalize(_inner.bodyMetricsChartNeedsTwo);
 
   @override
+  String get bodyMetricsInsightsCta =>
+      pseudoLocalize(_inner.bodyMetricsInsightsCta);
+
+  @override
+  String get bodyMetricsInsightsTitle =>
+      pseudoLocalize(_inner.bodyMetricsInsightsTitle);
+
+  @override
+  String get bodyMetricsTargetHint =>
+      pseudoLocalize(_inner.bodyMetricsTargetHint);
+
+  @override
+  String get bodyMetricsHistoryViewAll =>
+      pseudoLocalize(_inner.bodyMetricsHistoryViewAll);
+
+  @override
+  String get bodyMetricsHistoryShowLess =>
+      pseudoLocalize(_inner.bodyMetricsHistoryShowLess);
+
+  @override
+  String get bodyMetricsAboutCta => pseudoLocalize(_inner.bodyMetricsAboutCta);
+
+  @override
+  String get bodyMetricsAboutSmoothing =>
+      pseudoLocalize(_inner.bodyMetricsAboutSmoothing);
+
+  @override
+  String get bodyMetricsAboutNoValence =>
+      pseudoLocalize(_inner.bodyMetricsAboutNoValence);
+
+  @override
   String retrospectiveSummary(String workouts, String minutes, String reps) =>
       pseudoLocalize(_inner.retrospectiveSummary(workouts, minutes, reps));
 
@@ -5713,8 +5751,20 @@ class PseudoAppLocalizations extends AppLocalizations {
   String adherencePercentValue(int percent) =>
       pseudoLocalize(_inner.adherencePercentValue(percent));
 
+  @override
+  String bodyMetricsTrendCardTitle(String measure) =>
+      pseudoLocalize(_inner.bodyMetricsTrendCardTitle(measure));
+
+  @override
+  String bodyMetricsDeltaVsWindow(String amount, int days) =>
+      pseudoLocalize(_inner.bodyMetricsDeltaVsWindow(amount, days));
+
+  @override
+  String bodyMetricsDeltaNoChange(int days) =>
+      pseudoLocalize(_inner.bodyMetricsDeltaNoChange(days));
+
   /// Number of members this wrapper covers. The test suite asserts
   /// it still matches the generated class, so a new ARB key cannot
   /// slip past pseudo mode unnoticed.
-  static const int coveredMembers = 1600;
+  static const int coveredMembers = 1613;
 }

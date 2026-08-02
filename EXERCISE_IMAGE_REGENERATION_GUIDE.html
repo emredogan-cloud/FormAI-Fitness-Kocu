@@ -1,0 +1,1771 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FormAI · Exercise Image Regeneration Guide</title>
+<style>
+  :root {
+    --bg:#000; --card:#0b0b10; --line:#ffffff17; --ink:#fff;
+    --muted:#ffffff8c; --faint:#ffffff5c; --purple:#8e5bff; --lime:#b8ff33;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+    font:15px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  .wrap { max-width:1100px; margin:0 auto; padding:32px 20px 96px; }
+  h1 { font-size:30px; margin:0 0 6px; letter-spacing:.2px; }
+  h2 { font-size:20px; margin:40px 0 12px; }
+  h3 { font-size:16px; margin:0; flex:1 1 auto; }
+  p, li { color:var(--muted); }
+  code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+    color:var(--lime); background:#ffffff0d; padding:1px 5px; border-radius:5px; }
+  a { color:var(--lime); }
+  .lede { color:var(--muted); max-width:70ch; }
+  .stats { display:flex; flex-wrap:wrap; gap:10px; margin:22px 0 8px; }
+  .stat { background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:12px 16px; min-width:120px; }
+  .stat b { display:block; font-size:24px; }
+  .stat span { color:var(--faint); font-size:12px; text-transform:uppercase;
+    letter-spacing:1px; }
+  section.note { background:var(--card); border:1px solid var(--line);
+    border-radius:16px; padding:18px 20px; margin:18px 0; }
+  section.note.flag { border-color:#8e5bff66; }
+  .toolbar { position:sticky; top:0; z-index:5; background:#000000ee;
+    backdrop-filter:blur(8px); padding:14px 0; margin-bottom:10px;
+    border-bottom:1px solid var(--line); display:flex; gap:10px; flex-wrap:wrap; }
+  .toolbar input { flex:1 1 220px; background:var(--card); color:var(--ink);
+    border:1px solid var(--line); border-radius:999px; padding:10px 16px; font:inherit; }
+  .toolbar button { background:var(--card); color:var(--muted); border:1px solid var(--line);
+    border-radius:999px; padding:10px 16px; font:inherit; cursor:pointer; }
+  .toolbar button[aria-pressed=true] { color:#000; background:var(--lime);
+    border-color:var(--lime); font-weight:700; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:18px;
+    padding:16px 18px; margin:14px 0; }
+  .card header { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+  .num { color:var(--faint); font-variant-numeric:tabular-nums; font-size:13px; }
+  .badge { font-size:11px; letter-spacing:.6px; text-transform:uppercase;
+    border-radius:999px; padding:4px 10px; border:1px solid; }
+  .badge.ok { color:var(--lime); border-color:#b8ff3366; }
+  .badge.warn { color:var(--purple); border-color:#8e5bff66; }
+  dl { display:grid; grid-template-columns:auto 1fr; gap:4px 14px; margin:0 0 12px; }
+  dt { color:var(--faint); font-size:12px; text-transform:uppercase; letter-spacing:.7px; }
+  dd { margin:0; }
+  .promptwrap { position:relative; }
+  pre.prompt { white-space:pre-wrap; background:#ffffff08; border:1px solid var(--line);
+    border-radius:12px; padding:14px 16px; margin:0; color:#e9e9ee;
+    font:13px/1.65 ui-monospace,SFMono-Regular,Menlo,monospace; }
+  button.copy { position:absolute; top:8px; right:8px; background:var(--purple);
+    color:#fff; border:0; border-radius:999px; padding:7px 14px; font:inherit;
+    font-size:12.5px; font-weight:700; cursor:pointer; }
+  button.copy.done { background:var(--lime); color:#000; }
+  table { width:100%; border-collapse:collapse; margin:12px 0; }
+  th, td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line);
+    font-size:14px; }
+  th { color:var(--faint); font-size:12px; text-transform:uppercase; letter-spacing:.7px; }
+  @media (max-width:600px) {
+    dl { grid-template-columns:1fr; }
+    button.copy { position:static; margin-bottom:8px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Exercise Image Regeneration Guide</h1>
+<p class="lede">Every one of the 87 files in <code>photos/exercises/</code>
+carries instructional text burned into the pixels. Some of it is English,
+some of it is Turkish, and no translation layer can reach any of it — a
+Turkish reader meets English on some exercises and an English reader meets
+Turkish on others. This document is the brief for replacing all 87.</p>
+
+<div class="stats">
+  <div class="stat"><b>87</b><span>images</span></div>
+  <div class="stat"><b>87</b><span>carry text</span></div>
+  <div class="stat"><b>59</b><span>static is right</span></div>
+  <div class="stat"><b>9</b><span>isometric holds</span></div>
+  <div class="stat"><b>19</b><span>want motion</span></div>
+</div>
+
+<h2>What is actually wrong with these files</h2>
+<p>They are not photographs with a caption. They are <b>infographics</b>.
+The audit found four distinct layouts:</p>
+<table>
+  <tr><th>layout</th><th>count</th><th>what the pixels carry</th></tr>
+  <tr><td>Two-panel before/after<br><code>800&times;437</code></td><td>37</td>
+      <td>A caption bar top <em>and</em> bottom. Sometimes English over
+          Turkish, sometimes the same English twice.</td></tr>
+  <tr><td>Step filmstrip<br><code>800&times;533</code></td><td>48</td>
+      <td>A title, 3&ndash;6 numbered steps each with a Turkish instruction
+          paragraph, per-frame time chips, and a
+          <code>TOPLAM S&Uuml;RE</code> timeline. The isometric holds in
+          this size class use a variant with one large photo and a Turkish
+          sidebar &mdash; starting position, movement, breathing, cues,
+          target muscles &mdash; instead of the panel strip.</td></tr>
+  <tr><td>Frame grid<br><code>800&times;436</code></td><td>2</td>
+      <td>A 2&times;3 contact sheet with English per-frame captions.</td></tr>
+</table>
+
+<section class="note flag">
+<h3 style="margin-bottom:8px">Read this before generating anything</h3>
+<p>The text in these files is not decoration — on the filmstrip layouts it
+is <b>the coaching content</b>: the steps, the tempo, the breathing cues,
+the muscles worked. Generating a clean photograph deletes it.</p>
+<p>That is still the right move, because content burned into a pixel cannot
+be translated, corrected, resized, read aloud by a screen reader, or shown
+at a larger text scale. But the replacement is only complete when that
+content lands somewhere the app can render it — the
+<code>description</code> and <code>short_tip</code> columns the exercise
+catalogue already has, or new step rows beside them. <b>The images and the
+step copy are one project, not two.</b></p>
+</section>
+
+<section class="note">
+<h3 style="margin-bottom:8px">Why every prompt says "centred, generous margin"</h3>
+<p><code>ExerciseGuidePlayer</code> renders these with
+<code>BoxFit.cover</code> inside a picture-in-picture slot and applies a
+slow Ken&nbsp;Burns pan-zoom. The frame is therefore <em>cropped, and the
+crop moves</em>. Anything near an edge is not reliably on screen — which is
+also why a burned-in caption bar is doubly wrong here: the pan can slice it
+in half.</p>
+</section>
+
+<section class="note">
+<h3 style="margin-bottom:8px">Drop-in contract</h3>
+<p>Keep the filename and the folder and there is <b>no code change at
+all</b>. <code>ExerciseMediaRegistry.localImagePath()</code> derives the
+path from the slug — <code>photos/exercises/&lt;PascalCase&gt;.webp</code> —
+and <code>photos/exercises/</code> is already declared in
+<code>pubspec.yaml</code>. Aspect ratio is free: <code>cover</code> crops to
+the slot, so the 3:2 in these prompts changes nothing structurally.</p>
+<p>Export as WebP. The current 87 total 2.7&nbsp;MB, and holding roughly
+that budget keeps the APK where it is.</p>
+</section>
+
+<h2>Which categories need motion, and which do not</h2>
+<p>The founder asked where a looping demonstration is required and where a
+still is enough. The dividing line is not the muscle group — it is
+<b>whether one frame can show what the exercise is</b>.</p>
+
+<table>
+  <tr><th>class</th><th>count</th><th>verdict</th></tr>
+  <tr><td><b>Isometric holds</b><br>plank, dead hang, child's pose, stretches</td>
+      <td>9</td>
+      <td><b>A still is not a compromise, it is the exercise.</b> There is
+          nothing to animate. Never spend a video budget here.</td></tr>
+  <tr><td><b>Single-plane strength</b><br>presses, rows, curls, squats, hinges</td>
+      <td>59</td>
+      <td><b>A still at the hardest position is sufficient</b>, and is
+          arguably better than a loop: the position that gets corrected is
+          the one the user has to be shown, and a loop shows it for a
+          fraction of a second.</td></tr>
+  <tr><td><b>Ballistic, locomotive and multi-position movements</b><br>
+          burpees, swings, jumps, crawls, carries, shuffles, cleans,
+          thrusters, wall walks</td>
+      <td>19</td>
+      <td><b>These genuinely require a loop.</b> A still of a kettlebell
+          swing and a still of a front raise are the same photograph. The
+          information is the <em>path</em>, and a frame cannot carry a
+          path. This is also exactly the set the current filmstrip layout
+          was invented to fake.</td></tr>
+</table>
+
+<p>Each card below is tagged with its class, and the toolbar filters on it.
+If the budget only covers part of the library, the 19 tagged
+<em>needs motion</em> are where a loop buys something a still cannot.</p>
+
+<h2>Recommended media strategy</h2>
+<ol>
+  <li><b>Two tiers, not one.</b> A bundled WebP still for every exercise —
+      it is the offline floor, it is what renders on a cold start, and it
+      is what the user sees when the network is gone. A hosted loop
+      <em>on top</em> for the 19 that need one. Never ship a
+      movement with only a loop.</li>
+  <li><b>The loop is hosted, and today it has to be.</b>
+      <code>ExerciseGuidePlayer</code> passes only <code>http</code> paths
+      to the video controller and deliberately drops bundled asset paths to
+      the fallback tile — a branch added because malformed-URL inputs were
+      crashing. So a looping demo means a Supabase-hosted file plus the
+      existing file-cache warm, not a new asset in the APK. Good outcome
+      anyway: 19 loops in the binary would cost more than the entire
+      current image library.</li>
+  <li><b>Make the registry manifest-driven.</b>
+      <code>ExerciseMediaRegistry</code> still needs a hand edit to
+      <code>_localImageSlugs</code> for every file added.
+      <code>WorkoutBackgroundRegistry</code> beside it already resolves
+      from the asset manifest, so dropping a correctly-named file in is the
+      whole procedure. Porting that pattern removes the one step in this
+      pipeline a person can forget.</li>
+  <li><b>Silent, muted, 3–5 s, no audio track.</b> These play in a
+      picture-in-picture slot beside a live workout. An audio track would
+      fight the voice coach and is dead weight in the file.</li>
+  <li><b>The step copy goes to the database, not the pixels.</b> Whatever
+      the filmstrips were saying belongs in the exercise catalogue next to
+      <code>description</code> and <code>short_tip</code>, where it is
+      translatable, screen-reader reachable and scalable with the user's
+      text size. That is also what makes the next language a content task
+      rather than 87 more renders.</li>
+</ol>
+
+<h2>Production pipeline</h2>
+<ol>
+  <li>Generate at 1536&times;1024 or larger from the prompt on the card.</li>
+  <li><b>Reject any render with a letter or a digit in it.</b> Image models
+      put text on gym walls, plates and clothing unprompted. This is the
+      one check that cannot be skipped, because it is the entire reason the
+      library is being replaced.</li>
+  <li>Check the pose is the one named in the prompt. A model will happily
+      return a plausible athlete in the wrong position, and a wrong
+      instructional image is worse than none.</li>
+  <li>Crop to 3:2, centred on the athlete, and confirm nothing important
+      sits within ~8&nbsp;% of any edge — that band is what the pan-zoom
+      eats.</li>
+  <li>Export WebP, quality ~82, target &lt;&nbsp;40&nbsp;KB.</li>
+  <li>Save over the existing file at the exact path on the card. No code
+      change, no registry edit, no pubspec edit.</li>
+  <li>Re-run <code>flutter build apk --release</code> and confirm the size
+      has not moved materially.</li>
+</ol>
+
+<h2>The 87 images</h2>
+
+<div class="toolbar">
+  <input id="q" type="search" placeholder="Filter by exercise name…" aria-label="Filter by exercise name">
+  <button data-f="all" aria-pressed="true">All</button>
+  <button data-f="motion" aria-pressed="false">Needs motion</button>
+  <button data-f="hold" aria-pressed="false">Holds</button>
+  <button data-f="static" aria-pressed="false">Static</button>
+  <button id="copyall" type="button">Copy all prompts</button>
+</div>
+
+<div id="list">
+    <article class="card" data-motion="static" data-name="archer push-up">
+      <header>
+        <span class="num">01</span>
+        <h3>Archer Push-Up</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/ArcherPushUp.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>ArcherPushUp.webp</code></dd>
+        <dt>slug</dt><dd><code>archer_push_up</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating an archer push-up, captured at the bottom, weight stacked over the bent arm while the opposite arm is straight out to the side. Bare wooden floor, no equipment. Photographed from a low three-quarter view from the straight-arm side so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="motion" data-name="bear crawl">
+      <header>
+        <span class="num">02</span>
+        <h3>Bear Crawl</h3>
+        <span class="badge warn">needs motion</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/BearCrawl.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>BearCrawl.webp</code></dd>
+        <dt>slug</dt><dd><code>bear_crawl</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a bear crawl, captured mid-crawl with one hand and the opposite knee lifted, knees hovering a hand-width off the floor. Bare wooden floor, no equipment. Photographed from a ground-level side view so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="bench dip">
+      <header>
+        <span class="num">03</span>
+        <h3>Bench Dip</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/BenchDip.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>BenchDip.webp</code></dd>
+        <dt>slug</dt><dd><code>bench_dip</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a bench dip, captured at the bottom, elbows bent to ninety degrees and hips close to the bench. A flat bench, heels on the floor. Photographed from a side view level with the shoulders so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="bird dog">
+      <header>
+        <span class="num">04</span>
+        <h3>Bird Dog</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/BirdDog.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>BirdDog.webp</code></dd>
+        <dt>slug</dt><dd><code>bird_dog</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a bird dog, captured at full extension, one arm and the opposite leg in a straight line with the spine. An exercise mat. Photographed from a side view at hip height so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="motion" data-name="box jump">
+      <header>
+        <span class="num">05</span>
+        <h3>Box Jump</h3>
+        <span class="badge warn">needs motion</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/BoxJump.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>BoxJump.webp</code></dd>
+        <dt>slug</dt><dd><code>box_jump</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a box jump, captured at the top of the landing, both feet on the box in a quarter squat. A sixty-centimetre plyo box. Photographed from a side view level with the box so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="cable crossover">
+      <header>
+        <span class="num">06</span>
+        <h3>Cable Crossover</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/CableCrossover.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>CableCrossover.webp</code></dd>
+        <dt>slug</dt><dd><code>cable_crossover</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a cable crossover, captured at peak contraction with both handles met in front of the chest. A dual cable crossover station, high pulleys. Photographed from a front three-quarter view so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="cable curl">
+      <header>
+        <span class="num">07</span>
+        <h3>Cable Curl</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/CableCurl.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>CableCurl.webp</code></dd>
+        <dt>slug</dt><dd><code>cable_curl</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a cable curl, captured at the top of the curl, elbows pinned to the ribs. A low cable pulley with a straight bar. Photographed from a side view level with the elbows so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="motion" data-name="cat-cow stretch">
+      <header>
+        <span class="num">08</span>
+        <h3>Cat-Cow Stretch</h3>
+        <span class="badge warn">needs motion</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/CatCow.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>CatCow.webp</code></dd>
+        <dt>slug</dt><dd><code>cat_cow</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a cat-cow stretch, captured in the rounded cat position, spine at maximum flexion. An exercise mat, on all fours. Photographed from a side view at hip height so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="hold" data-name="child&#x27;s pose">
+      <header>
+        <span class="num">09</span>
+        <h3>Child&#x27;s Pose</h3>
+        <span class="badge ok">isometric hold</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/ChildPose.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>ChildPose.webp</code></dd>
+        <dt>slug</dt><dd><code>child_pose</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a child&#x27;s pose, captured settled fully into the pose, hips on the heels and arms stretched forward. An exercise mat. Photographed from a low side view so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="chin-up negative">
+      <header>
+        <span class="num">10</span>
+        <h3>Chin-Up Negative</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/ChinUpNegative.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>ChinUpNegative.webp</code></dd>
+        <dt>slug</dt><dd><code>chin_up_negative</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a chin-up negative, captured halfway through the slow lowering, elbows bent to ninety degrees. A pull-up bar, underhand grip. Photographed from a front view level with the chest so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="motion" data-name="clap push-up">
+      <header>
+        <span class="num">11</span>
+        <h3>Clap Push-Up</h3>
+        <span class="badge warn">needs motion</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/ClapPushUp.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>ClapPushUp.webp</code></dd>
+        <dt>slug</dt><dd><code>clap_push_up</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a clap push-up, captured airborne at the top with both hands off the floor and clapped together. Bare wooden floor, no equipment. Photographed from a low side view so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="hold" data-name="cobra stretch">
+      <header>
+        <span class="num">12</span>
+        <h3>Cobra Stretch</h3>
+        <span class="badge ok">isometric hold</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/CobraStretch.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>CobraStretch.webp</code></dd>
+        <dt>slug</dt><dd><code>cobra_stretch</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a cobra stretch, captured at the top of the arch, chest lifted and hips still on the mat. An exercise mat. Photographed from a low three-quarter view so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="cuban press">
+      <header>
+        <span class="num">13</span>
+        <h3>Cuban Press</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/CubanPress.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>CubanPress.webp</code></dd>
+        <dt>slug</dt><dd><code>cuban_press</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a cuban press, captured at the external-rotation point, elbows at shoulder height and forearms vertical. A pair of light dumbbells. Photographed from a front view level with the shoulders so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="dead bug">
+      <header>
+        <span class="num">14</span>
+        <h3>Dead Bug</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/DeadBug.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>DeadBug.webp</code></dd>
+        <dt>slug</dt><dd><code>dead_bug</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a dead bug, captured at full extension, one arm overhead and the opposite leg straight just above the floor. An exercise mat, lying supine. Photographed from a side view at floor level so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="hold" data-name="dead hang">
+      <header>
+        <span class="num">15</span>
+        <h3>Dead Hang</h3>
+        <span class="badge ok">isometric hold</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/DeadHang.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>DeadHang.webp</code></dd>
+        <dt>slug</dt><dd><code>dead_hang</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a dead hang, captured hanging at full stretch, shoulders relaxed and feet clear of the floor. A pull-up bar, overhand grip. Photographed from a front view level with the ribs so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="deadlift">
+      <header>
+        <span class="num">16</span>
+        <h3>Deadlift</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/Deadlift.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>Deadlift.webp</code></dd>
+        <dt>slug</dt><dd><code>deadlift</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a deadlift, captured at lockout, bar at the hips and shoulders back. A loaded olympic barbell on a lifting platform. Photographed from a side view level with the hips so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="decline bench press">
+      <header>
+        <span class="num">17</span>
+        <h3>Decline Bench Press</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/DeclineBenchPress.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>DeclineBenchPress.webp</code></dd>
+        <dt>slug</dt><dd><code>decline_bench_press</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a decline bench press, captured at the bottom, bar touching the lower chest. A decline bench and a loaded barbell. Photographed from a side three-quarter view so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="decline crunch">
+      <header>
+        <span class="num">18</span>
+        <h3>Decline Crunch</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/DeclineCrunch.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>DeclineCrunch.webp</code></dd>
+        <dt>slug</dt><dd><code>decline_crunch</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a decline crunch, captured at the top of the crunch, shoulder blades well off the pad. A decline sit-up bench. Photographed from a side view level with the torso so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="diamond push-up">
+      <header>
+        <span class="num">19</span>
+        <h3>Diamond Push-Up</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/DiamondPushUp.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>DiamondPushUp.webp</code></dd>
+        <dt>slug</dt><dd><code>diamond_push_up</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a diamond push-up, captured at the bottom, hands forming a diamond directly under the sternum. Bare wooden floor, no equipment. Photographed from a low front three-quarter view so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="hold" data-name="downward dog">
+      <header>
+        <span class="num">20</span>
+        <h3>Downward Dog</h3>
+        <span class="badge ok">isometric hold</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/DownwardDog.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>DownwardDog.webp</code></dd>
+        <dt>slug</dt><dd><code>downward_dog</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a downward dog, captured in the full pose, hips high and heels reaching for the floor. An exercise mat. Photographed from a side view at hip height so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="dragon flag">
+      <header>
+        <span class="num">21</span>
+        <h3>Dragon Flag</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/DragonFlag.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>DragonFlag.webp</code></dd>
+        <dt>slug</dt><dd><code>dragon_flag</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a dragon flag, captured at the hardest point, body a straight diagonal line supported only on the upper back. A flat bench, hands gripping behind the head. Photographed from a side view level with the bench so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="motion" data-name="dumbbell clean">
+      <header>
+        <span class="num">22</span>
+        <h3>Dumbbell Clean</h3>
+        <span class="badge warn">needs motion</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/DumbbellClean.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>DumbbellClean.webp</code></dd>
+        <dt>slug</dt><dd><code>dumbbell_clean</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a dumbbell clean, captured at the catch, dumbbells racked at the shoulders in a quarter squat. A pair of dumbbells. Photographed from a front three-quarter view so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="dumbbell kickback">
+      <header>
+        <span class="num">23</span>
+        <h3>Dumbbell Kickback</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/DumbbellKickback.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>DumbbellKickback.webp</code></dd>
+        <dt>slug</dt><dd><code>dumbbell_kickback</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a dumbbell kickback, captured at full extension, upper arm parallel to the floor and elbow locked. A single dumbbell, torso hinged forward. Photographed from a side view level with the elbow so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="dumbbell pullover">
+      <header>
+        <span class="num">24</span>
+        <h3>Dumbbell Pullover</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/DumbbellPullover.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>DumbbellPullover.webp</code></dd>
+        <dt>slug</dt><dd><code>dumbbell_pullover</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a dumbbell pullover, captured at the deepest stretch, dumbbell behind the head and ribcage expanded. A flat bench and a single dumbbell. Photographed from a side view level with the bench so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="dumbbell row">
+      <header>
+        <span class="num">25</span>
+        <h3>Dumbbell Row</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/DumbbellRow.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>DumbbellRow.webp</code></dd>
+        <dt>slug</dt><dd><code>dumbbell_row</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a dumbbell row, captured at the top of the row, elbow driven past the ribs. A flat bench, one knee and one hand supported, a dumbbell in the free hand. Photographed from a side three-quarter view so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="dumbbell step-up">
+      <header>
+        <span class="num">26</span>
+        <h3>Dumbbell Step-Up</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/DumbbellStepUp.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>DumbbellStepUp.webp</code></dd>
+        <dt>slug</dt><dd><code>dumbbell_step_up</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a dumbbell step-up, captured at the top, driving through the lead leg with the trail foot leaving the box. A plyo box and a pair of dumbbells. Photographed from a side view level with the box so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="face pull">
+      <header>
+        <span class="num">27</span>
+        <h3>Face Pull</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/FacePull.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>FacePull.webp</code></dd>
+        <dt>slug</dt><dd><code>face_pull</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a face pull, captured at peak contraction, rope split beside the ears and elbows high. A high cable pulley with a rope attachment. Photographed from a front view level with the face so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="motion" data-name="farmer carry">
+      <header>
+        <span class="num">28</span>
+        <h3>Farmer Carry</h3>
+        <span class="badge warn">needs motion</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/FarmerCarry.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>FarmerCarry.webp</code></dd>
+        <dt>slug</dt><dd><code>farmer_carry</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a farmer carry, captured mid-stride under load, shoulders packed and torso upright. A pair of heavy dumbbells or farmer handles. Photographed from a front three-quarter view so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="frog pump">
+      <header>
+        <span class="num">29</span>
+        <h3>Frog Pump</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/FrogPump.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>FrogPump.webp</code></dd>
+        <dt>slug</dt><dd><code>frog_pump</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a frog pump, captured at the top of the bridge, soles of the feet together and hips fully extended. An exercise mat. Photographed from a side three-quarter view so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="front squat">
+      <header>
+        <span class="num">30</span>
+        <h3>Front Squat</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/FrontSquat.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>FrontSquat.webp</code></dd>
+        <dt>slug</dt><dd><code>front_squat</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a front squat, captured at the bottom, elbows high and thighs below parallel. A loaded barbell in a front rack. Photographed from a side three-quarter view so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="glute bridge">
+      <header>
+        <span class="num">31</span>
+        <h3>Glute Bridge</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/GluteBridge.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>GluteBridge.webp</code></dd>
+        <dt>slug</dt><dd><code>glute_bridge</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a glute bridge, captured at the top, hips locked out in a straight line from knee to shoulder. An exercise mat. Photographed from a side view at hip height so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="goblet squat">
+      <header>
+        <span class="num">32</span>
+        <h3>Goblet Squat</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/GobletSquat.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>GobletSquat.webp</code></dd>
+        <dt>slug</dt><dd><code>goblet_squat</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a goblet squat, captured at the bottom, dumbbell held at the chest and elbows inside the knees. A single dumbbell or kettlebell. Photographed from a front three-quarter view so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="motion" data-name="half burpee">
+      <header>
+        <span class="num">33</span>
+        <h3>Half Burpee</h3>
+        <span class="badge warn">needs motion</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/HalfBurpee.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>HalfBurpee.webp</code></dd>
+        <dt>slug</dt><dd><code>half_burpee</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a half burpee, captured at the moment both feet land back under the hips in the plank-to-squat transition. Bare wooden floor, no equipment. Photographed from a low side view so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="hold" data-name="handstand hold">
+      <header>
+        <span class="num">34</span>
+        <h3>Handstand Hold</h3>
+        <span class="badge ok">isometric hold</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/HandstandHold.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>HandstandHold.webp</code></dd>
+        <dt>slug</dt><dd><code>handstand_hold</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a handstand hold, captured balanced in a straight line, heels stacked over the hands. Bare floor beside a wall. Photographed from a front view from a low angle so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="handstand push-up">
+      <header>
+        <span class="num">35</span>
+        <h3>Handstand Push-Up</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/HandstandPushUp.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>HandstandPushUp.webp</code></dd>
+        <dt>slug</dt><dd><code>handstand_push_up</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a handstand push-up, captured at the bottom, crown of the head just above the floor and elbows bent. A wall for support. Photographed from a side view from a low angle so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="hold" data-name="hip flexor stretch">
+      <header>
+        <span class="num">36</span>
+        <h3>Hip Flexor Stretch</h3>
+        <span class="badge ok">isometric hold</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/HipFlexorStretch.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>HipFlexorStretch.webp</code></dd>
+        <dt>slug</dt><dd><code>hip_flexor_stretch</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a hip flexor stretch, captured in a half-kneeling lunge with the back hip pushed forward and the torso tall. An exercise mat. Photographed from a side view at hip height so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="hip thrust">
+      <header>
+        <span class="num">37</span>
+        <h3>Hip Thrust</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/HipThrust.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>HipThrust.webp</code></dd>
+        <dt>slug</dt><dd><code>hip_thrust</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a hip thrust, captured at lockout, bar over the hips and the shin vertical. A flat bench and a padded loaded barbell. Photographed from a side view level with the hips so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="hold" data-name="hollow hold">
+      <header>
+        <span class="num">38</span>
+        <h3>Hollow Hold</h3>
+        <span class="badge ok">isometric hold</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/HollowHold.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>HollowHold.webp</code></dd>
+        <dt>slug</dt><dd><code>hollow_hold</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a hollow hold, captured in the held position, lower back pressed down with shoulders and heels off the floor. An exercise mat. Photographed from a side view at floor level so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="hyperextension">
+      <header>
+        <span class="num">39</span>
+        <h3>Hyperextension</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/Hyperextension.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>Hyperextension.webp</code></dd>
+        <dt>slug</dt><dd><code>hyperextension</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a hyperextension, captured at the top, torso in line with the legs and no over-arching. A forty-five degree back extension bench. Photographed from a side view level with the torso so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="incline chest fly">
+      <header>
+        <span class="num">40</span>
+        <h3>Incline Chest Fly</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/InclineChestFly.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>InclineChestFly.webp</code></dd>
+        <dt>slug</dt><dd><code>incline_chest_fly</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating an incline chest fly, captured at the deepest stretch, arms wide with a soft elbow bend. An incline bench and a pair of dumbbells. Photographed from a front three-quarter view from above so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="incline dumbbell curl">
+      <header>
+        <span class="num">41</span>
+        <h3>Incline Dumbbell Curl</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/InclineDumbbellCurl.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>InclineDumbbellCurl.webp</code></dd>
+        <dt>slug</dt><dd><code>incline_dumbbell_curl</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating an incline dumbbell curl, captured at the bottom, arms hanging fully stretched behind the torso. An incline bench and a pair of dumbbells. Photographed from a side view level with the chest so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="inverted row">
+      <header>
+        <span class="num">42</span>
+        <h3>Inverted Row</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/InvertedRow.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>InvertedRow.webp</code></dd>
+        <dt>slug</dt><dd><code>inverted_row</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating an inverted row, captured at the top, chest to the bar and body in one straight line. A barbell in a rack at hip height. Photographed from a side view level with the bar so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="motion" data-name="kettlebell swing">
+      <header>
+        <span class="num">43</span>
+        <h3>Kettlebell Swing</h3>
+        <span class="badge warn">needs motion</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/KettlebellSwing.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>KettlebellSwing.webp</code></dd>
+        <dt>slug</dt><dd><code>kettlebell_swing</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a kettlebell swing, captured at the top of the swing, kettlebell floating at chest height and hips locked out. A twenty-kilogram kettlebell. Photographed from a side view level with the hips so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="knee push-up">
+      <header>
+        <span class="num">44</span>
+        <h3>Knee Push-Up</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/KneePushUp.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>KneePushUp.webp</code></dd>
+        <dt>slug</dt><dd><code>knee_push_up</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a knee push-up, captured at the bottom, knees down and body straight from knee to head. An exercise mat. Photographed from a low side view so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="landmine press">
+      <header>
+        <span class="num">45</span>
+        <h3>Landmine Press</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/LandminePress.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>LandminePress.webp</code></dd>
+        <dt>slug</dt><dd><code>landmine_press</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a landmine press, captured at full extension, barbell end pressed up and forward. A barbell anchored in a landmine sleeve. Photographed from a side three-quarter view so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="motion" data-name="lateral shuffle">
+      <header>
+        <span class="num">46</span>
+        <h3>Lateral Shuffle</h3>
+        <span class="badge warn">needs motion</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/LateralShuffle.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>LateralShuffle.webp</code></dd>
+        <dt>slug</dt><dd><code>lateral_shuffle</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a lateral shuffle, captured mid-shuffle in an athletic stance, both feet momentarily off the floor. Bare floor, no equipment. Photographed from a front view at hip height so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="machine chest press">
+      <header>
+        <span class="num">47</span>
+        <h3>Machine Chest Press</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/MachineChestPress.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>MachineChestPress.webp</code></dd>
+        <dt>slug</dt><dd><code>machine_chest_press</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a machine chest press, captured at full extension, handles pressed together in front of the chest. A seated chest press machine. Photographed from a side three-quarter view so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="machine shoulder press">
+      <header>
+        <span class="num">48</span>
+        <h3>Machine Shoulder Press</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/MachineShoulderPress.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>MachineShoulderPress.webp</code></dd>
+        <dt>slug</dt><dd><code>machine_shoulder_press</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a machine shoulder press, captured at full extension, handles pressed overhead. A seated shoulder press machine. Photographed from a side three-quarter view so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="medicine ball russian twist">
+      <header>
+        <span class="num">49</span>
+        <h3>Medicine Ball Russian Twist</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/MedicineBallRussianTwist.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>MedicineBallRussianTwist.webp</code></dd>
+        <dt>slug</dt><dd><code>medicine_ball_russian_twist</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a medicine ball russian twist, captured at the end of a rotation, ball beside the hip and torso turned. A medicine ball, seated with heels raised. Photographed from a front three-quarter view so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="nordic curl">
+      <header>
+        <span class="num">50</span>
+        <h3>Nordic Curl</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/NordicCurl.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>NordicCurl.webp</code></dd>
+        <dt>slug</dt><dd><code>nordic_curl</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a nordic curl, captured halfway down, body a straight line from knee to head under hamstring control. A pad under the knees with the ankles anchored. Photographed from a side view level with the torso so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="overhead triceps extension">
+      <header>
+        <span class="num">51</span>
+        <h3>Overhead Triceps Extension</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/OverheadTricepsExtension.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>OverheadTricepsExtension.webp</code></dd>
+        <dt>slug</dt><dd><code>overhead_triceps_extension</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating an overhead triceps extension, captured at the deepest stretch, dumbbell behind the head and elbows pointing up. A single dumbbell held in both hands. Photographed from a side three-quarter view so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="pike push-up">
+      <header>
+        <span class="num">52</span>
+        <h3>Pike Push-Up</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/PikePushUpClose.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>PikePushUpClose.webp</code></dd>
+        <dt>slug</dt><dd><code>pike_push_up_close</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a pike push-up, captured at the bottom, hips high and crown of the head near the floor. Bare wooden floor, no equipment. Photographed from a side view at floor level so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="motion" data-name="pike walk">
+      <header>
+        <span class="num">53</span>
+        <h3>Pike Walk</h3>
+        <span class="badge warn">needs motion</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/PikeWalk.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>PikeWalk.webp</code></dd>
+        <dt>slug</dt><dd><code>pike_walk</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a pike walk, captured mid-walk, hands walking out with the hips still high. Bare wooden floor, no equipment. Photographed from a side view at hip height so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="pistol squat">
+      <header>
+        <span class="num">54</span>
+        <h3>Pistol Squat</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/PistolSquat.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>PistolSquat.webp</code></dd>
+        <dt>slug</dt><dd><code>pistol_squat</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a pistol squat, captured at the bottom, one leg fully bent and the other held straight out in front. Bare floor, no equipment. Photographed from a side three-quarter view so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="motion" data-name="plank jack">
+      <header>
+        <span class="num">55</span>
+        <h3>Plank Jack</h3>
+        <span class="badge warn">needs motion</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/PlankJack.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>PlankJack.webp</code></dd>
+        <dt>slug</dt><dd><code>plank_jack</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a plank jack, captured mid-jack with the feet apart and airborne, torso rigid in a plank. An exercise mat. Photographed from a low side view so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="preacher curl">
+      <header>
+        <span class="num">56</span>
+        <h3>Preacher Curl</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/PreacherCurl.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>PreacherCurl.webp</code></dd>
+        <dt>slug</dt><dd><code>preacher_curl</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a preacher curl, captured at the bottom, arms almost straight along the pad. A preacher bench and an ez-curl bar. Photographed from a side three-quarter view so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="prone t-raise">
+      <header>
+        <span class="num">57</span>
+        <h3>Prone T-Raise</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/ProneTRaise.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>ProneTRaise.webp</code></dd>
+        <dt>slug</dt><dd><code>prone_t_raise</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a prone t-raise, captured at the top, arms out to the sides forming a T with the shoulder blades pinched. An incline bench, chest supported. Photographed from a view from above and behind so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="prone y-raise">
+      <header>
+        <span class="num">58</span>
+        <h3>Prone Y-Raise</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/ProneYRaise.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>ProneYRaise.webp</code></dd>
+        <dt>slug</dt><dd><code>prone_y_raise</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a prone y-raise, captured at the top, arms overhead forming a Y with the thumbs up. An incline bench, chest supported. Photographed from a view from above and behind so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="pseudo planche push-up">
+      <header>
+        <span class="num">59</span>
+        <h3>Pseudo Planche Push-Up</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/PseudoPlanchePushUp.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>PseudoPlanchePushUp.webp</code></dd>
+        <dt>slug</dt><dd><code>pseudo_planche_push_up</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a pseudo planche push-up, captured at the bottom with the hands beside the waist and the shoulders forward of them. Bare wooden floor, no equipment. Photographed from a low side view so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="rear delt fly">
+      <header>
+        <span class="num">60</span>
+        <h3>Rear Delt Fly</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/RearDeltFly.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>RearDeltFly.webp</code></dd>
+        <dt>slug</dt><dd><code>rear_delt_fly</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a rear delt fly, captured at peak contraction, arms wide and shoulder blades drawn together. A pair of light dumbbells, torso hinged forward. Photographed from a view from above and behind so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="reverse crunch">
+      <header>
+        <span class="num">61</span>
+        <h3>Reverse Crunch</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/ReverseCrunch.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>ReverseCrunch.webp</code></dd>
+        <dt>slug</dt><dd><code>reverse_crunch</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a reverse crunch, captured at the top, hips curled off the floor and knees over the chest. An exercise mat. Photographed from a side view at floor level so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="rope triceps pushdown">
+      <header>
+        <span class="num">62</span>
+        <h3>Rope Triceps Pushdown</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/RopeTricepsPushdown.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>RopeTricepsPushdown.webp</code></dd>
+        <dt>slug</dt><dd><code>rope_triceps_pushdown</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a rope triceps pushdown, captured at full extension, rope split apart at the thighs. A high cable pulley with a rope attachment. Photographed from a side view level with the elbows so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="scapular pull-up">
+      <header>
+        <span class="num">63</span>
+        <h3>Scapular Pull-Up</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/ScapularPullUp.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>ScapularPullUp.webp</code></dd>
+        <dt>slug</dt><dd><code>scapular_pull_up</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a scapular pull-up, captured at the top of the shrug, arms still straight and shoulders pulled down. A pull-up bar, overhand grip. Photographed from a front view level with the shoulders so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="motion" data-name="scapular wall slide">
+      <header>
+        <span class="num">64</span>
+        <h3>Scapular Wall Slide</h3>
+        <span class="badge warn">needs motion</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/ScapularWallSlide.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>ScapularWallSlide.webp</code></dd>
+        <dt>slug</dt><dd><code>scapular_wall_slide</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a scapular wall slide, captured mid-slide with forearms flat to the wall and elbows at shoulder height. A bare wall. Photographed from a front three-quarter view so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="seated cable row">
+      <header>
+        <span class="num">65</span>
+        <h3>Seated Cable Row</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/SeatedCableRow.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>SeatedCableRow.webp</code></dd>
+        <dt>slug</dt><dd><code>seated_cable_row</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a seated cable row, captured at the top of the row, handle at the navel and chest tall. A seated cable row station. Photographed from a side view level with the torso so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="seated calf raise">
+      <header>
+        <span class="num">66</span>
+        <h3>Seated Calf Raise</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/SeatedCalfRaise.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>SeatedCalfRaise.webp</code></dd>
+        <dt>slug</dt><dd><code>seated_calf_raise</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a seated calf raise, captured at the top, up on the balls of the feet with the calves fully shortened. A seated calf raise machine. Photographed from a side view level with the knees so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="motion" data-name="shadow boxing">
+      <header>
+        <span class="num">67</span>
+        <h3>Shadow Boxing</h3>
+        <span class="badge warn">needs motion</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/ShadowBoxing.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>ShadowBoxing.webp</code></dd>
+        <dt>slug</dt><dd><code>shadow_boxing</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a shadow boxing, captured mid-combination with one arm extended and the guard hand at the chin. Bare floor, hand wraps, no equipment. Photographed from a front three-quarter view so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="hold" data-name="side plank">
+      <header>
+        <span class="num">68</span>
+        <h3>Side Plank</h3>
+        <span class="badge ok">isometric hold</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/SidePlank.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>SidePlank.webp</code></dd>
+        <dt>slug</dt><dd><code>side_plank</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a side plank, captured in the held position, hips lifted and body in one straight line. An exercise mat. Photographed from a front view level with the hips so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="single-leg calf raise">
+      <header>
+        <span class="num">69</span>
+        <h3>Single-Leg Calf Raise</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/SingleLegCalfRaise.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>SingleLegCalfRaise.webp</code></dd>
+        <dt>slug</dt><dd><code>single_leg_calf_raise</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a single-leg calf raise, captured at the top on one foot, heel driven high. A raised step, one hand lightly on a rail. Photographed from a side view level with the ankle so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="single-leg glute bridge">
+      <header>
+        <span class="num">70</span>
+        <h3>Single-Leg Glute Bridge</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/SingleLegGluteBridge.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>SingleLegGluteBridge.webp</code></dd>
+        <dt>slug</dt><dd><code>single_leg_glute_bridge</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a single-leg glute bridge, captured at the top, one leg extended and the hips level. An exercise mat. Photographed from a side view at hip height so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="single-leg romanian deadlift">
+      <header>
+        <span class="num">71</span>
+        <h3>Single-Leg Romanian Deadlift</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/SingleLegRdl.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>SingleLegRdl.webp</code></dd>
+        <dt>slug</dt><dd><code>single_leg_rdl</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a single-leg romanian deadlift, captured at the bottom, torso and rear leg forming one line parallel to the floor. A single dumbbell. Photographed from a side view level with the hips so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="motion" data-name="squat jump pulse">
+      <header>
+        <span class="num">72</span>
+        <h3>Squat Jump Pulse</h3>
+        <span class="badge warn">needs motion</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/SquatJumpPulse.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>SquatJumpPulse.webp</code></dd>
+        <dt>slug</dt><dd><code>squat_jump_pulse</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a squat jump pulse, captured airborne at the top of the jump with the feet just off the floor. Bare floor, no equipment. Photographed from a front view at hip height so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="motion" data-name="squat thrust">
+      <header>
+        <span class="num">73</span>
+        <h3>Squat Thrust</h3>
+        <span class="badge warn">needs motion</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/SquatThrust.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>SquatThrust.webp</code></dd>
+        <dt>slug</dt><dd><code>squat_thrust</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a squat thrust, captured at the moment the feet snap forward under the chest from the plank. Bare wooden floor, no equipment. Photographed from a low side view so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="hold" data-name="standing hamstring stretch">
+      <header>
+        <span class="num">74</span>
+        <h3>Standing Hamstring Stretch</h3>
+        <span class="badge ok">isometric hold</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/StandingHamstringStretch.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>StandingHamstringStretch.webp</code></dd>
+        <dt>slug</dt><dd><code>standing_hamstring_stretch</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a standing hamstring stretch, captured at the deepest point, hinged forward with a long spine. Bare floor, no equipment. Photographed from a side view at hip height so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="sumo squat">
+      <header>
+        <span class="num">75</span>
+        <h3>Sumo Squat</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/SumoSquat.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>SumoSquat.webp</code></dd>
+        <dt>slug</dt><dd><code>sumo_squat</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a sumo squat, captured at the bottom, feet wide and toes turned out, thighs below parallel. A single dumbbell held between the legs. Photographed from a front view at hip height so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="swimmer">
+      <header>
+        <span class="num">76</span>
+        <h3>Swimmer</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/Swimmer.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>Swimmer.webp</code></dd>
+        <dt>slug</dt><dd><code>swimmer</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a swimmer, captured at the top, opposite arm and leg lifted clear of the floor. An exercise mat, lying prone. Photographed from a side view at floor level so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="t-bar row">
+      <header>
+        <span class="num">77</span>
+        <h3>T-Bar Row</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/TBarRow.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>TBarRow.webp</code></dd>
+        <dt>slug</dt><dd><code>t_bar_row</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a t-bar row, captured at the top of the row, handles pulled into the ribs. A t-bar row station with plates loaded. Photographed from a side three-quarter view so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="motion" data-name="thruster">
+      <header>
+        <span class="num">78</span>
+        <h3>Thruster</h3>
+        <span class="badge warn">needs motion</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/Thruster.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>Thruster.webp</code></dd>
+        <dt>slug</dt><dd><code>thruster</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a thruster, captured at the top, weights locked out overhead out of a front squat. A pair of dumbbells. Photographed from a front three-quarter view so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="toe touch">
+      <header>
+        <span class="num">79</span>
+        <h3>Toe Touch</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/ToeTouch.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>ToeTouch.webp</code></dd>
+        <dt>slug</dt><dd><code>toe_touch</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a toe touch, captured at the top, reaching up toward the raised feet with the shoulders off the floor. An exercise mat, lying supine with legs vertical. Photographed from a side view at floor level so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="floor triceps extension">
+      <header>
+        <span class="num">80</span>
+        <h3>Floor Triceps Extension</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/TricepExtensionFloor.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>TricepExtensionFloor.webp</code></dd>
+        <dt>slug</dt><dd><code>tricep_extension_floor</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a floor triceps extension, captured at the bottom, dumbbells beside the ears with the upper arms vertical. An exercise mat and a pair of dumbbells. Photographed from a side view at floor level so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="motion" data-name="tuck jump">
+      <header>
+        <span class="num">81</span>
+        <h3>Tuck Jump</h3>
+        <span class="badge warn">needs motion</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/TuckJump.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>TuckJump.webp</code></dd>
+        <dt>slug</dt><dd><code>tuck_jump</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a tuck jump, captured at the peak of the jump with both knees tucked to the chest. Bare floor, no equipment. Photographed from a front view at hip height so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="upright row">
+      <header>
+        <span class="num">82</span>
+        <h3>Upright Row</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/UprightRow.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>UprightRow.webp</code></dd>
+        <dt>slug</dt><dd><code>upright_row</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating an upright row, captured at the top, elbows above the wrists at shoulder height. A barbell or a pair of dumbbells. Photographed from a front view level with the chest so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="motion" data-name="walking lunge">
+      <header>
+        <span class="num">83</span>
+        <h3>Walking Lunge</h3>
+        <span class="badge warn">needs motion</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/WalkingLungeDumbbell.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>WalkingLungeDumbbell.webp</code></dd>
+        <dt>slug</dt><dd><code>walking_lunge_dumbbell</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a walking lunge, captured at the bottom of a stride, back knee just above the floor. A pair of dumbbells. Photographed from a side view level with the hips so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="motion" data-name="wall walk">
+      <header>
+        <span class="num">84</span>
+        <h3>Wall Walk</h3>
+        <span class="badge warn">needs motion</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/WallWalk.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>WallWalk.webp</code></dd>
+        <dt>slug</dt><dd><code>wall_walk</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a wall walk, captured partway up, feet high on the wall and hands walked in close to it. A bare wall and floor. Photographed from a side view from a low angle so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="weighted leg raise">
+      <header>
+        <span class="num">85</span>
+        <h3>Weighted Leg Raise</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/WeightedLegRaise.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>WeightedLegRaise.webp</code></dd>
+        <dt>slug</dt><dd><code>weighted_leg_raise</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a weighted leg raise, captured at the top, legs vertical with a dumbbell held between the feet. An exercise mat and a light dumbbell. Photographed from a side view at floor level so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="weighted sit-up">
+      <header>
+        <span class="num">86</span>
+        <h3>Weighted Sit-Up</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/WeightedSitUp.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>WeightedSitUp.webp</code></dd>
+        <dt>slug</dt><dd><code>weighted_sit_up</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a weighted sit-up, captured at the top of the sit-up, weight held at the chest. An exercise mat and a dumbbell or plate. Photographed from a side view at floor level so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+    <article class="card" data-motion="static" data-name="wide push-up">
+      <header>
+        <span class="num">87</span>
+        <h3>Wide Push-Up</h3>
+        <span class="badge ok">static ok</span>
+      </header>
+      <dl>
+        <dt>current file</dt><dd><code>photos/exercises/WidePushUp.webp</code></dd>
+        <dt>destination folder</dt><dd><code>photos/exercises/</code></dd>
+        <dt>destination filename</dt><dd><code>WidePushUp.webp</code></dd>
+        <dt>slug</dt><dd><code>wide_push_up</code></dd>
+      </dl>
+      <div class="promptwrap">
+        <button class="copy" type="button">Copy prompt</button>
+        <pre class="prompt">A single athlete demonstrating a wide push-up, captured at the bottom, hands wider than the shoulders and chest close to the floor. Bare wooden floor, no equipment. Photographed from a low front three-quarter view so the working joints are unobstructed. Full body inside the frame with generous margin on all four sides, subject centred, nothing important near the edges. Dark studio cyclorama fading to deep black, cinematic three-point lighting, violet key light from camera left and a lime-green rim light separating the athlete from the background, high contrast, crisp muscle and skin definition, light sweat sheen, background softly out of focus while the athlete stays tack sharp, ultra realistic premium fitness photography, colour graded, highly detailed, 4k. 3:2 landscape. No text, no words, no letters, no numbers, no captions, no labels, no titles, no timers, no arrows, no logos, no watermark, no UI, no overlay, no graphics, no borders, no split panels, no collage, no before-and-after layout. A single clean photograph.</pre>
+      </div>
+    </article>
+</div>
+
+</div>
+<script>
+  document.querySelectorAll('button.copy').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var text = b.parentElement.querySelector('pre.prompt').textContent;
+      navigator.clipboard.writeText(text).then(function () {
+        b.textContent = 'Copied'; b.classList.add('done');
+        setTimeout(function () {
+          b.textContent = 'Copy prompt'; b.classList.remove('done');
+        }, 1400);
+      });
+    });
+  });
+
+  document.getElementById('copyall').addEventListener('click', function () {
+    var parts = [];
+    document.querySelectorAll('#list .card').forEach(function (c) {
+      if (c.style.display === 'none') return;
+      parts.push(c.querySelector('h3').textContent + ' -> ' +
+        c.querySelectorAll('dd code')[2].textContent + '\n' +
+        c.querySelector('pre.prompt').textContent);
+    });
+    navigator.clipboard.writeText(parts.join('\n\n---\n\n'));
+    this.textContent = 'Copied ' + parts.length;
+    var self = this;
+    setTimeout(function () { self.textContent = 'Copy all prompts'; }, 1600);
+  });
+
+  var filter = 'all';
+  function apply() {
+    var q = document.getElementById('q').value.trim().toLowerCase();
+    document.querySelectorAll('#list .card').forEach(function (c) {
+      var okF = filter === 'all' || c.dataset.motion === filter;
+      var okQ = !q || c.dataset.name.indexOf(q) !== -1;
+      c.style.display = (okF && okQ) ? '' : 'none';
+    });
+  }
+  document.getElementById('q').addEventListener('input', apply);
+  document.querySelectorAll('.toolbar button[data-f]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      filter = b.dataset.f;
+      document.querySelectorAll('.toolbar button[data-f]').forEach(function (o) {
+        o.setAttribute('aria-pressed', String(o === b));
+      });
+      apply();
+    });
+  });
+</script>
+</body>
+</html>

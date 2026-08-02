@@ -48,16 +48,20 @@ WorkoutSessionState _state({
   bool isResting = false,
   int restSecondsRemaining = 0,
   bool noExercises = false,
+  int exerciseCount = 1,
+  int activeExerciseIndex = 0,
 }) {
   final day = WorkoutDay(
     dayNumber: 1,
     title: 'Gün 1',
-    exercises: noExercises ? const [] : [_exercise()],
+    exercises: noExercises
+        ? const []
+        : [for (var i = 0; i < exerciseCount; i++) _exercise()],
   );
   return WorkoutSessionState(
     days: [day],
     activeDay: day,
-    activeExerciseIndex: 0,
+    activeExerciseIndex: activeExerciseIndex,
     currentReps: currentReps,
     currentSet: currentSet,
     isResting: isResting,
@@ -69,6 +73,7 @@ Future<ProviderContainer> _pump(
   WidgetTester tester,
   WorkoutSessionState seed, {
   double textScale = 1.0,
+  int? restCountdown,
 }) async {
   SharedPreferences.setMockInitialValues(const {});
   final prefs = await SharedPreferences.getInstance();
@@ -79,6 +84,9 @@ Future<ProviderContainer> _pump(
     ],
   );
   addTearDown(container.dispose);
+  if (restCountdown != null) {
+    container.read(restCountdownProvider.notifier).set(restCountdown);
+  }
 
   await tester.pumpWidget(
     UncontrolledProviderScope(
@@ -145,11 +153,65 @@ void main() {
   testWidgets('the rest state replaces the active view', (tester) async {
     await _pump(
       tester,
-      _state(isResting: true, restSecondsRemaining: 30),
+      _state(isResting: true, restSecondsRemaining: 45),
+      restCountdown: 30,
     );
     expect(find.text('DİNLEN'), findsOneWidget);
-    expect(find.text('30'), findsOneWidget);
     expect(find.text('SETİ TAMAMLA'), findsNothing);
+  });
+
+  // The countdown regression, pinned from two independent sources.
+  //
+  // Tier-B.8 froze `WorkoutSessionState.restSecondsRemaining` at the
+  // rest DURATION and moved the live tick to `restCountdownProvider`.
+  // This screen went on reading the frozen field, so it shipped a rest
+  // dial that showed the same number for the whole rest. The previous
+  // version of this test seeded ONE value into the frozen field and
+  // asserted on it, which passed for exactly as long as the bug existed.
+  //
+  // The two values are deliberately different: 45 is the frozen total
+  // the fixture's exercise rests for, 12 is what is actually left. A
+  // screen reading the wrong source shows 45 and fails here.
+  testWidgets(
+      'the rest dial reads the live countdown, not the frozen '
+      'session field', (tester) async {
+    await _pump(
+      tester,
+      _state(isResting: true, restSecondsRemaining: 45),
+      restCountdown: 12,
+    );
+
+    expect(find.text('12'), findsOneWidget);
+  });
+
+  testWidgets('the countdown re-renders as the provider ticks', (tester) async {
+    final container = await _pump(
+      tester,
+      _state(isResting: true, restSecondsRemaining: 45),
+      restCountdown: 40,
+    );
+    expect(find.text('40'), findsOneWidget);
+
+    container.read(restCountdownProvider.notifier).set(39);
+    await tester.pump();
+    expect(find.text('39'), findsOneWidget);
+    expect(find.text('40'), findsNothing);
+
+    container.read(restCountdownProvider.notifier).set(9);
+    await tester.pump();
+    expect(find.text('9'), findsOneWidget);
+  });
+
+  testWidgets(
+      'the day progress bar reports where this exercise sits in the '
+      'day', (tester) async {
+    await _pump(tester, _state(exerciseCount: 5, activeExerciseIndex: 2));
+
+    expect(find.text('EGZERSİZ 3 / 5'), findsOneWidget);
+    final bar = tester.widget<LinearProgressIndicator>(
+      find.byType(LinearProgressIndicator),
+    );
+    expect(bar.value, closeTo(3 / 5, 0.001));
   });
 
   testWidgets(

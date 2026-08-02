@@ -24,6 +24,23 @@ import '../../domain/trend_calculator.dart';
 ///     forever. The time axis itself deliberately does NOT mirror: weeks
 ///     run earlier-to-later, and flipping that would say the user's
 ///     history ran backwards.
+/// ---
+///
+/// **Pre-Phase-10 polish · the founder's "Your body" reference.** The
+/// stroke now runs the brand gradient along the time axis, the plot
+/// carries its own value and date axes, and the newest reading is a lit
+/// white dot. Three notes on what did *not* change with the look:
+///
+///   * **The gradient is along X, not by value.** Purple at the oldest
+///     reading, lime at the newest. It reads as "then → now", which is
+///     information. A gradient keyed to the value would be valence
+///     colouring by the back door.
+///   * **The axes are drawn, not laid out.** A painter is the only place
+///     the labels can be positioned against the same scale as the line
+///     without measuring the plot twice.
+///   * **[axisColor] and friends are handed in.** This widget is used on
+///     a hardcoded dark surface today, and it must not start assuming
+///     that.
 class BodyTrendChart extends StatelessWidget {
   const BodyTrendChart({
     super.key,
@@ -31,6 +48,12 @@ class BodyTrendChart extends StatelessWidget {
     required this.targetValue,
     required this.targetLabel,
     this.height = 180,
+    this.strokeGradient,
+    this.axisColor,
+    this.gridColor,
+    this.endDotColor,
+    this.valueLabel,
+    this.dateLabel,
   });
 
   final List<TrendPoint> points;
@@ -44,6 +67,23 @@ class BodyTrendChart extends StatelessWidget {
 
   final double height;
 
+  /// Oldest-to-newest stroke colours. Null falls back to the theme's
+  /// primary as a flat stroke, which is what the Progress tab wants.
+  final List<Color>? strokeGradient;
+
+  final Color? axisColor;
+  final Color? gridColor;
+  final Color? endDotColor;
+
+  /// Formats a plotted value for the right-hand axis. Null hides the
+  /// axis — a caller that has not thought about units should not get a
+  /// bare number.
+  final String Function(double value)? valueLabel;
+
+  /// Formats a day for the bottom axis. The last tick is handed
+  /// [points]`.last.day` and may return "Today".
+  final String Function(DateTime day, {required bool isLast})? dateLabel;
+
   @override
   Widget build(BuildContext context) {
     final scheme = context.colors;
@@ -56,9 +96,14 @@ class BodyTrendChart extends StatelessWidget {
           targetValue: targetValue,
           targetLabel: targetLabel,
           lineColor: scheme.primary,
+          strokeGradient: strokeGradient,
           dotColor: scheme.onSurface.withValues(alpha: 0.32),
-          gridColor: scheme.onSurface.withValues(alpha: 0.10),
+          gridColor: gridColor ?? scheme.onSurface.withValues(alpha: 0.10),
           targetColor: scheme.onSurface.withValues(alpha: 0.45),
+          axisColor: axisColor ?? scheme.onSurface.withValues(alpha: 0.45),
+          endDotColor: endDotColor,
+          valueLabel: valueLabel,
+          dateLabel: dateLabel,
           textDirection: Directionality.of(context),
         ),
       ),
@@ -72,9 +117,14 @@ class _BodyTrendPainter extends CustomPainter {
     required this.targetValue,
     required this.targetLabel,
     required this.lineColor,
+    required this.strokeGradient,
     required this.dotColor,
     required this.gridColor,
     required this.targetColor,
+    required this.axisColor,
+    required this.endDotColor,
+    required this.valueLabel,
+    required this.dateLabel,
     required this.textDirection,
   });
 
@@ -82,9 +132,14 @@ class _BodyTrendPainter extends CustomPainter {
   final double? targetValue;
   final String targetLabel;
   final Color lineColor;
+  final List<Color>? strokeGradient;
   final Color dotColor;
   final Color gridColor;
   final Color targetColor;
+  final Color axisColor;
+  final Color? endDotColor;
+  final String Function(double value)? valueLabel;
+  final String Function(DateTime day, {required bool isLast})? dateLabel;
 
   /// Handed in rather than read, because a painter has no
   /// `BuildContext`. Used for the label only — see the class doc for
@@ -94,10 +149,29 @@ class _BodyTrendPainter extends CustomPainter {
   static const double _topPad = 14;
   static const double _bottomPad = 10;
 
+  /// Gutter reserved for the right-hand value axis, and the strip under
+  /// the plot for the date axis. Both are zero when the caller did not
+  /// ask for that axis, so the Progress tab's chart is unchanged.
+  static const double _valueAxisWidth = 34;
+  static const double _dateAxisHeight = 20;
+  static const double _axisFontSize = 10.5;
+
   @override
   void paint(Canvas canvas, Size size) {
     if (points.length < 2) return;
 
+    // Everything below plots into `size`; carve the axis gutters off
+    // first so the line never runs under its own labels.
+    final plotSize = Size(
+      size.width - (valueLabel == null ? 0 : _valueAxisWidth),
+      size.height - (dateLabel == null ? 0 : _dateAxisHeight),
+    );
+    if (plotSize.width <= 1 || plotSize.height <= 1) return;
+    _paintPlot(canvas, plotSize);
+    if (dateLabel != null) _paintDateAxis(canvas, size, plotSize);
+  }
+
+  void _paintPlot(Canvas canvas, Size size) {
     // The value window includes the target when there is one, so a
     // target below everything logged is still on screen — otherwise the
     // line the user set would be the one thing they could not see.
@@ -145,6 +219,9 @@ class _BodyTrendPainter extends CustomPainter {
     }
 
     _paintGrid(canvas, size, gridColor);
+    if (valueLabel != null) {
+      _paintValueAxis(canvas, size, minValue, span);
+    }
 
     // The smoothed line, as a cubic through the midpoints.
     final path = Path()..moveTo(x(points.first.day), y(points.first.smoothed));
@@ -155,51 +232,121 @@ class _BodyTrendPainter extends CustomPainter {
       path.cubicTo(midX, prev.dy, midX, curr.dy, curr.dx, curr.dy);
     }
 
+    final plotRect = Rect.fromLTWH(0, 0, size.width, size.height);
+    final gradient = strokeGradient;
+
     final fill = Path.from(path)
       ..lineTo(size.width, size.height - _bottomPad)
       ..lineTo(0, size.height - _bottomPad)
       ..close();
-    canvas.drawPath(
-      fill,
-      Paint()
-        ..shader = LinearGradient(
-          colors: [
-            lineColor.withValues(alpha: 0.28),
-            lineColor.withValues(alpha: 0.0),
-          ],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ).createShader(Rect.fromLTWH(0, 0, size.width, size.height)),
-    );
+    if (gradient == null) {
+      // Flat stroke: a single vertical fade, as the Progress tab has
+      // always drawn it.
+      canvas.drawPath(
+        fill,
+        Paint()
+          ..shader = LinearGradient(
+            colors: [
+              lineColor.withValues(alpha: 0.28),
+              lineColor.withValues(alpha: 0.0),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ).createShader(plotRect),
+      );
+    } else {
+      _paintGradientFill(canvas, fill, plotRect, gradient);
+    }
 
     canvas.drawPath(
       path,
       Paint()
+        ..shader = gradient == null
+            ? null
+            : LinearGradient(colors: gradient).createShader(plotRect)
         ..color = lineColor
-        ..strokeWidth = 2.5
+        ..strokeWidth = 2.6
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round
         ..strokeJoin = StrokeJoin.round,
     );
 
-    // The raw readings, small and quiet, under the trend.
-    final dotPaint = Paint()..color = dotColor;
-    for (final point in points) {
-      canvas.drawCircle(Offset(x(point.day), y(point.value)), 2.5, dotPaint);
+    // The raw readings, small and quiet, under the trend. Suppressed
+    // once the stroke carries a gradient: on the dark surface the dots
+    // read as a second, noisier series rather than as the source of the
+    // first.
+    if (gradient == null) {
+      final dotPaint = Paint()..color = dotColor;
+      for (final point in points) {
+        canvas.drawCircle(Offset(x(point.day), y(point.value)), 2.5, dotPaint);
+      }
     }
 
-    // The latest smoothed value, anchored.
+    // The latest smoothed value, anchored — and lit, when the caller
+    // asked for it. This is the one point on the chart that is "now".
     final last = Offset(x(points.last.day), y(points.last.smoothed));
-    canvas.drawCircle(last, 4, Paint()..color = lineColor);
+    final endColor = endDotColor ?? lineColor;
+    if (endDotColor != null) {
+      canvas.drawCircle(
+        last,
+        11,
+        Paint()
+          ..color = (gradient?.last ?? lineColor).withValues(alpha: 0.55)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+      );
+    }
+    canvas.drawCircle(last, 4.5, Paint()..color = endColor);
     canvas.drawCircle(
       last,
-      7,
-      Paint()..color = lineColor.withValues(alpha: 0.22),
+      7.5,
+      Paint()..color = endColor.withValues(alpha: 0.22),
     );
 
     if (target != null) _paintTarget(canvas, size, y(target));
   }
 
+  /// The area under a gradient stroke, faded along X *and* down Y.
+  ///
+  /// One `Paint` carries one shader, so the two ramps cannot be
+  /// combined in a single draw: the horizontal hue is painted into its
+  /// own layer, then a vertical alpha ramp is composited over it with
+  /// [BlendMode.dstIn], which multiplies the layer's alpha rather than
+  /// drawing anything of its own.
+  ///
+  /// Without the vertical half, the area under the oldest reading is a
+  /// solid purple slab that reads as part of the chart rather than as
+  /// the space beneath it.
+  void _paintGradientFill(
+    Canvas canvas,
+    Path fill,
+    Rect rect,
+    List<Color> gradient,
+  ) {
+    canvas.saveLayer(rect, Paint());
+    canvas.drawPath(
+      fill,
+      Paint()
+        ..shader = LinearGradient(
+          colors: [for (final color in gradient) color.withValues(alpha: 0.34)],
+        ).createShader(rect),
+    );
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..blendMode = BlendMode.dstIn
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.black, Colors.transparent],
+          stops: [0.0, 0.92],
+        ).createShader(rect),
+    );
+    canvas.restore();
+  }
+
+  /// Four rules across the plot. Dashed when the chart carries a value
+  /// axis, because a solid rule beside a number reads as a threshold the
+  /// user set rather than as a gridline.
   void _paintGrid(Canvas canvas, Size size, Color color) {
     final paint = Paint()
       ..color = color
@@ -207,9 +354,85 @@ class _BodyTrendPainter extends CustomPainter {
     final plotHeight = size.height - _topPad - _bottomPad;
     for (var i = 0; i <= 3; i++) {
       final lineY = _topPad + plotHeight * (i / 3);
-      canvas.drawLine(Offset(0, lineY), Offset(size.width, lineY), paint);
+      if (valueLabel == null) {
+        canvas.drawLine(Offset(0, lineY), Offset(size.width, lineY), paint);
+      } else {
+        _dashedLine(canvas, lineY, size.width, paint);
+      }
     }
   }
+
+  void _dashedLine(Canvas canvas, double lineY, double width, Paint paint) {
+    const dash = 4.0;
+    const gap = 6.0;
+    for (var startX = 0.0; startX < width; startX += dash + gap) {
+      canvas.drawLine(
+        Offset(startX, lineY),
+        Offset(_min(startX + dash, width), lineY),
+        paint,
+      );
+    }
+  }
+
+  /// The value axis, in the gutter to the right of the plot. One label
+  /// per gridline, so a reader can put a number on any rule without
+  /// interpolating.
+  void _paintValueAxis(Canvas canvas, Size size, double minValue, double span) {
+    final format = valueLabel;
+    if (format == null) return;
+    final plotHeight = size.height - _topPad - _bottomPad;
+    for (var i = 0; i <= 3; i++) {
+      final lineY = _topPad + plotHeight * (i / 3);
+      // i == 0 is the TOP rule, which is the largest value.
+      final value = minValue + span * (1 - i / 3);
+      final painter = _label(format(value));
+      painter.paint(
+        canvas,
+        Offset(size.width + 8, lineY - painter.height / 2),
+      );
+    }
+  }
+
+  /// The date axis, under the plot. Five ticks evenly spaced across the
+  /// *time* window, matching the x() mapping — not across the point
+  /// list, which would bunch the labels wherever logging was dense.
+  void _paintDateAxis(Canvas canvas, Size size, Size plotSize) {
+    final format = dateLabel;
+    if (format == null) return;
+    final firstDay = points.first.day;
+    final lastDay = points.last.day;
+    final totalDays = lastDay.difference(firstDay).inDays;
+    const ticks = 5;
+    final top = plotSize.height + 2;
+
+    for (var i = 0; i < ticks; i++) {
+      final fraction = i / (ticks - 1);
+      final isLast = i == ticks - 1;
+      final day = isLast
+          ? lastDay
+          : firstDay.add(Duration(days: (totalDays * fraction).round()));
+      final painter = _label(format(day, isLast: isLast));
+      // The first and last labels are anchored to the plot edges rather
+      // than centred on their tick, so neither hangs off the canvas.
+      final centre = plotSize.width * fraction;
+      var left = centre - painter.width / 2;
+      if (i == 0) left = 0;
+      if (isLast) left = plotSize.width - painter.width;
+      painter.paint(canvas, Offset(left, top));
+    }
+  }
+
+  TextPainter _label(String text) => TextPainter(
+        text: TextSpan(
+          text: text,
+          style: TextStyle(
+            color: axisColor,
+            fontSize: _axisFontSize,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        textDirection: textDirection,
+      )..layout();
 
   /// A dashed horizontal rule with its caption at the reading-end.
   ///
@@ -258,5 +481,10 @@ class _BodyTrendPainter extends CustomPainter {
       old.targetValue != targetValue ||
       old.targetLabel != targetLabel ||
       old.lineColor != lineColor ||
+      old.strokeGradient != strokeGradient ||
+      old.axisColor != axisColor ||
+      old.endDotColor != endDotColor ||
+      old.valueLabel != valueLabel ||
+      old.dateLabel != dateLabel ||
       old.textDirection != textDirection;
 }

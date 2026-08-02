@@ -58,6 +58,25 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// The pre-Phase-10 rebuild moved the trend sentence, the plateau note
+  /// and the goal reconciliation off the scroll and into a sheet behind
+  /// "View insights". The assertions below still pin exactly what they
+  /// pinned — the tone rules are the point of this file — they just have
+  /// to open the drawer first.
+  ///
+  /// It asserts the pill is there before tapping, because a
+  /// `findsNothing` written against a control that has silently stopped
+  /// existing is a test that passes for the wrong reason. Three of the
+  /// assertions this helper serves are negative ones.
+  Future<void> openInsights(
+    WidgetTester tester, {
+    String label = 'Yorumu gör',
+  }) async {
+    expect(find.text(label), findsOneWidget);
+    await tester.tap(find.text(label));
+    await tester.pumpAndSettle();
+  }
+
   group('the empty state', () {
     testWidgets('invites rather than instructs', (tester) async {
       await pump(tester, await host(entries: const []));
@@ -73,14 +92,20 @@ void main() {
         'empty state and the FAB saying the same words on one screen',
         (tester) async {
       await pump(tester, await host(entries: const []));
+      // Exactly one, not two. The rebuild made the floating action the
+      // screen's own gradient pill rather than a `FloatingActionButton`,
+      // so counting the label is what pins the contract now — and it
+      // pins it more directly than counting a framework type did.
       expect(find.text('Ölçüm ekle'), findsOneWidget);
-      expect(find.byType(FloatingActionButton), findsNothing);
+      expect(find.text('Henüz kayıt yok'), findsOneWidget);
     });
 
-    testWidgets('the FAB comes back once there is something to add to',
-        (tester) async {
+    testWidgets(
+        'the floating action comes back once there is something '
+        'to add to', (tester) async {
       await pump(tester, await host(entries: [weight(0, 80)]));
-      expect(find.byType(FloatingActionButton), findsOneWidget);
+      expect(find.text('Ölçüm ekle'), findsOneWidget);
+      expect(find.text('Henüz kayıt yok'), findsNothing);
     });
   });
 
@@ -136,6 +161,7 @@ void main() {
         tester,
         await host(entries: [weight(28, 84), weight(14, 82), weight(0, 80)]),
       );
+      await openInsights(tester);
       expect(find.textContaining('verdin'), findsOneWidget);
     });
 
@@ -146,6 +172,7 @@ void main() {
         tester,
         await host(entries: [weight(28, 70), weight(14, 72), weight(0, 74)]),
       );
+      await openInsights(tester);
       expect(find.textContaining('aldın'), findsOneWidget);
     });
 
@@ -160,7 +187,73 @@ void main() {
           weight(0, 80.0),
         ]),
       );
+      await openInsights(tester);
       expect(find.textContaining('kilon sabit'), findsOneWidget);
+    });
+  });
+
+  // The delta under the big number is the one reading that stays on the
+  // screen, so it carries the no-valence rule on its own now.
+  group('the delta line', () {
+    testWidgets('names the window and never signs the magnitude',
+        (tester) async {
+      await pump(
+        tester,
+        await host(entries: [weight(28, 84), weight(14, 82), weight(0, 80)]),
+      );
+      expect(find.textContaining('gün öncesine göre'), findsOneWidget);
+      expect(find.textContaining('-'), findsNothing);
+    });
+
+    // Found on the device. The card read "1.8 kg vs 30 days ago" beside
+    // an insights sheet reading "over the last 13 days" — 30 was the
+    // selected range and 13 was how far back the readings actually went.
+    // The screen was claiming a weight from a day it has never been told
+    // anything about, and the two numbers came from two sources nobody
+    // had compared.
+    testWidgets(
+        'the window is the span of the readings, not the range the user '
+        'picked', (tester) async {
+      await pump(
+        tester,
+        // Default range is 30D; the data only reaches back 13 days.
+        await host(entries: [weight(13, 84.2), weight(0, 82.4)]),
+      );
+
+      expect(find.textContaining('13 gün öncesine göre'), findsOneWidget);
+      expect(find.textContaining('30 gün öncesine göre'), findsNothing);
+
+      // …and the sheet that interprets it agrees, which is the property
+      // that was actually broken.
+      await openInsights(tester);
+      expect(find.textContaining('Son 13 günde'), findsOneWidget);
+    });
+
+    testWidgets(
+        'a gain and a loss are painted the same colour — the arrow is '
+        'the direction, the colour is not a verdict', (tester) async {
+      Color colourOf(WidgetTester tester) => tester
+          .widget<Text>(find.textContaining('gün öncesine göre'))
+          .style!
+          .color!;
+
+      await pump(
+        tester,
+        await host(entries: [weight(28, 84), weight(0, 80)]),
+      );
+      final losing = colourOf(tester);
+      expect(find.byIcon(Icons.arrow_downward_rounded), findsOneWidget);
+
+      // Unmounted between the two, because re-pumping a ProviderScope
+      // whose only change is the value inside an override reuses the
+      // element tree and the screen keeps the first series.
+      await tester.pumpWidget(const SizedBox.shrink());
+      await pump(
+        tester,
+        await host(entries: [weight(28, 80), weight(0, 84)]),
+      );
+      expect(colourOf(tester), losing);
+      expect(find.byIcon(Icons.arrow_upward_rounded), findsOneWidget);
     });
   });
 
@@ -176,6 +269,7 @@ void main() {
           weight(0, 80.0),
         ]),
       );
+      await openInsights(tester);
       expect(find.text('Sabit bir dönem'), findsOneWidget);
       expect(
         find.textContaining('bir şeyin ters gittiği anlamına değil'),
@@ -192,6 +286,10 @@ void main() {
           weight(0, 80.0),
         ]),
       );
+      // Opened, not skipped: asserting the plateau copy is absent from a
+      // screen that never renders it anywhere would pass whatever the
+      // plateau logic did.
+      await openInsights(tester);
       expect(find.text('Sabit bir dönem'), findsNothing);
     });
   });
@@ -210,6 +308,7 @@ void main() {
         tester,
         await host(entries: [weight(28, 84), weight(0, 80)]),
       );
+      await openInsights(tester);
       expect(find.text('Hedefine doğru'), findsNothing);
     });
 
@@ -222,6 +321,7 @@ void main() {
           seed: {TargetWeightNotifier.storageKey: 75.0},
         ),
       );
+      await openInsights(tester);
       expect(find.text('Hedefine doğru'), findsOneWidget);
     });
 
@@ -235,6 +335,7 @@ void main() {
           seed: {TargetWeightNotifier.storageKey: 75.0},
         ),
       );
+      await openInsights(tester);
       expect(
         find.textContaining('hikâyenin tamamı değil'),
         findsOneWidget,
@@ -348,8 +449,11 @@ void main() {
         ),
       );
       expect(find.text('Your body'), findsOneWidget);
-      expect(find.textContaining("You're down"), findsOneWidget);
       expect(find.text('Consistency'), findsOneWidget);
+      expect(find.textContaining('days ago'), findsOneWidget);
+      expect(find.text('Weight trend'), findsOneWidget);
+      await openInsights(tester, label: 'View insights');
+      expect(find.textContaining("You're down"), findsOneWidget);
     });
 
     testWidgets('the percent sign sits where the language puts it',

@@ -484,7 +484,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       enabled: !_busy,
       style: const TextStyle(color: Colors.white),
       decoration: _inputDecoration(
-        label: 'E-posta',
+        label: AppLocalizations.of(context).authEmailLabel,
         icon: Icons.alternate_email,
       ),
       validator: (value) {

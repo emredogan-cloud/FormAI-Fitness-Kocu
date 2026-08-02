@@ -2364,7 +2364,7 @@ class _RedeemReferralDialogState extends State<_RedeemReferralDialog> {
             ),
             decoration: InputDecoration(
               counterText: '',
-              hintText: 'ABC123',
+              hintText: 'ABC123', // i18n-ignore — code alphabet, not copy
               hintStyle: TextStyle(
                 color: scheme.onSurface.withValues(alpha: 0.30),
                 letterSpacing: 8,
