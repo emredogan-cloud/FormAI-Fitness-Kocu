@@ -27,6 +27,9 @@ class CoachContext {
     this.lastSessionLine,
     this.firstCameraSession = false,
     this.workoutMode = 'camera',
+    this.weightChange30dKg,
+    this.waistChange30dCm,
+    this.isPlateau = false,
   });
 
   final int hour; // 0–23 local
@@ -71,10 +74,54 @@ class CoachContext {
   /// software that isn't paying attention.
   final String workoutMode;
 
+  /// Roadmap Phase 9 (C1) · signed change in the user's logged weight
+  /// over the last 30 days, in kilograms. Null when they have not logged
+  /// enough for the trend maths to say anything.
+  ///
+  /// This is what turns "keep going!" into "your weight is down 2.4 kg
+  /// and your waist has not moved" — the difference between
+  /// encouragement and coaching. It is passed as a NUMBER rather than a
+  /// pre-built sentence so each locale's prompt block writes its own; a
+  /// Turkish string threaded into an English block is the exact bug
+  /// Phase 6 fixed here.
+  ///
+  /// The persona's existing GERÇEKLİK constraint does the rest: it may
+  /// only speak about data it was handed, so null means the coach says
+  /// nothing about the body rather than guessing at it.
+  final double? weightChange30dKg;
+
+  /// Signed change in waist circumference over the same window, in
+  /// centimetres. The measure that most often tells the true story when
+  /// the scale is flat, which is precisely the conversation a plateau
+  /// needs the coach to be able to have.
+  final double? waistChange30dCm;
+
+  /// True when the weight series has been genuinely still for three
+  /// weeks or more. Surfaced separately from [bodyTrendLine] because a
+  /// plateau is the one body-metric state that should change what the
+  /// coach *does* — the roadmap asks for a proactive, actionable message
+  /// here, not another observation.
+  final bool isPlateau;
+
   String get firstName {
     final n = name?.trim();
     if (n == null || n.isEmpty) return '';
     return n.split(RegExp(r'\s+')).first;
+  }
+
+  /// A signed magnitude for the prompt, to one decimal: `-2.4`, `+0.8`,
+  /// `0.0`. The sign is explicit because a bare `2.4` in a prompt line
+  /// called "change" is genuinely ambiguous, and a model that guesses
+  /// wrong congratulates somebody for gaining the weight they are
+  /// trying to lose.
+  ///
+  /// A period decimal separator regardless of locale: this is prompt
+  /// scaffolding read by a model, not copy read by a person.
+  static String _signed(double value) {
+    final rounded = double.parse(value.toStringAsFixed(1));
+    return rounded > 0
+        ? '+${rounded.toStringAsFixed(1)}'
+        : rounded.toStringAsFixed(1);
   }
 
   double? get bmi {
@@ -132,6 +179,22 @@ class CoachContext {
           '- Bugünkü egzersizler: ${todayExerciseNames.join(', ')}'); // i18n-ignore
     }
     if (lastSessionLine != null) b.writeln('- $lastSessionLine');
+    final weightDelta = weightChange30dKg;
+    if (weightDelta != null) {
+      b.writeln('- Son 30 günde kilo değişimi: ' // i18n-ignore
+          '${_signed(weightDelta)} kg');
+    }
+    final waistDelta = waistChange30dCm;
+    if (waistDelta != null) {
+      b.writeln('- Son 30 günde bel değişimi: ' // i18n-ignore
+          '${_signed(waistDelta)} cm');
+    }
+    if (isPlateau) {
+      b.writeln(
+          '- Kilo üç haftadır sabit. Bu bir başarısızlık değil; ' // i18n-ignore
+          'tek bir şeyi (antrenman, porsiyon veya uyku) değiştirmek ' // i18n-ignore
+          'için doğru an. Somut ve tek bir öneri ver.'); // i18n-ignore
+    }
     if (workoutMode == 'manual') {
       b.writeln(
           '- Antrenman modu: kamerasız (tekrarları kullanıcı sayıyor; ' // i18n-ignore
@@ -173,6 +236,23 @@ class CoachContext {
           "- Today's exercises: ${todayExerciseNames.join(', ')}"); // i18n-ignore
     }
     if (lastSessionLine != null) b.writeln('- $lastSessionLine');
+    final weightDelta = weightChange30dKg;
+    if (weightDelta != null) {
+      b.writeln('- Weight change over the last 30 days: ' // i18n-ignore
+          '${_signed(weightDelta)} kg');
+    }
+    final waistDelta = waistChange30dCm;
+    if (waistDelta != null) {
+      b.writeln('- Waist change over the last 30 days: ' // i18n-ignore
+          '${_signed(waistDelta)} cm');
+    }
+    if (isPlateau) {
+      b.writeln(
+          '- Weight has been flat for three weeks. This is not a ' // i18n-ignore
+          'failure; it is the normal moment to change ONE thing ' // i18n-ignore
+          '(training, portions or sleep). Give one concrete ' // i18n-ignore
+          'suggestion.'); // i18n-ignore
+    }
     if (workoutMode == 'manual') {
       b.writeln(
           '- Workout mode: camera-free (the user counts their own reps; ' // i18n-ignore

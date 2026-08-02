@@ -162,14 +162,22 @@ class _CategoryRecipeCard extends StatelessWidget {
   const _CategoryRecipeCard({required this.recipe});
   final Recipe recipe;
 
-  /// Phase 33 bump: cards are now 140 px tall with a 120×120 thumb.
-  /// Phase 32's 120/100 pairing overflowed by ~17 px on rows with two
-  /// tag chips because the title (maxLines: 2) + tag Wrap + macro row
-  /// together exceed 100 px of inner height on compact devices. The
-  /// extra 20 px absorbs that while keeping the layout tight; the
-  /// title+tags block now lives in an `Expanded` so any residual slack
-  /// is distributed gracefully instead of overflowing.
-  static const double _cardHeight = 140;
+  /// Phase 33 bump: cards were 140 px tall with a 120×120 thumb.
+  ///
+  /// Roadmap Phase 9 turned it into a MINIMUM. It had been raised once
+  /// already — Phase 32's 120/100 pairing overflowed by ~17 px on rows
+  /// with two tag chips — and raising a magic constant every time a
+  /// longer string appears is a rule that has to be re-derived by
+  /// whoever hits it next. A card sized to its own content cannot
+  /// overflow at all, and the minimum keeps a one-line recipe from
+  /// collapsing to the height of its thumbnail.
+  ///
+  /// The two consequences are load-bearing and must not be undone:
+  /// with no fixed height the inner column is unbounded, so its
+  /// title+tags block is `Flexible` rather than `Expanded`, and the
+  /// column is `MainAxisSize.min`. `Expanded` under an unbounded
+  /// constraint throws.
+  static const double _cardMinHeight = 140;
   static const double _thumbSize = 120;
 
   @override
@@ -181,8 +189,8 @@ class _CategoryRecipeCard extends StatelessWidget {
     // they're the macro identifiers users learn.
     final scheme = context.colors;
     final isDark = context.isDarkMode;
-    return SizedBox(
-      height: _cardHeight,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: _cardMinHeight),
       child: Material(
         color: Colors.transparent,
         clipBehavior: Clip.antiAlias,
@@ -220,6 +228,7 @@ class _CategoryRecipeCard extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Title + tags share the flexible top region.
@@ -228,7 +237,7 @@ class _CategoryRecipeCard extends StatelessWidget {
                       // overflow trigger) without blowing past the
                       // fixed card height; the macro row below stays
                       // pinned as the fixed bottom anchor.
-                      Expanded(
+                      Flexible(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -254,38 +263,30 @@ class _CategoryRecipeCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 6),
-                      Row(
+                      // A `Wrap`, not a `Row`. Five inflexible children
+                      // beside a 100 px thumbnail leave ~199 px, and two
+                      // macro labels in a longer language need 342 —
+                      // this overflowed by 143 px under pseudo-
+                      // localisation and nothing saw it, because the
+                      // sweeps were rendering the screen's empty state.
+                      // Ellipsising was the other option and it is worse:
+                      // a truncated calorie count reads as a wrong
+                      // number, not as a cut one.
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 2,
                         children: [
-                          const Icon(
-                            Icons.local_fire_department,
+                          _MacroChip(
+                            icon: Icons.local_fire_department,
                             color: _neon,
-                            size: 14,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            AppLocalizations.of(context)
+                            label: AppLocalizations.of(context)
                                 .macroKcal(recipe.calories),
-                            style: TextStyle(
-                              color: scheme.onSurface,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
-                            ),
                           ),
-                          const SizedBox(width: 12),
-                          const Icon(
-                            Icons.fitness_center,
+                          _MacroChip(
+                            icon: Icons.fitness_center,
                             color: _proteinColor,
-                            size: 14,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            AppLocalizations.of(context)
+                            label: AppLocalizations.of(context)
                                 .macroProtein(recipe.protein),
-                            style: TextStyle(
-                              color: scheme.onSurface,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
-                            ),
                           ),
                         ],
                       ),
@@ -297,6 +298,40 @@ class _CategoryRecipeCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// An icon and its macro figure, kept together so the `Wrap` above
+/// moves them onto the next line as one unit rather than orphaning a
+/// flame icon from its calorie count.
+class _MacroChip extends StatelessWidget {
+  const _MacroChip({
+    required this.icon,
+    required this.color,
+    required this.label,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: color, size: 14),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: TextStyle(
+            color: context.colors.onSurface,
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
     );
   }
 }

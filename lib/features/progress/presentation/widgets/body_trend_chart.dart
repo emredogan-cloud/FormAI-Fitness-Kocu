@@ -138,8 +138,7 @@ class _BodyTrendPainter extends CustomPainter {
     // month later must not be evenly spaced, or the chart flattens a
     // holiday into a step.
     final firstDay = points.first.day;
-    final totalDays =
-        points.last.day.difference(firstDay).inDays.toDouble();
+    final totalDays = points.last.day.difference(firstDay).inDays.toDouble();
     double x(DateTime day) {
       if (totalDays <= 0) return 0;
       return size.width * (day.difference(firstDay).inDays / totalDays);
@@ -148,8 +147,7 @@ class _BodyTrendPainter extends CustomPainter {
     _paintGrid(canvas, size, gridColor);
 
     // The smoothed line, as a cubic through the midpoints.
-    final path = Path()
-      ..moveTo(x(points.first.day), y(points.first.smoothed));
+    final path = Path()..moveTo(x(points.first.day), y(points.first.smoothed));
     for (var i = 1; i < points.length; i++) {
       final prev = Offset(x(points[i - 1].day), y(points[i - 1].smoothed));
       final curr = Offset(x(points[i].day), y(points[i].smoothed));

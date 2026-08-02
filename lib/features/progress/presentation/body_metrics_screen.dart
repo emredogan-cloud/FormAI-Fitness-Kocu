@@ -253,9 +253,8 @@ class _Loaded extends ConsumerWidget {
         ? series.points
         : series.since(today.subtract(Duration(days: range.days!)));
     final summary = series.summarize(asOf: today, days: windowDays);
-    final reconciliation = active.isWeight
-        ? series.reconcile(asOf: today, target: target)
-        : null;
+    final reconciliation =
+        active.isWeight ? series.reconcile(asOf: today, target: target) : null;
 
     if (reconciliation != null) {
       // Scheduled out of build: firing an analytics event during a frame
@@ -526,12 +525,18 @@ class _TargetRow extends ConsumerWidget {
               ],
             ),
           ),
-          TextButton(
-            onPressed: () => _showTargetSheet(context, ref),
-            child: Text(
-              target == null
-                  ? l10n.bodyMetricsTargetSet
-                  : l10n.bodyMetricsTargetChange,
+          // Same reason as the goal card's week label: an inflexible
+          // child in a Row lays out at its full intrinsic width, and
+          // "Set a target" is not the longest this button gets.
+          Flexible(
+            child: TextButton(
+              onPressed: () => _showTargetSheet(context, ref),
+              child: Text(
+                target == null
+                    ? l10n.bodyMetricsTargetSet
+                    : l10n.bodyMetricsTargetChange,
+                textAlign: TextAlign.end,
+              ),
             ),
           ),
         ],
@@ -628,7 +633,8 @@ class _TargetSheetState extends ConsumerState<_TargetSheet> {
               decoration: InputDecoration(
                 labelText: l10n.bodyMetricsTargetTitle,
                 suffixText: weightUnitLabel(system),
-                errorText: _invalid ? _rangeError(l10n, system, localeTag) : null,
+                errorText:
+                    _invalid ? _rangeError(l10n, system, localeTag) : null,
                 border: const OutlineInputBorder(),
                 isDense: true,
               ),
@@ -711,6 +717,7 @@ class _GoalCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Text(
@@ -722,12 +729,21 @@ class _GoalCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Text(
-                goalWeekLabel(l10n, reconciliation),
-                style: TextStyle(
-                  color: scheme.onSurface.withValues(alpha: 0.55),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
+              const SizedBox(width: 8),
+              // Flexible, not bare: a `Text` in a Row's inflexible slot
+              // lays out on one line at its full intrinsic width, so a
+              // longer translation of "Week 5 of 12" pushes the whole row
+              // off the card. This one did — 98 px under pseudo-
+              // localisation, which is roughly what German would do.
+              Flexible(
+                child: Text(
+                  goalWeekLabel(l10n, reconciliation),
+                  textAlign: TextAlign.end,
+                  style: TextStyle(
+                    color: scheme.onSurface.withValues(alpha: 0.55),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
@@ -761,7 +777,6 @@ class _AdherenceCard extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final scheme = context.colors;
     final adherence = ref.watch(adherenceProvider);
-    final weekly = ref.watch(weeklySessionCountsProvider);
 
     return _SoftCard(
       child: Column(
@@ -779,22 +794,23 @@ class _AdherenceCard extends ConsumerWidget {
           Row(
             children: [
               Expanded(
+                // A count, not a percentage. See [AdherenceSummary].
                 child: _AdherenceFigure(
                   label: l10n.adherenceWeeklyLabel,
-                  value: adherence.weeklyConsistency,
-                  caption: weekly.planned == null
+                  text: adherence.weekPlanned == null
                       ? null
                       : l10n.adherenceSessionsValue(
-                          weekly.completed,
-                          weekly.planned!,
+                          adherence.weekCompleted,
+                          adherence.weekPlanned!,
                         ),
                 ),
               ),
               Expanded(
                 child: _AdherenceFigure(
                   label: l10n.adherenceThirtyLabel,
-                  value: adherence.rollingThirtyDay,
-                  caption: null,
+                  text: adherence.rollingThirtyDay == null
+                      ? null
+                      : percentLabel(l10n, adherence.rollingThirtyDay!),
                 ),
               ),
             ],
@@ -814,18 +830,13 @@ class _AdherenceCard extends ConsumerWidget {
 }
 
 class _AdherenceFigure extends StatelessWidget {
-  const _AdherenceFigure({
-    required this.label,
-    required this.value,
-    required this.caption,
-  });
+  const _AdherenceFigure({required this.label, required this.text});
 
   final String label;
 
-  /// Null means the window planned nothing — rendered as a sentence,
-  /// never as 0 %.
-  final double? value;
-  final String? caption;
+  /// Null means this window has nothing it can honestly report —
+  /// rendered as a sentence saying so, never as 0 %.
+  final String? text;
 
   @override
   Widget build(BuildContext context) {
@@ -844,26 +855,14 @@ class _AdherenceFigure extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          value == null
-              ? l10n.adherenceNothingPlanned
-              : percentLabel(l10n, value!),
+          text ?? l10n.adherenceNothingPlanned,
           style: TextStyle(
             color: scheme.onSurface,
-            fontSize: value == null ? 12.5 : 20,
-            fontWeight: value == null ? FontWeight.w500 : FontWeight.w900,
+            fontSize: text == null ? 12.5 : 19,
+            fontWeight: text == null ? FontWeight.w500 : FontWeight.w900,
             height: 1.3,
           ),
         ),
-        if (caption != null) ...[
-          const SizedBox(height: 2),
-          Text(
-            caption!,
-            style: TextStyle(
-              color: scheme.onSurface.withValues(alpha: 0.55),
-              fontSize: 11.5,
-            ),
-          ),
-        ],
       ],
     );
   }

@@ -36,7 +36,8 @@ class BodyMetricsSummaryCard extends ConsumerWidget {
     // `.value` rather than `.when`: this card sits in the middle of a
     // scrolling tab, and a spinner that appears for one frame on every
     // rebuild is worse than the empty state it replaces.
-    final entries = ref.watch(bodyMetricsProvider).value ?? const <BodyMetric>[];
+    final entries =
+        ref.watch(bodyMetricsProvider).value ?? const <BodyMetric>[];
     final series = TrendSeries.from(entries, BodyMeasure.weight);
     final latest = series.latest;
     final today = BodyMetric.dayOf(DateTime.now());

@@ -52,6 +52,27 @@ Future<void> pumpPseudo(
             ),
     ),
   );
+  // Blind spot #6, found in Phase 9 by injecting a 3000 px overflow into
+  // a screen the sweeps claimed to cover and watching every one of them
+  // still pass.
+  //
+  // A single `pump(settle)` renders the frame where every async provider
+  // is still `AsyncLoading`. So the sweeps were measuring spinners and
+  // skeletons: the body-metrics screen never left its loading branch,
+  // and the nutrition surfaces Phase 8 added "past the paywall" never
+  // painted a recipe card. A suite that renders an empty state and
+  // reports "no overflow" is worse than no suite, because it is
+  // evidence of the wrong thing.
+  //
+  // Each zero-duration pump drains one round of microtasks, which is
+  // what a `FutureProvider` needs to move Loading → Data, and what a
+  // provider that depends on another one needs again. Bounded rather
+  // than `pumpAndSettle` on purpose: several surfaces here run a
+  // deliberately infinite animation (the pulsing ring, the coach
+  // avatar), and `pumpAndSettle` on those never returns.
+  for (var i = 0; i < 6; i++) {
+    await tester.pump(Duration.zero);
+  }
   await tester.pump(settle);
 }
 

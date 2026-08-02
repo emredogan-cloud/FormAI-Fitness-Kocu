@@ -121,8 +121,7 @@ String? trendSentence(
   }
   final label = measureLabel(l10n, measure);
   return switch (summary.direction) {
-    TrendDirection.falling =>
-      l10n.bodyMetricsMeasureDown(label, amount, days),
+    TrendDirection.falling => l10n.bodyMetricsMeasureDown(label, amount, days),
     TrendDirection.rising => l10n.bodyMetricsMeasureUp(label, amount, days),
     TrendDirection.flat => l10n.bodyMetricsMeasureSteady(label, days),
   };

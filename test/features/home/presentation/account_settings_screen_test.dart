@@ -18,6 +18,22 @@ import 'package:sixpack_ai/l10n/app_localizations.dart';
 /// session) so the build never touches `Supabase.instance`.
 
 const String _kReminderKey = 'sixpack.daily_reminder_enabled';
+const String _kWeighInKey = 'sixpack.weigh_in_reminder_enabled';
+
+/// The switch inside the toggle tile whose title is [title].
+///
+/// Roadmap Phase 9 added a second toggle to this screen, so
+/// `find.byType(Switch)` is no longer unique. Locating by the tile's own
+/// title rather than by index means a third toggle cannot silently make
+/// these assertions about the wrong row.
+Switch _switchTitled(WidgetTester tester, String title) {
+  return tester.widget<Switch>(
+    find.descendant(
+      of: find.ancestor(of: find.text(title), matching: find.byType(Row)).first,
+      matching: find.byType(Switch),
+    ),
+  );
+}
 
 Widget _host(SharedPreferences prefs) {
   return ProviderScope(
@@ -66,10 +82,16 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Bildirimler'), findsOneWidget);
+    expect(find.text('Haftalık tartılma hatırlatıcısı'), findsOneWidget);
     expect(find.text('TEHLİKELİ BÖLGE'), findsOneWidget);
 
-    // Reminder defaults to off.
-    expect(tester.widget<Switch>(find.byType(Switch)).value, isFalse);
+    // Both reminders default to off — neither is scheduled without an
+    // explicit opt-in.
+    expect(_switchTitled(tester, 'Bildirimler').value, isFalse);
+    expect(
+      _switchTitled(tester, 'Haftalık tartılma hatırlatıcısı').value,
+      isFalse,
+    );
   });
 
   testWidgets('reminder switch reflects the persisted enabled state',
@@ -81,6 +103,41 @@ void main() {
     await tester.pumpWidget(_host(prefs));
     await tester.pump();
 
-    expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
+    expect(_switchTitled(tester, 'Bildirimler').value, isTrue);
+  });
+
+  testWidgets(
+      'the weigh-in nudge is its own consent — enabling the training '
+      'reminder does not turn it on', (tester) async {
+    _tallViewport(tester);
+    SharedPreferences.setMockInitialValues({_kReminderKey: true});
+    final prefs = await SharedPreferences.getInstance();
+
+    await tester.pumpWidget(_host(prefs));
+    await tester.pump();
+
+    expect(_switchTitled(tester, 'Bildirimler').value, isTrue);
+    expect(
+      _switchTitled(tester, 'Haftalık tartılma hatırlatıcısı').value,
+      isFalse,
+      reason: 'wanting a training reminder is not asking to be prompted '
+          'about body weight',
+    );
+  });
+
+  testWidgets('the weigh-in switch reflects its own persisted state',
+      (tester) async {
+    _tallViewport(tester);
+    SharedPreferences.setMockInitialValues({_kWeighInKey: true});
+    final prefs = await SharedPreferences.getInstance();
+
+    await tester.pumpWidget(_host(prefs));
+    await tester.pump();
+
+    expect(
+      _switchTitled(tester, 'Haftalık tartılma hatırlatıcısı').value,
+      isTrue,
+    );
+    expect(_switchTitled(tester, 'Bildirimler').value, isFalse);
   });
 }

@@ -6,6 +6,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/services/app_preferences.dart';
+import '../../progress/data/body_metrics_repository.dart';
+import '../../progress/domain/models/body_metric.dart';
+import '../../progress/domain/trend_calculator.dart';
 import '../../progress/providers/badge_unlocks_provider.dart';
 import '../../progress/providers/streak_provider.dart';
 import '../../progress/providers/xp_provider.dart';
@@ -313,6 +316,19 @@ final coachContextProvider = Provider<CoachContext>((ref) {
         'toplam ${latest.totalReps} tekrar, $mins dk ($names)'; // i18n-ignore
   }
 
+  // Roadmap Phase 9 (C1) · what the body has actually done, so the coach
+  // can stop guessing. `.value` rather than awaiting: the coach context
+  // is rebuilt on every provider change anyway, and a body-metrics read
+  // that has not landed yet means the coach simply says nothing about
+  // the body this turn — which is the correct behaviour, not a gap.
+  final bodyEntries =
+      ref.watch(bodyMetricsProvider).value ?? const <BodyMetric>[];
+  final today = BodyMetric.dayOf(DateTime.now());
+  final weightSeries = TrendSeries.from(bodyEntries, BodyMeasure.weight);
+  final weightTrend = weightSeries.summarize(asOf: today, days: 30);
+  final waistTrend = TrendSeries.from(bodyEntries, BodyMeasure.waist)
+      .summarize(asOf: today, days: 30);
+
   final goalKey =
       (metrics['goal'] ?? metrics['targetPhysique'] ?? prefs.goal) as String?;
   final activityKey = metrics['activityLevel'] as String?;
@@ -346,6 +362,9 @@ final coachContextProvider = Provider<CoachContext>((ref) {
         prefs.preferredWorkoutMode == WorkoutMode.camera &&
         (logs == null || logs.isEmpty),
     workoutMode: prefs.preferredWorkoutMode.token,
+    weightChange30dKg: weightTrend?.totalChange,
+    waistChange30dCm: waistTrend?.totalChange,
+    isPlateau: weightTrend?.isPlateau ?? false,
   );
 });
 

@@ -7,9 +7,13 @@ import 'package:sixpack_ai/core/services/disclosure_providers.dart';
 import 'package:sixpack_ai/features/auth/providers/auth_provider.dart';
 import 'package:sixpack_ai/features/home/presentation/account_settings_screen.dart';
 import 'package:sixpack_ai/features/home/presentation/discovery_hub_screen.dart';
+import 'package:sixpack_ai/features/progress/data/body_metrics_repository.dart';
+import 'package:sixpack_ai/features/progress/domain/models/body_metric.dart';
 import 'package:sixpack_ai/features/progress/presentation/badges_screen.dart';
+import 'package:sixpack_ai/features/progress/presentation/body_metrics_screen.dart';
 import 'package:sixpack_ai/features/progress/presentation/calendar_screen.dart';
 import 'package:sixpack_ai/features/progress/presentation/suggestions_screen.dart';
+import 'package:sixpack_ai/features/progress/providers/target_weight_provider.dart';
 import 'package:sixpack_ai/features/workout/providers/workout_provider.dart';
 
 import '../support/layout_probe.dart' show Viewports, scrollThrough;
@@ -150,4 +154,60 @@ void main() {
       ),
     );
   });
+
+  // ─── Roadmap Phase 9 · body metrics ─────────────────────────────────
+  //
+  // The English readouts are full sentences with numbers substituted into
+  // them, which is the shape that overflows: "You're down 2.4 kg over the
+  // last 28 days." is materially longer than the Turkish it was written
+  // beside, and at 1.3x it has to survive on a 393-wide phone.
+
+  testWidgets('body metrics', (tester) async {
+    SharedPreferences.setMockInitialValues({
+      TargetWeightNotifier.storageKey: 75.0,
+      'sixpack.max_streak': 11,
+    });
+    final prefs = await SharedPreferences.getInstance();
+    await _sweep(
+      tester,
+      'Body metrics',
+      ProviderScope(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          bodyMetricsProvider.overrideWith((ref) async => _bodyEntries()),
+        ],
+        child: const BodyMetricsScreen(),
+      ),
+    );
+  });
+
+  testWidgets('body metrics, empty', (tester) async {
+    final prefs = await _prefs();
+    await _sweep(
+      tester,
+      'Body metrics (empty)',
+      ProviderScope(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          bodyMetricsProvider.overrideWith((ref) async => const []),
+        ],
+        child: const BodyMetricsScreen(),
+      ),
+    );
+  });
+}
+
+/// Five weekly weigh-ins and a waist series, so the sweep renders the
+/// measure selector, a real chart, the trend readout, the goal card and
+/// the history list rather than placeholders.
+List<BodyMetric> _bodyEntries() {
+  final today = BodyMetric.dayOf(DateTime.now());
+  return [
+    for (var week = 4; week >= 0; week--)
+      BodyMetric(
+        recordedOn: today.subtract(Duration(days: week * 7)),
+        weightKg: 84 - (4 - week) * 1.0,
+        waistCm: week.isEven ? 92 - (4 - week) * 0.5 : null,
+      ),
+  ];
 }

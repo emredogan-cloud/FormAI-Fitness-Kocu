@@ -42,6 +42,16 @@ Future<void> pumpInLocale(
       home: Scaffold(body: child),
     ),
   );
+  // Blind spot #6 — the same one `pumpPseudo` carried. A single
+  // `pump(settle)` renders the frame where every async provider is still
+  // `AsyncLoading`, so the sweep measures a spinner and reports "no
+  // Turkish" about a screen that painted no copy at all. Each
+  // zero-duration pump drains one round of microtasks; bounded rather
+  // than `pumpAndSettle`, which never returns on the surfaces here that
+  // run an infinite animation.
+  for (var i = 0; i < 6; i++) {
+    await tester.pump(Duration.zero);
+  }
   await tester.pump(settle);
 }
 

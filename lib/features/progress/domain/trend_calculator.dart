@@ -381,26 +381,42 @@ class TrendSeries {
 /// their week.
 class AdherenceSummary {
   const AdherenceSummary({
-    required this.plannedSessions,
-    required this.completedSessions,
-    required this.weeklyConsistency,
+    required this.weekCompleted,
+    required this.weekPlanned,
     required this.rollingThirtyDay,
     required this.longestStreak,
     required this.currentStreak,
   });
 
-  final int plannedSessions;
-  final int completedSessions;
+  /// Sessions completed since Monday.
+  ///
+  /// **The current week is reported as a COUNT, never a percentage**, and
+  /// that is a deliberate correction rather than an omission. A
+  /// percentage mid-week is arithmetically true and emotionally false:
+  /// one session out of four on a Tuesday is 25 %, and it reads as a
+  /// grade for a week with four days still in it. "1 of 4" says the same
+  /// thing and cannot be misread as a verdict.
+  ///
+  /// Found by a test rather than by review — seeded on its install day,
+  /// the card read 0 %.
+  final int weekCompleted;
 
-  /// Completed ÷ planned for the current week, 0–1. Null when the week
-  /// planned nothing — a rest week is not 0 % adherence, and rendering
-  /// it as such would invent a failure out of the program's own design.
-  final double? weeklyConsistency;
+  /// Sessions the week prescribes — the WHOLE week, not the part of it
+  /// that has elapsed. Null when the install is too new to have had a
+  /// week prescribed at all.
+  final int? weekPlanned;
 
-  /// Completed ÷ planned over the trailing 30 days, 0–1, on the same
-  /// terms.
+  /// Completed ÷ prescribed over the trailing 30 days, 0–1.
+  ///
+  /// Null until the install has been observed for a full week. Below
+  /// that the figure is an accident of which weekday somebody installed
+  /// on, not a fact about how often they train.
   final double? rollingThirtyDay;
 
   final int longestStreak;
   final int currentStreak;
 }
+
+/// The shortest span over which "how often do you train" is a fact
+/// rather than an artefact of the install date.
+const int kAdherenceMinObservedDays = 7;

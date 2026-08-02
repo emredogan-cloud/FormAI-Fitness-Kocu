@@ -41,6 +41,9 @@ class NotificationService {
 
   static const int _dailyReminderId = 1001;
   static const int _streakWarningId = 1002;
+
+  /// Roadmap Phase 9 (C1) · the opt-in weekly weigh-in nudge.
+  static const int _weighInReminderId = 1003;
   static const String _channelId = 'formai_daily_reminder';
   // Phase 52 · streak-protection ping fires 48 h after the last workout
   // and shares the same Android notification channel because the OS
@@ -348,6 +351,76 @@ class NotificationService {
   Future<void> cancelStreakWarning() async {
     await init();
     await _plugin.cancel(id: _streakWarningId);
+  }
+
+  /// Roadmap Phase 9 (C1) · the weekly weigh-in nudge.
+  ///
+  /// **Opt-in, and one variant only.** The daily reminder rotates
+  /// through a pool so two consecutive days do not read identically;
+  /// this one deliberately does not. A weekly message about body weight
+  /// is not a place to be inventive — the same quiet sentence every week
+  /// is a routine, and a rotating one is a campaign.
+  ///
+  /// Weekly rather than daily because the scale moves less in a day than
+  /// it does between breakfast and dinner, and a daily prompt to weigh
+  /// yourself teaches people to read noise as progress.
+  ///
+  /// [weekday] follows `DateTime.monday`–`DateTime.sunday`.
+  Future<void> scheduleWeighInReminder({
+    required int weekday,
+    required TimeOfDay time,
+  }) async {
+    await init();
+    await _plugin.cancel(id: _weighInReminderId);
+
+    final l10n = await _copy();
+    try {
+      await _plugin.zonedSchedule(
+        id: _weighInReminderId,
+        title: l10n.weighInReminderNotificationTitle,
+        body: l10n.weighInReminderNotificationBody,
+        scheduledDate: _nextInstanceOfWeekday(weekday, time),
+        notificationDetails: NotificationDetails(
+          android: AndroidNotificationDetails(
+            _channelId,
+            l10n.notifChannelDailyName,
+            channelDescription: l10n.notifChannelDailyDesc,
+            // Default rather than high: this is a routine, not news, and
+            // a heads-up banner for "step on the scale" is the kind of
+            // interruption people disable the whole app's notifications
+            // over.
+            importance: Importance.defaultImportance,
+            priority: Priority.defaultPriority,
+          ),
+          iOS: DarwinNotificationDetails(),
+        ),
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        // Same weekday and time every week.
+        matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+      );
+    } catch (e, st) {
+      AppLogger.error(
+        'scheduleWeighInReminder failed',
+        e,
+        stackTrace: st,
+        category: 'notifications',
+      );
+    }
+  }
+
+  Future<void> cancelWeighInReminder() async {
+    await init();
+    await _plugin.cancel(id: _weighInReminderId);
+  }
+
+  /// The next occurrence of [weekday] at [time], skipping today when
+  /// today's slot has already passed.
+  tz.TZDateTime _nextInstanceOfWeekday(int weekday, TimeOfDay time) {
+    var scheduled = _nextInstanceOf(time);
+    while (scheduled.weekday != weekday) {
+      scheduled = scheduled.add(const Duration(days: 1));
+    }
+    return scheduled;
   }
 
   tz.TZDateTime _nextInstanceOf(TimeOfDay time) {

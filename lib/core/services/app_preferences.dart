@@ -466,6 +466,23 @@ class AppPreferences {
     await _prefs.setBool(_dailyReminderEnabledKey, value);
   }
 
+  /// Roadmap Phase 9 (C1) · the weekly weigh-in nudge.
+  ///
+  /// Its own key rather than a mode on the daily reminder, and its own
+  /// default of `false`. Somebody who wants a training reminder has not
+  /// thereby asked to be prompted about their body weight — those are
+  /// different consents, and bundling them is how an app ends up
+  /// pushing an unsolicited weekly message about somebody's weight.
+  bool get weighInReminderEnabled =>
+      _prefs.getBool(_weighInReminderEnabledKey) ?? false;
+
+  Future<void> setWeighInReminderEnabled(bool value) async {
+    await _prefs.setBool(_weighInReminderEnabledKey, value);
+  }
+
+  static const String _weighInReminderEnabledKey =
+      'sixpack.weigh_in_reminder_enabled';
+
   /// UX-10 · whether the on-device-ML transparency dialog has been
   /// acknowledged. Shown once, then never again — re-prompting on every
   /// single workout entry was pure friction at the core loop. (Cleared

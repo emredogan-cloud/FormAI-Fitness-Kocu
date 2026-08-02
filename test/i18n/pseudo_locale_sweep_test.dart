@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sixpack_ai/core/services/app_preferences.dart';
 import 'package:sixpack_ai/core/utils/pseudo_locale.dart';
+import 'package:sixpack_ai/features/progress/data/body_metrics_repository.dart';
+import 'package:sixpack_ai/features/progress/domain/models/body_metric.dart';
+import 'package:sixpack_ai/features/progress/presentation/body_metrics_screen.dart';
+import 'package:sixpack_ai/features/progress/providers/target_weight_provider.dart';
 import 'package:sixpack_ai/features/onboarding/presentation/steps/act_3_buildup_steps.dart';
 import 'package:sixpack_ai/features/onboarding/presentation/steps/act_1_hook_step.dart';
 import 'package:sixpack_ai/features/onboarding/presentation/consent_screen.dart';
@@ -203,6 +208,64 @@ void main() {
       );
     });
   });
+
+  // ─── Roadmap Phase 9 · body metrics ─────────────────────────────────
+  //
+  // The densest surface this phase adds: a four-up segmented control, a
+  // horizontally-scrolling measure selector and three cards of full
+  // sentences with numbers substituted in. Pseudo-localisation inflates
+  // every one of those ~40 %, which is roughly what German does, and the
+  // 320-wide case is where a four-segment control gives up.
+  group('body metrics', () {
+    testWidgets('populated', (tester) async {
+      SharedPreferences.setMockInitialValues({
+        TargetWeightNotifier.storageKey: 75.0,
+        'sixpack.max_streak': 11,
+      });
+      final prefs = await SharedPreferences.getInstance();
+      await sweepPseudoLayouts(
+        tester,
+        'Body metrics',
+        () => ProviderScope(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
+            bodyMetricsProvider.overrideWith((ref) async => _bodyEntries()),
+          ],
+          child: const BodyMetricsScreen(),
+        ),
+      );
+    });
+
+    testWidgets('empty', (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      await sweepPseudoLayouts(
+        tester,
+        'Body metrics (empty)',
+        () => ProviderScope(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
+            bodyMetricsProvider.overrideWith((ref) async => const []),
+          ],
+          child: const BodyMetricsScreen(),
+        ),
+      );
+    });
+  });
+}
+
+/// Five weekly weigh-ins and a waist series, so every card on the screen
+/// has real content to overflow with.
+List<BodyMetric> _bodyEntries() {
+  final today = BodyMetric.dayOf(DateTime.now());
+  return [
+    for (var week = 4; week >= 0; week--)
+      BodyMetric(
+        recordedOn: today.subtract(Duration(days: week * 7)),
+        weightKg: 84 - (4 - week) * 1.0,
+        waistCm: week.isEven ? 92 - (4 - week) * 0.5 : null,
+      ),
+  ];
 }
 
 void _noop() {}

@@ -61,6 +61,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   bool _matches = false;
   bool _busy = false;
   bool _reminderBusy = false;
+  bool _weighInBusy = false;
 
   @override
   void initState() {
@@ -87,6 +88,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     final metrics = prefs.userMetrics ?? const <String, dynamic>{};
     final user = ref.watch(currentUserProvider);
     final reminderEnabled = prefs.dailyReminderEnabled;
+    final weighInEnabled = prefs.weighInReminderEnabled;
 
     // Phase 53G · the entire account-settings screen was hardcoded for
     // dark mode. Drop the Scaffold + AppBar `0xFF0B0B12` so the active
@@ -138,6 +140,21 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
               enabled: reminderEnabled,
               busy: _reminderBusy,
               onChanged: _onReminderToggle,
+              title: AppLocalizations.of(context).profileNotificationsTitle,
+              subtitle: AppLocalizations.of(context).accountReminderRowSubtitle,
+            ),
+            const SizedBox(height: 10),
+            // Roadmap Phase 9 (C1) · a separate consent, on purpose.
+            // Someone who wants a training reminder has not thereby
+            // asked to be prompted about their body weight.
+            _NotificationToggleTile(
+              enabled: weighInEnabled,
+              busy: _weighInBusy,
+              onChanged: _onWeighInToggle,
+              title: AppLocalizations.of(context).bodyMetricsReminderTitle,
+              subtitle:
+                  AppLocalizations.of(context).bodyMetricsReminderSubtitle,
+              icon: Icons.monitor_weight_outlined,
             ),
             const SizedBox(height: 24),
             _SectionHeader(
@@ -289,6 +306,51 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
       _toast(AppLocalizations.of(context).accountReminderFailed);
     } finally {
       if (mounted) setState(() => _reminderBusy = false);
+    }
+  }
+
+  /// Roadmap Phase 9 (C1) · the weekly weigh-in nudge.
+  ///
+  /// Monday morning, because a weekly weigh-in wants to land on the same
+  /// day each week and Monday is the one most people can name without
+  /// checking. 09:00 rather than the daily reminder's 19:00: the number
+  /// a scale gives before breakfast is the one worth plotting.
+  Future<void> _onWeighInToggle(bool enabled) async {
+    if (_weighInBusy) return;
+    setState(() => _weighInBusy = true);
+    final prefs = ref.read(appPreferencesProvider);
+    try {
+      if (enabled) {
+        final granted = await NotificationService.instance.requestPermissions();
+        if (!mounted) return;
+        if (!granted) {
+          _toast(AppLocalizations.of(context).notificationPermissionDenied);
+          return;
+        }
+        await NotificationService.instance.scheduleWeighInReminder(
+          weekday: DateTime.monday,
+          time: const TimeOfDay(hour: 9, minute: 0),
+        );
+        await prefs.setWeighInReminderEnabled(true);
+        if (!mounted) return;
+        _toast(AppLocalizations.of(context).accountReminderOn);
+      } else {
+        await NotificationService.instance.cancelWeighInReminder();
+        await prefs.setWeighInReminderEnabled(false);
+        if (!mounted) return;
+        _toast(AppLocalizations.of(context).accountReminderOff);
+      }
+    } catch (e, st) {
+      AppLogger.error(
+        'weigh-in reminder toggle failed',
+        e,
+        stackTrace: st,
+        category: 'notifications',
+      );
+      if (!mounted) return;
+      _toast(AppLocalizations.of(context).accountReminderFailed);
+    } finally {
+      if (mounted) setState(() => _weighInBusy = false);
     }
   }
 
@@ -515,11 +577,21 @@ class _NotificationToggleTile extends StatelessWidget {
     required this.enabled,
     required this.busy,
     required this.onChanged,
+    required this.title,
+    required this.subtitle,
+    this.icon = Icons.notifications_active_outlined,
   });
 
   final bool enabled;
   final bool busy;
   final ValueChanged<bool> onChanged;
+
+  /// Parameterised in Roadmap Phase 9 so the weekly weigh-in nudge can
+  /// be its own row with its own consent, rather than a mode hidden
+  /// inside the training reminder.
+  final String title;
+  final String subtitle;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
@@ -541,11 +613,7 @@ class _NotificationToggleTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
               color: _neon.withValues(alpha: 0.18),
             ),
-            child: const Icon(
-              Icons.notifications_active_outlined,
-              color: _neon,
-              size: 20,
-            ),
+            child: Icon(icon, color: _neon, size: 20),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -553,7 +621,7 @@ class _NotificationToggleTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  AppLocalizations.of(context).profileNotificationsTitle,
+                  title,
                   style: TextStyle(
                     color: scheme.onSurface,
                     fontSize: 15,
@@ -562,7 +630,7 @@ class _NotificationToggleTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  AppLocalizations.of(context).accountReminderRowSubtitle,
+                  subtitle,
                   style: TextStyle(
                     color: scheme.onSurface.withValues(alpha: 0.55),
                     fontSize: 12,

@@ -10,6 +10,10 @@ import 'package:sixpack_ai/features/nutrition/presentation/discover_recipes_scre
 import 'package:sixpack_ai/features/nutrition/presentation/favorites_screen.dart';
 import 'package:sixpack_ai/features/nutrition/presentation/recipe_detail_screen.dart';
 import 'package:sixpack_ai/features/nutrition/providers/nutrition_provider.dart';
+import 'package:sixpack_ai/features/progress/data/body_metrics_repository.dart';
+import 'package:sixpack_ai/features/progress/domain/models/body_metric.dart';
+import 'package:sixpack_ai/features/progress/presentation/body_metrics_screen.dart';
+import 'package:sixpack_ai/features/progress/providers/target_weight_provider.dart';
 import 'package:sixpack_ai/features/referral/providers/referral_provider.dart';
 
 import '../support/layout_probe.dart';
@@ -163,4 +167,61 @@ void main() {
       () => _scope(prefs, const FavoritesScreen()),
     );
   });
+
+  // ─── Roadmap Phase 9 · body metrics ─────────────────────────────────
+  //
+  // Added the moment the surfaces existed rather than in a later sweep
+  // pass, which is the lesson Phase 8 recorded: the nutrition screens
+  // went a whole phase without either direction being rendered once.
+  //
+  // Populated AND empty, because they are different trees — the empty
+  // state is a centred column and the populated one carries a chart, a
+  // segmented control and a history list.
+
+  testWidgets('body metrics lays out right-to-left', (tester) async {
+    final prefs = await _prefs({
+      TargetWeightNotifier.storageKey: 75.0,
+    });
+    await sweepRtlLayout(
+      tester,
+      'Body metrics',
+      () => _bodyScope(prefs, _bodyEntries()),
+    );
+  });
+
+  testWidgets('body metrics empty state lays out right-to-left',
+      (tester) async {
+    final prefs = await _prefs();
+    await sweepRtlLayout(
+      tester,
+      'Body metrics (empty)',
+      () => _bodyScope(prefs, const []),
+    );
+  });
+}
+
+/// A month of weekly weigh-ins plus a waist series, so the sweep renders
+/// the measure selector, the chart, the trend readout and the history
+/// list rather than a placeholder.
+List<BodyMetric> _bodyEntries() {
+  final today = BodyMetric.dayOf(DateTime.now());
+  return [
+    for (var week = 4; week >= 0; week--)
+      BodyMetric(
+        recordedOn: today.subtract(Duration(days: week * 7)),
+        weightKg: 84 - (4 - week) * 1.0,
+        waistCm: week.isEven ? 92 - (4 - week) * 0.5 : null,
+        note: week == 0 ? 'sabah, aç karnına' : null,
+      ),
+  ];
+}
+
+ProviderScope _bodyScope(SharedPreferences prefs, List<BodyMetric> entries) {
+  return ProviderScope(
+    overrides: [
+      sharedPreferencesProvider.overrideWithValue(prefs),
+      bodyMetricsProvider.overrideWith((ref) async => entries),
+    ],
+    child: const BodyMetricsScreen(),
+  );
 }

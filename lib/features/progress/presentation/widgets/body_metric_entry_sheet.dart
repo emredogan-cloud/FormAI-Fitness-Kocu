@@ -199,9 +199,8 @@ class _BodyMetricEntrySheetState extends ConsumerState<_BodyMetricEntrySheet> {
     final localeTag = Localizations.localeOf(context).toLanguageTag();
     _seed(system, localeTag);
 
-    final visible = _showAllMeasures
-        ? BodyMeasure.values
-        : const [BodyMeasure.weight];
+    final visible =
+        _showAllMeasures ? BodyMeasure.values : const [BodyMeasure.weight];
 
     return Padding(
       padding: EdgeInsets.only(
@@ -388,24 +387,33 @@ class _DateRow extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final scheme = context.colors;
     final isToday = day == BodyMetric.dayOf(DateTime.now());
+    // Both children flexible: a Row with two inflexible children and a
+    // Spacer between them overflows the moment either one's translation
+    // grows, and this row holds a label and a formatted date — two
+    // things that vary by locale in opposite directions.
     return Row(
       children: [
-        Text(
-          l10n.bodyMetricsEntryDateLabel,
-          style: TextStyle(
-            color: scheme.onSurface.withValues(alpha: 0.7),
-            fontSize: 12.5,
-            fontWeight: FontWeight.w700,
+        Flexible(
+          child: Text(
+            l10n.bodyMetricsEntryDateLabel,
+            style: TextStyle(
+              color: scheme.onSurface.withValues(alpha: 0.7),
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
-        const Spacer(),
-        TextButton.icon(
-          onPressed: onPick,
-          icon: const Icon(Icons.event_rounded, size: 18),
-          label: Text(
-            isToday
-                ? l10n.bodyMetricsEntryToday
-                : DateFormat.yMMMd(localeTag).format(day),
+        const SizedBox(width: 8),
+        Flexible(
+          child: TextButton.icon(
+            onPressed: onPick,
+            icon: const Icon(Icons.event_rounded, size: 18),
+            label: Text(
+              isToday
+                  ? l10n.bodyMetricsEntryToday
+                  : DateFormat.yMMMd(localeTag).format(day),
+              textAlign: TextAlign.end,
+            ),
           ),
         ),
       ],
