@@ -3,8 +3,9 @@
 Read this first. It is written so a session with no memory of the
 previous one can continue without re-analysing the repository.
 
-**Last updated:** 2026-08-02, Phase 8 closed as split (RTL done, the three
-languages deferred by the founder); Phase 9 started.
+**Last updated:** 2026-08-02, Phase 9 closed (device walk included).
+Phase 8 stays closed as a split — RTL done, the three languages deferred
+by the founder. **Awaiting founder approval before Phase 10.**
 
 ---
 
@@ -27,9 +28,9 @@ one `PHASE_NN_COMPLETION_REPORT.md`. Final deliverable at the very end:
 | 6p · polish sprint | 12 of 12 done | `PHASE_06_POLISH_REPORT.md` |
 | **7 · Content & AI localization** | **done + device walk** | `PHASE_07_COMPLETION_REPORT.md` |
 | **8 · es / fr / de + RTL** | **closed as split** — RTL done, languages ⏸ deferred by founder | `PHASE_08_COMPLETION_REPORT.md` |
-| **9 · Body metrics & trends** | **in progress** | `PHASE_09_COMPLETION_REPORT.md` |
+| **9 · Body metrics & trends** | **done + device walk** | `PHASE_09_COMPLETION_REPORT.md` |
 
-**Branch:** `main`. **Build:** `1.0.0+29`.
+**Branch:** `main`. **Build:** `1.0.0+30`.
 
 ---
 
@@ -71,17 +72,31 @@ Lowering the directional ratchet is **not** deferred — it is ongoing.
 Each later phase converts the screens it touches and lowers the baseline;
 the gate stops the number rising either way, so it needs no phase.
 
-### 2.0.0b Phase 9 is what is being worked on now
+### 2.0.0b Phase 9 is DONE — read its report before Phase 10
 
-`TESTERS_COMMUNITY_PRODUCT_ROADMAP.md` §PHASE 9 (line ~1040) is the spec:
-body metrics, trend charts, adherence scoring, and reconciling the
-onboarding 12-week projection against reality.
+`PHASE_09_COMPLETION_REPORT.md` is the record. Body metrics, the trend
+maths, adherence, the coach wiring and a full device walk are all
+shipped on `1.0.0+30`.
 
-**Its migration cannot be called `013`.** The roadmap says
-`013_body_metrics.sql`, but `013`, `014` and `015` were taken by Phase 7
-and are applied to production. `016` is reserved for the deliberately
-unwritten `016_drop_legacy_tags.sql` (§2.0.1), so body metrics takes the
-next free number after that.
+Four things from it that save re-deriving:
+
+- **There is no onboarding goal weight and the app is not allowed to
+  invent one.** `ai_personalization_engine.dart` carries a store-
+  compliance rule against quantified outcome promises, which is why the
+  12-week projection is qualitative. The target is stated by the USER
+  and lives in `user_metrics.target_weight_kg`. Null is permanent and
+  valid.
+- **`017_body_metrics.sql` is written but NOT applied to production.**
+  The feature is offline-first and complete without it; applying it is a
+  separate safe step whenever the founder wants cross-device carry.
+  It is 017 and not 013 because 013–015 are Phase 7's and 016 stays
+  reserved for the unwritten `drop_legacy_tags`.
+- **Blind spot #6: the layout sweeps were rendering spinners.** Fixed in
+  `test/support/layout_probe.dart` and `locale_probe.dart`. Read those
+  headers before writing another sweep.
+- **The device walk found four defects**, two of which no gate in this
+  repo can see (two controls saying the same thing; a FAB covering a
+  delete button). See §8 of the report.
 
 ### 2.0.1 The three things Phase 7 deliberately did NOT do
 
@@ -140,9 +155,10 @@ $49.99 USD, yearly Most Popular, Turkish unchanged at ₺100 / ₺400 /
 `formai_pro_weekly` is what makes the weekly card appear, with no app
 release.
 
-**Two device surfaces still unverified**, both carried from Phase 5:
-the paywall interior (auth-gated) and a clean-install onboarding. Both
-destroy the session everything else depends on, so do them last.
+**The clean-install onboarding is now WALKED** — Phase 9 did the full
+19-step run on the Redmi, age gate to dashboard. **The paywall interior
+remains the one unverified surface**, carried since Phase 5; it is
+auth-gated and destroys the session.
 
 **Meal and workout photographs.** `docs/nutrition/MEAL_IMAGE_REQUESTS*.md`
 and `WORKOUT_BACKGROUND_IMAGE_REQUESTS.md`. Nothing is broken while those
@@ -154,9 +170,9 @@ the entire procedure.
 
 ```
 analyze                     0 issues
-tests                       1070
+tests                       1183
 hardcoded-string gate       0 in 0 files  (allowlist 244, printed per entry)
-ARB                         1534 keys · tr 100% · en 100% · all referenced
+ARB                         1600 keys · tr 100% · en 100% · all referenced
 recipe catalogue            392 rows · en 392/392 · 2242 ingredient rows
 recipe translation audit    0 findings · baseline armed at 392
 locales shipped             tr, en
@@ -164,8 +180,9 @@ pseudo-locale sweep         18 surfaces × 3 viewports, scrolled through
 English sweep               17 funnel + 5 app surfaces × 2 text scales
 RTL sweep                   16 surfaces
 CI                          green
-build                       1.0.0+29 · APK 134.5 MB
-device walk                 DONE for Phase 7 — 6 defects found, fixed, re-verified
+build                       1.0.0+30 · APK 135.8 MB
+device walk                 DONE for Phase 9 — 4 defects found, fixed, re-verified
+RTL sweep                   18 surfaces (body metrics added)
 working tree                clean except pre-existing untracked founder files
 ```
 
@@ -304,7 +321,22 @@ which is how CI was red for four commits before this session noticed.
     repository resolves language at decode time and nothing invalidated
     the rows already fetched. Anything that caches server data keyed by
     locale needs to watch `localeProvider`.
-25. **A recipe seed must be idempotent by a stable id.** Ids are derived
+25. **A single `pump()` renders the frame where every async provider is
+   still loading.** For two years the layout sweeps proved that spinners
+   do not overflow. Found by injecting a 3000 px overflow into a screen
+   all three suites covered and watching every one still pass. Drain
+   microtasks with bounded zero-duration pumps — never `pumpAndSettle`,
+   which hangs on this app's infinite animations.
+26. **`git add -A` in this repo stages the founder's private planning
+   material.** Fifteen files, deliberately untracked for eight phases,
+   went into a PUBLIC repository. They are gitignored now. Stage paths,
+   not wildcards.
+27. **A formatter's default is an argument about a use case, not a
+   fact.** `formatWeight` rounds to whole units because a profile card
+   wants that; on a screen about small changes over time it silently
+   destroyed the tenth the user typed. Read *why* a default exists
+   before inheriting it.
+28. **A recipe seed must be idempotent by a stable id.** Ids are derived
    from the proposal slug via `uuid_generate_v5`, so re-running after an
    edit updates instead of duplicating the catalogue — and the duplicate
    check has to exclude the batch's own earlier rows, or the second run

@@ -1,7 +1,7 @@
 # FormAI — Project Progress Summary
 
 **Spec:** `TESTERS_COMMUNITY_PRODUCT_ROADMAP.md` (18 phases / 5 waves)
-**As of:** 2026-08-02 · Phase 7 **complete, device walk included** · Phase 8 **closed as split** (RTL done, languages deferred by founder) · Phase 9 **in progress** · build **1.0.0+29**
+**As of:** 2026-08-02 · Phase 8 **closed as split** (RTL done, languages deferred by founder) · Phase 9 **complete, device walk included** · build **1.0.0+30** · **awaiting founder approval before Phase 10**
 
 ---
 
@@ -114,12 +114,41 @@
 
 ---
 
+### Phase 9 — Performance Analytics I: Body Metrics & Trends ✅
+*Build 1.0.0+30 · 1183 tests · CI green · `PHASE_09_COMPLETION_REPORT.md`*
+- **The app can finally answer "is this working?"** Weight and five tape
+  measurements, a chart over 7/30/90/all days, adherence, and an honest
+  reconciliation against the user's target.
+- **The roadmap asked for a goal weight the app is not allowed to have.**
+  There is no onboarding target — `ai_personalization_engine.dart` carries
+  a store-compliance rule against quantified outcome promises, which is
+  exactly why the 12-week projection is qualitative. So the target is
+  **stated by the user** and null stays a permanent, valid state.
+- **Direction is never valence.** No red for a gain, no green for a loss,
+  no confetti. The maths returns verdicts and one file turns them into
+  sentences, so the tone can be read in a sitting.
+- **A test found the card being cruel before a user did.** Seeded on its
+  install day, adherence read 0 %. The week is now a count — "1 of 4" —
+  and the 30-day percentage waits for a week of history.
+- **Blind spot #6, and the worst so far: the layout sweeps were measuring
+  a spinner.** A single `pump()` renders the frame where every async
+  provider is still loading, so every sweep in the repo had been proving
+  that loading states do not overflow. Found by injecting a 3000 px
+  overflow into a screen all three suites claimed to cover. The honest
+  sweeps immediately found a 143 px overflow on a Phase 8 surface that
+  phase had signed off as clean.
+- **The device walk found four defects** that 1,179 tests and seven gates
+  were green across — including the app silently discarding the tenth of
+  a kilogram the user typed, and the weekly retrospective saying every
+  unit twice in both languages since it shipped.
+
+---
+
 # 2. Currently Working On
 
-**Phase 9 — Performance Analytics I: Body Metrics & Trends.**
-Let users see their body change over time — weight and measurement
-logging, trend charts, adherence scoring, and the honest reconciliation
-of the onboarding 12-week projection against what actually happened.
+**Nothing — Phase 9 is closed and awaiting founder approval before
+Phase 10** (Performance Analytics II: visual outcomes and shareable
+reports).
 
 Founder-side, carried and still open:
 
@@ -141,7 +170,7 @@ Founder-side, carried and still open:
 - **Phase 8's content half.** ⏸ Spanish, French, German; multilingual recipe and exercise content; new coach personas; per-locale ASO and store listings; regional pricing; the translation-quality monitor; the documented market-selection method. **Full scope preserved — this is a pause, not a cut.** The recipe half is a content cost rather than an engineering one: the resolver is locale-agnostic and the audit loops over `kShippedLocales`. **The exercise catalogue is not** — 138 rows of `name`, `description` and `short_tip` are still Turkish-only, and their instructional images carry burned-in text in two languages.
 
 ### Wave 3 — Measurable Progress & Universal Access
-- **Phase 9 — Performance Analytics I.** 🔄 **in progress** — Body metrics and trends: let users see their body change over time.
+- **Phase 9 — Performance Analytics I.** ✅ **complete** — Body metrics and trends.
 - **Phase 10 — Performance Analytics II.** Visual outcomes and shareable reports; make the store-listing promise of measurable results literally true.
 - **Phase 11 — Accessibility Program.** Usable with visual, motor, auditory and cognitive differences, established as a standing definition-of-done.
 
@@ -162,24 +191,24 @@ Founder-side, carried and still open:
 ```
 Wave 1 — Production-Access Commitments   ✅ Complete   (Phases 1–4 + 3b)
 Wave 2 — Global Reach                    ✅ Complete   (5, 6, 7 done; 8 RTL done, languages ⏸ deferred)
-Wave 3 — Measurable Progress & Access    🔄 In Progress (9 started; 10–11 not)
+Wave 3 — Measurable Progress & Access    🔄 In Progress (9 done; 10–11 not)
 Wave 4 — Community & Content Engine      ⏳ Not Started (Phases 12–14)
 Wave 5 — Scale, Depth & Platform         ⏳ Not Started (Phases 15–17)
 ```
 
-**Phases complete:** 10 of 18 (0, 1, 2, 3, 3b, 4, 5, 6, 7, 8-as-split) + the Phase 6 polish sprint · device surfaces still carried forward: the paywall interior and a clean-install onboarding. The six Phase 7 nutrition surfaces are **walked and signed off**.
+**Phases complete:** 11 of 18 (0, 1, 2, 3, 3b, 4, 5, 6, 7, 8-as-split, 9) + the Phase 6 polish sprint · device surfaces still carried forward: the paywall interior and a clean-install onboarding. The six Phase 7 nutrition surfaces are **walked and signed off**.
 
 ### Current quality state
 
 | | |
 |---|---|
-| **Build** | 1.0.0+29 · APK 134.5 MB |
-| **Tests** | **1070 passing** (baseline was 330) |
+| **Build** | 1.0.0+30 · APK 135.8 MB |
+| **Tests** | **1183 passing** (baseline was 330) |
 | **`flutter analyze`** | **0 issues** |
 | **`dart format`** | clean |
 | **CI** | **GREEN** (CI + Secret Scan) |
 | **Hardcoded-string gate** | **0 in 0 files** · 244 allowlisted, reported per entry |
-| **ARB** | **1534 keys** · `tr` 100% · `en` 100% · all referenced in `lib/` |
+| **ARB** | **1600 keys** · `tr` 100% · `en` 100% · all referenced in `lib/` |
 | **Recipe catalogue** | **392 recipes** · `en` 392/392 · 2242 ingredient rows · audit 0 findings |
 | **Locales shipped** | `tr`, `en` |
 
