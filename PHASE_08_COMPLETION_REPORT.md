@@ -1,11 +1,45 @@
 # Phase 8 — Market Expansion: Spanish, French, German & RTL Readiness
 
 **Build:** `1.0.0+29` · **Branch:** `main`
-**Status: IN PROGRESS.** RTL readiness (C13) is underway; the languages
-are not started.
+**Status: CLOSED AS SPLIT.** The RTL / direction-neutrality half (C13) is
+**done**. The international content half (R3.1, C14) is **Deferred by
+founder after English launch**, 2026-08-02 — deferred, *not* cancelled.
 
 Roadmap: `TESTERS_COMMUNITY_PRODUCT_ROADMAP.md` §PHASE 8 (line 944).
 Covers R3.1 (full scope) · C13 · C14.
+
+---
+
+## 0. The founder's split, 2026-08-02
+
+Phase 8 is two projects wearing one number. One is engineering — make the
+app direction-neutral so that a right-to-left language costs no
+structural work. The other is content — author 1,534 ARB keys, 392
+recipes and 138 exercises in three more languages.
+
+The engineering half is finished and is what the rest of this report
+describes. **The content half is deferred until the English launch has
+data**, on the founder's call, for the reason recorded in the roadmap:
+one reviewed language beats three unreviewed ones, and Phase 6–7's
+English is itself still an unreviewed draft. Three more drafts would have
+multiplied that debt by four before the first market said anything back.
+
+Deferred, at full scope, to be picked up as written:
+
+- Spanish, French, German UI
+- multilingual recipe content
+- multilingual exercise content
+- new coach personas
+- per-locale ASO and store listings
+- and everything that only exists to serve those: regional pricing,
+  per-locale screenshots, the translation-quality monitor, the
+  market-selection method, per-locale golden tests and device sweeps
+
+Nothing about the deferral decays. `kShippedLocales`, the locale-agnostic
+recipe resolver and the audit that loops over locales are built and
+tested, so resuming later costs what it would cost today.
+
+**Do not start any deferred item without the founder saying so.**
 
 ---
 
@@ -15,16 +49,16 @@ Covers R3.1 (full scope) · C13 · C14.
 | --- | --- |
 | C13 · RTL sweep past the paywall | ✅ 5 nutrition surfaces, was funnel-only |
 | C13 · direction-neutrality gate in CI | ✅ ratchet armed at 177 |
-| C13 · convert the 177 directional call sites | ⏳ ratchet holds the line; conversion is incremental |
+| C13 · convert the 177 directional call sites | ✅ ratchet holds the line; conversion is incremental by design |
 | C13 · `CustomPainter` direction audit (18 painters) | ✅ 2 defects found and fixed |
-| R3.1 · `es` / `fr` / `de` UI (1,534 ARB keys × 3) | ⏳ not started |
-| R3.1 · `es` / `fr` / `de` recipes (392 rows × 3) | ⏳ not started |
-| R3.1 · exercise catalogue (138 rows, still Turkish-only) | ⏳ not started |
-| R3.1 · per-locale coach personas | ⏳ not started |
-| R3.1 · market-selection method, documented | ⏳ not started |
-| translation-quality monitor (>50 % length deviation) | ⏳ not started |
-| C14 · per-locale store listings + ASO | ⏳ founder-side |
-| regional pricing (RevenueCat) | ⏳ founder-side |
+| R3.1 · `es` / `fr` / `de` UI (1,534 ARB keys × 3) | ⏸ deferred by founder |
+| R3.1 · `es` / `fr` / `de` recipes (392 rows × 3) | ⏸ deferred by founder |
+| R3.1 · exercise catalogue (138 rows, still Turkish-only) | ⏸ deferred by founder |
+| R3.1 · per-locale coach personas | ⏸ deferred by founder |
+| R3.1 · market-selection method, documented | ⏸ deferred by founder |
+| translation-quality monitor (>50 % length deviation) | ⏸ deferred by founder |
+| C14 · per-locale store listings + ASO | ⏸ deferred by founder |
+| regional pricing (RevenueCat) | ⏸ deferred by founder |
 
 ```
 analyze              0 issues
@@ -131,34 +165,45 @@ this repo has hit twice.
 
 ---
 
-## 3. What is next, in order
+## 3. What is deferred, in the order it should resume
 
-1. **Convert the 121 alignments and 55 positioned**, screen by screen,
-   lowering the baseline as each goes. Decorative overlays may legitimately
-   keep an absolute side — that is what `// rtl-ignore` is for, with the
-   reason written down.
-2. **The translation-quality monitor** — flag ARB values whose length
-   deviates > 50 % from the template. Cheap, and it wants to exist before
-   three languages of copy land, not after.
-3. **`es` / `fr` / `de`.** This is the large one and it is content, not
+Every item here is **paused, not dropped**. The trigger is the English
+launch producing enough install and retention data to run the roadmap's
+market-selection method as a decision rather than a guess.
+
+1. **The translation-quality monitor** — flag ARB values whose length
+   deviates > 50 % from the template. Cheap, and it wants to exist
+   *before* three languages of copy land, so it is the first thing to
+   build when this resumes, not the last.
+2. **`es` / `fr` / `de`.** The large one, and it is content, not
    engineering: 1,534 ARB keys and 392 recipe rows per language, plus the
    138 Turkish-only exercise rows that no locale has yet. The rails are
-   built — `kShippedLocales`, the locale-agnostic resolver, the audit
-   that loops over locales — so the engineering cost is a `supportedLocales`
-   entry, a persona and a scaffold entry per language.
-4. **Per-locale coach personas**, authored not translated, server-side —
+   built — `kShippedLocales`, the locale-agnostic resolver, the audit that
+   loops over locales — so the engineering cost per language is a
+   `supportedLocales` entry, a persona and a scaffold entry.
+3. **Per-locale coach personas**, authored not translated, server-side —
    the Phase 6 decision, which means a language ships without an app
    release.
+4. **Per-locale ASO and store listings**, then regional pricing.
 
-### The honest sizing
+Left open and *not* deferred, because it is ongoing rather than a
+project: **converting the 121 alignments and 55 positioned call sites**,
+screen by screen, lowering the ratchet as each goes. Decorative overlays
+may legitimately keep an absolute side — that is what `// rtl-ignore` is
+for, with the reason written down. The gate stops the number rising
+either way, so this needs no phase of its own; each later phase lowers it
+for the screens it touches.
+
+### The honest sizing, and why the split happened
 
 The roadmap budgets **8–12 dev-days per language plus ~10 days RTL**.
-Nothing in what is done so far contradicts that. A machine-authored draft
-of 1,534 keys × 3 is achievable in a session; a draft a native speaker
-would sign off on is not, and Phase 7's English is already carrying that
-same caveat unresolved. Whoever picks this up should decide deliberately
-whether three more languages of unreviewed draft is the right thing to
-ship, or whether one reviewed language beats three unreviewed ones.
+Nothing in the RTL half contradicts that. A machine-authored draft of
+1,534 keys × 3 is achievable in a session; a draft a native speaker would
+sign off on is not, and Phase 7's English is already carrying that exact
+caveat unresolved. The founder's call on 2026-08-02 was the deliberate
+version of that decision: **one reviewed language beats three unreviewed
+ones**, so the languages wait for launch data and the English gets the
+native read first.
 
 ---
 

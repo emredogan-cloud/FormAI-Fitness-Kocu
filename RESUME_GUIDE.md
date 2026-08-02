@@ -3,7 +3,8 @@
 Read this first. It is written so a session with no memory of the
 previous one can continue without re-analysing the repository.
 
-**Last updated:** 2026-08-02, Phase 7 closed (device walk included); Phase 8 started.
+**Last updated:** 2026-08-02, Phase 8 closed as split (RTL done, the three
+languages deferred by the founder); Phase 9 started.
 
 ---
 
@@ -25,7 +26,8 @@ one `PHASE_NN_COMPLETION_REPORT.md`. Final deliverable at the very end:
 | 6 · English launch | done | `PHASE_06_COMPLETION_REPORT.md` |
 | 6p · polish sprint | 12 of 12 done | `PHASE_06_POLISH_REPORT.md` |
 | **7 · Content & AI localization** | **done + device walk** | `PHASE_07_COMPLETION_REPORT.md` |
-| **8 · es / fr / de + RTL** | **in progress** | `PHASE_08_COMPLETION_REPORT.md` |
+| **8 · es / fr / de + RTL** | **closed as split** — RTL done, languages ⏸ deferred by founder | `PHASE_08_COMPLETION_REPORT.md` |
+| **9 · Body metrics & trends** | **in progress** | `PHASE_09_COMPLETION_REPORT.md` |
 
 **Branch:** `main`. **Build:** `1.0.0+29`.
 
@@ -40,14 +42,24 @@ one `PHASE_NN_COMPLETION_REPORT.md`. Final deliverable at the very end:
 whole content pipeline is committed and re-runnable, and **the device
 walk is done** — see §9 of that report for the six defects it found.
 
-### 2.0.0 Phase 8 is STARTED — read its report before touching it
+### 2.0.0 Phase 8 is CLOSED AS SPLIT — do not start the languages
 
-`PHASE_08_COMPLETION_REPORT.md` §3 is the ordered to-do list. Done so
-far: the RTL sweep now covers the nutrition surfaces (it was funnel-only)
-and `tool/check_directional_layout.dart` is a CI ratchet armed at 177.
-**Not started: es / fr / de.**
+**The founder deferred the international content half on 2026-08-02.**
+It is a pause at full scope, **not a cancellation**, and the decision is
+recorded in the roadmap's Phase 8 section and §0 of
+`PHASE_08_COMPLETION_REPORT.md`.
 
-Two things that report says which save re-deriving:
+**Done and kept:** RTL infrastructure, the RTL CI gate, the
+directional-layout gate (`tool/check_directional_layout.dart`, ratchet
+armed at 177), the two `CustomPainter` RTL fixes, the RTL sweep past the
+paywall, and the directional audit.
+
+**⏸ Do not touch without the founder saying so:** Spanish, French,
+German, multilingual recipe content, multilingual exercise content, new
+coach personas, per-locale ASO and store listings, regional pricing, the
+translation-quality monitor, the market-selection method.
+
+Two things the report says which save re-deriving:
 
 - **The roadmap's "117 `EdgeInsets.fromLTRB`" is not RTL debt.** All 127
   of them are horizontally symmetric, so none mirrors wrong. The real
@@ -55,12 +67,21 @@ Two things that report says which save re-deriving:
 - **An `Alignment.centerLeft` does not overflow**, so no RTL layout sweep
   can ever catch it. That is why the static gate exists next to them.
 
-The language half is a content project, not an engineering one, for
-recipes: the resolver is locale-agnostic and the audit loops over
-`kShippedLocales`, so adding `es` means adding a `PERSONAS` entry, a
-`SCAFFOLD` entry and 392 rows of copy. **The exercise catalogue is a
-different story** — 138 rows are still Turkish-only and their
-instructional images carry burned-in text in two languages. See §8.
+Lowering the directional ratchet is **not** deferred — it is ongoing.
+Each later phase converts the screens it touches and lowers the baseline;
+the gate stops the number rising either way, so it needs no phase.
+
+### 2.0.0b Phase 9 is what is being worked on now
+
+`TESTERS_COMMUNITY_PRODUCT_ROADMAP.md` §PHASE 9 (line ~1040) is the spec:
+body metrics, trend charts, adherence scoring, and reconciling the
+onboarding 12-week projection against reality.
+
+**Its migration cannot be called `013`.** The roadmap says
+`013_body_metrics.sql`, but `013`, `014` and `015` were taken by Phase 7
+and are applied to production. `016` is reserved for the deliberately
+unwritten `016_drop_legacy_tags.sql` (§2.0.1), so body metrics takes the
+next free number after that.
 
 ### 2.0.1 The three things Phase 7 deliberately did NOT do
 

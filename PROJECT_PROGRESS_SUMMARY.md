@@ -1,7 +1,7 @@
 # FormAI — Project Progress Summary
 
 **Spec:** `TESTERS_COMMUNITY_PRODUCT_ROADMAP.md` (18 phases / 5 waves)
-**As of:** 2026-08-02 · Phase 7 **complete, device walk included** · Phase 8 **in progress** · build **1.0.0+29**
+**As of:** 2026-08-02 · Phase 7 **complete, device walk included** · Phase 8 **closed as split** (RTL done, languages deferred by founder) · Phase 9 **in progress** · build **1.0.0+29**
 
 ---
 
@@ -88,26 +88,38 @@
 
 ---
 
+### Phase 8 — RTL Readiness ✅ *(closed as split; languages deferred by founder)*
+*Build 1.0.0+29 · 1070 tests · CI green · `PHASE_08_COMPLETION_REPORT.md`*
+- **The engineering half is done.** The RTL sweep now covers the nutrition
+  surfaces Phase 7 built — it had only ever rendered the onboarding funnel —
+  and `tool/check_directional_layout.dart` is a CI ratchet armed at 177.
+- It exists because **an `Alignment.centerLeft` does not overflow**: it lays
+  out perfectly, on the wrong side, so no layout sweep can ever catch it.
+  The sweep and the gate are complements, not duplicates.
+- **The roadmap's headline RTL debt is not debt.** All 127
+  `EdgeInsets.fromLTRB` call sites are horizontally symmetric, so none of
+  them mirrors wrong. The real surface is 121 directional `Alignment` and
+  55 `Positioned(left:/right:)`, and the ratchet stops it growing.
+- Two of eighteen `CustomPainter`s laid out **ARB copy** with a hardcoded
+  `TextDirection.ltr`. Both fixed; the geometry deliberately did not move
+  with them — the pose skeleton's mirror is the selfie mirror, and a
+  12-week time axis is not text.
+- **⏸ Deferred by founder after English launch, 2026-08-02 — not cancelled:**
+  Spanish, French, German, multilingual recipe and exercise content, new
+  coach personas, per-locale ASO, regional pricing and the
+  translation-quality monitor. Reasoning and resume trigger are in the
+  roadmap's Phase 8 section and §0 of the phase report. **One reviewed
+  language beats three unreviewed ones** — and Phase 6–7's English is
+  still an unreviewed draft itself.
+
+---
+
 # 2. Currently Working On
 
-**Phase 8 — Spanish, French, German & RTL Readiness.**
-`PHASE_08_COMPLETION_REPORT.md` §3 is the ordered to-do list.
-
-Done: the RTL sweep now covers the nutrition surfaces Phase 7 built — it
-had only ever rendered the onboarding funnel — and
-`tool/check_directional_layout.dart` is a CI ratchet armed at 177. It
-exists because **an `Alignment.centerLeft` does not overflow**: it lays
-out perfectly on the wrong side, so no layout sweep can ever catch it.
-The audit also found that the roadmap's headline RTL debt is not debt —
-all 127 `EdgeInsets.fromLTRB` call sites are horizontally symmetric, so
-none of them mirrors wrong.
-
-Not started: `es` / `fr` / `de` themselves. That is 1,534 ARB keys and
-392 recipe rows per language, plus 138 exercise rows that are still
-Turkish-only in every locale.
-
-Phase 7 is closed, device walk and all — `PHASE_07_COMPLETION_REPORT.md`
-§9 is now the walk's record rather than its excuse.
+**Phase 9 — Performance Analytics I: Body Metrics & Trends.**
+Let users see their body change over time — weight and measurement
+logging, trend charts, adherence scoring, and the honest reconciliation
+of the onboarding 12-week projection against what actually happened.
 
 Founder-side, carried and still open:
 
@@ -125,11 +137,11 @@ Founder-side, carried and still open:
 
 # 3. Remaining Roadmap
 
-### Wave 2 — Global Reach *(continues)*
-- **Phase 8 — Spanish, French, German & RTL Readiness.** 🔄 **in progress** — RTL half started, languages not. Turn localization from a project into a repeatable capability and reach the markets the testers named. The recipe half is now a content cost rather than an engineering one: the resolver is locale-agnostic and the audit loops over `kShippedLocales`. **The exercise catalogue is not** — 138 rows of `name`, `description` and `short_tip` are still Turkish-only, and their instructional images carry burned-in text in two languages.
+### Deferred by founder — resume after the English launch has data
+- **Phase 8's content half.** ⏸ Spanish, French, German; multilingual recipe and exercise content; new coach personas; per-locale ASO and store listings; regional pricing; the translation-quality monitor; the documented market-selection method. **Full scope preserved — this is a pause, not a cut.** The recipe half is a content cost rather than an engineering one: the resolver is locale-agnostic and the audit loops over `kShippedLocales`. **The exercise catalogue is not** — 138 rows of `name`, `description` and `short_tip` are still Turkish-only, and their instructional images carry burned-in text in two languages.
 
 ### Wave 3 — Measurable Progress & Universal Access
-- **Phase 9 — Performance Analytics I.** Body metrics and trends: let users see their body change over time.
+- **Phase 9 — Performance Analytics I.** 🔄 **in progress** — Body metrics and trends: let users see their body change over time.
 - **Phase 10 — Performance Analytics II.** Visual outcomes and shareable reports; make the store-listing promise of measurable results literally true.
 - **Phase 11 — Accessibility Program.** Usable with visual, motor, auditory and cognitive differences, established as a standing definition-of-done.
 
@@ -149,13 +161,13 @@ Founder-side, carried and still open:
 
 ```
 Wave 1 — Production-Access Commitments   ✅ Complete   (Phases 1–4 + 3b)
-Wave 2 — Global Reach                    🔄 In Progress (5, 6, 7 done; 8 started)
-Wave 3 — Measurable Progress & Access    ⏳ Not Started (Phases 9–11)
+Wave 2 — Global Reach                    ✅ Complete   (5, 6, 7 done; 8 RTL done, languages ⏸ deferred)
+Wave 3 — Measurable Progress & Access    🔄 In Progress (9 started; 10–11 not)
 Wave 4 — Community & Content Engine      ⏳ Not Started (Phases 12–14)
 Wave 5 — Scale, Depth & Platform         ⏳ Not Started (Phases 15–17)
 ```
 
-**Phases complete:** 9 of 18 (0, 1, 2, 3, 3b, 4, 5, 6, 7) + the Phase 6 polish sprint · device surfaces still carried forward: the paywall interior and a clean-install onboarding. The six Phase 7 nutrition surfaces are **walked and signed off**.
+**Phases complete:** 10 of 18 (0, 1, 2, 3, 3b, 4, 5, 6, 7, 8-as-split) + the Phase 6 polish sprint · device surfaces still carried forward: the paywall interior and a clean-install onboarding. The six Phase 7 nutrition surfaces are **walked and signed off**.
 
 ### Current quality state
 
