@@ -64,7 +64,23 @@ class _PhotoComparisonViewState extends ConsumerState<PhotoComparisonView> {
     final l10n = AppLocalizations.of(context);
     final repository = ref.watch(progressPhotoRepositoryProvider);
     final localeTag = Localizations.localeOf(context).toLanguageTag();
-    final dates = DateFormat.yMMMd(localeTag);
+    // Found on the device: two photos captured the same day gave two
+    // chips reading "Aug 2, 2026", and there was no way to tell which
+    // was which. `recordedAt` is a MOMENT — unlike `BodyMetric`, which
+    // is a day — so the information was there and the formatter was
+    // throwing it away.
+    //
+    // The time is added to EVERY chip rather than only the colliding
+    // ones: a row where some chips carry a time and others do not reads
+    // as a rendering fault, and `add_jm` keeps the whole thing one
+    // locale-aware pattern rather than two strings joined by hand.
+    final days = widget.photos
+        .map((p) =>
+            DateTime(p.recordedAt.year, p.recordedAt.month, p.recordedAt.day))
+        .toSet();
+    final dates = days.length < widget.photos.length
+        ? DateFormat.MMMd(localeTag).add_jm()
+        : DateFormat.yMMMd(localeTag);
 
     final earlierPath = repository.cachedPathOf(_earlier);
     final laterPath = repository.cachedPathOf(_later);
