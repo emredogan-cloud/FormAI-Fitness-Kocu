@@ -68,9 +68,45 @@ void main() {
       );
     });
 
-    testWidgets('offers the entry action', (tester) async {
+    testWidgets(
+        'offers the entry action exactly once — the device walk found the '
+        'empty state and the FAB saying the same words on one screen',
+        (tester) async {
       await pump(tester, await host(entries: const []));
-      expect(find.text('Ölçüm ekle'), findsWidgets);
+      expect(find.text('Ölçüm ekle'), findsOneWidget);
+      expect(find.byType(FloatingActionButton), findsNothing);
+    });
+
+    testWidgets('the FAB comes back once there is something to add to',
+        (tester) async {
+      await pump(tester, await host(entries: [weight(0, 80)]));
+      expect(find.byType(FloatingActionButton), findsOneWidget);
+    });
+  });
+
+  group('precision', () {
+    testWidgets(
+        'a tenth of a kilogram survives to the screen — this is the whole '
+        'point of the feature, and it was being rounded away',
+        (tester) async {
+      await pump(tester, await host(entries: [weight(0, 82.4)]));
+      expect(find.textContaining('82,4 kg'), findsWidgets);
+      expect(find.textContaining('82 kg'), findsNothing);
+    });
+
+    testWidgets('a round value gains no decimal it does not need',
+        (tester) async {
+      await pump(tester, await host(entries: [weight(0, 80)]));
+      expect(find.textContaining('80 kg'), findsWidgets);
+      expect(find.textContaining('80,0'), findsNothing);
+    });
+
+    testWidgets('the decimal separator follows the language', (tester) async {
+      await pump(
+        tester,
+        await host(entries: [weight(0, 82.4)], locale: const Locale('en')),
+      );
+      expect(find.textContaining('82.4 kg'), findsWidgets);
     });
   });
 

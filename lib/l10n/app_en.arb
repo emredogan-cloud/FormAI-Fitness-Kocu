@@ -224,7 +224,7 @@
   "@retrospectiveEyebrow": {
     "description": "Weekly retrospective card eyebrow"
   },
-  "retrospectiveSummary": "This week you did {workouts} workouts, trained for {minutes} minutes and completed {reps} reps. Ready for next week?",
+  "retrospectiveSummary": "This week you did {workouts}, trained for {minutes} and completed {reps}. Ready for next week?",
   "@retrospectiveSummary": {
     "description": "Weekly retrospective sentence. Parameterised rather than concatenated so a translator can reorder the clauses.",
     "placeholders": {

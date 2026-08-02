@@ -43,10 +43,17 @@ String measureLabel(AppLocalizations l10n, BodyMeasure measure) =>
 /// Formats a stored metric value in the user's units, with its unit.
 ///
 /// Weight goes through `unit_system.dart` because pounds are a different
-/// number; a circumference converts to inches the same way. One decimal
-/// on circumferences and none on weight, matching what each instrument
-/// can actually resolve — a bathroom scale to the tenth of a pound is
-/// false precision, a tape to the tenth of a centimetre is not.
+/// number; a circumference converts to inches the same way.
+///
+/// **One decimal on weight, deliberately overriding `formatWeight`'s
+/// default of none.** That default is right where it is used — a profile
+/// card saying "82 kg" — and wrong here. This screen exists to show
+/// small changes over time, and the device walk found it discarding
+/// them: a user who typed 82.4 saw "82 kg", and re-opening the entry
+/// sheet to edit that day pre-filled "82", so saving again would have
+/// silently written away the tenth they had measured. `_trimZeros`
+/// means a round value still reads "82 kg", so nothing gains a decimal
+/// that does not need one.
 String formatMeasure(
   double value,
   BodyMeasure measure, {
@@ -56,7 +63,7 @@ String formatMeasure(
 }) {
   if (measure.isWeight) {
     return _localizeDigits(
-      formatWeight(value, system: system, withUnit: withUnit),
+      formatWeight(value, system: system, withUnit: withUnit, decimals: 1),
       localeTag,
     );
   }

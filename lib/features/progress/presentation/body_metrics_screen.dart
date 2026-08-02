@@ -93,11 +93,18 @@ class _BodyMetricsScreenState extends ConsumerState<BodyMetricsScreen> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openEntrySheet,
-        icon: const Icon(Icons.add_rounded),
-        label: Text(l10n.bodyMetricsAddCta),
-      ),
+      // No FAB on the empty state. The device walk showed the two
+      // together and they read as a bug: the same words, twice, on one
+      // screen, and the eye stops to ask whether they do different
+      // things. The empty state's own button is the better placement
+      // because it is part of the sentence explaining what logging buys.
+      floatingActionButton: (entriesAsync.value?.isEmpty ?? true)
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: _openEntrySheet,
+              icon: const Icon(Icons.add_rounded),
+              label: Text(l10n.bodyMetricsAddCta),
+            ),
       body: entriesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         // A read that could not reach the network still has the local
@@ -265,7 +272,11 @@ class _Loaded extends ConsumerWidget {
     }
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 96),
+      // 140 of bottom padding, not 96. An extended FAB is ~56 tall plus
+      // its 16 margin, and 96 left the last history row's delete button
+      // sitting underneath it — reachable only by scrolling past the end
+      // of a list that had already ended. Found on the device.
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 140),
       children: [
         if (tracked.length > 1) ...[
           _MeasureSelector(

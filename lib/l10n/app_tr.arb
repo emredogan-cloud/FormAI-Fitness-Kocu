@@ -56,7 +56,7 @@
   "badgeUnlockAcknowledge": "HARİKA!",
   "badgeUnlockShare": "Paylaş",
   "retrospectiveEyebrow": "HAFTANIN ÖZETİ",
-  "retrospectiveSummary": "Bu hafta {workouts} antrenman yaptın, {minutes} dakika çalıştın ve {reps} tekrar tamamladın. Gelecek hafta için hazır mısın?",
+  "retrospectiveSummary": "Bu hafta {workouts} yaptın, {minutes} çalıştın ve {reps} tamamladın. Gelecek hafta için hazır mısın?",
   "retrospectiveWorkoutsValue": "{count} antrenman",
   "retrospectiveMinutesValue": "{count} dakika",
   "retrospectiveRepsValue": "{count} tekrar",
