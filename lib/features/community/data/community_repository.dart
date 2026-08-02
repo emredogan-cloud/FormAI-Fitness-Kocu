@@ -51,6 +51,11 @@ class CommunityRepository {
 
   String? get _uid => _client.auth.currentUser?.id;
 
+  /// The signed-in user's id, for screens that have to decide which side
+  /// of a friendship they are on. Exposed rather than passed down from
+  /// four call sites, all of which would be asking the same client.
+  String? get currentUserId => _uid;
+
   /// True when `019` has been applied and the caller is signed in.
   ///
   /// A single `limit(1)` probe against one table. This is a reachability
@@ -173,6 +178,32 @@ class CommunityRepository {
           .single();
       return CommunityProfile.fromJson(row);
     }, null);
+  }
+
+  /// Display names for a set of user ids, for rendering a friend list
+  /// without a row-by-row lookup.
+  ///
+  /// **Silently omits ids RLS will not return** — a friend whose profile
+  /// is private, or who has blocked the caller since. The screen falls
+  /// back to the handle-less placeholder rather than showing an empty
+  /// row, because a friendship that exists with somebody you cannot see
+  /// is a real state and hiding the row would make "remove" unreachable.
+  Future<Map<String, CommunityProfile>> profilesByIds(
+    Iterable<String> userIds,
+  ) async {
+    final ids = userIds.toSet().toList();
+    if (ids.isEmpty) return const {};
+    return _guard(() async {
+      final rows = await _client
+          .from('public_profiles')
+          .select()
+          .inFilter('user_id', ids);
+      return {
+        for (final row in rows)
+          (row as Map)['user_id'] as String:
+              CommunityProfile.fromJson(row.cast<String, dynamic>()),
+      };
+    }, const <String, CommunityProfile>{});
   }
 
   Future<void> deleteProfile() async {
@@ -606,6 +637,17 @@ class CommunityProfile {
 
 final communityRepositoryProvider =
     Provider<CommunityRepository>((ref) => CommunityRepository());
+
+/// The signed-in user's id, as its own provider.
+///
+/// Separated from the repository so a screen that needs to know which
+/// side of a friendship it is on does not have to construct a Supabase
+/// client to find out — which is also what makes those screens testable
+/// without booting Supabase. Null when signed out, which every consumer
+/// already has to handle.
+final currentCommunityUserIdProvider = Provider<String?>(
+  (ref) => ref.watch(communityRepositoryProvider).currentUserId,
+);
 
 /// Whether the schema is applied. Watched by every community entry point
 /// so an unapplied migration renders "not available yet" rather than a

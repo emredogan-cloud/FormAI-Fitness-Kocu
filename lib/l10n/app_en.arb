@@ -8069,5 +8069,149 @@
   "profileDeleted": "Profile deleted.",
   "@profileDeleted": {
     "description": "Snackbar after deleting a profile."
+  },
+  "friendsTitle": "Friends",
+  "@friendsTitle": {
+    "description": "Title of the friends screen."
+  },
+  "friendsNone": "No friends yet",
+  "@friendsNone": {
+    "description": "Empty state on the friends screen."
+  },
+  "friendsNoneBody": "Add someone by their handle. They'll get a request and decide for themselves.",
+  "@friendsNoneBody": {
+    "description": "Empty state body. Says the other person consents, which is the point."
+  },
+  "friendsAdd": "Add a friend",
+  "@friendsAdd": {
+    "description": "Opens the add-by-handle sheet."
+  },
+  "friendsAddTitle": "Who do you want to add?",
+  "@friendsAddTitle": {
+    "description": "Title of the add-friend sheet."
+  },
+  "friendsAddHint": "Their handle, without the @.",
+  "@friendsAddHint": {
+    "description": "Helper under the handle field in the add sheet."
+  },
+  "friendsAddCta": "Send request",
+  "@friendsAddCta": {
+    "description": "Sends the friend request."
+  },
+  "friendsNotFound": "No one with that handle, or their profile is private.",
+  "@friendsNotFound": {
+    "description": "Shown when a handle lookup returns nothing. Deliberately does not distinguish the two, because that would confirm a handle is taken."
+  },
+  "friendsRequestSent": "Request sent.",
+  "@friendsRequestSent": {
+    "description": "Snackbar after sending a friend request."
+  },
+  "friendsRequestFailed": "Could not send that request.",
+  "@friendsRequestFailed": {
+    "description": "Snackbar when the request fails."
+  },
+  "friendsCannotSelf": "That's you.",
+  "@friendsCannotSelf": {
+    "description": "Shown when somebody enters their own handle."
+  },
+  "friendsCannotBlocked": "You can't add this person.",
+  "@friendsCannotBlocked": {
+    "description": "Shown across a block. Deliberately vague: naming the block would disclose it."
+  },
+  "friendsAlreadyFriends": "You're already friends.",
+  "@friendsAlreadyFriends": {
+    "description": "Shown when a friendship already exists."
+  },
+  "friendsAlreadyPending": "There's already a request between you.",
+  "@friendsAlreadyPending": {
+    "description": "Shown when a request is outstanding in either direction."
+  },
+  "friendsPreviouslyDeclined": "That request was already answered.",
+  "@friendsPreviouslyDeclined": {
+    "description": "Shown when a declined row still stands. Does not say who declined."
+  },
+  "friendsIncoming": "Requests",
+  "@friendsIncoming": {
+    "description": "Section header above incoming friend requests."
+  },
+  "friendsAccepted": "Friends",
+  "@friendsAccepted": {
+    "description": "Section header above accepted friendships."
+  },
+  "friendsOutgoing": "Sent",
+  "@friendsOutgoing": {
+    "description": "Section header above outgoing requests awaiting an answer."
+  },
+  "friendsAccept": "Accept",
+  "@friendsAccept": {
+    "description": "Accepts an incoming request."
+  },
+  "friendsDecline": "Decline",
+  "@friendsDecline": {
+    "description": "Declines an incoming request."
+  },
+  "friendsRemove": "Remove friend",
+  "@friendsRemove": {
+    "description": "Removes an accepted friendship."
+  },
+  "friendsRemoveTitle": "Remove this friend?",
+  "@friendsRemoveTitle": {
+    "description": "Confirmation dialog title."
+  },
+  "friendsRemoveBody": "They won't be told. You can add each other again later.",
+  "@friendsRemoveBody": {
+    "description": "Confirmation body — states both facts a person actually wants to know."
+  },
+  "friendsWaiting": "Waiting for an answer",
+  "@friendsWaiting": {
+    "description": "Subtitle on an outgoing request."
+  },
+  "friendsBlock": "Block",
+  "@friendsBlock": {
+    "description": "Blocks a user."
+  },
+  "friendsBlockTitle": "Block this person?",
+  "@friendsBlockTitle": {
+    "description": "Confirmation dialog title for blocking."
+  },
+  "friendsBlockBody": "You'll disappear from each other everywhere in the app, and they aren't told.",
+  "@friendsBlockBody": {
+    "description": "Confirmation body. States the symmetry and the silence, both of which are the design."
+  },
+  "friendsBlocked": "Blocked.",
+  "@friendsBlocked": {
+    "description": "Snackbar after blocking."
+  },
+  "friendsReport": "Report",
+  "@friendsReport": {
+    "description": "Opens the report sheet."
+  },
+  "friendsReportTitle": "What's wrong?",
+  "@friendsReportTitle": {
+    "description": "Title of the report sheet."
+  },
+  "friendsReportHarassment": "Harassment",
+  "@friendsReportHarassment": {
+    "description": "Report reason."
+  },
+  "friendsReportImpersonation": "Pretending to be someone",
+  "@friendsReportImpersonation": {
+    "description": "Report reason."
+  },
+  "friendsReportContent": "Inappropriate name or photo",
+  "@friendsReportContent": {
+    "description": "Report reason."
+  },
+  "friendsReportSpam": "Spam",
+  "@friendsReportSpam": {
+    "description": "Report reason."
+  },
+  "friendsReportOther": "Something else",
+  "@friendsReportOther": {
+    "description": "Report reason."
+  },
+  "friendsReported": "Thanks — we'll look at it.",
+  "@friendsReported": {
+    "description": "Snackbar after a report is filed."
   }
 }

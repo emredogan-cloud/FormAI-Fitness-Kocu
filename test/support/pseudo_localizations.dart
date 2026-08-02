@@ -8,7 +8,7 @@
 //   2. a layout that only fits Turkish overflows here instead of in a
 //      German store review.
 //
-// 1710 members covered.
+// 1746 members covered.
 
 import 'package:flutter/widgets.dart';
 import 'package:sixpack_ai/core/utils/pseudo_locale.dart';
@@ -5332,6 +5332,122 @@ class PseudoAppLocalizations extends AppLocalizations {
   String get profileDeleted => pseudoLocalize(_inner.profileDeleted);
 
   @override
+  String get friendsTitle => pseudoLocalize(_inner.friendsTitle);
+
+  @override
+  String get friendsNone => pseudoLocalize(_inner.friendsNone);
+
+  @override
+  String get friendsNoneBody => pseudoLocalize(_inner.friendsNoneBody);
+
+  @override
+  String get friendsAdd => pseudoLocalize(_inner.friendsAdd);
+
+  @override
+  String get friendsAddTitle => pseudoLocalize(_inner.friendsAddTitle);
+
+  @override
+  String get friendsAddHint => pseudoLocalize(_inner.friendsAddHint);
+
+  @override
+  String get friendsAddCta => pseudoLocalize(_inner.friendsAddCta);
+
+  @override
+  String get friendsNotFound => pseudoLocalize(_inner.friendsNotFound);
+
+  @override
+  String get friendsRequestSent => pseudoLocalize(_inner.friendsRequestSent);
+
+  @override
+  String get friendsRequestFailed =>
+      pseudoLocalize(_inner.friendsRequestFailed);
+
+  @override
+  String get friendsCannotSelf => pseudoLocalize(_inner.friendsCannotSelf);
+
+  @override
+  String get friendsCannotBlocked =>
+      pseudoLocalize(_inner.friendsCannotBlocked);
+
+  @override
+  String get friendsAlreadyFriends =>
+      pseudoLocalize(_inner.friendsAlreadyFriends);
+
+  @override
+  String get friendsAlreadyPending =>
+      pseudoLocalize(_inner.friendsAlreadyPending);
+
+  @override
+  String get friendsPreviouslyDeclined =>
+      pseudoLocalize(_inner.friendsPreviouslyDeclined);
+
+  @override
+  String get friendsIncoming => pseudoLocalize(_inner.friendsIncoming);
+
+  @override
+  String get friendsAccepted => pseudoLocalize(_inner.friendsAccepted);
+
+  @override
+  String get friendsOutgoing => pseudoLocalize(_inner.friendsOutgoing);
+
+  @override
+  String get friendsAccept => pseudoLocalize(_inner.friendsAccept);
+
+  @override
+  String get friendsDecline => pseudoLocalize(_inner.friendsDecline);
+
+  @override
+  String get friendsRemove => pseudoLocalize(_inner.friendsRemove);
+
+  @override
+  String get friendsRemoveTitle => pseudoLocalize(_inner.friendsRemoveTitle);
+
+  @override
+  String get friendsRemoveBody => pseudoLocalize(_inner.friendsRemoveBody);
+
+  @override
+  String get friendsWaiting => pseudoLocalize(_inner.friendsWaiting);
+
+  @override
+  String get friendsBlock => pseudoLocalize(_inner.friendsBlock);
+
+  @override
+  String get friendsBlockTitle => pseudoLocalize(_inner.friendsBlockTitle);
+
+  @override
+  String get friendsBlockBody => pseudoLocalize(_inner.friendsBlockBody);
+
+  @override
+  String get friendsBlocked => pseudoLocalize(_inner.friendsBlocked);
+
+  @override
+  String get friendsReport => pseudoLocalize(_inner.friendsReport);
+
+  @override
+  String get friendsReportTitle => pseudoLocalize(_inner.friendsReportTitle);
+
+  @override
+  String get friendsReportHarassment =>
+      pseudoLocalize(_inner.friendsReportHarassment);
+
+  @override
+  String get friendsReportImpersonation =>
+      pseudoLocalize(_inner.friendsReportImpersonation);
+
+  @override
+  String get friendsReportContent =>
+      pseudoLocalize(_inner.friendsReportContent);
+
+  @override
+  String get friendsReportSpam => pseudoLocalize(_inner.friendsReportSpam);
+
+  @override
+  String get friendsReportOther => pseudoLocalize(_inner.friendsReportOther);
+
+  @override
+  String get friendsReported => pseudoLocalize(_inner.friendsReported);
+
+  @override
   String retrospectiveSummary(String workouts, String minutes, String reps) =>
       pseudoLocalize(_inner.retrospectiveSummary(workouts, minutes, reps));
 
@@ -6114,5 +6230,5 @@ class PseudoAppLocalizations extends AppLocalizations {
   /// Number of members this wrapper covers. The test suite asserts
   /// it still matches the generated class, so a new ARB key cannot
   /// slip past pseudo mode unnoticed.
-  static const int coveredMembers = 1710;
+  static const int coveredMembers = 1746;
 }

@@ -94,7 +94,12 @@ class NeonCard extends StatelessWidget {
   /// than one gradient rim in a scroll and none of them is emphasis.
   final bool gradient;
 
-  final EdgeInsets padding;
+  /// `EdgeInsetsGeometry`, not `EdgeInsets`: a card with asymmetric
+  /// horizontal padding — a row whose trailing control needs less room
+  /// than its leading text — has to be able to pass
+  /// `EdgeInsetsDirectional`, or the directional-layout gate rejects the
+  /// call site.
+  final EdgeInsetsGeometry padding;
   final Color fill;
   final double radius;
 
