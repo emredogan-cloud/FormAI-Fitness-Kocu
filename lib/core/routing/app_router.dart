@@ -27,6 +27,7 @@ import '../../features/progress/presentation/body_metrics_screen.dart';
 import '../../features/progress/presentation/outcome_report_screen.dart';
 import '../../features/community/presentation/community_screen.dart';
 import '../../features/community/presentation/friends_screen.dart';
+import '../../features/community/presentation/squad_screen.dart';
 import '../../features/progress/presentation/photo_gallery_screen.dart';
 import '../../features/progress/presentation/calendar_screen.dart';
 import '../../features/progress/presentation/suggestions_screen.dart';
@@ -96,6 +97,9 @@ class AppRoutes {
 
   /// Roadmap Phase 12 (C22) · friends, and the block/report controls.
   static const String communityFriends = '/community/friends';
+
+  /// Roadmap Phase 12 (C22) · squads and their activity feeds.
+  static const String communitySquads = '/community/squads';
   static const String nutritionDiscover = '/nutrition/discover';
 
   /// Phase 50B · internal admin panel. Gated by [isAdminProvider]; the
@@ -450,6 +454,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.communityFriends,
         name: 'communityFriends',
         builder: (context, state) => const FriendsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.communitySquads,
+        name: 'communitySquads',
+        builder: (context, state) => const SquadScreen(),
       ),
       GoRoute(
         path: AppRoutes.nutritionDiscover,

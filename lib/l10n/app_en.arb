@@ -8213,5 +8213,180 @@
   "friendsReported": "Thanks — we'll look at it.",
   "@friendsReported": {
     "description": "Snackbar after a report is filed."
+  },
+  "squadTitle": "Squads",
+  "@squadTitle": {
+    "description": "Title of the squad list screen."
+  },
+  "squadNone": "No squad yet",
+  "@squadNone": {
+    "description": "Empty state on the squad screen."
+  },
+  "squadNoneBody": "A squad is up to 12 people who can see that you trained. Small enough that a quiet week gets noticed.",
+  "@squadNoneBody": {
+    "description": "Empty state body. Says what a squad is for and why it is small."
+  },
+  "squadCreate": "Create a squad",
+  "@squadCreate": {
+    "description": "CTA that creates a new squad."
+  },
+  "squadJoin": "Join with a code",
+  "@squadJoin": {
+    "description": "CTA that opens the join sheet."
+  },
+  "squadCreateTitle": "Name your squad",
+  "@squadCreateTitle": {
+    "description": "Title of the create sheet."
+  },
+  "squadNameLabel": "Squad name",
+  "@squadNameLabel": {
+    "description": "Label for the squad-name field."
+  },
+  "squadJoinTitle": "Enter the invite code",
+  "@squadJoinTitle": {
+    "description": "Title of the join sheet."
+  },
+  "squadCodeLabel": "Invite code",
+  "@squadCodeLabel": {
+    "description": "Label for the invite-code field."
+  },
+  "squadJoinCta": "Join",
+  "@squadJoinCta": {
+    "description": "Confirms joining a squad."
+  },
+  "squadCreated": "Squad created.",
+  "@squadCreated": {
+    "description": "Snackbar after creating a squad."
+  },
+  "squadJoined": "You're in.",
+  "@squadJoined": {
+    "description": "Snackbar after joining a squad."
+  },
+  "squadJoinFailed": "That code didn't work.",
+  "@squadJoinFailed": {
+    "description": "Shown when an invite code does not resolve. Does not distinguish wrong from full — see squadFull for the case the app can name."
+  },
+  "squadFull": "That squad is full.",
+  "@squadFull": {
+    "description": "Shown when a squad has reached 12 members."
+  },
+  "squadAlreadyMember": "You're already in that squad.",
+  "@squadAlreadyMember": {
+    "description": "Shown when the caller is already a member."
+  },
+  "squadCreateFailed": "Could not create the squad.",
+  "@squadCreateFailed": {
+    "description": "Snackbar when creation fails."
+  },
+  "squadMembers": "{count, plural, =1{1 of 12} other{{count} of 12}}",
+  "@squadMembers": {
+    "description": "Member count on a squad row. Says the cap alongside, so full is never a surprise.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "squadInviteShare": "Share the code",
+  "@squadInviteShare": {
+    "description": "Shares the squad's invite code."
+  },
+  "squadInviteMessage": "Join my squad on FormAI with the code {code}.",
+  "@squadInviteMessage": {
+    "description": "The text shared alongside an invite code.",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "squadLeave": "Leave squad",
+  "@squadLeave": {
+    "description": "Leaves a squad."
+  },
+  "squadLeaveTitle": "Leave this squad?",
+  "@squadLeaveTitle": {
+    "description": "Confirmation dialog title."
+  },
+  "squadLeaveBody": "The others aren't told. You can rejoin with the code.",
+  "@squadLeaveBody": {
+    "description": "Confirmation body — the two facts a person wants."
+  },
+  "squadLeft": "You left the squad.",
+  "@squadLeft": {
+    "description": "Snackbar after leaving."
+  },
+  "feedTitle": "Activity",
+  "@feedTitle": {
+    "description": "Title of the squad activity feed."
+  },
+  "feedEmpty": "Nothing yet",
+  "@feedEmpty": {
+    "description": "Empty state on the feed."
+  },
+  "feedEmptyBody": "When anyone here finishes a workout, it shows up. Nothing else does.",
+  "@feedEmptyBody": {
+    "description": "Empty state body — states exactly what the feed carries, which is the privacy position."
+  },
+  "feedWorkout": "{name} trained",
+  "@feedWorkout": {
+    "description": "Feed line for a completed workout.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "feedBadge": "{name} earned {badge}",
+  "@feedBadge": {
+    "description": "Feed line for a badge.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "badge": {
+        "type": "String"
+      }
+    }
+  },
+  "feedLevel": "{name} reached level {level}",
+  "@feedLevel": {
+    "description": "Feed line for a level-up.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "feedStreak": "{name, select, other{{name}}} is on a {count, plural, =1{1-day} other{{count}-day}} streak",
+  "@feedStreak": {
+    "description": "Feed line for a streak milestone.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "feedSomeone": "Someone",
+  "@feedSomeone": {
+    "description": "Fallback name when a squad member's profile is not visible to this reader."
+  },
+  "feedReactionCheer": "Nice",
+  "@feedReactionCheer": {
+    "description": "Reaction label."
+  },
+  "feedReactionStrong": "Strong",
+  "@feedReactionStrong": {
+    "description": "Reaction label."
+  },
+  "feedReactionFire": "On fire",
+  "@feedReactionFire": {
+    "description": "Reaction label."
   }
 }

@@ -8,7 +8,7 @@
 //   2. a layout that only fits Turkish overflows here instead of in a
 //      German store review.
 //
-// 1746 members covered.
+// 1780 members covered.
 
 import 'package:flutter/widgets.dart';
 import 'package:sixpack_ai/core/utils/pseudo_locale.dart';
@@ -5448,6 +5448,90 @@ class PseudoAppLocalizations extends AppLocalizations {
   String get friendsReported => pseudoLocalize(_inner.friendsReported);
 
   @override
+  String get squadTitle => pseudoLocalize(_inner.squadTitle);
+
+  @override
+  String get squadNone => pseudoLocalize(_inner.squadNone);
+
+  @override
+  String get squadNoneBody => pseudoLocalize(_inner.squadNoneBody);
+
+  @override
+  String get squadCreate => pseudoLocalize(_inner.squadCreate);
+
+  @override
+  String get squadJoin => pseudoLocalize(_inner.squadJoin);
+
+  @override
+  String get squadCreateTitle => pseudoLocalize(_inner.squadCreateTitle);
+
+  @override
+  String get squadNameLabel => pseudoLocalize(_inner.squadNameLabel);
+
+  @override
+  String get squadJoinTitle => pseudoLocalize(_inner.squadJoinTitle);
+
+  @override
+  String get squadCodeLabel => pseudoLocalize(_inner.squadCodeLabel);
+
+  @override
+  String get squadJoinCta => pseudoLocalize(_inner.squadJoinCta);
+
+  @override
+  String get squadCreated => pseudoLocalize(_inner.squadCreated);
+
+  @override
+  String get squadJoined => pseudoLocalize(_inner.squadJoined);
+
+  @override
+  String get squadJoinFailed => pseudoLocalize(_inner.squadJoinFailed);
+
+  @override
+  String get squadFull => pseudoLocalize(_inner.squadFull);
+
+  @override
+  String get squadAlreadyMember => pseudoLocalize(_inner.squadAlreadyMember);
+
+  @override
+  String get squadCreateFailed => pseudoLocalize(_inner.squadCreateFailed);
+
+  @override
+  String get squadInviteShare => pseudoLocalize(_inner.squadInviteShare);
+
+  @override
+  String get squadLeave => pseudoLocalize(_inner.squadLeave);
+
+  @override
+  String get squadLeaveTitle => pseudoLocalize(_inner.squadLeaveTitle);
+
+  @override
+  String get squadLeaveBody => pseudoLocalize(_inner.squadLeaveBody);
+
+  @override
+  String get squadLeft => pseudoLocalize(_inner.squadLeft);
+
+  @override
+  String get feedTitle => pseudoLocalize(_inner.feedTitle);
+
+  @override
+  String get feedEmpty => pseudoLocalize(_inner.feedEmpty);
+
+  @override
+  String get feedEmptyBody => pseudoLocalize(_inner.feedEmptyBody);
+
+  @override
+  String get feedSomeone => pseudoLocalize(_inner.feedSomeone);
+
+  @override
+  String get feedReactionCheer => pseudoLocalize(_inner.feedReactionCheer);
+
+  @override
+  String get feedReactionStrong => pseudoLocalize(_inner.feedReactionStrong);
+
+  @override
+  String get feedReactionFire => pseudoLocalize(_inner.feedReactionFire);
+
+  @override
   String retrospectiveSummary(String workouts, String minutes, String reps) =>
       pseudoLocalize(_inner.retrospectiveSummary(workouts, minutes, reps));
 
@@ -6227,8 +6311,30 @@ class PseudoAppLocalizations extends AppLocalizations {
   @override
   String photosCount(int count) => pseudoLocalize(_inner.photosCount(count));
 
+  @override
+  String squadMembers(int count) => pseudoLocalize(_inner.squadMembers(count));
+
+  @override
+  String squadInviteMessage(String code) =>
+      pseudoLocalize(_inner.squadInviteMessage(code));
+
+  @override
+  String feedWorkout(String name) => pseudoLocalize(_inner.feedWorkout(name));
+
+  @override
+  String feedBadge(String name, String badge) =>
+      pseudoLocalize(_inner.feedBadge(name, badge));
+
+  @override
+  String feedLevel(String name, int level) =>
+      pseudoLocalize(_inner.feedLevel(name, level));
+
+  @override
+  String feedStreak(String name, int count) =>
+      pseudoLocalize(_inner.feedStreak(name, count));
+
   /// Number of members this wrapper covers. The test suite asserts
   /// it still matches the generated class, so a new ARB key cannot
   /// slip past pseudo mode unnoticed.
-  static const int coveredMembers = 1746;
+  static const int coveredMembers = 1780;
 }
