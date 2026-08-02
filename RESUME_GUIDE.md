@@ -3,7 +3,7 @@
 Read this first. It is written so a session with no memory of the
 previous one can continue without re-analysing the repository.
 
-**Last updated:** 2026-08-02, Phase 7 closed including its device walk.
+**Last updated:** 2026-08-02, Phase 7 closed (device walk included); Phase 8 started.
 
 ---
 
@@ -25,7 +25,7 @@ one `PHASE_NN_COMPLETION_REPORT.md`. Final deliverable at the very end:
 | 6 · English launch | done | `PHASE_06_COMPLETION_REPORT.md` |
 | 6p · polish sprint | 12 of 12 done | `PHASE_06_POLISH_REPORT.md` |
 | **7 · Content & AI localization** | **done + device walk** | `PHASE_07_COMPLETION_REPORT.md` |
-| 8 · es / fr / de + RTL | next | roadmap only |
+| **8 · es / fr / de + RTL** | **in progress** | `PHASE_08_COMPLETION_REPORT.md` |
 
 **Branch:** `main`. **Build:** `1.0.0+29`.
 
@@ -40,7 +40,22 @@ one `PHASE_NN_COMPLETION_REPORT.md`. Final deliverable at the very end:
 whole content pipeline is committed and re-runnable, and **the device
 walk is done** — see §9 of that report for the six defects it found.
 
-**Phase 8 is next** and is a content project, not an engineering one, for
+### 2.0.0 Phase 8 is STARTED — read its report before touching it
+
+`PHASE_08_COMPLETION_REPORT.md` §3 is the ordered to-do list. Done so
+far: the RTL sweep now covers the nutrition surfaces (it was funnel-only)
+and `tool/check_directional_layout.dart` is a CI ratchet armed at 177.
+**Not started: es / fr / de.**
+
+Two things that report says which save re-deriving:
+
+- **The roadmap's "117 `EdgeInsets.fromLTRB`" is not RTL debt.** All 127
+  of them are horizontally symmetric, so none mirrors wrong. The real
+  surface is 121 directional `Alignment` and 55 `Positioned(left:/right:)`.
+- **An `Alignment.centerLeft` does not overflow**, so no RTL layout sweep
+  can ever catch it. That is why the static gate exists next to them.
+
+The language half is a content project, not an engineering one, for
 recipes: the resolver is locale-agnostic and the audit loops over
 `kShippedLocales`, so adding `es` means adding a `PERSONAS` entry, a
 `SCAFFOLD` entry and 392 rows of copy. **The exercise catalogue is a
@@ -118,7 +133,7 @@ the entire procedure.
 
 ```
 analyze                     0 issues
-tests                       1064
+tests                       1069
 hardcoded-string gate       0 in 0 files  (allowlist 244, printed per entry)
 ARB                         1534 keys · tr 100% · en 100% · all referenced
 recipe catalogue            392 rows · en 392/392 · 2242 ingredient rows
@@ -142,13 +157,15 @@ before this session started. It is **not ours** — leave it.
 
 ```bash
 flutter analyze                                   # must be 0 — CI fails on infos too
-flutter test                                      # 1064
+flutter test                                      # 1069
 dart format --output=none --set-exit-if-changed lib test tool
 dart run tool/check_hardcoded_strings.dart        # ratchet, currently 0
 dart run tool/check_hardcoded_strings.dart --list # every flagged line
 dart run tool/arb_coverage.dart --strict          # parity, plurals, EN audit
 dart run tool/gen_pseudo_localizations.dart --check
 dart run tool/recipe_translation_audit.dart       # the CATALOGUE, not the UI
+dart run tool/check_directional_layout.dart      # RTL ratchet, currently 177
+dart run tool/check_directional_layout.dart --list
 ```
 
 All of these are CI steps. `flutter analyze` exits 1 on **info**-level lints,
@@ -453,6 +470,9 @@ tool/check_hardcoded_strings.dart      the ratchet + allowlist (read its header)
 tool/arb_coverage.dart                 parity, unused keys, plural audit
 tool/gen_pseudo_localizations.dart     generates test/support/pseudo_localizations.dart
 tool/hardcoded_strings_baseline.json   per-file counts; currently empty
+tool/check_directional_layout.dart     RTL ratchet — read its header for what it does NOT flag
+tool/directional_layout_baseline.json  per-file counts; armed at 177
+test/i18n/rtl_app_sweep_test.dart      RTL past the paywall (the older sweep is funnel-only)
 
 lib/l10n/app_en.arb                    TEMPLATE — values AND @key metadata
 lib/l10n/app_tr.arb                    values only (house convention)

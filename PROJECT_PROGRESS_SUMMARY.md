@@ -1,7 +1,7 @@
 # FormAI — Project Progress Summary
 
 **Spec:** `TESTERS_COMMUNITY_PRODUCT_ROADMAP.md` (18 phases / 5 waves)
-**As of:** 2026-08-02 · Phase 7 **complete, device walk included** · build **1.0.0+29**
+**As of:** 2026-08-02 · Phase 7 **complete, device walk included** · Phase 8 **in progress** · build **1.0.0+29**
 
 ---
 
@@ -90,8 +90,24 @@
 
 # 2. Currently Working On
 
-**Nothing. Phase 7 is closed, device walk and all.**
-`PHASE_07_COMPLETION_REPORT.md` §9 is now the walk's record.
+**Phase 8 — Spanish, French, German & RTL Readiness.**
+`PHASE_08_COMPLETION_REPORT.md` §3 is the ordered to-do list.
+
+Done: the RTL sweep now covers the nutrition surfaces Phase 7 built — it
+had only ever rendered the onboarding funnel — and
+`tool/check_directional_layout.dart` is a CI ratchet armed at 177. It
+exists because **an `Alignment.centerLeft` does not overflow**: it lays
+out perfectly on the wrong side, so no layout sweep can ever catch it.
+The audit also found that the roadmap's headline RTL debt is not debt —
+all 127 `EdgeInsets.fromLTRB` call sites are horizontally symmetric, so
+none of them mirrors wrong.
+
+Not started: `es` / `fr` / `de` themselves. That is 1,534 ARB keys and
+392 recipe rows per language, plus 138 exercise rows that are still
+Turkish-only in every locale.
+
+Phase 7 is closed, device walk and all — `PHASE_07_COMPLETION_REPORT.md`
+§9 is now the walk's record rather than its excuse.
 
 Founder-side, carried and still open:
 
@@ -110,7 +126,7 @@ Founder-side, carried and still open:
 # 3. Remaining Roadmap
 
 ### Wave 2 — Global Reach *(continues)*
-- **Phase 8 — Spanish, French, German & RTL Readiness.** Turn localization from a project into a repeatable capability and reach the markets the testers named. The recipe half is now a content cost rather than an engineering one: the resolver is locale-agnostic and the audit loops over `kShippedLocales`. **The exercise catalogue is not** — 138 rows of `name`, `description` and `short_tip` are still Turkish-only, and their instructional images carry burned-in text in two languages.
+- **Phase 8 — Spanish, French, German & RTL Readiness.** 🔄 **in progress** — RTL half started, languages not. Turn localization from a project into a repeatable capability and reach the markets the testers named. The recipe half is now a content cost rather than an engineering one: the resolver is locale-agnostic and the audit loops over `kShippedLocales`. **The exercise catalogue is not** — 138 rows of `name`, `description` and `short_tip` are still Turkish-only, and their instructional images carry burned-in text in two languages.
 
 ### Wave 3 — Measurable Progress & Universal Access
 - **Phase 9 — Performance Analytics I.** Body metrics and trends: let users see their body change over time.
@@ -133,7 +149,7 @@ Founder-side, carried and still open:
 
 ```
 Wave 1 — Production-Access Commitments   ✅ Complete   (Phases 1–4 + 3b)
-Wave 2 — Global Reach                    🔄 In Progress (5, 6, 7 done; 8 next)
+Wave 2 — Global Reach                    🔄 In Progress (5, 6, 7 done; 8 started)
 Wave 3 — Measurable Progress & Access    ⏳ Not Started (Phases 9–11)
 Wave 4 — Community & Content Engine      ⏳ Not Started (Phases 12–14)
 Wave 5 — Scale, Depth & Platform         ⏳ Not Started (Phases 15–17)
@@ -146,7 +162,7 @@ Wave 5 — Scale, Depth & Platform         ⏳ Not Started (Phases 15–17)
 | | |
 |---|---|
 | **Build** | 1.0.0+29 · APK 134.5 MB |
-| **Tests** | **1064 passing** (baseline was 330) |
+| **Tests** | **1069 passing** (baseline was 330) |
 | **`flutter analyze`** | **0 issues** |
 | **`dart format`** | clean |
 | **CI** | **GREEN** (CI + Secret Scan) |
