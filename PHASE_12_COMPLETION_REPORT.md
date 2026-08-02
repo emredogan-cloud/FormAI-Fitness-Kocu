@@ -1,7 +1,7 @@
 # Phase 12 — Community I: Identity & Squads
 
 **Status:** 🔄 **IN PROGRESS** — the foundation is in; the feature surfaces are not.
-**Date:** 2026-08-02 · **Build:** `1.0.0+32` · **Commit:** `0c18f5c`
+**Date:** 2026-08-02 · **Build:** `1.0.0+32` · **Commits:** `0c18f5c`, `059f531`
 **Tests:** 1298 (1258 at phase start) · **`flutter analyze`:** 0 · **CI:** green
 
 > This file is the live record, updated as work lands rather than
@@ -22,6 +22,7 @@ for — the social accountability layer that makes fitness habits stick.
 | — | **Schema + RLS** (`019_social_profiles.sql`) | — | ✅ written, not applied |
 | — | **Domain rules** (visibility, friendship, squad) | — | ✅ shipped, 26 tests |
 | — | **RLS static gate** | testing §  | ✅ shipped, probed |
+| — | **Repository** (`community_repository.dart`) | — | ✅ shipped |
 | 1 | Public user profile | C24, R6 | ⬜ not started |
 | 2 | Profile card sharing | C24 | ⬜ not started |
 | 3 | Friends | C22 | ⬜ not started |
@@ -116,7 +117,43 @@ Accept button on their own outgoing request, that a block outranks an
 existing friendship, and that an unknown friendship status falls back to
 `pending` rather than `accepted`.
 
-### 3.3 The RLS gate, and what it is not
+### 3.3 The repository — `community_repository.dart`
+
+One class, not four: profiles, friendships, squads and the feed are four
+tables and one feature, nearly every screen needs two at once, and a
+friend row is meaningless without the profile it points at.
+
+**`019` is not applied, so that is a state rather than an error.**
+`isAvailable()` answers once and caches; `_guard` turns a missing
+relation into a fallback and **lets every other failure through**,
+because a swallow-everything wrapper would hide a broken policy as an
+empty list — the worst possible failure for a feature whose entire job
+is showing the right people the right things.
+
+Decisions worth repeating out of the file:
+
+- **No cache and no offline queue**, unlike `BodyMetricsRepository`.
+  Body metrics are the user's own data and must survive a plane; a squad
+  feed is other people's activity, and a stale one is worse than an
+  empty one.
+- **`profileByHandle` returns null for "does not exist" and "not visible
+  to you" alike.** RLS makes them indistinguishable and that is correct:
+  a "this profile is private" message confirms the handle is taken.
+- **Pair ordering happens here**, so a screen cannot produce a row the
+  `user_a < user_b` constraint rejects.
+- **Joining goes through the RPC**, never select-then-insert.
+- **Actor names are joined at read time**, so a rename is not
+  retroactively wrong across a whole feed.
+- **An unknown activity kind is dropped**, not rendered as something
+  else.
+- **`recordActivity` writes nothing when the user is in no squad** — a
+  non-participant should not pay for a write nobody can read.
+- **Blocking deletes the friendship**, because an accepted friendship
+  with somebody invisible to you is a state no screen can draw.
+- **`moderation_state` is approved-or-nothing**: a null, a typo or a
+  later build's new state all hide a profile rather than publish it.
+
+### 3.4 The RLS gate, and what it is not
 
 `test/features/community/rls_policy_test.dart` **executes no SQL** and
 says so in its own header. The roadmap asks for penetration tests that
@@ -153,20 +190,7 @@ too until a probe says otherwise.
 
 In this order. Each is a commit.
 
-### 4.1 Repositories — `lib/features/community/data/`
-
-`profile_repository.dart`, `friend_repository.dart`,
-`squad_repository.dart`, `feed_repository.dart`. Supabase-backed,
-mirroring the shape of `body_metrics_repository.dart` (which already
-handles the offline-first read + tolerant parse pattern this codebase
-uses).
-
-**The tables are not applied**, so every repository needs an honest
-empty path: a `PostgrestException` for a missing relation must surface
-as "community is not available" rather than as an error tile. That is
-the same call the recipe repository makes about an unmigrated column.
-
-### 4.2 Screens — `lib/features/community/presentation/`
+### 4.1 Screens — `lib/features/community/presentation/`
 
 Profile, friends, squad, feed. The design language is settled: dark-only
 neon on black like the outcome report and "Your body", `_NeonCard` and
@@ -186,13 +210,13 @@ Roadmap UX constraints, all load-bearing:
   phase's design budget early.
 - Safety controls reachable in one tap from any profile.
 
-### 4.3 Profile card share template
+### 4.2 Profile card share template
 
 `ShareOutcomeTemplate` in `lib/core/widgets/share_templates.dart` is the
 model to follow — it takes already-formatted lines and does no
 arithmetic. A profile card is the same shape with different content.
 
-### 4.4 Referral → friend bridge (C47)
+### 4.3 Referral → friend bridge (C47)
 
 `lib/features/referral/` and migration `007` already create the
 person-to-person link. The bridge is: after `redeem_referral` succeeds,
@@ -200,19 +224,19 @@ offer a friend request to the referrer. Converting an acquisition
 mechanic into a retention one is the whole point, so it belongs at the
 moment of redemption rather than in a settings screen.
 
-### 4.5 Activity events on the existing hooks
+### 4.4 Activity events on the existing hooks
 
 `xp_award_listener` and `badge_unlocks_provider` already fire on workout
 completion, badge unlock and level-up. Events are written from there, and
 **only when the user is in a squad** — writing events nobody can read is
 how a feature that is off still costs a round trip.
 
-### 4.6 Analytics
+### 4.5 Analytics
 
 `profileCreated/Viewed/Shared`, `friendAdded`, `squadCreated/Joined`,
 `feedReaction`. `AnalyticsService` is the pattern.
 
-### 4.7 Still owed by the phase
+### 4.6 Still owed by the phase
 
 - **The live RLS penetration pass.** Two real sessions against an applied
   `019`, attempting cross-user reads on every table. §3.3 explains why
