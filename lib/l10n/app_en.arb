@@ -7158,5 +7158,372 @@
   "recipeTagVegan": "Vegan",
   "@recipeTagVegan": {
     "description": "Recipe category chip for the `vegan` token."
+  },
+  "bodyMetricsTitle": "Your body",
+  "@bodyMetricsTitle": {
+    "description": "Roadmap Phase 9 · title of the body-metrics screen. Deliberately not 'Weight' — the screen tracks five tape measurements too, and for a recomposition user those tell the truer story."
+  },
+  "bodyMetricsEmptyTitle": "Nothing logged yet",
+  "@bodyMetricsEmptyTitle": {
+    "description": "Empty state heading, before the user's first entry."
+  },
+  "bodyMetricsEmptyBody": "Log your weight or a tape measurement and this becomes a picture of how your body is changing. One number is enough to start.",
+  "@bodyMetricsEmptyBody": {
+    "description": "Empty state body. Emotional-safety note: it must not imply the user is behind or has failed to do something. 'One number is enough' is load-bearing — a user who only ever weighs themselves should not feel the screen is asking for five more."
+  },
+  "bodyMetricsAddCta": "Add a measurement",
+  "@bodyMetricsAddCta": {
+    "description": "Primary action opening the entry sheet."
+  },
+  "bodyMetricsHistoryTitle": "Entries",
+  "@bodyMetricsHistoryTitle": {
+    "description": "Section heading above the reverse-chronological list of logged days."
+  },
+  "bodyMeasureWeight": "Weight",
+  "@bodyMeasureWeight": {
+    "description": "Name of the weight measure. Used as a chart selector label and inside the per-measure trend line, where it appears in the nominative followed by an em dash — never inflected into a sentence, because Turkish would need a case suffix the placeholder cannot carry."
+  },
+  "bodyMeasureWaist": "Waist",
+  "@bodyMeasureWaist": {
+    "description": "Name of the waist circumference measure."
+  },
+  "bodyMeasureChest": "Chest",
+  "@bodyMeasureChest": {
+    "description": "Name of the chest circumference measure."
+  },
+  "bodyMeasureArm": "Arm",
+  "@bodyMeasureArm": {
+    "description": "Name of the upper-arm circumference measure."
+  },
+  "bodyMeasureThigh": "Thigh",
+  "@bodyMeasureThigh": {
+    "description": "Name of the thigh circumference measure."
+  },
+  "bodyMeasureHip": "Hip",
+  "@bodyMeasureHip": {
+    "description": "Name of the hip circumference measure."
+  },
+  "bodyMetricsRange7": "7D",
+  "@bodyMetricsRange7": {
+    "description": "Chart range selector — last 7 days. Two characters; it sits in a four-up segmented control."
+  },
+  "bodyMetricsRange30": "30D",
+  "@bodyMetricsRange30": {
+    "description": "Chart range selector — last 30 days."
+  },
+  "bodyMetricsRange90": "90D",
+  "@bodyMetricsRange90": {
+    "description": "Chart range selector — last 90 days."
+  },
+  "bodyMetricsRangeAll": "All",
+  "@bodyMetricsRangeAll": {
+    "description": "Chart range selector — the user's whole history."
+  },
+  "bodyMetricsEntryTitle": "Log a measurement",
+  "@bodyMetricsEntryTitle": {
+    "description": "Title of the quick-entry bottom sheet."
+  },
+  "bodyMetricsEntryDateLabel": "Date",
+  "@bodyMetricsEntryDateLabel": {
+    "description": "Label above the date row in the entry sheet."
+  },
+  "bodyMetricsEntryToday": "Today",
+  "@bodyMetricsEntryToday": {
+    "description": "Shown instead of a formatted date when the entry is for the current day."
+  },
+  "bodyMetricsEntryNoteLabel": "Note (optional)",
+  "@bodyMetricsEntryNoteLabel": {
+    "description": "Label above the free-text note field."
+  },
+  "bodyMetricsEntryNoteHint": "morning, before breakfast",
+  "@bodyMetricsEntryNoteHint": {
+    "description": "Placeholder inside the note field. An example of the kind of context that explains a reading, so a jump has somewhere to carry its own explanation instead of reading as a failure."
+  },
+  "bodyMetricsEntrySave": "Save",
+  "@bodyMetricsEntrySave": {
+    "description": "Confirm button in the entry sheet."
+  },
+  "bodyMetricsEntryEmptyError": "Fill in at least one measurement.",
+  "@bodyMetricsEntryEmptyError": {
+    "description": "Shown when the user taps Save with every field blank."
+  },
+  "bodyMetricsEntryRangeError": "Enter a value between {min} and {max} {unit}.",
+  "@bodyMetricsEntryRangeError": {
+    "description": "Validation message under an out-of-range field. Bounds are already converted into the user's display unit, so translate the sentence and leave the numbers alone.",
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "bodyMetricsEntryReplaceHint": "You already logged this day. Saving replaces it.",
+  "@bodyMetricsEntryReplaceHint": {
+    "description": "Shown in the entry sheet when the chosen date already has an entry. Stated up front rather than as a confirmation dialog after the fact."
+  },
+  "bodyMetricsEntrySaved": "Saved.",
+  "@bodyMetricsEntrySaved": {
+    "description": "Snackbar after a successful save. Deliberately flat — no praise, no celebration. Weight is charged, and congratulating someone for a number is exactly the framing this screen avoids."
+  },
+  "bodyMetricsDelete": "Delete this entry",
+  "@bodyMetricsDelete": {
+    "description": "Destructive action on a history row."
+  },
+  "bodyMetricsDeleted": "Entry deleted.",
+  "@bodyMetricsDeleted": {
+    "description": "Snackbar after deleting an entry."
+  },
+  "bodyMetricsTargetTitle": "Target weight",
+  "@bodyMetricsTargetTitle": {
+    "description": "Heading of the target-weight row."
+  },
+  "bodyMetricsTargetNone": "Not set",
+  "@bodyMetricsTargetNone": {
+    "description": "Value of the target row when the user has not set one. A permanent, valid state — not a prompt."
+  },
+  "bodyMetricsTargetSet": "Set a target",
+  "@bodyMetricsTargetSet": {
+    "description": "Action opening the target sheet when none is set."
+  },
+  "bodyMetricsTargetChange": "Change",
+  "@bodyMetricsTargetChange": {
+    "description": "Action opening the target sheet when one is already set."
+  },
+  "bodyMetricsTargetRemove": "Remove target",
+  "@bodyMetricsTargetRemove": {
+    "description": "Clears the target weight, taking the target line off the chart."
+  },
+  "bodyMetricsTargetSheetTitle": "What are you aiming for?",
+  "@bodyMetricsTargetSheetTitle": {
+    "description": "Title of the target-weight sheet."
+  },
+  "bodyMetricsTargetExplain": "Your number, not ours. Leave it blank and everything here still works — there just won't be a target line.",
+  "@bodyMetricsTargetExplain": {
+    "description": "Explanation under the target field. 'Your number, not ours' is load-bearing and must survive translation: the app is not permitted to promise a numeric outcome, so this value is always the user's own."
+  },
+  "bodyMetricsTargetLineLabel": "Target",
+  "@bodyMetricsTargetLineLabel": {
+    "description": "Label on the chart's dashed target line. Very short — it is painted inside the plot area."
+  },
+  "bodyMetricsWeightDown": "You're down {amount} over the last {days} days.",
+  "@bodyMetricsWeightDown": {
+    "description": "Plain-language weight readout. `amount` arrives already formatted with its unit, e.g. '2.4 kg'. Direction is stated, never judged — down is the goal for one user and the opposite for another.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "bodyMetricsWeightUp": "You're up {amount} over the last {days} days.",
+  "@bodyMetricsWeightUp": {
+    "description": "Weight readout for an upward trend. Must read exactly as neutrally as the downward one — a bulking user is succeeding here.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "bodyMetricsWeightSteady": "Your weight has held steady for {days} days.",
+  "@bodyMetricsWeightSteady": {
+    "description": "Weight readout when the trend is flat. 'Held steady' rather than 'no change' — the first describes a body, the second describes a failure to move.",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "bodyMetricsMeasureDown": "{measure} — down {amount} over the last {days} days",
+  "@bodyMetricsMeasureDown": {
+    "description": "Per-measure trend line for the tape measurements. The measure name is set off by an em dash and stays in the nominative on purpose: dropping it inside a sentence would need a case suffix in Turkish that a placeholder cannot carry.",
+    "placeholders": {
+      "measure": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "bodyMetricsMeasureUp": "{measure} — up {amount} over the last {days} days",
+  "@bodyMetricsMeasureUp": {
+    "description": "Per-measure trend line for an upward trend.",
+    "placeholders": {
+      "measure": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "bodyMetricsMeasureSteady": "{measure} — steady over the last {days} days",
+  "@bodyMetricsMeasureSteady": {
+    "description": "Per-measure trend line when the trend is flat.",
+    "placeholders": {
+      "measure": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "bodyMetricsTrendNeedsMore": "Log once more — a trend starts at two points.",
+  "@bodyMetricsTrendNeedsMore": {
+    "description": "Shown in place of a readout when there is only one entry in the window. Says what is missing rather than showing a zero, because 'no change' would be a claim about a body that one point cannot support."
+  },
+  "bodyMetricsPlateauTitle": "A steady stretch",
+  "@bodyMetricsPlateauTitle": {
+    "description": "Heading of the plateau card. Not 'plateau' in English — the word carries failure. A plateau is a coaching moment, which is what this card is."
+  },
+  "bodyMetricsPlateauBody": "Three weeks at the same number usually means your body has settled, not that anything is wrong. It's the normal moment to change one thing — sessions, portions, or sleep.",
+  "@bodyMetricsPlateauBody": {
+    "description": "Plateau card body. Reviewed for tone: it names a cause that is not the user's fault, and it offers one action rather than three demands."
+  },
+  "bodyMetricsGoalCardTitle": "Toward your target",
+  "@bodyMetricsGoalCardTitle": {
+    "description": "Heading of the goal-reconciliation card."
+  },
+  "bodyMetricsGoalWeek": "Week {week} of {total}",
+  "@bodyMetricsGoalWeek": {
+    "description": "Where the user is in the twelve-week arc the onboarding report set up. `week` keeps counting past `total` — pretending the clock stopped would be its own dishonesty.",
+    "placeholders": {
+      "week": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "bodyMetricsGoalAhead": "{remaining} to go, and you're moving faster than the twelve-week pace.",
+  "@bodyMetricsGoalAhead": {
+    "description": "Reconciliation verdict — ahead of pace. `remaining` arrives formatted with its unit and without a sign.",
+    "placeholders": {
+      "remaining": {
+        "type": "String"
+      }
+    }
+  },
+  "bodyMetricsGoalOnTrack": "{remaining} to go, right about on pace.",
+  "@bodyMetricsGoalOnTrack": {
+    "description": "Reconciliation verdict — on pace. The band behind this is deliberately wide: real bodies do not move linearly, and a card that says 'behind' in week three is punishing someone for arithmetic.",
+    "placeholders": {
+      "remaining": {
+        "type": "String"
+      }
+    }
+  },
+  "bodyMetricsGoalBehind": "{remaining} to go. Slower than the twelve-week pace, and still the right direction.",
+  "@bodyMetricsGoalBehind": {
+    "description": "Reconciliation verdict — behind pace. The second clause is not decoration; it is the whole reason this state is safe to show.",
+    "placeholders": {
+      "remaining": {
+        "type": "String"
+      }
+    }
+  },
+  "bodyMetricsGoalMovingAway": "The number has gone the other way so far. That happens, and it isn't the whole story — measurements and sessions both count.",
+  "@bodyMetricsGoalMovingAway": {
+    "description": "Reconciliation verdict when the user is moving away from their target. The hardest state in the feature to word. It states the fact, refuses to editorialise, and points at the two other things this app measures. No number is repeated back at them."
+  },
+  "bodyMetricsGoalReached": "You reached your target. Set a new one whenever you're ready.",
+  "@bodyMetricsGoalReached": {
+    "description": "Reconciliation verdict when the target is met or passed."
+  },
+  "adherenceCardTitle": "Consistency",
+  "@adherenceCardTitle": {
+    "description": "Roadmap Phase 9 (C3) · heading of the adherence card. Separate from the body measures on purpose: adherence is behaviour, which the user controls, and weight is outcome, which they only influence."
+  },
+  "adherenceWeeklyLabel": "This week",
+  "@adherenceWeeklyLabel": {
+    "description": "Label of the current-week adherence figure."
+  },
+  "adherenceThirtyLabel": "Last 30 days",
+  "@adherenceThirtyLabel": {
+    "description": "Label of the rolling 30-day adherence figure."
+  },
+  "adherenceSessionsValue": "{completed} of {planned}",
+  "@adherenceSessionsValue": {
+    "description": "Completed against planned sessions.",
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "planned": {
+        "type": "int"
+      }
+    }
+  },
+  "adherenceLongestStreak": "{days, plural, =1{Longest streak: 1 day} other{Longest streak: {days} days}}",
+  "@adherenceLongestStreak": {
+    "description": "The user's best run of consecutive training days. A plural block because one day is a real and common value here, unlike the trend readouts, whose windows are never shorter than two days.",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "adherenceNothingPlanned": "Nothing scheduled yet.",
+  "@adherenceNothingPlanned": {
+    "description": "Shown instead of a percentage when the window planned no sessions. A rest week is not 0% adherence, and rendering it as one invents a failure out of the program's own design."
+  },
+  "adherencePercentValue": "{percent}%",
+  "@adherencePercentValue": {
+    "description": "A percentage, with the sign where the language puts it. Turkish writes %82 and English 82% — this is orthography, not a number format, and it is the third time in this codebase a percent sign has needed its own key.",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "bodyMetricsCardTitle": "YOUR BODY",
+  "@bodyMetricsCardTitle": {
+    "description": "Label of the body-metrics summary card on the Progress tab. Upper case to match the other card labels there."
+  },
+  "bodyMetricsCardEmptyCta": "Start tracking your weight",
+  "@bodyMetricsCardEmptyCta": {
+    "description": "Body of the summary card before the first entry — the tap target that opens the screen."
+  },
+  "bodyMetricsCardLatest": "Latest",
+  "@bodyMetricsCardLatest": {
+    "description": "Caption above the most recent value on the summary card."
+  },
+  "bodyMetricsReminderTitle": "Weekly weigh-in reminder",
+  "@bodyMetricsReminderTitle": {
+    "description": "Settings row that turns the weekly weigh-in nudge on and off."
+  },
+  "bodyMetricsReminderSubtitle": "One nudge a week. Off unless you turn it on.",
+  "@bodyMetricsReminderSubtitle": {
+    "description": "Explains the weigh-in reminder. Opt-in and easily silenced is a requirement, not a nicety — an unsolicited weekly reminder about body weight is exactly the wrong thing to push at somebody."
+  },
+  "weighInReminderNotificationTitle": "Weekly weigh-in",
+  "@weighInReminderNotificationTitle": {
+    "description": "Title of the weekly weigh-in notification. Rendered outside the widget tree, so it resolves through app_copy.dart rather than a BuildContext."
+  },
+  "weighInReminderNotificationBody": "Same day, same time — that's what makes the line readable.",
+  "@weighInReminderNotificationBody": {
+    "description": "Body of the weekly weigh-in notification. Says why the routine matters rather than asking the user to step on a scale."
+  },
+  "bodyMetricsChartNeedsTwo": "Two entries and a line appears here.",
+  "@bodyMetricsChartNeedsTwo": {
+    "description": "Shown in the chart area when the selected measure has fewer than two points in the selected range."
   }
 }

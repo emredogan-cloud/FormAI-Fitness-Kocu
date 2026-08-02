@@ -1,6 +1,19 @@
 import '../providers/wizard_provider.dart';
 import '../../../l10n/app_localizations.dart';
 
+/// The cadence the app itself prescribes, in sessions per week.
+///
+/// 4 days/week is the PM-spec'd starter cadence; 5 for self-reported
+/// regulars who can absorb the extra session.
+///
+/// Public, and top-level, because Roadmap Phase 9's adherence score
+/// divides by exactly this number — it is the denominator of "did you
+/// do what we asked". A second copy of the rule in the progress feature
+/// would let the promise and the scoring drift apart, and the user
+/// would be the one who found out.
+int weeklyWorkoutCountFor(String? experienceLevel) =>
+    experienceLevel == 'regular' ? 5 : 4;
+
 /// Phase 60D · the AI report DTO consumed by the dynamic-report and
 /// pre-paywall-summary screens. Single immutable value type so the
 /// two screens can pull whichever fields they need without re-running
@@ -252,11 +265,8 @@ class AiPersonalizationEngine {
     };
   }
 
-  static int _weeklyWorkoutCount(WizardState s) {
-    // 4 days/week is the PM-spec'd starter cadence; nudge to 5 for
-    // self-reported regulars who can absorb the extra session.
-    return s.experienceLevel == 'regular' ? 5 : 4;
-  }
+  static int _weeklyWorkoutCount(WizardState s) =>
+      weeklyWorkoutCountFor(s.experienceLevel);
 
   // Store-compliance note: never emit quantified outcome promises here
   // ("4-8 kg", "%20-30") — Apple 1.4.1 / Play health-misrepresentation

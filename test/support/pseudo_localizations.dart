@@ -8,7 +8,7 @@
 //   2. a layout that only fits Turkish overflows here instead of in a
 //      German store review.
 //
-// 1534 members covered.
+// 1600 members covered.
 
 import 'package:flutter/widgets.dart';
 import 'package:sixpack_ai/core/utils/pseudo_locale.dart';
@@ -4808,6 +4808,199 @@ class PseudoAppLocalizations extends AppLocalizations {
   String get recipeTagVegan => pseudoLocalize(_inner.recipeTagVegan);
 
   @override
+  String get bodyMetricsTitle => pseudoLocalize(_inner.bodyMetricsTitle);
+
+  @override
+  String get bodyMetricsEmptyTitle =>
+      pseudoLocalize(_inner.bodyMetricsEmptyTitle);
+
+  @override
+  String get bodyMetricsEmptyBody =>
+      pseudoLocalize(_inner.bodyMetricsEmptyBody);
+
+  @override
+  String get bodyMetricsAddCta => pseudoLocalize(_inner.bodyMetricsAddCta);
+
+  @override
+  String get bodyMetricsHistoryTitle =>
+      pseudoLocalize(_inner.bodyMetricsHistoryTitle);
+
+  @override
+  String get bodyMeasureWeight => pseudoLocalize(_inner.bodyMeasureWeight);
+
+  @override
+  String get bodyMeasureWaist => pseudoLocalize(_inner.bodyMeasureWaist);
+
+  @override
+  String get bodyMeasureChest => pseudoLocalize(_inner.bodyMeasureChest);
+
+  @override
+  String get bodyMeasureArm => pseudoLocalize(_inner.bodyMeasureArm);
+
+  @override
+  String get bodyMeasureThigh => pseudoLocalize(_inner.bodyMeasureThigh);
+
+  @override
+  String get bodyMeasureHip => pseudoLocalize(_inner.bodyMeasureHip);
+
+  @override
+  String get bodyMetricsRange7 => pseudoLocalize(_inner.bodyMetricsRange7);
+
+  @override
+  String get bodyMetricsRange30 => pseudoLocalize(_inner.bodyMetricsRange30);
+
+  @override
+  String get bodyMetricsRange90 => pseudoLocalize(_inner.bodyMetricsRange90);
+
+  @override
+  String get bodyMetricsRangeAll => pseudoLocalize(_inner.bodyMetricsRangeAll);
+
+  @override
+  String get bodyMetricsEntryTitle =>
+      pseudoLocalize(_inner.bodyMetricsEntryTitle);
+
+  @override
+  String get bodyMetricsEntryDateLabel =>
+      pseudoLocalize(_inner.bodyMetricsEntryDateLabel);
+
+  @override
+  String get bodyMetricsEntryToday =>
+      pseudoLocalize(_inner.bodyMetricsEntryToday);
+
+  @override
+  String get bodyMetricsEntryNoteLabel =>
+      pseudoLocalize(_inner.bodyMetricsEntryNoteLabel);
+
+  @override
+  String get bodyMetricsEntryNoteHint =>
+      pseudoLocalize(_inner.bodyMetricsEntryNoteHint);
+
+  @override
+  String get bodyMetricsEntrySave =>
+      pseudoLocalize(_inner.bodyMetricsEntrySave);
+
+  @override
+  String get bodyMetricsEntryEmptyError =>
+      pseudoLocalize(_inner.bodyMetricsEntryEmptyError);
+
+  @override
+  String get bodyMetricsEntryReplaceHint =>
+      pseudoLocalize(_inner.bodyMetricsEntryReplaceHint);
+
+  @override
+  String get bodyMetricsEntrySaved =>
+      pseudoLocalize(_inner.bodyMetricsEntrySaved);
+
+  @override
+  String get bodyMetricsDelete => pseudoLocalize(_inner.bodyMetricsDelete);
+
+  @override
+  String get bodyMetricsDeleted => pseudoLocalize(_inner.bodyMetricsDeleted);
+
+  @override
+  String get bodyMetricsTargetTitle =>
+      pseudoLocalize(_inner.bodyMetricsTargetTitle);
+
+  @override
+  String get bodyMetricsTargetNone =>
+      pseudoLocalize(_inner.bodyMetricsTargetNone);
+
+  @override
+  String get bodyMetricsTargetSet =>
+      pseudoLocalize(_inner.bodyMetricsTargetSet);
+
+  @override
+  String get bodyMetricsTargetChange =>
+      pseudoLocalize(_inner.bodyMetricsTargetChange);
+
+  @override
+  String get bodyMetricsTargetRemove =>
+      pseudoLocalize(_inner.bodyMetricsTargetRemove);
+
+  @override
+  String get bodyMetricsTargetSheetTitle =>
+      pseudoLocalize(_inner.bodyMetricsTargetSheetTitle);
+
+  @override
+  String get bodyMetricsTargetExplain =>
+      pseudoLocalize(_inner.bodyMetricsTargetExplain);
+
+  @override
+  String get bodyMetricsTargetLineLabel =>
+      pseudoLocalize(_inner.bodyMetricsTargetLineLabel);
+
+  @override
+  String get bodyMetricsTrendNeedsMore =>
+      pseudoLocalize(_inner.bodyMetricsTrendNeedsMore);
+
+  @override
+  String get bodyMetricsPlateauTitle =>
+      pseudoLocalize(_inner.bodyMetricsPlateauTitle);
+
+  @override
+  String get bodyMetricsPlateauBody =>
+      pseudoLocalize(_inner.bodyMetricsPlateauBody);
+
+  @override
+  String get bodyMetricsGoalCardTitle =>
+      pseudoLocalize(_inner.bodyMetricsGoalCardTitle);
+
+  @override
+  String get bodyMetricsGoalMovingAway =>
+      pseudoLocalize(_inner.bodyMetricsGoalMovingAway);
+
+  @override
+  String get bodyMetricsGoalReached =>
+      pseudoLocalize(_inner.bodyMetricsGoalReached);
+
+  @override
+  String get adherenceCardTitle => pseudoLocalize(_inner.adherenceCardTitle);
+
+  @override
+  String get adherenceWeeklyLabel =>
+      pseudoLocalize(_inner.adherenceWeeklyLabel);
+
+  @override
+  String get adherenceThirtyLabel =>
+      pseudoLocalize(_inner.adherenceThirtyLabel);
+
+  @override
+  String get adherenceNothingPlanned =>
+      pseudoLocalize(_inner.adherenceNothingPlanned);
+
+  @override
+  String get bodyMetricsCardTitle =>
+      pseudoLocalize(_inner.bodyMetricsCardTitle);
+
+  @override
+  String get bodyMetricsCardEmptyCta =>
+      pseudoLocalize(_inner.bodyMetricsCardEmptyCta);
+
+  @override
+  String get bodyMetricsCardLatest =>
+      pseudoLocalize(_inner.bodyMetricsCardLatest);
+
+  @override
+  String get bodyMetricsReminderTitle =>
+      pseudoLocalize(_inner.bodyMetricsReminderTitle);
+
+  @override
+  String get bodyMetricsReminderSubtitle =>
+      pseudoLocalize(_inner.bodyMetricsReminderSubtitle);
+
+  @override
+  String get weighInReminderNotificationTitle =>
+      pseudoLocalize(_inner.weighInReminderNotificationTitle);
+
+  @override
+  String get weighInReminderNotificationBody =>
+      pseudoLocalize(_inner.weighInReminderNotificationBody);
+
+  @override
+  String get bodyMetricsChartNeedsTwo =>
+      pseudoLocalize(_inner.bodyMetricsChartNeedsTwo);
+
+  @override
   String retrospectiveSummary(String workouts, String minutes, String reps) =>
       pseudoLocalize(_inner.retrospectiveSummary(workouts, minutes, reps));
 
@@ -5464,8 +5657,64 @@ class PseudoAppLocalizations extends AppLocalizations {
   String profileUnitsCurrent(String system) =>
       pseudoLocalize(_inner.profileUnitsCurrent(system));
 
+  @override
+  String bodyMetricsEntryRangeError(String min, String max, String unit) =>
+      pseudoLocalize(_inner.bodyMetricsEntryRangeError(min, max, unit));
+
+  @override
+  String bodyMetricsWeightDown(String amount, int days) =>
+      pseudoLocalize(_inner.bodyMetricsWeightDown(amount, days));
+
+  @override
+  String bodyMetricsWeightUp(String amount, int days) =>
+      pseudoLocalize(_inner.bodyMetricsWeightUp(amount, days));
+
+  @override
+  String bodyMetricsWeightSteady(int days) =>
+      pseudoLocalize(_inner.bodyMetricsWeightSteady(days));
+
+  @override
+  String bodyMetricsMeasureDown(String measure, String amount, int days) =>
+      pseudoLocalize(_inner.bodyMetricsMeasureDown(measure, amount, days));
+
+  @override
+  String bodyMetricsMeasureUp(String measure, String amount, int days) =>
+      pseudoLocalize(_inner.bodyMetricsMeasureUp(measure, amount, days));
+
+  @override
+  String bodyMetricsMeasureSteady(String measure, int days) =>
+      pseudoLocalize(_inner.bodyMetricsMeasureSteady(measure, days));
+
+  @override
+  String bodyMetricsGoalWeek(int week, int total) =>
+      pseudoLocalize(_inner.bodyMetricsGoalWeek(week, total));
+
+  @override
+  String bodyMetricsGoalAhead(String remaining) =>
+      pseudoLocalize(_inner.bodyMetricsGoalAhead(remaining));
+
+  @override
+  String bodyMetricsGoalOnTrack(String remaining) =>
+      pseudoLocalize(_inner.bodyMetricsGoalOnTrack(remaining));
+
+  @override
+  String bodyMetricsGoalBehind(String remaining) =>
+      pseudoLocalize(_inner.bodyMetricsGoalBehind(remaining));
+
+  @override
+  String adherenceSessionsValue(int completed, int planned) =>
+      pseudoLocalize(_inner.adherenceSessionsValue(completed, planned));
+
+  @override
+  String adherenceLongestStreak(int days) =>
+      pseudoLocalize(_inner.adherenceLongestStreak(days));
+
+  @override
+  String adherencePercentValue(int percent) =>
+      pseudoLocalize(_inner.adherencePercentValue(percent));
+
   /// Number of members this wrapper covers. The test suite asserts
   /// it still matches the generated class, so a new ARB key cannot
   /// slip past pseudo mode unnoticed.
-  static const int coveredMembers = 1534;
+  static const int coveredMembers = 1600;
 }

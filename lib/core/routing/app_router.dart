@@ -23,6 +23,7 @@ import '../../features/onboarding/presentation/feature_showcase_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/onboarding/presentation/prediction_screen.dart';
 import '../../features/progress/presentation/badges_screen.dart';
+import '../../features/progress/presentation/body_metrics_screen.dart';
 import '../../features/progress/presentation/calendar_screen.dart';
 import '../../features/progress/presentation/suggestions_screen.dart';
 import '../../features/progress/providers/badge_unlocks_provider.dart';
@@ -74,6 +75,9 @@ class AppRoutes {
   static const String progressCalendar = '/progress/calendar';
   static const String progressSuggestions = '/progress/suggestions';
   static const String progressBadges = '/progress/badges';
+
+  /// Roadmap Phase 9 (C1) · weight and tape measurements over time.
+  static const String progressBody = '/progress/body';
   static const String nutritionDiscover = '/nutrition/discover';
 
   /// Phase 50B · internal admin panel. Gated by [isAdminProvider]; the
@@ -399,6 +403,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.progressBadges,
         name: 'progressBadges',
         builder: (context, state) => const BadgesScreen(),
+      ),
+      // Roadmap Phase 9 (C1, C3) · body metrics and trends.
+      GoRoute(
+        path: AppRoutes.progressBody,
+        name: 'progressBody',
+        builder: (context, state) => const BodyMetricsScreen(),
       ),
       GoRoute(
         path: AppRoutes.nutritionDiscover,

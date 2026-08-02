@@ -568,6 +568,38 @@ class AnalyticsService {
     return _capture('churn_reason_logged', {'reason': reason});
   }
 
+  // ─── Roadmap Phase 9 (C1, C3) · body metrics ────────────────────────
+  //
+  // No value is ever attached to any of these. The events answer "how
+  // many people log, and how often" — the questions the phase's success
+  // criteria are written in — and a user's weight is not needed to
+  // answer either. Sending a body measurement to a product-analytics
+  // vendor would be the single most sensitive thing this app has ever
+  // emitted, in exchange for nothing.
+
+  /// The user saved an entry carrying a weight.
+  Future<void> weightLogged() => _capture('weight_logged', const {});
+
+  /// The user saved an entry carrying a tape measurement. [measure] is
+  /// the stable column token (`waist_cm`), never the localised label.
+  Future<void> measurementLogged({required String measure}) {
+    return _capture('measurement_logged', {'measure': measure});
+  }
+
+  /// The body-metrics screen was opened. [range] is the chart window in
+  /// force at the time (`7`, `30`, `90`, `all`).
+  Future<void> trendViewed({required String range}) {
+    return _capture('trend_viewed', {'range': range});
+  }
+
+  /// The goal-reconciliation card was rendered with a real verdict.
+  /// [pace] is the [GoalPace] name — `ahead`, `on_track`, `behind`,
+  /// `moving_away`, `reached` — which is how "does the honest version of
+  /// this card make people stop logging?" becomes answerable.
+  Future<void> goalReconciliationViewed({required String pace}) {
+    return _capture('goal_reconciliation_viewed', {'pace': pace});
+  }
+
   // NOTE · App Tracking Transparency was deliberately REMOVED. The app's
   // PrivacyInfo.xcprivacy declares `NSPrivacyTracking = false` and the
   // published privacy policy states no cross-app tracking occurs — so

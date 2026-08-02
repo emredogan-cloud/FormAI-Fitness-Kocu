@@ -105,7 +105,7 @@ class BodyMetricsRepository {
       throw ArgumentError.value(
         entry,
         'entry',
-        'a body metric with no measurement is a date, not an observation',
+        'a body metric with no measurement is a date, not an observation', // i18n-ignore — caller-bug diagnostic, never rendered
       );
     }
 

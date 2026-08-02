@@ -124,6 +124,24 @@ void main() {
       );
       expect(series.summarize(asOf: today, days: 30), isNull);
     });
+
+    test(
+        'two consecutive days is refused — body weight swings by more '
+        'overnight than a good week moves it', () {
+      final series = TrendSeries.from(
+        [weightOn(1, 81), weightOn(0, 80)],
+        BodyMeasure.weight,
+      );
+      expect(series.summarize(asOf: today, days: 30), isNull);
+    });
+
+    test('two days apart is the shortest span that says anything', () {
+      final series = TrendSeries.from(
+        [weightOn(2, 81), weightOn(0, 80)],
+        BodyMeasure.weight,
+      );
+      expect(series.summarize(asOf: today, days: 30), isNotNull);
+    });
   });
 
   group('summarize · direction and rate', () {

@@ -20,6 +20,7 @@ import '../../../referral/providers/referral_provider.dart';
 import '../../../nutrition/domain/models/planned_meal.dart';
 import '../../../nutrition/providers/daily_menu_provider.dart';
 import '../../../nutrition/providers/nutrition_provider.dart';
+import '../../../progress/presentation/widgets/body_metrics_summary_card.dart';
 import '../../../progress/presentation/widgets/weekly_retrospective_card.dart';
 import '../../../progress/providers/xp_provider.dart';
 import '../../../workout/data/session_log_repository.dart';
@@ -203,6 +204,12 @@ class GelisimTab extends ConsumerWidget {
               weeklyMinutes: weeklyMinutes,
               weeklyReps: weeklyReps,
             ),
+            const SizedBox(height: 22),
+            // Roadmap Phase 9 (C1) · above the coach card, below the
+            // session stats. The stats above it are what the user did;
+            // this is what changed because of it, which is the question
+            // the testers named first and the app could not answer.
+            const BodyMetricsSummaryCard(),
             const SizedBox(height: 22),
             // Phase 52 · weekly retrospective. The card returns
             // SizedBox.shrink on non-Sundays AND self-pads its own

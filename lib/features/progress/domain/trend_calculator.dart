@@ -249,12 +249,19 @@ class TrendSeries {
   /// slope; with one, the honest answer is "not yet", and returning a
   /// zero-change summary instead would render as "you have not moved",
   /// which is a claim about a body rather than about the data.
+  ///
+  /// Two points on consecutive days is also refused. Body weight swings
+  /// by more overnight than a good week moves it, so a one-day span is
+  /// noise wearing a trend's clothes — and the readout it produces
+  /// ("over the last 1 days") is broken English on top of being a
+  /// meaningless claim.
   TrendSummary? summarize({
     required DateTime asOf,
     required int days,
   }) {
     final window = since(BodyMetric.dayOf(asOf).subtract(Duration(days: days)));
     if (window.length < 2) return null;
+    if (window.last.day.difference(window.first.day).inDays < 2) return null;
 
     final threshold = plateauThresholdFor(measure);
     final perWeek = _slopePerWeek(window);
