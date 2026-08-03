@@ -25,13 +25,35 @@ import 'package:flutter_test/flutter_test.dart';
 /// A green run here means the shape is right. It does not mean the
 /// semantics are, and the file says so out loud so nobody mistakes it
 /// for the penetration pass.
+/// Read by name so adding a community migration without adding it here
+/// is a visible omission rather than a silent one.
+const List<String> communityMigrations = [
+  '019_social_profiles.sql',
+  '020_leaderboards.sql',
+];
+
+/// The content tables this suite expects to exist.
+///
+/// A tripwire, not a permission. The exemption below is derived from the
+/// schema; this constant only makes a *change* in what qualifies
+/// visible, so a table that quietly becomes exempt has to be looked at
+/// by a person.
+const Set<String> kExpectedContentTables = {'challenges'};
+
 void main() {
   late String sql;
   late List<String> statements;
 
   setUpAll(() {
-    sql =
-        File('supabase/migrations/019_social_profiles.sql').readAsStringSync();
+    // EVERY community migration, not one of them. The first version of
+    // this suite read only `019` and passed with a flourish while `020`
+    // — which it had never opened — carried a `using (true)`. A gate
+    // that names its input by hand is green about the file it happens
+    // to know, which is the third time a gate in this codebase has been
+    // confident about something it does not measure.
+    sql = communityMigrations
+        .map((name) => File('supabase/migrations/$name').readAsStringSync())
+        .join('\n');
     // Comments first: this migration explains at length why a block is
     // symmetric and why `using (true)` would be wrong, and matching
     // those phrases inside the prose would fail the test on its own
@@ -52,6 +74,40 @@ void main() {
         r'create table if not exists public\.(\w+)',
         caseSensitive: false,
       ).allMatches(sql).map((m) => m.group(1)!).toList(growable: false);
+
+  /// Tables that structurally cannot hold user data: no `user_id`
+  /// column and no reference to `auth.users`.
+  ///
+  /// This is the only thing that exempts a policy from the three
+  /// generic assertions below, and it is deliberately **derived from
+  /// the schema rather than declared**. An earlier draft exempted a
+  /// policy that carried an `rls-gate-ok` comment, which is a promise;
+  /// a table with nowhere to put a user id is a fact. This codebase has
+  /// twice been burned by a gate widened with an exclusion instead of a
+  /// signal.
+  Set<String> contentTables() {
+    final content = <String>{};
+    for (final table in createdTables()) {
+      final create = statements.firstWhere(
+        (s) => s.contains('create table if not exists public.$table'),
+        orElse: () => '',
+      );
+      if (create.isEmpty) continue;
+      if (!create.contains('user_id') && !create.contains('auth.users')) {
+        content.add(table);
+      }
+    }
+    return content;
+  }
+
+  bool isContentPolicy(String policy) =>
+      contentTables().any((t) => policy.contains('public.$t'));
+
+  test('the set of content tables is the one we think it is', () {
+    // If this fails, a table stopped holding user data or started to.
+    // Either way the exemption changed and somebody has to look.
+    expect(contentTables(), kExpectedContentTables);
+  });
 
   test('the migration creates the tables the phase needs', () {
     expect(
@@ -102,6 +158,7 @@ void main() {
 
     test('none of them is using (true)', () {
       for (final policy in policyStatements()) {
+        if (isContentPolicy(policy)) continue;
         final flat = policy.replaceAll(RegExp(r'\s+'), ' ').toLowerCase();
         expect(flat.contains('using (true)'), isFalse,
             reason: 'a permissive policy: $flat');
@@ -112,6 +169,7 @@ void main() {
 
     test('every one of them constrains on auth.uid()', () {
       for (final policy in policyStatements()) {
+        if (isContentPolicy(policy)) continue;
         final flat = policy.replaceAll(RegExp(r'\s+'), ' ');
         expect(
           flat.contains('auth.uid()'),
@@ -119,6 +177,24 @@ void main() {
           reason: 'a policy with no auth.uid() predicate is open to every '
               'signed-in user: $flat',
         );
+      }
+    });
+
+    test('a content table has no writer policy at all', () {
+      // The exemption only covers reads. `challenges` is authored by
+      // content ops through the service role, and the absence of any
+      // insert/update/delete policy is what stops a client writing one —
+      // the same shape as the progress-photo repository, where the
+      // guarantee is the absence of code rather than a flag over it.
+      for (final table in contentTables()) {
+        for (final policy in policyStatements()) {
+          if (!policy.contains('public.$table')) continue;
+          expect(
+            RegExp(r'for (insert|update|delete|all)').hasMatch(policy),
+            isFalse,
+            reason: 'public.$table has a client write policy: $policy',
+          );
+        }
       }
     });
   });
@@ -233,6 +309,7 @@ void main() {
         // squads reference auth.users via owner_id; join tables via
         // their own FKs. Every one of them must cascade somewhere, or a
         // deleted account leaves rows behind.
+        if (contentTables().contains(table)) continue;
         expect(
           statement.contains('on delete cascade'),
           isTrue,
