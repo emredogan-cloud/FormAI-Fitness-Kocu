@@ -2,7 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/utils/app_logger.dart';
+import '../domain/league.dart';
 import '../domain/models/community_models.dart';
+import '../domain/models/leaderboard_models.dart';
 
 /// Roadmap Phase 12 (R6, C22, C24, C47) · every read and write the
 /// community surfaces make.
@@ -635,6 +637,315 @@ class CommunityProfile {
       );
 }
 
+// ─── Roadmap Phase 13 (C23 · C25 · R6) · leaderboards ──────────────
+//
+// On this class rather than a `LeaderboardRepository` of its own,
+// because `_guard`, `_isMissingRelation` and the `_available` cache are
+// already here and a second repository would be a second, subtly
+// different answer to "is the schema applied?". Phase 12 made the same
+// call for its four tables and the reasoning has not changed.
+extension LeaderboardQueries on CommunityRepository {
+  /// Writes this week's numbers for the signed-in user.
+  ///
+  /// **Creating the row is the opt-in and deleting it is the opt-out** —
+  /// there is no flag, per `020`'s header. So this is only ever called
+  /// from an explicit user action, never on a timer and never as a side
+  /// effect of finishing a workout.
+  ///
+  /// The values are clamped with [clampWeek] before they are sent, so a
+  /// user sees the same number the board will show rather than an error
+  /// about a constraint they cannot read.
+  Future<bool> publishWeek({
+    required int xp,
+    required int sessions,
+    required int streak,
+    required int consistency,
+    DateTime? asOf,
+  }) async {
+    final uid = currentUserId;
+    if (uid == null) return false;
+    if (!await isAvailable()) return false;
+    final week = weekStartUtc(asOf ?? DateTime.now());
+    final safe = clampWeek(
+      xp: xp,
+      sessions: sessions,
+      streak: streak,
+      consistency: consistency,
+    );
+    return _guard(() async {
+      await _client.from('leaderboard_stats').upsert({
+        'user_id': uid,
+        'week_start': _dateOnly(week),
+        'weekly_xp': safe.xp,
+        'sessions': safe.sessions,
+        'streak_days': safe.streak,
+        'consistency': safe.consistency,
+      });
+      return true;
+    }, false);
+  }
+
+  /// Removes the caller from every board, past and present.
+  ///
+  /// Loses no progress: the numbers that matter live on the device, and
+  /// that is exactly why the roadmap's "withdraw without losing
+  /// progress" is satisfied by a delete.
+  Future<void> leaveLeaderboards() async {
+    final uid = currentUserId;
+    if (uid == null) return;
+    if (!await isAvailable()) return;
+    await _guard(() async {
+      await _client.from('leaderboard_stats').delete().eq('user_id', uid);
+      return null;
+    }, null);
+  }
+
+  /// Whether the caller currently appears on any board.
+  Future<bool> isOnLeaderboards() async {
+    final uid = currentUserId;
+    if (uid == null) return false;
+    if (!await isAvailable()) return false;
+    return _guard(() async {
+      final rows = await _client
+          .from('leaderboard_stats')
+          .select('user_id')
+          .eq('user_id', uid)
+          .limit(1);
+      return rows.isNotEmpty;
+    }, false);
+  }
+
+  /// This week's board at [scope], ordered by [metric], best first.
+  ///
+  /// Names are resolved in a second query against `public_profiles`,
+  /// which returns only the profiles RLS lets this caller see. **A row
+  /// whose name does not come back keeps its rank and loses its name** —
+  /// that is the pseudonymity the roadmap asks for, and it needs no
+  /// field of its own.
+  Future<List<LeaderboardEntry>> board({
+    required LeaderboardScope scope,
+    LeaderboardMetric metric = LeaderboardMetric.consistency,
+    DateTime? asOf,
+    int limit = 50,
+  }) async {
+    if (!await isAvailable()) return const [];
+    final week = _dateOnly(weekStartUtc(asOf ?? DateTime.now()));
+    return _guard(() async {
+      final scoped = await _idsInScope(scope);
+      // An empty scope is an empty board rather than a global one. A
+      // user with no squad must not silently be shown the world.
+      if (scoped != null && scoped.isEmpty) return const <LeaderboardEntry>[];
+
+      var query = _client
+          .from('leaderboard_stats')
+          .select('user_id, weekly_xp, sessions, streak_days, consistency')
+          .eq('week_start', week);
+      if (scoped != null) query = query.inFilter('user_id', scoped.toList());
+
+      final rows =
+          await query.order(metric.column, ascending: false).limit(limit);
+      final entries = <LeaderboardEntry>[];
+      for (final row in rows) {
+        final entry = LeaderboardEntry.fromJson(
+          Map<String, dynamic>.from(row as Map),
+        );
+        if (entry != null) entries.add(entry);
+      }
+      if (entries.isEmpty) return entries;
+
+      final names = await _namesFor(entries.map((e) => e.userId).toList());
+      return [
+        for (final e in entries)
+          LeaderboardEntry(
+            userId: e.userId,
+            weeklyXp: e.weeklyXp,
+            sessions: e.sessions,
+            streakDays: e.streakDays,
+            consistency: e.consistency,
+            displayName: names[e.userId],
+          ),
+      ];
+    }, const <LeaderboardEntry>[]);
+  }
+
+  /// The user ids a scope covers, or null for "everybody".
+  Future<Set<String>?> _idsInScope(LeaderboardScope scope) async {
+    final uid = currentUserId;
+    if (uid == null) return <String>{};
+    switch (scope) {
+      case LeaderboardScope.global:
+        return null;
+      case LeaderboardScope.friends:
+        final rows = await friendships();
+        return {
+          uid,
+          for (final f in rows)
+            if (f.isMutual && f.otherThan(uid) != null) f.otherThan(uid)!,
+        };
+      case LeaderboardScope.squad:
+        final squads = await mySquads();
+        if (squads.isEmpty) return <String>{};
+        final members = await _client
+            .from('squad_members')
+            .select('user_id')
+            .inFilter('squad_id', [for (final s in squads) s.id]);
+        return {
+          uid,
+          for (final row in members) (row as Map)['user_id'] as String,
+        };
+    }
+  }
+
+  /// Display names for [ids], for whichever of them RLS will serve.
+  Future<Map<String, String>> _namesFor(List<String> ids) async {
+    if (ids.isEmpty) return const {};
+    final rows = await _client
+        .from('public_profiles')
+        .select('user_id, display_name')
+        .inFilter('user_id', ids);
+    return {
+      for (final row in rows)
+        (row as Map)['user_id'] as String: row['display_name'] as String,
+    };
+  }
+
+  /// Challenges whose window has not closed, soonest to end first.
+  Future<List<Challenge>> challenges({DateTime? asOf}) async {
+    if (!await isAvailable()) return const [];
+    final now = (asOf ?? DateTime.now()).toUtc();
+    return _guard(() async {
+      final rows = await _client
+          .from('challenges')
+          .select()
+          .gte('ends_at', now.toIso8601String())
+          .order('ends_at');
+      final out = <Challenge>[];
+      for (final row in rows) {
+        final challenge =
+            Challenge.fromJson(Map<String, dynamic>.from(row as Map));
+        if (challenge != null) out.add(challenge);
+      }
+      return out;
+    }, const <Challenge>[]);
+  }
+
+  /// The caller's own entries, keyed by challenge id.
+  Future<Map<String, ChallengeEntry>> myChallengeEntries() async {
+    final uid = currentUserId;
+    if (uid == null) return const {};
+    if (!await isAvailable()) return const {};
+    return _guard(() async {
+      final rows = await _client
+          .from('challenge_participants')
+          .select()
+          .eq('user_id', uid);
+      final out = <String, ChallengeEntry>{};
+      for (final row in rows) {
+        final entry =
+            ChallengeEntry.fromJson(Map<String, dynamic>.from(row as Map));
+        if (entry != null) out[entry.challengeId] = entry;
+      }
+      return out;
+    }, const <String, ChallengeEntry>{});
+  }
+
+  /// Joins [challenge], or does nothing if its window has closed.
+  Future<bool> joinChallenge(Challenge challenge, {String? squadId}) async {
+    final uid = currentUserId;
+    if (uid == null) return false;
+    if (!await isAvailable()) return false;
+    // Checked here as well as by the screen, because a challenge can
+    // close between the frame being drawn and the button being pressed,
+    // and a join that earns nothing is worse than a refusal.
+    if (!challenge.isOpen(DateTime.now())) return false;
+    return _guard(() async {
+      await _client.from('challenge_participants').upsert({
+        'challenge_id': challenge.id,
+        'user_id': uid,
+        if (squadId != null) 'squad_id': squadId,
+      });
+      return true;
+    }, false);
+  }
+
+  /// Leaves [challengeId]. Progress is discarded — a challenge is a
+  /// commitment rather than a score, and half of one means nothing.
+  Future<void> leaveChallenge(String challengeId) async {
+    final uid = currentUserId;
+    if (uid == null) return;
+    if (!await isAvailable()) return;
+    await _guard(() async {
+      await _client
+          .from('challenge_participants')
+          .delete()
+          .eq('challenge_id', challengeId)
+          .eq('user_id', uid);
+      return null;
+    }, null);
+  }
+
+  /// Writes progress for a challenge the caller has joined, marking it
+  /// complete the first time it reaches the target.
+  Future<void> reportChallengeProgress({
+    required Challenge challenge,
+    required int progress,
+  }) async {
+    final uid = currentUserId;
+    if (uid == null) return;
+    if (!await isAvailable()) return;
+    final done = progress >= challenge.target;
+    await _guard(() async {
+      await _client
+          .from('challenge_participants')
+          .update({
+            'progress': progress,
+            // Only ever set, never cleared: finishing a challenge is not
+            // something a later smaller number should undo.
+            if (done) 'completed_at': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('challenge_id', challenge.id)
+          .eq('user_id', uid);
+      return null;
+    }, null);
+  }
+
+  /// The shared board for one challenge, furthest along first.
+  Future<List<ChallengeEntry>> challengeBoard(String challengeId,
+      {int limit = 50}) async {
+    if (!await isAvailable()) return const [];
+    return _guard(() async {
+      final rows = await _client
+          .from('challenge_participants')
+          .select()
+          .eq('challenge_id', challengeId)
+          .order('progress', ascending: false)
+          .limit(limit);
+      final entries = <ChallengeEntry>[];
+      for (final row in rows) {
+        final entry =
+            ChallengeEntry.fromJson(Map<String, dynamic>.from(row as Map));
+        if (entry != null) entries.add(entry);
+      }
+      if (entries.isEmpty) return entries;
+      final names = await _namesFor(entries.map((e) => e.userId).toList());
+      return [
+        for (final e in entries)
+          ChallengeEntry(
+            challengeId: e.challengeId,
+            userId: e.userId,
+            progress: e.progress,
+            completedAt: e.completedAt,
+            displayName: names[e.userId],
+          ),
+      ];
+    }, const <ChallengeEntry>[]);
+  }
+
+  /// A `date` column wants a date, not an instant.
+  String _dateOnly(DateTime day) =>
+      day.toIso8601String().split('T').first; // i18n-ignore — ISO date
+}
+
 final communityRepositoryProvider =
     Provider<CommunityRepository>((ref) => CommunityRepository());
 
@@ -666,4 +977,18 @@ final myFriendshipsProvider = FutureProvider<List<Friendship>>(
 
 final mySquadsProvider = FutureProvider<List<Squad>>(
   (ref) => ref.watch(communityRepositoryProvider).mySquads(),
+);
+
+/// Whether the caller appears on any leaderboard. Watched by the opt-in
+/// control, which is the only thing that changes it.
+final onLeaderboardsProvider = FutureProvider<bool>(
+  (ref) => ref.watch(communityRepositoryProvider).isOnLeaderboards(),
+);
+
+final openChallengesProvider = FutureProvider<List<Challenge>>(
+  (ref) => ref.watch(communityRepositoryProvider).challenges(),
+);
+
+final myChallengeEntriesProvider = FutureProvider<Map<String, ChallengeEntry>>(
+  (ref) => ref.watch(communityRepositoryProvider).myChallengeEntries(),
 );

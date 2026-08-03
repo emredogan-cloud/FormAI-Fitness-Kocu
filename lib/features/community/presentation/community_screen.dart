@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:go_router/go_router.dart';
+
+import '../../../core/routing/app_router.dart';
 import '../../../core/services/share_service.dart';
 import '../../../core/theme/neon_surface.dart';
 import '../../../l10n/app_localizations.dart';
@@ -255,6 +258,33 @@ class _Profile extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 16),
+        // Every other community screen hangs off this one. Until now
+        // `/community/friends` and `/community/squads` were registered
+        // routes that nothing in the app linked to — reachable only by
+        // typing a URL, which on a phone means not reachable. Phase 13
+        // adds two more, so the list is now the shape of the section
+        // rather than four ad-hoc buttons.
+        const _Destination(
+          icon: Icons.emoji_events_rounded,
+          route: AppRoutes.communityLeaderboard,
+          labelKey: _DestinationLabel.leaderboard,
+        ),
+        const _Destination(
+          icon: Icons.flag_rounded,
+          route: AppRoutes.communityChallenges,
+          labelKey: _DestinationLabel.challenges,
+        ),
+        const _Destination(
+          icon: Icons.people_alt_rounded,
+          route: AppRoutes.communityFriends,
+          labelKey: _DestinationLabel.friends,
+        ),
+        const _Destination(
+          icon: Icons.groups_rounded,
+          route: AppRoutes.communitySquads,
+          labelKey: _DestinationLabel.squads,
+        ),
+        const SizedBox(height: 16),
         Row(
           children: [
             Flexible(
@@ -313,6 +343,77 @@ class _Profile extends ConsumerWidget {
       displayName: profile.displayName,
       handle: profile.handle,
       lines: lines,
+    );
+  }
+}
+
+/// Which label a [_Destination] carries.
+///
+/// An enum rather than a `String` parameter because the label has to be
+/// resolved from `AppLocalizations` at build time, and passing a
+/// already-resolved string would mean resolving it in a parent that has
+/// no other reason to.
+enum _DestinationLabel { leaderboard, challenges, friends, squads }
+
+/// One row in the community section's list of places.
+class _Destination extends StatelessWidget {
+  const _Destination({
+    required this.icon,
+    required this.route,
+    required this.labelKey,
+  });
+
+  final IconData icon;
+  final String route;
+  final _DestinationLabel labelKey;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final label = switch (labelKey) {
+      _DestinationLabel.leaderboard => l10n.leaderboardTitle,
+      _DestinationLabel.challenges => l10n.challengesTitle,
+      _DestinationLabel.friends => l10n.friendsTitle,
+      _DestinationLabel.squads => l10n.squadTitle,
+    };
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: NeonSurface.card,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => context.push(route),
+          child: Container(
+            padding: const EdgeInsetsDirectional.fromSTEB(14, 14, 12, 14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: NeonSurface.hairline),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, color: NeonSurface.lime, size: 20),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: NeonSurface.faint,
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

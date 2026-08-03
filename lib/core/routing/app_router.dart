@@ -27,6 +27,8 @@ import '../../features/progress/presentation/body_metrics_screen.dart';
 import '../../features/progress/presentation/outcome_report_screen.dart';
 import '../../features/community/presentation/community_screen.dart';
 import '../../features/community/presentation/friends_screen.dart';
+import '../../features/community/presentation/challenges_screen.dart';
+import '../../features/community/presentation/leaderboard_screen.dart';
 import '../../features/community/presentation/squad_screen.dart';
 import '../../features/progress/presentation/photo_gallery_screen.dart';
 import '../../features/progress/presentation/calendar_screen.dart';
@@ -100,6 +102,12 @@ class AppRoutes {
 
   /// Roadmap Phase 12 (C22) · squads and their activity feeds.
   static const String communitySquads = '/community/squads';
+
+  /// Roadmap Phase 13 · under `/community` because a leaderboard is a
+  /// comparison between people and belongs with the identity layer that
+  /// makes those people nameable.
+  static const String communityLeaderboard = '/community/leaderboard';
+  static const String communityChallenges = '/community/challenges';
   static const String nutritionDiscover = '/nutrition/discover';
 
   /// Phase 50B · internal admin panel. Gated by [isAdminProvider]; the
@@ -459,6 +467,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.communitySquads,
         name: 'communitySquads',
         builder: (context, state) => const SquadScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.communityLeaderboard,
+        name: 'communityLeaderboard',
+        builder: (context, state) => const LeaderboardScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.communityChallenges,
+        name: 'communityChallenges',
+        builder: (context, state) => const ChallengesScreen(),
       ),
       GoRoute(
         path: AppRoutes.nutritionDiscover,

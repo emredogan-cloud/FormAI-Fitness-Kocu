@@ -8,7 +8,7 @@
 //   2. a layout that only fits Turkish overflows here instead of in a
 //      German store review.
 //
-// 1790 members covered.
+// 1817 members covered.
 
 import 'package:flutter/widgets.dart';
 import 'package:sixpack_ai/core/utils/pseudo_locale.dart';
@@ -5564,6 +5564,89 @@ class PseudoAppLocalizations extends AppLocalizations {
       pseudoLocalize(_inner.referralFriendDecline);
 
   @override
+  String get leaderboardTitle => pseudoLocalize(_inner.leaderboardTitle);
+
+  @override
+  String get leaderboardScopeSquad =>
+      pseudoLocalize(_inner.leaderboardScopeSquad);
+
+  @override
+  String get leaderboardScopeFriends =>
+      pseudoLocalize(_inner.leaderboardScopeFriends);
+
+  @override
+  String get leaderboardScopeGlobal =>
+      pseudoLocalize(_inner.leaderboardScopeGlobal);
+
+  @override
+  String get leaderboardMetricConsistency =>
+      pseudoLocalize(_inner.leaderboardMetricConsistency);
+
+  @override
+  String get leaderboardMetricXp => pseudoLocalize(_inner.leaderboardMetricXp);
+
+  @override
+  String get leaderboardMetricSessions =>
+      pseudoLocalize(_inner.leaderboardMetricSessions);
+
+  @override
+  String get leaderboardMetricStreak =>
+      pseudoLocalize(_inner.leaderboardMetricStreak);
+
+  @override
+  String get leaderboardJoinTitle =>
+      pseudoLocalize(_inner.leaderboardJoinTitle);
+
+  @override
+  String get leaderboardJoinBody => pseudoLocalize(_inner.leaderboardJoinBody);
+
+  @override
+  String get leaderboardJoinPrivacy =>
+      pseudoLocalize(_inner.leaderboardJoinPrivacy);
+
+  @override
+  String get leaderboardJoinButton =>
+      pseudoLocalize(_inner.leaderboardJoinButton);
+
+  @override
+  String get leaderboardLeaveNote =>
+      pseudoLocalize(_inner.leaderboardLeaveNote);
+
+  @override
+  String get leaderboardLeaveButton =>
+      pseudoLocalize(_inner.leaderboardLeaveButton);
+
+  @override
+  String get leaderboardEmptySquad =>
+      pseudoLocalize(_inner.leaderboardEmptySquad);
+
+  @override
+  String get leaderboardEmptyFriends =>
+      pseudoLocalize(_inner.leaderboardEmptyFriends);
+
+  @override
+  String get leaderboardEmptyGlobal =>
+      pseudoLocalize(_inner.leaderboardEmptyGlobal);
+
+  @override
+  String get challengesTitle => pseudoLocalize(_inner.challengesTitle);
+
+  @override
+  String get challengesEmpty => pseudoLocalize(_inner.challengesEmpty);
+
+  @override
+  String get challengeJoin => pseudoLocalize(_inner.challengeJoin);
+
+  @override
+  String get challengeLeave => pseudoLocalize(_inner.challengeLeave);
+
+  @override
+  String get challengeEnded => pseudoLocalize(_inner.challengeEnded);
+
+  @override
+  String get challengeComplete => pseudoLocalize(_inner.challengeComplete);
+
+  @override
   String retrospectiveSummary(String workouts, String minutes, String reps) =>
       pseudoLocalize(_inner.retrospectiveSummary(workouts, minutes, reps));
 
@@ -6365,8 +6448,24 @@ class PseudoAppLocalizations extends AppLocalizations {
   String feedStreak(String name, int count) =>
       pseudoLocalize(_inner.feedStreak(name, count));
 
+  @override
+  String leaderboardTopPercent(int percent) =>
+      pseudoLocalize(_inner.leaderboardTopPercent(percent));
+
+  @override
+  String leaderboardPercent(int value) =>
+      pseudoLocalize(_inner.leaderboardPercent(value));
+
+  @override
+  String challengeDaysLeft(int count) =>
+      pseudoLocalize(_inner.challengeDaysLeft(count));
+
+  @override
+  String challengeProgress(int done, int target) =>
+      pseudoLocalize(_inner.challengeProgress(done, target));
+
   /// Number of members this wrapper covers. The test suite asserts
   /// it still matches the generated class, so a new ARB key cannot
   /// slip past pseudo mode unnoticed.
-  static const int coveredMembers = 1790;
+  static const int coveredMembers = 1817;
 }

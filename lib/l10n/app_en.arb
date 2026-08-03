@@ -8428,5 +8428,136 @@
   "referralFriendDecline": "Not now",
   "@referralFriendDecline": {
     "description": "Dismiss button on the referral friend-request offer."
+  },
+  "leaderboardTitle": "Leaderboard",
+  "@leaderboardTitle": {
+    "description": "Title of the leaderboard screen."
+  },
+  "leaderboardScopeSquad": "Squad",
+  "@leaderboardScopeSquad": {
+    "description": "Leaderboard scope: people in your squads."
+  },
+  "leaderboardScopeFriends": "Friends",
+  "@leaderboardScopeFriends": {
+    "description": "Leaderboard scope: your accepted friends."
+  },
+  "leaderboardScopeGlobal": "Everyone",
+  "@leaderboardScopeGlobal": {
+    "description": "Leaderboard scope: all opted-in users."
+  },
+  "leaderboardMetricConsistency": "Consistency",
+  "@leaderboardMetricConsistency": {
+    "description": "Leaderboard metric: percentage of days trained."
+  },
+  "leaderboardMetricXp": "XP this week",
+  "@leaderboardMetricXp": {
+    "description": "Leaderboard metric: experience points earned this week."
+  },
+  "leaderboardMetricSessions": "Workouts",
+  "@leaderboardMetricSessions": {
+    "description": "Leaderboard metric: sessions completed."
+  },
+  "leaderboardMetricStreak": "Day streak",
+  "@leaderboardMetricStreak": {
+    "description": "Leaderboard metric: consecutive days trained."
+  },
+  "leaderboardJoinTitle": "Join the leaderboard",
+  "@leaderboardJoinTitle": {
+    "description": "Title of the leaderboard opt-in card."
+  },
+  "leaderboardJoinBody": "Leaderboards are off until you turn them on. These are the only four numbers we would send:",
+  "@leaderboardJoinBody": {
+    "description": "Body of the leaderboard opt-in card, introducing the explicit list of shared values."
+  },
+  "leaderboardJoinPrivacy": "Your name only appears if your profile is public — otherwise you are ranked without one. You can leave at any time and keep every bit of your progress.",
+  "@leaderboardJoinPrivacy": {
+    "description": "Privacy note on the leaderboard opt-in card."
+  },
+  "leaderboardJoinButton": "Turn on leaderboards",
+  "@leaderboardJoinButton": {
+    "description": "Confirm button on the leaderboard opt-in card."
+  },
+  "leaderboardLeaveNote": "Leaving removes you from every board. Your XP, streak and workouts stay exactly where they are.",
+  "@leaderboardLeaveNote": {
+    "description": "Note above the leaderboard opt-out button."
+  },
+  "leaderboardLeaveButton": "Leave leaderboards",
+  "@leaderboardLeaveButton": {
+    "description": "Button that removes the user from all leaderboards."
+  },
+  "leaderboardEmptySquad": "Nobody in your squads has joined a leaderboard yet.",
+  "@leaderboardEmptySquad": {
+    "description": "Empty state for the squad-scoped leaderboard."
+  },
+  "leaderboardEmptyFriends": "None of your friends has joined a leaderboard yet.",
+  "@leaderboardEmptyFriends": {
+    "description": "Empty state for the friends-scoped leaderboard."
+  },
+  "leaderboardEmptyGlobal": "No one has posted a week yet. You could be first.",
+  "@leaderboardEmptyGlobal": {
+    "description": "Empty state for the global leaderboard."
+  },
+  "leaderboardTopPercent": "top {percent}%",
+  "@leaderboardTopPercent": {
+    "description": "Percentile rendering of a large rank, e.g. 'top 12%'.",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "leaderboardPercent": "{value}%",
+  "@leaderboardPercent": {
+    "description": "A whole-percent value on the leaderboard.",
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "challengesTitle": "Challenges",
+  "@challengesTitle": {
+    "description": "Title of the challenges screen."
+  },
+  "challengesEmpty": "No challenges are running right now. New ones appear here when they open.",
+  "@challengesEmpty": {
+    "description": "Empty state for the challenges screen."
+  },
+  "challengeJoin": "Join",
+  "@challengeJoin": {
+    "description": "Button that enters the user into a challenge."
+  },
+  "challengeLeave": "Leave",
+  "@challengeLeave": {
+    "description": "Button that withdraws the user from a challenge."
+  },
+  "challengeEnded": "Ended",
+  "@challengeEnded": {
+    "description": "Label on a challenge whose window has closed."
+  },
+  "challengeComplete": "Completed",
+  "@challengeComplete": {
+    "description": "Label shown when the user has finished a challenge."
+  },
+  "challengeDaysLeft": "{count, plural, =0{Last day} =1{1 day left} other{{count} days left}}",
+  "@challengeDaysLeft": {
+    "description": "How long is left in a challenge window.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "challengeProgress": "{done} of {target}",
+  "@challengeProgress": {
+    "description": "Progress through a challenge target.",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
   }
 }

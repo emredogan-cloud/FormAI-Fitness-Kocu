@@ -647,6 +647,52 @@ class AnalyticsService {
     return _capture('feed_reaction', {'reaction': reaction});
   }
 
+  // ─── Roadmap Phase 13 (C23 · C25 · R6) · leaderboards ───────────────
+  //
+  // Same rule as Phase 12's block: counts, never identities, and never a
+  // score. A leaderboard position is a comparison between two people,
+  // and the moment it leaves the device it is a fact about both of them
+  // — so what goes out is that somebody looked, joined or left, not
+  // where they placed.
+
+  /// A leaderboard was opened. [scope] is the enum name — `squad`,
+  /// `friends`, `global` — never the localized tab label.
+  Future<void> leaderboardViewed({required String scope}) {
+    return _capture('leaderboard_viewed', {'scope': scope});
+  }
+
+  /// The user turned leaderboards on. This is the phase's headline
+  /// number ("≥ 30% opt in") and the only reason the event exists.
+  Future<void> leaderboardJoined() => _capture('leaderboard_joined', const {});
+
+  /// The user turned leaderboards off. Fired without a reason code: a
+  /// churn survey on a privacy control would be asking somebody to
+  /// justify a choice they are entitled to make silently.
+  Future<void> leaderboardLeft() => _capture('leaderboard_left', const {});
+
+  /// [outcome] is the [LeagueOutcome] name — `promoted`, `held`,
+  /// `relegated`. No tier is attached: tier plus outcome is close to an
+  /// identity in a small population.
+  Future<void> leagueOutcome({required String outcome}) {
+    return _capture('league_outcome', {'outcome': outcome});
+  }
+
+  /// [slug] is the challenge's stable identifier, which is content
+  /// rather than a person.
+  Future<void> challengeJoined({required String slug}) {
+    return _capture('challenge_joined', {'slug': slug});
+  }
+
+  Future<void> challengeCompleted({required String slug}) {
+    return _capture('challenge_completed', {'slug': slug});
+  }
+
+  /// Left before the window closed. Distinct from simply not finishing,
+  /// which is not an event because it has no moment.
+  Future<void> challengeAbandoned({required String slug}) {
+    return _capture('challenge_abandoned', {'slug': slug});
+  }
+
   // NOTE · App Tracking Transparency was deliberately REMOVED. The app's
   // PrivacyInfo.xcprivacy declares `NSPrivacyTracking = false` and the
   // published privacy policy states no cross-app tracking occurs — so
