@@ -19,7 +19,7 @@ for — the social accountability layer that makes fitness habits stick.
 
 | # | feature | roadmap | state |
 | --- | --- | --- | --- |
-| — | **Schema + RLS** (`019_social_profiles.sql`) | — | ✅ written, not applied |
+| — | **Schema + RLS** (`019_social_profiles.sql`) | — | ✅ **APPLIED to production 2026-08-03** |
 | — | **Domain rules** (visibility, friendship, squad) | — | ✅ shipped, 26 tests |
 | — | **RLS static gate** | testing §  | ✅ shipped, probed |
 | — | **Repository** (`community_repository.dart`) | — | ✅ shipped |
@@ -396,28 +396,50 @@ Everything the roadmap lists for Phase 12 is built. What is left is
 either **blocked on a founder decision** or **only checkable against an
 applied schema**, and those are the same decision.
 
-### 4.1 The one thing that unblocks everything: apply `019`
+### 4.1 `019` is APPLIED — and it did not work the first time
 
-`supabase/migrations/019_social_profiles.sql` is written, argued (§3.1),
-statically gated (§3.13), and **not applied**. Until it is:
+Applied to production **2026-08-03** on founder approval. The community
+surface is live.
 
-* every community screen shows "Community isn't switched on yet" — the
-  honest state, verified on device (§5);
-* the feed writer, the referral offer and the profile card cannot be
-  exercised end-to-end, because each fails quiet by design when the
-  schema is absent;
-* the live RLS penetration pass cannot be run at all.
+**It failed on first contact with a real database**, and the failure is
+worth more than the fix:
 
-This is a founder decision, not an engineering one — it turns on a
-social surface for real users. Nothing in the app breaks either way,
-which was the point of building it that way.
+```
+ERROR: relation "public.blocks" does not exist (SQLSTATE 42P01)
+```
+
+`public_profiles_select_published` filters blocked pairs, and `blocks`
+was declared fifty lines *below* it — under a section header that
+already read *"Blocks — declared before anything that references them"*.
+The intent was written down and the file did not match it.
+
+**The static RLS gate could not have caught this, and that is the
+lesson.** It reads policy shape from the text — RLS enabled, no
+`using (true)`, `auth.uid()` present, blocks checked in both directions
+— and every one of those assertions was true of a file that could not
+execute. A third gate in this codebase has now been confidently green
+about something it does not actually measure.
+
+The whole migration ran in one transaction, so the failed attempt rolled
+back cleanly and production was never in a partial state. The fix moved
+the entire `blocks` section above `Profiles`; the second push succeeded.
+
+**Only `019` was applied.** `017` (body metrics) and `018` (progress
+photo metadata) remain pending and were deliberately excluded: the
+approval named `019`, and both of the others would begin server-side
+storage of measurements and photo metadata — a privacy-relevant change
+that should not ride along on somebody else's decision. `supabase db
+push` applies everything pending, so they were staged out of the
+migrations directory for the duration of the push and restored after.
 
 ### 4.2 Owed the moment `019` is applied
 
-- **The live RLS penetration pass.** Two real sessions attempting
-  cross-user reads on every table. §3.13 explains at length why the CI
-  gate is deliberately not this: it reads SQL text, and a policy can be
-  well-formed and still wrong.
+- **The live RLS penetration pass.** Two real authenticated sessions
+  attempting cross-user reads on every table. §3.13 explains why the CI
+  gate is deliberately not this — and §4.1 is now a worked example of a
+  file that passed the gate and could not execute. **This needs the
+  project's anon key**, which this session was not permitted to read;
+  everything else it needs is in place now that `019` is live.
 - **A second device walk** covering the paths that are currently dark:
   create a profile, send and accept a request, create and join a squad,
   react on the feed, share a card, redeem a referral and take the offer.

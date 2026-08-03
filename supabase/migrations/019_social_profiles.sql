@@ -54,10 +54,55 @@
 -- APPLYING THIS IS A SEPARATE, DELIBERATE STEP
 -- ============================================================
 --
--- Written and NOT applied, like 017 and 018. Community is opt-in and
--- inert until a user creates a profile, so nothing regresses while this
--- is unapplied — the client's repositories surface an empty state. Apply
--- it when the founder wants the feature live.
+-- APPLIED to production 2026-08-03, on founder approval. Community is
+-- opt-in and inert until a user creates a profile, so nothing changed
+-- for anybody at the moment it landed.
+--
+-- ORDERING NOTE, learned the hard way. The first application of this
+-- file failed with `relation "public.blocks" does not exist` (42P01):
+-- `public_profiles_select_published` filters blocked pairs, and `blocks`
+-- was declared fifty lines further down — under a header that already
+-- read "declared before anything that references them". The intent was
+-- right and the file did not match it.
+--
+-- The static RLS gate could not have caught this. It reads policy SHAPE
+-- from the text — RLS enabled, no `using (true)`, `auth.uid()` present,
+-- blocks checked both ways — and every one of those was true of a file
+-- that could not execute. **A policy's dependencies must be declared
+-- above it, and only a real database will tell you they are not.**
+
+-- ------------------------------------------------------------
+-- Blocks — declared before anything that references them
+-- ------------------------------------------------------------
+
+create table if not exists public.blocks (
+  blocker_id uuid not null references auth.users(id) on delete cascade,
+  blocked_id uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (blocker_id, blocked_id),
+  -- Blocking yourself is not a state anything downstream handles.
+  check (blocker_id <> blocked_id)
+);
+
+alter table public.blocks enable row level security;
+
+-- Deliberately readable ONLY by the blocker. The blocked user must not
+-- be able to discover that they were blocked — that is the difference
+-- between a safety tool and an escalation.
+drop policy if exists blocks_select_own on public.blocks;
+create policy blocks_select_own
+  on public.blocks for select
+  using (auth.uid() = blocker_id);
+
+drop policy if exists blocks_insert_own on public.blocks;
+create policy blocks_insert_own
+  on public.blocks for insert
+  with check (auth.uid() = blocker_id);
+
+drop policy if exists blocks_delete_own on public.blocks;
+create policy blocks_delete_own
+  on public.blocks for delete
+  using (auth.uid() = blocker_id);
 
 -- ------------------------------------------------------------
 -- Profiles
@@ -143,39 +188,6 @@ drop policy if exists public_profiles_delete_own on public.public_profiles;
 create policy public_profiles_delete_own
   on public.public_profiles for delete
   using (auth.uid() = user_id);
-
--- ------------------------------------------------------------
--- Blocks — declared before anything that references them
--- ------------------------------------------------------------
-
-create table if not exists public.blocks (
-  blocker_id uuid not null references auth.users(id) on delete cascade,
-  blocked_id uuid not null references auth.users(id) on delete cascade,
-  created_at timestamptz not null default now(),
-  primary key (blocker_id, blocked_id),
-  -- Blocking yourself is not a state anything downstream handles.
-  check (blocker_id <> blocked_id)
-);
-
-alter table public.blocks enable row level security;
-
--- Deliberately readable ONLY by the blocker. The blocked user must not
--- be able to discover that they were blocked — that is the difference
--- between a safety tool and an escalation.
-drop policy if exists blocks_select_own on public.blocks;
-create policy blocks_select_own
-  on public.blocks for select
-  using (auth.uid() = blocker_id);
-
-drop policy if exists blocks_insert_own on public.blocks;
-create policy blocks_insert_own
-  on public.blocks for insert
-  with check (auth.uid() = blocker_id);
-
-drop policy if exists blocks_delete_own on public.blocks;
-create policy blocks_delete_own
-  on public.blocks for delete
-  using (auth.uid() = blocker_id);
 
 -- ------------------------------------------------------------
 -- Friendships
