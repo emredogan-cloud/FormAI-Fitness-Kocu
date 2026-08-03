@@ -6,9 +6,9 @@ previous one can continue without re-analysing the repository.
 **Last updated:** 2026-08-02, **Phase 10 closed** (device walk included)
 — build `1.0.0+32`. Phase 8 stays closed as a split (RTL done, three
 languages deferred). **Phase 11 is DEFERRED BY FOUNDER — do not
-implement it.** **Phase 12 is BUILT and blocked on one founder decision
-— whether to apply migration `019`. Read §2.0.0f before touching any of
-it, and do not rebuild what is already there.**
+implement it.** **Phases 12 and 13 are COMPLETE and their migrations
+(`019`, `020`) are APPLIED TO PRODUCTION.** Read §2.0.0f and §2.0.0h
+before touching either; do not rebuild what is already there.
 
 ---
 
@@ -243,6 +243,61 @@ Not loose ends — decisions, recorded in the report §4.3:
    the coach has no squad-shaped input yet.
 3. **Ranking of any kind.** The feed shows presence, not position. The
    roadmap puts ranking in Phase 13 on purpose.
+
+### 2.0.0h Phase 13 is DONE — leaderboards and challenges are live
+
+`PHASE_13_COMPLETION_REPORT.md` is the record. Build 1.0.0+34, 1376
+tests, `020_leaderboards.sql` applied to production.
+
+Things that save re-deriving:
+
+- **`020` is the leaderboard migration.** The roadmap calls it `016`,
+  which is reserved. 001–015 + `019` + `020` are applied; **`017` (body
+  metrics) and `018` (progress photos) are still NOT applied** and were
+  deliberately excluded — the approval named `019`, and those two would
+  begin server-side storage of measurements and photo metadata.
+- **The XP anti-gaming guarantee is a BOUND, not a promise**, and the
+  migration header says so at length. XP is client-authoritative; the
+  CHECK constraints and the plausibility trigger make the implausible
+  impossible but cannot tell an honest week from a fabricated one.
+  Eliminating that needs server-side session recording — Phase 15.
+- **The caps exist twice** (`020` and `lib/features/community/domain/
+  league.dart`) and `league_test.dart` reads the SQL to assert they
+  match. Change one, change both.
+- **Beginner protection is three constants in the domain layer** —
+  `defaultScope`, the metric enum's declaration order, and
+  `kRankTellsPosition`. They are there so they cannot be changed by
+  editing a widget. Do not "simplify" them into the screen.
+- **Pseudonymity and opt-out add no fields.** A private profile is
+  ranked without a name because `public_profiles_select_published`
+  requires `is_public`; opting out is deleting the `leaderboard_stats`
+  row. There is no `opted_in` column and there should not be one.
+- **The RLS gate was green about a file it had never opened.** It now
+  reads every migration in `communityMigrations` — add to that list when
+  you add a community migration. Its content-table exemption is derived
+  from the schema (no `user_id`, no `auth.users`), not from a marker.
+- **`supabase db push` from the repo root fails** — the CLI tries to
+  parse `.env.local` as dotenv and it is freeform notes. Push from a
+  staging workdir instead (copy `supabase/migrations` minus 017/018 plus
+  `.temp/linked-project.json`, then `supabase link --project-ref
+  xtvqhnjamwvmfcsahzxv`). Never source `.env.local`.
+- **A policy cannot reference a table declared below it.** `019` failed
+  its first push on exactly that (`blocks` under `public_profiles`).
+  Migrations run in one transaction, so a failure rolls back whole.
+
+### 2.0.0i What Phase 13 deliberately did NOT build
+
+Recorded in the report §4.1–§4.3. Not loose ends:
+
+1. **The weekly league rollover job.** Rules are written and tested;
+   nothing writes a tier, because promotion is a scheduled server job
+   and two clients computing it disagree. The Dart is the spec.
+2. **Challenge content.** The table is live and empty; what to run is a
+   founder call. `supabase/sql/seed_challenge_example.sql` is a
+   documented one-paste template.
+3. **Challenge progress auto-reporting**, tier artwork, coach rank copy,
+   and 100k-user load testing — each blocked on one of the above or on
+   data that does not exist yet.
 
 ### 2.0.1 The three things Phase 7 deliberately did NOT do
 

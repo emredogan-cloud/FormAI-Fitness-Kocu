@@ -7,6 +7,13 @@
 /// explanation, and neither is sufficient alone.
 library;
 
+/// The length of the programme consistency is measured against.
+///
+/// The app ships one 30-day programme and the Progress tab already
+/// reports "N of 30 days"; the leaderboard's consistency column is the
+/// same ratio, so it reads the same constant rather than restating 30.
+const int kProgrammeDays = 30;
+
 /// Days that count as one league season.
 ///
 /// The roadmap asks for weekly leaderboard resets inside monthly

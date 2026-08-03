@@ -105,14 +105,13 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     _reload();
   }
 
-  /// Days trained out of the days in the programme so far, as a whole
-  /// percent. The same ratio the Progress tab shows, so the number on
-  /// the board is the number the user has already seen.
-  int _consistencyPercent(int sessions) {
-    final total = ref.read(sessionLogsProvider).value?.length ?? 0;
-    if (total == 0) return 0;
-    return ((sessions / 30) * 100).round().clamp(0, 100);
-  }
+  /// Days trained out of the 30-day programme, as a whole percent.
+  ///
+  /// The same ratio the Progress tab already shows, so the number on the
+  /// board is the number the user has seen — a second formula here would
+  /// be a second answer to a question they think is settled.
+  int _consistencyPercent(int sessions) =>
+      ((sessions / kProgrammeDays) * 100).round().clamp(0, 100);
 
   @override
   Widget build(BuildContext context) {

@@ -1,7 +1,7 @@
 # FormAI — Project Progress Summary
 
 **Spec:** `TESTERS_COMMUNITY_PRODUCT_ROADMAP.md` (18 phases / 5 waves)
-**As of:** 2026-08-03 · Phase 8 **closed as split** · Phase 9 **complete** · pre-Phase-10 polish sprint complete · **Phase 10 complete, device walk included** · **Phase 11 ⏸ deferred by founder** · **Phase 12 built — blocked on applying migration `019`** · build **1.0.0+33**
+**As of:** 2026-08-04 · Phase 8 **closed as split** · Phase 9 **complete** · pre-Phase-10 polish sprint complete · **Phase 10 complete** · **Phase 11 ⏸ deferred by founder** · **Phase 12 complete — migration `019` APPLIED** · **Phase 13 complete — migration `020` APPLIED** · build **1.0.0+34**
 
 ---
 
@@ -269,8 +269,8 @@ Wave 5 — Scale, Depth & Platform         ⏳ Not Started (Phases 15–17)
 
 | | |
 |---|---|
-| **Build** | 1.0.0+33 · APK 137.3 MB · AAB 116.0 MB |
-| **Tests** | **1327 passing** (baseline was 330) |
+| **Build** | 1.0.0+34 · APK 137.3 MB · AAB 116.0 MB |
+| **Tests** | **1376 passing** (baseline was 330) |
 | **`flutter analyze`** | **0 issues** |
 | **`dart format`** | clean |
 | **CI** | **GREEN** (CI + Secret Scan) |
@@ -286,5 +286,6 @@ Wave 5 — Scale, Depth & Platform         ⏳ Not Started (Phases 15–17)
 - The local release build is upload-key signed, so device installs need `adb uninstall` first (loses session, requires a full onboarding re-walk).
 - **MIUI's "Install via USB" lapses.** `INSTALL_FAILED_USER_RESTRICTED` is not a signing problem and no adb flag works around it; it needs a Mi-account re-authorization on the handset.
 - **A green gate is a claim about its own heuristics.** Three phases running now. Phase 7's translation audit found four bugs in itself while proving its first batch — including one where the check meant to prove 199 recipes were translated reported every one of them as untranslated. Probe every widening.
-- **Migrations 017, 018 and 019 are written and NOT applied.** 017 body metrics, 018 progress photos, 019 social profiles. Phase 12's entire community surface reads "Community isn't switched on yet" until `019` lands — honestly and without breaking anything, which was the design. Applying it is a founder decision.
+- **Migrations 001–015, 019 and 020 are applied to production. 017 and 018 are NOT.** 017 (body metrics) and 018 (progress photo metadata) were deliberately excluded when 019 was approved — both would begin server-side storage of privacy-relevant data, and that is a separate decision nobody has made. `supabase db push` applies everything pending, so pushing from the repo root would apply them by accident; push from a staging workdir.
+- **Leaderboard anti-gaming is a bound, not a guarantee.** XP is client-authoritative. `020`'s constraints make the implausible impossible; they cannot detect a plausible lie. Closing that needs server-side session recording (Phase 15) and the migration header says so.
 - **The cross-check between two independent sources is where the defects are.** Every one of Phase 7's findings in pre-existing content came from comparing two things that had never been compared: hand tags against derived diet flags, English ingredient names against Turkish ones, the new macro rule against the old catalogue.
