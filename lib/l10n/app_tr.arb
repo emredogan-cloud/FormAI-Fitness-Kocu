@@ -1817,5 +1817,6 @@
   "challengeEnded": "Bitti",
   "challengeComplete": "Tamamlandı",
   "challengeDaysLeft": "{count, plural, =0{Son gün} =1{1 gün kaldı} other{{count} gün kaldı}}",
-  "challengeProgress": "{target} hedefin {done} tanesi"
+  "challengeProgress": "{target} hedefin {done} tanesi",
+  "navCommunity": "Topluluk"
 }

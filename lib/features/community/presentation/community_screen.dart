@@ -34,7 +34,17 @@ import 'profile_editor_screen.dart';
 /// the photo screens. A profile card is an artifact that gets shared,
 /// and the reasoning is in `neon_surface.dart`.
 class CommunityScreen extends ConsumerWidget {
-  const CommunityScreen({super.key});
+  const CommunityScreen({super.key, this.embedded = false});
+
+  /// True when this is the Community *tab* rather than a pushed route.
+  ///
+  /// The only difference is the back arrow. `automaticallyImplyLeading`
+  /// decides from whether the enclosing navigator can pop, and inside
+  /// the dashboard that answer depends on how the user reached the
+  /// dashboard — which would make a back button appear on a tab for
+  /// some users and not others. An explicit flag is one bool against a
+  /// heisenbug.
+  final bool embedded;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -49,6 +59,7 @@ class CommunityScreen extends ConsumerWidget {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         foregroundColor: Colors.white,
+        automaticallyImplyLeading: !embedded,
         title: Text(
           l10n.communityTitle,
           style: const TextStyle(fontWeight: FontWeight.w800),

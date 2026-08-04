@@ -8559,5 +8559,9 @@
         "type": "int"
       }
     }
+  },
+  "navCommunity": "Community",
+  "@navCommunity": {
+    "description": "Bottom-navigation label for the Community tab."
   }
 }

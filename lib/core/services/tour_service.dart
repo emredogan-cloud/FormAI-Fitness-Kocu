@@ -115,7 +115,9 @@ class TourService {
       SpotlightStep(
         title: l10n.tourProfileTitle,
         body: l10n.tourProfileBody,
-        rect: () => t.navItemRect(3),
+        // Slot 4, not 3: Community was inserted before Profile so the
+        // account tab stays last, which is where every app puts it.
+        rect: () => t.navItemRect(4),
         radius: 14,
         padding: 6,
       ),

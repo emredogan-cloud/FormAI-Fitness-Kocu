@@ -71,8 +71,11 @@ void main() {
         ),
       );
 
-      // 4 slots across 400px → centres at 50, 150, 250, 350.
-      for (final entry in {0: 50.0, 1: 150.0, 2: 250.0, 3: 350.0}.entries) {
+      // Phase 14 · 5 slots across 400px → centres at 40, 120, 200,
+      // 280, 360. Was four before Community joined the nav; this test
+      // is what caught the change, which is the point of it.
+      for (final entry
+          in {0: 40.0, 1: 120.0, 2: 200.0, 3: 280.0, 4: 360.0}.entries) {
         final rect = targets.navItemRect(entry.key);
         expect(rect, isNotNull, reason: 'index ${entry.key}');
         expect(rect!.center.dx, closeTo(entry.value, 0.01));
@@ -138,7 +141,7 @@ void main() {
         ),
       );
       expect(targets.navItemRect(-1), isNull);
-      expect(targets.navItemRect(4), isNull);
+      expect(targets.navItemRect(kBottomNavItemCount), isNull);
     });
   });
 

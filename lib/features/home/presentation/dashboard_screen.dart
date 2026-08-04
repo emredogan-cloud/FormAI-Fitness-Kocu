@@ -13,6 +13,7 @@ import '../../../core/services/progressive_disclosure.dart';
 import '../../../core/services/first_time_ai_scenes.dart';
 import '../../../core/services/tour_service.dart';
 import '../../../core/services/tour_targets.dart';
+import '../../community/presentation/community_screen.dart';
 import '../../../core/services/unlock_announcer.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme_extension.dart';
@@ -471,6 +472,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     AntrenmanTab(),
                     NutritionTab(),
                     GelisimTab(),
+                    // Phase 14 · Community is index 3 so Profile stays
+                    // last, which is where every app puts the account
+                    // tab. Capability.tabIndex only names 1 and 2, so
+                    // nothing in progressive disclosure moved; the
+                    // tour's Profile step followed to slot 4.
+                    CommunityScreen(embedded: true),
                     ProfileTab(),
                   ],
                 ),
@@ -750,83 +757,247 @@ class _BottomNav extends StatelessWidget {
   /// and only one of those is true.
   final Set<int> lockedTabs;
 
-  /// Overlays the discovery dot when the tab has never been opened, and
-  /// dims a not-yet-introduced tab.
-  ///
-  /// A locked tab deliberately gets no dot: the dot means "new, go
-  /// look", which is the opposite of what disclosure is saying about it.
-  Widget _item(Widget icon, int tabIndex) {
-    final child = lockedTabs.contains(tabIndex)
-        ? Opacity(opacity: 0.45, child: icon)
-        : icon;
-    if (lockedTabs.contains(tabIndex)) return child;
-    if (visitedTabs.contains(tabIndex)) return child;
-    return Badge(
-      backgroundColor: AppColors.neon,
-      smallSize: 8,
-      child: child,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    // Phase 53B · the bottom nav now reads its colours from the
-    // pre-resolved `Theme.of(context).bottomNavigationBarTheme` set up
-    // in `AppTheme.dark()` / `AppTheme.light()`, so the widget flips
-    // automatically with the user's theme choice. The previous
-    // hotfix wrapped the BottomNavigationBar in a Container with its
-    // own `decoration: BoxDecoration(color: ...)`, which was
-    // double-painting and produced rendering surprises in some
-    // builds — dropping the wrapper lets Material own the chrome
-    // entirely.
+    // Phase 14 · rebuilt as a custom bar when Community made it five
+    // items.
+    //
+    // WHY NOT JUST ADD A FIFTH `BottomNavigationBarItem`
+    //
+    // `BottomNavigationBarType.fixed` shows every label all the time.
+    // Four items on a 360 dp phone give each 90 dp, which "Antrenman"
+    // fits at 12 px. Five give 72 dp, which it does not — and the
+    // pseudo-locale sweep pushes it further. The options were to shrink
+    // the type until it stopped looking premium, or to stop showing
+    // five labels at once.
+    //
+    // So the label belongs to the selected item only, inside a tinted
+    // pill that grows into place. One label at a time cannot crowd, the
+    // selected tab reads at a glance, and the bar gets quieter rather
+    // than busier as it gains a destination.
+    //
+    // WHAT IS PRESERVED ON PURPOSE
+    //
+    //   * Colours still come from `bottomNavigationBarTheme`, so light
+    //     mode keeps working without a second palette.
+    //   * Every slot is an `Expanded`, so the equal-slice arithmetic in
+    //     `TourTargets.navItemRect` is still correct — the tour would
+    //     silently spotlight the wrong tab otherwise.
+    //   * The discovery dot and the reduced-opacity locked state are
+    //     unchanged, including that a locked tab stays tappable.
+    //   * The label is hidden visually, never semantically: each slot
+    //     carries a `Semantics` label at all times, so a screen reader
+    //     announces "Community, tab 4 of 5" whether or not the pill is
+    //     showing.
     final navTheme = Theme.of(context).bottomNavigationBarTheme;
     final scheme = context.colors;
-    // Roadmap Phase 2 (C27) · one key on the bar; the tour derives each
-    // item's rect from this via TourTargets.navItemRect.
+    final l10n = AppLocalizations.of(context);
+    final items = <({IconData icon, IconData active, String label})>[
+      (
+        icon: Icons.fitness_center_outlined,
+        active: Icons.fitness_center,
+        label: l10n.navWorkout,
+      ),
+      (
+        icon: Icons.restaurant_outlined,
+        active: Icons.restaurant,
+        label: l10n.navNutrition,
+      ),
+      (
+        icon: Icons.insights_outlined,
+        active: Icons.insights,
+        label: l10n.navProgress,
+      ),
+      (
+        icon: Icons.groups_outlined,
+        active: Icons.groups,
+        label: l10n.navCommunity,
+      ),
+      (
+        icon: Icons.person_outline,
+        active: Icons.person,
+        label: l10n.navProfile,
+      ),
+    ];
+    assert(
+      items.length == kBottomNavItemCount,
+      'the tour slices the bar into $kBottomNavItemCount slots',
+    );
+
     return DecoratedBox(
       key: targets.navBar,
       // Hairline border above the nav so the strip reads as a distinct
       // surface even when its background and the scaffold both land on
-      // near-white tones in light mode. The border colour pulls from
-      // outlineVariant so it darkens cleanly on dark mode too.
+      // near-white tones in light mode.
       decoration: BoxDecoration(
+        color: navTheme.backgroundColor,
         border: Border(top: BorderSide(color: scheme.outlineVariant)),
       ),
-      child: BottomNavigationBar(
-        currentIndex: index,
-        onTap: onChanged,
-        // `backgroundColor` is left null on purpose — the
-        // BottomNavigationBarThemeData on the active ThemeData paints
-        // the Material so we don't fight it from two sides.
-        backgroundColor: navTheme.backgroundColor,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: navTheme.selectedItemColor,
-        unselectedItemColor: navTheme.unselectedItemColor,
-        selectedFontSize: 12,
-        unselectedFontSize: 12,
-        showUnselectedLabels: true,
-        items: [
-          BottomNavigationBarItem(
-            icon: _item(const Icon(Icons.fitness_center_outlined), 0),
-            activeIcon: const Icon(Icons.fitness_center),
-            label: AppLocalizations.of(context).navWorkout,
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 62,
+          child: Padding(
+            // So the first and last pills do not kiss the screen edge.
+            // Without it the selected pill on slot 0 renders flush to
+            // x=0, which the device walk caught immediately.
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: Row(
+              children: [
+                for (var i = 0; i < items.length; i++)
+                  Expanded(
+                    child: _NavSlot(
+                      icon: items[i].icon,
+                      activeIcon: items[i].active,
+                      label: items[i].label,
+                      position: i + 1,
+                      total: items.length,
+                      selected: i == index,
+                      locked: lockedTabs.contains(i),
+                      unvisited:
+                          !visitedTabs.contains(i) && !lockedTabs.contains(i),
+                      selectedColor:
+                          navTheme.selectedItemColor ?? AppColors.neon,
+                      unselectedColor:
+                          navTheme.unselectedItemColor ?? scheme.outline,
+                      onTap: () => onChanged(i),
+                    ),
+                  ),
+              ],
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: _item(const Icon(Icons.restaurant_outlined), 1),
-            activeIcon: const Icon(Icons.restaurant),
-            label: AppLocalizations.of(context).navNutrition,
+        ),
+      ),
+    );
+  }
+}
+
+/// One slot in the bottom navigation.
+///
+/// Collapsed to an icon until it is selected, at which point the label
+/// slides out beside it inside a tinted pill. The animation is driven by
+/// `AnimatedSize` + `AnimatedOpacity` rather than a controller because
+/// there is no state to own beyond "is this the current tab", and both
+/// honour `MediaQuery.disableAnimations` through the app's global
+/// motion settings.
+class _NavSlot extends StatelessWidget {
+  const _NavSlot({
+    required this.icon,
+    required this.activeIcon,
+    required this.label,
+    required this.position,
+    required this.total,
+    required this.selected,
+    required this.locked,
+    required this.unvisited,
+    required this.selectedColor,
+    required this.unselectedColor,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final IconData activeIcon;
+  final String label;
+  final int position;
+  final int total;
+  final bool selected;
+  final bool locked;
+  final bool unvisited;
+  final Color selectedColor;
+  final Color unselectedColor;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = selected ? selectedColor : unselectedColor;
+    // A locked tab is dimmed and still tappable — the roadmap is
+    // explicit that locked never means blocked, which is reserved for
+    // Pro.
+    final opacity = locked ? 0.45 : 1.0;
+    final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final duration =
+        reduceMotion ? Duration.zero : const Duration(milliseconds: 220);
+
+    // A locked tab deliberately gets no dot: the dot means "new, go
+    // look", which is the opposite of what disclosure is saying about
+    // it. `unvisited` is computed with that already excluded.
+    Widget glyph = Icon(selected ? activeIcon : icon, color: color, size: 24);
+    if (unvisited) {
+      glyph = Badge(
+        backgroundColor: AppColors.neon,
+        smallSize: 8,
+        child: glyph,
+      );
+    }
+
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      value: MaterialLocalizations.of(context).tabLabel(
+        tabIndex: position,
+        tabCount: total,
+      ),
+      child: ExcludeSemantics(
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            child: Opacity(
+              opacity: opacity,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // The capsule sits behind the icon rather than around
+                  // icon-and-label, because a pill wide enough to hold
+                  // both does not fit one fifth of a 411 dp screen — the
+                  // device walk proved that by truncating "Training" to
+                  // "Trai". Highlighting the icon alone gives the same
+                  // "this one is selected" read in the width available.
+                  AnimatedContainer(
+                    duration: duration,
+                    curve: Curves.easeOutCubic,
+                    width: 46,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? selectedColor.withValues(alpha: 0.16)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    alignment: Alignment.center,
+                    child: glyph,
+                  ),
+                  const SizedBox(height: 3),
+                  // FittedBox rather than a smaller hardcoded size: the
+                  // longest label decides, and it is different in every
+                  // locale. Scaling down beats an ellipsis on a word
+                  // that is the only text identifying the tab.
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: AnimatedDefaultTextStyle(
+                        duration: duration,
+                        curve: Curves.easeOutCubic,
+                        style: TextStyle(
+                          color: color,
+                          fontSize: 10.5,
+                          fontWeight:
+                              selected ? FontWeight.w800 : FontWeight.w500,
+                        ),
+                        child: Text(
+                          label,
+                          maxLines: 1,
+                          softWrap: false,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: _item(const Icon(Icons.insights_outlined), 2),
-            activeIcon: const Icon(Icons.insights),
-            label: AppLocalizations.of(context).navProgress,
-          ),
-          BottomNavigationBarItem(
-            icon: _item(const Icon(Icons.person_outline), 3),
-            activeIcon: const Icon(Icons.person),
-            label: AppLocalizations.of(context).navProfile,
-          ),
-        ],
+        ),
       ),
     );
   }

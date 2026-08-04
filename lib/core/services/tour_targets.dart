@@ -20,6 +20,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Keys are `final` on a single instance held by a `Provider`, so they
 /// survive rebuilds (a fresh GlobalKey each build would detach the
 /// element and remount the subtree — a real bug, not a style point).
+/// How many slots the bottom navigation divides itself into.
+///
+/// The rect for a nav item is derived by slicing the bar rather than by
+/// keying each item (see [TourTargets.navBar]), so this number and the
+/// number of items in `_BottomNav` must agree — a mismatch silently
+/// spotlights the wrong tab. Phase 14's Community tab took it from four
+/// to five, and the tour's Profile step moved from index 3 to 4 with it.
+const int kBottomNavItemCount = 5;
+
 class TourTargets {
   TourTargets();
 
@@ -81,7 +90,7 @@ class TourTargets {
   /// items, so an even slice is exact rather than approximate. The slice
   /// is narrowed toward the icon so the spotlight hole reads as pointing
   /// at one destination rather than at a wide empty band.
-  Rect? navItemRect(int index, {int count = 4}) {
+  Rect? navItemRect(int index, {int count = kBottomNavItemCount}) {
     final bar = rectOf(navBar);
     if (bar == null) return null;
     if (index < 0 || index >= count) return null;

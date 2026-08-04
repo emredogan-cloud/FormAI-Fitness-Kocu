@@ -6,7 +6,7 @@ publish_to: 'none'
 # +14 = first store-submission release candidate (Phase 2 of the
 # FINAL_STORE_SUBMISSION_ROADMAP). +15 was uploaded to the closed test;
 # +16 = closed-test polish Part 2 (image refresh + illustration assets).
-version: 1.0.0+34
+version: 1.0.0+35
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
