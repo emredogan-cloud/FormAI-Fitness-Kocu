@@ -8563,5 +8563,9 @@
   "navCommunity": "Community",
   "@navCommunity": {
     "description": "Bottom-navigation label for the Community tab."
+  },
+  "challengeJoinFailed": "Could not join that challenge. Try again in a moment.",
+  "@challengeJoinFailed": {
+    "description": "Shown when joining a challenge does not succeed."
   }
 }

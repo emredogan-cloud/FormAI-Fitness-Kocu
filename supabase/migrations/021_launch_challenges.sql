@@ -1,10 +1,27 @@
 -- ============================================================
--- Launch challenges · Phase 14 (roadmap C25)
+-- 021 · Launch challenges · Phase 14 (roadmap C25)
 -- ============================================================
 --
--- Run this once from the SQL editor. It is idempotent — `on conflict
--- (slug)` updates copy and targets, so re-running after an edit is the
--- normal way to change wording.
+-- CONTENT IN A MIGRATION — the exception, and why it is one.
+--
+-- The whole point of authoring challenges as data is that starting one
+-- needs neither a release nor a schema change, and
+-- `supabase/sql/seed_challenge_example.sql` is how every *later*
+-- challenge ships: paste, done.
+--
+-- The launch set is different in one way that matters. It has to exist
+-- in **every** environment — production, a teammate's local database, a
+-- fresh staging project — or the challenges screen is empty there and
+-- nobody can test the feature. That is exactly what a migration is for,
+-- and the alternative is a README instruction that gets missed.
+--
+-- So: **the first six are versioned; everything after them is not.**
+-- If you find yourself adding a seventh here, ask whether it is really
+-- launch content or just the next challenge — and if it is the latter,
+-- it belongs in the SQL editor.
+--
+-- Idempotent either way: `on conflict (slug) do update` means re-running
+-- after an edit is the normal way to change wording.
 --
 -- ------------------------------------------------------------
 -- WHAT WAS *NOT* SEEDED, AND WHY IT MATTERS MORE THAN WHAT WAS

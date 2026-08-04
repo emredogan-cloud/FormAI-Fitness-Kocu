@@ -553,6 +553,6 @@ it.
 | Their tests | `test/features/community/league_test.dart` |
 | Tables (`leaderboard_stats`, `league_assignments`, `challenges`) | `supabase/migrations/020_leaderboards.sql` |
 | Challenge seeding template | `supabase/sql/seed_challenge_example.sql` |
-| Launch challenge content | `supabase/sql/seed_launch_challenges.sql` |
+| Launch challenge content | `supabase/migrations/021_launch_challenges.sql` |
 | Client reads and writes | `lib/features/community/data/community_repository.dart` |
 | Local notifications | `lib/core/services/notification_service.dart` |

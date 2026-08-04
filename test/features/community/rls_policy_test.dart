@@ -30,6 +30,7 @@ import 'package:flutter_test/flutter_test.dart';
 const List<String> communityMigrations = [
   '019_social_profiles.sql',
   '020_leaderboards.sql',
+  '022_fix_challenge_peer_policy.sql',
 ];
 
 /// The content tables this suite expects to exist.
@@ -148,9 +149,27 @@ void main() {
   });
 
   group('no policy is permissive by accident', () {
-    List<String> policyStatements() => statements
-        .where((s) => s.toLowerCase().startsWith('create policy'))
-        .toList(growable: false);
+    /// Every policy **as it finally stands**, one entry per name.
+    ///
+    /// Migrations are read in order and every policy is written as
+    /// `drop ... if exists` followed by `create`, so a later file
+    /// supersedes an earlier one. Checking every historical statement
+    /// would fail on a defect that has already been repaired — which is
+    /// exactly what happened when `022` fixed two policies and the
+    /// suite kept reporting `019`'s original text. The live database
+    /// has one definition per name, and that is what this asserts.
+    List<String> policyStatements() {
+      final latest = <String, String>{};
+      for (final statement in statements) {
+        if (!statement.toLowerCase().startsWith('create policy')) continue;
+        final name = RegExp(r'create policy\s+"?(\w+)"?', caseSensitive: false)
+            .firstMatch(statement)
+            ?.group(1);
+        if (name == null) continue;
+        latest[name] = statement;
+      }
+      return latest.values.toList(growable: false);
+    }
 
     test('there are policies to check', () {
       expect(policyStatements().length, greaterThan(15));
@@ -177,6 +196,66 @@ void main() {
           reason: 'a policy with no auth.uid() predicate is open to every '
               'signed-in user: $flat',
         );
+      }
+    });
+
+    test('no policy compares a column to itself through an alias', () {
+      // 020 shipped `mine.challenge_id = challenge_id` inside a policy
+      // on `challenge_participants`. The unqualified name resolves to
+      // the innermost scope, so the predicate was
+      // `mine.challenge_id = mine.challenge_id` — always true — and the
+      // read degraded to "has the caller joined anything at all". 019
+      // had the same defect in `squad_members_select_member`.
+      //
+      // **The check is precise, not merely suspicious.** An unqualified
+      // column inside a correlated subquery is only ambiguous if the
+      // aliased table actually has a column by that name. So the table's
+      // columns are read out of its own `create table` statement:
+      //
+      //   `from public.squads s ... where s.id = squad_id`
+      //
+      // is CORRECT, because `squads` has no `squad_id` — the bare name
+      // can only mean the outer row. The first draft of this test
+      // flagged it, which is the difference between a gate that measures
+      // something and one that just fires a lot.
+      final columnsByTable = <String, Set<String>>{};
+      for (final statement in statements) {
+        final match = RegExp(
+          r'create table if not exists public\.(\w+)\s*\(([\s\S]*)',
+          caseSensitive: false,
+        ).firstMatch(statement);
+        if (match == null) continue;
+        columnsByTable[match.group(1)!] =
+            RegExp(r'^\s*(\w+)\s+\w', multiLine: true)
+                .allMatches(match.group(2)!)
+                .map((m) => m.group(1)!)
+                .toSet();
+      }
+
+      final aliasSub = RegExp(
+        r'from\s+public\.(\w+)\s+(\w+)\s+where([\s\S]*?)\)',
+        caseSensitive: false,
+      );
+      for (final policy in policyStatements()) {
+        for (final match in aliasSub.allMatches(policy)) {
+          final table = match.group(1)!;
+          final alias = match.group(2)!;
+          final body = match.group(3)!;
+          final owned = columnsByTable[table] ?? const <String>{};
+          final shadowed = RegExp(r'(?<![.\w])(\w+)\b')
+              .allMatches(body)
+              .map((m) => m.group(1)!)
+              .where(owned.contains)
+              .toSet();
+          expect(
+            shadowed,
+            isEmpty,
+            reason: 'unqualified $shadowed beside alias "$alias" over '
+                'public.$table, which has those columns — the outer row '
+                'must be written table.column or it silently resolves to '
+                'the alias: $policy',
+          );
+        }
       }
     });
 

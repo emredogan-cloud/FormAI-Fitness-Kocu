@@ -32,6 +32,20 @@ void main() {
     });
   });
 
+  group('a deadline is only shown when it is news', () {
+    test('a year out says nothing', () {
+      // Every launch challenge runs for a year, so before this rule
+      // every card carried an identical "361 days left" competing with
+      // its own title.
+      expect(361 <= kChallengeDeadlineIsNews, isFalse);
+    });
+
+    test('a month out says something', () {
+      expect(30 <= kChallengeDeadlineIsNews, isTrue);
+      expect(3 <= kChallengeDeadlineIsNews, isTrue);
+    });
+  });
+
   group('the launch challenges only use kinds the app can measure', () {
     test('every kind maps to an engine the client actually owns', () {
       // Weekly Cardio, Strength Builder, Mobility, Daily Stretch, High

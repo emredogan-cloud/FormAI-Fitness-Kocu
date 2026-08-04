@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/services/analytics_service.dart';
 import '../../../core/theme/neon_surface.dart';
+import '../../../core/utils/app_logger.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/community_repository.dart';
 import '../domain/league.dart';
@@ -44,28 +45,65 @@ class ChallengesScreen extends ConsumerStatefulWidget {
 class _ChallengesScreenState extends ConsumerState<ChallengesScreen> {
   bool _busy = false;
 
+  /// # Why every one of these has a `finally`
+  ///
+  /// `_busy` disables every button on the screen while a write is in
+  /// flight. Without a `finally`, one thrown exception leaves it true
+  /// forever: the screen keeps rendering normally, every Join silently
+  /// does nothing, and there is no error anywhere to explain it. That
+  /// is a worse failure than the original error, and the device walk
+  /// found it exactly that way — taps that appeared to do nothing at
+  /// all.
+  ///
+  /// A failure is also *said out loud* now. `joinChallenge` returns
+  /// false for a closed window or an unapplied schema, and a button
+  /// that quietly declines is indistinguishable from a broken one.
   Future<void> _join(Challenge challenge) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context);
     setState(() => _busy = true);
-    final ok =
-        await ref.read(communityRepositoryProvider).joinChallenge(challenge);
-    if (!mounted) return;
-    setState(() => _busy = false);
-    if (ok) {
-      unawaited(
-          AnalyticsService.instance.challengeJoined(slug: challenge.slug));
-      ref.invalidate(myChallengeEntriesProvider);
+    try {
+      final ok =
+          await ref.read(communityRepositoryProvider).joinChallenge(challenge);
+      if (!mounted) return;
+      if (ok) {
+        unawaited(
+          AnalyticsService.instance.challengeJoined(slug: challenge.slug),
+        );
+        ref.invalidate(myChallengeEntriesProvider);
+      } else {
+        messenger.showSnackBar(
+          SnackBar(content: Text(l10n.challengeJoinFailed)),
+        );
+      }
+    } catch (e, st) {
+      AppLogger.error('joinChallenge failed', e,
+          stackTrace: st, category: 'community');
+      if (mounted) {
+        messenger.showSnackBar(
+          SnackBar(content: Text(l10n.challengeJoinFailed)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
     }
   }
 
   Future<void> _leave(Challenge challenge) async {
     setState(() => _busy = true);
-    await ref.read(communityRepositoryProvider).leaveChallenge(challenge.id);
-    if (!mounted) return;
-    setState(() => _busy = false);
-    unawaited(
-      AnalyticsService.instance.challengeAbandoned(slug: challenge.slug),
-    );
-    ref.invalidate(myChallengeEntriesProvider);
+    try {
+      await ref.read(communityRepositoryProvider).leaveChallenge(challenge.id);
+      if (!mounted) return;
+      unawaited(
+        AnalyticsService.instance.challengeAbandoned(slug: challenge.slug),
+      );
+      ref.invalidate(myChallengeEntriesProvider);
+    } catch (e, st) {
+      AppLogger.error('leaveChallenge failed', e,
+          stackTrace: st, category: 'community');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   @override
@@ -176,18 +214,22 @@ class _ChallengeCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 10),
-                Text(
-                  // A window that has closed says so instead of counting
-                  // down to a negative number.
-                  open
-                      ? l10n.challengeDaysLeft(daysLeft < 0 ? 0 : daysLeft)
-                      : l10n.challengeEnded,
-                  style: TextStyle(
-                    color: open ? NeonSurface.lime : NeonSurface.faint,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
+                // A window that has closed says so instead of counting
+                // down to a negative number; a window a year out says
+                // nothing at all, because a deadline that far away is
+                // not news and every card carrying the same large
+                // number just competes with the titles.
+                if (!open || daysLeft <= kChallengeDeadlineIsNews)
+                  Text(
+                    open
+                        ? l10n.challengeDaysLeft(daysLeft < 0 ? 0 : daysLeft)
+                        : l10n.challengeEnded,
+                    style: TextStyle(
+                      color: open ? NeonSurface.lime : NeonSurface.faint,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
               ],
             ),
             if (challenge.body(locale) != null) ...[

@@ -238,6 +238,15 @@ double challengeFraction({required int progress, required int target}) {
   return fraction.isFinite ? fraction.clamp(0.0, 1.0) : 0.0;
 }
 
+/// How near an ending has to be before it is worth saying.
+///
+/// A challenge that runs for a year is not urgent, and "361 days left"
+/// on every card is noise competing with the title for attention. Past
+/// this many days the deadline is not the story and the card says
+/// nothing about it — the same rule the feed uses for a zero reaction
+/// count, where absent beats rendering a number nobody needs.
+const int kChallengeDeadlineIsNews = 30;
+
 /// Whether a challenge is open for joining at [now].
 ///
 /// A challenge that has ended is not joinable even if it is still on

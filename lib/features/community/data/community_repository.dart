@@ -818,7 +818,12 @@ extension LeaderboardQueries on CommunityRepository {
           .from('challenges')
           .select()
           .gte('ends_at', now.toIso8601String())
-          .order('ends_at');
+          // ascending EXPLICITLY. `order()` in supabase-dart defaults to
+          // descending, so the bare call put the challenge closest to
+          // expiring at the bottom of the list — exactly backwards for a
+          // time-boxed feature, and invisible until six of them existed
+          // with different windows.
+          .order('ends_at', ascending: true);
       final out = <Challenge>[];
       for (final row in rows) {
         final challenge =
