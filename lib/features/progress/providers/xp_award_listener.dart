@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/services/app_preferences.dart';
+import '../../../core/services/analytics_service.dart';
 import '../../community/data/community_repository.dart';
+import '../../community/domain/league.dart';
 import '../../community/domain/models/community_models.dart';
 import '../../workout/data/session_log_repository.dart';
 import '../../workout/models/session_log_model.dart';
@@ -148,6 +150,70 @@ class XpAwardListener extends Notifier<void> {
     );
   }
 
+  /// Roadmap Phase 14 · advances every challenge the user has joined.
+  ///
+  /// Called from the same place as the feed write, for the same reason:
+  /// the ledger above has already decided that a session is new, and a
+  /// separate component asking that question would answer it slightly
+  /// differently. Once per completed workout is also the right cadence —
+  /// a challenge measured in sessions cannot advance more often than a
+  /// session happens.
+  ///
+  /// # Progress is derived, never accumulated
+  ///
+  /// Each kind is recomputed from the engine that owns it — session
+  /// logs, the streak provider, lifetime XP — rather than incremented.
+  /// An increment can be applied twice and is then wrong forever; a
+  /// derived value is self-correcting, so a missed write costs one
+  /// stale reading rather than a permanently wrong total.
+  ///
+  /// # It is as fabricable as the leaderboard, and bounded the same way
+  ///
+  /// The client reports the number because the client is where the
+  /// number lives (see `020_leaderboards.sql`'s header). What stops a
+  /// runaway value here is `target`: progress is only meaningful
+  /// relative to it, and `challengeFraction` clamps the rendering at
+  /// 1.0. Closing the gap properly needs server-side session recording,
+  /// which is Phase 15's.
+  Future<void> _reportChallengeProgress() async {
+    final repository = ref.read(communityRepositoryProvider);
+    final joined = await repository.myChallengeEntries();
+    if (joined.isEmpty) return;
+
+    final open = await repository.challenges();
+    if (open.isEmpty) return;
+
+    final logs = ref.read(sessionLogsProvider).value ?? const {};
+    final prefs = ref.read(appPreferencesProvider);
+    final xp = ref.read(lifetimeXpProvider);
+
+    for (final challenge in open) {
+      final entry = joined[challenge.id];
+      // Not joined, or already finished — completion is a moment and a
+      // later write must not reopen it.
+      if (entry == null || entry.isComplete) continue;
+      final progress = switch (challenge.kind) {
+        ChallengeKind.sessions => logs.length,
+        ChallengeKind.streak => prefs.maxStreak,
+        ChallengeKind.xp => xp,
+        ChallengeKind.consistency =>
+          ((logs.length / kProgrammeDays) * 100).round().clamp(0, 100),
+      };
+      // Nothing changed: skip the write rather than spend a round trip
+      // saying so.
+      if (progress <= entry.progress) continue;
+      await repository.reportChallengeProgress(
+        challenge: challenge,
+        progress: progress,
+      );
+      if (progress >= challenge.target) {
+        unawaited(
+          AnalyticsService.instance.challengeCompleted(slug: challenge.slug),
+        );
+      }
+    }
+  }
+
   /// Roadmap Phase 12 (C22) · mirrors what this pass credited into the
   /// squad feed.
   ///
@@ -209,6 +275,7 @@ class XpAwardListener extends Notifier<void> {
     }
 
     if (days == 1) send(ActivityKind.workoutCompleted);
+    if (days == 1) unawaited(_reportChallengeProgress());
     for (final id in badges) {
       send(ActivityKind.badgeEarned, token: id);
     }
