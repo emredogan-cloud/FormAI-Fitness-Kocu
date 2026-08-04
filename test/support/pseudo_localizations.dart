@@ -8,7 +8,7 @@
 //   2. a layout that only fits Turkish overflows here instead of in a
 //      German store review.
 //
-// 1819 members covered.
+// 1846 members covered.
 
 import 'package:flutter/widgets.dart';
 import 'package:sixpack_ai/core/utils/pseudo_locale.dart';
@@ -5653,6 +5653,86 @@ class PseudoAppLocalizations extends AppLocalizations {
   String get challengeJoinFailed => pseudoLocalize(_inner.challengeJoinFailed);
 
   @override
+  String get whatsNewTitle => pseudoLocalize(_inner.whatsNewTitle);
+
+  @override
+  String get whatsNewDefaultHeadline =>
+      pseudoLocalize(_inner.whatsNewDefaultHeadline);
+
+  @override
+  String get whatsNewDismiss => pseudoLocalize(_inner.whatsNewDismiss);
+
+  @override
+  String get whatsNewEmpty => pseudoLocalize(_inner.whatsNewEmpty);
+
+  @override
+  String get discoveryNewBadge => pseudoLocalize(_inner.discoveryNewBadge);
+
+  @override
+  String get discoveryNewContentTitle =>
+      pseudoLocalize(_inner.discoveryNewContentTitle);
+
+  @override
+  String get discoveryNewContentEmpty =>
+      pseudoLocalize(_inner.discoveryNewContentEmpty);
+
+  @override
+  String get programCompleteTitle =>
+      pseudoLocalize(_inner.programCompleteTitle);
+
+  @override
+  String get continueRepeatTitle => pseudoLocalize(_inner.continueRepeatTitle);
+
+  @override
+  String get continueRepeatBody => pseudoLocalize(_inner.continueRepeatBody);
+
+  @override
+  String get continueRepeatSameTitle =>
+      pseudoLocalize(_inner.continueRepeatSameTitle);
+
+  @override
+  String get continueRepeatSameBody =>
+      pseudoLocalize(_inner.continueRepeatSameBody);
+
+  @override
+  String get continueAdvanceBody => pseudoLocalize(_inner.continueAdvanceBody);
+
+  @override
+  String get continueSwitchTitle => pseudoLocalize(_inner.continueSwitchTitle);
+
+  @override
+  String get continueSwitchBody => pseudoLocalize(_inner.continueSwitchBody);
+
+  @override
+  String get continueMaintenanceTitle =>
+      pseudoLocalize(_inner.continueMaintenanceTitle);
+
+  @override
+  String get continueMaintenanceBody =>
+      pseudoLocalize(_inner.continueMaintenanceBody);
+
+  @override
+  String get continueRecommended => pseudoLocalize(_inner.continueRecommended);
+
+  @override
+  String get tierBeginner => pseudoLocalize(_inner.tierBeginner);
+
+  @override
+  String get tierIntermediate => pseudoLocalize(_inner.tierIntermediate);
+
+  @override
+  String get tierAdvanced => pseudoLocalize(_inner.tierAdvanced);
+
+  @override
+  String get fitTooHard => pseudoLocalize(_inner.fitTooHard);
+
+  @override
+  String get fitTooEasy => pseudoLocalize(_inner.fitTooEasy);
+
+  @override
+  String get fitWellMatched => pseudoLocalize(_inner.fitWellMatched);
+
+  @override
   String retrospectiveSummary(String workouts, String minutes, String reps) =>
       pseudoLocalize(_inner.retrospectiveSummary(workouts, minutes, reps));
 
@@ -6470,8 +6550,20 @@ class PseudoAppLocalizations extends AppLocalizations {
   String challengeProgress(int done, int target) =>
       pseudoLocalize(_inner.challengeProgress(done, target));
 
+  @override
+  String whatsNewVersion(String version) =>
+      pseudoLocalize(_inner.whatsNewVersion(version));
+
+  @override
+  String programCompleteBody(int done, int days) =>
+      pseudoLocalize(_inner.programCompleteBody(done, days));
+
+  @override
+  String continueAdvanceTitle(String tier) =>
+      pseudoLocalize(_inner.continueAdvanceTitle(tier));
+
   /// Number of members this wrapper covers. The test suite asserts
   /// it still matches the generated class, so a new ARB key cannot
   /// slip past pseudo mode unnoticed.
-  static const int coveredMembers = 1819;
+  static const int coveredMembers = 1846;
 }

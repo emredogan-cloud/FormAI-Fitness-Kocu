@@ -8567,5 +8567,131 @@
   "challengeJoinFailed": "Could not join that challenge. Try again in a moment.",
   "@challengeJoinFailed": {
     "description": "Shown when joining a challenge does not succeed."
+  },
+  "whatsNewTitle": "What's new",
+  "@whatsNewTitle": {
+    "description": "Title of the post-update changelog screen."
+  },
+  "whatsNewDefaultHeadline": "FormAI just got better",
+  "@whatsNewDefaultHeadline": {
+    "description": "Headline used when a release note does not author one."
+  },
+  "whatsNewVersion": "Version {version}",
+  "@whatsNewVersion": {
+    "description": "Subtitle naming the app version a changelog describes.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "whatsNewDismiss": "Great",
+  "@whatsNewDismiss": {
+    "description": "Button that closes the What's New screen."
+  },
+  "whatsNewEmpty": "Nothing new right now. It will be here after the next update.",
+  "@whatsNewEmpty": {
+    "description": "Shown when the changelog is opened and there is no release note."
+  },
+  "discoveryNewBadge": "New",
+  "@discoveryNewBadge": {
+    "description": "Small badge marking content the user has not seen."
+  },
+  "discoveryNewContentTitle": "New content",
+  "@discoveryNewContentTitle": {
+    "description": "Section heading over the list of recent content drops."
+  },
+  "discoveryNewContentEmpty": "New content shows up here when it lands.",
+  "@discoveryNewContentEmpty": {
+    "description": "Empty state for the new-content section."
+  },
+  "programCompleteTitle": "30 days done",
+  "@programCompleteTitle": {
+    "description": "Celebration heading shown when the program is finished."
+  },
+  "programCompleteBody": "You completed {done} of {days} days. Choose what comes next.",
+  "@programCompleteBody": {
+    "description": "Summary of the finished program above the continuation choices.",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "continueRepeatTitle": "Repeat with more volume",
+  "@continueRepeatTitle": {
+    "description": "Continuation path: same tier, higher volume."
+  },
+  "continueRepeatBody": "The same program with a few more reps. A base that is genuinely solid progresses fastest.",
+  "@continueRepeatBody": {
+    "description": "Explanation of the repeat-with-progression path."
+  },
+  "continueRepeatSameTitle": "Run the program again",
+  "@continueRepeatSameTitle": {
+    "description": "Continuation path offered to someone who did not finish: same program, same load."
+  },
+  "continueRepeatSameBody": "The same program at the same load. That is how a half-finished program gets finished.",
+  "@continueRepeatSameBody": {
+    "description": "Explanation of the repeat-without-overload path."
+  },
+  "continueAdvanceTitle": "Move up to {tier}",
+  "@continueAdvanceTitle": {
+    "description": "Continuation path: advance one difficulty tier.",
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "continueAdvanceBody": "Harder movements and longer sets. You completed most of this program.",
+  "@continueAdvanceBody": {
+    "description": "Explanation of the advance-a-tier path."
+  },
+  "continueSwitchTitle": "Change your focus",
+  "@continueSwitchTitle": {
+    "description": "Continuation path: same tier, different goal."
+  },
+  "continueSwitchBody": "Same level, different goal. A body that has adapted needs a new stimulus.",
+  "@continueSwitchBody": {
+    "description": "Explanation of the switch-focus path."
+  },
+  "continueMaintenanceTitle": "Switch to maintenance",
+  "@continueMaintenanceTitle": {
+    "description": "Continuation path: fewer sessions, hold the result."
+  },
+  "continueMaintenanceBody": "Fewer sessions a week, to hold what you built. You can come back any time.",
+  "@continueMaintenanceBody": {
+    "description": "Explanation of the maintenance path."
+  },
+  "continueRecommended": "Recommended",
+  "@continueRecommended": {
+    "description": "Badge marking the continuation path the app suggests."
+  },
+  "tierBeginner": "Beginner",
+  "@tierBeginner": {
+    "description": "Difficulty tier name."
+  },
+  "tierIntermediate": "Intermediate",
+  "@tierIntermediate": {
+    "description": "Difficulty tier name."
+  },
+  "tierAdvanced": "Advanced",
+  "@tierAdvanced": {
+    "description": "Difficulty tier name."
+  },
+  "fitTooHard": "This program was hard on you. We are not making the next one heavier.",
+  "@fitTooHard": {
+    "description": "Honest reading of a program the user largely did not complete."
+  },
+  "fitTooEasy": "This program was easy for you. Time to add load.",
+  "@fitTooEasy": {
+    "description": "Honest reading of a program the user finished quickly."
+  },
+  "fitWellMatched": "This program suited you well.",
+  "@fitWellMatched": {
+    "description": "Honest reading of a well-matched program."
   }
 }

@@ -5,8 +5,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
+import '../../../core/routing/app_router.dart';
 import '../../../core/services/app_preferences.dart';
+import '../../../core/services/content_sync_service.dart';
+import '../../../core/utils/app_logger.dart';
+import 'whats_new_screen.dart';
 import '../../../core/services/disclosure_providers.dart';
 import '../../../core/services/feature_flags.dart';
 import '../../../core/services/progressive_disclosure.dart';
@@ -180,6 +185,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _refreshTip();
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(_maybeShowWhatsNew());
+    });
     // Roadmap Phase 2 · honour external tab requests (currently the
     // Profil tab's tour-replay row). listenManual, not a build-time
     // ref.listen, so applying a request never happens during build.
@@ -191,6 +199,39 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         _onTabChanged(next.index);
       },
     );
+  }
+
+  /// Roadmap Phase 14 (C5) · the changelog, once per release.
+  ///
+  /// The sync runs first and the decision is made after it, so the very
+  /// first launch on a new build shows the note for that build rather
+  /// than one launch later. `refreshIfStale` makes that cheap: a user
+  /// who opens the app six times an hour issues one request.
+  ///
+  /// **Everything here is allowed to do nothing.** No release table, no
+  /// connectivity, no unread note and no locale with copy in it all end
+  /// the same way — silently. A changelog is the least important thing
+  /// on this screen and it must never be the reason it fails.
+  Future<void> _maybeShowWhatsNew() async {
+    try {
+      await ref.read(contentSyncServiceProvider).refreshIfStale();
+      if (!mounted) return;
+      final info = await PackageInfo.fromPlatform();
+      final build = int.tryParse(info.buildNumber);
+      if (build == null || !mounted) return;
+      final locale = Localizations.localeOf(context).toLanguageTag();
+      final release = ref.read(
+        pendingReleaseNoteProvider((build: build, locale: locale)),
+      );
+      if (release == null || !mounted) return;
+      await context.push(AppRoutes.whatsNew, extra: release);
+    } catch (e, st) {
+      // package_info_plus fails on test stubs, and a wedged link throws
+      // past the sync service's own guard. Neither is worth a broken
+      // dashboard.
+      AppLogger.warning('whats-new check skipped: $e',
+          category: 'content', data: {'stack': st.toString()});
+    }
   }
 
   void _maybePrefetchTodaysMeals() {

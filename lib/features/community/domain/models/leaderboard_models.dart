@@ -8,6 +8,7 @@
 /// wrong default whenever the server could be newer than the client.
 library;
 
+import '../../../../core/utils/localized_copy.dart';
 import '../league.dart';
 
 /// One person's week, as the leaderboard sees it.
@@ -157,19 +158,8 @@ class Challenge {
   ///
   /// Null rather than the slug: a slug is an identifier and showing one
   /// to a user is the same mistake as rendering a badge token.
-  String? title(String locale) => _pick(locale, 'title');
-  String? body(String locale) => _pick(locale, 'body');
-
-  String? _pick(String locale, String field) {
-    final exact = copy[locale]?[field];
-    if (exact != null && exact.isNotEmpty) return exact;
-    // The language without its region — 'tr' for 'tr-TR'.
-    final short = locale.split('-').first;
-    final byLanguage = copy[short]?[field];
-    if (byLanguage != null && byLanguage.isNotEmpty) return byLanguage;
-    final english = copy['en']?[field];
-    return (english != null && english.isNotEmpty) ? english : null;
-  }
+  String? title(String locale) => pickLocalized(copy, locale, 'title');
+  String? body(String locale) => pickLocalized(copy, locale, 'body');
 
   bool isOpen(DateTime now) =>
       challengeIsOpen(startsAt: startsAt, endsAt: endsAt, now: now);
@@ -199,24 +189,10 @@ class Challenge {
       target: target,
       startsAt: startsAt,
       endsAt: endsAt,
-      copy: _parseCopy(json['copy']),
+      copy: parseLocalizedCopy(json['copy']),
       badgeId: json['badge_id'] as String?,
       squadScope: json['squad_scope'] as bool? ?? false,
     );
-  }
-
-  static Map<String, Map<String, String>> _parseCopy(Object? raw) {
-    if (raw is! Map) return const {};
-    final out = <String, Map<String, String>>{};
-    raw.forEach((locale, fields) {
-      if (locale is! String || fields is! Map) return;
-      final entry = <String, String>{};
-      fields.forEach((key, value) {
-        if (key is String && value is String) entry[key] = value;
-      });
-      if (entry.isNotEmpty) out[locale] = entry;
-    });
-    return out;
   }
 }
 

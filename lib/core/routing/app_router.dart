@@ -10,7 +10,9 @@ import '../../features/auth/providers/auth_provider.dart';
 import '../../features/feedback/presentation/help_center_screen.dart';
 import '../../features/home/presentation/account_settings_screen.dart';
 import '../../features/home/presentation/dashboard_screen.dart';
+import '../../features/home/domain/content_freshness.dart';
 import '../../features/home/presentation/discovery_hub_screen.dart';
+import '../../features/home/presentation/whats_new_screen.dart';
 import '../../features/monetization/presentation/paywall_screen.dart';
 import '../../features/nutrition/domain/models/recipe.dart';
 import '../../features/nutrition/presentation/category_recipes_screen.dart';
@@ -109,6 +111,12 @@ class AppRoutes {
   static const String communityLeaderboard = '/community/leaderboard';
   static const String communityChallenges = '/community/challenges';
   static const String nutritionDiscover = '/nutrition/discover';
+
+  /// Phase 14 · the post-update changelog. Pushed automatically by the
+  /// dashboard when there is an unread note, and reachable directly so
+  /// somebody who dismissed it can go back and look — Phase 13 learned
+  /// that a route nothing links to is not a route.
+  static const String whatsNew = '/whats-new';
 
   /// Phase 50B · internal admin panel. Gated by [isAdminProvider]; the
   /// router redirects non-admins to [dashboard] before the screen is
@@ -477,6 +485,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.communityChallenges,
         name: 'communityChallenges',
         builder: (context, state) => const ChallengesScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.whatsNew,
+        name: 'whatsNew',
+        // `extra` is the release the dashboard already resolved. Null
+        // when the route is opened directly, which the screen renders as
+        // "nothing new right now" rather than treating as an error.
+        builder: (context, state) =>
+            WhatsNewScreen(release: state.extra as ContentRelease?),
       ),
       GoRoute(
         path: AppRoutes.nutritionDiscover,

@@ -1003,4 +1003,41 @@ class AppPreferences {
   Future<void> clearSeenYearInReview() async {
     await _prefs.remove(_seenYearInReviewKey);
   }
+
+  // ─── Phase 14 · content freshness ────────────────────────────────
+  //
+  // Both of these are device state on purpose, and `024`'s header
+  // argues it at length: keeping "have you read this" off the server
+  // means the content tables hold no user data at all, which is a
+  // stronger privacy property than any policy protecting a column, and
+  // it works on the first launch after an update — which is exactly
+  // when a phone may still be on the store's network rather than the
+  // user's.
+
+  static const String _whatsNewSeenBuildKey = 'sixpack.whats_new_seen_build';
+  static const String _seenDropsKey = 'sixpack.content_drops_seen_v1';
+
+  /// The highest build whose release note this device has shown.
+  ///
+  /// 0 means "never shown one", which is also what a fresh install
+  /// reports — [markWhatsNewSeen] is called with the running build at
+  /// the end of onboarding so a new user is not handed a changelog for
+  /// a version they never ran.
+  int get whatsNewSeenBuild => _prefs.getInt(_whatsNewSeenBuildKey) ?? 0;
+
+  Future<void> markWhatsNewSeen(int build) async {
+    // Never moves backwards. A downgrade (a tester sideloading an older
+    // APK) must not un-see the notes they have already read.
+    if (build <= whatsNewSeenBuild) return;
+    await _prefs.setInt(_whatsNewSeenBuildKey, build);
+  }
+
+  /// Slugs of content drops the user has already been shown a badge for.
+  Set<String> get seenContentDrops =>
+      (_prefs.getStringList(_seenDropsKey) ?? const <String>[]).toSet();
+
+  Future<void> markContentDropsSeen(Iterable<String> slugs) async {
+    final merged = {...seenContentDrops, ...slugs};
+    await _prefs.setStringList(_seenDropsKey, merged.toList(growable: false));
+  }
 }

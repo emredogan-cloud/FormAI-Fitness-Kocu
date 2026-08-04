@@ -693,6 +693,59 @@ class AnalyticsService {
     return _capture('challenge_abandoned', {'slug': slug});
   }
 
+  // ─── Phase 14 · content freshness ────────────────────────────────
+
+  /// The roadmap's target is ≥45% of users viewing What's New after an
+  /// update, so [build] is on the event: the denominator is per-release
+  /// and a rate across all releases would hide a bad one.
+  Future<void> whatsNewViewed({required String version, required int build}) {
+    return _capture('whats_new_viewed', {'version': version, 'build': build});
+  }
+
+  /// A content drop the user actually opened. [slug] is content, not a
+  /// person.
+  Future<void> newContentDiscovered({
+    required String slug,
+    required String kind,
+  }) {
+    return _capture('new_content_discovered', {'slug': slug, 'kind': kind});
+  }
+
+  /// Which way somebody went on day 31. The success criterion is that
+  /// ≥60% of completers choose *any* path rather than churning, so the
+  /// event fires for every path including maintenance.
+  Future<void> programContinuationChosen({
+    required String path,
+    required String tier,
+    required bool wasRecommended,
+  }) {
+    return _capture('program_continuation_chosen', {
+      'path': path,
+      'tier': tier,
+      'was_recommended': wasRecommended,
+    });
+  }
+
+  /// A lifecycle campaign notification was scheduled.
+  ///
+  /// Sent, not delivered — the app cannot observe the OS actually
+  /// showing it, and an event named `campaign_delivered` would be a
+  /// claim this code is not in a position to make.
+  Future<void> campaignSent({required String campaign}) {
+    return _capture('campaign_sent', {'campaign': campaign});
+  }
+
+  /// The app was opened from a campaign notification.
+  Future<void> campaignOpened({required String campaign}) {
+    return _capture('campaign_opened', {'campaign': campaign});
+  }
+
+  /// A campaign was followed by the thing it asked for, within the
+  /// window the campaign defines.
+  Future<void> campaignConverted({required String campaign}) {
+    return _capture('campaign_converted', {'campaign': campaign});
+  }
+
   // NOTE · App Tracking Transparency was deliberately REMOVED. The app's
   // PrivacyInfo.xcprivacy declares `NSPrivacyTracking = false` and the
   // published privacy policy states no cross-app tracking occurs — so
