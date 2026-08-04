@@ -365,10 +365,33 @@ below needs new schema or new decisions.
    tier's `token` back to `WorkoutGeneratorService`. Trigger point: the
    day-30 completion path, beside the existing Year-in-Review one-shot.
 
-2. **Difficulty-tier wiring** (feature 5). `DifficultyTier.token`
-   matches the generator's `fitnessLevel` strings exactly and a test
-   pins that. Nothing yet passes a chosen tier back into plan
-   generation, and `progressedReps` is not applied anywhere.
+2. **Difficulty-tier wiring** (feature 5). The plumbing, so nobody has
+   to re-derive it:
+
+   * **The stored tier is `userMetrics['activityLevel']`**, read in
+     `workout_provider.dart:238` and passed to
+     `loadOrGenerateProgram(fitnessLevel:)`.
+   * **It does not use the tier names.** Onboarding writes
+     `ActivityLevel.name` — `sedentary` · `light` · `active` — and the
+     Turkish build has written `başlangıç` · `orta` · `ileri`.
+     `DifficultyTier.fromToken` now accepts exactly the vocabulary
+     `WorkoutGeneratorService._normaliseLevel` accepts, and a test reads
+     that method's source to keep the two lists equal.
+   * **Advancing a tier is a write to `userMetrics` plus
+     `WorkoutRepository.resetProgress()`.** The plan cache is keyed by a
+     fingerprint of `(goal, fitnessLevel, hasEquipment)`, so changing
+     the level invalidates it without any extra step.
+   * `DifficultyTier.token` returns `beginner`/`intermediate`/
+     `advanced`, which `_normaliseLevel` accepts, so writing back works
+     as-is.
+   * `progressedReps` is not applied anywhere yet.
+
+   **This was nearly shipped wrong.** The first `fromToken` matched only
+   its own three names and would have reported every `active` user as a
+   beginner — recommending a tier advance to somebody already advanced —
+   and the first version of its test asserted that wrong answer, because
+   it was written from the same assumption. Gotcha #21 in the resume
+   guide, third occurrence.
 
 3. **New-content discovery surface** (feature 6). `ContentDrop`,
    `ContentAudience` and the whole targeting matrix are shipped and

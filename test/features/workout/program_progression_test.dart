@@ -33,13 +33,62 @@ void main() {
       expect(DifficultyTier.advanced.next, isNull);
     });
 
+    test('the STORED vocabulary is read, not just these three names', () {
+      // `userMetrics['activityLevel']` holds `ActivityLevel.name` —
+      // sedentary / light / active — and never the tier names. The
+      // first draft of `fromToken` matched only its own three, which
+      // reported every `active` user as a beginner, and the first draft
+      // of this test agreed with it because it was written from the
+      // same assumption.
+      expect(DifficultyTier.fromToken('active'), DifficultyTier.advanced);
+      expect(DifficultyTier.fromToken('light'), DifficultyTier.intermediate);
+      expect(DifficultyTier.fromToken('sedentary'), DifficultyTier.beginner);
+      // The Turkish spellings the app has written at various points.
+      expect(DifficultyTier.fromToken('İleri'), DifficultyTier.advanced);
+      expect(DifficultyTier.fromToken('Orta'), DifficultyTier.intermediate);
+    });
+
     test('an unreadable stored level is a beginner, never an advanced', () {
-      // Preferences have carried free text since before this enum. The
-      // safe direction is down: a beginner given an advanced program is
-      // hurt, an advanced user given a beginner one is bored.
+      // Down is the safe direction: a beginner given an advanced
+      // program is hurt, an advanced user given a beginner one is bored.
       expect(DifficultyTier.fromToken(null), DifficultyTier.beginner);
-      expect(DifficultyTier.fromToken('İleri'), DifficultyTier.beginner);
+      expect(DifficultyTier.fromToken(''), DifficultyTier.beginner);
+      expect(DifficultyTier.fromToken('hyperborean'), DifficultyTier.beginner);
       expect(DifficultyTier.fromToken('advanced'), DifficultyTier.advanced);
+    });
+
+    test('every token the generator accepts is a token this reads', () {
+      // The two vocabularies must not drift: the generator decides what
+      // plan gets built and this decides what tier the app believes the
+      // user is on. Same shape as the overload-constant test below.
+      final source = File(
+        'lib/features/workout/domain/services/workout_generator_service.dart',
+      ).readAsStringSync();
+      final level =
+          RegExp(r'_Level _normaliseLevel[\s\S]*?\n  \}').firstMatch(source);
+      expect(level, isNotNull,
+          reason: '_normaliseLevel is gone or renamed — this test derives '
+              'the accepted vocabulary from it');
+      final tokens = RegExp(r"v == '([^']+)'")
+          .allMatches(level!.group(0)!)
+          .map((m) => m.group(1)!)
+          .toSet();
+      expect(tokens, isNotEmpty);
+      for (final token in tokens) {
+        final mine = DifficultyTier.fromToken(token);
+        // `beginner` is the fallback, so it proves nothing on its own —
+        // assert the two NON-default buckets agree, which is where a
+        // silent disagreement would actually cost something.
+        if (token == 'advanced' || token == 'active' || token == 'ileri') {
+          expect(mine, DifficultyTier.advanced, reason: token);
+        } else if (token == 'intermediate' ||
+            token == 'light' ||
+            token == 'orta') {
+          expect(mine, DifficultyTier.intermediate, reason: token);
+        } else {
+          expect(mine, DifficultyTier.beginner, reason: token);
+        }
+      }
     });
   });
 

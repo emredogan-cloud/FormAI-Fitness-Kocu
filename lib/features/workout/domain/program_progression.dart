@@ -48,13 +48,31 @@ enum DifficultyTier {
         advanced => null,
       };
 
-  /// Parsed from stored preferences, which have carried free text since
-  /// long before this enum existed.
-  static DifficultyTier fromToken(String? token) => switch (token) {
-        'intermediate' => intermediate,
-        'advanced' => advanced,
-        _ => beginner,
-      };
+  /// Parsed from stored preferences.
+  ///
+  /// **The stored value is `userMetrics['activityLevel']`, and it does
+  /// NOT use these names.** Onboarding writes `ActivityLevel.name` —
+  /// `sedentary` · `light` · `active` — and the Turkish build has
+  /// written `başlangıç` · `orta` · `ileri` at various points. So this
+  /// accepts exactly the vocabulary `WorkoutGeneratorService`'s
+  /// `_normaliseLevel` accepts, and `program_progression_test.dart`
+  /// reads that method's source to prove the two lists still agree.
+  ///
+  /// The first draft of this method matched only its own three names,
+  /// which silently reported every `active` user as a beginner — and
+  /// the test written from the same assumption agreed with it.
+  static DifficultyTier fromToken(String? token) {
+    final v = token?.trim().toLowerCase() ?? '';
+    if (v == 'advanced' || v == 'active' || v == 'ileri') return advanced;
+    if (v == 'intermediate' || v == 'light' || v == 'orta') {
+      return intermediate;
+    }
+    // Everything else, including the beginner spellings and anything
+    // unrecognised. Down is the safe direction: a beginner handed an
+    // advanced program is hurt, an advanced user handed a beginner one
+    // is bored.
+    return beginner;
+  }
 }
 
 /// The four ways forward the roadmap names.
