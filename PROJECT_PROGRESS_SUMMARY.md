@@ -1,15 +1,17 @@
 # FormAI — Project Progress Summary
 
 **Spec:** `TESTERS_COMMUNITY_PRODUCT_ROADMAP.md` (18 phases / 5 waves)
-**As of:** 2026-08-04 · Phase 8 **closed as split** · Phase 9 **complete** · pre-Phase-10 polish sprint complete · **Phase 10 complete** · **Phase 11 ⏸ deferred by founder** · **Phase 12 complete** · **Phase 13 complete** · pre-Phase-14 polish complete · **Phase 14 IN PROGRESS — 4 of 8 features shipped** · **migrations 001–025 ALL APPLIED** · build **1.0.0+36** · **1453 tests**
+**As of:** 2026-08-04 · Phase 8 **closed as split** · Phase 9 **complete** · pre-Phase-10 polish sprint complete · **Phase 10 complete** · **Phase 11 ⏸ deferred by founder** · **Phase 12 complete** · **Phase 13 complete** · pre-Phase-14 polish complete · **Phase 14 IN PROGRESS — 4 of 8 features shipped** · **migrations 001–026 ALL APPLIED** · build **1.0.0+36** · **1453 tests**
 
-> **Two production defects were found and fixed on 2026-08-04, by the
+> **Three production defects were found and fixed on 2026-08-04, by the
 > first live RLS pass ever run against this database.** Five community
 > tables had been answering HTTP 500 since `019` was applied — squads
-> and the whole activity feed had never worked — and blocking a user did
-> nothing to their view of you. Both are fixed in `023` and verified
-> against production. `PHASE_14_PROGRESS_REPORT.md` §0 is the record;
-> `RESUME_GUIDE.md` §2.0.0k is the short version.
+> and the whole activity feed had never worked; blocking a user did
+> nothing to their view of you; and no user could create a squad,
+> because `.insert().select()` makes Postgres apply the SELECT policy to
+> the returned row. Fixed in `023` and `026`, each verified against
+> production with real accounts. `PHASE_14_PROGRESS_REPORT.md` §0 is the
+> record; `RESUME_GUIDE.md` §2.0.0k is the short version.
 
 ---
 
@@ -274,7 +276,7 @@ Founder-side, carried and still open:
 ### Wave 4 — Community & Content Engine
 - **Phase 12 — Community I: Identity & Squads.** ✅ **complete** — an identity worth showing and a small group worth showing up for. Migration `019` applied.
 - **Phase 13 — Community II: Leaderboards & Challenges.** ✅ **complete** — healthy competition on top of the identity layer, without making beginners feel bad. Migrations `020`–`022` applied.
-- **Phase 14 — Content Freshness Engine.** 🟡 **in progress, 4 of 8** — solve the structural problem that a 30-day program has a 30-day lifespan. Migrations `023`–`025` applied. `PHASE_14_PROGRESS_REPORT.md` §5 is the remainder.
+- **Phase 14 — Content Freshness Engine.** 🟡 **in progress, 4 of 8** — solve the structural problem that a 30-day program has a 30-day lifespan. Migrations `023`–`026` applied. `PHASE_14_PROGRESS_REPORT.md` §5 is the remainder.
 
 ### Wave 5 — Scale, Depth & Platform
 - **Phase 15 — Scale, Reliability & Continuous Discovery.** Sized for 10k–100k users, provably stable, driven by a permanent feedback loop.
@@ -316,7 +318,7 @@ Wave 5 — Scale, Depth & Platform         ⏳ Not Started (Phases 15–17)
 - The local release build is upload-key signed, so device installs need `adb uninstall` first (loses session, requires a full onboarding re-walk).
 - **MIUI's "Install via USB" lapses.** `INSTALL_FAILED_USER_RESTRICTED` is not a signing problem and no adb flag works around it; it needs a Mi-account re-authorization on the handset.
 - **A green gate is a claim about its own heuristics.** Three phases running now. Phase 7's translation audit found four bugs in itself while proving its first batch — including one where the check meant to prove 199 recipes were translated reported every one of them as untranslated. Probe every widening.
-- **Every migration 001–022 is applied to production.** 016 is deliberately unwritten. Repository and production are in sync. `supabase db push` must run from a staging workdir — the CLI parses `.env.local` as dotenv and it is freeform notes.
+- **Every migration 001–026 is applied to production.** 016 is deliberately unwritten. Repository and production are in sync. `supabase db push` must run from a staging workdir — the CLI parses `.env.local` as dotenv and it is freeform notes.
 - **An RLS predicate can be always-true and look correct.** `m.squad_id = squad_id` inside a policy binds to the alias, not the outer row. Four policies shipped that way; three were live from the day community launched, one was a write hole. Migration `022` fixed them and `rls_policy_test.dart` now catches the class. **The live penetration pass the roadmap asks for has still never been run**, and this is the strongest argument yet that it should be.
 - **Leaderboard anti-gaming is a bound, not a guarantee.** XP is client-authoritative. `020`'s constraints make the implausible impossible; they cannot detect a plausible lie. Closing that needs server-side session recording (Phase 15) and the migration header says so.
 - **The cross-check between two independent sources is where the defects are.** Every one of Phase 7's findings in pre-existing content came from comparing two things that had never been compared: hand tags against derived diet flags, English ingredient names against Turkish ones, the new macro rule against the old catalogue.

@@ -1,0 +1,65 @@
+-- ============================================================
+-- 026 · A user could never create a squad
+-- ============================================================
+--
+-- Found immediately after `023` made the squad tables reachable at all,
+-- by exercising the WRITE paths rather than the reads. This defect is
+-- independent of the recursion and had been sitting underneath it.
+--
+--   POST /rest/v1/squads   (Prefer: return=representation)
+--   403  42501  new row violates row-level security policy
+--                for table "squads"
+--
+--   POST /rest/v1/squads   (no representation)
+--   201
+--
+-- **The INSERT was never the problem — the RETURNING was.**
+-- `squads_insert_owner` is `with check (auth.uid() = owner_id)` and the
+-- row satisfies it. But `CommunityRepository.createSquad` writes
+--
+--     .from('squads').insert({...}).select().single()
+--
+-- and `.select()` makes PostgREST ask for the row back. Postgres applies
+-- the SELECT policy to a RETURNING row, and `squads_select_member`
+-- requires an existing `squad_members` row for the caller — which
+-- `createSquad` inserts on the **next line**. The row cannot be read at
+-- the moment it is created, so the whole statement is refused.
+--
+-- The error message names the INSERT, which is why reading it does not
+-- lead anywhere: it is the same 42501 text a genuine `with check`
+-- violation produces.
+--
+-- ------------------------------------------------------------
+-- THE FIX
+-- ------------------------------------------------------------
+--
+-- An owner may read their own squad, whether or not the membership row
+-- exists yet. This is strictly less power than they already have —
+-- `squads_update_owner` and `squads_delete_owner` both key on
+-- `auth.uid() = owner_id` — and it is the same shape as
+-- `public_profiles_select_own`, which exists so a user can always read
+-- their own row regardless of publication.
+--
+-- It also makes one failure mode recoverable that was not. `createSquad`
+-- is two statements without a transaction, so if the `squad_members`
+-- insert fails the squad exists with no members. Under
+-- `squads_select_member` alone that row is invisible to everybody
+-- forever, including the person who made it. Now its owner can see it,
+-- and `squads_delete_owner` can clean it up.
+--
+-- WHY NOT A `create_squad` RPC
+--
+-- Because `join_squad` is one — and the argument for that one does not
+-- transfer. `join_squad` is SECURITY DEFINER because the twelve-member
+-- cap has to be checked and written in a single statement or two people
+-- joining a squad of eleven both succeed. Creating a squad has no such
+-- race: the caller is the only participant. Making both writes atomic is
+-- still worth doing, and it is the right shape for the day this needs a
+-- transaction — but it is a redesign, and this is the one-line policy
+-- that makes the feature work.
+
+drop policy if exists squads_select_owner on public.squads;
+
+create policy squads_select_owner
+  on public.squads for select
+  using (auth.uid() = owner_id);

@@ -6,7 +6,7 @@ rules built and tested but no surface. See §5 for the exact remainder.
 **Commits:** `87a8dec` (the blocker) → `07b7034` → `03a4360`
 **Build:** 1.0.0+36 — **not bumped**, no APK/AAB built this session
 **Tests:** 1453 (1384 at session start, 1388 after the blocker fix)
-**Migrations applied to production:** `023`, `024`, `025`
+**Migrations applied to production:** `023`, `024`, `025`, `026`
 **Device walk:** ❌ **not done — no device was connected this session**
 
 ---
@@ -107,13 +107,55 @@ over an enumerable list and is strictly worse.
 | A blocks B, B reads A | B still sees A | **B loses sight of A** |
 | B reads the `blocks` row itself | 0 rows | 0 rows (unchanged, correct) |
 | client writes to a content table | — | **403** |
+| create a squad, join it, post to the feed | 500 / then 403 | **all 201** |
+| B reads A's feed event in a shared squad | — | **✅** |
+| B posts an event as A (the `022` write hole) | — | **refused, 403** |
+| after A blocks B, B loses A's feed event | — | **✅** |
 
 Every probe ran with throwaway accounts created and deleted through the
 admin API. Production holds no diagnostic residue: `auth.users` has no
 `formai-diag.invalid` address, and the founder's single
 `public_profiles` row is untouched.
 
-### 0.5 Why "no exception in logcat" was the wrong evidence
+### 0.5 A third defect, found only by exercising the WRITES
+
+`023` made the squad tables reachable, and the reads all returned 200.
+So the next question was whether anything could be *written*, and the
+answer was no:
+
+```
+POST /rest/v1/squads   (Prefer: return=representation)
+403  42501  new row violates row-level security policy for table "squads"
+
+POST /rest/v1/squads   (no representation)
+201
+```
+
+**The INSERT was never the problem — the RETURNING was.**
+`CommunityRepository.createSquad` writes
+`.from('squads').insert({...}).select().single()`, and `.select()` asks
+PostgREST for the row back. Postgres applies the SELECT policy to a
+RETURNING row, and `squads_select_member` requires a `squad_members` row
+for the caller — which `createSquad` inserts **on the next line**. The
+row cannot be read at the moment it is created, so the statement is
+refused.
+
+The error names the INSERT, which is why reading it leads nowhere: it is
+the same 42501 text a genuine `with check` violation produces.
+
+`026` lets an owner read their own squad. That is strictly less power
+than they already have — `squads_update_owner` and `squads_delete_owner`
+both key on `auth.uid() = owner_id` — and it is the shape
+`public_profiles_select_own` already uses. It also makes one failure
+recoverable that was not: `createSquad` is two statements without a
+transaction, so a failed membership insert leaves a squad that under
+`squads_select_member` alone is invisible to everybody forever,
+including the person who made it.
+
+**A read probe would never have found this.** All five tables answered
+200 after `023` and squad creation was still impossible.
+
+### 0.6 Why "no exception in logcat" was the wrong evidence
 
 `AppLogger.error` prints only under `kDebugMode`. The founder was
 testing a **release** build, so the `PostgrestException` was captured to
@@ -122,7 +164,7 @@ inference — no log, therefore no throw, therefore an early `return
 false` — was reasonable and wrong. **In a release build, "nothing in
 logcat" is not "no exception."**
 
-### 0.6 The gate now catches the class
+### 0.7 The gate now catches the class
 
 `rls_policy_test.dart` gained five checks, and all five were **probed
 against the real defect before being trusted**:

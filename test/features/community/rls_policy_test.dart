@@ -32,6 +32,7 @@ const List<String> communityMigrations = [
   '020_leaderboards.sql',
   '022_fix_challenge_peer_policy.sql',
   '023_rls_recursion_and_block_direction.sql',
+  '026_squad_owner_can_read_own.sql',
 ];
 
 /// The content tables this suite expects to exist.

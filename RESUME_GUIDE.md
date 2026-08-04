@@ -6,7 +6,7 @@ previous one can continue without re-analysing the repository.
 **Last updated:** 2026-08-04. Phase 8 stays closed as a split (RTL done,
 three languages deferred). **Phase 11 is DEFERRED BY FOUNDER — do not
 implement it.** **Phases 12 and 13 are COMPLETE. EVERY migration
-001–025 is applied to production** (016 is deliberately unwritten) and
+001–026 is applied to production** (016 is deliberately unwritten) and
 repository/production are in sync. Build `1.0.0+36`, 1453 tests.
 
 **Phase 14 is IN PROGRESS — 4 of 8 features shipped. Read §2.0.0l
@@ -46,7 +46,7 @@ one `PHASE_NN_COMPLETION_REPORT.md`. Final deliverable at the very end:
 | **13p · pre-Phase-14 polish** | **done** | `PROJECT_PROGRESS_SUMMARY.md` |
 | **14 · Content freshness** | **in progress — 4 of 8 shipped** (§2.0.0l) | `PHASE_14_PROGRESS_REPORT.md` |
 
-**Branch:** `main`. **Build:** `1.0.0+36`. **Migrations 001–025 applied.**
+**Branch:** `main`. **Build:** `1.0.0+36`. **Migrations 001–026 applied.**
 
 ---
 
@@ -393,6 +393,19 @@ because every line of it is worth knowing:
 **Both of these are structural, not incidental. Before adding any
 policy: it may not read its own table, and it may not read
 `public.blocks`. Use the `private.*` helpers.**
+
+**And then exercising the WRITES found a third one — `026`.** With every
+table answering 200, **no user could create a squad.**
+`createSquad` does `.insert({...}).select().single()`, and `.select()`
+means `RETURNING`; Postgres applies the SELECT policy to a returned row,
+and `squads_select_member` requires a `squad_members` row that
+`createSquad` writes on the *next line*. `026` lets an owner read their
+own squad, which is strictly less than `squads_update_owner` and
+`squads_delete_owner` already grant them.
+
+**A read probe cannot find that class.** Verify writes separately, and
+remember that `.select()` after an insert silently adds a SELECT-policy
+requirement to the write.
 
 ### 2.0.0l Phase 14 — IN PROGRESS · 4 of 8 features shipped
 
