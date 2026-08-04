@@ -1,7 +1,7 @@
 # FormAI — Project Progress Summary
 
 **Spec:** `TESTERS_COMMUNITY_PRODUCT_ROADMAP.md` (18 phases / 5 waves)
-**As of:** 2026-08-04 · Phase 8 **closed as split** · Phase 9 **complete** · pre-Phase-10 polish sprint complete · **Phase 10 complete** · **Phase 11 ⏸ deferred by founder** · **Phase 12 complete** · **Phase 13 complete** · pre-Phase-14 polish complete · **Phase 14 IN PROGRESS — 4 of 8 features shipped** · **migrations 001–026 ALL APPLIED** · build **1.0.0+37** · **1460 tests**
+**As of:** 2026-08-04 · Phase 8 **closed as split** · Phase 9 **complete** · pre-Phase-10 polish sprint complete · **Phase 10 complete** · **Phase 11 ⏸ deferred by founder** · **Phase 12 complete** · **Phase 13 complete** · pre-Phase-14 polish complete · **Phase 14 COMPLETE** · **migrations 001–026 ALL APPLIED** · build **1.0.0+37** · **1505 tests**
 
 > **Three production defects were found and fixed on 2026-08-04, by the
 > first live RLS pass ever run against this database.** Five community
@@ -221,31 +221,25 @@
 
 # 2. Currently Working On
 
-**Phase 14 — Content Freshness Engine.** Wave 4's closer.
-`PHASE_14_PROGRESS_REPORT.md` is the record and §5 is the exact
-remainder. **4 of 8 features shipped; the other 4 have their rules
-built and tested and no surface.**
+**Nothing — Wave 4 is closed.** Phase 14 shipped all eight features and
+`PHASE_14_PROGRESS_REPORT.md` is the record. **Phase 15 (Scale,
+Reliability & the Continuous Discovery Loop) is next**, and its §3.1
+dependency is already named: server-side session recording is what turns
+the leaderboard's anti-gaming *bound* into a guarantee.
 
-Shipped: migrations `024` (`content_releases`, `content_drops`) and
-`025` (seven rotating challenges, 13 live), the What's New screen with
-its route and dashboard trigger, `content_sync_service.dart`,
-`program_progression.dart` (the day-31 rules),
-`lifecycle_campaigns.dart` (the C50 journeys plus the global frequency
-cap), `docs/CONTENT_OPS.md` BÖLÜM II, all six analytics events, and a
-real release note live in production for build 36. +65 tests.
+What Phase 14 delivered: migrations `024` (release notes + content
+drops), `025` (seven rotating challenges — 13 live) and `026`; the
+What's New screen; `content_sync_service.dart`; the day-31 continuation
+screen with four paths; difficulty tiers wired back into the plan
+generator; the new-content discovery section; lifecycle campaigns with a
+global frequency cap; `docs/CONTENT_OPS.md` BÖLÜM II; and all six
+analytics events. +121 tests.
 
-Remaining, each a screen or a wiring job on top of tested logic:
-the **continuation-paths screen** (rules and all ARB copy already
-exist), **difficulty-tier wiring** back into the plan generator, the
-**new-content discovery surface**, and **campaign scheduling** (ledger,
-ARB bodies, `NotificationService` methods).
-
-**Device walk done** on the Redmi, the founder's own account. The Join
-blocker was closed on the installed build 36 with no client change — the
-fix was server-side. Then 1.0.0+37: What's New rendered from a Supabase
-row, squads were created and their feed opened, and the walk found one
-defect of its own (a challenge starting tomorrow read "Ended"), now
-fixed.
+Also fixed along the way — **four production defects nobody had
+noticed**, all found by the first live RLS pass ever run: five community
+tables returning 500 since `019` landed, blocking that did nothing to
+the blocked user's view, squad creation being impossible, and a
+challenge starting tomorrow reading "Ended".
 
 Founder-side, carried and still open:
 
@@ -277,7 +271,7 @@ Founder-side, carried and still open:
 ### Wave 4 — Community & Content Engine
 - **Phase 12 — Community I: Identity & Squads.** ✅ **complete** — an identity worth showing and a small group worth showing up for. Migration `019` applied.
 - **Phase 13 — Community II: Leaderboards & Challenges.** ✅ **complete** — healthy competition on top of the identity layer, without making beginners feel bad. Migrations `020`–`022` applied.
-- **Phase 14 — Content Freshness Engine.** 🟡 **in progress, 4 of 8** — solve the structural problem that a 30-day program has a 30-day lifespan. Migrations `023`–`026` applied. `PHASE_14_PROGRESS_REPORT.md` §5 is the remainder.
+- **Phase 14 — Content Freshness Engine.** ✅ **complete** — the structural problem that a 30-day program has a 30-day lifespan, solved on both ends: content ships without a release, and day 31 has four places to go. Migrations `023`–`026` applied. **Wave 4 is closed.**
 
 ### Wave 5 — Scale, Depth & Platform
 - **Phase 15 — Scale, Reliability & Continuous Discovery.** Sized for 10k–100k users, provably stable, driven by a permanent feedback loop.

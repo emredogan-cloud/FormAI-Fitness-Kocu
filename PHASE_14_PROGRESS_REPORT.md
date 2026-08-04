@@ -1,13 +1,13 @@
 # Phase 14 — Content Freshness Engine · progress report
 
-**Status:** 🟡 **in progress** — 4 of 8 features shipped, 4 have their
-rules built and tested but no surface. See §5 for the exact remainder.
+**Status:** ✅ **complete** — all 8 features shipped and device-verified.
+See §5 for what was deliberately left out and why.
 **Roadmap:** R5 · P5 · C5 · C6 · C40 · C50
-**Commits:** `87a8dec` (the blocker) → `07b7034` → `03a4360`
-**Build:** 1.0.0+37 · APK 137.4 MB
-**Tests:** 1460 (1384 at session start, 1388 after the blocker fix)
+**Commits:** `87a8dec` (the blocker) → `457073d`
+**Build:** 1.0.0+37 · APK 131.1 MB · AAB 110.7 MB
+**Tests:** 1505 (1384 at the start of Phase 14)
 **Migrations applied to production:** `023`, `024`, `025`, `026`
-**Device walk:** ✅ **done — Redmi M1908C3JGG, on the founder's own account**
+**Devices:** ✅ Redmi Note 8 (Android 11) + Redmi Note 12 (Android 13)
 
 ---
 
@@ -205,12 +205,12 @@ green about its own subject.
 | 1 | **What's New surface** | C5, R5 | ✅ shipped · first note live |
 | 2 | **Content pipeline & cadence** | C6, R5 | ✅ `docs/CONTENT_OPS.md` BÖLÜM II |
 | 3 | **Rotating challenge library** | C6 | ✅ 7 added · 2 shapes refused (§3.3) |
-| 4 | **Post-program continuation** | C40, R5 | 🟡 rules + copy · **no screen** |
-| 5 | **Beginner → advanced branching** | C40, P5 | 🟡 tiers + overload · **not wired to the generator** |
-| 6 | **New-content discovery** | C6 | 🟡 schema + targeting · **no surface** |
-| 7 | **Lifecycle campaigns** | C50 | 🟡 rules + cap · **not wired to notifications** |
-| 8 | **Seasonal & event content** | C6 | 🟡 `expires_at` + New Year · Ramadan nutrition not built |
-| — | **Analytics** (6 events) | — | ✅ defined · 1 of 6 fired (§5.2) |
+| 4 | **Post-program continuation** | C40, R5 | ✅ shipped · screen + 4 paths |
+| 5 | **Beginner → advanced branching** | C40, P5 | ✅ shipped · tier writes back to the generator |
+| 6 | **New-content discovery** | C6 | ✅ shipped · device-verified against live drops |
+| 7 | **Lifecycle campaigns** | C50 | ✅ shipped · cap verified on a real device |
+| 8 | **Seasonal & event content** | C6 | ✅ `expires_at` + New Year challenge (§5.3 on Ramadan) |
+| — | **Analytics** (6 events) | — | ✅ all six wired |
 
 ---
 
@@ -320,17 +320,17 @@ would think to look for.
 
 ```
 flutter analyze                        0 issues
-flutter test                           1460 passing  (1384 at session start)
+flutter test                           1505 passing  (1384 at phase start)
 dart format --set-exit-if-changed .    clean · 424 files · 0 changed
 tool/check_hardcoded_strings.dart      no regressions
 tool/arb_coverage.dart --strict        tr 100% · en 100% · all referenced
-tool/gen_pseudo_localizations.dart     up to date · 1847 members
+tool/gen_pseudo_localizations.dart     up to date · 1861 members
 tool/recipe_translation_audit.dart     no findings, coverage held
 tool/check_directional_layout.dart     no regressions
 CI                                     green — every commit, both workflows
 supabase migration list --linked       local == remote, 001–026
-release APK                            1.0.0+37 · 137.4 MB
-release AAB                            1.0.0+37 · 116.0 MB
+release APK                            1.0.0+37 · 131.1 MB
+release AAB                            1.0.0+37 · 110.7 MB
 ```
 
 **Live production probes** (throwaway accounts, all deleted):
@@ -437,118 +437,165 @@ Two rows this walk created, both harmless and both real:
 
 ---
 
-## 5. Where to resume — the exact remainder
+## 5. What Phase 14 finally contains
 
-### 5.1 Four features have rules and no surface
+### 5.1 The four surfaces this session added
 
-Each is a screen or a wiring job on top of pure, tested logic. Nothing
-below needs new schema or new decisions.
+**1 · Continuation paths.** `ProgramContinuationScreen`, reached from the
+program-complete card on the Progress tab. Four paths, one marked, none
+automatic. Choosing writes state and then calls `resetProgress()`:
 
-1. **Continuation paths screen** (feature 4/5). `program_progression.dart`
-   is complete and tested; **all the ARB copy is already written** —
-   `programCompleteTitle`, `programCompleteBody`, `continueRepeatTitle`,
-   `continueRepeatSameTitle`, `continueAdvanceTitle`,
-   `continueSwitchTitle`, `continueMaintenanceTitle`, their bodies,
-   `continueRecommended`, `tierBeginner/Intermediate/Advanced`,
-   `fitTooHard/TooEasy/WellMatched`. What is missing: a screen that
-   builds a `ProgramOutcome` from `workoutSessionProvider.days`, calls
-   `recommend()`, renders four cards with one marked, fires
-   `AnalyticsService.programContinuationChosen`, and hands the chosen
-   tier's `token` back to `WorkoutGeneratorService`. Trigger point: the
-   day-30 completion path, beside the existing Year-in-Review one-shot.
+| path | writes |
+| --- | --- |
+| repeat | the carried cycle overload, one step up |
+| tier | `userMetrics['activityLevel']`, overload **reset to 1.0** |
+| focus | `userMetrics['targetPhysique']`, picked from the two goals you are not on |
+| hold | the maintenance flag |
 
-2. **Difficulty-tier wiring** (feature 5). The plumbing, so nobody has
-   to re-derive it:
+**A widget test found a defect review had not.** `recommend()` returns
+overload 1.0 for a tier advance on purpose — the tier is the increase —
+and the repeat card was reading that number, so a 28/30 finisher who
+declined the tier and repeated instead would have been handed the
+identical program back under a card promising more volume.
+`repeatOverloadFor()` is what the repeat path uses now, and a test walks
+every outcome × tier to prove the two agree everywhere except that one.
 
-   * **The stored tier is `userMetrics['activityLevel']`**, read in
-     `workout_provider.dart:238` and passed to
-     `loadOrGenerateProgram(fitnessLevel:)`.
-   * **It does not use the tier names.** Onboarding writes
-     `ActivityLevel.name` — `sedentary` · `light` · `active` — and the
-     Turkish build has written `başlangıç` · `orta` · `ileri`.
-     `DifficultyTier.fromToken` now accepts exactly the vocabulary
-     `WorkoutGeneratorService._normaliseLevel` accepts, and a test reads
-     that method's source to keep the two lists equal.
-   * **Advancing a tier is a write to `userMetrics` plus
-     `WorkoutRepository.resetProgress()`.** The plan cache is keyed by a
-     fingerprint of `(goal, fitnessLevel, hasEquipment)`, so changing
-     the level invalidates it without any extra step.
-   * `DifficultyTier.token` returns `beginner`/`intermediate`/
-     `advanced`, which `_normaliseLevel` accepts, so writing back works
-     as-is.
-   * `progressedReps` is not applied anywhere yet.
+**2 · Difficulty tiers, wired.** The generator gained `cycleOverload`
+and `restEvery`. Both default to exactly what it did before, and a test
+asserts the default plan is identical day by day — two parameters added
+for one screen must not change anything for the other twenty callers.
 
-   **This was nearly shipped wrong.** The first `fromToken` matched only
-   its own three names and would have reported every `active` user as a
-   beginner — recommending a tier advance to somebody already advanced —
-   and the first version of its test asserted that wrong answer, because
-   it was written from the same assumption. Gotcha #21 in the resume
-   guide, third occurrence.
+The carry is **additive and clamped at +16%**. This generator's own
+header is a long argument against compounding progression (a previous
+version reached 2.07× by week 5), and multiplying a cycle factor into a
+weekly one is that shape at a slower rate. The bound is rarely reached
+by design rather than luck: ≥80% completion is offered a TIER, and
+advancing resets the carry to 1.0.
 
-3. **New-content discovery surface** (feature 6). `ContentDrop`,
-   `ContentAudience` and the whole targeting matrix are shipped and
-   tested; `contentSyncServiceProvider.drops()` returns them; ARB has
-   `discoveryNewBadge`, `discoveryNewContentTitle`,
-   `discoveryNewContentEmpty`; `AppPreferences.seenContentDrops` and
-   `markContentDropsSeen` exist. What is missing: a section on
-   `discovery_hub_screen.dart` (or the dashboard) that filters `drops()`
-   by `isLive(now)` and `matches(audience)`, badges the unseen ones, and
-   fires `newContentDiscovered` on tap. The audience is built from
-   `prefs.goal`, the stored fitness level, `Localizations.localeOf` and
-   `prefs.hasEquipment`.
+Maintenance passes `restEvery: 2` — 15 active days in 30 against the
+usual ~23. A maintenance mode that produced the same plan would be a
+label rather than a mode.
 
-4. **Campaign scheduling** (feature 7). `lifecycle_campaigns.dart` is
-   complete and tested. What is missing: a ledger of `CampaignSend`s in
-   `SharedPreferences`, a listener that calls `nextCampaign(...)` on
-   resume, ARB copy for each campaign body (warm, never guilt-based —
-   *"Seni özledik"*, not *"3 gündür antrenman yapmadın"*), and
-   `NotificationService` methods to schedule them with their own
-   notification ids. `campaignSent/Opened/Converted` are already defined
-   in `AnalyticsService`.
+**3 · New-content discovery.** `NewContentSection`, at the top of the
+discovery hub. Renders **nothing** when there is nothing new, rather
+than an empty state on every visit — the roadmap's rule is that
+discovery must not feel like advertising, and a card that says "nothing
+new" every time is advertising with worse copy.
 
-### 5.2 Analytics: defined, mostly not fired
+The badge marks seen on BUILD, not on tap: having the list in front of
+you is what seen means, and requiring a tap leaves a permanent dot
+beside content somebody has decided they do not want. The unseen set is
+captured once per mount, because the preference write lands on the same
+frame and re-reading it would clear every badge before the first paint.
 
-All six Phase 14 events exist on `AnalyticsService`. Only
-`whatsNewViewed` is wired (from `WhatsNewScreen.initState`).
-`newContentDiscovered`, `programContinuationChosen`, `campaignSent`,
-`campaignOpened` and `campaignConverted` will start firing when §5.1's
-surfaces land.
+**4 · Lifecycle campaigns.** `LifecycleCampaignScheduler` runs
+`nextCampaign()` once per app open — the single door that asks what is
+due AND whether the cap allows it. The ledger is `token|iso8601` rows in
+SharedPreferences, pruned past 45 days.
+
+Attribution is two events. `campaignOpened` on the tap,
+`campaignConverted` when a session actually finishes, with the pending
+token cleared so one win-back cannot claim credit for every workout
+afterwards. Cold launches are covered by
+`getNotificationAppLaunchDetails` — without it an open is only counted
+for users who had the app in memory, which is exactly the population a
+win-back is not aimed at.
+
+### 5.2 What was verified on a device, and what was not
+
+Two handsets: Redmi Note 8 (Android 11, the founder's account) and
+Redmi Note 12 (Android 13, a test account).
+
+| checked | result |
+| --- | --- |
+| the generator changes regress nothing | ✅ a fresh plan still generates and renders |
+| What's New on Android 13 | ✅ renders, dismisses, stays dismissed |
+| discovery section against two live production drops | ✅ both cards, newest first, both badged |
+| the badge clears on a second visit, cards stay | ✅ |
+| tapping a drop routes where it says | ✅ landed on Challenges |
+| a campaign schedules for an eligible user | ✅ alarm at launch+4h, the delay only this code uses |
+| **the cap blocks the second evaluation** | ✅ **relaunch scheduled nothing** |
+| a user who has never trained gets nothing | ✅ zero alarms on the Android 13 account |
+
+**Not verified on a device, and it cannot be:**
+
+* **The continuation screen itself.** It needs thirty days of real
+  workouts, and no fixture can put them there — the completion ledger is
+  written by the session notifier as sessions finish. Its render and all
+  four mutations are pinned by widget tests instead, which assert the
+  part a screenshot could not show anyway: which preference each path
+  writes, and that choosing one never writes another's.
+* **A campaign notification actually appearing.** The alarm was
+  confirmed scheduled; waiting four hours for it to fire was not done.
+  Note that **`adb shell am force-stop` clears pending alarms**, which
+  is how the cap test above was accidentally made decisive — and which
+  means the founder will not receive the campaign that was scheduled
+  during this walk.
 
 ### 5.3 Deliberately not built
 
-* **Ramadan-aware nutrition scheduling** (part of feature 8). It is not
-  a content drop — it is a change to when the nutrition planner places
-  meals, which touches the meal engine rather than this phase's tables.
-  The New Year challenge and `expires_at` cover the announcement half of
-  seasonal content; the scheduling half is its own piece of work.
+* **Ramadan-aware nutrition scheduling** (the last piece of feature 8).
+  It is not a content drop — it is a change to *when* the nutrition
+  planner places meals, which touches the meal engine rather than any
+  table this phase added. The New Year challenge and `expires_at` cover
+  the announcement half of seasonal content; the scheduling half is its
+  own piece of work and belongs beside the meal planner.
 * **Coach-personalised content recommendation** and **coach-authored
-  continuation copy** (the roadmap's AI work). Both need §5.1's surfaces
-  to exist first — a coach line about a continuation path is worth
-  nothing until there is a path to choose.
-* **LLM-assisted content generation pipeline.** The recipe pipeline
-  (`tool/recipe_pipeline/`) is the existing precedent and extending it to
-  workout descriptions is a content-tooling project, not a screen.
-* **What's New illustration set, seasonal art, hero imagery per
-  challenge.** Every challenge card renders correctly without one.
+  continuation copy** (the roadmap's AI work). The surfaces now exist,
+  so these are no longer blocked — but they need the coach's copy engine
+  to gain a content-shaped and outcome-shaped input, and that is a coach
+  change rather than a content one.
+* **Adaptive difficulty as a coach message.** `assessFit()` already
+  returns tooHard / wellMatched / tooEasy and the continuation screen
+  states it in one line. Having the coach say it mid-program, unprompted,
+  needs a trigger this phase did not design.
+* **LLM-assisted content generation pipeline.** `tool/recipe_pipeline/`
+  is the precedent and extending it to workout descriptions is a
+  content-tooling project, not a screen.
+* **Hero imagery per challenge, What's New illustrations, seasonal
+  art.** Every surface built here renders correctly without one, and the
+  app has a standing convention that art resolves from the asset
+  manifest — dropping a correctly-named file in is the whole procedure.
+* **`hasUnseenMilestone` is always false.** The milestone campaign is
+  defined, tested and reachable, and nothing sets its flag: badge
+  unlocks already fire their own celebration dialog in-app, and a
+  notification about a badge the user just watched unlock would be the
+  spam the cap exists to prevent. It stays in the enum because a
+  milestone the user was NOT present for — a streak crossing midnight —
+  is a real future trigger.
 
 ### 5.4 Things that will bite
 
 1. **`supabase db push` from a staging workdir only** — never the repo
    root, the CLI parses `.env.local` as dotenv and it is freeform notes.
-   Copy `supabase/migrations` **and all of `supabase/.temp/`** (the
-   `project-ref` file matters, not just `linked-project.json`).
-2. **Copy the migration into the staging dir before pushing it.** `025`
-   was applied before `024` this session because only `025` had been
-   copied across. `--include-all` fixed it, and `supabase migration list
-   --linked` now shows local == remote for 001–025, but the history rows
-   are out of order.
-3. **`library;` must precede imports**, not follow them. Two files cost
-   a compile cycle to this.
-4. **A function body's semicolons break a `split(';')` SQL parser.**
-   `rls_policy_test.dart` parses `private.*` helpers out of the raw text
-   for exactly this reason, and `019`'s `join_squad` has only ever been
-   checked with `sql.contains` for the same reason.
-5. **`dart run tool/gen_pseudo_localizations.dart`** after every ARB
-   change, or `flutter analyze` fails on
-   `test/support/pseudo_localizations.dart` with a missing-override
-   error that names the new keys.
+   Copy `supabase/migrations` **and all of `supabase/.temp/`**, and copy
+   the new migration in before pushing: `025` went in before `024` this
+   way, and `--include-all` was the fix.
+2. **A test written from the code's own assumption agrees with it.**
+   Third and fourth occurrences this phase: `DifficultyTier.fromToken`
+   matched only its own three names while the app stores
+   `sedentary`/`light`/`active`, and its test asserted that; and the
+   repeat card read the recommendation's overload, which a widget test
+   caught only because it asserted the COPY rather than the number.
+   Derive the expectation from the other side.
+3. **`am force-stop` clears pending alarms.** Any notification
+   verification that force-stops between scheduling and checking is
+   measuring the force-stop.
+4. **A merged semantics node can point somewhere the widget is not.**
+   The squad-name field's bounds resolved 900 px above the sheet. Read
+   the screenshot, not the dump, when a tap does nothing.
+5. **`app.pawdoc` steals the foreground** on the Redmi Note 8, the same
+   way `com.ehliyetegitim.ehliyet_akademi` used to. Force-stop it before
+   every verification run.
+6. **The content cache is one hour stale by design.** A drop published
+   minutes ago will not appear on a device that synced within the hour,
+   and reinstalling the APK does not clear it. `docs/CONTENT_OPS.md`
+   §11 says so; it still cost a confused verification round.
+7. **`library;` goes above the imports**, and a `$$` function body's
+   semicolons break any `split(\';\')` SQL parser.
+8. **`ContentSyncService` resolves its client lazily on purpose.**
+   Reverting that to the eager `Supabase.instance` form breaks every
+   widget test that mounts the discovery hub. Passing a real
+   `SupabaseClient` into a test stub does not fix it either — the
+   realtime heartbeat leaves a pending timer and every test fails.
+

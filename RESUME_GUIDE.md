@@ -7,10 +7,10 @@ previous one can continue without re-analysing the repository.
 three languages deferred). **Phase 11 is DEFERRED BY FOUNDER — do not
 implement it.** **Phases 12 and 13 are COMPLETE. EVERY migration
 001–026 is applied to production** (016 is deliberately unwritten) and
-repository/production are in sync. Build `1.0.0+37`, 1460 tests.
+repository/production are in sync. Build `1.0.0+37`, 1505 tests.
 
-**Phase 14 is IN PROGRESS — 4 of 8 features shipped. Read §2.0.0l
-before anything else; it has the exact remainder.**
+**PHASE 14 IS COMPLETE — all 8 features shipped and device-verified.
+Read §2.0.0l. Wave 4 is closed; Phase 15 is next.**
 
 **The Phase-13 join-challenge blocker is FIXED and it was not what
 anybody thought — read §2.0.0k. Five tables had been returning HTTP 500
@@ -44,7 +44,7 @@ one `PHASE_NN_COMPLETION_REPORT.md`. Final deliverable at the very end:
 | **12 · Community I** | **done** | `PHASE_12_COMPLETION_REPORT.md` |
 | **13 · Community II** | **done** — leaderboards, challenges | `PHASE_13_COMPLETION_REPORT.md` |
 | **13p · pre-Phase-14 polish** | **done** | `PROJECT_PROGRESS_SUMMARY.md` |
-| **14 · Content freshness** | **in progress — 4 of 8 shipped** (§2.0.0l) | `PHASE_14_PROGRESS_REPORT.md` |
+| **14 · Content freshness** | **done + device walk** | `PHASE_14_PROGRESS_REPORT.md` |
 
 **Branch:** `main`. **Build:** `1.0.0+37`. **Migrations 001–026 applied.**
 
@@ -407,59 +407,49 @@ own squad, which is strictly less than `squads_update_owner` and
 remember that `.select()` after an insert silently adds a SELECT-policy
 requirement to the write.
 
-### 2.0.0l Phase 14 — IN PROGRESS · 4 of 8 features shipped
+### 2.0.0l Phase 14 is DONE — all eight features
 
-`PHASE_14_PROGRESS_REPORT.md` is the record and §5 is the exact
-remainder. **Do not restart what is done.**
+`PHASE_14_PROGRESS_REPORT.md` is the record; §5.1 lists what each
+surface does and §5.4 the things that will bite. **Do not rebuild any of
+it.**
 
-**Shipped:** migration `024` (`content_releases`, `content_drops`) and
-`025` (seven rotating challenges — 13 live now), the What's New screen
-with its route and dashboard trigger, `content_sync_service.dart`,
-`program_progression.dart`, `lifecycle_campaigns.dart`,
-`localized_copy.dart`, `docs/CONTENT_OPS.md` BÖLÜM II, all six analytics
-events, and a real release note live in production for build 36.
-+65 tests.
+Migrations `023`–`026` applied. Build `1.0.0+37`, 1505 tests, APK and
+AAB built, both handsets walked (Redmi Note 8 / Android 11 and Redmi
+Note 12 / Android 13).
 
-**Built but with NO SURFACE — this is the whole remainder:**
-
-1. **Continuation paths screen** (day-31). Rules and **all ARB copy**
-   already exist. Needs a screen that builds a `ProgramOutcome` from
-   `workoutSessionProvider.days`, calls `recommend()`, renders four
-   cards with one marked, and fires `programContinuationChosen`.
-2. **Difficulty-tier wiring.** `DifficultyTier.token` matches the
-   generator's `fitnessLevel` strings and a test pins it; nothing passes
-   a chosen tier back into generation yet.
-3. **New-content discovery surface.** `ContentDrop` + targeting + ARB +
-   `seenContentDrops` all exist; no screen renders `drops()`.
-4. **Campaign scheduling.** `nextCampaign()` is complete and tested;
-   needs a `CampaignSend` ledger in prefs, ARB bodies, and
-   `NotificationService` methods.
-
-Four things that save re-deriving:
+Six things that save re-deriving:
 
 - **A release note is keyed to a BUILD NUMBER, not a date.** Play rolls
   a release out over days, so on release day both populations exist and
   a date-keyed note describes, to half of them, an app they do not have.
-- **"Have you read it" is device state.** `024` has no `user_id`
-  anywhere, so the tables hold nothing RLS must protect.
-- **The sync cache stores raw JSON rows, not parsed objects**, so a
-  client that learns a new field reads it out of a cache written by one
-  that did not.
+  Publish the note for build N+1 BEFORE N+1 ships — that is safe and is
+  the intended workflow.
+- **"Have you read it" and "have you seen this drop" are device state.**
+  `024` has no `user_id` anywhere, so the content tables hold nothing
+  RLS must protect.
+- **The generator's two new parameters default to the old behaviour and
+  a test asserts the plan is identical day by day.** `cycleOverload` is
+  ADDITIVE with the weekly ramp and clamped at +16%; that file's header
+  is a long argument against compounding and multiplying them is that
+  shape at a slower rate.
 - **`recommend()` never advances a struggling user, and a tier advance
-  carries no volume bump.** Both are the point, not an oversight.
+  carries no volume bump.** Both are the point. `repeatOverloadFor()`
+  exists because the repeat card must NOT read the recommendation's
+  overload — they differ for exactly one outcome, the strong finisher.
+- **The campaign cap governs what the APP decides to send.** The daily
+  reminder is exempt because the user picked its time — a property, not
+  a name-based exemption. Two per rolling week, 48 h apart minimum,
+  `nextCampaign()` is the only door.
+- **`ContentSyncService` resolves its Supabase client lazily**, and that
+  is load-bearing: the eager form breaks every widget test that mounts
+  the discovery hub, and passing a real client into a stub instead
+  leaves a realtime heartbeat timer that fails them all a second way.
 
-**DEVICE WALK DONE** — Redmi, the founder's own account. The Join
-blocker was closed **on the installed build 36**, with no client change,
-because the fix was server-side. Then 1.0.0+37: What's New rendered from
-a Supabase row and stayed dismissed across a relaunch; a squad was
-created and its feed opened; both rows reached production.
-
-**The walk found one defect and it was mine.** A challenge starting
-tomorrow read "Ended" — the screen collapsed "not started" into "over",
-which was correct for every challenge that existed before `025` staggered
-its start dates. Fixed, and the countdown is in calendar days rather than
-elapsed hours. Two rows are left on the founder's account: a real
-challenge join, and a squad named "Deneme".
+**The one thing that cannot be device-verified:** the continuation
+screen needs thirty days of real workouts and no fixture can put them
+there. Its render and all four mutations are pinned by widget tests
+that assert which preference each path writes — the part a screenshot
+could not show anyway.
 
 ### 2.0.1 The three things Phase 7 deliberately did NOT do
 
@@ -747,6 +737,19 @@ which is how CI was red for four commits before this session noticed.
    because only `025` had been copied across.
 36. **`library;` goes above the imports, not below them**, and a `$$`
    function body's semicolons break any `split(';')` SQL parser.
+37. **`am force-stop` clears pending alarms.** Any notification check
+   that force-stops between scheduling and inspecting is measuring the
+   force-stop, not the app.
+38. **A merged semantics node can point somewhere the widget is not.**
+   A `content-desc` for a bottom-sheet field resolved 900 px above the
+   sheet, so `input text` went nowhere and the write looked like it had
+   failed. Read the screenshot, not the dump, when a tap does nothing.
+39. **`app.pawdoc` now steals the foreground too**, alongside
+   `com.ehliyetegitim.ehliyet_akademi`. Force-stop both before a walk.
+40. **The content cache is one hour stale by design**, and reinstalling
+   the APK does not clear it. A drop published minutes ago will not
+   appear on a device that synced within the hour. That is documented in
+   `docs/CONTENT_OPS.md` §11 and it still cost a confused round.
 
 ---
 
