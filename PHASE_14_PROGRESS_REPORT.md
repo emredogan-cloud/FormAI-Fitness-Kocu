@@ -4,10 +4,10 @@
 rules built and tested but no surface. See §5 for the exact remainder.
 **Roadmap:** R5 · P5 · C5 · C6 · C40 · C50
 **Commits:** `87a8dec` (the blocker) → `07b7034` → `03a4360`
-**Build:** 1.0.0+36 — **not bumped**, no APK/AAB built this session
-**Tests:** 1455 (1384 at session start, 1388 after the blocker fix)
+**Build:** 1.0.0+37 · APK 137.4 MB
+**Tests:** 1460 (1384 at session start, 1388 after the blocker fix)
 **Migrations applied to production:** `023`, `024`, `025`, `026`
-**Device walk:** ❌ **not done — no device was connected this session**
+**Device walk:** ✅ **done — Redmi M1908C3JGG, on the founder's own account**
 
 ---
 
@@ -320,15 +320,17 @@ would think to look for.
 
 ```
 flutter analyze                        0 issues
-flutter test                           1455 passing  (1384 at session start)
+flutter test                           1460 passing  (1384 at session start)
 dart format --set-exit-if-changed .    clean · 424 files · 0 changed
 tool/check_hardcoded_strings.dart      no regressions
 tool/arb_coverage.dart --strict        tr 100% · en 100% · all referenced
-tool/gen_pseudo_localizations.dart     up to date · 1846 members
+tool/gen_pseudo_localizations.dart     up to date · 1847 members
 tool/recipe_translation_audit.dart     no findings, coverage held
 tool/check_directional_layout.dart     no regressions
-CI                                     green on 87a8dec
-supabase migration list --linked       local == remote, 001–025
+CI                                     green — every commit, both workflows
+supabase migration list --linked       local == remote, 001–026
+release APK                            1.0.0+37 · 137.4 MB
+release AAB                            1.0.0+37 · 116.0 MB
 ```
 
 **Live production probes** (throwaway accounts, all deleted):
@@ -344,17 +346,65 @@ supabase migration list --linked       local == remote, 001–025
 | client write to `content_releases` | ✅ refused, 403 |
 | 13 challenges live, windows staggered | ✅ |
 
-### 3.1 What is NOT verified
+### 3.1 The device walk
 
-* **No device walk.** `adb devices` was empty for the whole session. The
-  join fix is verified by reproducing the client's exact PostgREST
-  request as a real authenticated user — which is stronger evidence than
-  a tap, because it shows the status code and the row — but **nothing on
-  a screen was seen this session.**
-* **What's New has never been rendered on a device.** The screen, the
-  route, the dashboard trigger and the production note all exist; the
-  first person to run build 36 will be the first to see it.
-* **No APK or AAB was built**, and the build number was not bumped.
+Redmi M1908C3JGG, the founder's real account, English locale.
+
+**First on the installed build 36 — the exact build the bug was
+reported against, with no client change at all**, because the fix was
+server-side:
+
+| checked | result |
+| --- | --- |
+| `025`'s challenges appear with no app release | ✅ all seven |
+| tap Join on "Your first workout" | ✅ card flips to `0 of 1 · Leave` |
+| the row reaches production | ✅ written by the founder's own user id |
+
+**That closes the Phase 13 blocker on the device it was reported on.**
+
+Then build 1.0.0+37, installed over the top (session preserved):
+
+| checked | result |
+| --- | --- |
+| What's New appears on first launch after the update | ✅ |
+| its copy comes from a Supabase row written minutes earlier | ✅ headline, version, 3 items |
+| dismiss, force-stop, relaunch → it does not return | ✅ straight to the dashboard |
+| a challenge starting tomorrow reads "Starts tomorrow" | ✅ (§3.2) |
+| the other windows: 6, 11, 29, 42, 58 days | ✅ |
+| Squads screen opens | ✅ — this threw `42P17` an hour earlier |
+| create a squad | ✅ "Deneme · 1 of 12", "Squad created." |
+| both rows reach production | ✅ squad + owner membership |
+| open the squad feed | ✅ honest empty state |
+| no crash, no overflow, no Flutter error | ✅ |
+
+### 3.2 What the walk found
+
+**A challenge starting tomorrow said "Ended".** `challengeIsOpen` was
+always right; the *screen* branched `open ? daysLeft : Ended`, and until
+this session that was correct every time it could be checked — every
+challenge `021` shipped had already started. `025` staggers its start
+dates deliberately, and the first future-dated card rendered "Bitti".
+
+No test could have caught it: the label was correct for every challenge
+that existed when it was written. Fixed with `challengeIsUpcoming` and
+`challengeDaysUntilStart` in the domain, and the countdown is in
+**calendar days** — a challenge starting at midnight tonight is nine
+hours away at 15:00, and `Duration.inDays` calls that zero.
+
+**A semantics node can point somewhere the widget is not.** The squad
+name field's `content-desc` bounds resolved 900 px above the sheet, so
+the first `input text` went nowhere and `createSquad` returned early on
+an empty name — which looks exactly like a failed write. Read the
+screenshot, not the dump, when a tap does nothing.
+
+### 3.3 Left on the founder's account
+
+Two rows this walk created, both harmless and both real:
+
+* a `challenge_participants` row for **"Your first workout"** — a
+  genuine join, kept rather than reverted;
+* a squad named **"Deneme"** (invite code `782HBNG4`), one member.
+  Delete it from the squad screen's menu if it is not wanted.
 
 ---
 

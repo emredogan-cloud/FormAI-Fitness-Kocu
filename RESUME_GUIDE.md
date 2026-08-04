@@ -7,7 +7,7 @@ previous one can continue without re-analysing the repository.
 three languages deferred). **Phase 11 is DEFERRED BY FOUNDER — do not
 implement it.** **Phases 12 and 13 are COMPLETE. EVERY migration
 001–026 is applied to production** (016 is deliberately unwritten) and
-repository/production are in sync. Build `1.0.0+36`, 1455 tests.
+repository/production are in sync. Build `1.0.0+37`, 1460 tests.
 
 **Phase 14 is IN PROGRESS — 4 of 8 features shipped. Read §2.0.0l
 before anything else; it has the exact remainder.**
@@ -46,7 +46,7 @@ one `PHASE_NN_COMPLETION_REPORT.md`. Final deliverable at the very end:
 | **13p · pre-Phase-14 polish** | **done** | `PROJECT_PROGRESS_SUMMARY.md` |
 | **14 · Content freshness** | **in progress — 4 of 8 shipped** (§2.0.0l) | `PHASE_14_PROGRESS_REPORT.md` |
 
-**Branch:** `main`. **Build:** `1.0.0+36`. **Migrations 001–026 applied.**
+**Branch:** `main`. **Build:** `1.0.0+37`. **Migrations 001–026 applied.**
 
 ---
 
@@ -448,11 +448,18 @@ Four things that save re-deriving:
 - **`recommend()` never advances a struggling user, and a tier advance
   carries no volume bump.** Both are the point, not an oversight.
 
-**NOT verified: there was no device walk.** `adb devices` was empty all
-session. The join fix is verified by reproducing the client's exact
-PostgREST request as a real authenticated user, which shows the status
-code and the row — but nothing was seen on a screen. **What's New has
-never been rendered on a device.** No APK/AAB built; build not bumped.
+**DEVICE WALK DONE** — Redmi, the founder's own account. The Join
+blocker was closed **on the installed build 36**, with no client change,
+because the fix was server-side. Then 1.0.0+37: What's New rendered from
+a Supabase row and stayed dismissed across a relaunch; a squad was
+created and its feed opened; both rows reached production.
+
+**The walk found one defect and it was mine.** A challenge starting
+tomorrow read "Ended" — the screen collapsed "not started" into "over",
+which was correct for every challenge that existed before `025` staggered
+its start dates. Fixed, and the countdown is in calendar days rather than
+elapsed hours. Two rows are left on the founder's account: a real
+challenge join, and a squad named "Deneme".
 
 ### 2.0.1 The three things Phase 7 deliberately did NOT do
 

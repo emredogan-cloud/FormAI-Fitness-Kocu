@@ -1,7 +1,7 @@
 # FormAI — Project Progress Summary
 
 **Spec:** `TESTERS_COMMUNITY_PRODUCT_ROADMAP.md` (18 phases / 5 waves)
-**As of:** 2026-08-04 · Phase 8 **closed as split** · Phase 9 **complete** · pre-Phase-10 polish sprint complete · **Phase 10 complete** · **Phase 11 ⏸ deferred by founder** · **Phase 12 complete** · **Phase 13 complete** · pre-Phase-14 polish complete · **Phase 14 IN PROGRESS — 4 of 8 features shipped** · **migrations 001–026 ALL APPLIED** · build **1.0.0+36** · **1455 tests**
+**As of:** 2026-08-04 · Phase 8 **closed as split** · Phase 9 **complete** · pre-Phase-10 polish sprint complete · **Phase 10 complete** · **Phase 11 ⏸ deferred by founder** · **Phase 12 complete** · **Phase 13 complete** · pre-Phase-14 polish complete · **Phase 14 IN PROGRESS — 4 of 8 features shipped** · **migrations 001–026 ALL APPLIED** · build **1.0.0+37** · **1460 tests**
 
 > **Three production defects were found and fixed on 2026-08-04, by the
 > first live RLS pass ever run against this database.** Five community
@@ -240,11 +240,12 @@ exist), **difficulty-tier wiring** back into the plan generator, the
 **new-content discovery surface**, and **campaign scheduling** (ledger,
 ARB bodies, `NotificationService` methods).
 
-**Not verified: no device walk this session** — `adb devices` was empty
-throughout. The join-challenge fix is verified by reproducing the
-client's exact PostgREST request as a real authenticated user, but
-nothing was seen on a screen and What's New has never been rendered on
-a device. No APK/AAB built; build not bumped.
+**Device walk done** on the Redmi, the founder's own account. The Join
+blocker was closed on the installed build 36 with no client change — the
+fix was server-side. Then 1.0.0+37: What's New rendered from a Supabase
+row, squads were created and their feed opened, and the walk found one
+defect of its own (a challenge starting tomorrow read "Ended"), now
+fixed.
 
 Founder-side, carried and still open:
 
