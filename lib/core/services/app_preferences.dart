@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../features/workout/domain/workout_mode.dart';
+import 'lifecycle_campaigns.dart';
 
 /// Overridden in main() with the initialized SharedPreferences instance so
 /// the router can read flags synchronously at startup.
@@ -1064,4 +1065,76 @@ class AppPreferences {
 
   Future<void> setMaintenanceMode(bool value) =>
       _prefs.setBool(_maintenanceKey, value);
+
+  // ─── Phase 14 · the campaign ledger ──────────────────────────────
+  //
+  // `lifecycle_campaigns.dart` decides WHETHER to send by reading every
+  // app-initiated send in the trailing window. This is where that
+  // history lives.
+  //
+  // Rows are `token|iso8601`, one per entry, in a StringList. A table
+  // would be the "proper" answer and it would put the record of every
+  // notification a user received on a server, for a feature whose whole
+  // purpose is to bother them less. Same call `024` made about "have
+  // you read this".
+
+  static const String _campaignLedgerKey = 'sixpack.campaign_ledger_v1';
+
+  /// Entries older than this are pruned on write. The widest thing the
+  /// rules look at is a 30-day cooldown, so anything beyond it can never
+  /// change an answer and only costs storage.
+  static const Duration _campaignLedgerWindow = Duration(days: 45);
+
+  List<CampaignSend> get campaignLedger {
+    final rows = _prefs.getStringList(_campaignLedgerKey) ?? const <String>[];
+    final out = <CampaignSend>[];
+    for (final row in rows) {
+      final split = row.indexOf('|');
+      if (split <= 0) continue;
+      final campaign = LifecycleCampaign.values
+          .where((c) => c.token == row.substring(0, split))
+          .firstOrNull;
+      final at = DateTime.tryParse(row.substring(split + 1));
+      // A token this build does not know is an entry written by a newer
+      // one. Skipping it under-counts the cap, so it is dropped rather
+      // than guessed — the same rule the content parsers follow.
+      if (campaign == null || at == null) continue;
+      out.add(CampaignSend(campaign, at));
+    }
+    return out;
+  }
+
+  Future<void> recordCampaignSent(
+    LifecycleCampaign campaign,
+    DateTime at,
+  ) async {
+    final cutoff = at.subtract(_campaignLedgerWindow);
+    final kept = [
+      for (final send in campaignLedger)
+        if (send.at.isAfter(cutoff))
+          '${send.campaign.token}|'
+              '${send.at.toIso8601String()}',
+      '${campaign.token}|${at.toIso8601String()}',
+    ];
+    await _prefs.setStringList(_campaignLedgerKey, kept);
+  }
+
+  /// The campaign whose notification the user last opened, if any.
+  ///
+  /// Held so [AnalyticsService.campaignConverted] can fire when the
+  /// thing the campaign asked for actually happens, rather than at the
+  /// moment of the tap — an open is attention, a conversion is a
+  /// workout.
+  static const String _campaignPendingKey = 'sixpack.campaign_pending_v1';
+
+  String? get pendingCampaignConversion =>
+      _prefs.getString(_campaignPendingKey);
+
+  Future<void> setPendingCampaignConversion(String? token) async {
+    if (token == null) {
+      await _prefs.remove(_campaignPendingKey);
+    } else {
+      await _prefs.setString(_campaignPendingKey, token);
+    }
+  }
 }

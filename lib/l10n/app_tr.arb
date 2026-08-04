@@ -1847,5 +1847,19 @@
   "tierAdvanced": "İleri",
   "fitTooHard": "Bu program sana zor geldi. Bir sonrakini ağırlaştırmıyoruz.",
   "fitTooEasy": "Bu program sana kolay geldi. Yükü artırmanın zamanı.",
-  "fitWellMatched": "Bu program sana iyi oturdu."
+  "fitWellMatched": "Bu program sana iyi oturdu.",
+  "campaignWinBack7Title": "Seni özledik",
+  "campaignWinBack7Body": "Bıraktığın yerden devam edebilirsin. Tek bir antrenman yeter.",
+  "campaignWinBack14Title": "Kapı hâlâ açık",
+  "campaignWinBack14Body": "Programın seni bekliyor. İstersen daha hafif bir güne dönebilirsin.",
+  "campaignWinBack30Title": "Yeniden başlamak da bir başlangıçtır",
+  "campaignWinBack30Body": "Sıfırdan değil, bildiğin bir yerden devam edeceksin.",
+  "campaignStreakRiskTitle": "Serin duruyor",
+  "campaignStreakRiskBody": "Bugün kısa bir antrenman serini korur.",
+  "campaignMilestoneTitle": "Bunu sen yaptın",
+  "campaignMilestoneBody": "Yeni bir eşiği geçtin. Uygulamada seni bekliyor.",
+  "campaignContentDropTitle": "Yeni içerik geldi",
+  "campaignContentDropBody": "Senin çalıştığın alanda yenilikler var.",
+  "notifChannelCampaignName": "Hatırlatmalar",
+  "notifChannelCampaignDesc": "Ara verdiğinde ve yeni içerik geldiğinde gelen nazik bildirimler."
 }

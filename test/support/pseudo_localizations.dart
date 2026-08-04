@@ -8,7 +8,7 @@
 //   2. a layout that only fits Turkish overflows here instead of in a
 //      German store review.
 //
-// 1847 members covered.
+// 1861 members covered.
 
 import 'package:flutter/widgets.dart';
 import 'package:sixpack_ai/core/utils/pseudo_locale.dart';
@@ -5733,6 +5733,62 @@ class PseudoAppLocalizations extends AppLocalizations {
   String get fitWellMatched => pseudoLocalize(_inner.fitWellMatched);
 
   @override
+  String get campaignWinBack7Title =>
+      pseudoLocalize(_inner.campaignWinBack7Title);
+
+  @override
+  String get campaignWinBack7Body =>
+      pseudoLocalize(_inner.campaignWinBack7Body);
+
+  @override
+  String get campaignWinBack14Title =>
+      pseudoLocalize(_inner.campaignWinBack14Title);
+
+  @override
+  String get campaignWinBack14Body =>
+      pseudoLocalize(_inner.campaignWinBack14Body);
+
+  @override
+  String get campaignWinBack30Title =>
+      pseudoLocalize(_inner.campaignWinBack30Title);
+
+  @override
+  String get campaignWinBack30Body =>
+      pseudoLocalize(_inner.campaignWinBack30Body);
+
+  @override
+  String get campaignStreakRiskTitle =>
+      pseudoLocalize(_inner.campaignStreakRiskTitle);
+
+  @override
+  String get campaignStreakRiskBody =>
+      pseudoLocalize(_inner.campaignStreakRiskBody);
+
+  @override
+  String get campaignMilestoneTitle =>
+      pseudoLocalize(_inner.campaignMilestoneTitle);
+
+  @override
+  String get campaignMilestoneBody =>
+      pseudoLocalize(_inner.campaignMilestoneBody);
+
+  @override
+  String get campaignContentDropTitle =>
+      pseudoLocalize(_inner.campaignContentDropTitle);
+
+  @override
+  String get campaignContentDropBody =>
+      pseudoLocalize(_inner.campaignContentDropBody);
+
+  @override
+  String get notifChannelCampaignName =>
+      pseudoLocalize(_inner.notifChannelCampaignName);
+
+  @override
+  String get notifChannelCampaignDesc =>
+      pseudoLocalize(_inner.notifChannelCampaignDesc);
+
+  @override
   String retrospectiveSummary(String workouts, String minutes, String reps) =>
       pseudoLocalize(_inner.retrospectiveSummary(workouts, minutes, reps));
 
@@ -6569,5 +6625,5 @@ class PseudoAppLocalizations extends AppLocalizations {
   /// Number of members this wrapper covers. The test suite asserts
   /// it still matches the generated class, so a new ARB key cannot
   /// slip past pseudo mode unnoticed.
-  static const int coveredMembers = 1847;
+  static const int coveredMembers = 1861;
 }

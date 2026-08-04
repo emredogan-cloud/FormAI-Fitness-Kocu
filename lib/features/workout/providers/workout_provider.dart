@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/services/analytics_service.dart';
 import '../../../core/services/app_preferences.dart';
+import '../../../core/services/lifecycle_campaign_scheduler.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../progress/domain/streak_calculator.dart';
 import '../data/session_log_repository.dart';
@@ -435,6 +436,10 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
     // reminder cares about "did you work out today", not "did you
     // tick the next 30-day box".
     await ref.read(appPreferencesProvider).setLastWorkoutAt(DateTime.now());
+    // Roadmap Phase 14 (C50) · a session is what every campaign asks
+    // for, so this is where a campaign converts. No-op unless the app
+    // was opened from one — see `LifecycleCampaignScheduler.markOpened`.
+    unawaited(ref.read(lifecycleCampaignSchedulerProvider).markConverted());
     final updatedDay = isAdHoc
         ? day.copyWith(isCompleted: true)
         : refreshed.firstWhere(

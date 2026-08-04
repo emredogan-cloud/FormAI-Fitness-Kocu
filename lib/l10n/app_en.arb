@@ -8702,5 +8702,61 @@
   "fitWellMatched": "This program suited you well.",
   "@fitWellMatched": {
     "description": "Honest reading of a well-matched program."
+  },
+  "campaignWinBack7Title": "We miss you",
+  "@campaignWinBack7Title": {
+    "description": "Win-back notification title at 7 days lapsed. Warm, never guilt-based."
+  },
+  "campaignWinBack7Body": "You can pick up where you left off. One session is enough.",
+  "@campaignWinBack7Body": {
+    "description": "Win-back body at 7 days."
+  },
+  "campaignWinBack14Title": "The door is still open",
+  "@campaignWinBack14Title": {
+    "description": "Win-back title at 14 days lapsed."
+  },
+  "campaignWinBack14Body": "Your program is waiting. You can come back on an easier day if you want.",
+  "@campaignWinBack14Body": {
+    "description": "Win-back body at 14 days."
+  },
+  "campaignWinBack30Title": "Starting again is still starting",
+  "@campaignWinBack30Title": {
+    "description": "Win-back title at 30 days lapsed — the last one."
+  },
+  "campaignWinBack30Body": "You will not begin from nothing. You begin from somewhere you already know.",
+  "@campaignWinBack30Body": {
+    "description": "Win-back body at 30 days."
+  },
+  "campaignStreakRiskTitle": "Your streak is holding",
+  "@campaignStreakRiskTitle": {
+    "description": "Streak-risk title. States the fact, never the accusation."
+  },
+  "campaignStreakRiskBody": "A short session today keeps it going.",
+  "@campaignStreakRiskBody": {
+    "description": "Streak-risk body."
+  },
+  "campaignMilestoneTitle": "You did this",
+  "@campaignMilestoneTitle": {
+    "description": "Milestone celebration title."
+  },
+  "campaignMilestoneBody": "You crossed a new threshold. It is waiting in the app.",
+  "@campaignMilestoneBody": {
+    "description": "Milestone celebration body."
+  },
+  "campaignContentDropTitle": "New content landed",
+  "@campaignContentDropTitle": {
+    "description": "Content-drop announcement title."
+  },
+  "campaignContentDropBody": "There is something new in the area you train.",
+  "@campaignContentDropBody": {
+    "description": "Content-drop announcement body."
+  },
+  "notifChannelCampaignName": "Reminders",
+  "@notifChannelCampaignName": {
+    "description": "Android notification channel name for lifecycle campaigns."
+  },
+  "notifChannelCampaignDesc": "Gentle notifications when you take a break and when new content arrives.",
+  "@notifChannelCampaignDesc": {
+    "description": "Android notification channel description for lifecycle campaigns."
   }
 }

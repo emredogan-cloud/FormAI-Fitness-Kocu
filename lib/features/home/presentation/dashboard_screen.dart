@@ -10,6 +10,8 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../core/services/app_preferences.dart';
 import '../../../core/services/content_sync_service.dart';
+import '../../../core/services/lifecycle_campaign_scheduler.dart';
+import '../../../core/services/notification_service.dart';
 import '../../../core/utils/app_logger.dart';
 import 'whats_new_screen.dart';
 import '../../../core/services/disclosure_providers.dart';
@@ -188,6 +190,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) unawaited(_maybeShowWhatsNew());
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(_evaluateCampaigns());
+    });
     // Roadmap Phase 2 · honour external tab requests (currently the
     // Profil tab's tour-replay row). listenManual, not a build-time
     // ref.listen, so applying a request never happens during build.
@@ -232,6 +237,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       AppLogger.warning('whats-new check skipped: $e',
           category: 'content', data: {'stack': st.toString()});
     }
+  }
+
+  /// Roadmap Phase 14 (C50) · one campaign evaluation per app open.
+  ///
+  /// Attribution first: if this launch came from a campaign
+  /// notification, that open is recorded before anything new is
+  /// scheduled — otherwise a tap that lands here would be counted as
+  /// the campaign the evaluation happens to pick next.
+  Future<void> _evaluateCampaigns() async {
+    final scheduler = ref.read(lifecycleCampaignSchedulerProvider);
+    final opened = NotificationService.takePendingPayload();
+    if (opened != null) await scheduler.markOpened(opened);
+    await scheduler.evaluate();
   }
 
   void _maybePrefetchTodaysMeals() {

@@ -8,6 +8,7 @@ import 'package:timezone/timezone.dart' as tz;
 import '../../l10n/app_localizations.dart';
 import '../utils/app_copy.dart';
 import '../utils/app_logger.dart';
+import 'lifecycle_campaigns.dart';
 
 /// Phase 58 · the three states the smart-reminder scheduler picks
 /// between when stamping the daily ping. The notifier upstream
@@ -56,6 +57,21 @@ class NotificationService {
   // separate "Streak Warning" toggle when the intent is the same
   // ("FormAI is reminding me to train").
   static const String _streakChannelId = 'formai_streak_warning';
+
+  /// Roadmap Phase 14 (C50) · lifecycle campaigns.
+  ///
+  /// One id for ALL of them, so a newly scheduled campaign replaces any
+  /// pending one rather than stacking. The frequency cap in
+  /// `lifecycle_campaigns.dart` decides whether a campaign may be sent
+  /// at all; this id makes sure a decision the cap already allowed
+  /// cannot be doubled by a reschedule.
+  static const int _campaignId = 1005;
+
+  /// Its own channel, because this is the one class of notification a
+  /// user might want to silence WITHOUT silencing the reminder they
+  /// set themselves. The OS settings UI groups by channel, so sharing
+  /// one would make "stop nudging me" also mean "stop reminding me".
+  static const String _campaignChannelId = 'formai_campaigns';
 
   /// Loads copy without a widget tree — two of the three schedulers
   /// (the workout repository and the smart-reminder scheduler) run far
@@ -152,8 +168,45 @@ class NotificationService {
       android: androidInit,
       iOS: iosInit,
     );
-    await _plugin.initialize(settings: initSettings);
+    await _plugin.initialize(
+      settings: initSettings,
+      onDidReceiveNotificationResponse: _onTapped,
+    );
+    // The cold-launch case: the process was dead and the tap started
+    // it, so the callback above never fires. Without this a campaign
+    // open is only ever counted for users who had the app in memory,
+    // which is exactly the population a win-back is NOT aimed at.
+    try {
+      final launch = await _plugin.getNotificationAppLaunchDetails();
+      if (launch?.didNotificationLaunchApp ?? false) {
+        _onTapped(launch!.notificationResponse ??
+            const NotificationResponse(
+              notificationResponseType:
+                  NotificationResponseType.selectedNotification,
+            ));
+      }
+    } catch (_) {
+      // Not supported on every platform. Losing an attribution is not
+      // a reason to fail init.
+    }
     _initialized = true;
+  }
+
+  /// Payload of the notification the user last opened the app from.
+  ///
+  /// Consumed rather than read: [takePendingPayload] clears it, so one
+  /// tap produces one attribution however many surfaces ask.
+  static String? _pendingPayload;
+
+  static String? takePendingPayload() {
+    final payload = _pendingPayload;
+    _pendingPayload = null;
+    return payload;
+  }
+
+  static void _onTapped(NotificationResponse response) {
+    final payload = response.payload;
+    if (payload != null && payload.isNotEmpty) _pendingPayload = payload;
   }
 
   /// Request runtime notification permission. On Android 13+ this shows the
@@ -470,6 +523,92 @@ class NotificationService {
   }
 
   Future<void> cancelMonthlyRecap() => _plugin.cancel(id: _monthlyRecapId);
+
+  /// Roadmap Phase 14 (C50) · schedule one lifecycle campaign.
+  ///
+  /// **The caller must already have asked the cap.** This method
+  /// schedules what it is given — `nextCampaign()` in
+  /// `lifecycle_campaigns.dart` is the only thing that decides whether
+  /// a campaign is due AND allowed, and `LifecycleCampaignScheduler` is
+  /// the only caller.
+  ///
+  /// [delay] exists so a campaign lands at a plausible hour rather than
+  /// the moment the app happened to resume. It is not the cap.
+  Future<void> scheduleCampaign(
+    LifecycleCampaign campaign, {
+    Duration delay = const Duration(hours: 4),
+  }) async {
+    await init();
+    await _plugin.cancel(id: _campaignId);
+    final l10n = await _copy();
+    final copy = _campaignCopy(l10n, campaign);
+    try {
+      await _plugin.zonedSchedule(
+        id: _campaignId,
+        title: copy.title,
+        body: copy.body,
+        payload: campaign.token,
+        scheduledDate: tz.TZDateTime.now(tz.local).add(delay),
+        notificationDetails: NotificationDetails(
+          android: AndroidNotificationDetails(
+            _campaignChannelId,
+            l10n.notifChannelCampaignName,
+            channelDescription: l10n.notifChannelCampaignDesc,
+            // Deliberately NOT high. A win-back is not urgent, and the
+            // roadmap caps the opt-out rate at 8% — a heads-up banner
+            // for "we miss you" is how an app earns the other 92%.
+            importance: Importance.defaultImportance,
+            priority: Priority.defaultPriority,
+          ),
+          iOS: DarwinNotificationDetails(),
+        ),
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      );
+    } catch (e, st) {
+      AppLogger.error('scheduleCampaign failed', e,
+          stackTrace: st, category: 'notifications');
+    }
+  }
+
+  Future<void> cancelCampaign() async {
+    await init();
+    await _plugin.cancel(id: _campaignId);
+  }
+
+  /// Copy per campaign. Warm, never guilt-based — the roadmap's own
+  /// example is *"Seni özledik"* rather than *"3 gündür antrenman
+  /// yapmadın"*, and the difference is whether the app is glad to see
+  /// you or keeping score.
+  static ({String title, String body}) _campaignCopy(
+    AppLocalizations l10n,
+    LifecycleCampaign campaign,
+  ) =>
+      switch (campaign) {
+        LifecycleCampaign.winBack7 => (
+            title: l10n.campaignWinBack7Title,
+            body: l10n.campaignWinBack7Body,
+          ),
+        LifecycleCampaign.winBack14 => (
+            title: l10n.campaignWinBack14Title,
+            body: l10n.campaignWinBack14Body,
+          ),
+        LifecycleCampaign.winBack30 => (
+            title: l10n.campaignWinBack30Title,
+            body: l10n.campaignWinBack30Body,
+          ),
+        LifecycleCampaign.streakRisk => (
+            title: l10n.campaignStreakRiskTitle,
+            body: l10n.campaignStreakRiskBody,
+          ),
+        LifecycleCampaign.milestone => (
+            title: l10n.campaignMilestoneTitle,
+            body: l10n.campaignMilestoneBody,
+          ),
+        LifecycleCampaign.contentDrop => (
+            title: l10n.campaignContentDropTitle,
+            body: l10n.campaignContentDropBody,
+          ),
+      };
 
   Future<void> cancelWeighInReminder() async {
     await init();
