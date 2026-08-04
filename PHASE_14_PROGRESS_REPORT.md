@@ -5,7 +5,7 @@ rules built and tested but no surface. See §5 for the exact remainder.
 **Roadmap:** R5 · P5 · C5 · C6 · C40 · C50
 **Commits:** `87a8dec` (the blocker) → `07b7034` → `03a4360`
 **Build:** 1.0.0+36 — **not bumped**, no APK/AAB built this session
-**Tests:** 1453 (1384 at session start, 1388 after the blocker fix)
+**Tests:** 1455 (1384 at session start, 1388 after the blocker fix)
 **Migrations applied to production:** `023`, `024`, `025`, `026`
 **Device walk:** ❌ **not done — no device was connected this session**
 
@@ -320,7 +320,7 @@ would think to look for.
 
 ```
 flutter analyze                        0 issues
-flutter test                           1453 passing  (1384 at session start)
+flutter test                           1455 passing  (1384 at session start)
 dart format --set-exit-if-changed .    clean · 424 files · 0 changed
 tool/check_hardcoded_strings.dart      no regressions
 tool/arb_coverage.dart --strict        tr 100% · en 100% · all referenced

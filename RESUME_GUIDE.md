@@ -7,7 +7,7 @@ previous one can continue without re-analysing the repository.
 three languages deferred). **Phase 11 is DEFERRED BY FOUNDER — do not
 implement it.** **Phases 12 and 13 are COMPLETE. EVERY migration
 001–026 is applied to production** (016 is deliberately unwritten) and
-repository/production are in sync. Build `1.0.0+36`, 1453 tests.
+repository/production are in sync. Build `1.0.0+36`, 1455 tests.
 
 **Phase 14 is IN PROGRESS — 4 of 8 features shipped. Read §2.0.0l
 before anything else; it has the exact remainder.**

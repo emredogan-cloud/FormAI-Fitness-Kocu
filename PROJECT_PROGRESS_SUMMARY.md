@@ -1,7 +1,7 @@
 # FormAI — Project Progress Summary
 
 **Spec:** `TESTERS_COMMUNITY_PRODUCT_ROADMAP.md` (18 phases / 5 waves)
-**As of:** 2026-08-04 · Phase 8 **closed as split** · Phase 9 **complete** · pre-Phase-10 polish sprint complete · **Phase 10 complete** · **Phase 11 ⏸ deferred by founder** · **Phase 12 complete** · **Phase 13 complete** · pre-Phase-14 polish complete · **Phase 14 IN PROGRESS — 4 of 8 features shipped** · **migrations 001–026 ALL APPLIED** · build **1.0.0+36** · **1453 tests**
+**As of:** 2026-08-04 · Phase 8 **closed as split** · Phase 9 **complete** · pre-Phase-10 polish sprint complete · **Phase 10 complete** · **Phase 11 ⏸ deferred by founder** · **Phase 12 complete** · **Phase 13 complete** · pre-Phase-14 polish complete · **Phase 14 IN PROGRESS — 4 of 8 features shipped** · **migrations 001–026 ALL APPLIED** · build **1.0.0+36** · **1455 tests**
 
 > **Three production defects were found and fixed on 2026-08-04, by the
 > first live RLS pass ever run against this database.** Five community
