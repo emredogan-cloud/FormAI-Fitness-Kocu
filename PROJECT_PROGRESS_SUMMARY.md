@@ -1,7 +1,15 @@
 # FormAI — Project Progress Summary
 
 **Spec:** `TESTERS_COMMUNITY_PRODUCT_ROADMAP.md` (18 phases / 5 waves)
-**As of:** 2026-08-04 (pre-Phase-14 polish complete; **Phase 14 not started**) · Phase 8 **closed as split** · Phase 9 **complete** · pre-Phase-10 polish sprint complete · **Phase 10 complete** · **Phase 11 ⏸ deferred by founder** · **Phase 12 complete — migration `019` APPLIED** · **Phase 13 complete — migration `020` APPLIED** · build **1.0.0+34**
+**As of:** 2026-08-04 · Phase 8 **closed as split** · Phase 9 **complete** · pre-Phase-10 polish sprint complete · **Phase 10 complete** · **Phase 11 ⏸ deferred by founder** · **Phase 12 complete** · **Phase 13 complete** · pre-Phase-14 polish complete · **Phase 14 IN PROGRESS — 4 of 8 features shipped** · **migrations 001–025 ALL APPLIED** · build **1.0.0+36** · **1453 tests**
+
+> **Two production defects were found and fixed on 2026-08-04, by the
+> first live RLS pass ever run against this database.** Five community
+> tables had been answering HTTP 500 since `019` was applied — squads
+> and the whole activity feed had never worked — and blocking a user did
+> nothing to their view of you. Both are fixed in `023` and verified
+> against production. `PHASE_14_PROGRESS_REPORT.md` §0 is the record;
+> `RESUME_GUIDE.md` §2.0.0k is the short version.
 
 ---
 
@@ -211,13 +219,30 @@
 
 # 2. Currently Working On
 
-**Phase 12 — Community I: Identity & Squads.** Wave 4's opener, started
-immediately after Phase 10 closed and Phase 11 was marked deferred.
-**The foundation is in** — `019_social_profiles.sql` (eight tables, RLS
-throughout, written and not applied), the pure visibility/friendship/
-squad rules with 26 tests, and a static RLS gate with 14 that was probed
-against three real regressions before being trusted. **The screens are
-not started**; `PHASE_12_COMPLETION_REPORT.md` §4 orders the rest.
+**Phase 14 — Content Freshness Engine.** Wave 4's closer.
+`PHASE_14_PROGRESS_REPORT.md` is the record and §5 is the exact
+remainder. **4 of 8 features shipped; the other 4 have their rules
+built and tested and no surface.**
+
+Shipped: migrations `024` (`content_releases`, `content_drops`) and
+`025` (seven rotating challenges, 13 live), the What's New screen with
+its route and dashboard trigger, `content_sync_service.dart`,
+`program_progression.dart` (the day-31 rules),
+`lifecycle_campaigns.dart` (the C50 journeys plus the global frequency
+cap), `docs/CONTENT_OPS.md` BÖLÜM II, all six analytics events, and a
+real release note live in production for build 36. +65 tests.
+
+Remaining, each a screen or a wiring job on top of tested logic:
+the **continuation-paths screen** (rules and all ARB copy already
+exist), **difficulty-tier wiring** back into the plan generator, the
+**new-content discovery surface**, and **campaign scheduling** (ledger,
+ARB bodies, `NotificationService` methods).
+
+**Not verified: no device walk this session** — `adb devices` was empty
+throughout. The join-challenge fix is verified by reproducing the
+client's exact PostgREST request as a real authenticated user, but
+nothing was seen on a screen and What's New has never been rendered on
+a device. No APK/AAB built; build not bumped.
 
 Founder-side, carried and still open:
 
@@ -227,9 +252,14 @@ Founder-side, carried and still open:
    `WORKOUT_BACKGROUND_IMAGE_REQUESTS.md` and
    `EXERCISE_IMAGE_REGENERATION_GUIDE.html`.
 3. **A native-speaker read of the English.**
-4. **Apply migrations 017 and 018** whenever cross-device carry is
-   wanted. Both are written, both are deliberately unapplied, and both
-   features are complete without them.
+4. **Author the monthly content.** The cadence is documented and the
+   tables are live: a challenge a month, a recipe batch a fortnight, a
+   plan a month, seasonal content a quarter. `docs/CONTENT_OPS.md`
+   BÖLÜM II is the runbook and `supabase/sql/seed_content_freshness.sql`
+   is the paste-and-edit template. **None of it needs an app release.**
+5. **Write the release note before each build ships.** It is keyed to
+   `build_number`, so publishing early is safe and is the intended
+   workflow — a user on the old build never sees it.
 
 # 3. Remaining Roadmap
 
@@ -242,9 +272,9 @@ Founder-side, carried and still open:
 - **Phase 11 — Accessibility Program.** ⏸ **Deferred by founder** (2026-08-02). Usable with visual, motor, auditory and cognitive differences, established as a standing definition-of-done. **Full scope preserved in the roadmap — this is a pause, not a cut.** Wave 4 starts at Phase 12 instead.
 
 ### Wave 4 — Community & Content Engine
-- **Phase 12 — Community I: Identity & Squads.** An identity worth showing and a small group worth showing up for.
-- **Phase 13 — Community II: Leaderboards & Challenges.** Healthy competition on top of the identity layer, without making beginners feel bad.
-- **Phase 14 — Content Freshness Engine.** Solve the structural problem that a 30-day program has a 30-day lifespan.
+- **Phase 12 — Community I: Identity & Squads.** ✅ **complete** — an identity worth showing and a small group worth showing up for. Migration `019` applied.
+- **Phase 13 — Community II: Leaderboards & Challenges.** ✅ **complete** — healthy competition on top of the identity layer, without making beginners feel bad. Migrations `020`–`022` applied.
+- **Phase 14 — Content Freshness Engine.** 🟡 **in progress, 4 of 8** — solve the structural problem that a 30-day program has a 30-day lifespan. Migrations `023`–`025` applied. `PHASE_14_PROGRESS_REPORT.md` §5 is the remainder.
 
 ### Wave 5 — Scale, Depth & Platform
 - **Phase 15 — Scale, Reliability & Continuous Discovery.** Sized for 10k–100k users, provably stable, driven by a permanent feedback loop.

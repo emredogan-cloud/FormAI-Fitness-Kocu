@@ -3,13 +3,18 @@
 Read this first. It is written so a session with no memory of the
 previous one can continue without re-analysing the repository.
 
-**Last updated:** 2026-08-02, **Phase 10 closed** (device walk included)
-— build `1.0.0+32`. Phase 8 stays closed as a split (RTL done, three
-languages deferred). **Phase 11 is DEFERRED BY FOUNDER — do not
+**Last updated:** 2026-08-04. Phase 8 stays closed as a split (RTL done,
+three languages deferred). **Phase 11 is DEFERRED BY FOUNDER — do not
 implement it.** **Phases 12 and 13 are COMPLETE. EVERY migration
-001–022 is applied to production** (016 is deliberately unwritten) and
-repository/production are in sync. The pre-Phase-14 polish is done;
-**Phase 14 itself has NOT been started** — read §2.0.0j.
+001–025 is applied to production** (016 is deliberately unwritten) and
+repository/production are in sync. Build `1.0.0+36`, 1453 tests.
+
+**Phase 14 is IN PROGRESS — 4 of 8 features shipped. Read §2.0.0l
+before anything else; it has the exact remainder.**
+
+**The Phase-13 join-challenge blocker is FIXED and it was not what
+anybody thought — read §2.0.0k. Five tables had been returning HTTP 500
+in production since 2026-08-03, and blocking a user did nothing.**
 
 ---
 
@@ -36,9 +41,12 @@ one `PHASE_NN_COMPLETION_REPORT.md`. Final deliverable at the very end:
 | **9p · pre-Phase-10 polish** | **done + device walk** | `PRE_PHASE10_POLISH_REPORT.md` |
 | **10 · Visual outcomes & reports** | **done + device walk** | `PHASE_10_COMPLETION_REPORT.md` |
 | **11 · Accessibility** | ⏸ **DEFERRED BY FOUNDER** — full scope preserved | roadmap §PHASE 11 |
-| **12 · Community I** | **in progress — foundation in, screens not** | `PHASE_12_COMPLETION_REPORT.md` |
+| **12 · Community I** | **done** | `PHASE_12_COMPLETION_REPORT.md` |
+| **13 · Community II** | **done** — leaderboards, challenges | `PHASE_13_COMPLETION_REPORT.md` |
+| **13p · pre-Phase-14 polish** | **done** | `PROJECT_PROGRESS_SUMMARY.md` |
+| **14 · Content freshness** | **in progress — 4 of 8 shipped** (§2.0.0l) | `PHASE_14_PROGRESS_REPORT.md` |
 
-**Branch:** `main`. **Build:** `1.0.0+31`.
+**Branch:** `main`. **Build:** `1.0.0+36`. **Migrations 001–025 applied.**
 
 ---
 
@@ -345,10 +353,93 @@ It was NOT diagnosed — the anon key could not be read this session, so
 no direct PostgREST query was possible. **Start here: run the insert by
 hand in the SQL editor as a real user id and see what RLS says.**
 
-### 2.0.0k Phase 14 — Content Freshness Engine — NOT STARTED
+### 2.0.0k THE JOIN BLOCKER IS FIXED — and five tables were down
 
-Roadmap §"PHASE 14". Nothing has been built. Start from the roadmap
-section and the discipline in §2.0.0h.
+`023_rls_recursion_and_block_direction.sql`, applied to production.
+`PHASE_14_PROGRESS_REPORT.md` §0 is the full record. The short version,
+because every line of it is worth knowing:
+
+- **A policy that queries its own table recurses.** Postgres applies RLS
+  to the tables a policy expression reads *including the one the policy
+  is on*, so it re-enters itself: `42P17`, on every request, forever.
+  `squad_members_select_member` and `challenge_participants_select_peers`
+  both did it. `squads`, `activity_events` and `activity_reactions`
+  reference `squad_members` in their own policies and died with it.
+  **Squads and the whole activity feed had never worked in production.**
+- **`022` did not cause it.** Its subject was a different defect in the
+  same two policies. Qualifying a column name does not change which
+  table a subquery reads.
+- **Blocking a user did nothing to their view of you.** `blocks` has its
+  own RLS, a policy expression runs as the querying user, so the
+  "someone blocked me" half of every symmetric check could never match.
+  The blocker's half worked, which is why it survived review. Proved
+  with two real accounts, before and after.
+- **The fix is three `security definer` helpers in a `private` schema.**
+  Private, not public: PostgREST serves `public` functions, and
+  `public.is_blocked_with(uuid)` would be an enumerable "did this person
+  block me?" endpoint. It takes ONE argument and answers only about the
+  caller.
+- **"No exception in logcat" was the wrong evidence.** `AppLogger.error`
+  prints only under `kDebugMode`; in the release build the founder
+  tested, it went to Sentry. In a release build, nothing in logcat is
+  not no exception.
+- **The gate now catches the class, and all five new checks were probed
+  against the real defect.** The old "a block is checked in both
+  directions" test was deleted rather than adjusted — it passed
+  throughout the entire outage, because every check *was* symmetric and
+  the data it read was not. Fifth time a gate here has been green about
+  its own subject.
+
+**Both of these are structural, not incidental. Before adding any
+policy: it may not read its own table, and it may not read
+`public.blocks`. Use the `private.*` helpers.**
+
+### 2.0.0l Phase 14 — IN PROGRESS · 4 of 8 features shipped
+
+`PHASE_14_PROGRESS_REPORT.md` is the record and §5 is the exact
+remainder. **Do not restart what is done.**
+
+**Shipped:** migration `024` (`content_releases`, `content_drops`) and
+`025` (seven rotating challenges — 13 live now), the What's New screen
+with its route and dashboard trigger, `content_sync_service.dart`,
+`program_progression.dart`, `lifecycle_campaigns.dart`,
+`localized_copy.dart`, `docs/CONTENT_OPS.md` BÖLÜM II, all six analytics
+events, and a real release note live in production for build 36.
++65 tests.
+
+**Built but with NO SURFACE — this is the whole remainder:**
+
+1. **Continuation paths screen** (day-31). Rules and **all ARB copy**
+   already exist. Needs a screen that builds a `ProgramOutcome` from
+   `workoutSessionProvider.days`, calls `recommend()`, renders four
+   cards with one marked, and fires `programContinuationChosen`.
+2. **Difficulty-tier wiring.** `DifficultyTier.token` matches the
+   generator's `fitnessLevel` strings and a test pins it; nothing passes
+   a chosen tier back into generation yet.
+3. **New-content discovery surface.** `ContentDrop` + targeting + ARB +
+   `seenContentDrops` all exist; no screen renders `drops()`.
+4. **Campaign scheduling.** `nextCampaign()` is complete and tested;
+   needs a `CampaignSend` ledger in prefs, ARB bodies, and
+   `NotificationService` methods.
+
+Four things that save re-deriving:
+
+- **A release note is keyed to a BUILD NUMBER, not a date.** Play rolls
+  a release out over days, so on release day both populations exist and
+  a date-keyed note describes, to half of them, an app they do not have.
+- **"Have you read it" is device state.** `024` has no `user_id`
+  anywhere, so the tables hold nothing RLS must protect.
+- **The sync cache stores raw JSON rows, not parsed objects**, so a
+  client that learns a new field reads it out of a cache written by one
+  that did not.
+- **`recommend()` never advances a struggling user, and a tier advance
+  carries no volume bump.** Both are the point, not an oversight.
+
+**NOT verified: there was no device walk.** `adb devices` was empty all
+session. The join fix is verified by reproducing the client's exact
+PostgREST request as a real authenticated user, which shows the status
+code and the row — but nothing was seen on a screen. **What's New has
+never been rendered on a device.** No APK/AAB built; build not bumped.
 
 ### 2.0.1 The three things Phase 7 deliberately did NOT do
 
@@ -614,6 +705,28 @@ which is how CI was red for four commits before this session noticed.
    edit updates instead of duplicating the catalogue — and the duplicate
    check has to exclude the batch's own earlier rows, or the second run
    rejects everything the first one wrote.
+31. **A policy may not read the table it is attached to.** Postgres
+   applies RLS to a policy expression's own table, so it re-enters the
+   policy: `42P17`, on every request. Five tables were down in
+   production for a day because of two such policies. Route the
+   predicate through a `security definer` helper.
+32. **A policy may not read `public.blocks` either**, for the same
+   reason one layer along: `blocks_select_own` hides the row from the
+   blocked user, and a policy runs as the querying user, so the
+   "someone blocked me" direction never matches. Every block check in
+   this schema was symmetric and none of them worked.
+33. **A `security definer` helper belongs in `private`, not `public`.**
+   PostgREST serves `public` functions as RPC, so
+   `public.is_blocked_with(uuid)` would be an enumerable oracle.
+34. **In a release build, nothing in logcat is not no exception.**
+   `AppLogger.error` prints only under `kDebugMode` and captures to
+   Sentry otherwise. This misread cost a whole phase's diagnosis.
+35. **Copy the migration into the staging workdir before pushing**, and
+   copy ALL of `supabase/.temp/` — the `project-ref` file matters, not
+   just `linked-project.json`. `025` went in before `024` this session
+   because only `025` had been copied across.
+36. **`library;` goes above the imports, not below them**, and a `$$`
+   function body's semicolons break any `split(';')` SQL parser.
 
 ---
 
