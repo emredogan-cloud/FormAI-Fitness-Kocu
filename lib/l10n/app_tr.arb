@@ -1818,6 +1818,7 @@
   "challengeComplete": "Tamamlandı",
   "challengeDaysLeft": "{count, plural, =0{Son gün} =1{1 gün kaldı} other{{count} gün kaldı}}",
   "challengeProgress": "{target} hedefin {done} tanesi",
+  "challengeStartsIn": "{count, plural, =0{Bugün başlıyor} =1{Yarın başlıyor} other{{count} gün sonra başlıyor}}",
   "navCommunity": "Topluluk",
   "challengeJoinFailed": "Bu meydan okumaya katılınamadı. Birazdan tekrar dene.",
   "whatsNewTitle": "Yenilikler",

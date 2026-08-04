@@ -188,6 +188,7 @@ class _ChallengeCard extends StatelessWidget {
     final now = DateTime.now();
     final joined = entry != null;
     final open = challenge.isOpen(now);
+    final upcoming = challenge.isUpcoming(now);
     final fraction = challengeFraction(
       progress: entry?.progress ?? 0,
       target: challenge.target,
@@ -221,11 +222,26 @@ class _ChallengeCard extends StatelessWidget {
                 // number just competes with the titles.
                 if (!open || daysLeft <= kChallengeDeadlineIsNews)
                   Text(
-                    open
-                        ? l10n.challengeDaysLeft(daysLeft < 0 ? 0 : daysLeft)
-                        : l10n.challengeEnded,
+                    upcoming
+                        ? l10n.challengeStartsIn(
+                            challengeDaysUntilStart(
+                              startsAt: challenge.startsAt,
+                              now: now,
+                            ),
+                          )
+                        : open
+                            ? l10n
+                                .challengeDaysLeft(daysLeft < 0 ? 0 : daysLeft)
+                            : l10n.challengeEnded,
                     style: TextStyle(
-                      color: open ? NeonSurface.lime : NeonSurface.faint,
+                      color: open
+                          ? NeonSurface.lime
+                          // Upcoming is muted rather than faint: it is
+                          // news, just not news you can act on yet.
+                          // Ended is faint because it is over.
+                          : upcoming
+                              ? NeonSurface.muted
+                              : NeonSurface.faint,
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                     ),

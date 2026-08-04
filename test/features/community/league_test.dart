@@ -229,6 +229,83 @@ void main() {
       expect(ChallengeKind.fromToken('moon_phase'), isNull);
       expect(ChallengeKind.fromToken('streak'), ChallengeKind.streak);
     });
+
+    group('"not open" is TWO states', () {
+      // Found on a device. Every challenge `021` shipped had already
+      // started, so the screen's "open ? days left : Ended" was right
+      // every time it could be checked. `025` staggers its start dates
+      // on purpose, and the first future-dated card rendered "Bitti" —
+      // "Ended" — for something starting tomorrow.
+      final start = DateTime.utc(2026, 9, 1);
+      final end = DateTime.utc(2026, 10, 1);
+
+      test('before the window it is upcoming, not ended', () {
+        expect(
+          challengeIsUpcoming(startsAt: start, now: DateTime.utc(2026, 8, 10)),
+          isTrue,
+        );
+      });
+
+      test('after the window it is ended, not upcoming', () {
+        expect(
+          challengeIsUpcoming(startsAt: start, now: DateTime.utc(2026, 10, 5)),
+          isFalse,
+        );
+        expect(
+          challengeIsOpen(
+              startsAt: start, endsAt: end, now: DateTime.utc(2026, 10, 5)),
+          isFalse,
+        );
+      });
+
+      test('the three states are mutually exclusive and exhaustive', () {
+        for (final now in [
+          DateTime.utc(2026, 8, 1),
+          start,
+          DateTime.utc(2026, 9, 15),
+          end,
+          DateTime.utc(2026, 12, 1),
+        ]) {
+          final open = challengeIsOpen(startsAt: start, endsAt: end, now: now);
+          final upcoming = challengeIsUpcoming(startsAt: start, now: now);
+          expect(open && upcoming, isFalse,
+              reason: 'both true at $now — the card would contradict itself');
+        }
+      });
+
+      test('the countdown is in CALENDAR days, not elapsed hours', () {
+        // A challenge starting at midnight tonight is nine hours away
+        // at 15:00, and `Duration.inDays` calls that zero — which would
+        // render "starts today" on the day before it starts.
+        final tonight = DateTime(2026, 8, 5);
+        expect(
+          challengeDaysUntilStart(
+            startsAt: tonight,
+            now: DateTime(2026, 8, 4, 15),
+          ),
+          1,
+        );
+        expect(
+          challengeDaysUntilStart(
+            startsAt: tonight,
+            now: DateTime(2026, 8, 5, 0, 30),
+          ),
+          0,
+        );
+      });
+
+      test('a start already past counts as zero, never negative', () {
+        // The label is only read while upcoming, but a negative day
+        // count would reach an ICU plural and read as nonsense.
+        expect(
+          challengeDaysUntilStart(
+            startsAt: DateTime(2026, 8, 1),
+            now: DateTime(2026, 8, 20),
+          ),
+          0,
+        );
+      });
+    });
   });
 
   group('clamping a week before writing it', () {

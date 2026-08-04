@@ -261,6 +261,43 @@ bool challengeIsOpen({
   return !moment.isBefore(startsAt.toUtc()) && moment.isBefore(endsAt.toUtc());
 }
 
+/// Whether a challenge has not begun yet.
+///
+/// **"Not open" is two states, and until `025` only one of them could
+/// happen.** Every challenge `021` shipped had already started, so the
+/// screen said "Ended" for anything not open and was right every time.
+/// The rotating library staggers its start dates deliberately — so
+/// somebody opening the screen in any given week finds something that
+/// has only just begun — and on a device that turned "starts tomorrow"
+/// into "Bitti".
+///
+/// Found on the device walk. No test could have caught it: the label was
+/// correct for every challenge that existed when it was written.
+bool challengeIsUpcoming({
+  required DateTime startsAt,
+  required DateTime now,
+}) =>
+    now.toUtc().isBefore(startsAt.toUtc());
+
+/// Whole CALENDAR days from [now] until [startsAt], in local time.
+///
+/// Calendar days rather than elapsed hours, because "starts tomorrow"
+/// is a statement about the date and not about a 24-hour window. A
+/// challenge beginning at midnight tonight is nine hours away at 15:00
+/// and `Duration.inDays` calls that zero — which would render "starts
+/// today" on the day before it starts.
+int challengeDaysUntilStart({
+  required DateTime startsAt,
+  required DateTime now,
+}) {
+  final start = startsAt.toLocal();
+  final today = now.toLocal();
+  final from = DateTime(today.year, today.month, today.day);
+  final to = DateTime(start.year, start.month, start.day);
+  final days = to.difference(from).inDays;
+  return days < 0 ? 0 : days;
+}
+
 /// Caps a client-reported week to what the server will actually accept.
 ///
 /// The client applies this before writing so a user sees the same number

@@ -8564,6 +8564,15 @@
   "@navCommunity": {
     "description": "Bottom-navigation label for the Community tab."
   },
+  "challengeStartsIn": "{count, plural, =0{Starts today} =1{Starts tomorrow} other{Starts in {count} days}}",
+  "@challengeStartsIn": {
+    "description": "Shown on a challenge that has been published but has not begun. Distinct from challengeEnded — a staggered rotating library means a card can be neither open nor over.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "challengeJoinFailed": "Could not join that challenge. Try again in a moment.",
   "@challengeJoinFailed": {
     "description": "Shown when joining a challenge does not succeed."

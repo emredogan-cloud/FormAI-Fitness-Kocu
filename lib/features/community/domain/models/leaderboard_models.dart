@@ -164,6 +164,11 @@ class Challenge {
   bool isOpen(DateTime now) =>
       challengeIsOpen(startsAt: startsAt, endsAt: endsAt, now: now);
 
+  /// Published, but not begun. Distinct from ended — see
+  /// [challengeIsUpcoming].
+  bool isUpcoming(DateTime now) =>
+      challengeIsUpcoming(startsAt: startsAt, now: now);
+
   static Challenge? fromJson(Map<String, dynamic> json) {
     final id = json['id'] as String?;
     final slug = json['slug'] as String?;
