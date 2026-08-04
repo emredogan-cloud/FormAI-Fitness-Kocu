@@ -11,6 +11,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/app_haptics.dart';
 import 'dashboard_screen.dart';
 import '../../../l10n/app_localizations.dart';
+import 'widgets/new_content_section.dart';
 
 /// Roadmap Phase 4 (C28 · R1.3) · the "Keşfet" capability map.
 ///
@@ -101,6 +102,11 @@ class _DiscoveryHubScreenState extends ConsumerState<DiscoveryHubScreen> {
               totalCount: Capability.values.length,
             ),
             const SizedBox(height: 20),
+            // Roadmap Phase 14 (C6) · above the capability pillars,
+            // because content that landed since your last visit is more
+            // perishable than a capability that unlocks on a schedule.
+            // Renders nothing at all when there is nothing new.
+            const NewContentSection(),
             for (final pillar in CapabilityPillar.values)
               ..._pillarSection(pillar, state),
           ],

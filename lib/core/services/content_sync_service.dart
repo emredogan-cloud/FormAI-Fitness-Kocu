@@ -46,10 +46,39 @@ import 'app_preferences.dart';
 /// few who leave the app open for days.
 class ContentSyncService {
   ContentSyncService(this._prefs, {SupabaseClient? client})
-      : _client = client ?? Supabase.instance.client;
+      : _injectedClient = client;
 
   final SharedPreferences _prefs;
-  final SupabaseClient _client;
+
+  /// Resolved LAZILY, and that is load-bearing rather than tidy.
+  ///
+  /// `Supabase.instance` asserts when the SDK has not initialised, and
+  /// the constructor reading it means the class cannot exist without a
+  /// live backend — which is exactly backwards for a service whose
+  /// entire design is that reads never touch the network. A cache read
+  /// on a device where Supabase failed to start should still answer.
+  ///
+  /// `CommunityRepository` has the eager version of this and the resume
+  /// guide records the workaround it forces on every test. Here the
+  /// client is only built when [refresh] actually needs one.
+  final SupabaseClient? _injectedClient;
+
+  /// The client, or null when there is no backend to talk to.
+  ///
+  /// Null is a STATE here, not a failure. `Supabase.instance` throws
+  /// when the SDK has not initialised — which happens in every widget
+  /// test that mounts a screen containing this service, and on a device
+  /// whose init failed. Both cases mean the same thing: the cache still
+  /// answers and there is nothing to refresh from.
+  SupabaseClient? get _clientOrNull {
+    final injected = _injectedClient;
+    if (injected != null) return injected;
+    try {
+      return Supabase.instance.client;
+    } catch (_) {
+      return null;
+    }
+  }
 
   static const String _releasesKey = 'sixpack.content_releases_v1';
   static const String _dropsKey = 'sixpack.content_drops_v1';
@@ -103,18 +132,19 @@ class ContentSyncService {
   /// whole design: a partial sync that emptied the catalogue would make
   /// a flaky connection look like an app with nothing new in it.
   Future<void> refresh() async {
-    if (_client.auth.currentUser == null) return;
+    final client = _clientOrNull;
+    if (client == null || client.auth.currentUser == null) return;
     var wrote = false;
-    wrote = await _pull('content_releases', _releasesKey) || wrote;
-    wrote = await _pull('content_drops', _dropsKey) || wrote;
+    wrote = await _pull(client, 'content_releases', _releasesKey) || wrote;
+    wrote = await _pull(client, 'content_drops', _dropsKey) || wrote;
     if (wrote) {
       await _prefs.setString(_syncedAtKey, DateTime.now().toIso8601String());
     }
   }
 
-  Future<bool> _pull(String table, String key) async {
+  Future<bool> _pull(SupabaseClient client, String table, String key) async {
     try {
-      final rows = await _client.from(table).select().timeout(_netTimeout);
+      final rows = await client.from(table).select().timeout(_netTimeout);
       await _prefs.setString(key, jsonEncode(rows));
       return true;
     } on PostgrestException catch (e) {
