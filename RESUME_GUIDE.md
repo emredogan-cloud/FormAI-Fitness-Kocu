@@ -6,9 +6,10 @@ previous one can continue without re-analysing the repository.
 **Last updated:** 2026-08-02, **Phase 10 closed** (device walk included)
 — build `1.0.0+32`. Phase 8 stays closed as a split (RTL done, three
 languages deferred). **Phase 11 is DEFERRED BY FOUNDER — do not
-implement it.** **Phases 12 and 13 are COMPLETE and their migrations
-(`019`, `020`) are APPLIED TO PRODUCTION.** Read §2.0.0f and §2.0.0h
-before touching either; do not rebuild what is already there.
+implement it.** **Phases 12 and 13 are COMPLETE. EVERY migration
+001–022 is applied to production** (016 is deliberately unwritten) and
+repository/production are in sync. The pre-Phase-14 polish is done;
+**Phase 14 itself has NOT been started** — read §2.0.0j.
 
 ---
 
@@ -298,6 +299,56 @@ Recorded in the report §4.1–§4.3. Not loose ends:
 3. **Challenge progress auto-reporting**, tier artwork, coach rank copy,
    and 100k-user load testing — each blocked on one of the above or on
    data that does not exist yet.
+
+### 2.0.0j PRE-PHASE-14 POLISH IS DONE · PHASE 14 IS NOT STARTED
+
+Build **1.0.0+36**, **1384 tests**, all gates green, APK + AAB built.
+Everything below already shipped — do not redo it.
+
+**Task 1 · migrations.** 017, 018, 021, 022 applied. `supabase migration
+list --linked` shows local == remote for 001–022. Push from a staging
+workdir (see §2.0.0h) — never from the repo root, the CLI chokes on
+`.env.local`. Out-of-order migrations need `--include-all`.
+
+**Task 2 · bottom navigation.** Five tabs: Training · Nutrition ·
+Progress · **Community** · Profile. Rebuilt as a custom bar because
+`BottomNavigationBarType.fixed` shows every label always and 82 dp
+cannot hold "Antrenman" beside a 24 dp icon. Capsule behind the selected
+icon, label underneath at 10.5 sp in a `FittedBox`.
+`kBottomNavItemCount` is the single source of truth for the tour's slice
+count — **change it and the tour silently spotlights the wrong tab.**
+
+**Task 3 · `SUPABASE_SCHEDULED_JOBS_GUIDE.md`** — complete, including
+the full rollover function. Two of the four jobs asked for turn out not
+to be jobs (challenge expiry and activation are a timestamp comparison),
+and notifications stay on the device on purpose.
+
+**Task 4 · challenges.** Six launch challenges live in production via
+migration `021`. **Six of the ten suggested were refused** because the
+engine cannot measure them — the reasoning is in `021`'s header and it
+is the important part. Challenge progress now advances, hooked into the
+XP listener beside the session ledger.
+
+**Task 5 · production review — FOUR RLS HOLES FOUND AND FIXED.** See
+`022`. Read this even if you read nothing else: inside a policy,
+`m.squad_id = squad_id` is `m.squad_id = m.squad_id`, always true. Three
+of the four had been live since community shipped, one was a write hole.
+`rls_policy_test.dart` now catches the class, precisely (it reads each
+table's real columns, so `s.id = squad_id` over `squads` is correctly
+allowed).
+
+**Known, unresolved, and worth an hour:** joining a challenge from the
+device does not persist. The tap registers (Back works from the same
+coordinates), no exception reaches logcat, and the card stays on "Join".
+`joinChallenge` returns false somewhere between `isOpen` and the upsert.
+It was NOT diagnosed — the anon key could not be read this session, so
+no direct PostgREST query was possible. **Start here: run the insert by
+hand in the SQL editor as a real user id and see what RLS says.**
+
+### 2.0.0k Phase 14 — Content Freshness Engine — NOT STARTED
+
+Roadmap §"PHASE 14". Nothing has been built. Start from the roadmap
+section and the discipline in §2.0.0h.
 
 ### 2.0.1 The three things Phase 7 deliberately did NOT do
 
