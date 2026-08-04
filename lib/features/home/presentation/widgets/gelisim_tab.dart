@@ -189,7 +189,11 @@ class GelisimTab extends ConsumerWidget {
                 onRetry: () => ref.invalidate(workoutSessionProvider),
               )
             else if (isProgramComplete)
-              const ProgramCompleteCard()
+              ProgramCompleteCard(
+                // Roadmap Phase 14 (C40) · the day-31 problem. This card
+                // is where the app used to run out of things to say.
+                onChooseNext: () => context.push(AppRoutes.programContinuation),
+              )
             else if (activeDay != null)
               TodayTaskCard(activeDay: activeDay),
             const SizedBox(height: 24),

@@ -174,6 +174,41 @@ const double kStrongOverload = 1.08;
 /// Half a step, for somebody who finished most of it.
 const double kModestOverload = 1.04;
 
+/// Rest every other day in maintenance, against the usual every fourth.
+///
+/// 30 days at this cadence is 15 active days — about 3.5 sessions a
+/// week against the standard ~5.3. That is the difference between
+/// building and holding, and it is the whole content of the maintenance
+/// path: a mode that produced the same plan would be a label.
+const int kMaintenanceRestEvery = 2;
+
+/// The ceiling on accumulated between-program volume.
+///
+/// Each continuation adds its step to what the user already carried, so
+/// three strong-but-not-strong-enough cycles would otherwise stack to
+/// +12%, then +24%, then forever. `WorkoutGeneratorService` already
+/// ramps +32% *within* a program and its header calls that "a
+/// defensible coaching prescription"; two cycle steps on top of that is
+/// the most this app is willing to prescribe without a human looking.
+///
+/// It is rarely reached, and that is by design rather than luck: a user
+/// who completes ≥80% is offered a TIER instead, and advancing a tier
+/// resets the accumulation to 1.0 — the tier change is the increase.
+/// Only somebody repeatedly finishing 50–80% at the top tier can walk
+/// up to this bound, and they are not a person to pile volume on.
+const double kMaxCycleOverload = 1.16;
+
+/// [current] carried forward through one more [step].
+///
+/// Additive and clamped. Multiplying would compound, which is the exact
+/// defect `weeklyOverloadIncrement`'s header was written about.
+double nextCycleOverload(double current, double step) {
+  final base = current < 1.0 ? 1.0 : current;
+  final raised = base + (step - 1.0);
+  if (raised < 1.0) return 1.0;
+  return raised > kMaxCycleOverload ? kMaxCycleOverload : raised;
+}
+
 /// Sessions consistently finishing this much faster than planned is the
 /// signal that the work is too light, independent of completion.
 const double kTooEasyRatio = 0.7;
@@ -200,6 +235,24 @@ ProgramFit assessFit(ProgramOutcome outcome) {
   }
   if (ratio != null && ratio >= kTooHardRatio) return ProgramFit.tooHard;
   return ProgramFit.wellMatched;
+}
+
+/// The volume a REPEAT would carry, whatever path was recommended.
+///
+/// [ContinuationRecommendation.overload] is the volume of the
+/// *recommended* path, and for a tier advance that is deliberately 1.0
+/// — the tier is the increase. But a strong finisher who declines the
+/// tier and repeats instead has still earned the step, and reading the
+/// recommendation's number would hand them the identical program back
+/// and call it "repeat with more volume".
+///
+/// Found by a widget test, not by review: the two numbers agree for
+/// every outcome except the one where the recommendation is a tier.
+double repeatOverloadFor(ProgramOutcome outcome) {
+  final rate = outcome.completionRate;
+  if (rate < kStruggleThreshold) return 1.0;
+  if (rate < kAdvanceThreshold) return kModestOverload;
+  return kStrongOverload;
 }
 
 /// What to put in front of somebody on day 31.

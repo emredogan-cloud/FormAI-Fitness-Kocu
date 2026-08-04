@@ -1157,6 +1157,8 @@ class WorkoutRepository {
     String? userGoal,
     String? fitnessLevel,
     bool? hasEquipment,
+    double cycleOverload = 1.0,
+    int restEvery = 4,
   }) async {
     final completed = await _completedDays();
     // Phase 86 · the cache is keyed by an input fingerprint so a
@@ -1169,7 +1171,13 @@ class WorkoutRepository {
     // new filter rather than reading a stale cache. Legacy installs
     // with `hasEquipment == null` collapse to `"true"` in the
     // fingerprint string so they hold their old fingerprint stable.
-    final fingerprint = _fingerprint(userGoal, fitnessLevel, hasEquipment);
+    final fingerprint = _fingerprint(
+      userGoal,
+      fitnessLevel,
+      hasEquipment,
+      cycleOverload: cycleOverload,
+      restEvery: restEvery,
+    );
     final cached = _decodeCachedPlan(fingerprint);
     final List<WorkoutDay> plan;
     var isStub = false;
@@ -1196,6 +1204,8 @@ class WorkoutRepository {
         // they don't suddenly start filtering. Fresh installs always
         // pass an explicit bool through the wizard.
         hasEquipment: hasEquipment ?? true,
+        cycleOverload: cycleOverload,
+        restEvery: restEvery,
       );
       // Fire-and-forget — cache is advisory; if the write fails we'll
       // simply regenerate the same plan next launch (deterministic).
@@ -1223,13 +1233,22 @@ class WorkoutRepository {
   /// equipment question existed should keep their existing plan, and
   /// the generator treats null-equipment as "preserve current
   /// behaviour" (≡ has-equipment).
+  ///
+  /// Roadmap Phase 14 · [cycleOverload] and [restEvery] joined it too.
+  /// Choosing "repeat with more volume" changes neither the goal nor the
+  /// level, so without them the continuation screen would reset progress
+  /// and then serve the identical cached plan back — a progression the
+  /// user chose and cannot see.
   String _fingerprint(
     String? userGoal,
     String? fitnessLevel,
-    bool? hasEquipment,
-  ) {
+    bool? hasEquipment, {
+    double cycleOverload = 1.0,
+    int restEvery = 4,
+  }) {
     final eqStr = (hasEquipment ?? true) ? 'true' : 'false';
-    return '${userGoal ?? ''}|${fitnessLevel ?? ''}|$eqStr';
+    return '${userGoal ?? ''}|${fitnessLevel ?? ''}|$eqStr'
+        '|${cycleOverload.toStringAsFixed(2)}|$restEvery';
   }
 
   /// Reads + decodes the cached plan. Returns null for any failure mode:

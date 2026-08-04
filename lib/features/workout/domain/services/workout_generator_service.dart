@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../models/exercise_model.dart';
 import '../../models/workout_day_model.dart';
+import '../program_progression.dart';
 import '../../../../l10n/app_localizations.dart';
 
 /// Rule-based 30-day plan generator. Consumes a flat [Exercise] pool
@@ -62,7 +63,30 @@ class WorkoutGeneratorService {
     // repository falls back to true when AppPreferences.hasEquipment
     // is null on legacy installs).
     bool hasEquipment = true,
+    // Roadmap Phase 14 (C40) · the volume the user carried out of their
+    // LAST program, as a factor. The weekly increment above is
+    // progression *within* one program; this is progression *between*
+    // them, chosen on the continuation screen and bounded by
+    // `kMaxCycleOverload`.
+    //
+    // 1.0 is byte-identical to the pre-Phase-14 behaviour, and every
+    // caller that does not know about continuation gets it.
+    double cycleOverload = 1.0,
+    // Roadmap Phase 14 (C40) · rest cadence. 4 means "every fourth day
+    // is a rest day", which is what this generator has always done.
+    // Maintenance mode passes 2 — the point of maintenance is fewer
+    // sessions, and a maintenance mode that produced the same plan
+    // would be a label rather than a mode.
+    int restEvery = 4,
   }) {
+    // A caller passing 0 or 1 would make every day a rest day and hand
+    // the dashboard a stub it would report as "syncing" forever.
+    final restCadence = restEvery < 2 ? 4 : restEvery;
+    final cycle = cycleOverload < 1.0
+        ? 1.0
+        : (cycleOverload > kMaxCycleOverload
+            ? kMaxCycleOverload
+            : cycleOverload);
     if (pool.isEmpty) {
       // Phase 50A · the Supabase catalogue fetch failed (offline first
       // launch, transient 5xx, etc.). Returning 30 rest days keeps the
@@ -112,7 +136,7 @@ class WorkoutGeneratorService {
       // Rest days — every 4th day the user gets recovery. Empty exercise
       // list is the UI signal for "nothing to run here"; `title` carries
       // the label so the listing card can render "Dinlenme Günü".
-      if (dayNumber % 4 == 0) {
+      if (dayNumber % restCadence == 0) {
         days.add(WorkoutDay(
           dayNumber: dayNumber,
           exercises: const [],
@@ -147,7 +171,11 @@ class WorkoutGeneratorService {
       ]);
 
       final exerciseCount = _dailyExerciseCount(dayNumber);
-      final multiplier = 1.0 + weeklyOverloadIncrement * weekIndex;
+      // `cycle` is ADDITIVE with the weekly ramp, not multiplied by
+      // it. This method's own header is an argument against compounding
+      // progression, and multiplying a cycle factor into a weekly one is
+      // exactly that shape at a slower rate.
+      final multiplier = cycle + weeklyOverloadIncrement * weekIndex;
 
       final dayExercises = <Exercise>[];
       for (var i = 0; i < exerciseCount; i++) {

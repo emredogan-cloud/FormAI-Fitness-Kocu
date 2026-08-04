@@ -13,6 +13,7 @@ import '../../features/home/presentation/dashboard_screen.dart';
 import '../../features/home/domain/content_freshness.dart';
 import '../../features/home/presentation/discovery_hub_screen.dart';
 import '../../features/home/presentation/whats_new_screen.dart';
+import '../../features/workout/presentation/program_continuation_screen.dart';
 import '../../features/monetization/presentation/paywall_screen.dart';
 import '../../features/nutrition/domain/models/recipe.dart';
 import '../../features/nutrition/presentation/category_recipes_screen.dart';
@@ -117,6 +118,11 @@ class AppRoutes {
   /// somebody who dismissed it can go back and look — Phase 13 learned
   /// that a route nothing links to is not a route.
   static const String whatsNew = '/whats-new';
+
+  /// Phase 14 · day 31. Reached from the program-complete card on the
+  /// Progress tab, which is the only place the app knows a program just
+  /// ended.
+  static const String programContinuation = '/program/continue';
 
   /// Phase 50B · internal admin panel. Gated by [isAdminProvider]; the
   /// router redirects non-admins to [dashboard] before the screen is
@@ -485,6 +491,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.communityChallenges,
         name: 'communityChallenges',
         builder: (context, state) => const ChallengesScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.programContinuation,
+        name: 'programContinuation',
+        builder: (context, state) => const ProgramContinuationScreen(),
       ),
       GoRoute(
         path: AppRoutes.whatsNew,

@@ -1040,4 +1040,28 @@ class AppPreferences {
     final merged = {...seenContentDrops, ...slugs};
     await _prefs.setStringList(_seenDropsKey, merged.toList(growable: false));
   }
+
+  // ─── Phase 14 · what the last program left behind ────────────────
+  //
+  // Both feed the plan-cache fingerprint in `WorkoutRepository`, so
+  // changing either regenerates the plan rather than serving the old
+  // one. That is why neither needs its own cache-busting call.
+
+  static const String _cycleOverloadKey = 'sixpack.program_cycle_overload';
+  static const String _maintenanceKey = 'sixpack.program_maintenance';
+
+  /// Between-program volume carried out of the last completion, as a
+  /// factor. 1.0 for everybody who has never finished a program, which
+  /// is the value the generator has always effectively used.
+  double get programCycleOverload => _prefs.getDouble(_cycleOverloadKey) ?? 1.0;
+
+  Future<void> setProgramCycleOverload(double value) =>
+      _prefs.setDouble(_cycleOverloadKey, value);
+
+  /// Fewer sessions a week, held indefinitely. Chosen on the
+  /// continuation screen and cleared by choosing any other path.
+  bool get isMaintenanceMode => _prefs.getBool(_maintenanceKey) ?? false;
+
+  Future<void> setMaintenanceMode(bool value) =>
+      _prefs.setBool(_maintenanceKey, value);
 }

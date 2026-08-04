@@ -185,9 +185,21 @@ class TodayTaskCard extends ConsumerWidget {
 /// Review modal. Re-tappable any number of times; the persisted
 /// `seenYearInReview` flag is independent.
 class ProgramCompleteCard extends StatelessWidget {
-  const ProgramCompleteCard({super.key, this.onReplayJourney});
+  const ProgramCompleteCard({
+    super.key,
+    this.onReplayJourney,
+    this.onChooseNext,
+  });
 
   final VoidCallback? onReplayJourney;
+
+  /// Roadmap Phase 14 (C40) · the day-31 entry point.
+  ///
+  /// Rendered as the PRIMARY action above "see your journey", because
+  /// this card is otherwise where the app stops having anything to say
+  /// — which is the moment a subscription stops renewing. Looking back
+  /// is the secondary offer.
+  final VoidCallback? onChooseNext;
 
   static const Color _gold = Color(0xFFE0B547);
 
@@ -230,6 +242,31 @@ class ProgramCompleteCard extends StatelessWidget {
               ),
             ],
           ),
+          if (onChooseNext != null) ...[
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: _success,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                onPressed: onChooseNext,
+                child: Text(
+                  AppLocalizations.of(context).programCompleteTitle,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.4,
+                  ),
+                ),
+              ),
+            ),
+          ],
           if (onReplayJourney != null) ...[
             const SizedBox(height: 14),
             Align(

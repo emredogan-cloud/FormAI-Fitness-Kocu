@@ -13,6 +13,7 @@ import '../domain/services/workout_generator_service.dart';
 import '../domain/workout_mode.dart';
 import '../models/exercise_model.dart';
 import '../models/session_log_model.dart';
+import '../domain/program_progression.dart';
 import '../models/workout_day_model.dart';
 import '../models/workout_plan_model.dart';
 
@@ -246,6 +247,11 @@ class WorkoutSessionNotifier extends AsyncNotifier<WorkoutSessionState> {
       userGoal: userGoal,
       fitnessLevel: fitnessLevel,
       hasEquipment: hasEquipment,
+      // Roadmap Phase 14 (C40) · what the last program's continuation
+      // choice left behind. Both default to the pre-Phase-14 values for
+      // every user who has not finished a program yet.
+      cycleOverload: appPrefs.programCycleOverload,
+      restEvery: appPrefs.isMaintenanceMode ? kMaintenanceRestEvery : 4,
     );
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sixpack_ai/features/workout/domain/services/workout_generator_service.dart';
+import 'package:sixpack_ai/features/workout/models/workout_day_model.dart';
 import 'package:sixpack_ai/features/workout/models/exercise_model.dart';
 import 'package:flutter/widgets.dart';
 import 'package:sixpack_ai/l10n/app_localizations.dart';
@@ -615,6 +616,89 @@ void main() {
         w2.targetDurationInSeconds!,
         greaterThan(w1.targetDurationInSeconds!),
       );
+    });
+  });
+
+  group('Phase 14 · what a continuation carries into the next program', () {
+    List<WorkoutDay> plan({double cycleOverload = 1.0, int restEvery = 4}) =>
+        const WorkoutGeneratorService().generate30DayPlan(
+          l10n: l10n,
+          userGoal: 'sixpack',
+          fitnessLevel: 'beginner',
+          pool: _fixturePool,
+          cycleOverload: cycleOverload,
+          restEvery: restEvery,
+        );
+
+    test('the defaults reproduce the pre-Phase-14 plan exactly', () {
+      // Both parameters exist for one screen. Every other caller in the
+      // app omits them, and omitting them must change nothing at all.
+      final before = const WorkoutGeneratorService().generate30DayPlan(
+        l10n: l10n,
+        userGoal: 'sixpack',
+        fitnessLevel: 'beginner',
+        pool: _fixturePool,
+      );
+      final after = plan();
+      expect(after.length, before.length);
+      for (var i = 0; i < before.length; i++) {
+        expect(after[i].isRestDay, before[i].isRestDay, reason: 'day ${i + 1}');
+        expect(
+          after[i].exercises.map((e) => '${e.name}:${e.targetReps}').toList(),
+          before[i].exercises.map((e) => '${e.name}:${e.targetReps}').toList(),
+          reason: 'day ${i + 1}',
+        );
+      }
+    });
+
+    test('a carried overload raises day-1 reps', () {
+      // Day 1 is week 0, so the weekly ramp contributes nothing and the
+      // only thing that can move the number is the cycle carry.
+      final base = plan().first.exercises;
+      final carried = plan(cycleOverload: 1.16).first.exercises;
+      expect(base, isNotEmpty);
+      var moved = 0;
+      for (var i = 0; i < base.length; i++) {
+        final a = base[i].targetReps;
+        final b = carried[i].targetReps;
+        if (a != null && b != null && b > a) moved++;
+      }
+      expect(moved, greaterThan(0),
+          reason: 'a progression the user chose must be visible on day 1');
+    });
+
+    test('the carry is bounded even when a caller passes nonsense', () {
+      // The generator clamps rather than trusting its caller, because
+      // the value reaches it through a SharedPreferences double.
+      final absurd = plan(cycleOverload: 9.0).first.exercises;
+      final ceiling = plan(cycleOverload: 1.16).first.exercises;
+      for (var i = 0; i < absurd.length; i++) {
+        expect(absurd[i].targetReps, ceiling[i].targetReps);
+      }
+    });
+
+    test('a below-1.0 carry cannot make the program easier', () {
+      final under = plan(cycleOverload: 0.4).first.exercises;
+      final base = plan().first.exercises;
+      for (var i = 0; i < base.length; i++) {
+        expect(under[i].targetReps, base[i].targetReps);
+      }
+    });
+
+    test('maintenance halves the sessions rather than renaming them', () {
+      final normal = plan().where((d) => !d.isRestDay).length;
+      final hold = plan(restEvery: 2).where((d) => !d.isRestDay).length;
+      expect(hold, lessThan(normal));
+      expect(hold, 15, reason: '30 days resting every other one');
+    });
+
+    test('a rest cadence below 2 falls back rather than emptying the plan', () {
+      // restEvery: 1 would make every day a rest day, and the dashboard
+      // reads an all-rest plan as "syncing" forever.
+      for (final bad in [0, 1, -3]) {
+        expect(plan(restEvery: bad).where((d) => !d.isRestDay), isNotEmpty,
+            reason: 'restEvery: $bad');
+      }
     });
   });
 }

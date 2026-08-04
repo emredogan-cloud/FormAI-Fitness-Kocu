@@ -222,6 +222,77 @@ void main() {
     });
   });
 
+  group('what a REPEAT carries, whatever was recommended', () {
+    test('a strong finisher who declines the tier still earns the step', () {
+      // The defect a widget test found. `recommend()` returns 1.0 for a
+      // tier advance ON PURPOSE — the tier is the increase — and reading
+      // that number for the repeat card handed a 28/30 finisher the
+      // identical program back under a card promising more volume.
+      final strong = outcome(28);
+      expect(recommend(strong).path, ContinuationPath.advanceTier);
+      expect(recommend(strong).overload, 1.0);
+      expect(repeatOverloadFor(strong), kStrongOverload);
+    });
+
+    test('the two agree everywhere the recommendation is not a tier', () {
+      for (final tier in DifficultyTier.values) {
+        for (var days = 0; days <= 30; days++) {
+          final o = outcome(days, tier: tier);
+          final r = recommend(o);
+          if (r.path == ContinuationPath.advanceTier) continue;
+          expect(repeatOverloadFor(o), closeTo(r.overload, 1e-9),
+              reason: '$days days at ${tier.name}');
+        }
+      }
+    });
+
+    test('somebody who struggled is still offered no extra volume', () {
+      expect(repeatOverloadFor(outcome(11)), 1.0);
+      expect(repeatOverloadFor(outcome(0)), 1.0);
+    });
+  });
+
+  group('carrying volume between programs', () {
+    test('a step is added, never multiplied', () {
+      // Multiplying is what `weeklyOverloadIncrement`'s header was
+      // written about. 1.08 twice is 1.16 here, not 1.1664.
+      expect(nextCycleOverload(1.0, kStrongOverload),
+          closeTo(kStrongOverload, 1e-9));
+      expect(nextCycleOverload(kStrongOverload, kStrongOverload),
+          closeTo(1.16, 1e-9));
+    });
+
+    test('it cannot climb past the ceiling', () {
+      var carried = 1.0;
+      for (var cycle = 0; cycle < 40; cycle++) {
+        carried = nextCycleOverload(carried, kStrongOverload);
+      }
+      expect(carried, kMaxCycleOverload);
+    });
+
+    test('a no-overload step leaves it exactly where it was', () {
+      // What somebody who half-finished gets. Repeating a program you
+      // struggled with must not quietly raise the volume.
+      expect(nextCycleOverload(1.08, 1.0), closeTo(1.08, 1e-9));
+      expect(nextCycleOverload(1.0, 1.0), 1.0);
+    });
+
+    test('a corrupt stored value is read as no overload', () {
+      // The pref is a double somebody could have written anything into.
+      expect(nextCycleOverload(0.2, kModestOverload),
+          closeTo(kModestOverload, 1e-9));
+      expect(nextCycleOverload(-5, 1.0), 1.0);
+    });
+
+    test('the ceiling is below what one program already ramps to', () {
+      // `weeklyOverloadIncrement` reaches +32% inside a single program
+      // and its header calls that the defensible limit. The BETWEEN-
+      // program carry has to be smaller than that, or two mechanisms
+      // that were each argued separately combine into one nobody did.
+      expect(kMaxCycleOverload - 1.0, lessThan(0.32));
+    });
+  });
+
   test('the overload constant matches the generator\'s own', () {
     // The generator already knows how to make a week 8% harder. Two
     // progression rates would mean the screen promises one thing and the
