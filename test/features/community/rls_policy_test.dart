@@ -31,6 +31,7 @@ const List<String> communityMigrations = [
   '019_social_profiles.sql',
   '020_leaderboards.sql',
   '022_fix_challenge_peer_policy.sql',
+  '023_rls_recursion_and_block_direction.sql',
 ];
 
 /// The content tables this suite expects to exist.
@@ -43,6 +44,7 @@ const Set<String> kExpectedContentTables = {'challenges'};
 
 void main() {
   late String sql;
+  late String code;
   late List<String> statements;
 
   setUpAll(() {
@@ -59,7 +61,7 @@ void main() {
     // symmetric and why `using (true)` would be wrong, and matching
     // those phrases inside the prose would fail the test on its own
     // documentation.
-    final code = sql.replaceAll(RegExp(r'--.*', multiLine: true), '');
+    code = sql.replaceAll(RegExp(r'--.*', multiLine: true), '');
     statements = code
         .split(';')
         .map((s) => s.trim())
@@ -103,6 +105,55 @@ void main() {
 
   bool isContentPolicy(String policy) =>
       contentTables().any((t) => policy.contains('public.$t'));
+
+  /// Every policy **as it finally stands**, one entry per name.
+  ///
+  /// Migrations are read in order and every policy is written as
+  /// `drop ... if exists` followed by `create`, so a later file
+  /// supersedes an earlier one. Checking every historical statement
+  /// would fail on a defect that has already been repaired — which is
+  /// exactly what happened when `022` fixed two policies and the suite
+  /// kept reporting `019`'s original text. The live database has one
+  /// definition per name, and that is what this asserts.
+  List<String> policyStatements() {
+    final latest = <String, String>{};
+    for (final statement in statements) {
+      if (!statement.toLowerCase().startsWith('create policy')) continue;
+      final name = RegExp(r'create policy\s+"?(\w+)"?', caseSensitive: false)
+          .firstMatch(statement)
+          ?.group(1);
+      if (name == null) continue;
+      latest[name] = statement;
+    }
+    return latest.values.toList(growable: false);
+  }
+
+  /// The table a policy is attached to — `on public.X for select`.
+  String? policyTable(String policy) => RegExp(
+        r'on\s+public\.(\w+)\s+for\b',
+        caseSensitive: false,
+      ).firstMatch(policy)?.group(1);
+
+  /// The `private.*` helpers, keyed by name, each mapped to its whole
+  /// declaration — header and `$$` body together.
+  ///
+  /// These exist because a policy cannot read a table whose RLS is part
+  /// of the question it is asking — see `023`. They are read here so the
+  /// assertions below can check what a helper actually does rather than
+  /// trusting its name.
+  ///
+  /// Parsed out of the raw text and NOT out of `statements`, because a
+  /// function body contains semicolons and the splitter cuts the
+  /// declaration in half at the first one. That is also why `019`'s
+  /// `join_squad` has only ever been checked with `sql.contains`.
+  Map<String, String> privateHelpers() => {
+        for (final m in RegExp(
+          r'create or replace function private\.(\w+)\s*\([\s\S]*?'
+          r'\$\$[\s\S]*?\$\$',
+          caseSensitive: false,
+        ).allMatches(code))
+          m.group(1)!: m.group(0)!,
+      };
 
   test('the set of content tables is the one we think it is', () {
     // If this fails, a table stopped holding user data or started to.
@@ -149,28 +200,6 @@ void main() {
   });
 
   group('no policy is permissive by accident', () {
-    /// Every policy **as it finally stands**, one entry per name.
-    ///
-    /// Migrations are read in order and every policy is written as
-    /// `drop ... if exists` followed by `create`, so a later file
-    /// supersedes an earlier one. Checking every historical statement
-    /// would fail on a defect that has already been repaired — which is
-    /// exactly what happened when `022` fixed two policies and the
-    /// suite kept reporting `019`'s original text. The live database
-    /// has one definition per name, and that is what this asserts.
-    List<String> policyStatements() {
-      final latest = <String, String>{};
-      for (final statement in statements) {
-        if (!statement.toLowerCase().startsWith('create policy')) continue;
-        final name = RegExp(r'create policy\s+"?(\w+)"?', caseSensitive: false)
-            .firstMatch(statement)
-            ?.group(1);
-        if (name == null) continue;
-        latest[name] = statement;
-      }
-      return latest.values.toList(growable: false);
-    }
-
     test('there are policies to check', () {
       expect(policyStatements().length, greaterThan(15));
     });
@@ -187,14 +216,72 @@ void main() {
     });
 
     test('every one of them constrains on auth.uid()', () {
+      // `023` moved three predicates into `private.*` helpers, because a
+      // policy cannot read a table whose RLS is part of the question it
+      // is asking. So a policy may now constrain on the caller without
+      // the literal `auth.uid()` appearing in it.
+      //
+      // **That is widened with a signal, not an exclusion.** "Calls a
+      // private helper" would be a free pass — a helper is just a
+      // function name and could contain anything. What earns the pass is
+      // reading the helper's own body and finding `auth.uid()` in it. A
+      // helper that stopped constraining on the caller would take every
+      // policy that calls it down with it, which is the correct
+      // blast radius.
+      final helpers = privateHelpers();
+      final constrained = {
+        for (final entry in helpers.entries)
+          if (entry.value.contains('auth.uid()')) entry.key,
+      };
+      expect(constrained, isNotEmpty,
+          reason: 'no private helper constrains on auth.uid() — either they '
+              'were removed or the parser stopped finding them, and either '
+              'way the pass below is being handed out for free');
+
       for (final policy in policyStatements()) {
         if (isContentPolicy(policy)) continue;
         final flat = policy.replaceAll(RegExp(r'\s+'), ' ');
+        final viaHelper = constrained.any((h) => flat.contains('private.$h('));
         expect(
-          flat.contains('auth.uid()'),
+          flat.contains('auth.uid()') || viaHelper,
           isTrue,
           reason: 'a policy with no auth.uid() predicate is open to every '
               'signed-in user: $flat',
+        );
+      }
+    });
+
+    test('no policy queries the table it is attached to', () {
+      // The defect that made joining a challenge do nothing, and that
+      // had `squads`, `squad_members`, `activity_events` and
+      // `activity_reactions` answering 500 in production from the day
+      // `019` was applied:
+      //
+      //   create policy challenge_participants_select_peers
+      //     on public.challenge_participants for select
+      //     using (exists (select 1 from public.challenge_participants ...))
+      //
+      // Postgres applies row security to the tables a policy expression
+      // reads — including the one the policy is on — so evaluating it
+      // re-enters it. `42P17 infinite recursion detected in policy`, on
+      // every request, forever. A table three others reference in their
+      // own policies takes them down with it.
+      //
+      // No gate in this file could see it: the shape is a correlated
+      // subquery, which is what a correct policy looks like. The route
+      // out is a `security definer` helper, which reads the table
+      // without row security.
+      for (final policy in policyStatements()) {
+        final table = policyTable(policy);
+        if (table == null) continue;
+        expect(
+          RegExp('from\\s+public\\.$table\\b', caseSensitive: false)
+              .hasMatch(policy),
+          isFalse,
+          reason: 'policy on public.$table reads public.$table — this '
+              'recurses and every request against the table returns 42P17. '
+              'Move the predicate into a private.* security definer '
+              'helper: $policy',
         );
       }
     });
@@ -291,30 +378,85 @@ void main() {
       }
     });
 
-    test('a block is checked in both directions wherever it is checked', () {
-      // The roadmap requires a block to "fully sever visibility both
-      // ways". A one-directional check lets somebody keep watching a
-      // profile that blocked them.
-      // Whole statements rather than a sub-match: a non-greedy regex
-      // stops at the first ')' and truncates the clause before the OR
-      // it is looking for, which made the first draft of this test fail
-      // on a migration that was correct.
-      final consulting = statements
-          .where((s) => s.contains('from public.blocks b'))
-          .toList(growable: false);
-
-      expect(consulting.length, greaterThanOrEqualTo(3),
-          reason: 'blocks are consulted by profiles, friendships and the feed');
-
-      for (final statement in consulting) {
-        final flat = statement.replaceAll(RegExp(r'\s+'), ' ');
-        expect(flat.contains('b.blocker_id'), isTrue);
-        expect(flat.contains('b.blocked_id'), isTrue);
+    test('no policy reads public.blocks directly', () {
+      // The version of this test that `023` replaced asserted that every
+      // block check named `blocker_id` on both sides of an `or`. Every
+      // one of them did. **The blocks were still not working**, and two
+      // real accounts against production proved it: A blocked B, and B
+      // went on reading A's profile.
+      //
+      // `blocks_select_own` deliberately shows a block row only to the
+      // blocker, and a policy expression is evaluated as the querying
+      // user — so the row matching the second half of that symmetric
+      // predicate is invisible to exactly the person it is meant to
+      // stop. The predicate was symmetric and the data it read was not.
+      //
+      // So the property worth checking is no longer "is it written both
+      // ways". It is: nothing reads `public.blocks` from inside a policy
+      // at all. There is one reader, it is `security definer`, and it is
+      // checked below.
+      for (final policy in policyStatements()) {
+        // The `on public.blocks for select` header of the policies that
+        // govern the table itself is not a read of it.
+        final predicate = policy.replaceFirst(
+          RegExp(r'on\s+public\.\w+\s+for\b', caseSensitive: false),
+          '',
+        );
         expect(
-          RegExp(r'b\.blocker_id.*\bor\b.*b\.blocker_id').hasMatch(flat),
-          isTrue,
-          reason: 'a block check naming blocker_id once is one-directional, '
-              'and a blocked user could keep watching: $flat',
+          predicate.contains('public.blocks'),
+          isFalse,
+          reason: 'a policy reading public.blocks sees only the rows the '
+              'CALLER wrote, so the "someone blocked me" direction never '
+              'matches. Use private.is_blocked_with: $policy',
+        );
+      }
+    });
+
+    test('the one thing that reads blocks checks both directions', () {
+      final helper = privateHelpers()['is_blocked_with'];
+      expect(helper, isNotNull,
+          reason: 'private.is_blocked_with is the only sanctioned reader of '
+              'public.blocks and it is gone');
+      final flat = helper!.replaceAll(RegExp(r'\s+'), ' ');
+      expect(flat.contains('from public.blocks'), isTrue,
+          reason: 'sanity: this is meant to be the one thing that reads the '
+              'table, and it does not: $flat');
+      expect(
+        RegExp(r'blocker_id.*\bor\b.*blocker_id').hasMatch(flat),
+        isTrue,
+        reason: 'the roadmap requires a block to sever visibility both ways, '
+            'and this is now the single place that decides it: $flat',
+      );
+    });
+
+    test('every private helper is security definer and pins search_path', () {
+      // A SECURITY DEFINER function runs as its owner. One that resolves
+      // an unqualified name through a caller-controlled search_path runs
+      // somebody else's code as its owner.
+      final helpers = privateHelpers();
+      expect(helpers.keys, isNotEmpty, reason: 'the parser found no helpers');
+      for (final entry in helpers.entries) {
+        expect(entry.value.contains('security definer'), isTrue,
+            reason: 'private.${entry.key} is not security definer, so it '
+                'cannot read past RLS and the policy calling it still '
+                'recurses');
+        expect(entry.value.contains('set search_path'), isTrue,
+            reason: 'private.${entry.key} does not pin search_path');
+      }
+    });
+
+    test('the helpers are not reachable as PostgREST RPC', () {
+      // They live in `private` rather than `public` on purpose.
+      // `public.is_blocked_with(uuid)` would be an endpoint any signed-in
+      // user could call for any id — an enumerable "did this person
+      // block me?" oracle, which is the exact thing blocks_select_own
+      // refuses to be.
+      expect(sql.contains('create schema if not exists private'), isTrue);
+      for (final name in privateHelpers().keys) {
+        expect(
+          sql.contains('create or replace function public.$name('),
+          isFalse,
+          reason: '$name also exists in the exposed public schema',
         );
       }
     });
