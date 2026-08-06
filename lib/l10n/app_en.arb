@@ -5623,14 +5623,9 @@
   "@act5StatAiPowered": {
     "description": "Stat card label completing 'AI ___'."
   },
-  "act5StatOnDevice": "{percent}% ON DEVICE",
+  "act5StatOnDevice": "ON-DEVICE ANALYSIS",
   "@act5StatOnDevice": {
-    "description": "Stat card sub-label. The percent sign leads the number in Turkish and trails it in English.",
-    "placeholders": {
-      "percent": {
-        "type": "int"
-      }
-    }
+    "description": "Stat card sub-label under the 'AI POWERED' tile. Names the analysis specifically: the pose detection runs on the device, while the AI coach's replies are generated on a server, so the previous '100% ON DEVICE' read as a claim about all of the app's AI. Keep at or under 18 characters — the label is maxLines:1 with ellipsis at 9pt in a half-width tile, and the sibling card's 18-character 'LIVE FORM ANALYSIS' is the proven fit."
   },
   "act5VoiceCoachTitle": "{voice} FORM COACHING",
   "@act5VoiceCoachTitle": {

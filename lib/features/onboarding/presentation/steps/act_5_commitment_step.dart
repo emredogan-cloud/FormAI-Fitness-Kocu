@@ -206,7 +206,7 @@ class _PrePaywallSummaryStepState extends ConsumerState<PrePaywallSummaryStep>
                                     icon: Icons.memory_rounded,
                                     big: 'AI',
                                     line1: l10n.act5StatAiPowered,
-                                    line2: l10n.act5StatOnDevice(100),
+                                    line2: l10n.act5StatOnDevice,
                                   ),
                                 ),
                               ],

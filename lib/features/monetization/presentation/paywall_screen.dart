@@ -1221,7 +1221,7 @@ class _HeroFeature extends StatelessWidget {
 }
 
 /// The AI-features checklist card from the reference (dark, neon-bordered): a
-/// glowing body glyph, the four capability lines, and a compact FORM SKORU
+/// glowing body glyph, the four capability lines, and a compact form-score
 /// gauge evoking the phone mock.
 class _AiFeaturesCard extends StatelessWidget {
   const _AiFeaturesCard();
@@ -1311,14 +1311,14 @@ class _AiFeaturesCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          // Right · FORM SKORU gauge (evokes the reference phone mock).
+          // Right · form-score gauge (evokes the reference phone mock).
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'FORM\nSKORU',
+              Text(
+                AppLocalizations.of(context).showcaseHeroFormScore.toUpperCase(),
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white54,
                   fontSize: 8,
                   fontWeight: FontWeight.w800,

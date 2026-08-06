@@ -16,7 +16,16 @@ import 'package:sixpack_ai/l10n/app_localizations.dart';
 /// not a crash — it is a card that tells somebody they are behind, or
 /// that their body has not changed, on evidence that cannot support it.
 void main() {
-  final today = BodyMetric.dayOf(DateTime(2026, 8, 2));
+  // Anchored to the wall clock, NOT to a literal date. The screen
+  // computes its own window from `DateTime.now()`
+  // (body_metrics_screen.dart), so a fixture pinned to a fixed day
+  // drifts out of that window as real time moves past it: this file was
+  // written against `DateTime(2026, 8, 2)` and began failing on
+  // 2026-08-06 when the seeded points aged past the trend window and
+  // `summarize()` started returning null — which hides the insights CTA
+  // three of these tests tap. Reading the same clock the screen reads
+  // keeps the fixtures and the window aligned on every future run.
+  final today = BodyMetric.dayOf(DateTime.now());
   DateTime daysAgo(int n) => today.subtract(Duration(days: n));
 
   BodyMetric weight(int daysBack, double kg) =>

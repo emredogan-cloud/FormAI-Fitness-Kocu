@@ -374,10 +374,7 @@ class DynamicReportStep extends ConsumerStatefulWidget {
 
 class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
     with SingleTickerProviderStateMixin {
-  static const double _confidenceTarget = 0.92;
-
   late final AnimationController _intro;
-  late final Animation<double> _confidence;
 
   // Phase 106 · staggered scene composition. The single content
   // FadeTransition + SlideTransition wrapping the whole Column has
@@ -393,8 +390,8 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
   late final _RevealAnim _assessmentReveal;
   late final _RevealAnim _ctaReveal;
 
-  /// Set when the confidence bar finishes its land. Gates the CTA's
-  /// ambient [GlowPulse] so it doesn't compete with the bar's filling.
+  /// Set when the intro choreography finishes. Gates the CTA's ambient
+  /// [GlowPulse] so it doesn't compete with the report still revealing.
   bool _confidenceLanded = false;
 
   @override
@@ -415,16 +412,6 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
     _projectionReveal = _makeReveal(0.30, 0.60);
     _assessmentReveal = _makeReveal(0.40, 0.70);
     _ctaReveal = _makeReveal(0.55, 1.00);
-
-    // Confidence lands with easeOutBack — overshoots ~3 % past
-    // target then settles. Reads as a number arriving at its place
-    // rather than smoothly filling.
-    _confidence = Tween<double>(begin: 0.0, end: _confidenceTarget).animate(
-      CurvedAnimation(
-        parent: _intro,
-        curve: const Interval(0.45, 1.0, curve: Curves.easeOutBack),
-      ),
-    );
 
     _intro.addStatusListener((s) {
       if (s == AnimationStatus.completed && mounted && !_confidenceLanded) {
@@ -630,58 +617,17 @@ class _DynamicReportStepState extends ConsumerState<DynamicReportStep>
                     ),
                   ),
                 ),
-                const SizedBox(height: 14),
-                // RC-1 P9 · success probability as a RING + copy row
-                // (reference layout) instead of a bare linear bar.
-                AnimatedBuilder(
-                  animation: _confidence,
-                  builder: (context, _) {
-                    // Clamp display: easeOutBack overshoots, but we
-                    // don't want to show 95 % en route to 92 %.
-                    final shown = _confidence.value.clamp(0.0, 1.0);
-                    return Row(
-                      children: [
-                        _SuccessRing(fraction: shown),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.reportSuccessProbability,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                l10n.reportSuccessNearGoal,
-                                style: const TextStyle(
-                                  color: Colors.white54,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(4),
-                                child: LinearProgressIndicator(
-                                  value: shown,
-                                  minHeight: 5,
-                                  backgroundColor: Colors.white12,
-                                  valueColor: const AlwaysStoppedAnimation(
-                                    AppColors.neon,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
+                // The "success probability 92 %" ring that used to sit
+                // here was a compile-time constant — every user saw the
+                // same number, under an "AI ASSESSMENT" heading, before
+                // they had trained once. Play's Misrepresentation policy
+                // treats a fabricated figure presented as a personalised
+                // analysis as deceptive, and there is no honest number to
+                // put in its place: nothing the wizard collects predicts
+                // whether a person will reach a fitness goal. Removed
+                // rather than recalculated. `_confidenceLanded` still
+                // gates the CTA glow — it hangs off `_intro`, not off the
+                // ring, so the entrance choreography is unchanged.
                 const SizedBox(height: 16),
                 // Pinned footer — structurally outside the scroll area,
                 // so it is on screen at every viewport height.
@@ -1101,44 +1047,6 @@ class _PulsingDot extends StatelessWidget {
           BoxShadow(
             color: AppColors.neonGreen.withValues(alpha: 0.6),
             blurRadius: 6,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// RC-1 P9 · circular %92 ring for the success-probability row.
-class _SuccessRing extends StatelessWidget {
-  const _SuccessRing({required this.fraction});
-  final double fraction;
-
-  @override
-  Widget build(BuildContext context) {
-    final pct = (fraction * 100).round();
-    return SizedBox(
-      width: 56,
-      height: 56,
-      child: Stack(
-        fit: StackFit.expand,
-        alignment: Alignment.center,
-        children: [
-          CircularProgressIndicator(
-            value: fraction,
-            strokeWidth: 5,
-            strokeCap: StrokeCap.round,
-            backgroundColor: Colors.white12,
-            valueColor: const AlwaysStoppedAnimation(AppColors.neon),
-          ),
-          Center(
-            child: Text(
-              AppLocalizations.of(context).percentValue(pct),
-              style: const TextStyle(
-                color: AppColors.neon,
-                fontSize: 14,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
           ),
         ],
       ),

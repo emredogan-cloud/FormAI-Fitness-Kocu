@@ -184,7 +184,7 @@ class _SocialProofStepState extends State<SocialProofStep> {
                               number: 'AI',
                               caption: _twoLine(
                                 l10n.act5StatAiPowered,
-                                l10n.act5StatOnDevice(100),
+                                l10n.act5StatOnDevice,
                               ),
                             ),
                           ],

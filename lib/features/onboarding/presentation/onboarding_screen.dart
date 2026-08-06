@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/motion/motion_tokens.dart';
@@ -280,6 +281,25 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
   }
 
+  /// Marks the running build's release note as already seen.
+  ///
+  /// Swallows everything: `PackageInfo` throws on test stubs and a
+  /// non-numeric build number is possible on a hand-rolled build. Both
+  /// end the same way — no suppression, which is the pre-existing
+  /// behaviour and never worse than a failed onboarding.
+  Future<void> _suppressWhatsNewForNewInstall(AppPreferences prefs) async {
+    try {
+      final build = int.tryParse((await PackageInfo.fromPlatform()).buildNumber);
+      if (build != null) await prefs.markWhatsNewSeen(build);
+    } catch (e, st) {
+      AppLogger.warning(
+        'whats-new suppression skipped: $e',
+        category: 'onboarding',
+        data: {'stack': st.toString()},
+      );
+    }
+  }
+
   Future<void> _finish() async {
     AppHaptics.primaryCta();
     final wizard = ref.read(wizardProvider);
@@ -329,6 +349,20 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       // "Devam Et" again and we'll re-attempt the writes.
       return;
     }
+    // A fresh install reports `whatsNewSeenBuild == 0`, which the
+    // release-note selector reads as "has seen nothing" and answers with
+    // the newest note at or below the running build. That is the right
+    // rule for an upgrade and the wrong one here: a first-time user has
+    // never run a previous version, so a changelog for one is at best
+    // noise and at worst a version number they cannot reconcile with the
+    // build they just installed. Claiming the running build as already
+    // seen is what `AppPreferences.whatsNewSeenBuild` documents as
+    // happening at the end of onboarding — this is that call.
+    //
+    // Deliberately outside the try/catch above and never awaited into the
+    // navigation path: `PackageInfo` is stubbed out in widget tests and a
+    // suppressed changelog is not worth blocking a finished onboarding.
+    unawaited(_suppressWhatsNewForNewInstall(prefs));
     // The user just committed to the program; the paywall is the next
     // major surface they may see. Kick off RevenueCat configuration now
     // so the platform-channel handshake overlaps the prediction render

@@ -1293,7 +1293,7 @@
   "act5HeroBubble": "Her tekrarında\nyanındayım.",
   "act5StatExercises": "EGZERSİZ",
   "act5StatAiPowered": "DESTEKLİ",
-  "act5StatOnDevice": "%{percent} CİHAZINDA",
+  "act5StatOnDevice": "CİHAZINDA ANALİZ",
   "act5VoiceCoachTitle": "{voice} FORM KOÇLUĞU",
   "act5VoiceCoachHighlight": "SESLİ",
   "act5VoiceCoachBody": "Formun bozulduğunda sesli uyarı ve düzeltme önerisi alırsın.",

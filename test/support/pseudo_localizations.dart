@@ -6074,8 +6074,7 @@ class PseudoAppLocalizations extends AppLocalizations {
       pseudoLocalize(_inner.act5Headline(coach));
 
   @override
-  String act5StatOnDevice(int percent) =>
-      pseudoLocalize(_inner.act5StatOnDevice(percent));
+  String get act5StatOnDevice => pseudoLocalize(_inner.act5StatOnDevice);
 
   @override
   String act5VoiceCoachTitle(String voice) =>
