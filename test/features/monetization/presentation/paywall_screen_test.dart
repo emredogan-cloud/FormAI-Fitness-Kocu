@@ -460,18 +460,27 @@ void main() {
       // The weekly price is the store's, rendered verbatim.
       expect(find.text('₺100,00'), findsOneWidget);
       // Weekly costs MORE per month than monthly, so it carries no
-      // savings framing — the one strikethrough on screen belongs to
-      // the annual card: ₺400 × 12 = ₺4.800,00.
-      expect(find.text('₺4.800,00'), findsOneWidget);
+      // savings framing. The one per-month caption on screen belongs to
+      // the annual card: ₺1.200,00 ÷ 12 = ₺100,00 a month.
+      //
+      // This assertion used to read `₺4.800,00` — the struck-through
+      // `₺400 × 12` total. The production audit removed that: a
+      // strikethrough claims a former price and nobody was ever charged
+      // ₺4.800,00. The per-month figure divides a price the user really
+      // does pay.
+      expect(find.text('aylık ₺100,00'), findsOneWidget);
     },
   );
 
   testWidgets(
-    'a USD storefront gets US separators in the derived strikethrough',
+    'a USD storefront gets US separators in the derived per-month figure',
     (tester) async {
-      // The regression: the monthly-equivalent anchor hardcoded Turkish
-      // grouping, so a US user saw "$10.00" on one card and "$120,00"
-      // struck through on the next. Same screen, two number systems.
+      // The regression: the derived price hardcoded Turkish grouping, so
+      // a US user saw "$10.00" on one card and "$120,00" on the next.
+      // Same screen, two number systems. The presentation changed — the
+      // struck-through total became a per-month caption — but the
+      // derivation still goes through `scaleStorePrice`, so the property
+      // this test exists for is unchanged and still worth pinning.
       await tester.pumpWidget(_wrapPaywall(
         seededState: SubscriptionState(
           offerings: _offeringsWithLineup(
@@ -486,8 +495,14 @@ void main() {
       ));
       await tester.pump();
 
-      expect(find.text(r'$120.00'), findsOneWidget);
-      expect(find.text(r'$120,00'), findsNothing);
+      // Annual $50.00 ÷ 12 = $4.17 a month. (The quarterly package in
+      // this fixture carries a hardcoded amount of 1000 whatever its
+      // price string says, so it is dearer than monthly and correctly
+      // shows no saving at all — it is not a second sample here.)
+      expect(find.text(r'aylık $4.17'), findsOneWidget);
+      // The point of the test: a comma decimal separator would mean the
+      // Turkish convention had leaked back into a USD storefront.
+      expect(find.text(r'aylık $4,17'), findsNothing);
       expect(find.textContaining('₺', findRichText: true), findsNothing);
     },
   );

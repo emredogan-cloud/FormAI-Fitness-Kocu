@@ -181,7 +181,7 @@ class _PrePaywallSummaryStepState extends ConsumerState<PrePaywallSummaryStep>
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              l10n.earlyAccessBlurb,
+                              l10n.trainAnywhereBlurb,
                               textAlign: TextAlign.center,
                               style: const TextStyle(
                                 color: Colors.white54,
@@ -228,7 +228,7 @@ class _PrePaywallSummaryStepState extends ConsumerState<PrePaywallSummaryStep>
                                 // overflows rather than reflows.
                                 Flexible(
                                   child: Text(
-                                    l10n.earlyAccessBadge,
+                                    l10n.trainAnywhereBadge,
                                     style: const TextStyle(
                                       color: AppColors.neon,
                                       fontSize: 12,
@@ -245,7 +245,7 @@ class _PrePaywallSummaryStepState extends ConsumerState<PrePaywallSummaryStep>
                                 ),
                                 Flexible(
                                   child: Text(
-                                    l10n.earlyAccessSubline,
+                                    l10n.trainAnywhereSubline,
                                     style: const TextStyle(
                                       color: Colors.white54,
                                       fontSize: 12,

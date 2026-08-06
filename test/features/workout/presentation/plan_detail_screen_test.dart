@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sixpack_ai/features/monetization/providers/monetization_provider.dart';
 import 'package:sixpack_ai/features/monetization/widgets/locked_overlay.dart';
+import 'package:sixpack_ai/features/workout/domain/workout_plan_titles.dart';
 import 'package:sixpack_ai/features/workout/models/exercise_model.dart';
 import 'package:sixpack_ai/features/workout/models/workout_plan_model.dart';
 import 'package:sixpack_ai/features/workout/presentation/plan_detail_screen.dart';
@@ -26,11 +27,14 @@ Exercise _ex(String id, String name) => Exercise(
       sets: 3,
     );
 
+/// A real catalogue id, not a synthetic one. `WorkoutPlan.title` now
+/// resolves from `workout_plan_titles.dart` by id, so a made-up id would
+/// render the id itself and the hero assertion below would be pinning
+/// the fallback rather than the feature.
 WorkoutPlan _plan() => WorkoutPlan(
-      id: 'p1',
-      title: 'Çelik Karın',
+      id: 'core_steel_abs',
       category: ExerciseCategory.core,
-      level: 'Başlangıç',
+      levelToken: WorkoutLevel.beginner,
       durationMinutes: 20,
       exercises: [_ex('e1', 'Push Up'), _ex('e2', 'Squat')],
     );
@@ -66,7 +70,7 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    expect(find.text('Çelik Karın'), findsOneWidget); // hero title
+    expect(find.text('Çelik Gibi Karın'), findsOneWidget); // hero title
     expect(find.text('2 egzersiz · 20 Dk · Başlangıç'), findsOneWidget);
     expect(find.text('Push Up'), findsOneWidget);
     expect(find.text('Squat'), findsOneWidget);

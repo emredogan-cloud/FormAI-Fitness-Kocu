@@ -33,6 +33,10 @@ const List<String> communityMigrations = [
   '022_fix_challenge_peer_policy.sql',
   '023_rls_recursion_and_block_direction.sql',
   '026_squad_owner_can_read_own.sql',
+  // Not a community table, but a user-data table with RLS, which is what
+  // every assertion below is actually about. The production audit added
+  // it; putting it under the same gate is cheaper than a second one.
+  '027_ai_content_reports.sql',
 ];
 
 /// The content tables this suite expects to exist.
@@ -174,6 +178,7 @@ void main() {
         'activity_events',
         'activity_reactions',
         'user_reports',
+        'ai_content_reports',
       ]),
     );
   });

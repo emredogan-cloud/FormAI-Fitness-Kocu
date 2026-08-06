@@ -1,3 +1,5 @@
+import '../../../core/utils/app_copy.dart';
+import '../domain/workout_plan_titles.dart';
 import 'exercise_model.dart';
 
 /// A discoverable, region-tagged collection of exercises (e.g. "Çelik Gibi
@@ -7,9 +9,8 @@ import 'exercise_model.dart';
 class WorkoutPlan {
   const WorkoutPlan({
     required this.id,
-    required this.title,
     required this.category,
-    required this.level,
+    required this.levelToken,
     required this.durationMinutes,
     required this.exercises,
     this.image,
@@ -17,11 +18,11 @@ class WorkoutPlan {
   });
 
   final String id;
-  final String title;
   final ExerciseCategory category;
 
-  /// Human-readable difficulty label: 'Başlangıç' / 'Orta düzey' / 'İleri'.
-  final String level;
+  /// Difficulty as a token. Was a Turkish label string, which is how an
+  /// English reader ended up seeing "Orta düzey" on every plan card.
+  final WorkoutLevel levelToken;
   final int durationMinutes;
   final List<Exercise> exercises;
 
@@ -38,7 +39,23 @@ class WorkoutPlan {
   /// launches `exercises` unchanged, the premium button launches these.
   final List<Exercise> premiumExercises;
 
-  String get summary => '$level · $durationMinutes Dk';
+  /// Card title in the reader's language.
+  ///
+  /// Resolved on read rather than stored, so switching language applies
+  /// to the catalogue and not only to the chrome around it — the failure
+  /// Phase 7 hit with recipes, where every ARB string flipped instantly
+  /// and the content stayed in the old language until restart.
+  ///
+  /// [AppCopy] rather than a `BuildContext` because a plan is also
+  /// composed into notifications, which have no tree. Falls back to the
+  /// id, which is visible enough to notice and harmless enough to ship:
+  /// every id in the catalogue has a title, and a test proves it.
+  String get title => workoutPlanTitle(AppCopy.strings, id) ?? id;
+
+  String get level => levelToken.label(AppCopy.strings);
+
+  String get summary =>
+      AppCopy.strings.minutesLevelLine(durationMinutes, level);
 
   bool get isComingSoon => exercises.isEmpty;
 

@@ -2604,7 +2604,7 @@
   "@profileRedeemCodeTitle": {
     "description": "Settings row title"
   },
-  "profileRedeemCodeSubtitle": "Enter a friend's code and you both get a Premium month.",
+  "profileRedeemCodeSubtitle": "Enter a friend's code — you're both recorded, and you both earn when the reward program opens.",
   "@profileRedeemCodeSubtitle": {
     "description": "Settings row subtitle"
   },
@@ -4521,7 +4521,7 @@
   "@reportGoalStrength": {
     "description": "AI report assessment sentence — strength goal"
   },
-  "reportBeginner": "Because you're new to training, the \"newbie gain\" effect means fast, visible results in the first 30 days.",
+  "reportBeginner": "You're new to training, so the plan starts gently and builds. What you get out of it depends on how consistently you show up.",
   "@reportBeginner": {
     "description": "AI report assessment sentence — beginner. Store compliance: this must stay qualitative, never a quantified promise."
   },
@@ -5033,14 +5033,6 @@
   "@reportAiAssessmentEyebrow": {
     "description": "Eyebrow above the AI assessment paragraph."
   },
-  "reportSuccessProbability": "Success probability",
-  "@reportSuccessProbability": {
-    "description": "Label of the confidence bar on the AI report."
-  },
-  "reportSuccessNearGoal": "You're very close to your goals!",
-  "@reportSuccessNearGoal": {
-    "description": "Sub-line under the confidence bar."
-  },
   "reportPrimaryCta": "GET MY PERSONAL PLAN",
   "@reportPrimaryCta": {
     "description": "Primary CTA at the end of the AI report."
@@ -5469,11 +5461,11 @@
   "@act1CapPlanBody": {
     "description": "Capability card body."
   },
-  "act1CapResultTitle": "REAL RESULTS",
+  "act1CapResultTitle": "PROGRESS",
   "@act1CapResultTitle": {
     "description": "Capability card title."
   },
-  "act1CapResultBody": "Steady progress\nfor 30 days.",
+  "act1CapResultBody": "Tracked, day\nby day.",
   "@act1CapResultBody": {
     "description": "Capability card body."
   },
@@ -5494,7 +5486,7 @@
   "@act1TrustSafeTitle": {
     "description": "Trust badge title."
   },
-  "act1TrustSafeBody": "Evidence-based\nmethods",
+  "act1TrustSafeBody": "Standard, well-\nknown movements",
   "@act1TrustSafeBody": {
     "description": "Trust badge body."
   },
@@ -5510,7 +5502,7 @@
   "@act1TrustEfficientTitle": {
     "description": "Trust badge title."
   },
-  "act1TrustEfficientBody": "Maximum\nresults",
+  "act1TrustEfficientBody": "Focused\nsessions",
   "@act1TrustEfficientBody": {
     "description": "Trust badge body."
   },
@@ -5518,7 +5510,7 @@
   "@act1TrustGoalTitle": {
     "description": "Trust badge title."
   },
-  "act1TrustGoalBody": "The body you\nwant",
+  "act1TrustGoalBody": "Built around\nyour goal",
   "@act1TrustGoalBody": {
     "description": "Trust badge body."
   },
@@ -5578,17 +5570,17 @@
   "@consentAcceptAll": {
     "description": "Secondary consent action that switches both toggles on."
   },
-  "earlyAccessBlurb": "Early access — you're one of the first to try FormAI.",
-  "@earlyAccessBlurb": {
-    "description": "Early-access line shared by the social-proof and commitment steps."
+  "trainAnywhereBlurb": "No gym, no equipment needed — your plan works with whatever you have.",
+  "@trainAnywhereBlurb": {
+    "description": "Capability line shared by the social-proof and commitment steps. Replaced 'Early access — you're one of the first to try FormAI', which stops being true on the production track; the production audit flagged it as advertising a launch phase the app is leaving."
   },
-  "earlyAccessBadge": "Early access",
-  "@earlyAccessBadge": {
-    "description": "Early-access badge."
+  "trainAnywhereBadge": "Train anywhere",
+  "@trainAnywhereBadge": {
+    "description": "Badge beside the capability sub-line. Was 'Early access'."
   },
-  "earlyAccessSubline": "Be one of the first users",
-  "@earlyAccessSubline": {
-    "description": "Sub-line beside the early-access badge."
+  "trainAnywhereSubline": "Bodyweight plans included",
+  "@trainAnywhereSubline": {
+    "description": "Sub-line beside the badge. Was 'Be one of the first users'."
   },
   "commitCta": "GO TO MY PLAN",
   "@commitCta": {
@@ -5889,7 +5881,7 @@
   "@paywallFeatureFormCorrection": {
     "description": "AI-features checklist item."
   },
-  "paywallFeatureSciencePlans": "Evidence-based, effective training plans",
+  "paywallFeatureSciencePlans": "Plans built around your goal and level",
   "@paywallFeatureSciencePlans": {
     "description": "AI-features checklist item."
   },
@@ -5917,28 +5909,6 @@
   "paywallNoPaymentNowBadge": "No payment now!",
   "@paywallNoPaymentNowBadge": {
     "description": "Standalone trial badge."
-  },
-  "paywallGuaranteeTitle": "{percent}% Satisfaction Guarantee",
-  "@paywallGuaranteeTitle": {
-    "description": "Guarantee card title. The percent sign leads the number in Turkish and trails it in English.",
-    "placeholders": {
-      "percent": {
-        "type": "int"
-      }
-    }
-  },
-  "paywallGuaranteeBody": "You have an unconditional refund right within the first {days, plural, =1{1 day} other{{days} days}}.",
-  "@paywallGuaranteeBody": {
-    "description": "Guarantee card body. {days} is the same constant the crest renders, so the two cannot drift apart.",
-    "placeholders": {
-      "days": {
-        "type": "int"
-      }
-    }
-  },
-  "paywallGuaranteeDaysUnit": "DAYS",
-  "@paywallGuaranteeDaysUnit": {
-    "description": "Unit under the number on the guarantee crest."
   },
   "paywallTrialOpening": "When your {length} free trial ends, the subscription you chose starts automatically.",
   "@paywallTrialOpening": {
@@ -8745,6 +8715,271 @@
   "campaignContentDropBody": "There is something new in the area you train.",
   "@campaignContentDropBody": {
     "description": "Content-drop announcement body."
+  },
+  "planTitleEquipmentChestStrength": "Weighted Chest Strength",
+  "@planTitleEquipmentChestStrength": {
+    "description": "Workout-plan card title for the 'equipment_chest_strength' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleEquipmentBackWidth": "Weighted Back Width",
+  "@planTitleEquipmentBackWidth": {
+    "description": "Workout-plan card title for the 'equipment_back_width' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleEquipmentShouldersRound": "Round Shoulder Shaping",
+  "@planTitleEquipmentShouldersRound": {
+    "description": "Workout-plan card title for the 'equipment_shoulders_round' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleEquipmentArmsBiceps": "Weighted Biceps Pump",
+  "@planTitleEquipmentArmsBiceps": {
+    "description": "Workout-plan card title for the 'equipment_arms_biceps' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleEquipmentArmsTriceps": "Weighted Triceps Focus",
+  "@planTitleEquipmentArmsTriceps": {
+    "description": "Workout-plan card title for the 'equipment_arms_triceps' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleEquipmentLegsPower": "Weighted Leg Power",
+  "@planTitleEquipmentLegsPower": {
+    "description": "Workout-plan card title for the 'equipment_legs_power' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleEquipmentCoreLoaded": "Weighted Core Shaping",
+  "@planTitleEquipmentCoreLoaded": {
+    "description": "Workout-plan card title for the 'equipment_core_loaded' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleCoreSteelAbs": "Steel Abs",
+  "@planTitleCoreSteelAbs": {
+    "description": "Workout-plan card title for the 'core_steel_abs' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleCoreAthletic": "Athletic Core",
+  "@planTitleCoreAthletic": {
+    "description": "Workout-plan card title for the 'core_athletic' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleChestDumbbellFast": "Fast Dumbbell Chest",
+  "@planTitleChestDumbbellFast": {
+    "description": "Workout-plan card title for the 'chest_dumbbell_fast' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleChestActivationGrowth": "Chest Activation & Growth",
+  "@planTitleChestActivationGrowth": {
+    "description": "Workout-plan card title for the 'chest_activation_growth' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleChestFullGrowthBurst": "Full Chest Growth & Burst",
+  "@planTitleChestFullGrowthBurst": {
+    "description": "Workout-plan card title for the 'chest_full_growth_burst' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleChestFatBurnBasic": "Chest Fat-Burn Basics",
+  "@planTitleChestFatBurnBasic": {
+    "description": "Workout-plan card title for the 'chest_fat_burn_basic' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleBackVTaper": "Wide V-Taper Back",
+  "@planTitleBackVTaper": {
+    "description": "Workout-plan card title for the 'back_v_taper' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleBackPostureBasic": "Posture-Fixing Back Basics",
+  "@planTitleBackPostureBasic": {
+    "description": "Workout-plan card title for the 'back_posture_basic' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleShouldersGiant": "Giant Shoulders",
+  "@planTitleShouldersGiant": {
+    "description": "Workout-plan card title for the 'shoulders_giant' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleShouldersVTaper": "V-Shape Shoulder Shaping",
+  "@planTitleShouldersVTaper": {
+    "description": "Workout-plan card title for the 'shoulders_v_taper' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleShouldersPowerBurst": "Power Shoulder Burst",
+  "@planTitleShouldersPowerBurst": {
+    "description": "Workout-plan card title for the 'shoulders_power_burst' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleArmsSteel": "Steel Arms",
+  "@planTitleArmsSteel": {
+    "description": "Workout-plan card title for the 'arms_steel' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleArmsExplosiveSuper": "Explosive Arm Supersets",
+  "@planTitleArmsExplosiveSuper": {
+    "description": "Workout-plan card title for the 'arms_explosive_super' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleArmsQuickTone": "Quick-Tone Arms",
+  "@planTitleArmsQuickTone": {
+    "description": "Workout-plan card title for the 'arms_quick_tone' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleLegsQuadStrength": "Big, Strong Quads",
+  "@planTitleLegsQuadStrength": {
+    "description": "Workout-plan card title for the 'legs_quad_strength' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleLegsPowerDay": "Leg Power Day",
+  "@planTitleLegsPowerDay": {
+    "description": "Workout-plan card title for the 'legs_power_day' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleLegsCardioStrength": "Lower-Body Cardio & Strength",
+  "@planTitleLegsCardioStrength": {
+    "description": "Workout-plan card title for the 'legs_cardio_strength' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleLegsEliteSculpt": "Elite Leg Sculpting",
+  "@planTitleLegsEliteSculpt": {
+    "description": "Workout-plan card title for the 'legs_elite_sculpt' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleCardioFatBurn": "Fat-Burning Cardio",
+  "@planTitleCardioFatBurn": {
+    "description": "Workout-plan card title for the 'cardio_fat_burn' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleCardioFullBodyBurst": "Full-Body Burst",
+  "@planTitleCardioFullBodyBurst": {
+    "description": "Workout-plan card title for the 'cardio_full_body_burst' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleCardioMorningQuick": "Quick Morning Cardio",
+  "@planTitleCardioMorningQuick": {
+    "description": "Workout-plan card title for the 'cardio_morning_quick' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleCoreStaticResistance": "Static Core Resistance",
+  "@planTitleCoreStaticResistance": {
+    "description": "Workout-plan card title for the 'core_static_resistance' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleCoreLowerAbs": "Lower-Ab Shaping",
+  "@planTitleCoreLowerAbs": {
+    "description": "Workout-plan card title for the 'core_lower_abs' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleCoreObliqueBurner": "Oblique Burner",
+  "@planTitleCoreObliqueBurner": {
+    "description": "Workout-plan card title for the 'core_oblique_burner' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleCoreMobilityFlow": "Core Mobility Flow",
+  "@planTitleCoreMobilityFlow": {
+    "description": "Workout-plan card title for the 'core_mobility_flow' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleChestBodyweightBurst": "Bodyweight Chest Burst",
+  "@planTitleChestBodyweightBurst": {
+    "description": "Workout-plan card title for the 'chest_bodyweight_burst' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleChestPlyoExplosive": "Explosive Plyo Chest",
+  "@planTitleChestPlyoExplosive": {
+    "description": "Workout-plan card title for the 'chest_plyo_explosive' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleChestBeginnerFlow": "Beginner Chest Flow",
+  "@planTitleChestBeginnerFlow": {
+    "description": "Workout-plan card title for the 'chest_beginner_flow' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleBackBodyweightActivation": "Bodyweight Back Activation",
+  "@planTitleBackBodyweightActivation": {
+    "description": "Workout-plan card title for the 'back_bodyweight_activation' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleBackPosturalCorrective": "Postural Back Correction",
+  "@planTitleBackPosturalCorrective": {
+    "description": "Workout-plan card title for the 'back_postural_corrective' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleBackHangingWorkout": "Hanging Back Workout",
+  "@planTitleBackHangingWorkout": {
+    "description": "Workout-plan card title for the 'back_hanging_workout' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleShouldersAdvancedBodyweight": "Advanced Bodyweight Shoulders",
+  "@planTitleShouldersAdvancedBodyweight": {
+    "description": "Workout-plan card title for the 'shoulders_advanced_bodyweight' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleShouldersMobilityOpening": "Shoulder Mobility & Opening",
+  "@planTitleShouldersMobilityOpening": {
+    "description": "Workout-plan card title for the 'shoulders_mobility_opening' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleShouldersScapularStability": "Scapular Stability",
+  "@planTitleShouldersScapularStability": {
+    "description": "Workout-plan card title for the 'shoulders_scapular_stability' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleArmsBodyweightBurst": "Bodyweight Arm Burst",
+  "@planTitleArmsBodyweightBurst": {
+    "description": "Workout-plan card title for the 'arms_bodyweight_burst' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleArmsTricepsBodyweight": "Triceps-Heavy Bodyweight",
+  "@planTitleArmsTricepsBodyweight": {
+    "description": "Workout-plan card title for the 'arms_triceps_bodyweight' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleArmsHangingGrip": "Hanging Arm & Grip Work",
+  "@planTitleArmsHangingGrip": {
+    "description": "Workout-plan card title for the 'arms_hanging_grip' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleLegsGluteActivation": "Glute Activation",
+  "@planTitleLegsGluteActivation": {
+    "description": "Workout-plan card title for the 'legs_glute_activation' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleLegsSingleLegBodyweight": "Single-Leg Bodyweight",
+  "@planTitleLegsSingleLegBodyweight": {
+    "description": "Workout-plan card title for the 'legs_single_leg_bodyweight' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleLegsPlyometricBurst": "Plyometric Leg Burst",
+  "@planTitleLegsPlyometricBurst": {
+    "description": "Workout-plan card title for the 'legs_plyometric_burst' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleLegsSumoAdductor": "Sumo & Inner Thigh",
+  "@planTitleLegsSumoAdductor": {
+    "description": "Workout-plan card title for the 'legs_sumo_adductor' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleCardioHiitBurst": "HIIT Burst",
+  "@planTitleCardioHiitBurst": {
+    "description": "Workout-plan card title for the 'cardio_hiit_burst' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleCardioMobilityStretch": "Mobility & Flexibility Flow",
+  "@planTitleCardioMobilityStretch": {
+    "description": "Workout-plan card title for the 'cardio_mobility_stretch' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleCardioShadowBox": "Shadow Box Cardio",
+  "@planTitleCardioShadowBox": {
+    "description": "Workout-plan card title for the 'cardio_shadow_box' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "planTitleCardioFullBodyFlow": "Full-Body Movement Flow",
+  "@planTitleCardioFullBodyFlow": {
+    "description": "Workout-plan card title for the 'cardio_full_body_flow' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "paywallPerMonthEquivalent": "{price} / mo",
+  "@paywallPerMonthEquivalent": {
+    "description": "Caption under a multi-month plan's price: what it works out to per month. Replaced a struck-through 12x-monthly total, which read as a former price and had never been charged. {price} is already formatted by the store.",
+    "placeholders": { "price": { "type": "String" } }
+  },
+  "paywallCancelAnytimeTitle": "Cancel anytime",
+  "@paywallCancelAnytimeTitle": {
+    "description": "Paywall reassurance card title. Replaced '100% Satisfaction Guarantee', which promised an unconditional 7-day refund the developer cannot grant: Google Play controls subscription refunds, so it was a claim the purchase path could not honour."
+  },
+  "paywallCancelAnytimeBody": "Manage or cancel your subscription in Google Play whenever you want. Refunds are handled by Google Play under its refund policy.",
+  "@paywallCancelAnytimeBody": {
+    "description": "Paywall reassurance card body. States only what is true and actually in the user's control."
+  },
+  "coachReportAction": "Report this reply",
+  "@coachReportAction": {
+    "description": "Long-press action on a coach message. Required by Google Play's AI-Generated Content policy, which asks for an in-app way to flag offensive AI output."
+  },
+  "coachReportTitle": "Report this reply",
+  "@coachReportTitle": {
+    "description": "Title of the sheet that opens from the long-press action."
+  },
+  "coachReportSubtitle": "What's wrong with it? The reply is sent to the FormAI team so a person can read it.",
+  "@coachReportSubtitle": {
+    "description": "Sheet subtitle. States plainly that the reported message text is transmitted, because it is."
+  },
+  "coachReportHarmfulAdvice": "Unsafe training or nutrition advice",
+  "@coachReportHarmfulAdvice": {
+    "description": "Report reason. First in the list on purpose — it is the failure mode that matters most in a fitness app."
+  },
+  "coachReportOffensive": "Offensive or inappropriate",
+  "@coachReportOffensive": {
+    "description": "Report reason. The literal subject of the Play policy clause."
+  },
+  "coachReportInaccurate": "Wrong or misleading",
+  "@coachReportInaccurate": {
+    "description": "Report reason."
+  },
+  "coachReportOther": "Something else",
+  "@coachReportOther": {
+    "description": "Report reason."
+  },
+  "coachReportSent": "Reported. Thank you — a person reads every one.",
+  "@coachReportSent": {
+    "description": "Toast after a report lands."
+  },
+  "coachReportFailed": "The report couldn't be sent. Please try again.",
+  "@coachReportFailed": {
+    "description": "Toast when the report insert failed, usually offline."
+  },
+  "coachReportHint": "Press and hold a reply to report it.",
+  "@coachReportHint": {
+    "description": "Discovery hint under the coach header, so the reporting affordance is findable rather than hidden behind a gesture nobody tries."
+  },
+  "coachDisclaimer": "Form is an AI. It gives general fitness guidance, not medical advice.",
+  "@coachDisclaimer": {
+    "description": "Persistent disclosure that the coach is AI-generated and is not a clinician. Sits with the reporting hint."
   },
   "notifChannelCampaignName": "Reminders",
   "@notifChannelCampaignName": {

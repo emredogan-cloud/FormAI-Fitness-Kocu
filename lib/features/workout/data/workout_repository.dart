@@ -16,6 +16,7 @@ import 'premium_exercise_tags.dart';
 import 'session_log_repository.dart';
 import '../models/exercise_model.dart';
 import '../models/workout_day_model.dart';
+import '../domain/workout_plan_titles.dart';
 import '../models/workout_plan_model.dart';
 import '../../../core/utils/app_copy.dart';
 
@@ -361,9 +362,9 @@ class WorkoutRepository {
   static const List<_PlanTemplate> _equipmentTemplates = [
     _PlanTemplate(
       id: 'equipment_chest_strength',
-      title: 'Ekipmanlı Göğüs Gücü',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.chest,
-      level: 'Orta düzey',
+      level: WorkoutLevel.intermediate,
       durationMinutes: 22,
       exerciseSlugs: [
         'bench_press',
@@ -382,9 +383,9 @@ class WorkoutRepository {
     ),
     _PlanTemplate(
       id: 'equipment_back_width',
-      title: 'Ekipmanlı Sırt Genişliği',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.back,
-      level: 'Orta düzey',
+      level: WorkoutLevel.intermediate,
       durationMinutes: 24,
       exerciseSlugs: [
         'pull_up',
@@ -404,9 +405,9 @@ class WorkoutRepository {
     ),
     _PlanTemplate(
       id: 'equipment_shoulders_round',
-      title: 'Yuvarlak Omuz Şekillendirme',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.shoulders,
-      level: 'Orta düzey',
+      level: WorkoutLevel.intermediate,
       durationMinutes: 20,
       exerciseSlugs: [
         'shoulder_press',
@@ -426,9 +427,9 @@ class WorkoutRepository {
     ),
     _PlanTemplate(
       id: 'equipment_arms_biceps',
-      title: 'Ekipmanlı Biceps Pompası',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.arms,
-      level: 'Orta düzey',
+      level: WorkoutLevel.intermediate,
       durationMinutes: 14,
       exerciseSlugs: [
         'biceps_curl',
@@ -445,9 +446,9 @@ class WorkoutRepository {
     ),
     _PlanTemplate(
       id: 'equipment_arms_triceps',
-      title: 'Ekipmanlı Triceps Yoğunluğu',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.arms,
-      level: 'Orta düzey',
+      level: WorkoutLevel.intermediate,
       durationMinutes: 14,
       exerciseSlugs: [
         'triceps_pushdown',
@@ -464,9 +465,9 @@ class WorkoutRepository {
     ),
     _PlanTemplate(
       id: 'equipment_legs_power',
-      title: 'Ekipmanlı Bacak Gücü',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.legs,
-      level: 'İleri',
+      level: WorkoutLevel.advanced,
       durationMinutes: 28,
       exerciseSlugs: [
         'barbell_squat',
@@ -487,9 +488,9 @@ class WorkoutRepository {
     ),
     _PlanTemplate(
       id: 'equipment_core_loaded',
-      title: 'Ağırlıklı Karın Şekillendirme',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.core,
-      level: 'İleri',
+      level: WorkoutLevel.advanced,
       durationMinutes: 18,
       exerciseSlugs: [
         'cable_crunch',
@@ -511,9 +512,9 @@ class WorkoutRepository {
     // ---- Core ----
     _PlanTemplate(
       id: 'core_steel_abs',
-      title: 'Çelik Gibi Karın',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.core,
-      level: 'Başlangıç',
+      level: WorkoutLevel.beginner,
       durationMinutes: 15,
       exerciseSlugs: [
         'plank',
@@ -526,9 +527,9 @@ class WorkoutRepository {
     ),
     _PlanTemplate(
       id: 'core_athletic',
-      title: 'Atletik Core',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.core,
-      level: 'Orta düzey',
+      level: WorkoutLevel.intermediate,
       durationMinutes: 20,
       exerciseSlugs: [
         'crunch',
@@ -542,27 +543,27 @@ class WorkoutRepository {
     // ---- Göğüs (Chest) ----
     _PlanTemplate(
       id: 'chest_dumbbell_fast',
-      title: 'Dambıl Hızlı Göğüs Yapma',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.chest,
-      level: 'Orta düzey',
+      level: WorkoutLevel.intermediate,
       durationMinutes: 14,
       exerciseSlugs: ['bench_press', 'chest_fly', 'push_up'],
       image: 'photos/workouts/chest_dumbbell_fast.webp',
     ),
     _PlanTemplate(
       id: 'chest_activation_growth',
-      title: 'Göğüs Aktivasyonu ve Büyüme',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.chest,
-      level: 'Başlangıç',
+      level: WorkoutLevel.beginner,
       durationMinutes: 6,
       exerciseSlugs: ['incline_push_up', 'push_up'],
       image: 'photos/workouts/chest_activation_growth.webp',
     ),
     _PlanTemplate(
       id: 'chest_full_growth_burst',
-      title: 'Tam Göğüs Büyümesi ve Patlaması',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.chest,
-      level: 'İleri',
+      level: WorkoutLevel.advanced,
       durationMinutes: 22,
       exerciseSlugs: [
         'push_up',
@@ -576,9 +577,9 @@ class WorkoutRepository {
     ),
     _PlanTemplate(
       id: 'chest_fat_burn_basic',
-      title: 'Göğüs Yağ Yakma Temel Planı',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.chest,
-      level: 'Orta düzey',
+      level: WorkoutLevel.intermediate,
       durationMinutes: 18,
       exerciseSlugs: [
         'push_up',
@@ -591,18 +592,18 @@ class WorkoutRepository {
     // ---- Sırt (Back) ----
     _PlanTemplate(
       id: 'back_v_taper',
-      title: 'Geniş V-Taper Sırt',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.back,
-      level: 'Orta düzey',
+      level: WorkoutLevel.intermediate,
       durationMinutes: 22,
       exerciseSlugs: ['pull_up', 'chin_up', 'lat_pulldown', 'barbell_row'],
       image: 'photos/workouts/back_v_taper.webp',
     ),
     _PlanTemplate(
       id: 'back_posture_basic',
-      title: 'Duruş Düzeltici Temel Sırt',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.back,
-      level: 'Başlangıç',
+      level: WorkoutLevel.beginner,
       durationMinutes: 12,
       exerciseSlugs: ['superman', 'lat_pulldown', 'barbell_row'],
       image: 'photos/workouts/back_posture_basic.webp',
@@ -610,9 +611,9 @@ class WorkoutRepository {
     // ---- Omuz (Shoulders) ----
     _PlanTemplate(
       id: 'shoulders_giant',
-      title: 'Dev Omuzlar',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.shoulders,
-      level: 'Orta düzey',
+      level: WorkoutLevel.intermediate,
       durationMinutes: 18,
       exerciseSlugs: [
         'shoulder_press',
@@ -624,18 +625,18 @@ class WorkoutRepository {
     ),
     _PlanTemplate(
       id: 'shoulders_v_taper',
-      title: 'V-Tipi Omuz Şekillendirme',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.shoulders,
-      level: 'Başlangıç',
+      level: WorkoutLevel.beginner,
       durationMinutes: 14,
       exerciseSlugs: ['lateral_raise', 'front_raise', 'pike_push_up'],
       image: 'photos/workouts/shoulders_v_taper.webp',
     ),
     _PlanTemplate(
       id: 'shoulders_power_burst',
-      title: 'Power Omuz Patlaması',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.shoulders,
-      level: 'İleri',
+      level: WorkoutLevel.advanced,
       durationMinutes: 22,
       exerciseSlugs: [
         'arnold_press',
@@ -648,18 +649,18 @@ class WorkoutRepository {
     // ---- Kol (Arms) ----
     _PlanTemplate(
       id: 'arms_steel',
-      title: 'Çelik Kollar',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.arms,
-      level: 'Orta düzey',
+      level: WorkoutLevel.intermediate,
       durationMinutes: 14,
       exerciseSlugs: ['biceps_curl', 'hammer_curl', 'triceps_dip'],
       image: 'photos/workouts/arms_steel.webp',
     ),
     _PlanTemplate(
       id: 'arms_explosive_super',
-      title: 'Patlayıcı Kol Süper Setleri',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.arms,
-      level: 'İleri',
+      level: WorkoutLevel.advanced,
       durationMinutes: 20,
       exerciseSlugs: [
         'biceps_curl',
@@ -672,9 +673,9 @@ class WorkoutRepository {
     ),
     _PlanTemplate(
       id: 'arms_quick_tone',
-      title: 'Hızlı Tonlama Kolları',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.arms,
-      level: 'Başlangıç',
+      level: WorkoutLevel.beginner,
       durationMinutes: 10,
       exerciseSlugs: ['biceps_curl', 'hammer_curl', 'triceps_pushdown'],
       image: 'photos/workouts/arms_quick_tone.webp',
@@ -682,18 +683,18 @@ class WorkoutRepository {
     // ---- Bacak (Legs) ----
     _PlanTemplate(
       id: 'legs_quad_strength',
-      title: 'Büyük ve Güçlü Quadriceps Şekli',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.legs,
-      level: 'Orta düzey',
+      level: WorkoutLevel.intermediate,
       durationMinutes: 18,
       exerciseSlugs: ['squat', 'lunge', 'leg_press', 'calf_raise'],
       image: 'photos/workouts/legs_quad_strength.webp',
     ),
     _PlanTemplate(
       id: 'legs_power_day',
-      title: 'Bacak Gücü Artışı Günü',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.legs,
-      level: 'İleri',
+      level: WorkoutLevel.advanced,
       durationMinutes: 25,
       exerciseSlugs: [
         'squat',
@@ -705,18 +706,18 @@ class WorkoutRepository {
     ),
     _PlanTemplate(
       id: 'legs_cardio_strength',
-      title: 'Alt Vücut Kardiyo ve Güç',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.legs,
-      level: 'Orta düzey',
+      level: WorkoutLevel.intermediate,
       durationMinutes: 20,
       exerciseSlugs: ['squat', 'lunge', 'calf_raise', 'wall_sit'],
       image: 'photos/workouts/legs_cardio_strength.webp',
     ),
     _PlanTemplate(
       id: 'legs_elite_sculpt',
-      title: 'Elit Bacak Şekillendirme',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.legs,
-      level: 'İleri',
+      level: WorkoutLevel.advanced,
       durationMinutes: 28,
       exerciseSlugs: [
         'bulgarian_split_squat',
@@ -730,18 +731,18 @@ class WorkoutRepository {
     // ---- Kardiyo & Full Body ----
     _PlanTemplate(
       id: 'cardio_fat_burn',
-      title: 'Yağ Yakıcı Kardiyo',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.fullBody,
-      level: 'Orta düzey',
+      level: WorkoutLevel.intermediate,
       durationMinutes: 20,
       exerciseSlugs: ['burpee', 'jumping_jack', 'high_knees', 'jump_squat'],
       image: 'photos/workouts/cardio_fat_burn.webp',
     ),
     _PlanTemplate(
       id: 'cardio_full_body_burst',
-      title: 'Tam Vücut Patlama',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.fullBody,
-      level: 'İleri',
+      level: WorkoutLevel.advanced,
       durationMinutes: 25,
       exerciseSlugs: [
         'burpee',
@@ -754,9 +755,9 @@ class WorkoutRepository {
     ),
     _PlanTemplate(
       id: 'cardio_morning_quick',
-      title: 'Hızlı Sabah Kardiyosu',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.fullBody,
-      level: 'Başlangıç',
+      level: WorkoutLevel.beginner,
       durationMinutes: 12,
       exerciseSlugs: ['jumping_jack', 'high_knees', 'skipping_rope'],
       image: 'photos/workouts/cardio_morning_quick.webp',
@@ -772,9 +773,9 @@ class WorkoutRepository {
     // ---- Phase 97 · Core ----
     _PlanTemplate(
       id: 'core_static_resistance',
-      title: 'Statik Çekirdek Direnci',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.core,
-      level: 'Orta düzey',
+      level: WorkoutLevel.intermediate,
       durationMinutes: 14,
       exerciseSlugs: [
         'plank',
@@ -787,9 +788,9 @@ class WorkoutRepository {
     ),
     _PlanTemplate(
       id: 'core_lower_abs',
-      title: 'Alt Karın Şekillendirme',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.core,
-      level: 'Orta düzey',
+      level: WorkoutLevel.intermediate,
       durationMinutes: 12,
       exerciseSlugs: [
         'reverse_crunch',
@@ -801,9 +802,9 @@ class WorkoutRepository {
     ),
     _PlanTemplate(
       id: 'core_oblique_burner',
-      title: 'Yan Kas Yakıcı',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.core,
-      level: 'Başlangıç',
+      level: WorkoutLevel.beginner,
       durationMinutes: 12,
       exerciseSlugs: [
         'russian_twist',
@@ -815,9 +816,9 @@ class WorkoutRepository {
     ),
     _PlanTemplate(
       id: 'core_mobility_flow',
-      title: 'Mobiliteli Karın Akışı',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.core,
-      level: 'Başlangıç',
+      level: WorkoutLevel.beginner,
       durationMinutes: 14,
       exerciseSlugs: [
         'cat_cow',
@@ -831,9 +832,9 @@ class WorkoutRepository {
     // ---- Phase 97 · Göğüs ----
     _PlanTemplate(
       id: 'chest_bodyweight_burst',
-      title: 'Bodyweight Göğüs Patlaması',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.chest,
-      level: 'İleri',
+      level: WorkoutLevel.advanced,
       durationMinutes: 16,
       exerciseSlugs: [
         'wide_push_up',
@@ -845,9 +846,9 @@ class WorkoutRepository {
     ),
     _PlanTemplate(
       id: 'chest_plyo_explosive',
-      title: 'Patlayıcı Plyo Göğüs',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.chest,
-      level: 'İleri',
+      level: WorkoutLevel.advanced,
       durationMinutes: 18,
       exerciseSlugs: [
         'clap_push_up',
@@ -859,9 +860,9 @@ class WorkoutRepository {
     ),
     _PlanTemplate(
       id: 'chest_beginner_flow',
-      title: 'Yeni Başlayan Göğüs Akışı',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.chest,
-      level: 'Başlangıç',
+      level: WorkoutLevel.beginner,
       durationMinutes: 8,
       exerciseSlugs: ['knee_push_up', 'incline_push_up', 'push_up'],
       image: 'photos/workouts/chest_fat_burn_basic.webp',
@@ -869,9 +870,9 @@ class WorkoutRepository {
     // ---- Phase 97 · Sırt ----
     _PlanTemplate(
       id: 'back_bodyweight_activation',
-      title: 'Bodyweight Sırt Aktivasyonu',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.back,
-      level: 'Orta düzey',
+      level: WorkoutLevel.intermediate,
       durationMinutes: 18,
       exerciseSlugs: [
         'inverted_row',
@@ -884,9 +885,9 @@ class WorkoutRepository {
     ),
     _PlanTemplate(
       id: 'back_postural_corrective',
-      title: 'Postüral Sırt Düzeltme',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.back,
-      level: 'Başlangıç',
+      level: WorkoutLevel.beginner,
       durationMinutes: 14,
       exerciseSlugs: [
         'swimmer',
@@ -899,9 +900,9 @@ class WorkoutRepository {
     ),
     _PlanTemplate(
       id: 'back_hanging_workout',
-      title: 'Asılı Sırt Antrenmanı',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.back,
-      level: 'İleri',
+      level: WorkoutLevel.advanced,
       durationMinutes: 18,
       exerciseSlugs: ['scapular_pull_up', 'dead_hang', 'pull_up', 'chin_up'],
       image: 'photos/workouts/back_v_taper.webp',
@@ -909,9 +910,9 @@ class WorkoutRepository {
     // ---- Phase 97 · Omuz ----
     _PlanTemplate(
       id: 'shoulders_advanced_bodyweight',
-      title: 'İleri Bodyweight Omuz',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.shoulders,
-      level: 'İleri',
+      level: WorkoutLevel.advanced,
       durationMinutes: 18,
       exerciseSlugs: [
         'handstand_hold',
@@ -923,18 +924,18 @@ class WorkoutRepository {
     ),
     _PlanTemplate(
       id: 'shoulders_mobility_opening',
-      title: 'Omuz Mobilite ve Açılış',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.shoulders,
-      level: 'Başlangıç',
+      level: WorkoutLevel.beginner,
       durationMinutes: 10,
       exerciseSlugs: ['scapular_wall_slide', 'pike_walk', 'downward_dog'],
       image: 'photos/workouts/mobility_stretch.webp',
     ),
     _PlanTemplate(
       id: 'shoulders_scapular_stability',
-      title: 'Skapular Stabilite',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.shoulders,
-      level: 'Başlangıç',
+      level: WorkoutLevel.beginner,
       durationMinutes: 12,
       exerciseSlugs: [
         'scapular_wall_slide',
@@ -947,9 +948,9 @@ class WorkoutRepository {
     // ---- Phase 97 · Kol ----
     _PlanTemplate(
       id: 'arms_bodyweight_burst',
-      title: 'Bodyweight Kol Patlaması',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.arms,
-      level: 'Orta düzey',
+      level: WorkoutLevel.intermediate,
       durationMinutes: 14,
       exerciseSlugs: [
         'close_grip_push_up',
@@ -961,9 +962,9 @@ class WorkoutRepository {
     ),
     _PlanTemplate(
       id: 'arms_triceps_bodyweight',
-      title: 'Triceps Yoğun Bodyweight',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.arms,
-      level: 'Orta düzey',
+      level: WorkoutLevel.intermediate,
       durationMinutes: 14,
       exerciseSlugs: [
         'bench_dip',
@@ -975,9 +976,9 @@ class WorkoutRepository {
     ),
     _PlanTemplate(
       id: 'arms_hanging_grip',
-      title: 'Asılı Kol & Grip Antrenmanı',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.arms,
-      level: 'İleri',
+      level: WorkoutLevel.advanced,
       durationMinutes: 12,
       exerciseSlugs: ['chin_up_negative', 'dead_hang', 'scapular_pull_up'],
       image: 'photos/workouts/arms_explosive_super.webp',
@@ -985,9 +986,9 @@ class WorkoutRepository {
     // ---- Phase 97 · Bacak ----
     _PlanTemplate(
       id: 'legs_glute_activation',
-      title: 'Glute Aktivasyonu',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.legs,
-      level: 'Başlangıç',
+      level: WorkoutLevel.beginner,
       durationMinutes: 12,
       exerciseSlugs: [
         'glute_bridge',
@@ -999,9 +1000,9 @@ class WorkoutRepository {
     ),
     _PlanTemplate(
       id: 'legs_single_leg_bodyweight',
-      title: 'Tek Bacak Bodyweight',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.legs,
-      level: 'İleri',
+      level: WorkoutLevel.advanced,
       durationMinutes: 18,
       exerciseSlugs: [
         'pistol_squat',
@@ -1013,9 +1014,9 @@ class WorkoutRepository {
     ),
     _PlanTemplate(
       id: 'legs_plyometric_burst',
-      title: 'Plyometrik Bacak Patlaması',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.legs,
-      level: 'İleri',
+      level: WorkoutLevel.advanced,
       durationMinutes: 16,
       exerciseSlugs: [
         'box_jump',
@@ -1027,9 +1028,9 @@ class WorkoutRepository {
     ),
     _PlanTemplate(
       id: 'legs_sumo_adductor',
-      title: 'Sumo & İç Uyluk',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.legs,
-      level: 'Başlangıç',
+      level: WorkoutLevel.beginner,
       durationMinutes: 14,
       exerciseSlugs: [
         'sumo_squat',
@@ -1042,9 +1043,9 @@ class WorkoutRepository {
     // ---- Phase 97 · Kardiyo & Full Body ----
     _PlanTemplate(
       id: 'cardio_hiit_burst',
-      title: 'HIIT Patlaması',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.fullBody,
-      level: 'İleri',
+      level: WorkoutLevel.advanced,
       durationMinutes: 18,
       exerciseSlugs: [
         'burpee',
@@ -1057,9 +1058,9 @@ class WorkoutRepository {
     ),
     _PlanTemplate(
       id: 'cardio_mobility_stretch',
-      title: 'Mobilite ve Esneklik Akışı',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.fullBody,
-      level: 'Başlangıç',
+      level: WorkoutLevel.beginner,
       durationMinutes: 12,
       exerciseSlugs: [
         'cat_cow',
@@ -1073,9 +1074,9 @@ class WorkoutRepository {
     ),
     _PlanTemplate(
       id: 'cardio_shadow_box',
-      title: 'Shadow Box Cardio',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.fullBody,
-      level: 'Başlangıç',
+      level: WorkoutLevel.beginner,
       durationMinutes: 14,
       exerciseSlugs: [
         'shadow_boxing',
@@ -1087,9 +1088,9 @@ class WorkoutRepository {
     ),
     _PlanTemplate(
       id: 'cardio_full_body_flow',
-      title: 'Tüm Vücut Hareket Akışı',
+      // title comes from workout_plan_titles.dart, keyed by id.
       category: ExerciseCategory.fullBody,
-      level: 'Orta düzey',
+      level: WorkoutLevel.intermediate,
       durationMinutes: 14,
       exerciseSlugs: [
         'bear_crawl',
@@ -1484,7 +1485,6 @@ class WorkoutRepository {
 class _PlanTemplate {
   const _PlanTemplate({
     required this.id,
-    required this.title,
     required this.category,
     required this.level,
     required this.durationMinutes,
@@ -1494,9 +1494,8 @@ class _PlanTemplate {
   });
 
   final String id;
-  final String title;
   final ExerciseCategory category;
-  final String level;
+  final WorkoutLevel level;
   final int durationMinutes;
   final List<String> exerciseSlugs;
   final String? image;
@@ -1510,9 +1509,8 @@ class _PlanTemplate {
   WorkoutPlan resolve(Map<String, Exercise> bySlug) {
     return WorkoutPlan(
       id: id,
-      title: title,
       category: category,
-      level: level,
+      levelToken: level,
       durationMinutes: durationMinutes,
       image: image,
       exercises: exerciseSlugs

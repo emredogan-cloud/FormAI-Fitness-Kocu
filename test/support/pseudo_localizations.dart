@@ -8,7 +8,7 @@
 //   2. a layout that only fits Turkish overflows here instead of in a
 //      German store review.
 //
-// 1861 members covered.
+// 1922 members covered.
 
 import 'package:flutter/widgets.dart';
 import 'package:sixpack_ai/core/utils/pseudo_locale.dart';
@@ -3870,14 +3870,6 @@ class PseudoAppLocalizations extends AppLocalizations {
       pseudoLocalize(_inner.reportAiAssessmentEyebrow);
 
   @override
-  String get reportSuccessProbability =>
-      pseudoLocalize(_inner.reportSuccessProbability);
-
-  @override
-  String get reportSuccessNearGoal =>
-      pseudoLocalize(_inner.reportSuccessNearGoal);
-
-  @override
   String get reportPrimaryCta => pseudoLocalize(_inner.reportPrimaryCta);
 
   @override
@@ -4276,13 +4268,14 @@ class PseudoAppLocalizations extends AppLocalizations {
   String get consentAcceptAll => pseudoLocalize(_inner.consentAcceptAll);
 
   @override
-  String get earlyAccessBlurb => pseudoLocalize(_inner.earlyAccessBlurb);
+  String get trainAnywhereBlurb => pseudoLocalize(_inner.trainAnywhereBlurb);
 
   @override
-  String get earlyAccessBadge => pseudoLocalize(_inner.earlyAccessBadge);
+  String get trainAnywhereBadge => pseudoLocalize(_inner.trainAnywhereBadge);
 
   @override
-  String get earlyAccessSubline => pseudoLocalize(_inner.earlyAccessSubline);
+  String get trainAnywhereSubline =>
+      pseudoLocalize(_inner.trainAnywhereSubline);
 
   @override
   String get commitCta => pseudoLocalize(_inner.commitCta);
@@ -4302,6 +4295,9 @@ class PseudoAppLocalizations extends AppLocalizations {
 
   @override
   String get act5StatAiPowered => pseudoLocalize(_inner.act5StatAiPowered);
+
+  @override
+  String get act5StatOnDevice => pseudoLocalize(_inner.act5StatOnDevice);
 
   @override
   String get act5VoiceCoachHighlight =>
@@ -4474,10 +4470,6 @@ class PseudoAppLocalizations extends AppLocalizations {
   @override
   String get paywallNoPaymentNowBadge =>
       pseudoLocalize(_inner.paywallNoPaymentNowBadge);
-
-  @override
-  String get paywallGuaranteeDaysUnit =>
-      pseudoLocalize(_inner.paywallGuaranteeDaysUnit);
 
   @override
   String get paywallRenewalNoPrice =>
@@ -5781,6 +5773,256 @@ class PseudoAppLocalizations extends AppLocalizations {
       pseudoLocalize(_inner.campaignContentDropBody);
 
   @override
+  String get planTitleEquipmentChestStrength =>
+      pseudoLocalize(_inner.planTitleEquipmentChestStrength);
+
+  @override
+  String get planTitleEquipmentBackWidth =>
+      pseudoLocalize(_inner.planTitleEquipmentBackWidth);
+
+  @override
+  String get planTitleEquipmentShouldersRound =>
+      pseudoLocalize(_inner.planTitleEquipmentShouldersRound);
+
+  @override
+  String get planTitleEquipmentArmsBiceps =>
+      pseudoLocalize(_inner.planTitleEquipmentArmsBiceps);
+
+  @override
+  String get planTitleEquipmentArmsTriceps =>
+      pseudoLocalize(_inner.planTitleEquipmentArmsTriceps);
+
+  @override
+  String get planTitleEquipmentLegsPower =>
+      pseudoLocalize(_inner.planTitleEquipmentLegsPower);
+
+  @override
+  String get planTitleEquipmentCoreLoaded =>
+      pseudoLocalize(_inner.planTitleEquipmentCoreLoaded);
+
+  @override
+  String get planTitleCoreSteelAbs =>
+      pseudoLocalize(_inner.planTitleCoreSteelAbs);
+
+  @override
+  String get planTitleCoreAthletic =>
+      pseudoLocalize(_inner.planTitleCoreAthletic);
+
+  @override
+  String get planTitleChestDumbbellFast =>
+      pseudoLocalize(_inner.planTitleChestDumbbellFast);
+
+  @override
+  String get planTitleChestActivationGrowth =>
+      pseudoLocalize(_inner.planTitleChestActivationGrowth);
+
+  @override
+  String get planTitleChestFullGrowthBurst =>
+      pseudoLocalize(_inner.planTitleChestFullGrowthBurst);
+
+  @override
+  String get planTitleChestFatBurnBasic =>
+      pseudoLocalize(_inner.planTitleChestFatBurnBasic);
+
+  @override
+  String get planTitleBackVTaper => pseudoLocalize(_inner.planTitleBackVTaper);
+
+  @override
+  String get planTitleBackPostureBasic =>
+      pseudoLocalize(_inner.planTitleBackPostureBasic);
+
+  @override
+  String get planTitleShouldersGiant =>
+      pseudoLocalize(_inner.planTitleShouldersGiant);
+
+  @override
+  String get planTitleShouldersVTaper =>
+      pseudoLocalize(_inner.planTitleShouldersVTaper);
+
+  @override
+  String get planTitleShouldersPowerBurst =>
+      pseudoLocalize(_inner.planTitleShouldersPowerBurst);
+
+  @override
+  String get planTitleArmsSteel => pseudoLocalize(_inner.planTitleArmsSteel);
+
+  @override
+  String get planTitleArmsExplosiveSuper =>
+      pseudoLocalize(_inner.planTitleArmsExplosiveSuper);
+
+  @override
+  String get planTitleArmsQuickTone =>
+      pseudoLocalize(_inner.planTitleArmsQuickTone);
+
+  @override
+  String get planTitleLegsQuadStrength =>
+      pseudoLocalize(_inner.planTitleLegsQuadStrength);
+
+  @override
+  String get planTitleLegsPowerDay =>
+      pseudoLocalize(_inner.planTitleLegsPowerDay);
+
+  @override
+  String get planTitleLegsCardioStrength =>
+      pseudoLocalize(_inner.planTitleLegsCardioStrength);
+
+  @override
+  String get planTitleLegsEliteSculpt =>
+      pseudoLocalize(_inner.planTitleLegsEliteSculpt);
+
+  @override
+  String get planTitleCardioFatBurn =>
+      pseudoLocalize(_inner.planTitleCardioFatBurn);
+
+  @override
+  String get planTitleCardioFullBodyBurst =>
+      pseudoLocalize(_inner.planTitleCardioFullBodyBurst);
+
+  @override
+  String get planTitleCardioMorningQuick =>
+      pseudoLocalize(_inner.planTitleCardioMorningQuick);
+
+  @override
+  String get planTitleCoreStaticResistance =>
+      pseudoLocalize(_inner.planTitleCoreStaticResistance);
+
+  @override
+  String get planTitleCoreLowerAbs =>
+      pseudoLocalize(_inner.planTitleCoreLowerAbs);
+
+  @override
+  String get planTitleCoreObliqueBurner =>
+      pseudoLocalize(_inner.planTitleCoreObliqueBurner);
+
+  @override
+  String get planTitleCoreMobilityFlow =>
+      pseudoLocalize(_inner.planTitleCoreMobilityFlow);
+
+  @override
+  String get planTitleChestBodyweightBurst =>
+      pseudoLocalize(_inner.planTitleChestBodyweightBurst);
+
+  @override
+  String get planTitleChestPlyoExplosive =>
+      pseudoLocalize(_inner.planTitleChestPlyoExplosive);
+
+  @override
+  String get planTitleChestBeginnerFlow =>
+      pseudoLocalize(_inner.planTitleChestBeginnerFlow);
+
+  @override
+  String get planTitleBackBodyweightActivation =>
+      pseudoLocalize(_inner.planTitleBackBodyweightActivation);
+
+  @override
+  String get planTitleBackPosturalCorrective =>
+      pseudoLocalize(_inner.planTitleBackPosturalCorrective);
+
+  @override
+  String get planTitleBackHangingWorkout =>
+      pseudoLocalize(_inner.planTitleBackHangingWorkout);
+
+  @override
+  String get planTitleShouldersAdvancedBodyweight =>
+      pseudoLocalize(_inner.planTitleShouldersAdvancedBodyweight);
+
+  @override
+  String get planTitleShouldersMobilityOpening =>
+      pseudoLocalize(_inner.planTitleShouldersMobilityOpening);
+
+  @override
+  String get planTitleShouldersScapularStability =>
+      pseudoLocalize(_inner.planTitleShouldersScapularStability);
+
+  @override
+  String get planTitleArmsBodyweightBurst =>
+      pseudoLocalize(_inner.planTitleArmsBodyweightBurst);
+
+  @override
+  String get planTitleArmsTricepsBodyweight =>
+      pseudoLocalize(_inner.planTitleArmsTricepsBodyweight);
+
+  @override
+  String get planTitleArmsHangingGrip =>
+      pseudoLocalize(_inner.planTitleArmsHangingGrip);
+
+  @override
+  String get planTitleLegsGluteActivation =>
+      pseudoLocalize(_inner.planTitleLegsGluteActivation);
+
+  @override
+  String get planTitleLegsSingleLegBodyweight =>
+      pseudoLocalize(_inner.planTitleLegsSingleLegBodyweight);
+
+  @override
+  String get planTitleLegsPlyometricBurst =>
+      pseudoLocalize(_inner.planTitleLegsPlyometricBurst);
+
+  @override
+  String get planTitleLegsSumoAdductor =>
+      pseudoLocalize(_inner.planTitleLegsSumoAdductor);
+
+  @override
+  String get planTitleCardioHiitBurst =>
+      pseudoLocalize(_inner.planTitleCardioHiitBurst);
+
+  @override
+  String get planTitleCardioMobilityStretch =>
+      pseudoLocalize(_inner.planTitleCardioMobilityStretch);
+
+  @override
+  String get planTitleCardioShadowBox =>
+      pseudoLocalize(_inner.planTitleCardioShadowBox);
+
+  @override
+  String get planTitleCardioFullBodyFlow =>
+      pseudoLocalize(_inner.planTitleCardioFullBodyFlow);
+
+  @override
+  String get paywallCancelAnytimeTitle =>
+      pseudoLocalize(_inner.paywallCancelAnytimeTitle);
+
+  @override
+  String get paywallCancelAnytimeBody =>
+      pseudoLocalize(_inner.paywallCancelAnytimeBody);
+
+  @override
+  String get coachReportAction => pseudoLocalize(_inner.coachReportAction);
+
+  @override
+  String get coachReportTitle => pseudoLocalize(_inner.coachReportTitle);
+
+  @override
+  String get coachReportSubtitle => pseudoLocalize(_inner.coachReportSubtitle);
+
+  @override
+  String get coachReportHarmfulAdvice =>
+      pseudoLocalize(_inner.coachReportHarmfulAdvice);
+
+  @override
+  String get coachReportOffensive =>
+      pseudoLocalize(_inner.coachReportOffensive);
+
+  @override
+  String get coachReportInaccurate =>
+      pseudoLocalize(_inner.coachReportInaccurate);
+
+  @override
+  String get coachReportOther => pseudoLocalize(_inner.coachReportOther);
+
+  @override
+  String get coachReportSent => pseudoLocalize(_inner.coachReportSent);
+
+  @override
+  String get coachReportFailed => pseudoLocalize(_inner.coachReportFailed);
+
+  @override
+  String get coachReportHint => pseudoLocalize(_inner.coachReportHint);
+
+  @override
+  String get coachDisclaimer => pseudoLocalize(_inner.coachDisclaimer);
+
+  @override
   String get notifChannelCampaignName =>
       pseudoLocalize(_inner.notifChannelCampaignName);
 
@@ -6074,9 +6316,6 @@ class PseudoAppLocalizations extends AppLocalizations {
       pseudoLocalize(_inner.act5Headline(coach));
 
   @override
-  String get act5StatOnDevice => pseudoLocalize(_inner.act5StatOnDevice);
-
-  @override
   String act5VoiceCoachTitle(String voice) =>
       pseudoLocalize(_inner.act5VoiceCoachTitle(voice));
 
@@ -6119,14 +6358,6 @@ class PseudoAppLocalizations extends AppLocalizations {
   @override
   String paywallTrialFreeCta(String length) =>
       pseudoLocalize(_inner.paywallTrialFreeCta(length));
-
-  @override
-  String paywallGuaranteeTitle(int percent) =>
-      pseudoLocalize(_inner.paywallGuaranteeTitle(percent));
-
-  @override
-  String paywallGuaranteeBody(int days) =>
-      pseudoLocalize(_inner.paywallGuaranteeBody(days));
 
   @override
   String paywallTrialOpening(String length) =>
@@ -6621,8 +6852,12 @@ class PseudoAppLocalizations extends AppLocalizations {
   String continueAdvanceTitle(String tier) =>
       pseudoLocalize(_inner.continueAdvanceTitle(tier));
 
+  @override
+  String paywallPerMonthEquivalent(String price) =>
+      pseudoLocalize(_inner.paywallPerMonthEquivalent(price));
+
   /// Number of members this wrapper covers. The test suite asserts
   /// it still matches the generated class, so a new ARB key cannot
   /// slip past pseudo mode unnoticed.
-  static const int coveredMembers = 1861;
+  static const int coveredMembers = 1922;
 }

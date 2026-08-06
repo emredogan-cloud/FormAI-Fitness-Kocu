@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../data/ai_report_repository.dart';
 import '../domain/coach_brain.dart';
 import '../providers/coach_providers.dart';
+import 'ai_report_sheet.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _bg = Color(0xFF0A0612);
@@ -53,6 +56,32 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
   /// Turns already revealed — the newest coach bubble beyond this count gets
   /// the typewriter entrance, then is marked revealed so it never replays.
   int _revealedCount = 0;
+
+  /// Opens the report sheet for one coach reply and reports the outcome.
+  ///
+  /// Google Play's AI-Generated Content policy requires an in-app way to
+  /// flag offensive AI output "without needing to exit the app", which is
+  /// why the whole path — sheet, insert, confirmation — stays on this
+  /// screen and why a failure is a retry rather than a handoff to mail.
+  Future<void> _report(String messageText) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final reason = await showAiReportSheet(context);
+    if (reason == null || !mounted) return;
+    final ok = await ref.read(aiReportRepositoryProvider).report(
+          messageText: messageText,
+          reason: reason,
+          surface: AiReportSurface.coachChat,
+          locale: Localizations.localeOf(context).toLanguageTag(),
+        );
+    if (!mounted) return;
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(ok ? l10n.coachReportSent : l10n.coachReportFailed),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -105,6 +134,15 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
       ),
       body: Column(
         children: [
+          // Two sentences, permanently on screen: this is a machine, and
+          // here is how to report what it says. Play's AI-Generated
+          // Content policy requires the reporting affordance to exist;
+          // putting the gesture in writing is what makes it findable,
+          // because nobody long-presses a chat bubble on spec.
+          _AiNotice(
+            text: '${AppLocalizations.of(context).coachDisclaimer} '
+                '${AppLocalizations.of(context).coachReportHint}',
+          ),
           Expanded(
             child: ListView.builder(
               controller: _scroll,
@@ -122,6 +160,10 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
                   animate: animate,
                   onRevealed:
                       animate ? () => _revealedCount = turns.length : null,
+                  // Only the coach's own words are reportable. Offering it
+                  // on the user's own message would be nonsense, and the
+                  // policy is about AI-generated content specifically.
+                  onReport: turn.fromCoach ? () => _report(turn.text) : null,
                 );
               },
             ),
@@ -137,12 +179,19 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
 
 class _Bubble extends StatefulWidget {
   const _Bubble(
-      {super.key, required this.turn, this.animate = false, this.onRevealed});
+      {super.key,
+      required this.turn,
+      this.animate = false,
+      this.onRevealed,
+      this.onReport});
   final CoachTurn turn;
 
   /// Typewriter-reveal the text (newest coach reply only).
   final bool animate;
   final VoidCallback? onRevealed;
+
+  /// Non-null only on coach turns — see the call site.
+  final VoidCallback? onReport;
 
   @override
   State<_Bubble> createState() => _BubbleState();
@@ -173,33 +222,50 @@ class _BubbleState extends State<_Bubble> {
           alignment: coach
               ? AlignmentDirectional.centerStart
               : AlignmentDirectional.centerEnd,
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 3),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.82),
-            decoration: BoxDecoration(
-              color: coach ? _coachBubble : _neon,
-              borderRadius: BorderRadius.only(
-                topLeft: const Radius.circular(16),
-                topRight: const Radius.circular(16),
-                bottomLeft: Radius.circular(coach ? 4 : 16),
-                bottomRight: Radius.circular(coach ? 16 : 4),
-              ),
-              border: coach
-                  ? Border.all(color: Colors.white.withValues(alpha: 0.06))
-                  : null,
-            ),
-            child: widget.animate && !_done
-                ? _TypewriterReveal(
-                    text: turn.text,
-                    builder: (visible) => _RichCoachText(text: visible),
-                    onDone: () {
-                      _done = true;
-                      widget.onRevealed?.call();
+          child: GestureDetector(
+            // Long-press, plus a `Semantics` action so the affordance is
+            // reachable without the gesture — a report mechanism that
+            // only a sighted user performing a press-and-hold can find is
+            // not much of a mechanism.
+            onLongPress: widget.onReport,
+            child: Semantics(
+              customSemanticsActions: widget.onReport == null
+                  ? null
+                  : {
+                      CustomSemanticsAction(
+                        label: AppLocalizations.of(context).coachReportAction,
+                      ): widget.onReport!,
                     },
-                  )
-                : body,
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 3),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.82),
+                decoration: BoxDecoration(
+                  color: coach ? _coachBubble : _neon,
+                  borderRadius: BorderRadius.only(
+                    topLeft: const Radius.circular(16),
+                    topRight: const Radius.circular(16),
+                    bottomLeft: Radius.circular(coach ? 4 : 16),
+                    bottomRight: Radius.circular(coach ? 16 : 4),
+                  ),
+                  border: coach
+                      ? Border.all(color: Colors.white.withValues(alpha: 0.06))
+                      : null,
+                ),
+                child: widget.animate && !_done
+                    ? _TypewriterReveal(
+                        text: turn.text,
+                        builder: (visible) => _RichCoachText(text: visible),
+                        onDone: () {
+                          _done = true;
+                          widget.onRevealed?.call();
+                        },
+                      )
+                    : body,
+              ),
+            ),
           ),
         ),
         if (at != null)
@@ -215,6 +281,42 @@ class _BubbleState extends State<_Bubble> {
         else
           const SizedBox(height: 10),
       ],
+    );
+  }
+}
+
+/// The standing "this is an AI, and here is how to report it" strip under
+/// the coach header. Quiet by design — it is a disclosure, not a banner —
+/// but never dismissible, because the disclosure is the point.
+class _AiNotice extends StatelessWidget {
+  const _AiNotice({required this.text});
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: Color(0x14FFFFFF))),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.info_outline, color: Colors.white38, size: 14),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                color: Colors.white38,
+                fontSize: 11,
+                height: 1.35,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -290,18 +392,30 @@ class _RichCoachText extends StatelessWidget {
     return r >= 0x2190; // arrows/symbols/emoji block onward — never TR letters
   }
 
-  /// `**bold**` → bold spans; everything else keeps [style].
+  /// `**bold**` → bold, `*italic*` → italic; everything else keeps
+  /// [style].
+  ///
+  /// The single-asterisk arm was added by the production audit, which
+  /// caught the model writing "what works for *you*" and the screen
+  /// printing the asterisks. `**` is matched FIRST in the same
+  /// alternation so a bold run is never mistaken for two italics — the
+  /// regex engine takes the leftmost-longest of the two branches in
+  /// order, and reversing them turns `**x**` into an italic `*x*`.
   List<TextSpan> _inline(String line, TextStyle style) {
     final spans = <TextSpan>[];
-    final re = RegExp(r'\*\*(.+?)\*\*');
+    final re = RegExp(r'\*\*(.+?)\*\*|\*([^*\n]+?)\*');
     var idx = 0;
     for (final m in re.allMatches(line)) {
       if (m.start > idx) {
         spans.add(TextSpan(text: line.substring(idx, m.start), style: style));
       }
+      final bold = m.group(1);
       spans.add(TextSpan(
-          text: m.group(1),
-          style: style.copyWith(fontWeight: FontWeight.w800)));
+        text: bold ?? m.group(2),
+        style: bold != null
+            ? style.copyWith(fontWeight: FontWeight.w800)
+            : style.copyWith(fontStyle: FontStyle.italic),
+      ));
       idx = m.end;
     }
     if (idx < line.length) {

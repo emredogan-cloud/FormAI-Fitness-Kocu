@@ -160,7 +160,7 @@ class _SocialProofStepState extends State<SocialProofStep> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          l10n.earlyAccessBlurb,
+                          l10n.trainAnywhereBlurb,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.62),
@@ -665,7 +665,7 @@ class _EarlyAccessStrip extends StatelessWidget {
         // right edge under pseudo-localisation.
         Flexible(
           child: Text(
-            AppLocalizations.of(context).earlyAccessBadge,
+            AppLocalizations.of(context).trainAnywhereBadge,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
@@ -688,7 +688,7 @@ class _EarlyAccessStrip extends StatelessWidget {
         const SizedBox(width: 6),
         Flexible(
           child: Text(
-            AppLocalizations.of(context).earlyAccessSubline,
+            AppLocalizations.of(context).trainAnywhereSubline,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(

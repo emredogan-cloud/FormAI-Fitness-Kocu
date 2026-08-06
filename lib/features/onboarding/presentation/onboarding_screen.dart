@@ -289,7 +289,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   /// behaviour and never worse than a failed onboarding.
   Future<void> _suppressWhatsNewForNewInstall(AppPreferences prefs) async {
     try {
-      final build = int.tryParse((await PackageInfo.fromPlatform()).buildNumber);
+      final build =
+          int.tryParse((await PackageInfo.fromPlatform()).buildNumber);
       if (build != null) await prefs.markWhatsNewSeen(build);
     } catch (e, st) {
       AppLogger.warning(

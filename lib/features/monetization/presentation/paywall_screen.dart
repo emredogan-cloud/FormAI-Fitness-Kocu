@@ -71,7 +71,6 @@ String _periodLabelOf(AppLocalizations l10n, _Plan plan) => switch (plan) {
 /// The refund window the guarantee card promises. Rendered twice — as
 /// the crest numeral and inside the sentence — so it lives in one place
 /// and the two cannot drift apart.
-const int _kGuaranteeDays = 7;
 
 class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   static const Color _neon = Color(0xFF8E5BFF);
@@ -1316,7 +1315,9 @@ class _AiFeaturesCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                AppLocalizations.of(context).showcaseHeroFormScore.toUpperCase(),
+                AppLocalizations.of(context)
+                    .showcaseHeroFormScore
+                    .toUpperCase(),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: Colors.white54,
@@ -1397,28 +1398,41 @@ class _PlanCard extends StatelessWidget {
       };
 
   /// Honest savings vs paying monthly, derived entirely from the live RC
-  /// prices. `struck` = the monthly-equivalent total (e.g. 12 × the monthly
-  /// price), formatted in the store currency; `percent` = the rounded saving.
-  /// Both null when there's no baseline, no saving, or a formatting failure —
-  /// so a misconfigured store never fabricates a discount.
-  ({String? struck, int? percent}) get _savings {
+  /// prices. `perMonth` = what THIS plan works out to per month;
+  /// `percent` = the rounded saving against the monthly plan. Both null
+  /// when there's no baseline, no saving, or a formatting failure — so a
+  /// misconfigured store never fabricates a discount.
+  ///
+  /// **This used to be a struck-through `12 × monthly` total** — ₺2.159,88
+  /// crossed out above ₺959,99. The number was derived rather than
+  /// invented, and the code was proud of that, but the *presentation* was
+  /// still the problem: a strikethrough reads as "this is what it used to
+  /// cost", and ₺2.159,88 has never been charged to anybody. That is a
+  /// reference-price claim in EU (Omnibus) and Turkish consumer law and a
+  /// deceptive-pricing pattern under Play's Payments policy, which is how
+  /// the production audit flagged it.
+  ///
+  /// The per-month equivalent says the same useful thing — this plan is
+  /// cheaper per month — using only a number that is true: the price the
+  /// user will actually pay, divided by the months it covers. The
+  /// percentage badge beside it is unchanged and was never the issue.
+  ({String? perMonth, int? percent}) get _savings {
     final self = package?.storeProduct.price;
+    final selfStr = package?.storeProduct.priceString;
     final monthly = monthlyPackage?.storeProduct.price;
-    final monthlyStr = monthlyPackage?.storeProduct.priceString;
     final months = _monthsCovered;
     if (self == null || monthly == null || monthly <= 0 || months == 0) {
-      return (struck: null, percent: null);
+      return (perMonth: null, percent: null);
     }
     final full = monthly * months;
-    if (self >= full) return (struck: null, percent: null);
+    if (self >= full) return (perMonth: null, percent: null);
     final percent = ((1 - self / full) * 100).round();
-    // Format the monthly-equivalent total by borrowing the currency symbol
-    // AND the number system from the live monthly priceString — "₺179,99"
-    // → "₺2.159,88", "$9.99" → "$119.88". No intl / locale-data dependency;
-    // falls back to null on an unexpected format so a strikethrough is
-    // never guessed. See core/utils/price_format.dart.
-    final struck = scaleStorePrice(monthlyStr, full);
-    return (struck: struck, percent: percent <= 0 ? null : percent);
+    // Borrows the currency symbol AND the number system from this plan's
+    // own live priceString — "₺959,99" → "₺80,00", "$49.99" → "$4.17".
+    // Falls back to null on an unexpected format, so the caption is never
+    // guessed. See core/utils/price_format.dart.
+    final perMonth = scaleStorePrice(selfStr, self / months);
+    return (perMonth: perMonth, percent: percent <= 0 ? null : percent);
   }
 
   /// Phase 95 · the resolved RevenueCat package for this plan, or null
@@ -1570,23 +1584,6 @@ class _PlanCard extends StatelessWidget {
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Monthly-equivalent strikethrough (honest: monthly ×
-                      // cycles, from the live RC price). Absent on the monthly
-                      // card and whenever the store price can't back it.
-                      if (savings.struck != null) ...[
-                        Text(
-                          savings.struck!,
-                          style: TextStyle(
-                            color: scheme.onSurface.withValues(alpha: 0.42),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            decoration: TextDecoration.lineThrough,
-                            decorationColor:
-                                scheme.onSurface.withValues(alpha: 0.42),
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                      ],
                       _buildPriceSlot(scheme),
                       const SizedBox(height: 2),
                       Text(
@@ -1597,6 +1594,24 @@ class _PlanCard extends StatelessWidget {
                           letterSpacing: 1,
                         ),
                       ),
+                      // What this plan works out to per month. Absent on
+                      // the monthly card (nothing to divide) and whenever
+                      // the store price cannot back it. Replaced a
+                      // struck-through total nobody was ever charged —
+                      // see `_savings`.
+                      if (savings.perMonth != null) ...[
+                        const SizedBox(height: 3),
+                        Text(
+                          AppLocalizations.of(context)
+                              .paywallPerMonthEquivalent(savings.perMonth!),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: scheme.onSurface.withValues(alpha: 0.50),
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                       // "%N İNDİRİM" badge — shown on the highlighted (yearly)
                       // card, the biggest honest saving. Derived, never faked.
                       if (_isHighlighted && savings.percent != null) ...[
@@ -1801,7 +1816,7 @@ class _GuaranteeCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  AppLocalizations.of(context).paywallGuaranteeTitle(100),
+                  AppLocalizations.of(context).paywallCancelAnytimeTitle,
                   style: TextStyle(
                     color: scheme.onSurface,
                     fontSize: 15,
@@ -1810,8 +1825,7 @@ class _GuaranteeCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  AppLocalizations.of(context)
-                      .paywallGuaranteeBody(_kGuaranteeDays),
+                  AppLocalizations.of(context).paywallCancelAnytimeBody,
                   style: TextStyle(
                     color: scheme.onSurface.withValues(alpha: 0.6),
                     fontSize: 12.5,
@@ -1821,50 +1835,15 @@ class _GuaranteeCard extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          // 7-GÜN crest.
-          Container(
-            width: 54,
-            height: 60,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  _PaywallScreenState._neon.withValues(alpha: 0.35),
-                  _PaywallScreenState._neon.withValues(alpha: 0.12),
-                ],
-              ),
-              border: Border.all(
-                color: _PaywallScreenState._neon.withValues(alpha: 0.7),
-              ),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  '$_kGuaranteeDays',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    height: 1,
-                  ),
-                ),
-                Text(
-                  AppLocalizations.of(context).paywallGuaranteeDaysUnit,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          // The "7 DAYS" crest that used to sit here belonged to a
+          // "100% Satisfaction Guarantee — unconditional refund within
+          // the first 7 days" promise. The production audit removed it:
+          // Google Play controls subscription refunds, the developer
+          // cannot unilaterally grant one through the billing flow, and
+          // a guarantee the purchase path cannot honour is a misleading
+          // claim under the Payments policy. Cancellation, which the
+          // user genuinely can do at any time, says so instead — and it
+          // needs no number.
         ],
       ),
     );
