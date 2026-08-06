@@ -96,7 +96,12 @@ void main() {
     testWidgets('states all three placement rules', (t) async {
       await _pump(t);
       expect(find.text('Telefonu sabit bir yere koy'), findsOneWidget);
-      expect(find.text('Yaklaşık 2 metre uzaklaş'), findsOneWidget);
+      // The distance is now formatted from the user's Metric/Imperial
+      // setting rather than baked into the copy per language — it used
+      // to read "2 metre" in Turkish and "6 feet" in English, so the
+      // figure followed the language instead of the preference. Metric
+      // is the default, hence "2 m".
+      expect(find.text('Yaklaşık 2 m uzaklaş'), findsOneWidget);
       expect(find.text('Ortam aydınlık olsun'), findsOneWidget);
     });
 

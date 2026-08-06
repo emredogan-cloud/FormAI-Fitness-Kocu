@@ -19,6 +19,7 @@ import '../../monetization/models/locked_feature_type.dart';
 import '../../monetization/providers/monetization_provider.dart';
 import '../../monetization/services/premium_gate_service.dart';
 import '../../monetization/widgets/locked_overlay.dart';
+import '../domain/workout_plan_titles.dart';
 import '../models/exercise_model.dart';
 import '../models/workout_day_model.dart';
 import '../models/workout_plan_model.dart';
@@ -274,7 +275,12 @@ class _PlanDetailScreenState extends ConsumerState<PlanDetailScreen> {
           elevation: 0,
           leading: const _BackButton(),
           flexibleSpace: FlexibleSpaceBar(
-            background: _HeroHeader(copy: heroCopy),
+            background: _HeroHeader(
+              copy: heroCopy,
+              level: WorkoutLevel.dominantOf(
+                (activeDay?.exercises ?? const []).map((e) => e.difficulty),
+              ),
+            ),
           ),
         ),
         SliverPersistentHeader(
@@ -464,8 +470,12 @@ class _BackButton extends StatelessWidget {
 }
 
 class _HeroHeader extends StatelessWidget {
-  const _HeroHeader({required this.copy});
+  const _HeroHeader({required this.copy, required this.level});
   final _HeroCopy copy;
+
+  /// What today's exercises actually add up to. Was the literal
+  /// `difficultyIntermediateLong` — see [WorkoutLevel.dominantOf].
+  final WorkoutLevel level;
 
   @override
   Widget build(BuildContext context) {
@@ -518,13 +528,19 @@ class _HeroHeader extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.bolt, color: Colors.white, size: 18),
-                    Icon(Icons.bolt, color: Colors.white, size: 18),
-                    Icon(Icons.bolt, color: Colors.white70, size: 18),
-                    SizedBox(width: 6),
+                    // One bolt per level, dimmed past the one this day
+                    // reaches — the count used to be a hardcoded 2-of-3
+                    // beside a hardcoded "Intermediate".
+                    for (var i = 0; i < WorkoutLevel.values.length; i++)
+                      Icon(
+                        Icons.bolt,
+                        color: i <= level.index ? Colors.white : Colors.white38,
+                        size: 18,
+                      ),
+                    const SizedBox(width: 6),
                     Text(
-                      AppLocalizations.of(context).difficultyIntermediateLong,
-                      style: TextStyle(
+                      level.label(AppLocalizations.of(context)),
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -663,9 +679,17 @@ class _ActiveDayCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Stub progress until per-set tracking lands; matches the screenshot's
-    // "14% Tamamlandı" hint without lying about state we don't track yet.
-    final percent = realDay == null ? 0 : 14;
+    // This used to read `final percent = realDay == null ? 0 : 14;` — a
+    // literal 14 %, shown on a day where nothing had been done, with a
+    // comment claiming it was "without lying about state we don't track
+    // yet". It was the lie: a user opening day 1 for the first time was
+    // told they were 14 % through it.
+    //
+    // Per-set tracking still does not exist, so there is no honest
+    // percentage to put here. The exercise count is a fact the screen
+    // already has, it is what the other day rows show, and it answers
+    // the question somebody opening a day actually has.
+    final exerciseCount = realDay?.exercises.length ?? 0;
     return Container(
       padding: const EdgeInsetsDirectional.fromSTEB(20, 18, 14, 16),
       decoration: BoxDecoration(
@@ -711,7 +735,8 @@ class _ActiveDayCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      AppLocalizations.of(context).percentCompleted(percent),
+                      AppLocalizations.of(context)
+                          .exerciseCountLower(exerciseCount),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 13,

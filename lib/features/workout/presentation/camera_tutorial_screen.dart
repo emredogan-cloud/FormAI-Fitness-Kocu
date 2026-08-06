@@ -8,12 +8,14 @@ import 'package:go_router/go_router.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../../core/providers/unit_system_provider.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../core/services/analytics_service.dart';
 import '../../../core/services/app_preferences.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/app_haptics.dart';
 import '../../../core/utils/app_logger.dart';
+import '../../../core/utils/unit_system.dart';
 import '../../../core/utils/audio_feedback.dart';
 import '../../../l10n/app_localizations.dart';
 import '../domain/framing_validator.dart';
@@ -545,14 +547,28 @@ class _CameraTutorialScreenState extends ConsumerState<CameraTutorialScreen>
 // Stage 1 · placement guidance (no camera, no permission)
 // ═══════════════════════════════════════════════════════════════════════
 
-class _PlacementStage extends StatelessWidget {
+/// How far back to stand, written in the user's own units.
+///
+/// Two metres is what `FramingValidator` is tuned for, so the number is
+/// fixed and only its presentation varies. It used to be baked into the
+/// copy — "6 feet" in English, "2 metre" in Turkish — which made the
+/// figure follow the LANGUAGE instead of the Metric/Imperial setting,
+/// and an English reader with Metric selected was told to step back six
+/// feet.
+String _setbackLabel(WidgetRef ref) => formatDistance(
+      2,
+      system: ref.watch(unitSystemProvider),
+      decimals: 0,
+    );
+
+class _PlacementStage extends ConsumerWidget {
   const _PlacementStage({required this.onStart, required this.onSkipCamera});
 
   final VoidCallback onStart;
   final VoidCallback onSkipCamera;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       children: [
         Expanded(
@@ -593,7 +609,8 @@ class _PlacementStage extends StatelessWidget {
                 _Step(
                   index: 2,
                   icon: Icons.straighten_rounded,
-                  title: AppLocalizations.of(context).tutorialStepDistanceTitle,
+                  title: AppLocalizations.of(context)
+                      .tutorialStepDistanceTitle(_setbackLabel(ref)),
                   body: AppLocalizations.of(context).tutorialStepDistanceBody,
                 ),
                 _Step(
@@ -622,11 +639,11 @@ class _PlacementStage extends StatelessWidget {
 
 /// A phone-position diagram drawn in code — no asset to ship, and it
 /// scales cleanly at any text size.
-class _PlacementDiagram extends StatelessWidget {
+class _PlacementDiagram extends ConsumerWidget {
   const _PlacementDiagram();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       height: 132,
       decoration: BoxDecoration(
@@ -682,7 +699,8 @@ class _PlacementDiagram extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  AppLocalizations.of(context).tutorialDiagramDistance,
+                  AppLocalizations.of(context)
+                      .tutorialDiagramDistance(_setbackLabel(ref)),
                   style: TextStyle(
                     color: AppColors.neon.withValues(alpha: 0.9),
                     fontSize: 12,

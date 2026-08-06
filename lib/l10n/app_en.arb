@@ -1162,7 +1162,11 @@
   "@tutorialStepPlaceBody": {
     "description": "Setup step 1 body"
   },
-  "tutorialStepDistanceTitle": "Step back about 6 feet",
+  "tutorialStepDistanceTitle": "Step back about {distance}",
+  "@tutorialStepDistanceTitle": {
+    "description": "Camera-setup step. {distance} is formatted by unit_system.dart from the user's Metric/Imperial setting — it was a hardcoded '6 feet' in English and '2 metre' in Turkish, so the figure followed the LANGUAGE rather than the unit preference and a metric English reader was told to step back six feet.",
+    "placeholders": { "distance": { "type": "String" } }
+  },
   "@tutorialStepDistanceTitle": {
     "description": "Setup step 2 title. Distance is converted, not translated: the Turkish source says 2 meters."
   },
@@ -1182,7 +1186,11 @@
   "@tutorialDiagramPhone": {
     "description": "Label under the phone in the placement diagram"
   },
-  "tutorialDiagramDistance": "~6 ft",
+  "tutorialDiagramDistance": "~{distance}",
+  "@tutorialDiagramDistance": {
+    "description": "Label on the phone-to-user diagram. Same reasoning as tutorialStepDistanceTitle.",
+    "placeholders": { "distance": { "type": "String" } }
+  },
   "@tutorialDiagramDistance": {
     "description": "Distance label in the placement diagram. Converted from the Turkish '~2 m', not translated."
   },
@@ -4447,7 +4455,7 @@
   "@equipmentNo": {
     "description": "Equipment option — no"
   },
-  "bondingPromise": "Hello, I'm Form. I'll show you how to change your body in 12 weeks. First let me get to know you — it takes 90 seconds.",
+  "bondingPromise": "Hello, I'm Form. I'll build you a 30-day program and coach you through it. First let me get to know you — it takes 90 seconds.",
   "@bondingPromise": {
     "description": "Coach promise at the start of onboarding. The 90-second claim sets an expectation the flow must keep."
   },
@@ -4746,7 +4754,7 @@
   "@onbFormNoteHeadline": {
     "description": "Headline of the coach note card. 'Form' is the coach's name and is never translated."
   },
-  "onbMinutesAiNote": "Even just 15 minutes a day is 100% more effective than none at all. Consistency matters far more than duration.",
+  "onbMinutesAiNote": "Fifteen minutes a day you actually do beats an hour you skip. Consistency matters far more than duration.",
   "@onbMinutesAiNote": {
     "description": "Coach note body on the daily-minutes step."
   },
@@ -8923,6 +8931,14 @@
   "planTitleCardioFullBodyFlow": "Full-Body Movement Flow",
   "@planTitleCardioFullBodyFlow": {
     "description": "Workout-plan card title for the 'cardio_full_body_flow' template in workout_repository.dart. Was a hardcoded Turkish literal rendered to English readers."
+  },
+  "coachOffline": "offline",
+  "@coachOffline": {
+    "description": "Status beside the coach's name on the dashboard card when the device has no connection. The dot stayed green and the label stayed 'online' with the radio off, which is the one moment the indicator exists to report."
+  },
+  "workoutProgramPreparing": "Program on the way",
+  "@workoutProgramPreparing": {
+    "description": "Hero-card title while the offline fallback stub is in place. The stub is 30 empty days and `isRestDay` is `exercises.isEmpty`, so the card used to read 'Rest day' — announcing a scheduled rest to somebody whose program simply had not downloaded."
   },
   "paywallPerMonthEquivalent": "{price} / mo",
   "@paywallPerMonthEquivalent": {

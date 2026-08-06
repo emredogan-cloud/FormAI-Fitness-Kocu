@@ -20,6 +20,34 @@ enum WorkoutLevel {
         WorkoutLevel.intermediate => l10n.difficultyIntermediateLong,
         WorkoutLevel.advanced => l10n.difficultyAdvanced,
       };
+
+  /// The level a set of exercises actually adds up to: whichever
+  /// difficulty appears most often, beginner when there is nothing to
+  /// count.
+  ///
+  /// Exists because the plan-detail hero used to print
+  /// `difficultyIntermediateLong` as a **literal** — every program, every
+  /// user, "Intermediate", including for somebody who had just told the
+  /// wizard they had never trained. It sat under the line "Built
+  /// specifically for your goal and level", which is what made it worth
+  /// fixing rather than leaving as decoration.
+  ///
+  /// The rule is the one `today_task_card` already used; both now call
+  /// this, so the two surfaces cannot disagree about the same day.
+  static WorkoutLevel dominantOf(Iterable<String> difficulties) {
+    final counts = <String, int>{};
+    for (final d in difficulties) {
+      counts[d] = (counts[d] ?? 0) + 1;
+    }
+    if (counts.isEmpty) return WorkoutLevel.beginner;
+    final dominant =
+        counts.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
+    return switch (dominant) {
+      'advanced' => WorkoutLevel.advanced,
+      'intermediate' => WorkoutLevel.intermediate,
+      _ => WorkoutLevel.beginner,
+    };
+  }
 }
 
 /// Plan id → its localized card title.

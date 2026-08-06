@@ -8,7 +8,7 @@
 //   2. a layout that only fits Turkish overflows here instead of in a
 //      German store review.
 //
-// 1922 members covered.
+// 1924 members covered.
 
 import 'package:flutter/widgets.dart';
 import 'package:sixpack_ai/core/utils/pseudo_locale.dart';
@@ -953,10 +953,6 @@ class PseudoAppLocalizations extends AppLocalizations {
       pseudoLocalize(_inner.tutorialStepPlaceBody);
 
   @override
-  String get tutorialStepDistanceTitle =>
-      pseudoLocalize(_inner.tutorialStepDistanceTitle);
-
-  @override
   String get tutorialStepDistanceBody =>
       pseudoLocalize(_inner.tutorialStepDistanceBody);
 
@@ -971,10 +967,6 @@ class PseudoAppLocalizations extends AppLocalizations {
   @override
   String get tutorialDiagramPhone =>
       pseudoLocalize(_inner.tutorialDiagramPhone);
-
-  @override
-  String get tutorialDiagramDistance =>
-      pseudoLocalize(_inner.tutorialDiagramDistance);
 
   @override
   String get tutorialDiagramYou => pseudoLocalize(_inner.tutorialDiagramYou);
@@ -5979,6 +5971,13 @@ class PseudoAppLocalizations extends AppLocalizations {
       pseudoLocalize(_inner.planTitleCardioFullBodyFlow);
 
   @override
+  String get coachOffline => pseudoLocalize(_inner.coachOffline);
+
+  @override
+  String get workoutProgramPreparing =>
+      pseudoLocalize(_inner.workoutProgramPreparing);
+
+  @override
   String get paywallCancelAnytimeTitle =>
       pseudoLocalize(_inner.paywallCancelAnytimeTitle);
 
@@ -6061,6 +6060,14 @@ class PseudoAppLocalizations extends AppLocalizations {
   @override
   String workoutSetShort(int number) =>
       pseudoLocalize(_inner.workoutSetShort(number));
+
+  @override
+  String tutorialStepDistanceTitle(Object distance) =>
+      pseudoLocalize(_inner.tutorialStepDistanceTitle(distance));
+
+  @override
+  String tutorialDiagramDistance(Object distance) =>
+      pseudoLocalize(_inner.tutorialDiagramDistance(distance));
 
   @override
   String unlockAfterSessions(int count) =>
@@ -6859,5 +6866,5 @@ class PseudoAppLocalizations extends AppLocalizations {
   /// Number of members this wrapper covers. The test suite asserts
   /// it still matches the generated class, so a new ARB key cannot
   /// slip past pseudo mode unnoticed.
-  static const int coveredMembers = 1922;
+  static const int coveredMembers = 1924;
 }

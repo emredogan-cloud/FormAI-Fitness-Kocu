@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/routing/app_router.dart';
 import '../../../../core/services/app_preferences.dart';
+import '../../../../core/services/connectivity_service.dart';
 import '../../../../core/services/tour_targets.dart';
 import '../../../../core/theme/theme_extension.dart';
 import '../../../../core/utils/app_logger.dart';
@@ -236,7 +237,16 @@ class _AntrenmanTabState extends ConsumerState<AntrenmanTab> {
           child: KeyedSubtree(
             key: ref.read(tourTargetsProvider).planCard,
             child: ChallengeHeroCard(
-              title: _challengeTitleFor(nextDay),
+              // The offline stub is thirty EMPTY days and `isRestDay` is
+              // `exercises.isEmpty`, so an unloaded program and a
+              // genuine rest day are the same value to this card — it
+              // read "Rest day" to a user whose program had simply not
+              // downloaded. The banner above already says what is
+              // happening; the card must not contradict it with a
+              // schedule it does not have.
+              title: session.isStub
+                  ? AppLocalizations.of(context).workoutProgramPreparing
+                  : _challengeTitleFor(nextDay),
               dayNumber: nextDay?.dayNumber ?? 1,
               completed: completed,
               total: 30,
@@ -647,13 +657,23 @@ class _CoachButton extends StatelessWidget {
 /// calm, tappable card in the home flow — not a floating bubble — so "talk to
 /// Form" reads as a first-class surface (à la WHOOP / Fitbod coach cards).
 /// Theme-aware; one tap opens the full coach conversation.
-class _CoachEntryCard extends StatelessWidget {
+class _CoachEntryCard extends ConsumerWidget {
   const _CoachEntryCard();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final scheme = context.colors;
     final isDark = context.isDarkMode;
+    // The dot and its label used to be a green circle and the word
+    // "online", unconditionally. With the radio off the card still said
+    // the coach was online — which is the single situation the indicator
+    // exists to report, and the coach genuinely cannot answer, because
+    // its replies come from a server.
+    //
+    // `connectivityProvider` assumes online until the first platform
+    // event (see its doc comment), so a cold start does not flicker
+    // through a false offline state.
+    final online = ref.watch(connectivityProvider).value ?? true;
     return Semantics(
       button: true,
       label: AppLocalizations.of(context).coachTalkLong,
@@ -711,14 +731,18 @@ class _CoachEntryCard extends StatelessWidget {
                           Container(
                             width: 6,
                             height: 6,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF39FF14),
+                            decoration: BoxDecoration(
+                              color: online
+                                  ? const Color(0xFF39FF14)
+                                  : scheme.onSurface.withValues(alpha: 0.35),
                               shape: BoxShape.circle,
                             ),
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            AppLocalizations.of(context).coachOnline,
+                            online
+                                ? AppLocalizations.of(context).coachOnline
+                                : AppLocalizations.of(context).coachOffline,
                             style: TextStyle(
                               color: scheme.onSurface.withValues(alpha: 0.55),
                               fontSize: 11,

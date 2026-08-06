@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/services/app_preferences.dart';
+import '../../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_haptics.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../providers/wizard_provider.dart';
@@ -564,6 +565,36 @@ class _ActivityFreeTextInput extends StatelessWidget {
 
 // ─────────────────────────── physical-data (Cupertino wheels) ───────────────
 
+/// The stored birth year, or null if preferences are not available.
+///
+/// Guarded because this is a **convenience default for one wheel**, and
+/// a convenience must not decide whether the screen renders at all.
+/// `appPreferencesProvider` is built on `sharedPreferencesProvider`,
+/// which throws unless a host overrides it — the layout sweeps, the RTL
+/// sweep and the English sweep all mount this step without one, and
+/// making them provide it would mean every future host has to know that
+/// a wheel's initial value has a dependency.
+int? _birthYearOrNull(WidgetRef ref) {
+  try {
+    return ref.read(appPreferencesProvider).birthYear;
+  } catch (_) {
+    return null;
+  }
+}
+
+/// Whole years between [birthYear] and now, or null when the age gate
+/// never ran (a legacy install) or stored something implausible.
+///
+/// Deliberately a year subtraction and not a birthday calculation: the
+/// gate only ever collected a year, so pretending to know the month
+/// would be inventing precision. Off by at most one, which is inside the
+/// wheel's own granularity.
+int? _ageFromBirthYear(int? birthYear) {
+  if (birthYear == null) return null;
+  final age = DateTime.now().year - birthYear;
+  return (age >= 13 && age <= 100) ? age : null;
+}
+
 class PhysicalDataStep extends ConsumerStatefulWidget {
   const PhysicalDataStep({super.key, required this.onContinue});
   final VoidCallback onContinue;
@@ -592,7 +623,15 @@ class _PhysicalDataStepState extends ConsumerState<PhysicalDataStep>
   void initState() {
     super.initState();
     final w = ref.read(wizardProvider);
-    final initialAge = (w.age ?? 25).clamp(_minAge, _maxAge) - _minAge;
+    // The age gate two screens ago asked for a birth year and stored it.
+    // This wheel then opened on a flat 25 regardless, so somebody who
+    // had just said 2000 was shown 25 and had to scroll to 26 — the app
+    // asking the same question twice and disagreeing with itself about
+    // the answer. Prefer what the user already told us; 25 stays as the
+    // floor for installs from before the gate existed.
+    final fromGate = _ageFromBirthYear(_birthYearOrNull(ref));
+    final initialAge =
+        (w.age ?? fromGate ?? 25).clamp(_minAge, _maxAge) - _minAge;
     final initialHeight =
         (w.heightCm ?? 170).clamp(_minHeight, _maxHeight) - _minHeight;
     final initialWeight =

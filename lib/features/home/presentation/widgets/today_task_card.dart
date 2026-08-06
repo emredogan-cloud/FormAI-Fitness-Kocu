@@ -8,6 +8,7 @@ import '../../../../core/utils/app_haptics.dart';
 import '../../../monetization/models/locked_feature_type.dart';
 import '../../../monetization/providers/monetization_provider.dart';
 import '../../../monetization/services/premium_gate_service.dart';
+import '../../../workout/domain/workout_plan_titles.dart';
 import '../../../workout/models/workout_day_model.dart';
 import '../../../../l10n/app_localizations.dart';
 
@@ -157,23 +158,9 @@ class TodayTaskCard extends ConsumerWidget {
     return bucketed;
   }
 
-  String _levelLabel(AppLocalizations l10n, WorkoutDay day) {
-    final counts = <String, int>{};
-    for (final ex in day.exercises) {
-      counts[ex.difficulty] = (counts[ex.difficulty] ?? 0) + 1;
-    }
-    if (counts.isEmpty) return l10n.difficultyBeginner;
-    final dominant =
-        counts.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
-    switch (dominant) {
-      case 'advanced':
-        return l10n.difficultyAdvanced;
-      case 'intermediate':
-        return l10n.difficultyIntermediate;
-      default:
-        return l10n.difficultyBeginner;
-    }
-  }
+  String _levelLabel(AppLocalizations l10n, WorkoutDay day) =>
+      WorkoutLevel.dominantOf(day.exercises.map((e) => e.difficulty))
+          .label(l10n);
 }
 
 /// Terminal-state companion to [TodayTaskCard]: replaces the card once
