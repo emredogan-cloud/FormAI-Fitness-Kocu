@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FormAI — Play Store ASO Image Prompt Library</title>
+<style>
+  :root{
+    --bg:#0A0612; --surface:#12101A; --card:#17131F; --line:#262233;
+    --text:#ECECF1; --muted:#9C9EAA; --dim:#6E6B7B;
+    --neon:#8E5BFF; --neon-deep:#6A3DFF; --accent:#4DA6FF; --green:#39FF14;
+    --warn:#FFB020; --danger:#FF4D6D;
+    --max:1180px;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Arial,sans-serif;
+    font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;
+  }
+  header.top{
+    max-width:var(--max);margin:0 auto;padding:40px 24px 8px;
+  }
+  h1{font-size:30px;line-height:1.15;letter-spacing:-.02em;margin:0 0 6px;font-weight:800}
+  h1 span{color:var(--neon)}
+  .sub{color:var(--muted);font-size:14.5px;margin:0 0 22px}
+  .rules{
+    background:var(--surface);border:1px solid var(--line);
+    border-left:3px solid var(--danger);border-radius:12px;padding:16px 18px;margin:0 0 14px;
+  }
+  .rules h2{font-size:15px;margin:0 0 10px;letter-spacing:.02em;text-transform:uppercase;color:var(--danger)}
+  .rules ul{margin:0;padding-left:20px}
+  .rules li{margin:6px 0;font-size:14px;color:var(--text)}
+  .rules code{background:#000;padding:1px 6px;border-radius:4px;font-size:12.5px;color:var(--green)}
+  .palette{
+    display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 0;
+  }
+  .sw{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);
+      border-radius:8px;padding:6px 10px;font-size:12.5px;font-family:ui-monospace,Menlo,Consolas,monospace}
+  .dot{width:14px;height:14px;border-radius:4px;flex:none}
+  nav.toc{
+    max-width:var(--max);margin:0 auto;padding:10px 24px 0;
+    display:flex;flex-wrap:wrap;gap:8px;
+  }
+  nav.toc a{
+    font-size:12.5px;color:var(--muted);text-decoration:none;background:var(--surface);
+    border:1px solid var(--line);border-radius:999px;padding:5px 12px;
+  }
+  nav.toc a:hover{color:var(--neon);border-color:var(--neon)}
+  main{max-width:var(--max);margin:0 auto;padding:22px 24px 90px}
+  h2.section{
+    font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);
+    margin:38px 0 14px;padding-top:14px;border-top:1px solid var(--line);font-weight:700;
+  }
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:16px;
+    margin:0 0 20px;overflow:hidden;
+  }
+  .card > .head{
+    display:flex;align-items:flex-start;gap:14px;justify-content:space-between;
+    padding:16px 18px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(142,91,255,.10),transparent);
+  }
+  .card h3{margin:0;font-size:18px;font-weight:800;letter-spacing:-.01em}
+  .card h3 small{display:block;font-size:12.5px;font-weight:600;color:var(--neon);margin-top:3px;letter-spacing:.04em}
+  .specs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 18px 0}
+  .chip{
+    font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;
+    background:#0B0912;border:1px solid var(--line);border-radius:6px;padding:4px 8px;color:var(--muted);
+  }
+  .chip b{color:var(--text);font-weight:600}
+  .body{padding:14px 18px 18px}
+  .block{margin:16px 0 0}
+  .block > .lbl{
+    font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);
+    font-weight:700;margin:0 0 6px;
+  }
+  .block ul{margin:0;padding-left:19px}
+  .block li{margin:4px 0;font-size:14px}
+  .block p{margin:0;font-size:14px}
+  .promptwrap{position:relative;margin:6px 0 0}
+  pre.prompt{
+    margin:0;background:#07050C;border:1px solid var(--line);border-radius:10px;
+    padding:14px 16px;white-space:pre-wrap;word-wrap:break-word;
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:12.7px;line-height:1.62;color:#D8D6E4;
+  }
+  button.copy{
+    position:absolute;top:9px;right:9px;background:var(--neon);color:#fff;border:0;
+    border-radius:7px;padding:6px 13px;font-size:11.5px;font-weight:700;cursor:pointer;
+    letter-spacing:.03em;
+  }
+  button.copy:hover{background:var(--neon-deep)}
+  button.copy.done{background:var(--green);color:#04120A}
+  .no{color:var(--danger)}
+  .yes{color:var(--green)}
+  .warnbox{
+    background:rgba(255,176,32,.07);border:1px solid rgba(255,176,32,.35);
+    border-radius:9px;padding:11px 14px;font-size:13.5px;color:#F2DFC2;margin:16px 0 0;
+  }
+  .warnbox b{color:var(--warn)}
+  footer{max-width:var(--max);margin:0 auto;padding:0 24px 60px;color:var(--dim);font-size:12.5px}
+  @media(max-width:640px){
+    h1{font-size:24px} main{padding:18px 16px 70px} header.top{padding:28px 16px 6px}
+    nav.toc{padding:8px 16px 0}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1>FormAI — Play Store <span>ASO Image Prompt Library</span></h1>
+  <p class="sub">
+    GPT Image prompts for every Google Play graphic FormAI needs, plus optional promotional assets.
+    Each card is self-contained: copy the prompt, generate, check it against the restrictions in the same card.
+    Written against build <b>1.0.0+38</b> · package <code style="color:var(--green)">com.emredogan.formaifit</code>.
+  </p>
+
+  <div class="rules">
+    <h2>Non-negotiable rules — these came from a Play policy audit, not from taste</h2>
+    <ul>
+      <li><span class="no">Never</span> put an <b>outcome promise</b> in an asset. No “transform in 30 days”, no “lose X kg”, no before/after body comparison. The app’s own copy was stripped of exactly these claims in build 38 — a store asset that still makes them contradicts the product and is a Misrepresentation risk.</li>
+      <li><span class="no">Never</span> invent <b>social proof</b>: no star ratings, no “★ 4.9”, no download counts, no testimonials, no press logos, no “#1 fitness app”. FormAI has no such numbers and fabricating them is a straightforward policy violation.</li>
+      <li><span class="no">Never</span> render an <b>iPhone</b>, an iOS status bar, a notch or a Dynamic Island. Android device frames only. iOS frames in a Play listing were flagged in the audit as an asset-quality/deception risk.</li>
+      <li><span class="no">Never</span> show a <b>feature that does not ship</b>: no smartwatch pairing, no heart-rate/BPM readout, no calorie-burn-from-camera, no live video calls with a human trainer, no barcode food scanning, no Apple Health/Google Fit sync. FormAI has none of these.</li>
+      <li><span class="no">Never</span> draw a fake <b>Google Play badge</b>, a fake “Install”/“Get” button, the Google logo, or Play’s own UI chrome inside an asset. Play rejects assets that imitate store UI.</li>
+      <li><span class="yes">Always</span> keep the AI claim honest: <b>pose/form analysis runs on-device</b> (Google ML Kit); the <b>chat coach is a server-side LLM</b>. Never write “100% on-device AI” — that was corrected in the app and must not come back through an image.</li>
+      <li><span class="yes">Always</span> spell it <b>PERSONAL TRAINER</b> if that phrase appears. The shipped hero art contains the typo <code>PERSONEL TRAINER</code>; every regenerated asset must fix it.</li>
+      <li><span class="yes">Always</span> use <b>American English</b> in EN assets (“program”, not “programme”) and correct Turkish typography in TR assets (<code>ı İ ş ğ ç ö ü</code>). Generated art frequently mangles Turkish diacritics — inspect every glyph.</li>
+      <li><span class="yes">Always</span> treat generated text as <b>unreliable</b>. GPT Image misspells. Either request minimal text and typeset the real copy afterwards in a design tool, or proofread every character at 100% zoom before upload.</li>
+      <li><span class="yes">Always</span> match the in-app palette below so the store page and the app read as one product.</li>
+    </ul>
+    <div class="palette">
+      <span class="sw"><span class="dot" style="background:#8E5BFF"></span>#8E5BFF neon (primary)</span>
+      <span class="sw"><span class="dot" style="background:#6A3DFF"></span>#6A3DFF deep violet</span>
+      <span class="sw"><span class="dot" style="background:#4DA6FF"></span>#4DA6FF accent blue</span>
+      <span class="sw"><span class="dot" style="background:#39FF14"></span>#39FF14 signal green</span>
+      <span class="sw"><span class="dot" style="background:#0A0612;border:1px solid #333"></span>#0A0612 canvas</span>
+      <span class="sw"><span class="dot" style="background:#0F0F14;border:1px solid #333"></span>#0F0F14 surface</span>
+      <span class="sw"><span class="dot" style="background:#1E1E26;border:1px solid #333"></span>#1E1E26 hairline</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <a href="#a1">Feature Graphic</a>
+  <a href="#a2">App Icon 512</a>
+  <a href="#s1">1 · AI Coach</a>
+  <a href="#s2">2 · Form Detection</a>
+  <a href="#s3">3 · 30-Day Plan</a>
+  <a href="#s4">4 · Nutrition</a>
+  <a href="#s5">5 · Progress</a>
+  <a href="#s6">6 · Community</a>
+  <a href="#s7">7 · Challenges</a>
+  <a href="#s8">8 · Body Metrics</a>
+  <a href="#t7">Tablet 7″</a>
+  <a href="#t10">Tablet 10″</a>
+  <a href="#tl">Landscape Promo</a>
+  <a href="#p1">Social Banner</a>
+  <a href="#p2">Update Banner</a>
+  <a href="#p3">Launch Banner</a>
+  <a href="#p4">What’s New</a>
+  <a href="#p5">Press Kit</a>
+  <a href="#p6">Web Hero</a>
+</nav>
+
+<main>
+
+<!-- ══════════════════════════ CORE STORE ASSETS ══════════════════════════ -->
+<h2 class="section">Required Play Console assets</h2>
+
+<!-- ─────────────── FEATURE GRAPHIC ─────────────── -->
+<article class="card" id="a1">
+  <div class="head">
+    <h3>Feature Graphic<small>REQUIRED · TOP OF THE STORE PAGE</small></h3>
+  </div>
+  <div class="specs">
+    <span class="chip"><b>1024 × 500 px</b></span>
+    <span class="chip">PNG or JPEG, no alpha</span>
+    <span class="chip">≤ 15 MB</span>
+    <span class="chip">Device: all — phone, tablet, web</span>
+  </div>
+  <div class="body">
+
+    <div class="block"><p class="lbl">Safe areas</p>
+      <ul>
+        <li><b>Center ~250 × 250 px must stay visually quiet.</b> If you ever attach a promo video, Play overlays a circular ▶ play button dead center. Critical text or the logo mark under that button becomes unreadable.</li>
+        <li><b>Keep 64 px clear on every edge.</b> Play crops this graphic differently across placements and form factors.</li>
+        <li>Assume the app title and icon are rendered <i>below</i> this image by Play — do not duplicate the app name at large size, it reads as a stutter.</li>
+      </ul>
+    </div>
+
+    <div class="block"><p class="lbl">GPT Image prompt</p>
+      <div class="promptwrap"><button class="copy">Copy</button><pre class="prompt">A premium 1024x500 horizontal marketing banner for a mobile fitness application, dark luxury branding, cinematic studio lighting.
+
+COMPOSITION: Left third holds the typographic lockup. Right third holds a single athletic human figure, mid-plank or mid-squat, lit from behind with violet rim light so the silhouette separates from the background. The middle third is an intentional low-detail gradient bridge — no text, no logo, no face in the exact center of the frame.
+
+BACKGROUND: near-black #0A0612 with a soft radial violet glow (#8E5BFF at roughly 18% opacity) blooming from the right, falling off to pure dark on the left. Add a very faint diagonal grid of thin lines at 6% opacity, like a technical overlay. No stock-photo gym clutter, no dumbbell props, no barbells.
+
+FOREGROUND GRAPHIC ELEMENT: over the figure, a minimal skeletal pose-tracking overlay — small circular joint nodes connected by thin 2px lines in #39FF14 signal green, following shoulders, elbows, hips, knees. It should read as computer-vision telemetry, elegant and sparse, not a busy wireframe. Six to ten nodes maximum.
+
+TYPOGRAPHY: geometric sans-serif, heavy weight, tight letter-spacing, pure white.
+Headline: "AI FORM COACH"
+Sub-line beneath in medium weight, 40% smaller, muted lavender-grey: "Your camera. Your form. On your phone."
+
+COLOR: violet #8E5BFF primary, deep violet #6A3DFF in the gradient, signal green #39FF14 used ONLY for the pose nodes, everything else near-black and white.
+
+STYLE: modern App Store / Google Play featured-banner quality. Premium soft shadows, subtle lens bloom, high dynamic range, crisp edges. Flat vector typography over a photographic figure. No frames, no borders, no device mockups, no phone in this asset.
+
+Ultra sharp, 1024x500, landscape.</pre></div>
+    </div>
+
+    <div class="block"><p class="lbl">Text that should appear</p>
+      <ul>
+        <li>Headline: <b>AI FORM COACH</b> — or Turkish default listing: <b>AI FORM KOÇU</b></li>
+        <li>Sub-line: <b>Your camera. Your form. On your phone.</b> / TR: <b>Kameran. Formun. Telefonunda.</b></li>
+        <li>Nothing else. No price, no “Download now”, no rating.</li>
+      </ul>
+    </div>
+
+    <div class="block"><p class="lbl">Design notes</p>
+      <ul>
+        <li>This is the single most-viewed asset on the listing. It has one job: say what the app is in under two seconds.</li>
+        <li>The pose overlay is the differentiator — it is the one visual only this app can honestly use. Give it room.</li>
+        <li>Resist filling the middle. Negative space reads as premium; a full-bleed collage reads as a template.</li>
+      </ul>
+    </div>
+
+    <div class="block"><p class="lbl">Visual hierarchy</p>
+      <ul><li>1 · Headline → 2 · Pose-overlay figure → 3 · Sub-line → 4 · Background glow</li></ul>
+    </div>
+
+    <div class="block"><p class="lbl">CTA emphasis</p>
+      <p>None. A feature graphic must not carry a CTA — Play supplies the Install button. A drawn “Install” is a rejection risk.</p>
+    </div>
+
+    <div class="block"><p class="lbl">Restrictions</p>
+      <ul>
+        <li>No device frames, no screenshots inside it (Google explicitly discourages screenshot collages here).</li>
+        <li>No Play badge, no Google logo, no “Editors’ Choice”-style award marks.</li>
+        <li>No before/after bodies, no weight numbers, no “30 days” claim.</li>
+        <li>No text in the outer 64 px, no critical content in the center 250 px.</li>
+      </ul>
+    </div>
+
+    <div class="warnbox"><b>Replaces:</b> <code>asosystem/play_store_ready/feature_graphic_1024x500.png</code>. Check the old one for claims that build 38 removed before reusing any part of it.</div>
+  </div>
+</article>
+
+<!-- ─────────────── ICON ─────────────── -->
+<article class="card" id="a2">
+  <div class="head">
+    <h3>App Icon — high-res store version<small>REQUIRED · REVIEW + LISTING</small></h3>
+  </div>
+  <div class="specs">
+    <span class="chip"><b>512 × 512 px</b></span>
+    <span class="chip">32-bit PNG with alpha</span>
+    <span class="chip">≤ 1 MB</span>
+    <span class="chip">Device: all</span>
+  </div>
+  <div class="body">
+
+    <div class="block"><p class="lbl">Safe areas</p>
+      <ul>
+        <li>Play applies its own rounded-corner mask. <b>Keep all meaning inside the central 400 × 400 px</b> and expect roughly 10% of each corner to be clipped.</li>
+        <li>Design the mark full-bleed to 512 — do <b>not</b> pre-round the corners and do not add your own drop shadow; Play adds both.</li>
+        <li>Must remain legible at <b>48 × 48 px</b>. Test it downscaled before you accept it.</li>
+      </ul>
+    </div>
+
+    <div class="block"><p class="lbl">GPT Image prompt</p>
+      <div class="promptwrap"><button class="copy">Copy</button><pre class="prompt">A 512x512 mobile app icon, full-bleed square, premium dark branding, flat vector illustration.
+
+SUBJECT: a single bold abstract monogram mark built from an uppercase letter F, constructed out of three thick rounded bars. The lower bar bends slightly upward at its right end so the whole letterform reads simultaneously as an "F" and as an ascending progress arrow. Perfectly centered, optically balanced, occupying about 60% of the canvas width.
+
+TREATMENT: the mark is filled with a smooth diagonal gradient from violet #8E5BFF at the top-left to deep violet #6A3DFF at the bottom-right, with a thin 3px inner highlight of lighter lavender along the top edge of each bar to suggest a soft light source above.
+
+BACKGROUND: a rich near-black #0A0612 square, edge to edge, with a subtle radial violet glow behind the mark at roughly 25% opacity so the letterform appears to float and emit light. Background must be a solid full square — no transparency, no rounded corners, no border, no drop shadow outside the mark.
+
+STYLE: clean geometric vector, crisp anti-aliased edges, no texture, no gradients in the background other than the single radial glow, no text, no letters other than the F monogram, no human figures, no dumbbells, no fitness clichés.
+
+Must stay instantly legible when scaled down to 48x48 pixels: thick strokes, high contrast, generous internal spacing, no fine detail.
+
+512x512, square, centered, app icon.</pre></div>
+    </div>
+
+    <div class="block"><p class="lbl">Text that should appear</p>
+      <p>None beyond the “F” monogram itself. Icons with words fail at 48 px and Play’s guidance discourages them.</p>
+    </div>
+
+    <div class="block"><p class="lbl">Design notes</p>
+      <ul>
+        <li>The current icon lives at <code>photos/APP_ICON_512.png</code>. Only replace it if the new mark is clearly better — icon churn costs recognition with existing testers.</li>
+        <li>If you do replace it, regenerate the in-app launcher icons too so the store and the home screen agree.</li>
+      </ul>
+    </div>
+
+    <div class="block"><p class="lbl">Visual hierarchy</p><ul><li>1 · Monogram → 2 · Glow → 3 · Background</li></ul></div>
+    <div class="block"><p class="lbl">CTA emphasis</p><p>Not applicable.</p></div>
+
+    <div class="block"><p class="lbl">Restrictions</p>
+      <ul>
+        <li>No pre-rounded corners, no baked-in shadow, no transparent background.</li>
+        <li>No photographic content, no human bodies, no text.</li>
+        <li>Must not imitate another app’s mark or any Google product icon.</li>
+      </ul>
+    </div>
+  </div>
+</article>
+
+<!-- ══════════════════════════ PHONE SCREENSHOTS ══════════════════════════ -->
+<h2 class="section">Phone screenshots · 1080 × 1920 portrait</h2>
+
+<div class="rules" style="border-left-color:var(--neon)">
+  <h2 style="color:var(--neon)">Rules that apply to all eight screenshots</h2>
+  <ul>
+    <li><b>Play requires a minimum of 2 and allows up to 8.</b> The first 2–3 are what appear in search results — put the strongest features first.</li>
+    <li><b>Safe areas (identical on every screenshot):</b> keep the marketing headline inside the <b>top 300 px</b>, keep the device mockup between <b>y ≈ 340 px and y ≈ 1780 px</b>, and leave <b>72 px clear on the left and right</b> and <b>90 px clear at the bottom</b>. Play’s carousel rounds the corners and crops a few pixels.</li>
+    <li><b>The UI inside the frame must be the real app.</b> The most reliable method is: capture a real screenshot on the device, then use the prompt below to generate <i>only</i> the surrounding scene (frame, background, glow, floating cards) and composite the real capture into the frame. Prompts here are written so the generated UI is close enough to composite over, not to ship as-is.</li>
+    <li><b>Android frame only.</b> A modern bezel-less Android handset, centered punch-hole camera, symmetric bezels. Never a notch, never an iOS status bar, never an Apple silhouette.</li>
+    <li><b>No fabricated data.</b> Streaks, XP, calorie numbers and chart shapes shown in a screenshot must be plausible for a real early user. Do not show “Day 247” or “15,000 XP” on a launch listing.</li>
+  </ul>
+</div>
+
+<!-- S1 -->
+<article class="card" id="s1">
+  <div class="head"><h3>Screenshot 1 — AI Coach<small>LEAD ASSET · SHOWN IN SEARCH RESULTS</small></h3></div>
+  <div class="specs">
+    <span class="chip"><b>1080 × 1920 px</b></span><span class="chip">9:16 portrait</span>
+    <span class="chip">Device: phone</span><span class="chip">PNG / JPEG ≤ 8 MB</span>
+  </div>
+  <div class="body">
+    <div class="block"><p class="lbl">Real feature being shown</p>
+      <p>The persistent chat coach (“Form”). It is a real large-language-model coach reached from the dashboard. It carries a permanent disclosure strip and every reply can be reported.</p></div>
+
+    <div class="block"><p class="lbl">GPT Image prompt</p>
+      <div class="promptwrap"><button class="copy">Copy</button><pre class="prompt">A premium 1080x1920 vertical app-store marketing screenshot, dark luxury branding, studio product-photography lighting.
+
+LAYOUT: Marketing headline occupies the top 300 pixels, centered, on the dark background above the device. Below it, a single modern bezel-less ANDROID smartphone in a three-quarter-facing upright position, tilted about 6 degrees, floating with a long soft shadow beneath it. Symmetric thin bezels, small centered punch-hole front camera. Absolutely no notch, no Dynamic Island, no Apple device.
+
+SCREEN CONTENT: a dark chat interface. Top bar shows a small circular coach avatar and the name "Form" with a small status dot. Directly beneath the top bar, a thin muted disclaimer strip of small grey text. The conversation shows two rounded message bubbles from the coach in dark grey (#17131F) aligned left, and one shorter user bubble in violet (#8E5BFF) aligned right. At the bottom, a rounded text input pill with a circular violet send button.
+
+FLOATING CALLOUT CARDS: two small glass-morphism cards float just outside the phone silhouette, one overlapping the upper-right edge and one the lower-left edge. Each is a rounded rectangle with a blurred translucent dark fill, a 1px violet hairline border, a tiny icon, and one short line of text. Card one, upper right: a chat icon with "Ask anything, anytime". Card two, lower left: a shield icon with "Flag any reply".
+
+BACKGROUND: deep near-black #0A0612 with a large soft violet radial glow (#8E5BFF, about 22% opacity) behind the upper half of the phone, fading to black at the corners. Very subtle vignette.
+
+TYPOGRAPHY: geometric sans-serif. Headline in heavy weight pure white, roughly 66px cap height: "A COACH THAT ANSWERS". Sub-headline directly under it in medium weight muted lavender-grey at 55% of the headline size: "Trained guidance, in your language."
+
+COLOR: violet #8E5BFF, deep violet #6A3DFF, accent blue #4DA6FF sparingly, near-black #0A0612, surface #0F0F14, white text.
+
+STYLE: modern Google Play featured-listing quality. Premium soft shadows, gentle rim light along the phone edges, crisp typography, generous negative space. Photorealistic device, flat vector UI on the screen.
+
+1080x1920, vertical, ultra sharp.</pre></div></div>
+
+    <div class="block"><p class="lbl">Text that should appear</p>
+      <ul><li>Headline: <b>A COACH THAT ANSWERS</b> · TR: <b>SANA CEVAP VEREN KOÇ</b></li>
+      <li>Sub: <b>Trained guidance, in your language.</b> · TR: <b>Kendi dilinde rehberlik.</b></li>
+      <li>Callouts: <b>Ask anything, anytime</b> / <b>Flag any reply</b></li></ul></div>
+
+    <div class="block"><p class="lbl">Mockup requirements</p>
+      <ul><li>Android handset, ~78% of frame width, 6° tilt, long soft shadow.</li>
+      <li>Screen must show the disclosure strip — it is a real, permanent part of the UI and showing it is a trust signal.</li></ul></div>
+
+    <div class="block"><p class="lbl">Visual hierarchy</p><ul><li>1 · Headline → 2 · Phone screen → 3 · Floating cards → 4 · Glow</li></ul></div>
+    <div class="block"><p class="lbl">CTA emphasis</p><p>None on screenshot 1. Let the feature speak; save any directive language for the final screenshot.</p></div>
+
+    <div class="block"><p class="lbl">Restrictions</p>
+      <ul><li>Do not imply the coach is a licensed professional, a doctor, a dietitian or a physiotherapist.</li>
+      <li>Do not imply the chat coach runs on-device. It does not.</li>
+      <li>Do not show a fabricated coach reply promising results.</li></ul></div>
+  </div>
+</article>
+
+<!-- S2 -->
+<article class="card" id="s2">
+  <div class="head"><h3>Screenshot 2 — Workout Form Detection<small>THE DIFFERENTIATOR</small></h3></div>
+  <div class="specs"><span class="chip"><b>1080 × 1920 px</b></span><span class="chip">9:16 portrait</span><span class="chip">Device: phone</span></div>
+  <div class="body">
+    <div class="block"><p class="lbl">Real feature being shown</p>
+      <p>Live camera pose detection via Google ML Kit. Runs entirely on the handset, counts reps, calls out form corrections by voice. No frame ever leaves the device.</p></div>
+
+    <div class="block"><p class="lbl">GPT Image prompt</p>
+      <div class="promptwrap"><button class="copy">Copy</button><pre class="prompt">A premium 1080x1920 vertical app-store marketing screenshot, dark luxury branding, cinematic lighting.
+
+LAYOUT: Marketing headline in the top 300 pixels. Below it, a modern bezel-less ANDROID smartphone standing upright, tilted about 5 degrees, floating with a soft long shadow. Symmetric bezels, centered punch-hole camera. No notch, no Apple device.
+
+SCREEN CONTENT: a full-bleed live camera view in portrait. Inside it, a person seen from a few metres away performing a bodyweight squat in a clean, softly-lit home room. Over the person, a precise pose-tracking skeleton: small circular joint markers at shoulders, elbows, wrists, hips, knees and ankles, connected by thin 2px lines, drawn in signal green #39FF14 with a faint outer glow. Overlaid UI on top of the camera view: a large rep counter reading "8 / 12" in the upper area, a slim confidence ring in the corner, and a single short coaching cue in a rounded dark pill near the bottom reading "Chest up".
+
+FLOATING CALLOUT CARDS: two glass-morphism cards outside the phone silhouette. Upper left: a lock icon with "Video never leaves your phone". Lower right: a waveform icon with "Voice cues as you move".
+
+BACKGROUND: deep near-black #0A0612, large soft green-tinted glow behind the phone at low opacity blending into violet toward the edges, subtle vignette.
+
+TYPOGRAPHY: geometric sans-serif. Headline heavy weight pure white: "IT WATCHES EVERY REP". Sub-headline in muted lavender-grey at 55% size: "On-device form analysis. No frame uploaded."
+
+COLOR: signal green #39FF14 reserved strictly for the pose skeleton and the rep counter accent; violet #8E5BFF for glow and UI chrome; near-black background; white text.
+
+STYLE: modern Google Play featured quality, premium shadows, crisp edges, photorealistic phone, flat vector overlay UI, realistic but tasteful camera image inside the screen.
+
+1080x1920, vertical, ultra sharp.</pre></div></div>
+
+    <div class="block"><p class="lbl">Text that should appear</p>
+      <ul><li>Headline: <b>IT WATCHES EVERY REP</b> · TR: <b>HER TEKRARI GÖRÜR</b></li>
+      <li>Sub: <b>On-device form analysis. No frame uploaded.</b> · TR: <b>Cihazında form analizi. Hiçbir kare yüklenmez.</b></li>
+      <li>In-screen: rep counter <b>8 / 12</b>, cue <b>Chest up</b> · TR: <b>Göğsünü dik tut</b></li></ul></div>
+
+    <div class="block"><p class="lbl">Mockup requirements</p>
+      <ul><li>The person must be <b>fully in frame, modestly dressed, from a realistic ~2 m distance</b> — that is what the app actually asks for.</li>
+      <li>Skeleton must have ≤ 14 nodes. A dense mesh looks like a different product.</li></ul></div>
+
+    <div class="block"><p class="lbl">Visual hierarchy</p><ul><li>1 · Pose skeleton → 2 · Headline → 3 · Rep counter → 4 · Callouts</li></ul></div>
+    <div class="block"><p class="lbl">CTA emphasis</p><p>None. The privacy callout is doing the persuasion.</p></div>
+
+    <div class="block"><p class="lbl">Restrictions</p>
+      <ul><li>No heart rate, no BPM, no calories-burned readout — the camera does not measure any of those.</li>
+      <li>No revealing or sexualized posing. This is a fitness utility, not a body-image product, and suggestive imagery drags the content rating upward.</li>
+      <li>Do not show the skeleton tracking a face. It tracks body joints.</li></ul></div>
+  </div>
+</article>
+
+<!-- S3 -->
+<article class="card" id="s3">
+  <div class="head"><h3>Screenshot 3 — Personal 30-Day Plan<small>CORE PRODUCT LOOP</small></h3></div>
+  <div class="specs"><span class="chip"><b>1080 × 1920 px</b></span><span class="chip">9:16 portrait</span><span class="chip">Device: phone</span></div>
+  <div class="body">
+    <div class="block"><p class="lbl">Real feature being shown</p>
+      <p>A 30-day program generated from the onboarding answers — goal, experience level, session length and available equipment. Day cards, rest days, difficulty derived from the day’s own exercises.</p></div>
+
+    <div class="block"><p class="lbl">GPT Image prompt</p>
+      <div class="promptwrap"><button class="copy">Copy</button><pre class="prompt">A premium 1080x1920 vertical app-store marketing screenshot, dark luxury branding.
+
+LAYOUT: Headline in the top 300 pixels. Beneath it, a bezel-less ANDROID smartphone upright, tilted about 6 degrees, floating with a long soft shadow. No notch, no Apple device.
+
+SCREEN CONTENT: a dark program screen. At the top, a photographic hero band showing an athletic figure in moody violet lighting, with a small row of three lightning-bolt difficulty icons and a difficulty word beside them. Below the hero, a bold violet-to-blue gradient card for the current day containing the label "day 1", a small circular progress ring, a short line reading "6 exercises", and a white pill button reading "CONTINUE". Under it, two flat dark list rows for "day 2" and "day 3", each with a small exercise count in muted text, and a fourth row for a rest day with a small cup icon.
+
+FLOATING CALLOUT CARDS: upper right, a target icon with "Built from your answers". Lower left, a calendar icon with "Rest days included".
+
+BACKGROUND: near-black #0A0612 with a soft violet radial glow behind the device, fading to black at the edges.
+
+TYPOGRAPHY: geometric sans-serif. Headline heavy white: "A PLAN THAT FITS YOU". Sub-headline in muted lavender-grey: "Your goal, your level, your equipment."
+
+COLOR: violet #8E5BFF and #6A3DFF for the active day card gradient, accent blue #4DA6FF at the card's far edge, near-black surfaces, white and grey text.
+
+STYLE: modern Google Play featured quality, premium soft shadows, crisp flat vector UI on screen, photorealistic device.
+
+1080x1920, vertical, ultra sharp.</pre></div></div>
+
+    <div class="block"><p class="lbl">Text that should appear</p>
+      <ul><li>Headline: <b>A PLAN THAT FITS YOU</b> · TR: <b>SANA GÖRE BİR PLAN</b></li>
+      <li>Sub: <b>Your goal, your level, your equipment.</b> · TR: <b>Hedefin, seviyen, ekipmanın.</b></li>
+      <li>In-screen: <b>day 1 · 6 exercises · CONTINUE</b>, <b>day 2</b>, <b>day 3</b>, <b>Rest day</b></li></ul></div>
+
+    <div class="block"><p class="lbl">Mockup requirements</p>
+      <ul><li>Show a <b>rest day</b> in the list. It is honest and it differentiates from apps that pretend you train daily.</li>
+      <li>Difficulty word must be a real one: Beginner / Intermediate / Advanced.</li></ul></div>
+
+    <div class="block"><p class="lbl">Visual hierarchy</p><ul><li>1 · Headline → 2 · Active day card → 3 · Day list → 4 · Callouts</li></ul></div>
+    <div class="block"><p class="lbl">CTA emphasis</p><p>The in-UI <b>CONTINUE</b> button is the only button-like element. Do not add a marketing CTA on top of it.</p></div>
+
+    <div class="block"><p class="lbl">Restrictions</p>
+      <ul><li><span class="no">Never</span> write “30 days to a new body”, “results in 30 days”, or any variant. The program is 30 days long; that is a duration, not a promise.</li>
+      <li>Do not show a completion percentage the app cannot compute — per-set tracking does not exist.</li></ul></div>
+  </div>
+</article>
+
+<!-- S4 -->
+<article class="card" id="s4">
+  <div class="head"><h3>Screenshot 4 — Nutrition<small>SUPPORTING FEATURE</small></h3></div>
+  <div class="specs"><span class="chip"><b>1080 × 1920 px</b></span><span class="chip">9:16 portrait</span><span class="chip">Device: phone</span></div>
+  <div class="body">
+    <div class="block"><p class="lbl">Real feature being shown</p>
+      <p>A recipe catalogue of several hundred dishes with calories and macros, filtered by goal, diet flags and taste, fully localized in Turkish and English.</p></div>
+
+    <div class="block"><p class="lbl">GPT Image prompt</p>
+      <div class="promptwrap"><button class="copy">Copy</button><pre class="prompt">A premium 1080x1920 vertical app-store marketing screenshot, dark luxury branding, appetizing food photography.
+
+LAYOUT: Headline in the top 300 pixels. Below, a bezel-less ANDROID smartphone upright, tilted about 6 degrees, floating with a soft shadow. No notch, no Apple device.
+
+SCREEN CONTENT: a dark nutrition screen. Top section shows a daily macro summary: three slim circular progress rings side by side labelled with short macro abbreviations and gram values, plus a calorie figure. Below, a vertically scrolling list of two recipe cards. Each card is a rounded rectangle with a real, beautifully lit photograph of a healthy plated meal on the right half — one grilled chicken with greens, one salmon and vegetable bowl — and on the left a dish name, a small calorie value and two tiny rounded tag chips.
+
+FLOATING CALLOUT CARDS: upper left, a leaf icon with "Filtered to your diet". Lower right, a scale icon with "Calories and macros".
+
+BACKGROUND: near-black #0A0612 with a warm-tinted violet glow behind the device, softly vignetted.
+
+TYPOGRAPHY: geometric sans-serif. Headline heavy white: "EATING, SORTED". Sub-headline muted lavender-grey: "Recipes matched to your goal."
+
+COLOR: violet #8E5BFF chrome, accent blue #4DA6FF for one macro ring, warm natural food tones inside the photographs only, near-black surfaces, white text.
+
+STYLE: modern Google Play featured quality. Food photography must look genuinely appetizing and realistic — natural light, shallow depth of field — while the surrounding UI stays flat, dark and vector-clean.
+
+1080x1920, vertical, ultra sharp.</pre></div></div>
+
+    <div class="block"><p class="lbl">Text that should appear</p>
+      <ul><li>Headline: <b>EATING, SORTED</b> · TR: <b>BESLENME ÇÖZÜLDÜ</b></li>
+      <li>Sub: <b>Recipes matched to your goal.</b> · TR: <b>Hedefine uygun tarifler.</b></li>
+      <li>Callouts: <b>Filtered to your diet</b> / <b>Calories and macros</b></li></ul></div>
+
+    <div class="block"><p class="lbl">Mockup requirements</p>
+      <ul><li>Two recipe cards maximum — a longer list at this scale becomes unreadable in the carousel.</li>
+      <li>Meals must look like food a real person cooks, not restaurant styling.</li></ul></div>
+
+    <div class="block"><p class="lbl">Visual hierarchy</p><ul><li>1 · Food photography → 2 · Headline → 3 · Macro rings → 4 · Callouts</li></ul></div>
+    <div class="block"><p class="lbl">CTA emphasis</p><p>None.</p></div>
+
+    <div class="block"><p class="lbl">Restrictions</p>
+      <ul><li>No medical or therapeutic claims — nothing “cures”, “detoxes”, “boosts metabolism” or “burns fat”.</li>
+      <li>No specific weight-loss numbers.</li>
+      <li>Do not show barcode scanning or a food database search — FormAI has neither.</li></ul></div>
+  </div>
+</article>
+
+<!-- S5 -->
+<article class="card" id="s5">
+  <div class="head"><h3>Screenshot 5 — Progress<small>RETENTION PROOF</small></h3></div>
+  <div class="specs"><span class="chip"><b>1080 × 1920 px</b></span><span class="chip">9:16 portrait</span><span class="chip">Device: phone</span></div>
+  <div class="body">
+    <div class="block"><p class="lbl">Real feature being shown</p>
+      <p>Streaks, XP and levels, badges, weekly adherence, and a 30-day outcome report aggregating sessions, minutes, reps and energy.</p></div>
+
+    <div class="block"><p class="lbl">GPT Image prompt</p>
+      <div class="promptwrap"><button class="copy">Copy</button><pre class="prompt">A premium 1080x1920 vertical app-store marketing screenshot, dark luxury branding.
+
+LAYOUT: Headline in the top 300 pixels. Below, a bezel-less ANDROID smartphone upright, tilted about 6 degrees, floating with a long soft shadow. No notch, no Apple device.
+
+SCREEN CONTENT: a dark progress dashboard. Top row holds two compact stat tiles side by side — one with a flame icon and a small day count, one with a checkmark icon and a completed-days fraction. Beneath them, a weekly bar chart of seven slim rounded vertical bars of varying modest heights in violet, with the current day highlighted brighter. Under the chart, a horizontal row of four small circular badge medallions, two of them lit and two dimmed to indicate not-yet-earned. At the bottom edge of the screen, a slim level bar with a small XP figure.
+
+FLOATING CALLOUT CARDS: upper right, a flame icon with "Streaks that hold you". Lower left, a chart icon with "See what actually changed".
+
+BACKGROUND: near-black #0A0612 with a violet radial glow behind the upper device, vignetted corners.
+
+TYPOGRAPHY: geometric sans-serif. Headline heavy white: "PROGRESS YOU CAN SEE". Sub-headline muted lavender-grey: "Sessions, streaks and badges, tracked."
+
+COLOR: violet #8E5BFF for bars and the level fill, signal green #39FF14 for exactly one earned badge, near-black surfaces, white and grey text.
+
+STYLE: modern Google Play featured quality, premium soft shadows, flat vector data visualisation, photorealistic device.
+
+1080x1920, vertical, ultra sharp.</pre></div></div>
+
+    <div class="block"><p class="lbl">Text that should appear</p>
+      <ul><li>Headline: <b>PROGRESS YOU CAN SEE</b> · TR: <b>GÖREBİLECEĞİN İLERLEME</b></li>
+      <li>Sub: <b>Sessions, streaks and badges, tracked.</b> · TR: <b>Seanslar, seriler ve rozetler.</b></li></ul></div>
+
+    <div class="block"><p class="lbl">Mockup requirements</p>
+      <ul><li>Use <b>modest, believable numbers</b>: a streak in single or low double digits, a fraction like 9 / 30, two earned badges out of four.</li>
+      <li>Bars must be uneven. A perfect ascending staircase reads as fake.</li></ul></div>
+
+    <div class="block"><p class="lbl">Visual hierarchy</p><ul><li>1 · Headline → 2 · Chart → 3 · Stat tiles → 4 · Badges</li></ul></div>
+    <div class="block"><p class="lbl">CTA emphasis</p><p>None.</p></div>
+
+    <div class="block"><p class="lbl">Restrictions</p>
+      <ul><li>No body-weight loss curve, no “−8 kg” annotation, no before/after silhouettes.</li>
+      <li>No leaderboard position implying competition against strangers on this screen — that belongs to screenshot 6/7.</li></ul></div>
+  </div>
+</article>
+
+<!-- S6 -->
+<article class="card" id="s6">
+  <div class="head"><h3>Screenshot 6 — Community &amp; Squads<small>SOCIAL LAYER</small></h3></div>
+  <div class="specs"><span class="chip"><b>1080 × 1920 px</b></span><span class="chip">9:16 portrait</span><span class="chip">Device: phone</span></div>
+  <div class="body">
+    <div class="block"><p class="lbl">Real feature being shown</p>
+      <p>Optional public profile, small squads capped at twelve members, an activity feed of presence events, and friend requests. Profiles are private by default.</p></div>
+
+    <div class="block"><p class="lbl">GPT Image prompt</p>
+      <div class="promptwrap"><button class="copy">Copy</button><pre class="prompt">A premium 1080x1920 vertical app-store marketing screenshot, dark luxury branding.
+
+LAYOUT: Headline in the top 300 pixels. Below, a bezel-less ANDROID smartphone upright, tilted about 6 degrees, floating with a long soft shadow. No notch, no Apple device.
+
+SCREEN CONTENT: a dark community screen. Near the top, a squad header card showing a squad name, a small member-count pill reading a low number out of 12, and a horizontal row of four small circular avatar placeholders rendered as simple flat monogram circles in muted violet — abstract, not photographic faces. Beneath it, a vertical activity feed of three compact rows, each with a small circular avatar, a short one-line entry describing an anonymous member finishing a session, and a tiny timestamp. A small reaction icon sits at the right of one row.
+
+FLOATING CALLOUT CARDS: upper left, a people icon with "Squads of up to 12". Lower right, a lock icon with "Private by default".
+
+BACKGROUND: near-black #0A0612 with a soft violet radial glow, vignetted.
+
+TYPOGRAPHY: geometric sans-serif. Headline heavy white: "SHOW UP TOGETHER". Sub-headline muted lavender-grey: "A small group beats a big feed."
+
+COLOR: violet #8E5BFF chrome, accent blue #4DA6FF on one avatar, near-black surfaces, white and grey text.
+
+STYLE: modern Google Play featured quality, premium shadows, flat vector UI, photorealistic device. Avatars must be abstract monogram circles, never real human faces.
+
+1080x1920, vertical, ultra sharp.</pre></div></div>
+
+    <div class="block"><p class="lbl">Text that should appear</p>
+      <ul><li>Headline: <b>SHOW UP TOGETHER</b> · TR: <b>BİRLİKTE DEVAM ET</b></li>
+      <li>Sub: <b>A small group beats a big feed.</b> · TR: <b>Küçük bir grup, büyük bir akıştan iyidir.</b></li>
+      <li>Callouts: <b>Squads of up to 12</b> / <b>Private by default</b></li></ul></div>
+
+    <div class="block"><p class="lbl">Mockup requirements</p>
+      <ul><li><b>Abstract monogram avatars only.</b> Photographic faces in a store asset raise a likeness-rights problem and imply a user base that does not exist yet.</li>
+      <li>Feed entries must be presence events (“finished a session”), never chat messages — the feed carries no free text.</li></ul></div>
+
+    <div class="block"><p class="lbl">Visual hierarchy</p><ul><li>1 · Headline → 2 · Squad card → 3 · Feed rows → 4 · Callouts</li></ul></div>
+    <div class="block"><p class="lbl">CTA emphasis</p><p>None.</p></div>
+
+    <div class="block"><p class="lbl">Restrictions</p>
+      <ul><li>No member counts implying scale (“12,480 members online”).</li>
+      <li>No public chat UI — the app deliberately has none, and showing one invites UGC-moderation questions during review.</li>
+      <li>No real names. Use neutral short display names or initials.</li></ul></div>
+  </div>
+</article>
+
+<!-- S7 -->
+<article class="card" id="s7">
+  <div class="head"><h3>Screenshot 7 — Challenges &amp; Leaderboard<small>ENGAGEMENT LOOP</small></h3></div>
+  <div class="specs"><span class="chip"><b>1080 × 1920 px</b></span><span class="chip">9:16 portrait</span><span class="chip">Device: phone</span></div>
+  <div class="body">
+    <div class="block"><p class="lbl">Real feature being shown</p>
+      <p>Rotating time-boxed challenges with real progress counters, plus a beginner-protective leaderboard scoped so newcomers are not ranked against veterans.</p></div>
+
+    <div class="block"><p class="lbl">GPT Image prompt</p>
+      <div class="promptwrap"><button class="copy">Copy</button><pre class="prompt">A premium 1080x1920 vertical app-store marketing screenshot, dark luxury branding.
+
+LAYOUT: Headline in the top 300 pixels. Below, a bezel-less ANDROID smartphone upright, tilted about 6 degrees, floating with a long soft shadow. No notch, no Apple device.
+
+SCREEN CONTENT: a dark challenges screen. Top card is a featured challenge: a rounded rectangle with a subtle violet gradient, a trophy icon, a short challenge title, a slim horizontal progress bar partially filled, a small "x of y" counter and a compact days-remaining pill. Beneath it, two smaller challenge rows in flat dark cards, one showing a "Starts in 3 days" state and one showing an active state with its own thin progress bar. Lower on the screen, a compact three-row leaderboard strip with rank numbers, abstract monogram avatars and short scores.
+
+FLOATING CALLOUT CARDS: upper right, a trophy icon with "New challenges every month". Lower left, a shield icon with "Ranked with your level".
+
+BACKGROUND: near-black #0A0612 with a violet radial glow behind the device, vignetted corners.
+
+TYPOGRAPHY: geometric sans-serif. Headline heavy white: "SOMETHING TO CHASE". Sub-headline muted lavender-grey: "Fresh challenges, fair rankings."
+
+COLOR: violet #8E5BFF for gradients and progress fills, warm gold accent used sparingly on the trophy icon only, near-black surfaces, white and grey text.
+
+STYLE: modern Google Play featured quality, premium shadows, flat vector UI, photorealistic device. Abstract monogram avatars, never real faces.
+
+1080x1920, vertical, ultra sharp.</pre></div></div>
+
+    <div class="block"><p class="lbl">Text that should appear</p>
+      <ul><li>Headline: <b>SOMETHING TO CHASE</b> · TR: <b>PEŞİNDEN GİDECEĞİN BİR ŞEY</b></li>
+      <li>Sub: <b>Fresh challenges, fair rankings.</b> · TR: <b>Yeni meydan okumalar, adil sıralama.</b></li></ul></div>
+
+    <div class="block"><p class="lbl">Mockup requirements</p>
+      <ul><li>Show a challenge that has <b>not started yet</b> — the library genuinely rotates and staggers start dates.</li>
+      <li>Progress values must be small and plausible (e.g. 2 of 5).</li></ul></div>
+
+    <div class="block"><p class="lbl">Visual hierarchy</p><ul><li>1 · Featured challenge → 2 · Headline → 3 · Challenge rows → 4 · Leaderboard</li></ul></div>
+    <div class="block"><p class="lbl">CTA emphasis</p><p>The in-UI progress bars carry the energy. No marketing CTA.</p></div>
+
+    <div class="block"><p class="lbl">Restrictions</p>
+      <ul><li>No cash prizes, no gift cards, no “win rewards” — that language turns a challenge into a contest/gambling review question.</li>
+      <li>No global rank implying millions of players.</li>
+      <li>Do not show a challenge type the engine cannot measure (e.g. “chest-focus week”). Sessions and streaks are what it counts.</li></ul></div>
+  </div>
+</article>
+
+<!-- S8 -->
+<article class="card" id="s8">
+  <div class="head"><h3>Screenshot 8 — Body Metrics &amp; Trends<small>CLOSING ASSET</small></h3></div>
+  <div class="specs"><span class="chip"><b>1080 × 1920 px</b></span><span class="chip">9:16 portrait</span><span class="chip">Device: phone</span></div>
+  <div class="body">
+    <div class="block"><p class="lbl">Real feature being shown</p>
+      <p>Self-logged weight and five tape measurements, a trend chart over 7/30/90 days, and an honest reconciliation against a target the user states themselves.</p></div>
+
+    <div class="block"><p class="lbl">GPT Image prompt</p>
+      <div class="promptwrap"><button class="copy">Copy</button><pre class="prompt">A premium 1080x1920 vertical app-store marketing screenshot, dark luxury branding.
+
+LAYOUT: Headline in the top 300 pixels. Below, a bezel-less ANDROID smartphone upright, tilted about 6 degrees, floating with a long soft shadow. No notch, no Apple device.
+
+SCREEN CONTENT: a dark body-metrics screen. Top holds a segmented range selector with four short options, the second one active. Beneath it, a smooth line chart plotting a gently and irregularly declining series across the width, drawn as a 3px violet line with a soft gradient fill fading downward beneath it, small circular data points, and light horizontal grid lines. Under the chart, a compact row of three small metric tiles each with a short label and a value with a unit. At the bottom, one flat card containing a single calm sentence of neutral grey text, no colour coding, no red or green verdict.
+
+FLOATING CALLOUT CARDS: upper left, a ruler icon with "Weight and 5 measurements". Lower right, a heart icon with "No judgement, just the data".
+
+BACKGROUND: near-black #0A0612 with a violet radial glow behind the device, vignetted.
+
+TYPOGRAPHY: geometric sans-serif. Headline heavy white: "IS IT WORKING?". Sub-headline muted lavender-grey: "Log it, chart it, read it honestly."
+
+COLOR: violet #8E5BFF for the chart line and fill, near-black surfaces, white and neutral grey text. Deliberately NO red and NO green anywhere in the chart area.
+
+STYLE: modern Google Play featured quality, premium shadows, flat vector data visualisation, photorealistic device.
+
+1080x1920, vertical, ultra sharp.</pre></div></div>
+
+    <div class="block"><p class="lbl">Text that should appear</p>
+      <ul><li>Headline: <b>IS IT WORKING?</b> · TR: <b>İŞE YARIYOR MU?</b></li>
+      <li>Sub: <b>Log it, chart it, read it honestly.</b> · TR: <b>Kaydet, çiz, dürüstçe oku.</b></li></ul></div>
+
+    <div class="block"><p class="lbl">Mockup requirements</p>
+      <ul><li>The trend line must be <b>gentle and irregular</b>. A steep clean drop is an implicit results claim.</li>
+      <li>Deliberately avoid red/green colour-coding: the app’s design rule is that direction is never a verdict, and the asset should honour it.</li></ul></div>
+
+    <div class="block"><p class="lbl">Visual hierarchy</p><ul><li>1 · Chart → 2 · Headline → 3 · Metric tiles → 4 · Callouts</li></ul></div>
+    <div class="block"><p class="lbl">CTA emphasis</p>
+      <p>If any screenshot carries a soft closing line, it is this one. Acceptable: <b>Start today</b>. Never a fake button, never “Download now”.</p></div>
+
+    <div class="block"><p class="lbl">Restrictions</p>
+      <ul><li>No BMI category labels (“Obese”, “Overweight”) — health-status classification in a marketing asset is a health-claim risk.</li>
+      <li>No goal-weight promise, no projected finish date.</li>
+      <li>Progress photos exist in-app but stay on the device — do not show one in a store asset.</li></ul></div>
+  </div>
+</article>
+
+<!-- ══════════════════════════ TABLETS ══════════════════════════ -->
+<h2 class="section">Tablet assets</h2>
+
+<article class="card" id="t7">
+  <div class="head"><h3>7-inch Tablet Screenshots<small>OPTIONAL BUT RECOMMENDED</small></h3></div>
+  <div class="specs">
+    <span class="chip"><b>1200 × 1920 px</b> portrait</span>
+    <span class="chip">or 1920 × 1200 landscape</span>
+    <span class="chip">min 2, max 8</span>
+    <span class="chip">Device: 7″ tablet</span>
+  </div>
+  <div class="body">
+    <div class="block"><p class="lbl">Safe areas</p>
+      <ul><li>Headline in the top <b>260 px</b>; device between <b>y ≈ 300</b> and <b>y ≈ 1800</b>; <b>90 px</b> clear left and right.</li>
+      <li>The 5:8 ratio is squarer than a phone — the same composition scaled up leaves dead space at the sides. Widen the glow, not the type.</li></ul></div>
+
+    <div class="block"><p class="lbl">GPT Image prompt</p>
+      <div class="promptwrap"><button class="copy">Copy</button><pre class="prompt">A premium 1200x1920 vertical marketing screenshot for a 7-inch ANDROID TABLET, dark luxury branding, studio lighting.
+
+LAYOUT: Marketing headline centered in the top 260 pixels. Below it, a modern bezel-less Android tablet in portrait orientation, tilted about 4 degrees, floating with a long soft shadow. Uniform slim bezels, no notch, no Apple device, no keyboard, no stylus.
+
+SCREEN CONTENT: the app's dashboard rendered at tablet scale — a two-column arrangement where a narrow left column shows a vertical navigation rail with five small icons, and the wide right column shows a large program hero card with a photographic athletic figure, beneath it a row of two workout cards side by side, and beneath that a horizontal strip of category chips.
+
+FLOATING CALLOUT CARDS: two glass-morphism cards outside the tablet silhouette, upper right and lower left, each with a small icon and one short line: "Room to see everything" and "Same coach, bigger canvas".
+
+BACKGROUND: near-black #0A0612 with a wide soft violet radial glow (#8E5BFF, 20% opacity) behind the device, falling to black at the corners, subtle vignette.
+
+TYPOGRAPHY: geometric sans-serif, heavy white headline: "BUILT FOR THE BIG SCREEN". Sub-headline in muted lavender-grey at 55% size: "Every feature, more room to work."
+
+COLOR: violet #8E5BFF, deep violet #6A3DFF, accent blue #4DA6FF sparingly, near-black, white text.
+
+STYLE: modern Google Play featured quality, premium soft shadows, gentle rim light on the tablet edges, crisp flat vector UI, photorealistic device.
+
+1200x1920, vertical, ultra sharp.</pre></div></div>
+
+    <div class="block"><p class="lbl">Text that should appear</p>
+      <ul><li>Headline: <b>BUILT FOR THE BIG SCREEN</b> · TR: <b>BÜYÜK EKRAN İÇİN</b></li>
+      <li>Sub: <b>Every feature, more room to work.</b> · TR: <b>Tüm özellikler, daha geniş alan.</b></li></ul></div>
+
+    <div class="block"><p class="lbl">Mockup requirements</p>
+      <ul><li>The tablet layout must be <b>genuinely different</b> from the phone — a stretched phone UI is exactly what Google’s large-screen guidance penalises.</li>
+      <li>Generate at least 2; ideally re-shoot screenshots 1, 2, 3 and 5 at this size.</li></ul></div>
+
+    <div class="block"><p class="lbl">Visual hierarchy</p><ul><li>1 · Headline → 2 · Tablet screen → 3 · Callouts → 4 · Glow</li></ul></div>
+    <div class="block"><p class="lbl">CTA emphasis</p><p>None.</p></div>
+    <div class="block"><p class="lbl">Restrictions</p>
+      <ul><li>Do not upload tablet screenshots that are phone screenshots on a tablet background — reviewers check, and it undermines the large-screen quality signal.</li>
+      <li>All phone-screenshot restrictions apply unchanged.</li></ul></div>
+
+    <div class="warnbox"><b>Honest caveat:</b> FormAI’s UI has not been optimised for tablets in any shipped phase. If the real tablet build looks like a stretched phone, <b>upload no tablet screenshots at all</b> rather than generating aspirational ones. An asset that promises a layout the app does not have is a deceptive-listing risk.</div>
+  </div>
+</article>
+
+<article class="card" id="t10">
+  <div class="head"><h3>10-inch Tablet Screenshots<small>OPTIONAL</small></h3></div>
+  <div class="specs">
+    <span class="chip"><b>1600 × 2560 px</b> portrait</span>
+    <span class="chip">or 2560 × 1600 landscape</span>
+    <span class="chip">min 2, max 8</span>
+    <span class="chip">Device: 10″ tablet</span>
+  </div>
+  <div class="body">
+    <div class="block"><p class="lbl">Safe areas</p>
+      <ul><li>Headline in the top <b>340 px</b>; device between <b>y ≈ 400</b> and <b>y ≈ 2400</b>; <b>120 px</b> clear left and right.</li></ul></div>
+
+    <div class="block"><p class="lbl">GPT Image prompt</p>
+      <div class="promptwrap"><button class="copy">Copy</button><pre class="prompt">A premium 1600x2560 vertical marketing screenshot for a 10-inch ANDROID TABLET, dark luxury branding, cinematic studio lighting.
+
+LAYOUT: Marketing headline centered in the top 340 pixels. Below it, a large modern bezel-less Android tablet in portrait orientation, perfectly upright with a very slight 3 degree tilt, floating with a broad soft shadow. Uniform slim bezels, no notch, no Apple device, no keyboard, no stylus.
+
+SCREEN CONTENT: a genuine two-pane tablet layout — the left pane is a persistent list of program days as compact rows, the right pane is a detail view showing one selected workout day with a photographic hero band at the top, a vertical list of four exercise rows each with a small thumbnail and a name, and a wide primary action button at the bottom. A slim navigation rail runs down the far left edge with five icons.
+
+FLOATING CALLOUT CARDS: three glass-morphism cards positioned outside the tablet silhouette — upper left, upper right and lower right — each a rounded translucent dark rectangle with a violet hairline border, a small icon and one short line of text: "List and detail, side by side", "Your plan at a glance", "Coach one tap away".
+
+BACKGROUND: near-black #0A0612 with a wide, soft violet radial glow behind the device at about 20% opacity, dissolving into black toward the corners, subtle vignette, faint 6% opacity technical grid.
+
+TYPOGRAPHY: geometric sans-serif. Heavy white headline: "EVERYTHING, SIDE BY SIDE". Sub-headline in muted lavender-grey at 55% of headline size: "A layout that uses the whole screen."
+
+COLOR: violet #8E5BFF primary, deep violet #6A3DFF, accent blue #4DA6FF sparingly, near-black surfaces, white text.
+
+STYLE: modern Google Play featured quality, premium soft shadows, high dynamic range, crisp flat vector UI on the screen, photorealistic device.
+
+1600x2560, vertical, ultra sharp.</pre></div></div>
+
+    <div class="block"><p class="lbl">Text that should appear</p>
+      <ul><li>Headline: <b>EVERYTHING, SIDE BY SIDE</b> · TR: <b>HEPSİ YAN YANA</b></li>
+      <li>Sub: <b>A layout that uses the whole screen.</b> · TR: <b>Tüm ekranı kullanan bir düzen.</b></li></ul></div>
+
+    <div class="block"><p class="lbl">Mockup requirements</p>
+      <ul><li>Two-pane master/detail is the layout Google’s large-screen guidelines actually reward. Only depict it if the app does it.</li></ul></div>
+
+    <div class="block"><p class="lbl">Visual hierarchy</p><ul><li>1 · Two-pane screen → 2 · Headline → 3 · Callouts</li></ul></div>
+    <div class="block"><p class="lbl">CTA emphasis</p><p>None.</p></div>
+    <div class="block"><p class="lbl">Restrictions</p><ul><li>Same caveat as the 7″ card — do not depict a layout the build does not render.</li></ul></div>
+  </div>
+</article>
+
+<article class="card" id="tl">
+  <div class="head"><h3>Landscape Promotional Artwork<small>OPTIONAL · TV / WIDE PLACEMENTS</small></h3></div>
+  <div class="specs">
+    <span class="chip"><b>1920 × 1080 px</b> (16:9)</span>
+    <span class="chip">also export 4096 × 2304</span>
+    <span class="chip">Device: wide / promotional</span>
+  </div>
+  <div class="body">
+    <div class="block"><p class="lbl">Safe areas</p>
+      <ul><li><b>Title-safe: inner 90%</b> (keep text within x 96–1824, y 54–1026). Wide placements crop aggressively.</li>
+      <li>Keep the center ~300 px free in case a play-button overlay is applied.</li></ul></div>
+
+    <div class="block"><p class="lbl">GPT Image prompt</p>
+      <div class="promptwrap"><button class="copy">Copy</button><pre class="prompt">A premium 1920x1080 widescreen promotional key-art image for a mobile fitness application, dark luxury branding, cinematic lighting, 16:9.
+
+COMPOSITION: A wide cinematic scene. Left 40% holds the typographic lockup, vertically centered. Right 55% holds a single athletic figure mid-movement in a minimal dark room, lit from behind and to the side with violet rim light. The figure is captured in a controlled, powerful pose — a squat hold or a plank — not a dramatic jump. A modern Android phone stands propped on the floor in the mid-ground, small in frame, screen glowing violet, angled toward the figure as if filming them.
+
+FOREGROUND GRAPHIC: a sparse pose-tracking skeleton overlays the figure — small circular joint nodes connected by thin lines in signal green #39FF14 with a faint glow, ten nodes maximum, elegant and technical rather than busy.
+
+BACKGROUND: deep near-black #0A0612, a large soft violet bloom behind the figure, a faint 6% opacity technical grid across the lower third, gentle atmospheric haze catching the rim light. No gym equipment, no crowds, no clutter.
+
+TYPOGRAPHY: geometric sans-serif, heavy weight, pure white, tight tracking.
+Headline: "AI FORM COACH"
+Sub-line beneath in medium weight at 40% size, muted lavender-grey: "Your camera. Your form. On your phone."
+
+COLOR: violet #8E5BFF, deep violet #6A3DFF, signal green #39FF14 strictly for the pose nodes, near-black, white.
+
+STYLE: cinematic key art, premium soft shadows, subtle lens bloom, shallow depth of field on the background, crisp flat vector typography composited over a photographic scene. Modern streaming-service poster quality.
+
+1920x1080, landscape, ultra sharp.</pre></div></div>
+
+    <div class="block"><p class="lbl">Text that should appear</p>
+      <ul><li><b>AI FORM COACH</b> + <b>Your camera. Your form. On your phone.</b></li></ul></div>
+    <div class="block"><p class="lbl">Design notes</p><ul><li>This is the master key art. Crop it down to produce the social, launch and press assets below rather than generating each from scratch — consistency across placements is worth more than variety.</li></ul></div>
+    <div class="block"><p class="lbl">Visual hierarchy</p><ul><li>1 · Figure + skeleton → 2 · Headline → 3 · Phone prop → 4 · Sub-line</li></ul></div>
+    <div class="block"><p class="lbl">CTA emphasis</p><p>None in the Play version. A “Now on Google Play” line may be added only to the off-store social crops.</p></div>
+    <div class="block"><p class="lbl">Restrictions</p><ul><li>No Play badge inside a Play-hosted asset. Badges are allowed only on your own website and social posts, and must use Google’s official badge artwork unmodified.</li></ul></div>
+  </div>
+</article>
+
+<!-- ══════════════════════════ PROMOTIONAL ══════════════════════════ -->
+<h2 class="section">Optional promotional assets — off-store</h2>
+
+<article class="card" id="p1">
+  <div class="head"><h3>Social Announcement Banner<small>X / LINKEDIN / FACEBOOK</small></h3></div>
+  <div class="specs"><span class="chip"><b>1200 × 675 px</b> (16:9)</span><span class="chip">also 1080 × 1080 square</span><span class="chip">Device: social feed</span></div>
+  <div class="body">
+    <div class="block"><p class="lbl">Safe areas</p><ul><li>Keep text inside the inner 85%; feed crops vary by platform. For the square variant assume a center-crop to 1:1.</li></ul></div>
+    <div class="block"><p class="lbl">GPT Image prompt</p>
+      <div class="promptwrap"><button class="copy">Copy</button><pre class="prompt">A premium 1200x675 social media announcement banner for a mobile fitness app launch, dark luxury branding, 16:9.
+
+COMPOSITION: Centered typographic lockup on the left two-thirds. On the right, a modern bezel-less Android phone floating at a 10 degree tilt, screen showing a dark fitness app interface with a violet gradient card and a green pose-tracking skeleton faintly visible, with a soft long shadow beneath.
+
+BACKGROUND: near-black #0A0612 with a violet radial bloom behind the phone, faint technical grid at 6% opacity, subtle vignette.
+
+TYPOGRAPHY: geometric sans-serif. Small eyebrow line in violet uppercase with wide letter-spacing: "NOW ON GOOGLE PLAY". Beneath it a heavy white headline: "AI FORM COACH". Beneath that, medium weight muted lavender-grey: "On-device form analysis, a 30-day plan and an AI coach."
+
+COLOR: violet #8E5BFF, deep violet #6A3DFF, signal green #39FF14 only inside the phone screen, near-black, white.
+
+STYLE: modern SaaS launch graphic, premium soft shadows, crisp vector typography, photorealistic device, generous negative space.
+
+Leave the lower-right 220x80 pixel area empty and uncluttered so an official Google Play badge can be composited in afterwards.
+
+1200x675, landscape, ultra sharp.</pre></div></div>
+    <div class="block"><p class="lbl">Text that should appear</p><ul><li>Eyebrow: <b>NOW ON GOOGLE PLAY</b> · Headline: <b>AI FORM COACH</b> · Sub: <b>On-device form analysis, a 30-day plan and an AI coach.</b></li></ul></div>
+    <div class="block"><p class="lbl">Design notes</p><ul><li>Leave the badge area empty and drop in Google’s official badge afterwards — never let a model draw it.</li></ul></div>
+    <div class="block"><p class="lbl">Visual hierarchy</p><ul><li>1 · Headline → 2 · Phone → 3 · Eyebrow → 4 · Sub</li></ul></div>
+    <div class="block"><p class="lbl">CTA emphasis</p><p>The Play badge is the CTA. Nothing else needed.</p></div>
+    <div class="block"><p class="lbl">Restrictions</p><ul><li>Official Play badge artwork only, unmodified, correct clear-space. A redrawn badge is a trademark problem.</li><li>No claims that are absent from the store listing.</li></ul></div>
+  </div>
+</article>
+
+<article class="card" id="p2">
+  <div class="head"><h3>Update Banner<small>IN-APP / SOCIAL · PER RELEASE</small></h3></div>
+  <div class="specs"><span class="chip"><b>1200 × 600 px</b></span><span class="chip">Device: social / blog</span></div>
+  <div class="body">
+    <div class="block"><p class="lbl">Safe areas</p><ul><li>Version number bottom-left, inside 60 px margins. Headline in the upper-left quadrant.</li></ul></div>
+    <div class="block"><p class="lbl">GPT Image prompt</p>
+      <div class="promptwrap"><button class="copy">Copy</button><pre class="prompt">A clean 1200x600 product update banner for a dark-themed mobile fitness app, premium branding.
+
+COMPOSITION: Left half holds the typography. Right half holds three small floating glass-morphism feature cards arranged in a loose diagonal cascade, each a rounded translucent dark rectangle with a violet hairline border, a small line icon and a very short label. Cards read: a flag icon with "Report any AI reply", a globe icon with "Full English workouts", a tag icon with "Clearer pricing".
+
+BACKGROUND: near-black #0A0612 with a soft violet glow behind the cards, faint diagonal grid at 5% opacity.
+
+TYPOGRAPHY: geometric sans-serif. Small violet uppercase eyebrow with wide tracking: "WHAT'S NEW". Heavy white headline beneath: "CLEARER, SAFER, MORE ENGLISH". Small muted grey version line at the bottom left: "Version 1.0.0"
+
+COLOR: violet #8E5BFF, deep violet #6A3DFF, near-black, white, muted grey.
+
+STYLE: modern changelog graphic, flat vector, premium soft shadows, lots of negative space, no device mockup, no photography.
+
+1200x600, landscape, ultra sharp.</pre></div></div>
+    <div class="block"><p class="lbl">Text that should appear</p><ul><li>Eyebrow <b>WHAT’S NEW</b>, headline <b>CLEARER, SAFER, MORE ENGLISH</b>, version <b>Version 1.0.0</b>, three card labels as above.</li></ul></div>
+    <div class="block"><p class="lbl">Design notes</p><ul><li>Regenerate per release by swapping the three card labels. Keep the layout fixed so the series is recognisable.</li></ul></div>
+    <div class="block"><p class="lbl">Visual hierarchy</p><ul><li>1 · Headline → 2 · Feature cards → 3 · Eyebrow → 4 · Version</li></ul></div>
+    <div class="block"><p class="lbl">CTA emphasis</p><p>None.</p></div>
+    <div class="block"><p class="lbl">Restrictions</p><ul><li>Only list changes that actually shipped in that build. A changelog graphic is a claim.</li></ul></div>
+  </div>
+</article>
+
+<article class="card" id="p3">
+  <div class="head"><h3>Launch Banner<small>WEBSITE / EMAIL HEADER</small></h3></div>
+  <div class="specs"><span class="chip"><b>1600 × 800 px</b></span><span class="chip">Device: web / email</span></div>
+  <div class="body">
+    <div class="block"><p class="lbl">Safe areas</p><ul><li>Email clients crop the right edge on narrow viewports — keep everything essential inside the left 70%.</li></ul></div>
+    <div class="block"><p class="lbl">GPT Image prompt</p>
+      <div class="promptwrap"><button class="copy">Copy</button><pre class="prompt">A premium 1600x800 launch announcement banner for a mobile fitness application, dark luxury branding, cinematic lighting.
+
+COMPOSITION: Left 55% holds a large typographic lockup, vertically centered, with generous margins. Right 45% shows two modern bezel-less Android phones overlapping in a staggered arrangement, both floating with long soft shadows and tilted about 8 degrees. The front phone shows a dark camera view with a green pose-tracking skeleton over a person mid-squat and a rep counter. The rear phone, partly hidden, shows a dark program screen with a violet gradient day card.
+
+BACKGROUND: deep near-black #0A0612 with a large soft violet bloom behind the phones, faint technical grid at 6% opacity across the lower area, atmospheric haze, subtle vignette.
+
+TYPOGRAPHY: geometric sans-serif. Small violet uppercase eyebrow with wide tracking: "OUT NOW". Heavy white headline: "YOUR FORM COACH IS HERE". Sub-line in medium weight muted lavender-grey: "Prop your phone up. Start moving."
+
+COLOR: violet #8E5BFF, deep violet #6A3DFF, signal green #39FF14 only in the pose skeleton, near-black, white.
+
+STYLE: cinematic product launch graphic, premium soft shadows, gentle rim light on device edges, crisp vector typography, photorealistic devices.
+
+Leave the lower-left area below the sub-line clear so an official Google Play badge can be composited in afterwards.
+
+1600x800, landscape, ultra sharp.</pre></div></div>
+    <div class="block"><p class="lbl">Text that should appear</p><ul><li><b>OUT NOW</b> / <b>YOUR FORM COACH IS HERE</b> / <b>Prop your phone up. Start moving.</b></li></ul></div>
+    <div class="block"><p class="lbl">Design notes</p><ul><li>“Prop your phone up” is the app’s real setup instruction — using it as the tagline makes the promise and the product identical.</li></ul></div>
+    <div class="block"><p class="lbl">Visual hierarchy</p><ul><li>1 · Headline → 2 · Front phone → 3 · Eyebrow → 4 · Sub-line</li></ul></div>
+    <div class="block"><p class="lbl">CTA emphasis</p><p>Official Play badge, composited, lower left.</p></div>
+    <div class="block"><p class="lbl">Restrictions</p><ul><li>No launch-day download claims, no “#1”, no countdown urgency.</li></ul></div>
+  </div>
+</article>
+
+<article class="card" id="p4">
+  <div class="head"><h3>“What’s New” In-App Artwork<small>OPTIONAL · RELEASE-NOTE HEADER</small></h3></div>
+  <div class="specs"><span class="chip"><b>1080 × 640 px</b></span><span class="chip">Device: phone, in-app</span></div>
+  <div class="body">
+    <div class="block"><p class="lbl">Safe areas</p>
+      <ul><li>Rendered inside a rounded card with ~24 px corner radius — keep content inside a 40 px inset.</li>
+      <li>Must read on a <b>dark</b> surface (#0A0612). Do not generate a light-background variant.</li></ul></div>
+    <div class="block"><p class="lbl">GPT Image prompt</p>
+      <div class="promptwrap"><button class="copy">Copy</button><pre class="prompt">A 1080x640 abstract header illustration for an in-app "What's New" release-note card, dark premium branding, no text.
+
+SUBJECT: an elegant abstract composition of three overlapping rounded translucent panels floating in space at slight angles, suggesting layered app screens without depicting any actual interface. Each panel has a thin violet hairline edge and a soft blurred dark fill. Small geometric accents drift around them: a few thin connecting lines, three or four small circular nodes, and a scattering of tiny particles catching light.
+
+BACKGROUND: deep near-black #0A0612 with a soft violet radial glow blooming from the upper right, dissolving to black at the lower left, plus a faint technical grid at 5% opacity.
+
+COLOR: violet #8E5BFF, deep violet #6A3DFF, one small accent in signal green #39FF14 on a single node, near-black.
+
+STYLE: minimal abstract 3D-lite illustration, premium soft shadows, subtle depth of field, calm and quiet rather than busy. Absolutely no text, no letters, no numbers, no icons, no human figures, no device frames.
+
+The image must work as a decorative banner behind which app-rendered text will be placed, so keep the lower third visually quiet and low contrast.
+
+1080x640, landscape, ultra sharp.</pre></div></div>
+    <div class="block"><p class="lbl">Text that should appear</p><p><b>None.</b> The release-note copy is rendered by the app from Supabase in the user’s own language. Baked-in text would ship untranslated.</p></div>
+    <div class="block"><p class="lbl">Design notes</p><ul><li>The app resolves art from the asset manifest — dropping a correctly-named file in is the whole procedure; no code change.</li></ul></div>
+    <div class="block"><p class="lbl">Visual hierarchy</p><ul><li>1 · Glow → 2 · Panels → 3 · Particles. Nothing should compete with the text placed over it.</li></ul></div>
+    <div class="block"><p class="lbl">CTA emphasis</p><p>None — the app draws the button.</p></div>
+    <div class="block"><p class="lbl">Restrictions</p><ul><li>No text of any kind, in any language. This is the one asset where generated lettering would definitely ship wrong.</li></ul></div>
+  </div>
+</article>
+
+<article class="card" id="p5">
+  <div class="head"><h3>Press Kit Header<small>MEDIA / PARTNER DECK</small></h3></div>
+  <div class="specs"><span class="chip"><b>2400 × 1260 px</b></span><span class="chip">Device: web / print-safe</span></div>
+  <div class="body">
+    <div class="block"><p class="lbl">Safe areas</p><ul><li>Keep the lockup inside the inner 80% so the image survives being cropped into a deck slide at 16:9.</li></ul></div>
+    <div class="block"><p class="lbl">GPT Image prompt</p>
+      <div class="promptwrap"><button class="copy">Copy</button><pre class="prompt">A 2400x1260 high-resolution press kit header image for a mobile fitness technology company, dark luxury branding, editorial quality.
+
+COMPOSITION: A calm, wide, editorial hero. Centered slightly left, a single modern bezel-less Android phone stands upright on a matte dark surface, angled about 12 degrees, screen glowing with a dark app interface showing a faint green pose-tracking skeleton over a camera view. To the right, generous empty space with a soft violet gradient falling off into black — deliberately left open for headline text to be typeset afterwards.
+
+LIGHTING: single soft key light from the upper left creating a long, clean reflection on the matte surface beneath the phone, plus a violet rim light along the phone's right edge. Gentle atmospheric haze.
+
+BACKGROUND: near-black #0A0612 seamless studio backdrop with a subtle horizon gradient where the surface meets the background.
+
+COLOR: violet #8E5BFF, deep violet #6A3DFF, signal green #39FF14 only inside the screen, near-black, neutral greys.
+
+STYLE: premium editorial product photography, shallow depth of field, high dynamic range, immaculate and uncluttered. No text, no logos, no people, no props, no gym equipment.
+
+2400x1260, landscape, ultra sharp, print quality.</pre></div></div>
+    <div class="block"><p class="lbl">Text that should appear</p><p><b>None.</b> Journalists crop and typeset their own headlines; a clean plate is more usable than a finished graphic.</p></div>
+    <div class="block"><p class="lbl">Design notes</p><ul><li>Ship it alongside the icon at 512, the feature graphic, three screenshots, and a plain-text fact sheet (developer name, package id, price, platforms, privacy stance).</li></ul></div>
+    <div class="block"><p class="lbl">Visual hierarchy</p><ul><li>1 · Phone → 2 · Reflection → 3 · Negative space for type</li></ul></div>
+    <div class="block"><p class="lbl">CTA emphasis</p><p>None.</p></div>
+    <div class="block"><p class="lbl">Restrictions</p><ul><li>No text, no award badges, no press-quote overlays.</li></ul></div>
+  </div>
+</article>
+
+<article class="card" id="p6">
+  <div class="head"><h3>Website Hero Banner<small>LANDING PAGE ABOVE THE FOLD</small></h3></div>
+  <div class="specs"><span class="chip"><b>2880 × 1400 px</b> (@2x)</span><span class="chip">1440 × 700 @1x</span><span class="chip">Device: desktop + responsive</span></div>
+  <div class="body">
+    <div class="block"><p class="lbl">Safe areas</p>
+      <ul><li>Mobile browsers center-crop to roughly 3:4 — <b>keep the phone and the headline within the central 50% horizontally</b> or they will be cut on a handset.</li>
+      <li>Leave the top 120 px quiet for a sticky site header.</li></ul></div>
+    <div class="block"><p class="lbl">GPT Image prompt</p>
+      <div class="promptwrap"><button class="copy">Copy</button><pre class="prompt">A 2880x1400 website hero banner for a premium mobile fitness application, dark luxury branding, cinematic depth.
+
+COMPOSITION: A wide immersive scene with a strong center of gravity. In the middle-left, a modern bezel-less Android phone floats upright at a slight 5 degree tilt, large in frame, screen showing a dark camera view with an athletic figure mid-squat overlaid by a sparse green pose-tracking skeleton and a rep counter. Behind and to the right, the same figure appears again at larger scale as a softly blurred, low-opacity photographic layer, as if the phone is looking at them — creating depth between the screen and reality.
+
+BACKGROUND: deep near-black #0A0612, a broad violet bloom behind the phone, a faint technical grid at 5% opacity, volumetric haze catching the rim light, heavy vignette at the edges.
+
+FOREGROUND: a few small floating glass-morphism chips drift near the phone, each a tiny rounded translucent card with a violet hairline border and a small icon only — no text.
+
+COLOR: violet #8E5BFF, deep violet #6A3DFF, accent blue #4DA6FF in the far background haze, signal green #39FF14 strictly in the pose skeleton, near-black.
+
+STYLE: cinematic web hero, premium soft shadows, shallow depth of field, subtle chromatic bloom, immaculate composition. No text anywhere — headline and buttons will be overlaid in HTML.
+
+The top 120 pixels and the far left and right 15% must remain low-contrast and uncluttered so overlaid navigation and responsive cropping both work.
+
+2880x1400, landscape, ultra sharp.</pre></div></div>
+    <div class="block"><p class="lbl">Text that should appear</p><p><b>None in the image.</b> Headline, sub-line and the Play badge are live HTML over the top — better for accessibility, SEO and localization.</p></div>
+    <div class="block"><p class="lbl">Design notes</p>
+      <ul><li>The site is hosted at <code>d2srybp77lgcpy.cloudfront.net</code> alongside the legal pages. If a marketing page ever ships there, keep the legal footer links (<code>/privacy.html</code>, <code>/terms.html</code>, <code>/delete-account.html</code>) visible — Play checks that the privacy URL resolves.</li></ul></div>
+    <div class="block"><p class="lbl">Visual hierarchy</p><ul><li>1 · Phone screen → 2 · Blurred figure → 3 · Glow → 4 · Chips</li></ul></div>
+    <div class="block"><p class="lbl">CTA emphasis</p><p>HTML button plus the official Play badge, overlaid. Not drawn.</p></div>
+    <div class="block"><p class="lbl">Restrictions</p><ul><li>No baked text. No fabricated press logos or “as seen in” strips.</li></ul></div>
+  </div>
+</article>
+
+</main>
+
+<footer>
+  FormAI · <code style="color:var(--green)">com.emredogan.formaifit</code> · build 1.0.0+38 ·
+  Prompts written 6 August 2026. Palette taken from <code>lib/core/theme/app_colors.dart</code>;
+  claim restrictions taken from <code>docs/store/LISTING_EN.md</code> and
+  <code>FINAL_GOOGLE_PLAY_PRODUCTION_AUDIT.md</code>. Every generated asset must be proofread
+  character by character before upload — generated text is not trustworthy.
+</footer>
+
+<script>
+document.querySelectorAll('button.copy').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var pre = btn.parentElement.querySelector('pre.prompt');
+    var text = pre.innerText;
+    var done = function () {
+      btn.textContent = 'Copied';
+      btn.classList.add('done');
+      setTimeout(function () {
+        btn.textContent = 'Copy';
+        btn.classList.remove('done');
+      }, 1600);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } else {
+      fallback();
+    }
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); done(); } catch (e) { btn.textContent = 'Select manually'; }
+      document.body.removeChild(ta);
+    }
+  });
+});
+</script>
+
+</body>
+</html>
