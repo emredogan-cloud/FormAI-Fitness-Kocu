@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FormAI — Final Play Store Review</title>
+<style>
+:root{
+  --canvas:#08050E;--surface:#0F0B18;--surface2:#151021;--hair:#241C36;
+  --violet:#8E5BFF;--violet-d:#6A3DFF;--blue:#4DA6FF;--green:#39FF14;
+  --crit:#FF4D5E;--minor:#FFCB3D;--pass:#39FF14;
+  --txt:#EDE9F7;--mut:#9C93B8;--dim:#6E6688;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:80px}
+body{background:var(--canvas);color:var(--txt);font-family:var(--sans);font-size:15px;line-height:1.65;
+ background-image:radial-gradient(1100px 600px at 80% -8%,rgba(142,91,255,.14),transparent 62%),
+                  radial-gradient(700px 420px at 3% 3%,rgba(77,166,255,.07),transparent 60%);
+ background-attachment:fixed;-webkit-font-smoothing:antialiased}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(8,5,14,.92);backdrop-filter:blur(18px);border-bottom:1px solid var(--hair)}
+.topbar-in{max-width:1400px;margin:0 auto;padding:11px 24px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.brand{font-weight:800;font-size:15px;letter-spacing:-.02em;white-space:nowrap}
+.brand span{background:linear-gradient(90deg,var(--violet),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.jump{display:flex;gap:4px;flex-wrap:wrap;font-size:11.5px}
+.jump a{color:var(--mut);text-decoration:none;padding:5px 10px;border-radius:7px;border:1px solid transparent;transition:.15s;white-space:nowrap}
+.jump a:hover{color:var(--txt);background:var(--surface2);border-color:var(--hair)}
+.wrap{max-width:1400px;margin:0 auto;padding:0 24px 110px}
+header.hero{padding:56px 0 36px;border-bottom:1px solid var(--hair);margin-bottom:40px}
+h1{font-size:clamp(28px,4.2vw,46px);font-weight:850;letter-spacing:-.033em;line-height:1.05;margin-bottom:14px}
+h1 em{font-style:normal;background:linear-gradient(100deg,var(--violet),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.lede{color:var(--mut);font-size:16px;max-width:76ch}.lede b{color:var(--txt);font-weight:650}
+section{margin-top:60px;scroll-margin-top:80px}
+.sec-h{display:flex;align-items:baseline;gap:13px;margin-bottom:8px;flex-wrap:wrap}
+.sec-h h2{font-size:26px;font-weight:800;letter-spacing:-.028em}
+.sec-h .tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);border:1px solid var(--hair);padding:3px 9px;border-radius:20px}
+.sec-sub{color:var(--mut);font-size:15px;max-width:82ch;margin-bottom:24px}
+h3{font-size:18px;font-weight:750;letter-spacing:-.015em;margin:30px 0 10px}
+.badge{font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;padding:4px 11px;border-radius:20px;white-space:nowrap;display:inline-block}
+.b-pass{background:rgba(57,255,20,.12);color:#7DFF5C;border:1px solid rgba(57,255,20,.36)}
+.b-minor{background:rgba(255,203,61,.13);color:#FFD873;border:1px solid rgba(255,203,61,.38)}
+.b-crit{background:rgba(255,77,94,.16);color:#FF7E8B;border:1px solid rgba(255,77,94,.42)}
+table{width:100%;border-collapse:collapse;font-size:13.4px;margin-top:12px}
+th{text-align:left;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);padding:9px 11px;border-bottom:1px solid var(--hair);font-weight:750;white-space:nowrap}
+td{padding:11px;border-bottom:1px solid rgba(36,28,54,.55);color:var(--mut);vertical-align:top}
+td.f{font-family:var(--mono);color:var(--txt);font-size:12.4px;white-space:nowrap}
+td b{color:var(--txt);font-weight:650}
+tr:hover td{background:rgba(142,91,255,.035)}
+.callout{background:var(--surface);border:1px solid var(--hair);border-left:3px solid var(--violet);border-radius:11px;padding:18px 22px;margin:18px 0}
+.callout.bad{border-left-color:var(--crit)}.callout.warn{border-left-color:var(--minor)}.callout.good{border-left-color:var(--green)}
+.callout h4{font-size:14.5px;font-weight:750;margin-bottom:7px}
+.callout p{color:var(--mut);font-size:13.8px}.callout p+p{margin-top:9px}
+.callout ul{margin:9px 0 0 19px;color:var(--mut);font-size:13.8px}.callout li{margin-bottom:6px}
+.callout li b,.callout p b{color:var(--txt);font-weight:650}
+code{font-family:var(--mono);font-size:12.3px;background:rgba(142,91,255,.1);padding:1.5px 6px;border-radius:4px;color:#C4AEFF}
+.quote{font-family:var(--mono);font-size:12.4px;background:rgba(0,0,0,.42);border:1px solid var(--hair);border-radius:6px;padding:5px 10px;margin:5px 0;color:#FFC9CE;display:inline-block}
+.quote.ok{color:#9CFF85}
+.verdict{background:linear-gradient(135deg,rgba(255,77,94,.13),rgba(255,77,94,.03));border:1px solid rgba(255,77,94,.42);border-left:4px solid var(--crit);border-radius:13px;padding:26px 28px;margin:26px 0}
+.verdict .big{font-size:30px;font-weight:850;color:#FF8A95;letter-spacing:-.02em;margin-bottom:10px}
+.verdict p{color:#F3D6DA;font-size:15px}.verdict p+p{margin-top:10px}
+.scores{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-top:24px}
+.score{background:var(--surface);border:1px solid var(--hair);border-radius:13px;padding:18px 20px}
+.score .k{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);font-weight:750}
+.score .v{font-size:38px;font-weight:850;letter-spacing:-.03em;margin:4px 0 8px;line-height:1}
+.score .v s{text-decoration:none;font-size:16px;color:var(--dim);font-weight:600}
+.bar{height:6px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--violet),var(--blue))}
+.score .n{font-size:11.8px;color:var(--dim);margin-top:8px}
+.meta{background:var(--surface);border:1px solid var(--hair);border-radius:13px;margin-bottom:18px;overflow:hidden}
+.meta-h{display:flex;align-items:center;gap:12px;padding:14px 20px;background:var(--surface2);border-bottom:1px solid var(--hair);flex-wrap:wrap}
+.meta-h .t{font-weight:750;font-size:14.5px}
+.meta-h .lim{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--dim);white-space:nowrap}
+.cnt{font-family:var(--mono);font-size:10.5px;padding:3px 9px;border-radius:20px;background:rgba(57,255,20,.12);color:#7DFF5C;border:1px solid rgba(57,255,20,.32)}
+.pbox{position:relative}
+.pbox pre{background:#050309;border:none;padding:18px 18px;font-family:var(--mono);font-size:12.4px;line-height:1.72;color:#CFC6E8;overflow-x:auto;white-space:pre-wrap;word-wrap:break-word;max-height:520px;overflow-y:auto}
+.copy{position:absolute;top:9px;right:9px;background:var(--violet);color:#fff;border:none;border-radius:7px;padding:7px 15px;font-size:11.5px;font-weight:750;cursor:pointer;font-family:var(--sans);transition:.15s;z-index:2}
+.copy:hover{background:var(--violet-d)}.copy.done{background:var(--green);color:#04120A}
+.kw{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.kw span{font-size:12.4px;padding:5px 11px;border-radius:7px;background:rgba(142,91,255,.1);border:1px solid rgba(142,91,255,.26);color:#C9B8FF}
+.kw.sec span{background:rgba(77,166,255,.09);border-color:rgba(77,166,255,.24);color:#A6D2FF}
+.kw.lt span{background:rgba(255,255,255,.04);border-color:var(--hair);color:var(--mut);font-size:12px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+@media(max-width:960px){.two{grid-template-columns:1fr}}
+footer{margin-top:70px;padding-top:24px;border-top:1px solid var(--hair);color:var(--dim);font-size:12.4px}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="topbar-in">
+  <div class="brand">FormAI · <span>Final Play Store Review</span></div>
+  <nav class="jump">
+    <a href="#review">1 · Screenshots</a>
+    <a href="#remaining">2 · Remaining</a>
+    <a href="#verdict">3 · Verdict</a>
+    <a href="#en">4 · EN Metadata</a>
+    <a href="#tr">5 · TR Metadata</a>
+    <a href="#kw">6 · Keywords</a>
+    <a href="#final">7 · Recommendation</a>
+  </nav>
+</div></div>
+
+<div class="wrap">
+
+<header class="hero">
+  <h1>Final validation —<br><em>22 regenerated assets, two locales</em></h1>
+  <p class="lede">Reviewed against the prior audit. <b>The compliance work landed.</b> Every critical policy finding
+  from the previous report — the false privacy absolutes, the iPhone mockups, the medical skeleton imagery, the
+  transformation promises, the fabricated community feed, the invented calorie metric — is resolved in both locales.
+  What remains is <b>four asset-integrity defects and one export setting</b>. None of them is a policy violation.</p>
+</header>
+
+<!-- =============== 1 · SCREENSHOT REVIEW =============== -->
+<section id="review">
+  <div class="sec-h"><h2>1 · Final screenshot review</h2><span class="tag">per asset</span></div>
+  <p class="sec-sub">Only what changed, what is still open, and what is newly wrong.</p>
+
+  <h3>English — <code>US/NEW</code></h3>
+  <table>
+    <thead><tr><th style="width:110px">Asset</th><th style="width:120px">Verdict</th><th>Assessment</th></tr></thead>
+    <tbody>
+      <tr><td class="f">001.png</td><td><span class="badge b-pass">Pass</span></td>
+        <td>Wordmark now reads <b>FormAI</b>. Android device, bare wrists, unbranded tee. Transformation headline gone.
+        Calories-burned tile gone. Pose card replaced the red-muscle anatomy panel. Trust bar correctly scoped to camera.
+        <i>Nit only:</i> 4 filled weekday bars against "5 completed".</td></tr>
+      <tr><td class="f">002.png</td><td><span class="badge b-pass">Pass</span></td>
+        <td>"Immune Support" and "Probiotic" removed — tags are now culinary/macro only. Turkish-cuisine framing dropped
+        from the US asset. Calorie ring closes exactly (840 / 1900 / 1060 left) and the menu dishes match the recipe
+        cards. Shopping-list copy correctly narrowed to favourites. <i>Nit:</i> in-app date reads <b>May 17, 2025</b> — a
+        past year on a 2026 listing.</td></tr>
+      <tr><td class="f">003.png</td><td><span class="badge b-pass">Pass</span></td>
+        <td>The false privacy claim is gone, replaced with <span class="quote ok">Camera frames are analysed on your
+        phone and never uploaded</span> — accurate and verifiable. "PERSONEL TRAINER" typo gone, no smartwatch, no trial
+        claim. 1,840 kcal is now correctly labelled <b>logged</b> (intake), and streak reads 7 days over 7 dots.</td></tr>
+      <tr><td class="f">004.png</td><td><span class="badge b-minor">Minor fix</span></td>
+        <td>"24 SESSIONS · Six rest days" and "Day 30 · Program complete" both land. Milestone arithmetic is now correct.
+        <b>But two layout defects:</b> the countdown labels <b>"9 days left"</b> and <b>"18 days left"</b> are stacked
+        together beside Day 30 instead of one per row — Day 30 appears to have two contradictory countdowns; and the
+        streak shows <b>7 filled dots against "6 days current streak"</b>.</td></tr>
+      <tr><td class="f">005.png</td><td><span class="badge b-minor">Minor fix</span></td>
+        <td>Rebuilt correctly — presence-only feed, monogram avatars, three reactions, "Someone" for blocked members,
+        7/12 cap, no Nearby tab, no fabricated member count. Matches <code>squad_feed_screen.dart</code> precisely.
+        <b>One spelling error:</b> <span class="quote">Twelve people, naximum.</span> — should be <b>maximum</b>.</td></tr>
+      <tr><td class="f">006.png</td><td><span class="badge b-pass">Pass</span></td>
+        <td>"Reduces injury risk" removed. The unscoped "100% SECURE" replaced with
+        <span class="quote ok">Frames are analysed on your phone and discarded</span>. Skeleton anatomy is clean, subject
+        modestly dressed, form score is a real shipped feature. <b>Strongest asset in the set.</b></td></tr>
+      <tr><td class="f">007.png</td><td><span class="badge b-pass">Pass</span></td>
+        <td>Human avatar replaced with an abstract orb labelled <b>"AI assistant"</b>. Disclaimer strip retained.
+        "Backed by scientific sources", "maximize your results" and "continuously learns" all gone. The new
+        <span class="quote ok">AI-GENERATED REPLIES — Answers are produced by an AI model</span> is exactly the
+        disclosure Play's generative-AI policy asks for. Chat storage described honestly.</td></tr>
+      <tr><td class="f">008.png</td><td><span class="badge b-minor">Minor fix</span></td>
+        <td>The missing Body Metrics asset now exists — no BMI, no body-fat, no goal-weight, no red/green verdict, and
+        the trend line genuinely wobbles rather than dropping cleanly. <b>Copy contradiction:</b> the read-out says
+        <b>"Two weeks of data"</b> while the chart axis spans <b>May 1 → May 29</b>.</td></tr>
+      <tr><td class="f">009.png</td><td><span class="badge b-crit">Critical fix</span></td>
+        <td><b>Still depicts a tablet layout the app does not render.</b> Nav rail, two-up grid and category chips under
+        the headline "BUILT FOR THE BIG SCREEN" — the only consumer width-responsive layout in the codebase is the
+        internal admin dashboard. The cosmetic fixes landed (no calories, no founder name, 40% correct, female model
+        added), but the underlying misrepresentation is unchanged. Also still 992×1586 — neither 9:16 nor a tablet size.
+        <b>Recommendation: delete.</b></td></tr>
+      <tr><td class="f">feature-graphic</td><td><span class="badge b-pass">Pass</span></td>
+        <td>X-ray skeleton, "HIP ALIGNMENT" degree readings, the human trainer figure, the bare torso, "60 FPS", the
+        false privacy line and the trial claim are all gone. Android device. "REST DAYS INCLUDED" is a good honest hook.
+        <i>Nit:</i> the 87% ring sits inside the centre 250×250 play-button zone, and content runs into the outer 64 px
+        — only matters if you attach a promo video or Play crops for a different placement.</td></tr>
+      <tr><td class="f">app-logo.png</td><td><span class="badge b-crit">Critical fix</span></td>
+        <td><b>The corrective prompt was not applied.</b> See the dedicated section below — this is the single blocking
+        asset.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Turkish — <code>TUR/NEW</code></h3>
+  <table>
+    <thead><tr><th style="width:150px">Asset</th><th style="width:120px">Verdict</th><th>Assessment</th></tr></thead>
+    <tbody>
+      <tr><td class="f">001.png</td><td><span class="badge b-pass">Pass</span></td>
+        <td><b>"AI TEKNOLO.iSi" is gone</b> — the trust bar now reads CİHAZDA FORM ANALİZİ · HİÇBİR KARE YÜKLENMEZ · HER
+        YANITI BİLDİR, all correctly accented. "30 GÜNDE DÖNÜŞÜM" and "Vücudunu tarar" removed. FormAI wordmark correct,
+        %87 in Turkish form, rest day stated. Diacritics clean throughout.</td></tr>
+      <tr><td class="f">002.png</td><td><span class="badge b-pass">Pass</span></td>
+        <td>"Bağışıklık Dostu" and "Sindirim Dostu" removed; the regulated "Lif Kaynağı" softened to the descriptive
+        "Lif oranı yüksek". <b>"250+ TÜRK TARİFİ"</b> now carries both Ü and dotted İ. Menu matches the recipe cards.</td></tr>
+      <tr><td class="f">003.png</td><td><span class="badge b-pass">Pass</span></td>
+        <td><b>"CEBİNDE"</b> and <b>"DİYOR Kİ"</b> now correctly dotted. The false "%100 GÜVENLİK / Sunucuya gönderilmez"
+        is gone. No PERSONEL typo, no smartwatch, no trial claim. 1.840 kcal correctly marked <b>alındı</b> (consumed).</td></tr>
+      <tr><td class="f">004.png</td><td><span class="badge b-minor">Minor fix</span></td>
+        <td>"Gün 30 — Program tamamlandı" replaces "Yeni vücut". "Core" translated to "Karın". Milestone maths correct.
+        <b>Two defects:</b> the in-app pill renders <span class="quote">Β0 Günlük Plan</span> — the 3 became a beta-like
+        glyph, should be <b>30</b>; and the streak shows <b>8 filled dots against "6 gün mevcut seri"</b>.</td></tr>
+      <tr><td class="f">005.png</td><td><span class="badge b-pass">Pass</span></td>
+        <td>Fully rebuilt and fully localized — badge, screen title ("Takımım") and navigation are all Turkish now.
+        Presence feed, monogram avatars, "Biri" for blocked members, "Üç tepki. Yorum kutusu yok." matches the shipped
+        behaviour exactly. Diacritics clean.</td></tr>
+      <tr><td class="f">006.png</td><td><span class="badge b-crit">Critical fix</span></td>
+        <td>The policy fixes all landed — "Sakatlık riskini azaltır" gone, <b>"Göğsünü dik tut"</b> translated,
+        <b>"CANLI ANALİZ"</b> correctly dotted, %87 used consistently. <b>But the wrong content was pasted in:</b> the
+        three feature columns beneath the headline read <b>KÜÇÜK TAKIMLAR / SIRALAMA DEĞİL, KATILIM / VARSAYILAN
+        GİZLİ</b> — those are the <b>Squad</b> screenshot's columns, sitting inside the camera form-analysis asset. A
+        screenshot headlined "tracks every rep" opens by talking about 12-person squads and profile privacy.</td></tr>
+      <tr><td class="f">007.png</td><td><span class="badge b-minor">Minor fix</span></td>
+        <td>"Kendine güveiinş." is now correctly <b>"Kendine güven."</b>; "core" translated; the leaderboard uses
+        initials (AK/SD/MT) instead of full names. Challenges and leaderboard both ship, so the content is honest.
+        <b>Remaining:</b> the tab bar (Ana Sayfa · Antrenör · Antrenman · Topluluk · Profil) still differs from 004 and
+        005, and calls the same tab <b>Topluluk</b> here but <b>Takım</b> in 005.</td></tr>
+      <tr><td class="f">008.png</td><td><span class="badge b-pass">Pass</span></td>
+        <td>Mirrors US/007 exactly. Abstract orb, "AI asistan", Turkish disclaimer strip retained, and
+        <span class="quote ok">SOHBETLERİN HESABINDA — Sohbetler hesabına bağlıdır ve şifreli bağlantı üzerinden
+        iletilir</span> replaces the previously false "chats stay on your device". Honest and well written.</td></tr>
+      <tr><td class="f">009(useless).png</td><td><span class="badge b-crit">Critical fix</span></td>
+        <td>"ozellikler" fixed to "özellikler" and the chips are fully Turkish now. <b>But the same tablet
+        misrepresentation stands</b>, and there is a <b>new arithmetic error</b>: the ring reads <b>%60</b> for
+        <b>"30 günün 12'si tamamlandı"</b> — 12 of 30 is <b>40%</b>, which is what TUR/004 correctly shows.
+        <b>The filename already says it: delete this.</b></td></tr>
+      <tr><td class="f">feature-graphic</td><td><span class="badge b-pass">Pass</span></td>
+        <td>Same clean rebuild as the English one, and every annotation is now Turkish — the English "HIP ALIGNMENT"
+        text is gone along with the skeleton it labelled. "DİNLENME GÜNLERİ DAHİL" is a strong honest hook. Same minor
+        safe-area note.</td></tr>
+      <tr><td class="f">app-logo.png</td><td><span class="badge b-crit">Critical fix</span></td>
+        <td>Byte-identical to the US icon — <b>correct</b>, since Play does not localize the icon, and the "YAPAY"
+        mistranslation is gone as a result. But the icon itself is the blocking problem. See below.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout good">
+    <h4>What the regeneration got right — worth recording</h4>
+    <ul>
+      <li>Every <b>false privacy absolute</b> is gone from both locales, replaced with camera-scoped wording that
+      matches the app's own strings. This was the suspension-grade finding; it is fully closed.</li>
+      <li><b>Zero Apple devices</b> across 22 assets. Every mockup is an Android handset with a centred punch-hole.</li>
+      <li>The <b>Squad screenshots now match the shipped code</b> — presence events, three reactions, no text field,
+      "Someone" for blocked members, a hard cap of 12. Someone read the source.</li>
+      <li><b>Turkish typography is clean.</b> All six previously mangled words are correct, and the two remaining glyph
+      issues are isolated, not systemic.</li>
+      <li>The <b>AI disclosure</b> on both chat assets ("Answers are produced by an AI model" / "YANITLAR AI ÜRETİMİ")
+      is better than most apps in this category ship.</li>
+      <li><b>Aspect ratio fixed</b> to 9:16, <b>duplicate removed</b>, and the missing Body Metrics asset created.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- =============== 2 · REMAINING ISSUES =============== -->
+<section id="remaining">
+  <div class="sec-h"><h2>2 · Remaining issues</h2><span class="tag">4 blocking · 5 minor · 1 export setting</span></div>
+
+  <div class="callout bad">
+    <h4>BLOCKER 1 · The app icon — the corrective prompt was not applied</h4>
+    <p>The prompt specified a flat vector <b>F monogram</b>, full-bleed, no rounding, no border, no human figures. What
+    was produced is two neon wireframe human bodies. Four separate problems:</p>
+    <ul>
+      <li><b>Pre-rounded corners with a glowing border, on a black square.</b> Play applies its <em>own</em> rounded mask
+      and shadow, so this gets masked twice — the border will be clipped into four disconnected arcs and the black
+      corners will show as a hard square behind the mask.</li>
+      <li><b>Illegible at 48 px.</b> Downscaled, the two figures collapse into an indistinct purple-and-green smear. You
+      cannot tell what the app is. This is the size the icon renders at in search results and the app drawer.</li>
+      <li><b>Nude anatomical wireframes.</b> Both figures are rendered as unclothed body forms with contour detail. At
+      icon scale in a fitness listing this is an avoidable content-rating question.</li>
+      <li><b>It reads as body scanning.</b> Wireframe bodies with node points imply body-composition analysis — a
+      softer version of the exact health-claim imagery the previous audit flagged in the old icon.</li>
+    </ul>
+    <p>The icon is a required asset. This one cannot ship. <b>Regenerate with the monogram prompt from the previous
+    report.</b></p>
+  </div>
+
+  <div class="callout bad">
+    <h4>BLOCKER 2 · <code>TUR/NEW/006.png</code> — Squad content pasted into the Form Detection asset</h4>
+    <p>The top feature row reads KÜÇÜK TAKIMLAR / SIRALAMA DEĞİL, KATILIM / VARSAYILAN GİZLİ — verbatim from
+    <code>TUR/NEW/005.png</code>. It is not a policy violation, it is a content-integrity defect, and it is plainly
+    visible: the screenshot contradicts its own headline. <b>Replace that row</b> with the camera-feature columns
+    (ON-DEVICE AI / GERÇEK ZAMANLI POZ ANALİZİ / SESLİ KOÇLUK), or delete the row entirely — the four side cards already
+    carry those messages, and the English twin has no top row at all.</p>
+  </div>
+
+  <div class="callout bad">
+    <h4>BLOCKER 3 · Both tablet assets still misrepresent the app</h4>
+    <p><code>US/NEW/009.png</code> and <code>TUR/NEW/009(useless).png</code> depict a nav rail, a two-up workout grid and
+    a category taxonomy under a headline claiming the app is built for large screens. <b>Verified again:</b> the only
+    width-responsive consumer layout in <code>lib/</code> does not exist — the ≥600 px branch lives in
+    <code>admin_dashboard_screen.dart</code>. The Turkish one additionally states <b>%60</b> for 12 of 30 days, which is
+    40%. <b>Delete both.</b> Play requires no tablet screenshot, and the folder name suggests this call was already
+    made.</p>
+  </div>
+
+  <div class="callout bad">
+    <h4>BLOCKER 4 · Alpha channel — a hard upload blocker on all 18 screenshots</h4>
+    <p>Every phone screenshot in both <code>NEW</code> folders is still <code>RGBA</code>. Play requires
+    <b>JPEG or 24-bit PNG with no alpha</b>. Flatten against <code>#08050E</code> on export. The feature graphics and the
+    icon are already RGB and correct.</p>
+  </div>
+
+  <div class="callout warn">
+    <h4>Minor — fix before upload, none of them blocking</h4>
+    <ul>
+      <li><b><code>US/005</code></b> — <b>"naximum"</b> → <b>"maximum"</b>.</li>
+      <li><b><code>US/004</code></b> — "9 days left" / "18 days left" are stacked beside Day 30 instead of one per
+      milestone row; streak shows 7 dots for a 6-day streak.</li>
+      <li><b><code>TUR/004</code></b> — the pill renders <b>"Β0 Günlük Plan"</b> instead of <b>"30"</b>; streak shows 8
+      dots for a 6-day streak.</li>
+      <li><b><code>US/008</code></b> — "Two weeks of data" against a chart spanning May 1 → May 29.</li>
+      <li><b><code>US/002</code></b> — in-app date reads "May 17, 2025"; use a current or undated screen.</li>
+      <li><b><code>TUR/007</code></b> — tab bar differs from TUR/004 and TUR/005, and names the same tab
+      <b>Topluluk</b> here vs <b>Takım</b> there. Pick one and mirror it across the carousel.</li>
+    </ul>
+  </div>
+
+  <div class="callout warn">
+    <h4>Two structural notes</h4>
+    <p><b>Resolution.</b> All screenshots are <b>941 px</b> on the short side. Play accepts this, but the
+    <b>minimum 1080 px</b> threshold is what qualifies a listing for promotion and featuring. Re-canvas to
+    <b>1080 × 1920</b> — do not upscale-stretch; re-compose on a larger canvas.</p>
+    <p><b>Locale parity, still broken.</b> With 009 deleted, the English carousel ships <em>Body Metrics</em> in slot 8
+    and the Turkish one ships <em>Challenges</em> in slot 7. Both are honest, shipped features — but the two listings
+    advertise different products. Generate the missing twin for each locale so both carousels show the same eight.</p>
+  </div>
+</section>
+
+<!-- =============== 3 · VERDICT =============== -->
+<section id="verdict">
+  <div class="sec-h"><h2>3 · Final upload verdict</h2></div>
+
+  <div class="verdict">
+    <div class="big">🔴 Do Not Upload Yet</div>
+    <p>This is a <b>much closer call than last time</b>, and the reason for the red is narrow: <b>no policy violation
+    remains</b>. Every Critical finding in Section A of the previous audit is closed in both locales. What blocks upload
+    is a required asset that cannot ship (the icon), one screenshot carrying the wrong content, two screenshots that
+    describe a layout the app does not have, and a PNG export flag.</p>
+    <p><b>Distance to green: four fixes and a re-export.</b> Regenerate the icon, repair the top row of
+    <code>TUR/006</code>, delete both <code>009</code> files, flatten the alpha, and fix six strings. Nothing here
+    requires new creative direction — the hard work is already done.</p>
+  </div>
+
+  <div class="scores">
+    <div class="score"><div class="k">ASO Quality</div><div class="v">84<s>/100</s></div>
+      <div class="bar"><i style="width:84%"></i></div>
+      <div class="n">Strong, differentiated messaging. Costs: two wasted slots on 009, and locale carousels that
+      advertise different features.</div></div>
+    <div class="score"><div class="k">Design</div><div class="v">87<s>/100</s></div>
+      <div class="bar"><i style="width:87%"></i></div>
+      <div class="n">Genuinely premium and consistent. Dragged down by the icon, the TUR/006 content leak and three
+      small layout defects.</div></div>
+    <div class="score"><div class="k">Compliance</div><div class="v">91<s>/100</s></div>
+      <div class="bar"><i style="width:91%"></i></div>
+      <div class="n">Every policy landmine cleared. Remaining deductions are the tablet misrepresentation and the
+      alpha-channel spec breach — not content policy.</div></div>
+    <div class="score"><div class="k">Conversion</div><div class="v">85<s>/100</s></div>
+      <div class="bar"><i style="width:85%"></i></div>
+      <div class="n">Clear value props and unusually credible trust signals. Upside remains in ordering — the form
+      detection asset is still not first.</div></div>
+  </div>
+
+  <div class="callout">
+    <h4>Recommended carousel order (both locales)</h4>
+    <p><b>1</b> Form detection (006) · <b>2</b> AI coach chat (007/008) · <b>3</b> 30-day plan (004) ·
+    <b>4</b> Hero (001) · <b>5</b> Nutrition (002) · <b>6</b> Progress (003) · <b>7</b> Squad (005) ·
+    <b>8</b> Body metrics / Challenges.</p>
+    <p>Slots 1–3 are what appear in search results. Lead with the one thing no competitor can honestly show.</p>
+  </div>
+</section>
+
+<!-- =============== 4 · ENGLISH METADATA =============== -->
+<section id="en">
+  <div class="sec-h"><h2>4 · English Play Store metadata</h2><span class="tag">en-US</span></div>
+  <p class="sec-sub">Written against what the codebase actually ships. No outcome promises, no health claims, no
+  privacy absolutes, AI disclosed honestly — on-device pose analysis and a server-side chat model described as what
+  each one is.</p>
+
+  <div class="meta">
+    <div class="meta-h"><span class="t">App Name</span><span class="cnt">24 / 30</span><span class="lim">Play limit: 30 characters</span></div>
+    <div class="pbox"><button class="copy">Copy</button><pre>FormAI: AI Fitness Coach</pre></div>
+  </div>
+
+  <div class="meta">
+    <div class="meta-h"><span class="t">Short Description</span><span class="cnt">75 / 80</span><span class="lim">Play limit: 80 characters</span></div>
+    <div class="pbox"><button class="copy">Copy</button><pre>Real-time form check on your phone. A 30-day plan and a coach that replies.</pre></div>
+  </div>
+
+  <div class="meta">
+    <div class="meta-h"><span class="t">Long Description</span><span class="cnt">2,457 / 4,000</span><span class="lim">Play limit: 4,000 characters</span></div>
+    <div class="pbox"><button class="copy">Copy</button><pre>FormAI turns your phone camera into a form check.
+
+Prop your phone up, start a set, and FormAI reads your body position while you move — counting reps and calling out cues in real time. The pose analysis runs on your device. Camera frames are processed on your phone and are never uploaded.
+
+WHAT YOU GET
+
+▸ REAL-TIME FORM ANALYSIS
+Joint-level pose tracking, live rep counting and a form score for the set. Spoken cues as you move, so you are not staring at the screen mid-squat.
+
+▸ A 30-DAY PLAN BUILT FROM YOUR ANSWERS
+Tell FormAI your goal, your experience level, how long you can train and what equipment you have. You get a 30-day program with rest days already scheduled — 24 sessions, not 30, because recovery is part of training.
+
+▸ AN AI COACH THAT REPLIES
+Ask about your plan, your form, your next session, recovery or nutrition. Replies are produced by an AI model and are general fitness guidance, not medical advice. Every message can be flagged in one tap.
+
+▸ 250+ RECIPES WITH THE MACROS ALREADY COUNTED
+Filter by your goal and your dietary preferences. Calories, protein, carbs and fat are calculated for every recipe. Export a shopping list from the ones you favourite.
+
+▸ PROGRESS YOU CAN ACTUALLY READ
+Streaks, XP, badges and weekly consistency. Log your weight and five tape measurements, then see the trend across 7, 30 or 90 days. You enter the numbers — the app shows the line, without a verdict attached.
+
+▸ SQUADS OF TWELVE
+Join a small squad and see who showed up. Presence, not ranking: three reactions, no comment box, nobody placed above anybody. Your profile stays private until you choose to share it.
+
+▸ CHALLENGES AND FAIR RANKINGS
+Time-boxed challenges that rotate each month, with leaderboards scoped to your level so beginners are not measured against veterans.
+
+PRIVACY, STATED PLAINLY
+Camera footage never leaves your device — form analysis runs entirely on your phone and no image is recorded or sent anywhere. Your training history, profile and chat are stored on secure servers, tied to your account and sent over an encrypted connection. We tell you which is which because the difference matters.
+
+WHAT FORMAI IS NOT
+FormAI is a training tool, not a medical device and not a clinician. It does not diagnose, treat or prevent any condition, and it makes no promise about how your body will change. Train sensibly, and if something hurts, stop and speak to a qualified professional.
+
+Available in English and Turkish.</pre></div>
+  </div>
+</section>
+
+<!-- =============== 5 · TURKISH METADATA =============== -->
+<section id="tr">
+  <div class="sec-h"><h2>5 · Türkçe Play Store metadata</h2><span class="tag">tr-TR</span></div>
+  <p class="sec-sub">Çeviri değil — Türkçe için yazıldı. Sağlık vaadi yok, sonuç garantisi yok, gizlilik iddiaları
+  kameraya sınırlı. Karakter sayıları Play sınırlarına göre doğrulandı.</p>
+
+  <div class="meta">
+    <div class="meta-h"><span class="t">Uygulama Adı</span><span class="cnt">23 / 30</span><span class="lim">Play sınırı: 30 karakter</span></div>
+    <div class="pbox"><button class="copy">Copy</button><pre>FormAI: AI Fitness Koçu</pre></div>
+  </div>
+
+  <div class="meta">
+    <div class="meta-h"><span class="t">Kısa Açıklama</span><span class="cnt">75 / 80</span><span class="lim">Play sınırı: 80 karakter</span></div>
+    <div class="pbox"><button class="copy">Copy</button><pre>Telefonunda anlık form analizi. 30 günlük plan ve sana yanıt veren bir koç.</pre></div>
+  </div>
+
+  <div class="meta">
+    <div class="meta-h"><span class="t">Uzun Açıklama</span><span class="cnt">2,468 / 4,000</span><span class="lim">Play sınırı: 4.000 karakter</span></div>
+    <div class="pbox"><button class="copy">Copy</button><pre>FormAI, telefonunun kamerasını bir form kontrolüne dönüştürür.
+
+Telefonunu karşına koy, sete başla; FormAI sen hareket ederken vücut pozisyonunu okur, tekrarlarını sayar ve anlık ipuçları verir. Poz analizi cihazında çalışır. Kamera kareleri telefonunda işlenir ve hiçbir zaman yüklenmez.
+
+NELER VAR
+
+▸ GERÇEK ZAMANLI FORM ANALİZİ
+Eklem seviyesinde poz takibi, canlı tekrar sayımı ve set için bir form skoru. Hareket ederken sesli ipuçları alırsın; squat'ın ortasında ekrana bakmak zorunda kalmazsın.
+
+▸ CEVAPLARINDAN KURULAN 30 GÜNLÜK PLAN
+Hedefini, seviyeni, ne kadar süre ayırabildiğini ve elindeki ekipmanı söyle. Dinlenme günleri baştan planlanmış bir 30 günlük program alırsın — 30 değil, 24 seans; çünkü toparlanma da antrenmanın parçası.
+
+▸ SANA YANIT VEREN BİR AI KOÇ
+Planın, formun, bir sonraki seansın, toparlanma ya da beslenme hakkında sor. Yanıtlar bir yapay zekâ modeli tarafından üretilir ve genel fitness rehberliğidir; tıbbi tavsiye değildir. Her mesajı tek dokunuşla bildirebilirsin.
+
+▸ MAKROLARI HESAPLANMIŞ 250+ TARİF
+Hedefine ve diyet tercihlerine göre filtrele. Her tarifin kalorisi, proteini, karbonhidratı ve yağı hazır. Favorilediğin tariflerden alışveriş listesi çıkar.
+
+▸ GERÇEKTEN OKUNABİLİR BİR İLERLEME
+Seriler, XP, rozetler ve haftalık istikrar. Kilonu ve beş vücut ölçünü kaydet, 7, 30 veya 90 günlük eğilimi gör. Sayıları sen girersin — uygulama sadece çizgiyi gösterir, bir hüküm vermez.
+
+▸ ON İKİ KİŞİLİK TAKIMLAR
+Küçük bir takıma katıl ve kimin çalıştığını gör. Sıralama değil katılım: üç tepki, yorum kutusu yok, kimse kimsenin üstünde değil. Sen paylaşmayı seçene kadar profilin gizli kalır.
+
+▸ MEYDAN OKUMALAR VE ADİL SIRALAMA
+Her ay yenilenen süreli meydan okumalar ve seviyene göre kapsanan sıralamalar — yeni başlayanlar deneyimlilerle aynı tabloda yarışmaz.
+
+GİZLİLİK, AÇIKÇA
+Kamera görüntün cihazından çıkmaz — form analizi tamamen telefonunda çalışır, hiçbir görüntü kaydedilmez veya gönderilmez. Antrenman geçmişin, profilin ve sohbetlerin ise hesabına bağlı olarak güvenli sunucularda saklanır ve şifreli bağlantı üzerinden iletilir. Hangisinin nerede durduğunu açıkça söylüyoruz, çünkü aradaki fark önemli.
+
+FORMAI NE DEĞİLDİR
+FormAI bir antrenman aracıdır; tıbbi cihaz ya da sağlık uzmanı değildir. Hiçbir rahatsızlığı teşhis etmez, tedavi etmez, önlemez ve vücudunun nasıl değişeceğine dair bir vaatte bulunmaz. Kendini zorlama, bir yerin ağrıyorsa dur ve bir uzmana danış.
+
+Türkçe ve İngilizce olarak kullanılabilir.</pre></div>
+  </div>
+</section>
+
+<!-- =============== 6 · KEYWORDS =============== -->
+<section id="kw">
+  <div class="sec-h"><h2>6 · Keyword strategy</h2><span class="tag">both locales</span></div>
+  <p class="sec-sub">Google Play has no keyword field — ranking comes from the title, the short description and term
+  frequency in the long description. Every term below already appears naturally in the copy above; none is stuffed.</p>
+
+  <div class="two">
+    <div>
+      <h3>English</h3>
+      <p style="color:var(--dim);font-size:12.5px;margin-bottom:4px">PRIMARY — title + short description + first 200 characters</p>
+      <div class="kw"><span>ai fitness coach</span><span>form check app</span><span>workout form analysis</span>
+        <span>ai personal trainer</span><span>home workout app</span><span>rep counter app</span></div>
+
+      <p style="color:var(--dim);font-size:12.5px;margin:16px 0 4px">SECONDARY — feature headings, 2–3 mentions each</p>
+      <div class="kw sec"><span>pose detection</span><span>30 day workout plan</span><span>macro tracker</span>
+        <span>workout tracker</span><span>bodyweight workout</span><span>squat form</span><span>calorie counter</span>
+        <span>fitness challenges</span><span>progress tracker</span><span>gym workout planner</span></div>
+
+      <p style="color:var(--dim);font-size:12.5px;margin:16px 0 4px">LONG-TAIL — low volume, high intent</p>
+      <div class="kw lt"><span>app that checks your squat form</span><span>count reps with phone camera</span>
+        <span>30 day workout plan with rest days</span><span>on-device form analysis privacy</span>
+        <span>ai coach that answers fitness questions</span><span>workout app that doesn't upload video</span>
+        <span>small group fitness accountability</span><span>body measurement trend tracker</span></div>
+    </div>
+
+    <div>
+      <h3>Türkçe</h3>
+      <p style="color:var(--dim);font-size:12.5px;margin-bottom:4px">BİRİNCİL — başlık + kısa açıklama + ilk 200 karakter</p>
+      <div class="kw"><span>yapay zeka fitness</span><span>form analizi uygulaması</span><span>ai antrenman koçu</span>
+        <span>evde antrenman</span><span>kişisel antrenör uygulaması</span><span>fitness uygulaması</span></div>
+
+      <p style="color:var(--dim);font-size:12.5px;margin:16px 0 4px">İKİNCİL — özellik başlıkları, 2–3 tekrar</p>
+      <div class="kw sec"><span>tekrar sayacı</span><span>poz analizi</span><span>30 günlük antrenman programı</span>
+        <span>makro takibi</span><span>kalori hesaplama</span><span>vücut ölçüleri takibi</span>
+        <span>spor programı</span><span>antrenman takip</span><span>squat formu</span><span>fitness tarifleri</span></div>
+
+      <p style="color:var(--dim);font-size:12.5px;margin:16px 0 4px">UZUN KUYRUK — düşük hacim, yüksek niyet</p>
+      <div class="kw lt"><span>kamerayla squat formu kontrolü</span><span>telefonla tekrar sayma</span>
+        <span>dinlenme günlü 30 günlük program</span><span>türk mutfağı fitness tarifleri</span>
+        <span>yapay zeka fitness koçu soru cevap</span><span>video yüklemeyen antrenman uygulaması</span>
+        <span>evde ekipmansız antrenman programı</span><span>kilo ve ölçü takip uygulaması</span></div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <h4>Two placement notes</h4>
+    <p><b>The title carries the most weight.</b> "FormAI: AI Fitness Coach" / "FormAI: AI Fitness Koçu" puts the brand
+    first and the two highest-volume terms immediately after, inside 30 characters in both locales.</p>
+    <p><b>"Türk mutfağı" belongs only in the Turkish listing.</b> It is a genuine differentiator there and dead weight in
+    en-US — which is why the English long description says "250+ recipes" and the Turkish one can lean on the cuisine
+    angle in its nutrition screenshot.</p>
+  </div>
+</section>
+
+<!-- =============== 7 · FINAL RECOMMENDATION =============== -->
+<section id="final">
+  <div class="sec-h"><h2>7 · Final recommendation</h2></div>
+
+  <div class="callout bad">
+    <h4>Do these five things, then submit</h4>
+    <ul>
+      <li><b>1 · Regenerate the app icon.</b> Use the F-monogram prompt from the previous report: flat vector,
+      full-bleed square, no rounding, no border, no shadow, no human figures, no text. Verify it at 48 px before you
+      accept it. This is the only asset that blocks submission outright.</li>
+      <li><b>2 · Fix <code>TUR/NEW/006.png</code>.</b> Replace the three squad columns with the camera-feature columns,
+      or delete the row — the English twin has no top row and reads better for it.</li>
+      <li><b>3 · Delete <code>US/NEW/009.png</code> and <code>TUR/NEW/009(useless).png</code>.</b> Ship seven honest
+      screenshots per locale rather than eight with a layout the app does not render.</li>
+      <li><b>4 · Re-export all screenshots</b> as 24-bit PNG with no alpha, on a <b>1080 × 1920</b> canvas.</li>
+      <li><b>5 · Fix the six strings:</b> "naximum" → "maximum"; "Β0" → "30"; the two orphaned day-counters in US/004;
+      the streak dot counts in US/004 and TUR/004; "Two weeks of data" in US/008; the 2025 date in US/002.</li>
+    </ul>
+    <p>After that, the verdict moves to <b>✅ Production Ready</b>, and the compliance score to roughly 97.</p>
+  </div>
+
+  <div class="callout good">
+    <h4>Then, when there is time — not before submission</h4>
+    <ul>
+      <li><b>Reorder the carousel</b> so form detection is slot 1 in both locales. This is the single highest-value
+      change left, and it costs nothing.</li>
+      <li><b>Close the locale gap</b> — generate a Turkish Body Metrics asset and an English Challenges asset so both
+      listings advertise the same eight features.</li>
+      <li><b>Unify the in-app navigation</b> shown across screenshots. Three different tab bars in one carousel is the
+      kind of thing a reviewer with the app open will notice.</li>
+      <li><b>Consider a 30-second promo video</b> of the pose skeleton counting reps. If you add one, move the 87% ring
+      out of the feature graphic's centre 250 × 250 first — Play overlays a play button there.</li>
+    </ul>
+  </div>
+
+  <div class="callout">
+    <h4>The honest summary</h4>
+    <p>The previous audit found fourteen critical items across twenty-two assets, three of which were statements the
+    app's own source code contradicted. <b>All fourteen are closed.</b> The listing now describes a product that exists:
+    on-device pose analysis stated as on-device, a server-side coach stated as server-side, a squad feed that matches
+    the shipped feed, a 30-day plan that admits to rest days, and an AI disclosure most competitors do not bother with.</p>
+    <p>What is left is craft, not compliance — one icon, one copy-paste error, two assets to delete, an export flag and
+    six strings. That is a good place to be.</p>
+  </div>
+</section>
+
+<footer>
+  <p>FormAI · Final Play Store listing validation · <code>playstore-new-ASO/US/NEW</code> and
+  <code>playstore-new-ASO/TUR/NEW</code> · 22 assets reviewed against ASO_SCREENSHOT_COMPLIANCE_REPORT.html</p>
+  <p style="margin-top:8px">Claims were re-verified against the shipped Flutter source. Character counts for all
+  metadata fields were validated against Play limits (30 / 80 / 4,000). No application code, Flutter source or
+  existing documentation was modified.</p>
+</footer>
+</div>
+
+<script>
+document.addEventListener('click',function(e){
+  var b=e.target.closest('.copy'); if(!b) return;
+  var pre=b.parentElement.querySelector('pre'); if(!pre) return;
+  var t=pre.textContent;
+  var done=function(){var o=b.textContent;b.textContent='Copied';b.classList.add('done');
+    setTimeout(function(){b.textContent=o;b.classList.remove('done')},1500)};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,fb)}else{fb()}
+  function fb(){var ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(err){}
+    document.body.removeChild(ta)}
+});
+</script>
+</body>
+</html>

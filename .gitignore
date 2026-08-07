@@ -123,3 +123,7 @@ TESTERS_COMMUNITY_PRODUCT_ROADMAP.md
 formai_mission.txt
 com.emredogan.formaifit_*.pdf
 playstore-new-ASO/
+
+# Python bytecode from tool/*.py (Play asset pipeline).
+__pycache__/
+*.pyc

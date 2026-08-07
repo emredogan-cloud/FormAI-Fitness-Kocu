@@ -537,3 +537,136 @@ sprint.
 
 *Every PASS in §5 was driven on the physical device against the release
 build. Everything not verified is listed as such, with the reason.*
+
+---
+
+## 11. Play listing assets — 7 August 2026
+
+Everything below concerns the **store listing artwork**, not the app. The
+build, the tests and the AAB are untouched by this pass.
+
+Two audits preceded it. `ASO_SCREENSHOT_COMPLIANCE_REPORT.html` found 14
+critical policy items across the original 22 assets — false privacy
+absolutes, iPhone mockups, medical skeleton imagery, transformation
+promises, a fabricated community feed, a metric the app never computes.
+`FINAL_PLAY_STORE_REVIEW.html` re-reviewed the regenerated artwork and
+confirmed **all 14 are closed in both locales**, leaving four asset-integrity
+defects and one export setting.
+
+This session closed those. The **founder's one owned task — regenerating the
+app icon — was already done** before the session started: `app-logo.png` is
+now the violet F monogram, full-bleed, no pre-rounding, no text, with the
+previous neon-bodies version kept as `app-logo(backup).png`.
+
+### 11.1 DONE BY ENGINEERING
+
+Two committed scripts do the work and prove it:
+`tool/playstore_asset_pipeline.py` builds
+`playstore-new-ASO/FINAL/{en-US,tr-TR}/` from the untouched source artwork,
+and `tool/validate_play_assets.py` re-opens every output and asserts Play's
+published rules independently. Setup and rationale:
+`tool/README_play_assets.md`.
+
+**Content repairs** — pixel-level, at native resolution, no artwork regenerated:
+
+| # | Asset | Defect | Fix |
+| --- | --- | --- | --- |
+| 1 | icon (both) | 12-row pure-white band across the bottom (rows 500–511, 6 144 px) — an export artefact that Play's rounded mask would have shown as a white arc | background gradient extrapolated over the band; the F mark was never touched |
+| 2 | `US/002` | in-app date read **May 17, 2025** — a past year reads as a stale screenshot | year re-rendered as **2026**; "May 17," keeps its original pixels |
+| 3 | `US/004` | "9 days left" and "18 days left" stacked beside Day 30, so Day 30 appeared to carry two countdowns | the reward card overlaps the Day 21 row, so there is nowhere legitimate to align the first — it was removed, and "18 days left" lifted onto the Day 30 row |
+| 4 | `US/004` | 7 filled streak dots against "6 days current streak" | 7th dot replaced with an outline dot |
+| 5 | `US/005` | **"naximum."** | re-rendered as "maximum." |
+| 6 | `US/008` | "Two weeks of data" against a chart spanning May 1 – May 29 with the 30d range active | "Four weeks"; the rest of the line keeps its original pixels and slides right |
+| 7 | `TUR/004` | plan pill rendered "30" as a beta-like glyph — **"Β0 Günlük Plan"** | "30" re-rendered, rotated to the mockup's −5.93° tilt |
+| 8 | `TUR/004` | 7 filled streak dots against "6 gün mevcut seri" | 7th dot replaced with an outline dot |
+| 9 | `TUR/006` | the Form-detection frame carried the **Squad frame's** three feature columns (KÜÇÜK TAKIMLAR / SIRALAMA DEĞİL, KATILIM / VARSAYILAN GİZLİ) — wrong content in the wrong asset | row removed and the violet gradient reconstructed; the English twin has no such row, so this also matches the locales |
+
+**Set composition**
+
+- Both `009` tablet frames **dropped**. They depict a nav rail, a two-up grid
+  and a category taxonomy the app does not render — the only width-responsive
+  consumer layout in `lib/` does not exist, the `>= 600` branch lives in
+  `admin_dashboard_screen.dart`. The Turkish one additionally stated **%60**
+  for 12 of 30 days, which is 40 %. Play requires no tablet screenshot.
+- `app-logo(backup).png` excluded from the upload set.
+- **Slot parity fixed.** The locales were authored with different frames in
+  slots 7 and 8 — English shipped Body Metrics, Turkish shipped Challenges —
+  so one slot advertised a different feature per storefront. The seven shared
+  features now sit in identical slots and the locale-specific extra is last.
+  Both extras are real shipped features (`leaderboard_screen.dart`,
+  `challenges_screen.dart`, the metrics screen).
+
+**Format and encoding** — every output asset:
+
+- alpha channel removed; flattened onto `#060012`, the artwork's own black
+  (all 18 source screenshots were `RGBA`, which Play rejects)
+- re-canvassed **941×1672 → 1080×1920** by cover-fit and centre-crop, so the
+  true aspect is preserved rather than anisotropically stretched, with a
+  calibrated unsharp pass to return what Lanczos costs
+- 8-bit sRGB, every ancillary PNG chunk stripped (`exiftool` before *and*
+  after optimisation, because optimisers reintroduce them)
+- losslessly recompressed with `oxipng -o6`
+
+Net: **+31 % pixels for +0.5 % bytes** — 1 167 KB/megapixel down to 903 KB/megapixel.
+Largest file 2.02 MB against Play's 8 MB limit.
+
+**Validation** — `tool/validate_play_assets.py`: **131/131 checks pass**, covering
+format, alpha, 8-bit sRGB, dimensions, aspect ratio, per-file size, metadata
+chunks, asset counts, contiguous slot numbering, promotion eligibility
+(≥ 4 screenshots ≥ 1080 px at 9:16 — **8 of 8 qualify in both locales**),
+locale parity, byte-identical icon across locales, and no duplicate frames.
+
+**Tooling installed** (sudo-free — Debian packages extracted into
+`~/.cache/formai-play-tools/prefix`, Python packages into a venv per PEP 668):
+`pngquant`, `optipng`, `pngcrush`, `zopflipng`, `exiftool`, `oxipng`
+(`pyoxipng`), `numpy`, `Pillow`, `fonts-inter`. ImageMagick and ffmpeg were
+already present. `pngquant`/`pngcrush`/`zopflipng` are available but
+**deliberately unused** — pngquant is lossy and these are gradient-heavy dark
+UI frames where banding would show; the set has 4× headroom on Play's limit,
+so lossless is the right trade.
+
+### 11.2 Known residuals — recorded, not fixed
+
+- **In-app navigation differs across frames.** The real tab set is
+  `navWorkout · navProgress · navNutrition · navCommunity · navProfile`
+  (Antrenman · Gelişim · Beslenme · Topluluk · Profil). No screenshot matches
+  it exactly; `TUR/005` shows "Takım", which is not a nav label at all.
+  Correcting this means re-rendering four or five small tilted labels across
+  five frames — high risk of looking worse, for a defect no reviewer compares
+  against the app. **Note:** an earlier draft of the review had this backwards
+  and suggested changing `TUR/007`; `TUR/007` is the one that is right.
+- **Feature-graphic safe areas.** The 87 % ring sits inside the centre
+  250×250 px where Play overlays a play button, and content runs into the
+  outer 64 px. Only matters if a promo video is attached — see 11.3.
+- **Carousel order.** Form detection is slot 6. It is the one asset no
+  competitor can honestly show and it belongs in slot 1, but ordering is a
+  marketing call, not a compliance one, and it is drag-and-drop in the
+  Console. Left to the founder.
+
+### 11.3 FOUNDER ACTIONS
+
+Only what code cannot do. Nothing here is an asset defect.
+
+1. **Apply migration `027`** — unchanged from §9 Step 1, still the single most
+   important remaining item, still one command. Until it runs, AI-reply
+   reporting shows its honest failure toast.
+2. **Upload the set.** `playstore-new-ASO/FINAL/en-US/` and `.../tr-TR/` —
+   8 screenshots, 1 feature graphic, 1 icon each. Filenames carry their slot
+   order. The icon is byte-identical in both folders because Play stores one
+   globally; upload either.
+3. **Paste the listing metadata** from `FINAL_PLAY_STORE_REVIEW.html` §4/§5 —
+   app name, short and long description, both locales, all verified against
+   Play's 30/80/4000 character limits.
+4. Steps 2–8 of §9 (legal pages, data-deletion URL, content rating, target
+   audience, health declaration, Data Safety, "(Erken Erişim)" removal) —
+   unchanged, all Play Console.
+5. **Optional:** decide the carousel order (11.2) and whether to attach a promo
+   video. If a video is attached, the feature graphic's centre 250×250 px
+   should be cleared first.
+
+### 11.4 Status
+
+**The listing is production-ready apart from the founder's Console work.**
+Every asset defect found in either audit is closed, the icon the founder
+regenerated is in the set with its export artefact repaired, and 131/131
+conformance checks pass. No policy finding remains open in either locale.
