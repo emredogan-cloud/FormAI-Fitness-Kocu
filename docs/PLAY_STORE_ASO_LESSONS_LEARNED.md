@@ -2014,30 +2014,28 @@ waived with a recorded reason.
 1. **Never invent a feature for an ASO screenshot.** The reviewer has the app.
 2. **Never put a claim into an image that the code cannot prove.**
 3. **Treat every store asset as part of the product's public contract**, not as marketing artwork.
-4. **Verify the verb, not just the noun.** "The feature exists" does not validate "the feature does *this*".
-5. **Check the scope, not just the fact.** Most failures are true-but-widened claims.
-6. **Never make a privacy claim broader than the actual data flow** — and never one that contradicts Data Safety.
-7. **Ban the absolutes:** 100%, all data, never, always, completely, nothing.
-8. **Never use transformation or outcome promises.** Duration is not a result.
-9. **Never fabricate a metric.** If no code computes it, it does not go in the picture.
-10. **Never fabricate users, counts, ratings or testimonials.** No human face is a user.
-11. **Never show an Apple device in an Android Play listing** — state the prohibition explicitly in the prompt.
-12. **Never ship a tablet layout the consumer app does not render.** Shipping *no* tablet asset is permitted; shipping a fictional one is not.
-13. **Never let a generator draw your brand name.** Composite it.
-14. **Never trust generated text.** Validate against the ARB, or typeset it programmatically.
-15. **Generate art without non-ASCII text and typeset the locale afterwards.** No prompt prevents diacritic decay.
-16. **Define the depicted state before generating**, and make every number in the asset agree with it.
-17. **Disclose AI, and make AI look synthetic.** Never claim scientific backing for model output.
-18. **No medical imagery in a fitness app** unless the app performs the measurement and can substantiate it.
-19. **Repair before resampling.** A patch applied after upscaling reads as a paste.
-20. **Measure coordinates; never guess them.** And measure the mockup's tilt.
-21. **Script the invisible checks** — alpha, dimensions, hashes, chunks — and run them before any human review.
-22. **Validate with a tool independent of the one that produced the asset.**
-23. **Localization changes language, not product truth.**
-24. **Distinguish hard Play requirements from recommendations**, and never present a recommendation to a founder as policy.
-25. **An audit finding is a hypothesis until the code confirms it** — including your own.
-26. **Never assume green CI means Play-ready.** CI validates the code, not the claims.
-27. **Beauty lowers scrutiny.** The better an asset looks, the harder you should check what it says.
+4. **Verify the verb and the scope, not just the noun.** "The feature exists" does not validate "the feature does *this*", and a true narrow claim is not a true broad one. Most failures are true-but-widened.
+5. **Never make a privacy claim broader than the actual data flow** — and never one that contradicts Data Safety.
+6. **Ban the absolutes:** 100%, all data, never, always, completely, nothing.
+7. **Never use transformation or outcome promises.** Duration is not a result.
+8. **Never fabricate a metric.** If no code computes it, it does not go in the picture.
+9. **Never fabricate users, counts, ratings or testimonials.** No human face is a user.
+10. **Never show an Apple device in an Android Play listing** — state the prohibition explicitly in the prompt.
+11. **Never ship a tablet layout the consumer app does not render.** Shipping *no* tablet asset is permitted; shipping a fictional one is not.
+12. **Never let a generator draw your brand name.** Composite it.
+13. **Never trust generated text.** Validate against the ARB, or typeset it programmatically.
+14. **Generate art without non-ASCII text and typeset the locale afterwards.** No prompt prevents diacritic decay.
+15. **Define the depicted state before generating**, and make every number in the asset agree with it.
+16. **Disclose AI, and make AI look synthetic.** Never claim scientific backing for model output.
+17. **No medical imagery in a fitness app** unless the app performs the measurement and can substantiate it.
+18. **Repair before resampling.** A patch applied after upscaling reads as a paste.
+19. **Measure coordinates; never guess them.** And measure the mockup's tilt.
+20. **Script the invisible checks** — alpha, dimensions, hashes, chunks — run them before any human review, and run them from a tool independent of the one that produced the asset.
+21. **Localization changes language, not product truth.**
+22. **Distinguish hard Play requirements from recommendations**, and never present a recommendation to a founder as policy.
+23. **An audit finding is a hypothesis until the code confirms it** — including your own.
+24. **Never assume green CI means Play-ready.** CI validates the code, not the claims.
+25. **Beauty lowers scrutiny.** The better an asset looks, the harder you should check what it says.
 
 ---
 
