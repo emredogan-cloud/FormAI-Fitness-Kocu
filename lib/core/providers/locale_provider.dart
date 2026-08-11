@@ -7,11 +7,30 @@ import '../utils/app_logger.dart';
 
 /// Roadmap Phase 6 (R3.1) · the locales this build actually ships.
 ///
-/// Order matters twice. `first` is the fallback for a device locale we
-/// don't support, and it is the order the language picker renders in.
-/// Turkish leads because it is the home market and the reviewed,
-/// native-authored copy; English is the translation.
+/// Order is the order the language picker renders in. Turkish leads
+/// because it is the home market and the reviewed, native-authored copy;
+/// English is the translation.
+///
+/// It used to mean one more thing — `first` was also the fallback for an
+/// unsupported device locale — and [kFallbackLocale] now carries that
+/// separately. See its note for why the two had to come apart.
 const List<Locale> kSupportedLocales = [Locale('tr'), Locale('en')];
+
+/// Where a device lands when it asks for a language this build does not
+/// ship.
+///
+/// This is **not** `kSupportedLocales.first`, and the split is the point.
+/// That list is also the picker's render order, so pinning the fallback
+/// to its head meant the two could never disagree — and they should.
+///
+/// The fallback only ever applies to a device set to something that is
+/// neither Turkish nor English: a French, German or Spanish phone. A
+/// Turkish speaker's device is already Turkish and matches directly, so
+/// "Turkish is the home market" — the reason Turkish heads the picker —
+/// is an argument about a case this constant never sees. For everyone it
+/// *does* see, English is the far likelier second language. Falling back
+/// to Turkish handed them the one option they were least able to read.
+const Locale kFallbackLocale = Locale('en');
 
 /// The name of a language, written in that language.
 ///
@@ -71,7 +90,7 @@ String localeFlagEmoji(Locale locale) {
 /// "Currently English" — describing the choice it exists to undo.
 ///
 /// Same matching rule as `main.dart`'s resolver: language code only,
-/// falling back to the first supported locale.
+/// falling back to [kFallbackLocale].
 Locale deviceLocale() {
   final platform = WidgetsBinding.instance.platformDispatcher.locales;
   for (final candidate in platform) {
@@ -79,7 +98,7 @@ Locale deviceLocale() {
       if (supported.languageCode == candidate.languageCode) return supported;
     }
   }
-  return kSupportedLocales.first;
+  return kFallbackLocale;
 }
 
 /// Roadmap Phase 6 (R3.2) · the user's language preference.

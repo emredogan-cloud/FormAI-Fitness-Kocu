@@ -15,7 +15,7 @@ import 'package:sixpack_ai/l10n/app_localizations.dart';
 /// CI and fails on any key present in one locale and absent in the
 /// other, so "missing key" cannot reach a device. What is left to prove
 /// at runtime is the last link — a locale we do not ship must land on
-/// Turkish rather than on a screen of untranslated identifiers.
+/// one we do rather than on a screen of untranslated identifiers.
 ///
 /// That is worth stating out loud, because "we have a runtime fallback"
 /// and "we have a build-time guarantee" are different promises and only
@@ -36,8 +36,8 @@ Widget _app(SharedPreferences prefs) {
           for (final l in supported) {
             if (l.languageCode == requested?.languageCode) return l;
           }
-          AppCopy.locale = supported.first;
-          return supported.first;
+          AppCopy.locale = kFallbackLocale;
+          return kFallbackLocale;
         },
         home: Builder(
           builder: (context) => Scaffold(
@@ -72,19 +72,37 @@ void main() {
       expect(find.text('Profile'), findsOneWidget);
     });
 
-    testWidgets('a locale we do not ship falls back to Turkish, not to keys',
+    testWidgets('a locale we do not ship falls back to English, not to keys',
         (tester) async {
       // The failure this guards against is not "the user gets the wrong
       // language" — it is a screen of raw identifiers, which is what the
       // framework default produces for an unmatched locale.
+      //
+      // The fallback was Turkish until the device-language phase, on the
+      // strength of Turkish being the home market. That argument is about
+      // a user this branch never sees: a Turkish speaker's phone is set
+      // to Turkish and matches above. Everyone who actually reaches here
+      // asked for something we don't ship, and English is the likelier
+      // second language for them. See `kFallbackLocale`.
       tester.platformDispatcher.localesTestValue = [const Locale('de')];
       addTearDown(tester.platformDispatcher.clearLocalesTestValue);
 
       await tester.pumpWidget(_app(await _prefs()));
       await tester.pump();
 
-      expect(find.text('tr'), findsOneWidget);
-      expect(find.text('Profil'), findsOneWidget);
+      expect(find.text('en'), findsOneWidget);
+      expect(find.text('Profile'), findsOneWidget);
+    });
+
+    testWidgets('the fallback is not just the head of the supported list',
+        (tester) async {
+      // Guards the decoupling itself. `kSupportedLocales` is also the
+      // picker's render order and Turkish leads it deliberately; if a
+      // later edit re-derives the fallback from `.first`, this fails
+      // while the test above would still pass on a reordered list.
+      expect(kFallbackLocale, const Locale('en'));
+      expect(kSupportedLocales.first, const Locale('tr'));
+      expect(kSupportedLocales, contains(kFallbackLocale));
     });
 
     testWidgets('an explicit choice beats the device', (tester) async {
@@ -150,8 +168,11 @@ void main() {
         final strings = lookupAppLocalizations(locale);
         expect(strings.navProfile.trim(), isNotEmpty,
             reason: '${locale.languageCode} left navProfile blank');
-        expect(strings.languageStepTitle.trim(), isNotEmpty,
-            reason: '${locale.languageCode} left languageStepTitle blank');
+        // Was `languageStepTitle`, which belonged to the onboarding
+        // language ask and went with it. The Settings picker's title is
+        // the surviving string in that family and makes the same point.
+        expect(strings.languageSettingsTitle.trim(), isNotEmpty,
+            reason: '${locale.languageCode} left languageSettingsTitle blank');
       }
     });
 

@@ -8,7 +8,7 @@
 //   2. a layout that only fits Turkish overflows here instead of in a
 //      German store review.
 //
-// 1924 members covered.
+// 1919 members covered.
 
 import 'package:flutter/widgets.dart';
 import 'package:sixpack_ai/core/utils/pseudo_locale.dart';
@@ -4515,13 +4515,6 @@ class PseudoAppLocalizations extends AppLocalizations {
   String get detectorStateUp => pseudoLocalize(_inner.detectorStateUp);
 
   @override
-  String get languageStepTitle => pseudoLocalize(_inner.languageStepTitle);
-
-  @override
-  String get languageStepSubtitle =>
-      pseudoLocalize(_inner.languageStepSubtitle);
-
-  @override
   String get languageSettingsTitle =>
       pseudoLocalize(_inner.languageSettingsTitle);
 
@@ -4772,15 +4765,6 @@ class PseudoAppLocalizations extends AppLocalizations {
 
   @override
   String get unitSystemImperial => pseudoLocalize(_inner.unitSystemImperial);
-
-  @override
-  String get languageWelcomeTo => pseudoLocalize(_inner.languageWelcomeTo);
-
-  @override
-  String get languageTagline => pseudoLocalize(_inner.languageTagline);
-
-  @override
-  String get languageContinue => pseudoLocalize(_inner.languageContinue);
 
   @override
   String get recipeTagHighProtein =>
@@ -6866,5 +6850,5 @@ class PseudoAppLocalizations extends AppLocalizations {
   /// Number of members this wrapper covers. The test suite asserts
   /// it still matches the generated class, so a new ARB key cannot
   /// slip past pseudo mode unnoticed.
-  static const int coveredMembers = 1924;
+  static const int coveredMembers = 1919;
 }

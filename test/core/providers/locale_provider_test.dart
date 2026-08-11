@@ -102,23 +102,31 @@ void main() {
       expect(deviceLocale(), const Locale('en'));
     });
 
-    testWidgets('an unshipped phone language falls back to the first',
+    testWidgets('an unshipped phone language falls back to English',
         (tester) async {
+      // Deliberately asserted against `kFallbackLocale` and NOT against
+      // `kSupportedLocales.first`, which is Turkish. The two used to be
+      // the same constant; splitting them is the point of the change.
       tester.platformDispatcher.localesTestValue = [const Locale('de')];
       addTearDown(tester.platformDispatcher.clearLocalesTestValue);
-      expect(deviceLocale(), kSupportedLocales.first);
+      expect(deviceLocale(), kFallbackLocale);
+      expect(deviceLocale(), const Locale('en'));
     });
 
     testWidgets('a later preferred locale wins over an unshipped first',
         (tester) async {
-      // Android hands over an ordered list. A phone set to German with
-      // English second should get English, not the Turkish fallback.
+      // Android hands over an ordered list, and the walk down it has to
+      // actually happen. Deliberately [de, tr] rather than [de, en]:
+      // English is now the fallback, so a phone whose second choice is
+      // English returns English whether the walk works or not, and the
+      // test would pass on a build that had lost it entirely. Turkish
+      // second can only be reached by matching.
       tester.platformDispatcher.localesTestValue = const [
         Locale('de'),
-        Locale('en')
+        Locale('tr')
       ];
       addTearDown(tester.platformDispatcher.clearLocalesTestValue);
-      expect(deviceLocale(), const Locale('en'));
+      expect(deviceLocale(), const Locale('tr'));
     });
   });
 

@@ -60,23 +60,18 @@ Widget _hostOnboarding(SharedPreferences prefs) {
   );
 }
 
-/// Mounts the wizard and steps past the language ask onto the welcome
-/// hero, which is where every test below starts.
+/// Mounts the wizard on the welcome hero, which is where every test
+/// below starts.
 ///
-/// Roadmap Phase 6 put the language picker at index 0. It is genuinely
-/// the first screen now, so the tests that assert on the hero have to
-/// walk to it rather than pretend it is still first — and the walk is
-/// itself a check that step 0 hands off to step 1.
+/// This used to tap through a language picker to get here: Roadmap
+/// Phase 6 put one at index 0, and the helper walked past it. The picker
+/// is gone — the app follows the device locale rather than asking — so
+/// the welcome hero is step 0 again and there is nothing to walk.
 Future<void> _pumpToWelcome(
     WidgetTester tester, SharedPreferences prefs) async {
   await tester.pumpWidget(_hostOnboarding(prefs));
-  await tester.pump();
-  // The language step's own CTA — `languageContinue`, not the wizard's
-  // shared `onbContinueCta`. It is shorter because it carries a chevron.
-  await tester.tap(find.text('Devam'));
   // Not pumpAndSettle: the welcome hero runs a looping glow, so the
-  // tree never settles. One pump past the 480 ms scene transition is
-  // what "the next screen is up" actually means here.
+  // tree never settles.
   await tester.pump(const Duration(milliseconds: 600));
 }
 

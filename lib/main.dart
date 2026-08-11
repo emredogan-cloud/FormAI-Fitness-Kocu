@@ -757,13 +757,25 @@ Locale _onLocaleResolved(Locale? deviceLocale, Iterable<Locale> supported) {
 /// Roadmap Phase 5 (C11) · device locale → a locale we actually ship.
 ///
 /// Honours the device locale when we genuinely support it, otherwise
-/// falls back to Turkish — never to the framework default, which would
-/// hand an unsupported-locale user a screen of untranslated keys.
+/// falls back to [kFallbackLocale] — never to the framework default,
+/// which would hand an unsupported-locale user a screen of untranslated
+/// keys.
+///
+/// The fallback used to be `supported.first`, i.e. Turkish. It is now
+/// English, because the only devices that reach this line are the ones
+/// asking for neither language we ship; see [kFallbackLocale].
 Locale _resolveLocale(Locale? deviceLocale, Iterable<Locale> supported) {
   if (deviceLocale != null) {
     for (final locale in supported) {
       if (locale.languageCode == deviceLocale.languageCode) return locale;
     }
+  }
+  // `supported` is `kSupportedLocales` everywhere in this app, so the
+  // fallback is always in it. The containment check is for the framework
+  // calling us with a narrowed list — returning a locale absent from it
+  // is what produces untranslated keys.
+  if (supported.any((l) => l.languageCode == kFallbackLocale.languageCode)) {
+    return kFallbackLocale;
   }
   return supported.isEmpty ? const Locale('tr') : supported.first;
 }

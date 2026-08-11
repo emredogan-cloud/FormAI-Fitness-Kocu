@@ -1164,10 +1164,6 @@
   },
   "tutorialStepDistanceTitle": "Step back about {distance}",
   "@tutorialStepDistanceTitle": {
-    "description": "Camera-setup step. {distance} is formatted by unit_system.dart from the user's Metric/Imperial setting — it was a hardcoded '6 feet' in English and '2 metre' in Turkish, so the figure followed the LANGUAGE rather than the unit preference and a metric English reader was told to step back six feet.",
-    "placeholders": { "distance": { "type": "String" } }
-  },
-  "@tutorialStepDistanceTitle": {
     "description": "Setup step 2 title. Distance is converted, not translated: the Turkish source says 2 meters."
   },
   "tutorialStepDistanceBody": "You should still fit in frame with your arms spread.",
@@ -1187,10 +1183,6 @@
     "description": "Label under the phone in the placement diagram"
   },
   "tutorialDiagramDistance": "~{distance}",
-  "@tutorialDiagramDistance": {
-    "description": "Label on the phone-to-user diagram. Same reasoning as tutorialStepDistanceTitle.",
-    "placeholders": { "distance": { "type": "String" } }
-  },
   "@tutorialDiagramDistance": {
     "description": "Distance label in the placement diagram. Converted from the Turkish '~2 m', not translated."
   },
@@ -2531,9 +2523,9 @@
   "@profileFieldGoal": {
     "description": "Profile info tile label"
   },
-  "profileEdit": "Edit",
+  "profileEdit": "Edit profile",
   "@profileEdit": {
-    "description": "Button opening the profile edit sheet"
+    "description": "Opens the editor for an existing profile."
   },
   "profileStatStreak": "STREAK",
   "@profileStatStreak": {
@@ -6742,14 +6734,6 @@
       }
     }
   },
-  "languageStepTitle": "Choose your language",
-  "@languageStepTitle": {
-    "description": "Heading of onboarding step 0, the language picker. The selection applies instantly, so a user who cannot read this heading taps their language and watches it become readable — keep it short enough to be scanned rather than read."
-  },
-  "languageStepSubtitle": "You can change this any time from your profile.",
-  "@languageStepSubtitle": {
-    "description": "Reassurance under the language-picker heading, so the first screen in the product does not read as an irreversible decision."
-  },
   "languageSettingsTitle": "Language",
   "@languageSettingsTitle": {
     "description": "Label of the language row in the profile tab's settings section."
@@ -7107,18 +7091,6 @@
   "unitSystemImperial": "Imperial",
   "@unitSystemImperial": {
     "description": "The imperial option: feet, inches and pounds."
-  },
-  "languageWelcomeTo": "Welcome to",
-  "@languageWelcomeTo": {
-    "description": "Line above the FormAI wordmark on the language screen. It runs straight into the brand name, so it must not end with punctuation."
-  },
-  "languageTagline": "Your AI Fitness Coach",
-  "@languageTagline": {
-    "description": "One-line positioning under the wordmark on the language screen."
-  },
-  "languageContinue": "Continue",
-  "@languageContinue": {
-    "description": "Primary button on the language screen. Shorter than the onboarding DEVAM ET because this button carries a chevron beside it."
   },
   "recipeTagHighProtein": "High protein",
   "@recipeTagHighProtein": {
@@ -7970,10 +7942,6 @@
   "profileCreate": "Create a profile",
   "@profileCreate": {
     "description": "CTA that opens the profile editor."
-  },
-  "profileEdit": "Edit profile",
-  "@profileEdit": {
-    "description": "Opens the editor for an existing profile."
   },
   "profileDisplayName": "Display name",
   "@profileDisplayName": {
@@ -8943,7 +8911,11 @@
   "paywallPerMonthEquivalent": "{price} / mo",
   "@paywallPerMonthEquivalent": {
     "description": "Caption under a multi-month plan's price: what it works out to per month. Replaced a struck-through 12x-monthly total, which read as a former price and had never been charged. {price} is already formatted by the store.",
-    "placeholders": { "price": { "type": "String" } }
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
   },
   "paywallCancelAnytimeTitle": "Cancel anytime",
   "@paywallCancelAnytimeTitle": {

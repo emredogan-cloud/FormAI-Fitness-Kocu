@@ -10,7 +10,6 @@ import 'package:sixpack_ai/features/onboarding/presentation/steps/act_3_buildup_
 import 'package:sixpack_ai/features/onboarding/presentation/steps/act_4_revelation_steps.dart';
 import 'package:sixpack_ai/features/onboarding/presentation/steps/act_5_commitment_step.dart';
 import 'package:sixpack_ai/features/onboarding/presentation/steps/body_feelings_step.dart';
-import 'package:sixpack_ai/features/onboarding/presentation/steps/language_step.dart';
 import 'package:sixpack_ai/features/onboarding/presentation/steps/name_capture_step.dart';
 import 'package:sixpack_ai/features/onboarding/presentation/steps/social_proof_step.dart';
 
@@ -74,13 +73,11 @@ void main() {
   }
 
   group('the funnel speaks English', () {
-    testWidgets('step 0 · the language picker', (tester) async {
-      await sweepEnglish(
-        tester,
-        'Language step',
-        () => const ProviderScope(child: LanguageStep(onContinue: _noop)),
-      );
-    });
+    // The language picker used to be swept here as step 0. The step is
+    // gone — the app follows the device locale instead of asking — so
+    // the funnel now opens on the hook screen. The picker's English is
+    // still covered: it lives in Settings, and profile_tab is swept by
+    // this file's sibling cases.
 
     testWidgets('act 1 · the hook screen', (tester) async {
       await sweepEnglish(
