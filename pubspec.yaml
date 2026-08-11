@@ -214,6 +214,15 @@ flutter:
     # Phases 124 and 126 and were silently shipping in every APK; they
     # have since been relocated. Future visual references go to
     # `docs/reference-imagery/`, not here.
+    #
+    # The rule caught a second batch during the icon phase: APP_ICON.png,
+    # YEDEK_APP_ICON.png, APP_ICON_512.png and calories-interface.png —
+    # 5.4 MB of icon masters and design reference that no Dart code has
+    # ever loaded, shipping in every install. The first three were the
+    # *source* artwork for the launcher icon, which is exactly the trap
+    # Phase 120 documented for tool/app_icon.png and which reappeared
+    # because the store master was dropped next to the old one. All four
+    # now live in `docs/reference-imagery/`.
     - "photos/"
     # Tier 2-A · after the recipe-image migration this directory only
     # contains the 5 `budget_cover_*.webp` category tiles hardcoded
@@ -259,10 +268,10 @@ flutter:
     # background-keyed + compressed before shipping.
     - "assets/illustrations/"
 
-# Launcher icon source. Uses a square PNG (derived from the onboarding
-# webp by ImageMagick convert) because flutter_launcher_icons needs PNG
-# input. Regenerate native icons whenever this file changes via:
-#   flutter pub run flutter_launcher_icons
+# Launcher icon source. Uses square PNGs because flutter_launcher_icons
+# needs PNG input. They are derived from the 512 px store master by
+# `bash tool/gen_app_icons.sh`, which also runs the generation step:
+#   bash tool/gen_app_icons.sh && dart run flutter_launcher_icons
 #
 # Phase 120 · moved out of photos/ → tool/. The previous location
 # accidentally bundled the 1.35 MB source PNG into every debug APK
@@ -283,13 +292,26 @@ flutter_launcher_icons:
   ios: true
   image_path: "tool/app_icon.png"
   remove_alpha_ios: true
-  # RC-1 · canonical icon = photos/APP_ICON.png (founder decision), inner
-  # rounded-square cropped to a full-bleed 1024 square. Photographic art →
-  # the adaptive BACKGROUND carries the full-bleed image (fills every OEM
-  # mask edge-to-edge) and the foreground is transparent; scaling the photo
-  # into the 66% foreground safe zone instead makes it float tiny in a dark
-  # field. Regenerate the trio together if the art changes:
-  # tool/app_icon.png (legacy+iOS) · tool/app_icon_bg.png (adaptive bg) ·
-  # tool/app_icon_fg.png (transparent overlay).
+  # Canonical icon = the FormAI "F" logomark, the same artwork Google Play
+  # shows. It replaced the photographic "AI FITNESS COACH" scene that used
+  # to live here: the store listing was updated during the ASO refresh and
+  # this pipeline was not, so the launcher and the store showed two
+  # different images for weeks.
+  #
+  # The three assets are DERIVED, not hand-made — regenerate them together
+  # with `bash tool/gen_app_icons.sh`, never edit the PNGs:
+  #   tool/app_icon.png    legacy launcher (minSdk 24 → API 24-25 use it) + iOS
+  #   tool/app_icon_bg.png adaptive background — the colour field
+  #   tool/app_icon_fg.png adaptive foreground — the F glyph, on transparency
+  #
+  # The layer split is the opposite of the photographic version's, and
+  # deliberately so. A photo can be cropped by an OEM mask harmlessly, so
+  # the old icon put full-bleed art in the BACKGROUND with a transparent
+  # foreground. A logomark cannot: measured on the master, the F's bounding
+  # box reaches 42.2 dp from centre on the 108 dp canvas and a circular mask
+  # clips at 36 dp, so that arrangement would have sliced the corner where
+  # the F's stem meets its top bar on every round-mask launcher. The glyph
+  # therefore lives in the foreground, sized to 31.9 dp. See
+  # mipmap-anydpi-v26/launcher_icon.xml for why it carries no <inset>.
   adaptive_icon_background: "tool/app_icon_bg.png"
   adaptive_icon_foreground: "tool/app_icon_fg.png"
