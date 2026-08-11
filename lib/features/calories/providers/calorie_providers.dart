@@ -81,9 +81,26 @@ final scanQuotaProvider = FutureProvider.autoDispose<ScanQuota>((ref) async {
   }
 });
 
+/// The last 14 days of totals, for the history view.
+///
+/// Keyed on nothing and `autoDispose`: history is read on a screen the
+/// user opens deliberately, so keeping it warm between visits would hold
+/// two weeks of rows for a screen most sessions never reach.
+final calorieHistoryProvider =
+    FutureProvider.autoDispose<Map<DateTime, DailyTotals>>((ref) async {
+  final repo = ref.watch(calorieRepositoryProvider);
+  final today = DateTime.now();
+  final end = DateTime(today.year, today.month, today.day);
+  return repo.dailyTotalsForRange(
+    from: end.subtract(const Duration(days: 13)),
+    to: end,
+  );
+});
+
 /// Invalidate everything the dashboard reads. Called after a meal is
 /// logged, edited or deleted, and after a scan consumes a slot.
 void refreshCalorieSurfaces(WidgetRef ref) {
   ref.invalidate(dailyMealsProvider);
   ref.invalidate(scanQuotaProvider);
+  ref.invalidate(calorieHistoryProvider);
 }

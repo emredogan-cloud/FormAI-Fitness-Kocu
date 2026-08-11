@@ -9,9 +9,11 @@ import '../../../core/routing/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../l10n/app_localizations.dart';
+import '../domain/jpeg_privacy.dart';
 import '../domain/models/meal_entry.dart';
 import '../domain/models/scan_result.dart';
 import '../providers/calorie_providers.dart';
+import 'barcode_flow.dart';
 import 'calorie_dashboard.dart' show ConfidenceDot, slotLabel;
 
 /// Capture → analyse → correct → log.
@@ -31,22 +33,41 @@ import 'calorie_dashboard.dart' show ConfidenceDot, slotLabel;
 ///     sending more is paying for tokens nobody reads (research doc §5.2)
 ///   * latency — a 4 MB upload over a phone connection is most of the
 ///     wait
-///   * privacy — re-encoding drops EXIF, and a food photo's EXIF carries
-///     GPS. The research doc (§7) asks for the original never to leave
-///     the handset; this is how that is true rather than asserted
+///   * privacy — the full-resolution original never leaves the handset
 ///
 /// `camera` would hand back a full-resolution file and leave all three to
 /// us. Reaching for the heavier dependency would mean re-implementing
 /// what the lighter one does natively.
+///
+/// The re-encode also drops EXIF, but that is treated as a bonus rather
+/// than as the mechanism: `stripJpegMetadata` removes it explicitly
+/// below, because a privacy claim resting on another package's resize
+/// path stops being true the moment that path changes. See
+/// `jpeg_privacy.dart`.
 const _maxEdge = 1024.0;
 const _quality = 80;
 
 Future<void> startFoodScan(BuildContext context, WidgetRef ref) async {
   final l10n = AppLocalizations.of(context);
 
-  // Check the quota BEFORE opening the camera. Letting a user frame a
-  // photo, wait, and only then be told they are out of scans wastes their
-  // time and reads as a bait-and-switch.
+  final choice = await _pickSource(context);
+  if (choice == null || !context.mounted) return;
+
+  // Barcode first, and deliberately BEFORE the quota check.
+  //
+  // Reading a barcode costs no model call, so it must stay available to
+  // a user who has spent all their AI scans. Gating it behind the quota
+  // would make the free tier merely limited instead of usable — and
+  // would push packaged food back through the vision model, which the
+  // research doc (§1.2) is explicit it should never take.
+  if (choice == _ScanChoice.barcode) {
+    await startBarcodeScan(context, ref);
+    return;
+  }
+
+  // Everything below spends a scan. Check the quota BEFORE opening the
+  // camera: letting a user frame a photo, wait, and only then be told
+  // they are out wastes their time and reads as a bait-and-switch.
   final quota = ref.read(scanQuotaProvider).value;
   if (quota != null && quota.isExhausted) {
     if (!context.mounted) return;
@@ -54,8 +75,9 @@ Future<void> startFoodScan(BuildContext context, WidgetRef ref) async {
     return;
   }
 
-  final source = await _pickSource(context);
-  if (source == null || !context.mounted) return;
+  final source =
+      choice == _ScanChoice.camera ? ImageSource.camera : ImageSource.gallery;
+  if (!context.mounted) return;
 
   final XFile? shot;
   try {
@@ -78,7 +100,11 @@ Future<void> startFoodScan(BuildContext context, WidgetRef ref) async {
 
   if (shot == null || !context.mounted) return;
 
-  final bytes = await shot.readAsBytes();
+  // Strip metadata before the bytes go anywhere. `image_picker`'s resize
+  // almost certainly dropped EXIF already; this makes it certain, and
+  // `jpeg_privacy.dart` explains why "almost certainly" was not good
+  // enough for a claim we make in the privacy policy.
+  final bytes = stripJpegMetadata(await shot.readAsBytes());
   if (!context.mounted) return;
 
   final outcome = await _runScanWithProgress(context, ref, bytes);
@@ -249,9 +275,11 @@ Future<void> _showQuotaSheet(
   );
 }
 
-Future<ImageSource?> _pickSource(BuildContext context) {
+enum _ScanChoice { camera, gallery, barcode }
+
+Future<_ScanChoice?> _pickSource(BuildContext context) {
   final l10n = AppLocalizations.of(context);
-  return showModalBottomSheet<ImageSource>(
+  return showModalBottomSheet<_ScanChoice>(
     context: context,
     useSafeArea: true,
     builder: (sheetContext) => SafeArea(
@@ -261,12 +289,20 @@ Future<ImageSource?> _pickSource(BuildContext context) {
           ListTile(
             leading: const Icon(Icons.photo_camera_outlined),
             title: Text(l10n.calorieSourceCamera),
-            onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
+            onTap: () => Navigator.pop(sheetContext, _ScanChoice.camera),
           ),
           ListTile(
             leading: const Icon(Icons.photo_library_outlined),
             title: Text(l10n.calorieSourceGallery),
-            onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
+            onTap: () => Navigator.pop(sheetContext, _ScanChoice.gallery),
+          ),
+          // Labelled as free, because that is the useful fact: it is the
+          // one capture path that does not spend a daily scan.
+          ListTile(
+            leading: const Icon(Icons.qr_code_scanner),
+            title: Text(l10n.calorieSourceBarcode),
+            subtitle: Text(l10n.calorieSourceBarcodeHint),
+            onTap: () => Navigator.pop(sheetContext, _ScanChoice.barcode),
           ),
           const SizedBox(height: 8),
         ],

@@ -79,6 +79,49 @@ class CalorieRepository {
     return mealId;
   }
 
+  /// Daily totals across a date range, for the history view.
+  ///
+  /// Aggregated client-side from the meal rows rather than by a SQL
+  /// `group by`, and deliberately: the meal totals are already
+  /// denormalised onto `meal_entries` by migration 028's trigger, so this
+  /// is one indexed range scan over at most a few hundred small rows.
+  /// A server-side aggregate would need its own RPC, its own RLS
+  /// reasoning, and a second definition of "a day's calories" that could
+  /// drift from the one the dashboard uses.
+  ///
+  /// Items are NOT fetched — the history view shows totals, and pulling
+  /// every item for 30 days to display none of them is the kind of
+  /// over-fetch that only shows up on a slow connection.
+  Future<Map<DateTime, DailyTotals>> dailyTotalsForRange({
+    required DateTime from,
+    required DateTime to,
+  }) async {
+    final rows = await _client
+        .from('meal_entries')
+        .select('id, logged_for, meal_slot, source, kcal, protein_g, '
+            'carbs_g, fat_g, created_at')
+        .gte('logged_for', _dateOnly(from))
+        .lte('logged_for', _dateOnly(to))
+        .order('logged_for', ascending: true);
+
+    final byDay = <DateTime, List<MealEntry>>{};
+    for (final raw in (rows as List<dynamic>)) {
+      if (raw is! Map<String, dynamic>) continue;
+      final meal = MealEntry.fromJson(raw);
+      final key = DateTime(
+        meal.loggedFor.year,
+        meal.loggedFor.month,
+        meal.loggedFor.day,
+      );
+      (byDay[key] ??= []).add(meal);
+    }
+
+    return {
+      for (final entry in byDay.entries)
+        entry.key: DailyTotals.from(entry.value),
+    };
+  }
+
   Future<void> deleteMeal(String mealId) =>
       _client.from('meal_entries').delete().eq('id', mealId);
 

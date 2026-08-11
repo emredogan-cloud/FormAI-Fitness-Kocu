@@ -8,7 +8,7 @@
 //   2. a layout that only fits Turkish overflows here instead of in a
 //      German store review.
 //
-// 1986 members covered.
+// 2007 members covered.
 
 import 'package:flutter/widgets.dart';
 import 'package:sixpack_ai/core/utils/pseudo_locale.dart';
@@ -6223,6 +6223,66 @@ class PseudoAppLocalizations extends AppLocalizations {
       pseudoLocalize(_inner.calorieManualIncomplete);
 
   @override
+  String get calorieSourceBarcode =>
+      pseudoLocalize(_inner.calorieSourceBarcode);
+
+  @override
+  String get calorieSourceBarcodeHint =>
+      pseudoLocalize(_inner.calorieSourceBarcodeHint);
+
+  @override
+  String get calorieBarcodeTitle => pseudoLocalize(_inner.calorieBarcodeTitle);
+
+  @override
+  String get calorieBarcodeHint => pseudoLocalize(_inner.calorieBarcodeHint);
+
+  @override
+  String get calorieBarcodeNoCamera =>
+      pseudoLocalize(_inner.calorieBarcodeNoCamera);
+
+  @override
+  String get calorieBarcodeAmount =>
+      pseudoLocalize(_inner.calorieBarcodeAmount);
+
+  @override
+  String get calorieEditItemTitle =>
+      pseudoLocalize(_inner.calorieEditItemTitle);
+
+  @override
+  String get calorieEditItemSave => pseudoLocalize(_inner.calorieEditItemSave);
+
+  @override
+  String get calorieItemUpdated => pseudoLocalize(_inner.calorieItemUpdated);
+
+  @override
+  String get calorieItemRemoved => pseudoLocalize(_inner.calorieItemRemoved);
+
+  @override
+  String get calorieHistoryTitle => pseudoLocalize(_inner.calorieHistoryTitle);
+
+  @override
+  String get calorieHistoryCta => pseudoLocalize(_inner.calorieHistoryCta);
+
+  @override
+  String get calorieHistoryEmpty => pseudoLocalize(_inner.calorieHistoryEmpty);
+
+  @override
+  String get calorieHistoryAverage =>
+      pseudoLocalize(_inner.calorieHistoryAverage);
+
+  @override
+  String get calorieHistoryDaysLogged =>
+      pseudoLocalize(_inner.calorieHistoryDaysLogged);
+
+  @override
+  String get calorieHistoryOnTarget =>
+      pseudoLocalize(_inner.calorieHistoryOnTarget);
+
+  @override
+  String get calorieHistoryAverageNote =>
+      pseudoLocalize(_inner.calorieHistoryAverageNote);
+
+  @override
   String retrospectiveSummary(String workouts, String minutes, String reps) =>
       pseudoLocalize(_inner.retrospectiveSummary(workouts, minutes, reps));
 
@@ -7072,8 +7132,24 @@ class PseudoAppLocalizations extends AppLocalizations {
   String calorieQuotaTitle(int limit) =>
       pseudoLocalize(_inner.calorieQuotaTitle(limit));
 
+  @override
+  String calorieBarcodeNotFound(String barcode) =>
+      pseudoLocalize(_inner.calorieBarcodeNotFound(barcode));
+
+  @override
+  String calorieBarcodePer100(int kcal) =>
+      pseudoLocalize(_inner.calorieBarcodePer100(kcal));
+
+  @override
+  String calorieBarcodeOneServing(int grams) =>
+      pseudoLocalize(_inner.calorieBarcodeOneServing(grams));
+
+  @override
+  String calorieHistoryGoalLine(int goal) =>
+      pseudoLocalize(_inner.calorieHistoryGoalLine(goal));
+
   /// Number of members this wrapper covers. The test suite asserts
   /// it still matches the generated class, so a new ARB key cannot
   /// slip past pseudo mode unnoticed.
-  static const int coveredMembers = 1986;
+  static const int coveredMembers = 2007;
 }

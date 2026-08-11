@@ -9083,5 +9083,60 @@
   "calorieManualName": "Food name",
   "calorieManualPortion": "Portion (e.g. 1 bowl)",
   "calorieManualSave": "Add to log",
-  "calorieManualIncomplete": "Enter at least a name and the calories."
+  "calorieManualIncomplete": "Enter at least a name and the calories.",
+  "calorieSourceBarcode": "Scan a barcode",
+  "calorieSourceBarcodeHint": "For packaged food — doesn't use an AI scan",
+  "@calorieSourceBarcodeHint": {
+    "description": "The free-of-quota fact is the useful part."
+  },
+  "calorieBarcodeTitle": "Scan barcode",
+  "calorieBarcodeHint": "Point the camera at the barcode on the package.",
+  "calorieBarcodeNoCamera": "No camera found on this device.",
+  "calorieBarcodeNotFound": "We don't have {barcode} in the food database yet. You can add it by hand.",
+  "@calorieBarcodeNotFound": {
+    "placeholders": {
+      "barcode": {
+        "type": "String"
+      }
+    }
+  },
+  "calorieBarcodePer100": "{kcal} kcal per 100 g",
+  "@calorieBarcodePer100": {
+    "placeholders": {
+      "kcal": {
+        "type": "int"
+      }
+    }
+  },
+  "calorieBarcodeAmount": "How much did you have? (g)",
+  "calorieBarcodeOneServing": "1 serving ({grams} g)",
+  "@calorieBarcodeOneServing": {
+    "placeholders": {
+      "grams": {
+        "type": "int"
+      }
+    }
+  },
+  "calorieEditItemTitle": "Edit item",
+  "calorieEditItemSave": "Save changes",
+  "calorieItemUpdated": "Item updated",
+  "calorieItemRemoved": "Item removed",
+  "calorieHistoryTitle": "Last 14 days",
+  "calorieHistoryCta": "History",
+  "calorieHistoryEmpty": "Nothing logged in the last two weeks yet.",
+  "calorieHistoryGoalLine": "Target {goal} kcal",
+  "@calorieHistoryGoalLine": {
+    "placeholders": {
+      "goal": {
+        "type": "int"
+      }
+    }
+  },
+  "calorieHistoryAverage": "Daily average",
+  "calorieHistoryDaysLogged": "Days logged",
+  "calorieHistoryOnTarget": "Within target",
+  "calorieHistoryAverageNote": "Averages count only the days you logged something — a day you didn't open the app isn't a zero-calorie day.",
+  "@calorieHistoryAverageNote": {
+    "description": "Explains why unlogged days are excluded from the average."
+  }
 }

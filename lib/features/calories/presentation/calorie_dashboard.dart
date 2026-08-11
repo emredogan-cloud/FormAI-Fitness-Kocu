@@ -7,7 +7,9 @@ import '../../nutrition/providers/nutrition_provider.dart';
 import '../domain/models/meal_entry.dart';
 import '../domain/models/scan_result.dart';
 import '../providers/calorie_providers.dart';
+import 'calorie_history_screen.dart';
 import 'food_scan_flow.dart';
+import 'item_editor.dart';
 import 'widgets/calorie_ring.dart';
 
 /// The AI calorie tracker.
@@ -105,6 +107,13 @@ class _DayHeader extends ConsumerWidget {
           ),
         ),
         const SizedBox(width: 8),
+        IconButton(
+          tooltip: l10n.calorieHistoryCta,
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const CalorieHistoryScreen()),
+          ),
+          icon: const Icon(Icons.insights_outlined),
+        ),
         IconButton(
           tooltip: l10n.caloriePreviousDay,
           onPressed: () =>
@@ -508,36 +517,42 @@ class _MealBlock extends ConsumerWidget {
               ),
             ],
           ),
+          // Tapping an item opens the editor. Corrections must be
+          // possible after the fact, not only in the seconds before Save
+          // — you notice the portion was wrong when you next open the day.
           for (final item in meal.items)
-            Padding(
-              padding: const EdgeInsetsDirectional.only(start: 8, top: 6),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text.rich(
-                      TextSpan(children: [
-                        TextSpan(text: item.name),
-                        if (item.portionLabel.isNotEmpty)
-                          TextSpan(
-                            text: ' · ${item.portionLabel}',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
+            InkWell(
+              onTap: () => showItemEditor(context, ref, item),
+              child: Padding(
+                padding: const EdgeInsetsDirectional.only(start: 8, top: 6),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text.rich(
+                        TextSpan(children: [
+                          TextSpan(text: item.name),
+                          if (item.portionLabel.isNotEmpty)
+                            TextSpan(
+                              text: ' · ${item.portionLabel}',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
                             ),
-                          ),
-                      ]),
-                      style: theme.textTheme.bodyMedium,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                        ]),
+                        style: theme.textTheme.bodyMedium,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 6),
-                  ConfidenceDot(confidence: item.confidence),
-                  const SizedBox(width: 8),
-                  Text(
-                    l10n.calorieKcalValue(item.kcal),
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ],
+                    const SizedBox(width: 6),
+                    ConfidenceDot(confidence: item.confidence),
+                    const SizedBox(width: 8),
+                    Text(
+                      l10n.calorieKcalValue(item.kcal),
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ],
+                ),
               ),
             ),
           // The honesty qualifier from the research doc (§6). Shown only
