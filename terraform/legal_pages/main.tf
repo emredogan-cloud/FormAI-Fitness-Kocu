@@ -98,7 +98,12 @@ resource "aws_s3_object" "terms" {
   key           = "terms.html"
   source        = "${path.module}/../../web/public/terms.html"
   etag          = filemd5("${path.module}/../../web/public/terms.html")
-  content_type  = "text/html"
+  # Charset is explicit on purpose. The live objects already carried
+  # `; charset=utf-8` and a bare "text/html" here would have silently
+  # removed it on the next apply. The privacy page is bilingual and its
+  # Turkish half is full of ş/ğ/ı/ö/ü/ç — leaving the encoding to the
+  # browser's sniffing is not a risk worth taking on a legal page.
+  content_type  = "text/html; charset=utf-8"
   cache_control = "public, max-age=300"
 
   depends_on = [aws_s3_bucket_policy.legal_pages_public_read]
@@ -109,7 +114,12 @@ resource "aws_s3_object" "privacy" {
   key           = "privacy.html"
   source        = "${path.module}/../../web/public/privacy.html"
   etag          = filemd5("${path.module}/../../web/public/privacy.html")
-  content_type  = "text/html"
+  # Charset is explicit on purpose. The live objects already carried
+  # `; charset=utf-8` and a bare "text/html" here would have silently
+  # removed it on the next apply. The privacy page is bilingual and its
+  # Turkish half is full of ş/ğ/ı/ö/ü/ç — leaving the encoding to the
+  # browser's sniffing is not a risk worth taking on a legal page.
+  content_type  = "text/html; charset=utf-8"
   cache_control = "public, max-age=300"
 
   depends_on = [aws_s3_bucket_policy.legal_pages_public_read]

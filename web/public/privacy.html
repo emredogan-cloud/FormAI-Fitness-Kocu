@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#0b0b0f" media="(prefers-color-scheme: dark)">
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-  <meta name="description" content="FormAI Privacy Policy — how we collect, process, and safeguard your data; on-device pose detection; third-party processors.">
+  <meta name="description" content="FormAI Privacy Policy / Gizlilik Politikası — on-device pose detection, food-photo processing for the AI calorie scanner, third-party processors. English and Türkçe.">
   <meta name="robots" content="index, follow">
   <title>Privacy Policy — FormAI</title>
   <style>
@@ -151,6 +151,34 @@
       main { padding: 24px 18px 60px; }
       table.processors th, table.processors td { padding: 8px 10px; font-size: 13.5px; }
     }
+  
+    .langbar {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 16px 24px 0;
+      display: flex;
+      gap: 8px;
+    }
+    .langbar button {
+      font: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 7px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .langbar button[aria-pressed="true"] {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    /* Both languages stay in the DOM so the page is complete without
+       JavaScript — a store reviewer with scripting disabled still sees
+       every disclosure, just stacked. */
+    .lang-section + .lang-section { border-top: 1px solid var(--border); margin-top: 8px; }
   </style>
 </head>
 <body>
@@ -163,17 +191,24 @@
     </nav>
   </header>
 
-  <main>
-    <h1>Privacy Policy</h1>
-    <p class="meta">Last updated: 6 August 2026 · Effective: 6 August 2026</p>
+  <div class="langbar">
+    <button type="button" id="btn-en" aria-pressed="true">English</button>
+    <button type="button" id="btn-tr" aria-pressed="false">Türkçe</button>
+  </div>
 
-    <p>This Privacy Policy explains how FormAI ("we", "us", "our") collects, uses, shares, and safeguards information when you use the FormAI mobile application (the "App"). We designed FormAI to minimize the personal data we collect and to keep the most sensitive data — your camera feed during workouts — entirely on your device.</p>
+  <main>
+    <section class="lang-section" id="lang-en" lang="en">
+
+    <h1>Privacy Policy</h1>
+    <p class="meta">Last updated: 11 August 2026 · Effective: 11 August 2026</p>
+
+    <p>This Privacy Policy explains how FormAI ("we", "us", "our") collects, uses, shares, and safeguards information when you use the FormAI mobile application (the "App"). We designed FormAI to minimize the personal data we collect. Your workout camera feed stays entirely on your device. Food photographs you choose to scan for calories do leave your device — Section 1.3.1 explains exactly what happens to them.</p>
 
     <h2>Data Controller (Veri Sorumlusu)</h2>
     <p>FormAI is operated by <strong>Emre Doğan</strong>, an individual developer (the "data controller" / <em>veri sorumlusu</em> under KVKK Art. 3). For any privacy question or data-subject request — including access, deletion, or objection — contact <a href="mailto:support@formai.app">support@formai.app</a>. A postal correspondence address is available on request via the same email.</p>
 
     <div class="callout">
-      <strong>The most important thing to know:</strong> When the camera is used for pose detection, the video stream is processed <strong>entirely on your device</strong> using Google ML Kit. We do not upload, stream, store, or transmit camera frames, photos, or video to our servers or to any third party.
+      <strong>The most important thing to know:</strong> Your <strong>workout video never leaves your device</strong> — pose detection runs entirely on your handset using Google ML Kit, and no frame is uploaded to us or to anyone else.<br><br><strong>Food photos are the exception, and they are opt-in.</strong> If you use the calorie scanner, that one photograph is sent through our server to <strong>Anthropic</strong> to be analysed. FormAI does not store the image. Section 1.3.1 sets out the detail.
     </div>
 
     <h2>1. Data We Collect</h2>
@@ -188,6 +223,7 @@
     <ul>
       <li><strong>Body metrics:</strong> Height, weight, sex, age range, fitness goal (e.g., lose weight, build muscle), activity level, and any body measurements you log (waist, chest, arm, thigh, hip). These are written to your device first and <strong>synced to your account on our servers</strong> (Supabase, EU) so your measurement history and progress charts survive a reinstall or a second device. They are used to personalize workout and nutrition plans and to draw your own trends. They are deleted when you delete your account, and removed from the device when you sign out or uninstall the App.</li>
       <li><strong>Workout history:</strong> Which plan days you completed and when is synced to your account so your progress survives reinstalls. Detailed session logs (sets, reps, durations) stay on your device.</li>
+      <li><strong>Meal log:</strong> Foods you log — by photo scan, barcode, or by hand — with their portions, calories, macronutrients and the date and meal they belong to. Stored in your account so your history and daily totals survive a reinstall. Deleted with your account.</li>
     </ul>
 
     <h3>1.2.1 AI coach conversations</h3>
@@ -198,6 +234,20 @@
 
     <h3>1.3 Camera feed (on-device only)</h3>
     <p>During pose-detection workouts, the App accesses your device camera to count repetitions and check form. The video stream is processed by <strong>Google ML Kit Pose Detection</strong> running entirely on your device's CPU/GPU. No frame, image, video, or pose-landmark coordinate is uploaded to our servers, sent to Google, or shared with any third party. Only the resulting numerical results (e.g., rep count, exercise duration) are saved to your workout history.</p>
+
+    <h3>1.3.1 Food photographs (calorie scanner) — leaves your device</h3>
+    <p>The calorie scanner is optional. Nothing here happens unless you open it and choose a photo.</p>
+    <ul>
+      <li><strong>Prepared on your device first.</strong> Before anything is sent, the App resizes the picture so its longest edge is at most 1024 pixels, re-encodes it as JPEG, and <strong>removes the file's metadata</strong> — including any EXIF GPS coordinates your camera recorded. The full-resolution original never leaves your handset.</li>
+      <li><strong>Where it goes.</strong> The prepared image is sent to our server (Supabase, EU) and forwarded to <strong>Anthropic</strong> (US), which identifies the foods and returns an estimate of portions, calories and macronutrients. Nothing else about you travels with it — no name, no email, no body metrics, no location.</li>
+      <li><strong>We do not keep the photo.</strong> FormAI does not write the image to a database, an object store, or a log. It exists only for the duration of the request. Anthropic processes it to produce the reply and applies its own limited abuse-monitoring window; it is not used to train its models.</li>
+      <li><strong>What we do store</strong> is the result you confirm: the food names, portion descriptions, calories, macronutrients, a per-item confidence level, and which meal and date you filed them under. This is your meal log, and it lives in your account until you delete it.</li>
+      <li><strong>We also store a scan counter.</strong> To enforce the daily limit on AI scans, we record one row per scan containing your user ID, the date, and whether the scan succeeded. It contains no image and no food data.</li>
+      <li><strong>The estimates are estimates.</strong> AI calorie estimation carries meaningful error, particularly for mixed dishes. The App shows a confidence level per item and lets you correct every number before and after saving. Do not rely on it for medical or clinical purposes.</li>
+    </ul>
+
+    <h3>1.3.2 Barcode scanning</h3>
+    <p>When you scan a product barcode, the barcode is decoded <strong>on your device</strong> and only the resulting number is sent to <strong>Open Food Facts</strong>, a public open food database, to look up the product. No image is uploaded and no AI processing takes place. Your identity is not sent with the lookup.</p>
 
     <h3>1.4 Device &amp; technical data</h3>
     <ul>
@@ -265,13 +315,19 @@
         </tr>
         <tr>
           <td><strong>Anthropic</strong></td>
-          <td>AI coach replies (large language model)</td>
-          <td>Your chat messages and a profile context block: first name, age, height, weight, activity level, goal, streak, plan progress, and 30-day weight/waist change. No email address, no account identifier, no camera data.</td>
+          <td>AI coach replies, and food recognition for the calorie scanner (large language model)</td>
+          <td><strong>Coach:</strong> your chat messages and a profile context block — first name, age, height, weight, activity level, goal, streak, plan progress, and 30-day weight/waist change.<br><strong>Calorie scanner:</strong> the single food photograph you chose, resized and stripped of metadata (see §1.3.1). No email address, no account identifier, no location, no workout camera data.</td>
           <td>US</td>
         </tr>
         <tr>
+          <td><strong>Open Food Facts</strong></td>
+          <td>Product lookup for barcode scanning</td>
+          <td>The scanned barcode number only. No account identifier, no image, no personal data.</td>
+          <td>EU (France)</td>
+        </tr>
+        <tr>
           <td><strong>Google ML Kit</strong></td>
-          <td>On-device pose detection</td>
+          <td>On-device pose detection and on-device barcode decoding</td>
           <td><strong>None.</strong> Runs entirely on your device. No data leaves the device.</td>
           <td>On-device</td>
         </tr>
@@ -293,6 +349,8 @@
       <li><strong>Workout completion history:</strong> Retained while your account is active; deleted alongside your account.</li>
       <li><strong>Body metrics:</strong> Retained on our servers while your account is active and deleted alongside your account; the device copy is removed when you sign out or uninstall the App.</li>
       <li><strong>AI coach conversations:</strong> Message history and its rolling summary are held on your device. Anthropic retains the request only as long as needed to return the reply and for its own limited abuse-monitoring window; we do not keep a server-side transcript.</li>
+      <li><strong>Food photographs:</strong> <strong>Not retained by FormAI.</strong> The image is held in memory only for the length of the analysis request and is never written to our database or file storage. Anthropic retains the request only as long as needed to return the result and for its own limited abuse-monitoring window.</li>
+      <li><strong>Meal log and scan counters:</strong> Retained while your account is active and deleted alongside your account. You can delete an individual food, meal or day at any time from inside the App.</li>
       <li><strong>Crash reports:</strong> Retained for up to 90 days, then automatically purged.</li>
       <li><strong>Anonymous analytics:</strong> Aggregated event data has no fixed expiry and may persist after account deletion in non-identifying form.</li>
     </ul>
@@ -331,10 +389,222 @@
 
     <h2>11. Contact</h2>
     <p>For privacy questions, data-subject requests, or to report a concern, email us at <a href="mailto:support@formai.app">support@formai.app</a>.</p>
+      </section>
+
+    <section class="lang-section" id="lang-tr" lang="tr">
+    <h1>Gizlilik Politikası</h1>
+    <p class="meta">Son güncelleme: 11 Ağustos 2026 · Yürürlük: 11 Ağustos 2026</p>
+
+    <p>Bu Gizlilik Politikası, FormAI mobil uygulamasını ("Uygulama") kullandığında FormAI'nin ("biz") hangi bilgileri topladığını, nasıl kullandığını, kiminle paylaştığını ve nasıl koruduğunu açıklar. FormAI'yi mümkün olan en az kişisel veriyi toplayacak şekilde tasarladık. Antrenman sırasındaki kamera görüntün tamamen cihazında kalır. Kalori taraması için seçtiğin yemek fotoğrafları ise cihazından çıkar — bölüm 1.3.1 bunun tam olarak nasıl işlediğini anlatır.</p>
+
+    <h2>Veri Sorumlusu</h2>
+    <p>FormAI, bireysel geliştirici <strong>Emre Doğan</strong> tarafından işletilmektedir (KVKK m.3 anlamında "veri sorumlusu"). Erişim, silme veya itiraz dahil her türlü gizlilik sorusu ve ilgili kişi başvurusu için <a href="mailto:support@formai.app">support@formai.app</a> adresine yazabilirsin. Posta adresi aynı e-posta üzerinden talep edilebilir.</p>
+
+    <div class="callout">
+      <strong>Bilinmesi gereken en önemli şey:</strong> <strong>Antrenman videon cihazından hiç çıkmaz</strong> — poz algılama tamamen telefonunda, Google ML Kit ile çalışır ve tek bir kare bile bize ya da başkasına yüklenmez.<br><br><strong>Yemek fotoğrafları bunun istisnasıdır ve tamamen senin tercihindir.</strong> Kalori tarayıcısını kullanırsan o tek fotoğraf, sunucumuz üzerinden analiz edilmek üzere <strong>Anthropic</strong>'e gönderilir. FormAI bu görseli saklamaz. Ayrıntılar bölüm 1.3.1'de.
+    </div>
+
+    <h2>1. Topladığımız Veriler</h2>
+
+    <h3>1.1 Hesap bilgileri</h3>
+    <ul>
+      <li><strong>Kimlik:</strong> E-posta adresi, giriş sağlayıcısı (Google, Apple veya e-posta) ve rastgele üretilmiş bir kullanıcı kimliği.</li>
+      <li><strong>Profil:</strong> Görünen ad (verdiysen) ve giriş sağlayıcın üzerinden gelen avatar bağlantısı (varsa).</li>
+    </ul>
+
+    <h3>1.2 Fitness ve sağlık verileri (senin girdiğin)</h3>
+    <ul>
+      <li><strong>Vücut ölçüleri:</strong> Boy, kilo, cinsiyet, yaş aralığı, hedef (ör. kilo vermek, kas yapmak), aktivite düzeyi ve kaydettiğin ölçüler (bel, göğüs, kol, bacak, kalça). Önce cihazına yazılır, ardından <strong>hesabına senkronlanır</strong> (Supabase, AB) — böylece ölçüm geçmişin ve grafiklerin yeniden kurulumdan veya ikinci bir cihazdan sonra da durur. Antrenman ve beslenme planını kişiselleştirmek ve kendi trendlerini çizmek için kullanılır. Hesabını sildiğinde silinir; çıkış yaptığında veya uygulamayı kaldırdığında cihazdan kaldırılır.</li>
+      <li><strong>Antrenman geçmişi:</strong> Hangi plan günlerini ne zaman tamamladığın hesabına senkronlanır. Ayrıntılı seans kayıtları (set, tekrar, süre) cihazında kalır.</li>
+      <li><strong>Öğün kaydı:</strong> Fotoğrafla, barkodla veya elle kaydettiğin yiyecekler; porsiyonları, kalorileri, makro değerleri ve hangi öğüne ve tarihe ait oldukları. Günlük toplamların ve geçmişin yeniden kurulumdan sonra da dursun diye hesabında saklanır. Hesabınla birlikte silinir.</li>
+    </ul>
+
+    <h3>1.2.1 Yapay zekâ koçu konuşmaları</h3>
+    <p>Uygulama içindeki yapay zekâ koçuyla yazıştığında mesajın ve kısa bir profil bağlamı — yazdığın şekliyle adın, yaşın, boyun, kilon, aktivite düzeyin, hedefin, güncel serin, son plan ilerlemen ve varsa 30 günlük kilo veya bel değişimin — sunucumuz aracılığıyla <strong>Anthropic</strong>'e (ABD) gönderilir ve koçun yanıtı üretilir. Koçun önceki konuşmayı hatırlaması için sonraki mesajlarda dönen bir özet de iletilir. E-posta adresini, hesap kimliğini veya herhangi bir kamera verisini göndermiyoruz. Anthropic bu veriyi yalnızca yanıtı döndürmek için işler ve modellerini eğitmek için kullanmaz. Bu veriyi göndermek istemiyorsan yapay zekâ koçunu kullanma — uygulamanın geri kalanı onsuz da çalışır.</p>
+
+    <h3>1.2.2 Yapay zekâ yanıtlarıyla ilgili bildirimlerin</h3>
+    <p>Herhangi bir koç yanıtını basılı tutarak bildirebilirsin. Bunu yaptığında bize <strong>o yanıtın metni</strong>, seçtiğin gerekçe, hangi ekrandan geldiği ve hangi dilde yazıldığı iletilir — başka hiçbir şey ve sen bildirmediğin sürece hiçbir şey. Yanıtın metni bildirimle birlikte taşınır; çünkü sunucu tarafında bir konuşma kaydı yok (bkz. 1.2.1) ve metni olmayan bir bildirim, artık hiçbir yerde bulunmayan bir cümle hakkında şikâyet olurdu. Bildirimler yalnızca sana ve bize açıktır; hesabınla birlikte silinir.</p>
+
+    <h3>1.3 Kamera görüntüsü (yalnızca cihazda)</h3>
+    <p>Poz algılamalı antrenmanlarda Uygulama, tekrarları saymak ve formu kontrol etmek için cihazının kamerasına erişir. Video akışı tamamen cihazının işlemcisinde <strong>Google ML Kit Pose Detection</strong> ile işlenir. Hiçbir kare, görüntü, video veya poz koordinatı sunucularımıza yüklenmez, Google'a gönderilmez veya üçüncü taraflarla paylaşılmaz. Yalnızca sayısal sonuçlar (ör. tekrar sayısı, süre) antrenman geçmişine kaydedilir.</p>
+
+    <h3>1.3.1 Yemek fotoğrafları (kalori tarayıcısı) — cihazından çıkar</h3>
+    <p>Kalori tarayıcısı isteğe bağlıdır. Sen açıp bir fotoğraf seçmedikçe burada anlatılanların hiçbiri gerçekleşmez.</p>
+    <ul>
+      <li><strong>Önce cihazında hazırlanır.</strong> Hiçbir şey gönderilmeden önce Uygulama görseli, uzun kenarı en fazla 1024 piksel olacak şekilde küçültür, JPEG olarak yeniden kodlar ve <strong>dosyanın üst verilerini siler</strong> — kameranın kaydettiği EXIF GPS konumu dahil. Tam çözünürlüklü orijinal telefonundan hiç çıkmaz.</li>
+      <li><strong>Nereye gider.</strong> Hazırlanan görsel sunucumuza (Supabase, AB) ve oradan <strong>Anthropic</strong>'e (ABD) iletilir; yiyecekleri tanıyıp porsiyon, kalori ve makro tahmini döndürür. Yanında senin hakkında başka hiçbir şey gitmez — ad yok, e-posta yok, vücut ölçüsü yok, konum yok.</li>
+      <li><strong>Fotoğrafı saklamıyoruz.</strong> FormAI görseli bir veritabanına, dosya deposuna veya kayda yazmaz; yalnızca isteğin sürdüğü süre boyunca bellekte bulunur. Anthropic görseli yanıtı üretmek için işler ve kendi sınırlı kötüye kullanım denetimi süresini uygular; modellerini eğitmek için kullanmaz.</li>
+      <li><strong>Sakladığımız şey</strong>, senin onayladığın sonuçtur: yiyecek adları, porsiyon açıklamaları, kalori, makro değerler, kalem başına güven düzeyi ve hangi öğün ve tarihe kaydettiğin. Bu senin öğün kaydındır ve sen silene kadar hesabında durur.</li>
+      <li><strong>Bir de tarama sayacı tutuyoruz.</strong> Günlük yapay zekâ tarama sınırını uygulayabilmek için her tarama başına kullanıcı kimliğini, tarihi ve taramanın başarılı olup olmadığını içeren bir kayıt tutarız. İçinde görsel de yiyecek verisi de yoktur.</li>
+      <li><strong>Tahminler tahmindir.</strong> Yapay zekâ ile kalori tahmininin, özellikle karışık yemeklerde, kayda değer bir hata payı vardır. Uygulama her kalem için bir güven düzeyi gösterir ve kaydetmeden önce de sonra da her sayıyı düzeltmene izin verir. Tıbbi veya klinik amaçlarla bu tahminlere güvenme.</li>
+    </ul>
+
+    <h3>1.3.2 Barkod tarama</h3>
+    <p>Bir ürün barkodunu taradığında barkod <strong>cihazında</strong> çözülür ve yalnızca çıkan numara, ürünü bulmak için açık bir gıda veritabanı olan <strong>Open Food Facts</strong>'e gönderilir. Hiçbir görsel yüklenmez ve yapay zekâ işlemesi yapılmaz. Sorguyla birlikte kimliğin gönderilmez.</p>
+
+    <h3>1.4 Cihaz ve teknik veriler</h3>
+    <ul>
+      <li><strong>Cihaz modeli</strong>, <strong>işletim sistemi sürümü</strong>, <strong>uygulama sürümü</strong>, <strong>dil</strong> ve <strong>saat dilimi</strong> — uyumluluk ve analiz için.</li>
+      <li><strong>Çökme ve hata raporları</strong> — yığın izleri ve asgari cihaz bilgisi; teşhis amacıyla Sentry'ye gönderilir (bkz. Bölüm 4).</li>
+      <li><strong>Anonim ürün analitiği</strong> — özellik kullanımı, ekran görüntülenmeleri, huni tamamlanması (bkz. Bölüm 4).</li>
+    </ul>
+
+    <h3>1.5 Abonelik ve ödeme</h3>
+    <p>FormAI Pro'ya abone olduğunda satın alman Apple App Store veya Google Play tarafından işlenir. Tam ödeme bilgilerini (kart numarası, fatura adresi) görmüyoruz. Abonelik altyapı sağlayıcımız RevenueCat, Uygulamanın Pro aboneliğinin etkin olup olmadığını bilmesi için bir işlem kimliği ve yetki durumu alır.</p>
+
+    <h2>2. Verileri Nasıl Kullanıyoruz</h2>
+    <ul>
+      <li><strong>Hizmeti sunmak:</strong> Kişiselleştirilmiş antrenman ve beslenme planları üretmek, ilerlemeni takip etmek ve verilerini cihazlar arasında senkronlamak.</li>
+      <li><strong>Hizmeti geliştirmek:</strong> Hangi özelliklerin değerli olduğunu anlamak ve sorunları gidermek için anonim kullanım desenlerini incelemek.</li>
+      <li><strong>Seninle iletişim kurmak:</strong> Zorunlu hizmet mesajları göndermek (ör. abonelik makbuzları, güvenlik uyarıları). Onayın olmadan pazarlama e-postası göndermiyoruz.</li>
+      <li><strong>Hukuka uymak:</strong> Yetkili makamların hukuka uygun taleplerini karşılamak ve Kullanım Şartlarımızı uygulamak.</li>
+    </ul>
+
+    <h2>3. Hukuki Sebepler (KVKK / GDPR)</h2>
+    <p>Türkiye'de, Avrupa Ekonomik Alanı'nda veya Birleşik Krallık'ta isen işleme faaliyetimizin hukuki sebepleri şunlardır:</p>
+    <ul>
+      <li><strong>Sözleşme (KVKK m.5/2-c · GDPR m.6(1)(b)):</strong> Kaydolduğun hizmeti sunmak.</li>
+      <li><strong>Açık rıza (KVKK m.5/1 · GDPR m.6(1)(a)):</strong> Çökme raporlama ve anonim ürün analitiği. Her ikisi de <strong>varsayılan olarak kapalıdır</strong> ve yalnızca uygulama içi onay ekranında kabul edersen çalışır; rızanı istediğin zaman Ayarlar'dan geri çekebilirsin.</li>
+      <li><strong>Meşru menfaat (KVKK m.5/2-f · GDPR m.6(1)(f)):</strong> Hizmet güvenliği, dolandırıcılık ve kötüye kullanımın önlenmesi — gizlilik menfaatinle dengelenerek.</li>
+      <li><strong>Hukuki yükümlülük (KVKK m.5/2-a · GDPR m.6(1)(c)):</strong> Aboneliğine ilişkin vergi kayıtları.</li>
+    </ul>
+
+    <h2>4. Üçüncü Taraf Veri İşleyenler</h2>
+    <p>Hizmeti işletmek için özenle seçilmiş az sayıda veri işleyenle çalışıyoruz. Her biriyle veri işleme sözleşmemiz var ve verilerini yalnızca bizim talimatlarımızla işleyebilirler.</p>
+
+    <table class="processors">
+      <thead>
+        <tr>
+          <th>Veri işleyen</th>
+          <th>Amaç</th>
+          <th>Paylaşılan veri</th>
+          <th>Bölge</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Supabase</strong></td>
+          <td>Bulut veritabanı, kimlik doğrulama, depolama</td>
+          <td>Hesap profili (e-posta, kullanıcı kimliği), antrenman tamamlama geçmişi, öğün kaydı, uygulama içi geri bildirim mesajları, davet kodu</td>
+          <td>AB (Frankfurt)</td>
+        </tr>
+        <tr>
+          <td><strong>PostHog</strong></td>
+          <td>Anonim ürün analitiği</td>
+          <td>Takma adlı kullanıcı kimliği, ekran görüntülenmeleri, özellik olayları. Kalıcı reklam tanımlayıcısı <em>yok</em>.</td>
+          <td>ABD veya AB (proje oluşturulurken seçilen bölgeye göre)</td>
+        </tr>
+        <tr>
+          <td><strong>Sentry</strong></td>
+          <td>Çökme ve hata raporlama</td>
+          <td>Yığın izleri, uygulama sürümü, cihaz modeli, dil. Kimlik belirtici alanlar temizlenir.</td>
+          <td>AB (Frankfurt)</td>
+        </tr>
+        <tr>
+          <td><strong>RevenueCat</strong></td>
+          <td>Abonelik durumu yönetimi</td>
+          <td>Takma adlı kullanıcı kimliği, uygulama mağazası işlem kimliği, yetki durumu</td>
+          <td>ABD</td>
+        </tr>
+        <tr>
+          <td><strong>Anthropic</strong></td>
+          <td>Yapay zekâ koçu yanıtları ve kalori tarayıcısı için yemek tanıma (büyük dil modeli)</td>
+          <td><strong>Koç:</strong> mesajların ve bir profil bağlamı — adın, yaşın, boyun, kilon, aktivite düzeyin, hedefin, serin, plan ilerlemen ve 30 günlük kilo/bel değişimin.<br><strong>Kalori tarayıcısı:</strong> seçtiğin tek yemek fotoğrafı; küçültülmüş ve üst verisi silinmiş halde (bkz. 1.3.1). E-posta adresi yok, hesap kimliği yok, konum yok, antrenman kamerası verisi yok.</td>
+          <td>ABD</td>
+        </tr>
+        <tr>
+          <td><strong>Open Food Facts</strong></td>
+          <td>Barkod taramasında ürün sorgulama</td>
+          <td>Yalnızca taranan barkod numarası. Hesap kimliği yok, görsel yok, kişisel veri yok.</td>
+          <td>AB (Fransa)</td>
+        </tr>
+        <tr>
+          <td><strong>Google ML Kit</strong></td>
+          <td>Cihaz üzerinde poz algılama ve barkod çözme</td>
+          <td><strong>Yok.</strong> Tamamen cihazında çalışır. Hiçbir veri cihazdan çıkmaz.</td>
+          <td>Cihaz üzerinde</td>
+        </tr>
+        <tr>
+          <td><strong>Apple App Store / Google Play</strong></td>
+          <td>Uygulama dağıtımı ve ödeme</td>
+          <td>Platform şartlarına göre ödeme bilgileri</td>
+          <td>Platforma göre</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>4.1 Reklam yok; veri satışı yok</h3>
+    <p>Kişisel verilerini reklamverenlere, veri simsarlarına veya pazarlama ağlarına <strong>satmıyor</strong>, kiralamıyor veya paylaşmıyoruz. Uygulamada üçüncü taraf reklam SDK'sı veya uygulamalar arası izleme yoktur. iOS Gizlilik Manifestosu <code>NSPrivacyTracking = false</code> beyan eder; App Tracking Transparency izni bu yüzden gösterilmez.</p>
+
+    <h2>5. Verilerin Saklanması</h2>
+    <ul>
+      <li><strong>Hesap verileri:</strong> Hesabın etkin olduğu sürece saklanır. Hesabını sildikten sonra 30 gün içinde silinir; yasal kayıt yükümlülükleri (ör. ilgili mevzuat gereği tutulan vergi belgeleri) saklıdır.</li>
+      <li><strong>Antrenman tamamlama geçmişi:</strong> Hesabın etkin olduğu sürece saklanır; hesabınla birlikte silinir.</li>
+      <li><strong>Vücut ölçüleri:</strong> Hesabın etkin olduğu sürece sunucularımızda saklanır ve hesabınla birlikte silinir; cihazdaki kopya çıkış yaptığında veya uygulamayı kaldırdığında kaldırılır.</li>
+      <li><strong>Yapay zekâ koçu konuşmaları:</strong> Mesaj geçmişi ve dönen özeti cihazında tutulur. Anthropic isteği yalnızca yanıtı döndürmek için gereken süre ve kendi sınırlı kötüye kullanım denetimi süresi boyunca saklar; bizde sunucu tarafında konuşma kaydı yoktur.</li>
+      <li><strong>Yemek fotoğrafları:</strong> <strong>FormAI tarafından saklanmaz.</strong> Görsel yalnızca analiz isteği sürdüğü sürece bellekte tutulur; veritabanımıza veya dosya depomuza hiç yazılmaz. Anthropic isteği yalnızca sonucu döndürmek için gereken süre ve kendi sınırlı kötüye kullanım denetimi süresi boyunca saklar.</li>
+      <li><strong>Öğün kaydı ve tarama sayaçları:</strong> Hesabın etkin olduğu sürece saklanır ve hesabınla birlikte silinir. Tek bir yiyeceği, öğünü veya günü istediğin zaman Uygulama içinden silebilirsin.</li>
+      <li><strong>Çökme raporları:</strong> En fazla 90 gün saklanır, sonra otomatik olarak temizlenir.</li>
+      <li><strong>Anonim analitik:</strong> Toplulaştırılmış olay verisinin sabit bir son kullanma tarihi yoktur ve hesap silindikten sonra kimlik belirtmeyen biçimde kalabilir.</li>
+    </ul>
+
+    <h2>6. Haklarınız</h2>
+    <p>KVKK m.11 ve GDPR uyarınca; verilerine erişme, düzeltilmesini isteme, silinmesini isteme, işlemenin kısıtlanmasını isteme, verilerini taşınabilir biçimde alma ve işlemeye itiraz etme haklarına sahipsin. Bu hakları kullanmak için <a href="mailto:support@formai.app">support@formai.app</a> adresine yaz; en geç 30 gün içinde yanıt veriyoruz. Hesabını ve verilerini Uygulama içindeki hesap ayarlarından da doğrudan silebilirsin. Sonuçtan memnun kalmazsan Kişisel Verileri Koruma Kurumu'na (KVKK) veya bulunduğun ülkedeki veri koruma otoritesine şikâyette bulunabilirsin.</p>
+
+    <h2>7. Güvenlik</h2>
+    <p>Verileri aktarım sırasında TLS ile, sunucu tarafında ise erişim denetimli şifreli depolama ile koruyoruz. Hesap verilerine erişim, veritabanı düzeyinde satır bazlı güvenlik kurallarıyla kendi kullanıcı kimliğinle sınırlandırılmıştır. Hiçbir sistem tamamen güvenli değildir; bir güvenlik açığı fark edersen lütfen bize bildir.</p>
+
+    <h2>8. Çocukların Gizliliği</h2>
+    <p>FormAI 18 yaşından küçükler için tasarlanmamıştır ve bilerek onlardan veri toplamayız. Bir çocuğun bize veri gönderdiğini fark edersen bizimle iletişime geç; sileriz.</p>
+
+    <h2>9. Uluslararası Veri Aktarımı</h2>
+    <p>Veri işleyenlerimizin bir kısmı Türkiye ve AEA dışında bulunmaktadır (ör. Anthropic ve RevenueCat, ABD). Verilerin yurt dışına aktarıldığı hallerde, korumanın yeterli düzeyde sürmesi için Standart Sözleşme Hükümleri (SCC) ve KVKK'nın kabul ettiği eşdeğer mekanizmalar gibi uygun güvenceler uygulanır.</p>
+
+    <h2>10. Bu Politikadaki Değişiklikler</h2>
+    <p>Bu Gizlilik Politikasını zaman zaman güncelleyebiliriz. Esaslı değişiklikler yürürlüğe girmeden en az 14 gün önce Uygulama üzerinden ve uygun olduğunda e-posta veya uygulama içi bildirimle duyurulur. Sayfanın başındaki "Son güncelleme" tarihi en son revizyonu gösterir.</p>
+
+    <h2>11. İletişim</h2>
+    <p>Gizlilikle ilgili sorular, ilgili kişi başvuruları veya bildirimlerin için <a href="mailto:support@formai.app">support@formai.app</a> adresine yazabilirsin.</p>
+    </section>
   </main>
 
   <footer class="site-footer">
     © 2026 FormAI. All rights reserved.
   </footer>
+
+  <script>
+    // Progressive enhancement only. Without JS both sections render, so
+    // nothing is hidden from a reviewer or a crawler.
+    (function () {
+      var en = document.getElementById('lang-en');
+      var tr = document.getElementById('lang-tr');
+      var bEn = document.getElementById('btn-en');
+      var bTr = document.getElementById('btn-tr');
+
+      function show(lang) {
+        var turkish = lang === 'tr';
+        en.hidden = turkish;
+        tr.hidden = !turkish;
+        bEn.setAttribute('aria-pressed', String(!turkish));
+        bTr.setAttribute('aria-pressed', String(turkish));
+        document.documentElement.lang = turkish ? 'tr' : 'en';
+        if (location.hash !== (turkish ? '#tr' : '#en')) {
+          history.replaceState(null, '', turkish ? '#tr' : '#en');
+        }
+      }
+
+      bEn.addEventListener('click', function () { show('en'); });
+      bTr.addEventListener('click', function () { show('tr'); });
+
+      // Explicit #tr / #en wins; otherwise follow the browser. A Turkish
+      // user arriving from the Turkish app should land on Turkish.
+      var hash = (location.hash || '').replace('#', '');
+      if (hash === 'tr' || hash === 'en') {
+        show(hash);
+      } else {
+        show((navigator.language || 'en').toLowerCase().indexOf('tr') === 0 ? 'tr' : 'en');
+      }
+    })();
+  </script>
 </body>
 </html>
