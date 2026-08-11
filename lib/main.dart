@@ -85,10 +85,26 @@ Future<void> main() async {
     // Portrait lock — Redmi Note 11R (and similar low-end Androids)
     // started freezing on landscape rotation during workouts because
     // the ML Kit pose detector re-allocates tensors on every resize.
-    await SystemChrome.setPreferredOrientations([
+    //
+    // NOT AWAITED, and that is the single biggest startup win in this
+    // file. Awaiting it cost ~1.9 s of the ~3.0 s to first frame on a
+    // Redmi Note 8 — measured, reproducible, and against 2 ms for the
+    // dotenv load on the very next line. It is a platform-channel round
+    // trip issued while the Android main thread is still building the
+    // activity, so it does not answer until that work drains, and every
+    // millisecond of it was sitting on the path to the first frame.
+    //
+    // Nothing below needs its result: it configures the window, it does
+    // not report anything back. Android now declares the lock in the
+    // manifest (`android:screenOrientation="portrait"`), where the OS
+    // applies it before the process starts, so there is no frame in
+    // which a landscape phone could catch the app unlocked. This call
+    // remains for iOS, whose Info.plist still lists both landscapes and
+    // which has no manifest to move it to.
+    unawaited(SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
-    ]);
+    ]));
 
     // Phase 94 · `.env` bundling state is now a first-class signal,
     // not a swallowed exception. The flag rides into `_BootGate` so

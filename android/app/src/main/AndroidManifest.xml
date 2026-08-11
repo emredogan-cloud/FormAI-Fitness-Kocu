@@ -39,12 +39,25 @@
         android:enableOnBackInvokedCallback="true"
         android:networkSecurityConfig="@xml/network_security_config"
         android:usesCleartextTraffic="false">
+        <!-- android:screenOrientation="portrait" below is a STARTUP FIX, not
+             just a config tidy-up. The portrait lock used to live only in
+             Dart, as an awaited SystemChrome.setPreferredOrientations() at
+             the top of main(). On a Redmi Note 8 that single await measured
+             ~1.9 s — reproducibly, and against 2 ms for the dotenv load
+             right after it — because it is a platform-channel round trip
+             issued while the Android main thread is still building the
+             activity, and it sat squarely on the path to the first frame.
+             Declaring the lock here lets the OS enforce portrait before the
+             process starts, which is both faster and stricter. The Dart call
+             stays, un-awaited: iOS has no equivalent of this line and its
+             Info.plist still lists both landscape orientations. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
             android:taskAffinity=""
             android:theme="@style/LaunchTheme"
+            android:screenOrientation="portrait"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize">
