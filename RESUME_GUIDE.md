@@ -23,7 +23,13 @@ which remains closed and correct — do not restart any of it.
 | 3 · Automatic device language | ✅ shipped + device-verified · `33056cd` |
 | 4 · Growth & advertising strategy | ✅ `docs/FORM_AI_GROWTH_AND_ADVERTISING_STRATEGY.md` |
 | 5 · Calorie market + tech research | ✅ `docs/CALORIE_TRACKING_RESEARCH.md` |
-| **6–15 · the calorie feature** | **NOT STARTED — this is where to resume** |
+| 6 · Calorie backend | ✅ migration 028 applied + `food-scan` deployed · `458cf70` |
+| 7 · Calorie UI + navigation | ✅ shipped + device walk · `4626d51` |
+| 8–10 · Capture, recognition, editing | ✅ shipped + device walk · `4626d51` |
+| **11–12 · Logging / history / analytics** | **PARTIAL — resume here** |
+| **13 · tr/en for calories** | strings done + gates green; **English not device-walked** |
+| **14 · Privacy / cost hardening** | mostly done; **privacy policy NOT updated — ships blocked on this** |
+| **15 · Full QA + release AAB** | not started |
 
 Build is still `1.0.0+39` — **deliberately not bumped**, because the brief
 says the release version is created only when the whole roadmap is done.
@@ -50,6 +56,34 @@ re-derive the hard way:**
    from `kSupportedLocales.first` (Turkish, which is also picker order).
    Do not re-implement locale detection.
 
+### §0.1b · What phases 11–15 still owe (read before resuming)
+
+The founder's four decisions of 2026-08-11 are all applied: assume-key,
+Open Food Facts behind an interface, 2 free / 20 Pro scans, and the
+tracker inside the Nutrition tab with Community untouched.
+
+**Genuinely still open:**
+
+| # | item | note |
+| --- | --- | --- |
+| 1 | **Privacy policy** | The research doc (§7) says plainly: the image leaves the device and is processed by a third party, so the policy must say so in **both languages before this ships**. Nothing in the code can substitute. **Treat as a ship blocker.** |
+| 2 | Post-save item editing | `CalorieRepository.updateItem` and `deleteItem` exist and set `was_edited`; no UI calls them yet. Corrections are only possible *before* saving. |
+| 3 | History / trends | Day-at-a-time navigation works (`selectedCalorieDayProvider`, clamped to today). There is no multi-day view and no analytics. |
+| 4 | English device walk | The 67 new keys pass the ARB gate and the English sweep, but no one has opened the tracker on an `en` device. |
+| 5 | EXIF verification | `image_picker`'s re-encode is *expected* to drop EXIF. It has not been proven — pull the uploaded bytes and check before claiming it anywhere user-facing. |
+| 6 | Barcode scanning | `FoodDatabase.lookupBarcode` and the Open Food Facts client are written and tested; no scanner UI is wired to them. This is why the research doc's "packaged food never goes through the vision model" is not yet true. |
+
+**Two traps that cost time here:**
+
+- **A release APK will not install over a profile build** — different
+  signing. `adb install -r` fails, but the *old* build keeps running, so
+  it looks exactly like code that didn't compile in. An hour of the
+  Phase 7 walk went to this. Check `adb shell pm path` and compare sizes
+  before believing a UI change didn't land.
+- **The Nutrition tab is gated by a 4-step preferences sheet** on first
+  open, and finishing it drops you into a recipe detail screen, not the
+  tab. Two backs from there.
+
 ### §0.1 · Where Phase 6 resumes, and what blocks it
 
 `FORM_AI_NEXT_PRODUCT_ROADMAP.md` §2 has the full traceability matrix.
@@ -58,7 +92,8 @@ is a Supabase migration plus a `food-scan` edge function modelled on
 `supabase/functions/coach-chat/index.ts` — read that file first; it already
 solves key-handling, locale-aware prompting and error mapping.
 
-**Four founder decisions gate it. Do not guess any of them:**
+**These four were the blockers. All are now decided and applied
+(2026-08-11) — kept for the record:**
 
 | # | decision | why it can't be assumed |
 | --- | --- | --- |
