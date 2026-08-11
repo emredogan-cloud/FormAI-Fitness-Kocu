@@ -33,7 +33,8 @@ which remains closed and correct — do not restart any of it.
 
 Build is still `1.0.0+39` — **deliberately not bumped**, because the brief
 says the release version is created only when the whole roadmap is done.
-1518 tests pass; all 9 CI gates green; migrations still 001–027.
+**1544 tests pass; all 9 CI gates green; migrations 001–028 applied**
+(028 is the calorie schema). The `food-scan` edge function is deployed.
 
 **Three things that are true and that a fresh session will otherwise
 re-derive the hard way:**
