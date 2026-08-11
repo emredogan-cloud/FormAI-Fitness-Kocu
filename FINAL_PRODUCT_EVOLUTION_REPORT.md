@@ -1,322 +1,281 @@
 # FormAI — Final Product Evolution Report
 
-**Date:** 2026-07-13 · **Branch:** `main` @ `1d92e9f` · **Author:** engineering pass (autonomous)
-
-This is one of the **two** documents that close out the Final Product Evolution
-Sprint. It records what was built, what was verified, and what was found — with
-honest limitations. The companion document, **`FOUNDER_MASTER_GUIDE.md`**, is
-the step-by-step handbook for everything only you (accounts, money, devices) can
-do.
-
-**Repo health at close:** `flutter analyze` **0 issues** · **321 tests pass** ·
-release AAB `1.0.0+14` built (106.9 MB bundle), obfuscated, **16 KB page-size
-verified** (all 9 arm64 `.so` libs aligned) · GitHub: only `main` remains · CI
-hardened (see §7). Everything an engineer can do without your accounts is done.
+**Programme:** `FORM_AI_NEXT_PRODUCT_ROADMAP.md` (founder brief, 2026-08-11)
+**Completed:** 2026-08-11 · **Release:** `1.0.0+40`
+**Supersedes nothing.** The previous programme
+(`TESTERS_COMMUNITY_PRODUCT_ROADMAP.md`) stays closed and untouched.
 
 ---
 
-## Executive summary
+## 1. The original problems, and what they turned out to be
 
-The sprint had ten parts. Nine produced shippable code or verified an existing
-capability; one (nutrition deep-visual audit) is honestly capped by a paywall
-and documented rather than blindly changed. The headline additions:
+Three of the four workstreams had a root cause that was not the one the
+brief assumed. That is the most useful thing in this report.
 
-| # | Part | Outcome |
-|---|---|---|
-| 1 | **Persistent AI Coach** | **Built & shipped.** Always-reachable, context-aware, honest, LLM-ready. |
-| 2 | Nutrition audit | Audited from code; module is already rich; the one real finding is a *product* decision (free taste), documented. |
-| 3 | Live form detection | **Re-verified on device** — pose state, framing hint, live rep counter all working on the new build. |
-| 4 | UI darkness | Assessed: dark-first is brand-correct and legible; light toggle exists. No risky global change. |
-| 5 | AI avatar | **Regenerated** — one friendly, consistent "Form" persona replaces the text-baked robot. |
-| 6 | App icon padding | **Fixed** — new FormAI mark, adaptive foreground re-fit to the safe zone. |
-| 7 | GitHub cleanup | **Done** — single `main`, and CI made *deterministically* green (this session). |
-| 8 | Supabase sync | **Done** — migration history repaired (001–007); prod objects probe-verified. |
-| 9 | Onboarding review | Reviewed; it's a genuine differentiator; ideas captured, no regressions introduced. |
-| 10 | Continuous validation | Green throughout; final AAB + 16 KB re-verified at close. |
+| reported | actual cause |
+| --- | --- |
+| "The Play Store icon and the installed icon are different" | The icon pipeline was **entirely correct** and faithfully rendering the wrong input. `tool/app_icon.png` still held the old *"AI FITNESS COACH"* marketing scene; the store listing had been re-cut during the ASO refresh and this side was never re-pointed. Nothing about mipmaps, adaptive layers or the manifest needed investigating. |
+| "Production onboarding is extremely slow on a fresh device" | **One awaited platform call.** `await SystemChrome.setPreferredOrientations` measured **1982 ms** of a ~3.0 s first frame, against 2 ms for the dotenv load on the very next line. It is a platform-channel round trip issued while the Android main thread is still building the activity, and nothing in `main()` used its result. |
+| "The app asks the user to select a language" | Device-language following **already shipped** (Phase 6 of the previous programme). Only the onboarding ask needed removing — plus one real decision: the unsupported-locale fallback was Turkish because `kSupportedLocales.first` was doing double duty as both picker order and fallback. |
+| "Build an AI calorie tracker" | Genuinely new. But the risky half — a server-side Anthropic integration with the key off the device — was already built and in production as `coach-chat`. |
 
 ---
 
-## Part 1 — The persistent AI Coach (flagship)
+## 2. Research
 
-**Goal:** a coach that is always reachable, has a permanent UI presence, and
-genuinely knows the user (profile, today's workout, progress, achievements,
-goals, onboarding answers) — architected so a real LLM can slot in later,
-without faking intelligence today.
+Two decision documents, both ending in founder actions rather than
+surveys.
 
-**What shipped (all on `main`):**
+**`docs/CALORIE_TRACKING_RESEARCH.md`** — recommends the hybrid
+architecture. Three findings did the deciding: independent testing puts
+AI calorie error at **15–25%** with a 2026 study finding a single meal off
+by **345 kcal**, and the reported failure mode is composite dishes, which
+is most of Turkish home cooking; `coach-chat` already solved key handling,
+locale-aware prompting and error mapping; and at ~$0.004/scan, 1000 DAU
+logging four meals is **~$480/month from a feature with no per-use
+revenue**, scaling with success.
 
-- **`lib/features/coach/domain/coach_context.dart`** — an immutable snapshot of
-  everything the coach knows, aggregated from *existing* app state: name, goal,
-  age/height/weight, activity level, equipment, streak, level, XP, badge count,
-  completed/total days, and today's day number + exercise count + completion.
-  Getters `firstName` and `bmi`. Crucially, `toPromptContext()` renders this
-  state as a Turkish system-prompt string — **this is the exact seam a future
-  LLM plugs into.**
-- **`lib/features/coach/domain/coach_brain.dart`** — the `CoachBrain` interface
-  (`greeting`, `suggestions`, `respond`) plus `CoachTurn`/`CoachSuggestion`.
-  The production LLM design is documented in-file: a Supabase Edge Function
-  proxy (`coach-chat`) so the model key is **never** on the client, rolling
-  summary memory, and a medical guardrail.
-- **`lib/features/coach/domain/rule_based_coach_brain.dart`** — the brain we can
-  *honestly* ship today. Every reply is derived from the real context (today's
-  day and exercise count, real progress %, real streak, computed BMI + goal).
-  Intents: today, progress, nutrition, motivate, streak, injury, greet, thanks.
-  The injury path defers to a professional with a "not medical advice"
-  disclaimer. **The fallback is honest** — unmatched input gets "here's what I
-  can actually help with," never fabricated free-form text.
-- **`lib/features/coach/presentation/coach_screen.dart`** — the chat UI (Form
-  avatar + "AI Koçun · çevrimiçi", bubbles, starter suggestion chips, input
-  bar). It reads the conversation from a provider, so it is **unchanged** when
-  the rule brain is swapped for an LLM.
-- **`lib/features/coach/providers/coach_providers.dart`** — `coachBrainProvider`
-  (the one-line swap point), `coachContextProvider` (aggregation), and
-  `coachChatProvider` (the live conversation, seeded with a contextual greeting).
-- **Permanent presence:** a 38 px circular Form avatar button in the workout
-  header (`antrenman_tab.dart`) routes to `/coach` (added to `app_router.dart`).
-- **Tests:** `test/features/coach/coach_brain_test.dart` (8 tests) pins both
-  properties the future LLM must preserve: genuine context-awareness AND
-  honesty (no faked replies).
-
-**Device-verified** on the Xiaomi test device against the new build: the
-greeting personalises to the user and today's plan ("… Bugün 1. günündesin — 6
-egzersiz seni bekliyor."), the progress chip reports real numbers ("0/30 gün
-tamamlandı (%0) …"), and free-text motivation replies land.
-
-**Why this is the honest maximum today:** shipping a fake "AI chat" that
-hallucinates fitness/medical claims would be both a product lie and a store-
-review risk. The rule brain tells the truth about its scope; the architecture
-means going live with a real model is a *provider swap + Edge Function*, not a
-rewrite. See `FOUNDER_MASTER_GUIDE.md` → "Turning the Coach into a real LLM."
+**`docs/FORM_AI_GROWTH_AND_ADVERTISING_STRATEGY.md`** — built on one
+asymmetry: Turkey is a Tier-2 install market where the same annual
+subscription sustains ~4.4× less than Germany, while Tier-1 Health &
+Fitness CPI runs $4.30–5.50. Cheap installs where revenue is thin,
+expensive installs where it isn't. Recommends **not starting paid yet** —
+without D7 retention and trial-to-paid by locale, every campaign is
+unreadable — and puts a measurement gate in front of the first dollar.
+**No in-app advertising was proposed or built.**
 
 ---
 
-## Part 2 — Nutrition audit
+## 3. What shipped
 
-**What the module already is (from code):** a genuinely rich nutrition surface —
-a calorie ring with a traffic-light palette, macro progress bars, a
-`_MacroTilesRow` (kcal + protein/carbs/fat tiles), AI "prescription" prompts, a
-next-best-meal suggestion, a collapsed "kcal kaldı | P %…" toolbar, recipe
-detail with tags, and a shopping list. The listing's "yüzlerce tarif" maps to
-**293 recipes** in the catalogue. This is not a thin feature.
+| phase | outcome | commit |
+| --- | --- | --- |
+| 0 | Baseline audit, roadmap, traceability matrix | — |
+| 1 | Canonical F icon everywhere | `1e80cfb` |
+| 2 | Cold start 4830 ms → ~2784 ms | `bc447e2` |
+| 3 | Device language automatic; onboarding ask removed | `33056cd` |
+| 4–5 | Two research documents | `5da96fa` |
+| 6 | Migration 028 + `food-scan` edge function | `458cf70` |
+| 7–10 | Dashboard, navigation, capture, recognition, correction | `4626d51` |
+| 11–14 | Barcodes, post-save editing, history, EXIF | `3bda53d` |
+| 15 | Final QA, `1.0.0+40`, release APK + AAB | this commit |
 
-**The one real finding — and it's a *product* decision, not a bug:** the entire
-Beslenme tab is **Pro-gated** for non-subscribers. A free/guest user tapping it
-is intercepted by the premium gate (`dashboard_screen.dart:366`) and bounced
-back — they never see any nutrition content. That is an intentional monetization
-choice, and it's internally consistent (the paywall does its job). But from a
-growth lens it's aggressive: free users get **zero** nutrition taste, so they
-can't experience the module's value before paying, and a store reviewer only
-sees it via the reviewer account.
+### Decisions worth keeping
 
-**Recommendation (founder decision — deliberately NOT changed unilaterally):**
-consider a small free taste — e.g. 2–3 unlocked sample recipes or a read-only
-calorie ring — to drive conversion and to let reviewers/users feel the value.
-This is a pricing/product call with revenue implications, so it belongs to you,
-not to an engineer editing the paywall blind. Documented in the master guide's
-"Product decisions" section.
+**`meal_items` carries a denormalised `user_id`.** The natural policy —
+"you may read an item if you own its parent meal" — is the exact shape
+that took five tables down for a day in migration 023. Every policy in 028
+is `auth.uid() = user_id` against a column on the row itself, with a
+trigger that overwrites it from the parent so it cannot be forged.
 
-**Why no blind UI edits:** the nutrition UI is only reachable with Pro, which
-this environment can't exercise end-to-end, and the code shows the visualisation
-is already complete. Changing spacing/colours I can't see on-device would be
-speculative — exactly the kind of non-surgical change to avoid.
+**The scan quota lives in Postgres, not the edge function.** The limit
+depends on entitlement, and only the database knows that authoritatively —
+`pro_entitlements` is already maintained server-side by the RevenueCat
+webhook. It checks `expires_at` as well as `is_active`, because migration
+003 documents that a CANCELLATION leaves `is_active` true through the
+paid-up period; `is_active` alone would keep granting 20 scans to a lapsed
+subscriber. `claim_food_scan` takes a transaction-scoped advisory lock —
+count-then-insert without one is a race two concurrent requests both win.
 
----
+**The quota day comes from `now()`, never from the request.** A
+client-supplied date means a loop with a different date each call has
+infinite scans. It is evaluated in `Europe/Istanbul` so the reset lands at
+local midnight for the home market.
 
-## Part 3 — Live form detection (re-verification)
+**Barcodes are not gated by the quota**, and the check moved to *after*
+the source choice so it gates only the paths that spend money. Reading a
+barcode costs no model call, so it stays available to a user who has spent
+every AI scan — which is what keeps the free tier usable rather than
+merely limited.
 
-Re-verified on the **new** release build on device: the camera opens, the pose
-overlay initialises, the UNKNOWN pose state shows the "Kadraja gir" framing hint
-when no full body is in frame, and the rep counter is live. The per-exercise
-analyzers are covered by golden-frame tests that feed **synthetic pose streams**
-(landmark sequences) through the rep/form logic, which is the right way to test
-CV logic deterministically in CI. Voice coaching (flutter_tts) is wired and
-testable from the profile "Sesli Koç Testi". No regressions from the avatar/icon
-/coach changes.
-
-**Honest limitation:** a full "does it correctly count a real squat set" pass
-needs a person exercising in front of the camera — that's the device-QA line
-item G1 in the founder guide, not something automatable here.
-
----
-
-## Part 4 — UI darkness assessment
-
-**Verdict: the app is *appropriately* dark, not oppressively dark — no change
-needed.** Evidence and reasoning:
-
-- The brand is deliberately **dark-first** (deep `#0A0612` base, neon purple/cyan
-  accents). On device the dark surfaces read as premium: cards carry subtle
-  light borders, text is high-contrast white/blue, and accents guide the eye.
-- A **light theme toggle already exists**, so users who prefer light aren't
-  trapped.
-- The one *coherence* nit (documented earlier as D2): onboarding is always-dark
-  (cinematic) while the rest follows the system theme, so a light-mode device
-  can jump dark→light after onboarding. That's polish, not a defect; the
-  low-risk options (default `themeMode` to dark, or add a light onboarding
-  variant) are a product call, captured in the guide.
-
-Making a *global* darkness change (e.g. lightening every surface) would be a
-high-blast-radius edit against a brand decision — explicitly avoided.
+**Navigation kept five tabs.** The brief's layout had no slot for
+Community. Calories went inside Nutrition as a segment instead, with the
+recipe view built lazily so a user who only opens Calories never pays for
+the recipe catalogue's fetch.
 
 ---
 
-## Part 5 — AI avatar (regenerated)
+## 4. Database
 
-**Before:** `photos/PT_FORM.png` was a stock-looking robot with **baked-in text**
-("Form / AI COACH") and a green accent that clashed with the purple/cyan brand —
-text baked into pixels can't be localised and reads as clip-art.
+`supabase/migrations/028_calorie_tracking.sql`, **applied to production**.
+Migrations are now 001–028 (016 deliberately unwritten).
 
-**After:** a single friendly humanoid "Form" persona (generated via the
-authorized OpenAI key), 640 px, transparent corners, on-brand. It is the **one
-consistent identity** now used both in the coach screen header and as the
-coach's chat-bubble avatar, and as the permanent header button on the workout
-tab. The legacy asset was preserved at `scratchpad/PT_FORM_legacy.png` for
-reference. **Device-verified** visible in both the header and the coach bubble.
+`meal_entries` · `meal_items` · `food_scan_log`, all with RLS; two triggers
+(user-id sync, totals recalculation); four functions
+(`food_scan_daily_limit`, `food_scan_quota`, `claim_food_scan`,
+`settle_food_scan`).
 
-**Remaining (post-launch, design):** evolving "Form" into a more distinctive
-mascot character (a retention lever) is a design investment, not an engineering
-task — noted in the guide's polish backlog.
+`supabase/functions/food-scan/` **deployed**.
 
 ---
 
-## Part 6 — App icon padding fix
+## 5. AI cost controls
 
-**Problem:** the previous launcher icon was a photographic "AI FITNESS COACH"
-image — wrong brand, and its adaptive foreground didn't respect the safe zone,
-so Android's circular/rounded masks clipped it.
+| control | value |
+| --- | --- |
+| model | `claude-haiku-4-5`, env-overridable |
+| image | 1024 px long edge, JPEG q80, downscaled on-device |
+| body cap | ~1.5 MB, rejected server-side |
+| daily scans | free **2**, Pro **20**, enforced in Postgres |
+| timeout | 20 s, then a typed error |
+| retries | 1, only on 5xx/timeout — never on a refusal or a 400 |
+| refunds | a failure that is ours returns the scan slot |
+| caching | **deliberately none** — the system prompt is below Haiku 4.5's 4096-token cacheable minimum, so a breakpoint would pay a write premium and read nothing |
 
-**Fix:**
-- New full-bleed FormAI mark: a purple→cyan neon running figure
-  (`tool/app_icon.png`, `tool/app_icon_fg.png`, source at
-  `tool/app_icon_source_formai.png`).
-- The adaptive **foreground** is the figure extracted via luminance-alpha and
-  re-fit to **~74 % fill**, inside the ~66 % safe-zone circle every OEM mask
-  respects (the prior art was too small *and* too edge-heavy). Background set to
-  the brand `#0A0612` (was `#212427`).
-- Regenerated all densities via `flutter_launcher_icons`; iOS 1024 confirmed
-  **RGB with no alpha** (App Store rejects alpha in the marketing icon).
-
-Adaptive previews were checked across mask shapes; the figure stays fully inside
-the mask with balanced padding.
+The order of operations in the function is itself a cost control: verify
+JWT → validate image → claim slot → **then** call the model. Every
+rejection that can happen for free happens before the money is spent.
 
 ---
 
-## Part 7 — GitHub cleanup + CI made deterministically green
+## 6. Privacy and security
 
-**Branches:** the store-submission work (72 commits) was merged to `main`, stale
-branches deleted, and **only `main` remains**.
+**EXIF stripping is now true by construction, not by side effect.** It
+had been resting on `image_picker`'s resize re-encoding the file — almost
+certainly enough, and "almost certainly" is not a basis for a policy
+claim. `stripJpegMetadata` walks the JPEG segment table and drops every
+`APPn` and `COM` marker (EXIF/GPS, ICC, IPTC, JFIF) while preserving
+quantisation tables, frame headers and the entropy-coded scan byte for
+byte. Seven tests, including one against a JPEG ImageMagick wrote and
+re-decoded after stripping.
 
-**CI reliability (fixed this session):** `main` had been showing red on every
-push, but *both* causes were environmental, not code — and both are now fixed:
+**Images are not retained.** The photo is sent, analysed, and not stored;
+only the structured nutrition row persists.
 
-1. **Secret Scan / gitleaks** was failing with "missing gitleaks license." The
-   `gitleaks-action@v2` wrapper added a license gate that, for org-associated
-   accounts, fails whenever its license-validation API call is **rate-limited by
-   GitHub** — a non-deterministic red (it passed on one commit, failed on the
-   next). Fix (`1d92e9f`): run the **MIT-licensed gitleaks binary** directly.
-   Same detection engine, auto-loads our `.gitleaks.toml` allowlist, scans full
-   history + working tree, **no license call.** The independent `.env` secret
-   guard job was already green and is unchanged.
-2. **CI** intermittently hit **"No space left on device"** — the emulator's AVD
-   system image is several GB and tight runners ran out. Fix (`1d92e9f`): a
-   dependency-free step reclaims ~10 GB of unused pre-installed toolchains
-   (dotnet, ghc, powershell, swift, CodeQL) before the heavy work, on both the
-   emulator and APK-build jobs.
+**The model key never reaches the device.** `food-scan` forwards the
+caller's own token rather than holding a service-role key — it never needs
+to act as anyone but the caller.
 
-Together with the earlier KVM fix (`eb83307`, which cured the emulator's
-software-render timeout), these remove the known flake sources. The gitleaks
-change is deterministic; the disk change is defensive headroom.
+**Verified adversarially against production:** user B injecting an item
+into A's meal → `42501` (the trigger rewrote `user_id`, then the policy
+rejected it); B writing `food_scan_log` directly → `42501`; a replayed
+settle refunding twice → does not; B settling A's claim → does not.
 
----
-
-## Part 8 — Supabase production sync
-
-- **Migration history repaired:** `supabase migration repair --status applied
-  001 … 007` — the remote history table now tracks all seven migrations (they
-  had been applied out-of-band historically, so `migration list` showed an empty
-  remote column despite the objects existing).
-- **Production objects probe-verified** via REST/RPC (a 404 vs a `PGRST202`
-  hint vs a `P0001` "Not authenticated" tells you whether an object exists):
-  `delete_user` exists (returns "Not authenticated" when called anonymously) and
-  `redeem_referral(referrer_code text)` **matches the app's call signature**
-  (`rpc('redeem_referral', params: {'referrer_code': …})` in
-  `referral_service.dart`).
-- `supabase db diff` timed out at 2 min against the pooled connection, so
-  verification is probe-based rather than a full schema diff — an honest
-  limitation, but the objects the app actually calls are confirmed present with
-  matching signatures.
-
-**Founder follow-up** (in the guide): the delete round-trip should be confirmed
-once on a throwaway account against prod, and custom SMTP configured before
-inviting 12 testers (default Supabase SMTP is ~2 mails/hr).
+> **⚠️ Founder action, outstanding.** The image leaves the device and is
+> processed by a third-party model provider. **The privacy policy must say
+> so, in both languages, before this ships.** The founder has taken this
+> on manually. No code change substitutes for it.
 
 ---
 
-## Part 9 — Onboarding review (product-designer lens)
+## 7. Localization
 
-The onboarding is a **genuine differentiator** and was verified working end-to-
-end on device across prior sprints: an age gate, opt-in-OFF consent, an 11-step
-persona-driven wizard (name chat, feelings multi-select, pain point, activity,
-body metrics, cinematic interludes, plan generation, an AI "report," honest
-social proof, equipment), and a projection chart. It is closer to Duolingo/WHOOP
-onboarding than to a typical fitness app's form.
+88 new keys × 2 locales, all through ARB. Turkish is the authored copy;
+English is the translation. Gates green: `arb_coverage --strict`,
+`check_hardcoded_strings`, `gen_pseudo_localizations --check`.
 
-**Ideas (captured, not force-fit):**
-
-- **Close the loop to the new coach.** Onboarding builds a relationship with
-  "Form"; the persistent coach (Part 1) now *continues* it inside the app.
-  A natural next step is to have the coach's first-session greeting explicitly
-  reference an onboarding answer ("Göbek eritmek" goal, chosen activity) — the
-  context is already available via `coachContextProvider`.
-- **Theme coherence** (Part 4 / D2): give onboarding→app a single theme feel.
-- These are enhancements; the flow ships as-is with no regressions.
+Walked on a physical device in **both** languages. Food names stay in the
+language they were captured in, which is correct — they are stored user
+data, not chrome.
 
 ---
 
-## Part 10 — Continuous validation (final gate)
+## 8. Tests
 
-Run at close on `main`:
+**1551 passing**, up from 1505 at the start of the programme.
 
-- `flutter analyze` → **No issues found.**
-- `flutter test` → **All 321 tests passed.**
-- `flutter build appbundle --release --obfuscate --split-debug-info` → built
-  `app-release.aab` (106.9 MB bundle; download size is far smaller via split
-  APKs).
-- **16 KB page-size re-verified** on the fresh AAB: all 9 arm64 `.so` LOAD
-  segments are ≥ `0x4000`-aligned.
-- CI hardened and pushed (§7); the run on `1d92e9f` should now be green (verify
-  in the Actions tab — the fixes are deterministic/defensive).
+New coverage is chosen for what breaks *silently*: confidence degrading
+upward, a kJ-only European product reading as zero calories, a scan
+failure collapsing into the wrong user-facing message, and a startup
+regression no widget test can observe.
 
----
-
-## What changed on disk this sprint (for review)
-
-| Area | Files |
-|---|---|
-| AI Coach (new) | `lib/features/coach/**` (domain, providers, presentation) + `test/features/coach/coach_brain_test.dart` + router + workout-header button |
-| Avatar | `photos/PT_FORM.png` (replaced) |
-| App icon | `tool/app_icon*.png`, `pubspec.yaml` adaptive config, regenerated density assets |
-| CI | `.github/workflows/ci.yml`, `.github/workflows/secret-scan.yml` |
-| Supabase | migration history repaired (remote state; no file change) |
+`test/startup/boot_critical_path_test.dart` is a **source** assertion on
+purpose — `testWidgets` never runs `main()`, mocks the platform channel to
+answer instantly, and cannot reproduce a busy Android main thread. Every
+test that could observe that bug is one CI cannot run.
 
 ---
 
-## Honest limitations (what an engineer could NOT verify here)
+## 9. Device validation
 
-- **Nutrition visual QA** — Pro-gated; audited from code, not exercised live.
-- **Real-person form counting** — needs a human in front of the camera (device
-  QA G1).
-- **Full prod schema diff** — timed out; verified by object/ signature probes.
-- **CI green confirmation** — the fix was pushed; the run completes in ~15 min
-  and GitHub API rate limits delayed live confirmation. The changes are
-  deterministic (gitleaks) and defensive (disk), so the expectation is green;
-  confirm in the Actions tab.
+Redmi Note 8 (Android 11), against production Supabase.
 
-Everything else in the ten parts is done and, where a device could show it,
-verified on device.
+| checked | result |
+| --- | --- |
+| Icon: launcher, recents, App Info | F icon, matching the store |
+| Cold start, release, cleared data | **3017 / 2579 / 2541 ms** (baseline 4830) |
+| Locale `tr-TR` / `de-DE` / `en-US` | Turkish / **English fallback** / English |
+| Portrait lock after un-awaiting it | `user_rotation=1` left the app at ROTATION_0 |
+| Manual entry | ring 320, Kahvaltı 320, quota **unchanged** |
+| AI scan of a mixed plate | five items in Turkish; oily pilav `low`, chicken/potatoes `medium`, white cheese `high` |
+| Saving a scan | ring flipped to the over-target gradient; quota 2 → 1 |
+| Post-save edit | 380→300, dot red→green, meal total recomputed, caveat line disappeared |
+| History | average 1660 from one logged day — **not** 118 |
+| Barcode scanner | camera preview, reticle, Turkish hint, permission prompt |
+| Open Food Facts, live | full product, a nameless one (correctly rejected), and a genuine miss |
+| English walk | dashboard, meals, history — no untranslated keys, no overflow |
+| Release build end to end | fresh account, quota resolved server-side, all surfaces render |
 
 ---
 
-*Companion: **`FOUNDER_MASTER_GUIDE.md`** — the complete, no-guessing handbook
-for the account/money/device steps that take FormAI from "engineering done" to
-"live on both stores."*
+## 10. CI
+
+Green on every commit in the programme. All 9 gates: format, env-secret
+guard, analyze, hardcoded strings, ARB coverage, recipe translation audit,
+pseudo-localisations, directional layout, tests + coverage.
+
+Two gates caught real defects during this work and both were fixed rather
+than suppressed: a `Positioned(left:)` in the barcode overlay, and the
+Open Food Facts protocol constants.
+
+---
+
+## 11. Known limitations
+
+**Production-ready:** everything in §3.
+
+**Verified partially:**
+- **Barcode decode from a physical package was not tested.** The screen,
+  camera preview, permission flow and reticle were verified on device, and
+  the Open Food Facts lookup was verified against the live API with three
+  real barcodes. The camera-to-barcode decode step itself needs a real
+  package in front of a phone.
+
+**Intentionally unimplemented:**
+- Image retention and re-analysis — the MVP stores no images by design.
+- TürKomp integration — licence unconfirmed; the MVP was designed not to
+  block on it. Open Food Facts sits behind `FoodDatabase`, and
+  `FoodDatabaseChain` exists so a Turkish source can be put *in front* of
+  it without touching a call site.
+- Multi-photo scanning, restaurant menus, connected scales.
+
+**Founder / external:**
+- **The privacy policy update (§6). This is a ship blocker.**
+- The live Play Store 512 icon still carries a 1 px light-grey column down
+  its right edge (measured mean 38 against 8.8 interior) — the same defect
+  class as the bottom "white stripe" fixed in `b216fb9`, which was fixed
+  on that edge only. The app now shaves it; the listing needs a re-upload.
+- `ANTHROPIC_API_KEY` in the Supabase **function** environment.
+- `photos/First_opening.png` (1.9 MB) appears unreferenced and ships in
+  every install. **Unverified — left alone deliberately.**
+
+---
+
+## 12. Future roadmap
+
+1. Read the onboarding funnel data. `onboardingStepCompleted` fires on all
+   19 steps and has been collecting the whole time. It will name the step
+   losing the most users, and that is worth more than any channel decision
+   in the growth document.
+2. Turkish free tools (BMR/TDEE/macro) on the existing `web/` — they rank
+   for exactly the queries a future user types.
+3. Barcode field test, then consider a Turkish composition database in
+   front of Open Food Facts.
+4. Watch `was_edited` on `meal_items`. A food with a high edit rate is one
+   the prompt or the nutrition source is wrong about; that flag is the
+   feature's most useful diagnostic and nothing reads it yet.
+
+---
+
+## 13. Final artifacts
+
+| | |
+| --- | --- |
+| version | **1.0.0+40** |
+| APK | `build/app/outputs/flutter-apk/app-release.apk` (162.7 MB) |
+| **AAB** | **`build/app/outputs/bundle/release/app-release.aab` (133.0 MB)** |
+| tests | 1551 passing |
+| gates | 9 / 9 green |
+| migrations | 001–028, applied |
+| edge functions | `coach-chat`, `revenuecat-webhook`, `food-scan` |
+| device validation | passed — see §9 |

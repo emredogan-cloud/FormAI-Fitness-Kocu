@@ -26,15 +26,17 @@ which remains closed and correct — do not restart any of it.
 | 6 · Calorie backend | ✅ migration 028 applied + `food-scan` deployed · `458cf70` |
 | 7 · Calorie UI + navigation | ✅ shipped + device walk · `4626d51` |
 | 8–10 · Capture, recognition, editing | ✅ shipped + device walk · `4626d51` |
-| **11–12 · Logging / history / analytics** | **PARTIAL — resume here** |
-| **13 · tr/en for calories** | strings done + gates green; **English not device-walked** |
-| **14 · Privacy / cost hardening** | mostly done; **privacy policy NOT updated — ships blocked on this** |
-| **15 · Full QA + release AAB** | not started |
+| 11–12 · Logging / history / analytics | ✅ shipped + device walk · `3bda53d` |
+| 13 · tr/en for calories | ✅ 88 keys × 2 locales, English device walk done |
+| 14 · Privacy / cost hardening | ✅ EXIF provable; **privacy policy is the founder's, still outstanding** |
+| 15 · Full QA + release | ✅ `1.0.0+40`, APK + AAB built, release build device-walked |
 
-Build is still `1.0.0+39` — **deliberately not bumped**, because the brief
-says the release version is created only when the whole roadmap is done.
-**1544 tests pass; all 9 CI gates green; migrations 001–028 applied**
-(028 is the calorie schema). The `food-scan` edge function is deployed.
+**THE PROGRAMME IS COMPLETE.** See `FINAL_PRODUCT_EVOLUTION_REPORT.md`.
+The one thing standing between this and a store upload is the privacy
+policy — the image leaves the device and the policy does not yet say so.
+
+Build **`1.0.0+40`**. 1551 tests, all 9 CI gates green, migrations
+001–028 applied, `food-scan` deployed. Release APK and AAB built.
 
 **Three things that are true and that a fresh session will otherwise
 re-derive the hard way:**
@@ -63,16 +65,13 @@ The founder's four decisions of 2026-08-11 are all applied: assume-key,
 Open Food Facts behind an interface, 2 free / 20 Pro scans, and the
 tracker inside the Nutrition tab with Community untouched.
 
-**Genuinely still open:**
+**Still open after the programme closed:**
 
 | # | item | note |
 | --- | --- | --- |
 | 1 | **Privacy policy** | The research doc (§7) says plainly: the image leaves the device and is processed by a third party, so the policy must say so in **both languages before this ships**. Nothing in the code can substitute. **Treat as a ship blocker.** |
-| 2 | Post-save item editing | `CalorieRepository.updateItem` and `deleteItem` exist and set `was_edited`; no UI calls them yet. Corrections are only possible *before* saving. |
-| 3 | History / trends | Day-at-a-time navigation works (`selectedCalorieDayProvider`, clamped to today). There is no multi-day view and no analytics. |
-| 4 | English device walk | The 67 new keys pass the ARB gate and the English sweep, but no one has opened the tracker on an `en` device. |
-| 5 | EXIF verification | `image_picker`'s re-encode is *expected* to drop EXIF. It has not been proven — pull the uploaded bytes and check before claiming it anywhere user-facing. |
-| 6 | Barcode scanning | `FoodDatabase.lookupBarcode` and the Open Food Facts client are written and tested; no scanner UI is wired to them. This is why the research doc's "packaged food never goes through the vision model" is not yet true. |
+| 2 | Barcode decode from a real package | The screen, camera preview, permission flow and reticle are verified on device, and the Open Food Facts lookup is verified against the live API with three real barcodes. The camera-to-barcode decode step needs a physical package in front of a phone. |
+| 3 | Store icon re-upload | The live 512 still has the 1 px grey right edge. The app shaves it; the listing does not. |
 
 **Two traps that cost time here:**
 
@@ -112,7 +111,8 @@ existing navigation architecture if a better arrangement is required."*
 - Do not re-investigate the icon pipeline, the cold-start cause, or locale
   detection — all three are solved and their root causes are in the commit
   messages.
-- Do not bump the version or cut an AAB until phases 6–15 are done.
+- The version IS bumped and the AAB IS cut (`1.0.0+40`). Do not cut
+  another until there is new work to ship.
 - `photos/` root files ship in every APK (pubspec declares the folder).
   Reference imagery goes to `docs/reference-imagery/`, never `photos/`.
   `photos/First_opening.png` (1.9 MB) appears unreferenced and is a
