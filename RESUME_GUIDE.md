@@ -3,6 +3,88 @@
 Read this first. It is written so a session with no memory of the
 previous one can continue without re-analysing the repository.
 
+---
+
+## ⚠️ THERE ARE NOW TWO PROGRAMMES. READ §0 FIRST.
+
+**A new programme started 2026-08-11** from a fresh founder brief and is
+tracked in **`FORM_AI_NEXT_PRODUCT_ROADMAP.md`**, not in the roadmap this
+guide describes below. Everything from "## 1. Where we are" onward refers
+to the **previous** programme (`TESTERS_COMMUNITY_PRODUCT_ROADMAP.md`),
+which remains closed and correct — do not restart any of it.
+
+### §0 · New programme status (2026-08-11)
+
+| phase | state |
+| --- | --- |
+| 0 · Baseline audit + roadmap + traceability | ✅ `FORM_AI_NEXT_PRODUCT_ROADMAP.md` |
+| 1 · Canonical F app icon | ✅ shipped + device-verified · `1e80cfb` |
+| 2 · Onboarding performance | ✅ shipped + measured · `bc447e2` |
+| 3 · Automatic device language | ✅ shipped + device-verified · `33056cd` |
+| 4 · Growth & advertising strategy | ✅ `docs/FORM_AI_GROWTH_AND_ADVERTISING_STRATEGY.md` |
+| 5 · Calorie market + tech research | ✅ `docs/CALORIE_TRACKING_RESEARCH.md` |
+| **6–15 · the calorie feature** | **NOT STARTED — this is where to resume** |
+
+Build is still `1.0.0+39` — **deliberately not bumped**, because the brief
+says the release version is created only when the whole roadmap is done.
+1518 tests pass; all 9 CI gates green; migrations still 001–027.
+
+**Three things that are true and that a fresh session will otherwise
+re-derive the hard way:**
+
+1. **The icon bug was never in the icon pipeline.** Mipmaps, adaptive
+   layers, manifest and flutter_launcher_icons were all correct and all
+   pointed at `tool/app_icon.png`, which held the *old marketing artwork*.
+   Regenerate icons only via `bash tool/gen_app_icons.sh` — it derives all
+   three layers from the store master and encodes the mask-safety maths.
+   Do not hand-edit the PNGs.
+2. **~1.9 s of the cold start was one awaited platform call.**
+   `SystemChrome.setPreferredOrientations` is now dispatched with
+   `unawaited()` and Android holds the portrait lock in the manifest
+   instead. `test/startup/boot_critical_path_test.dart` guards both halves
+   with source assertions — deliberately, because no widget test can
+   observe a busy Android main thread. **Do not "fix" that test into a
+   behavioural one; it will silently stop guarding anything.**
+3. **Device-language following already existed.** Phase 3 only deleted the
+   onboarding ask and split the fallback (`kFallbackLocale` = English) away
+   from `kSupportedLocales.first` (Turkish, which is also picker order).
+   Do not re-implement locale detection.
+
+### §0.1 · Where Phase 6 resumes, and what blocks it
+
+`FORM_AI_NEXT_PRODUCT_ROADMAP.md` §2 has the full traceability matrix.
+`docs/CALORIE_TRACKING_RESEARCH.md` §10 lists the founder actions. Phase 6
+is a Supabase migration plus a `food-scan` edge function modelled on
+`supabase/functions/coach-chat/index.ts` — read that file first; it already
+solves key-handling, locale-aware prompting and error mapping.
+
+**Four founder decisions gate it. Do not guess any of them:**
+
+| # | decision | why it can't be assumed |
+| --- | --- | --- |
+| 1 | `ANTHROPIC_API_KEY` present in the Supabase **function** environment | `coach-chat` already uses it, but `food-scan` cannot be tested without confirmation |
+| 2 | Nutrition-database position (research doc §4.2) | TürKomp's licence is unconfirmed; the MVP is designed *not* to block on it |
+| 3 | Per-user daily scan caps (research doc §5.2) | It is the cost ceiling **and** a pricing decision — ~$480/month at 1000 DAU × 4 scans |
+| 4 | **The navigation shape** (roadmap §0.3) | The brief's five-tab layout has no slot for **Community** — squads, leaderboards and challenges, the whole output of the previous programme's Phases 12–13. The bar already has five items and `dashboard_screen.dart:824` explains why that forced a custom one-label-at-a-time design. Adopting the brief verbatim silently removes a shipped feature from navigation |
+
+Decision 4 is the one most likely to be got wrong by a session reading the
+brief without the repository: the brief itself says *"use the actual
+existing navigation architecture if a better arrangement is required."*
+
+### §0.2 · Not to redo
+
+- Do not re-investigate the icon pipeline, the cold-start cause, or locale
+  detection — all three are solved and their root causes are in the commit
+  messages.
+- Do not bump the version or cut an AAB until phases 6–15 are done.
+- `photos/` root files ship in every APK (pubspec declares the folder).
+  Reference imagery goes to `docs/reference-imagery/`, never `photos/`.
+  `photos/First_opening.png` (1.9 MB) appears unreferenced and is a
+  candidate for the same move — **unverified, left alone deliberately.**
+- `docs/reference-imagery/calories-interface.png` (the founder's calorie UI
+  reference) is intentionally **untracked** — it is an unreleased-feature
+  mockup and this repository is public.
+
 **Last updated:** 2026-08-04. Phase 8 stays closed as a split (RTL done,
 three languages deferred). **Phase 11 is DEFERRED BY FOUNDER — do not
 implement it.** **Phases 12 and 13 are COMPLETE. EVERY migration
