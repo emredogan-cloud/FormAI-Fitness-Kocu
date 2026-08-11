@@ -93,6 +93,12 @@ dependencies:
   # `XFile.readAsBytes()` returns the raw bytes for the Supabase
   # Storage upload pipeline.
   image_picker: ^1.1.2
+  # Calorie tracking · promoted from transitive. `supabase_flutter` and
+  # `cached_network_image` already pull `http` in, but the Open Food Facts
+  # client imports it directly, and importing a package you did not
+  # declare means a future dependency bump can remove it without any
+  # signal until the build breaks.
+  http: ^1.2.2
   # Phase 51 · explicit dependency on the disk-cache layer that
   # `cached_network_image` already pulled in transitively. Promoting
   # it to a direct dep so `ExerciseGuidePlayer` can hand video URLs

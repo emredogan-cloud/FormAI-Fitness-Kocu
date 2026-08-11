@@ -8976,5 +8976,112 @@
   "notifChannelCampaignDesc": "Gentle notifications when you take a break and when new content arrives.",
   "@notifChannelCampaignDesc": {
     "description": "Android notification channel description for lifecycle campaigns."
-  }
+  },
+  "nutritionSegmentCalories": "Calories",
+  "nutritionSegmentRecipes": "Recipes",
+  "calorieDayToday": "Today",
+  "caloriePreviousDay": "Previous day",
+  "calorieNextDay": "Next day",
+  "calorieConsumed": "Eaten",
+  "calorieRemaining": "Remaining",
+  "calorieOverTarget": "Over target",
+  "calorieKcal": "kcal",
+  "calorieTarget": "Target",
+  "calorieMacros": "Macros",
+  "calorieProtein": "Protein",
+  "calorieCarbs": "Carbs",
+  "calorieFat": "Fat",
+  "calorieProteinShort": "P (g)",
+  "calorieCarbsShort": "C (g)",
+  "calorieFatShort": "F (g)",
+  "calorieSources": "Where your calories came from",
+  "calorieSlotBreakfast": "Breakfast",
+  "calorieSlotLunch": "Lunch",
+  "calorieSlotDinner": "Dinner",
+  "calorieSlotSnack": "Snack",
+  "calorieMeals": "Meals",
+  "calorieKcalValue": "{kcal} kcal",
+  "@calorieKcalValue": {
+    "placeholders": {
+      "kcal": {
+        "type": "int"
+      }
+    }
+  },
+  "calorieDeleteMeal": "Remove meal",
+  "calorieEstimateCaveat": "Some items are rough estimates. Tap to correct them.",
+  "@calorieEstimateCaveat": {
+    "description": "Shown only on meals containing a low-confidence item."
+  },
+  "calorieConfidenceHigh": "High confidence",
+  "calorieConfidenceMedium": "Medium confidence",
+  "calorieConfidenceLow": "Low confidence — please check",
+  "@calorieConfidenceLow": {
+    "description": "Semantics label; confidence must not be conveyed by colour alone."
+  },
+  "calorieEmptyTitle": "Nothing logged yet",
+  "calorieEmptyBody": "Photograph a meal or add one by hand to start today's log.",
+  "calorieLoadFailed": "Couldn't load today's meals.",
+  "calorieRetry": "Try again",
+  "calorieScanCta": "Scan food",
+  "calorieAddManual": "Add by hand",
+  "calorieScansLeft": "{remaining} of {limit} AI scans left today",
+  "@calorieScansLeft": {
+    "placeholders": {
+      "remaining": {
+        "type": "int"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "calorieScansExhausted": "You've used all {limit} AI scans for today",
+  "@calorieScansExhausted": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "calorieSourceCamera": "Take a photo",
+  "calorieSourceGallery": "Choose from gallery",
+  "calorieAnalysing": "Analysing your meal",
+  "calorieAnalysingHint": "This usually takes a few seconds.",
+  "calorieCameraDenied": "Couldn't open the camera. Check the app's camera permission, or pick a photo from your gallery.",
+  "calorieNoFoodFound": "No food found in that photo. Try again with the plate more clearly in frame.",
+  "calorieSignInRequired": "Please sign in to scan meals.",
+  "calorieImageTooLarge": "That photo is too large. Try taking a new one.",
+  "calorieScanRefused": "That image couldn't be analysed. Try a different photo.",
+  "calorieScannerUnavailable": "The scanner isn't available right now. You can still add meals by hand.",
+  "calorieScanFailedRetry": "The scan didn't go through. Your daily scan wasn't used — please try again.",
+  "@calorieScanFailedRetry": {
+    "description": "Names the refund explicitly — the server returns the scan slot on our failures."
+  },
+  "calorieQuotaTitle": "You've used your {limit} scans for today",
+  "@calorieQuotaTitle": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "calorieQuotaUpgradeBody": "Pro gives you 20 AI scans a day. You can still add meals by hand any time.",
+  "calorieQuotaProBody": "Your scans reset at midnight. You can still add meals by hand any time.",
+  "calorieQuotaUpgradeCta": "See Pro",
+  "calorieQuotaDismiss": "Not now",
+  "calorieResultTitle": "What we found",
+  "calorieResultSubtitle": "These are estimates. Correct anything that looks off before saving.",
+  "calorieResultSlot": "Which meal is this?",
+  "calorieResultTotal": "Total",
+  "calorieResultConfirm": "Save",
+  "calorieResultAllRemoved": "You've removed every item.",
+  "calorieRemoveItem": "Remove item",
+  "calorieMealLogged": "Meal saved",
+  "calorieLogFailed": "Couldn't save the meal. Please try again.",
+  "calorieManualTitle": "Add a food",
+  "calorieManualName": "Food name",
+  "calorieManualPortion": "Portion (e.g. 1 bowl)",
+  "calorieManualSave": "Add to log",
+  "calorieManualIncomplete": "Enter at least a name and the calories."
 }

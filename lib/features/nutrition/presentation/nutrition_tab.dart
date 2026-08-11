@@ -23,6 +23,7 @@ import '../providers/nutrition_provider.dart';
 import 'widgets/meal_plan_timeline.dart';
 import 'widgets/recipe_tags.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../calories/presentation/calorie_dashboard.dart';
 
 const Color _neon = Color(0xFF8E5BFF);
 const Color _neonGreen = Color(0xFF39FF14);
@@ -35,6 +36,86 @@ const Color _fatColor = Color(0xFFEAFF00);
 const Color _statusOnTrack = Color(0xFF39FF14);
 const Color _statusLow = Color(0xFFEAFF00);
 const Color _statusOver = Color(0xFFFF5577);
+
+/// The Nutrition destination — two views of one subject.
+///
+/// The founder's decision of 2026-08-11: the AI calorie tracker does NOT
+/// get a sixth bottom-nav slot and does not displace Community. It lands
+/// here, in front, with the recipe catalogue one tap behind it. Calories
+/// and recipes are the same question asked twice — what am I eating, and
+/// what should I eat — so they are two segments, not two destinations.
+///
+/// The recipe view is built lazily rather than eagerly inside the
+/// `IndexedStack`. Building both up front would fire the recipe
+/// catalogue's network fetch on every visit to this tab even for a user
+/// who only ever looks at calories, which is exactly the kind of
+/// speculative startup work Phase 2 of this roadmap spent its time
+/// removing. Once visited it stays alive, so switching back is instant
+/// and the scroll position survives.
+class NutritionTab extends ConsumerStatefulWidget {
+  const NutritionTab({super.key});
+
+  @override
+  ConsumerState<NutritionTab> createState() => _NutritionTabState();
+}
+
+class _NutritionTabState extends ConsumerState<NutritionTab> {
+  static const int _calories = 0;
+  static const int _recipes = 1;
+
+  int _segment = _calories;
+  bool _recipesEverShown = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+          child: SegmentedButton<int>(
+            segments: [
+              ButtonSegment(
+                value: _calories,
+                icon:
+                    const Icon(Icons.local_fire_department_outlined, size: 18),
+                label: Text(l10n.nutritionSegmentCalories),
+              ),
+              ButtonSegment(
+                value: _recipes,
+                icon: const Icon(Icons.menu_book_outlined, size: 18),
+                label: Text(l10n.nutritionSegmentRecipes),
+              ),
+            ],
+            selected: {_segment},
+            showSelectedIcon: false,
+            onSelectionChanged: (selection) => setState(() {
+              _segment = selection.first;
+              if (_segment == _recipes) _recipesEverShown = true;
+            }),
+          ),
+        ),
+        Expanded(
+          child: IndexedStack(
+            index: _segment,
+            children: [
+              const CalorieDashboard(),
+              if (_recipesEverShown)
+                const _RecipesView()
+              else
+                const SizedBox.shrink(),
+            ],
+          ),
+        ),
+        // Only the calorie view has a scan action. Showing it over the
+        // recipe catalogue would attach a camera button to a screen that
+        // has nothing to photograph.
+        if (_segment == _calories) const CalorieScanBar(),
+      ],
+    );
+  }
+}
 
 /// Phase 26 decision-first dashboard. Everything the user needs to act
 /// on their day (calorie ring + AI prescription + next best meal with
@@ -51,8 +132,8 @@ const Color _statusOver = Color(0xFFFF5577);
 ///     gone — their content is absorbed into the one hero panel so
 ///     the user doesn't have to scroll past five separate cards to
 ///     make one decision.
-class NutritionTab extends ConsumerWidget {
-  const NutritionTab({super.key});
+class _RecipesView extends ConsumerWidget {
+  const _RecipesView();
 
   /// Total expanded height of the hero sliver. Bumped in phase 27 to
   /// accommodate the restored Protein/Carbs/Fat macro bars between the

@@ -8,7 +8,7 @@
 //   2. a layout that only fits Turkish overflows here instead of in a
 //      German store review.
 //
-// 1919 members covered.
+// 1986 members covered.
 
 import 'package:flutter/widgets.dart';
 import 'package:sixpack_ai/core/utils/pseudo_locale.dart';
@@ -6014,6 +6014,215 @@ class PseudoAppLocalizations extends AppLocalizations {
       pseudoLocalize(_inner.notifChannelCampaignDesc);
 
   @override
+  String get nutritionSegmentCalories =>
+      pseudoLocalize(_inner.nutritionSegmentCalories);
+
+  @override
+  String get nutritionSegmentRecipes =>
+      pseudoLocalize(_inner.nutritionSegmentRecipes);
+
+  @override
+  String get calorieDayToday => pseudoLocalize(_inner.calorieDayToday);
+
+  @override
+  String get caloriePreviousDay => pseudoLocalize(_inner.caloriePreviousDay);
+
+  @override
+  String get calorieNextDay => pseudoLocalize(_inner.calorieNextDay);
+
+  @override
+  String get calorieConsumed => pseudoLocalize(_inner.calorieConsumed);
+
+  @override
+  String get calorieRemaining => pseudoLocalize(_inner.calorieRemaining);
+
+  @override
+  String get calorieOverTarget => pseudoLocalize(_inner.calorieOverTarget);
+
+  @override
+  String get calorieKcal => pseudoLocalize(_inner.calorieKcal);
+
+  @override
+  String get calorieTarget => pseudoLocalize(_inner.calorieTarget);
+
+  @override
+  String get calorieMacros => pseudoLocalize(_inner.calorieMacros);
+
+  @override
+  String get calorieProtein => pseudoLocalize(_inner.calorieProtein);
+
+  @override
+  String get calorieCarbs => pseudoLocalize(_inner.calorieCarbs);
+
+  @override
+  String get calorieFat => pseudoLocalize(_inner.calorieFat);
+
+  @override
+  String get calorieProteinShort => pseudoLocalize(_inner.calorieProteinShort);
+
+  @override
+  String get calorieCarbsShort => pseudoLocalize(_inner.calorieCarbsShort);
+
+  @override
+  String get calorieFatShort => pseudoLocalize(_inner.calorieFatShort);
+
+  @override
+  String get calorieSources => pseudoLocalize(_inner.calorieSources);
+
+  @override
+  String get calorieSlotBreakfast =>
+      pseudoLocalize(_inner.calorieSlotBreakfast);
+
+  @override
+  String get calorieSlotLunch => pseudoLocalize(_inner.calorieSlotLunch);
+
+  @override
+  String get calorieSlotDinner => pseudoLocalize(_inner.calorieSlotDinner);
+
+  @override
+  String get calorieSlotSnack => pseudoLocalize(_inner.calorieSlotSnack);
+
+  @override
+  String get calorieMeals => pseudoLocalize(_inner.calorieMeals);
+
+  @override
+  String get calorieDeleteMeal => pseudoLocalize(_inner.calorieDeleteMeal);
+
+  @override
+  String get calorieEstimateCaveat =>
+      pseudoLocalize(_inner.calorieEstimateCaveat);
+
+  @override
+  String get calorieConfidenceHigh =>
+      pseudoLocalize(_inner.calorieConfidenceHigh);
+
+  @override
+  String get calorieConfidenceMedium =>
+      pseudoLocalize(_inner.calorieConfidenceMedium);
+
+  @override
+  String get calorieConfidenceLow =>
+      pseudoLocalize(_inner.calorieConfidenceLow);
+
+  @override
+  String get calorieEmptyTitle => pseudoLocalize(_inner.calorieEmptyTitle);
+
+  @override
+  String get calorieEmptyBody => pseudoLocalize(_inner.calorieEmptyBody);
+
+  @override
+  String get calorieLoadFailed => pseudoLocalize(_inner.calorieLoadFailed);
+
+  @override
+  String get calorieRetry => pseudoLocalize(_inner.calorieRetry);
+
+  @override
+  String get calorieScanCta => pseudoLocalize(_inner.calorieScanCta);
+
+  @override
+  String get calorieAddManual => pseudoLocalize(_inner.calorieAddManual);
+
+  @override
+  String get calorieSourceCamera => pseudoLocalize(_inner.calorieSourceCamera);
+
+  @override
+  String get calorieSourceGallery =>
+      pseudoLocalize(_inner.calorieSourceGallery);
+
+  @override
+  String get calorieAnalysing => pseudoLocalize(_inner.calorieAnalysing);
+
+  @override
+  String get calorieAnalysingHint =>
+      pseudoLocalize(_inner.calorieAnalysingHint);
+
+  @override
+  String get calorieCameraDenied => pseudoLocalize(_inner.calorieCameraDenied);
+
+  @override
+  String get calorieNoFoodFound => pseudoLocalize(_inner.calorieNoFoodFound);
+
+  @override
+  String get calorieSignInRequired =>
+      pseudoLocalize(_inner.calorieSignInRequired);
+
+  @override
+  String get calorieImageTooLarge =>
+      pseudoLocalize(_inner.calorieImageTooLarge);
+
+  @override
+  String get calorieScanRefused => pseudoLocalize(_inner.calorieScanRefused);
+
+  @override
+  String get calorieScannerUnavailable =>
+      pseudoLocalize(_inner.calorieScannerUnavailable);
+
+  @override
+  String get calorieScanFailedRetry =>
+      pseudoLocalize(_inner.calorieScanFailedRetry);
+
+  @override
+  String get calorieQuotaUpgradeBody =>
+      pseudoLocalize(_inner.calorieQuotaUpgradeBody);
+
+  @override
+  String get calorieQuotaProBody => pseudoLocalize(_inner.calorieQuotaProBody);
+
+  @override
+  String get calorieQuotaUpgradeCta =>
+      pseudoLocalize(_inner.calorieQuotaUpgradeCta);
+
+  @override
+  String get calorieQuotaDismiss => pseudoLocalize(_inner.calorieQuotaDismiss);
+
+  @override
+  String get calorieResultTitle => pseudoLocalize(_inner.calorieResultTitle);
+
+  @override
+  String get calorieResultSubtitle =>
+      pseudoLocalize(_inner.calorieResultSubtitle);
+
+  @override
+  String get calorieResultSlot => pseudoLocalize(_inner.calorieResultSlot);
+
+  @override
+  String get calorieResultTotal => pseudoLocalize(_inner.calorieResultTotal);
+
+  @override
+  String get calorieResultConfirm =>
+      pseudoLocalize(_inner.calorieResultConfirm);
+
+  @override
+  String get calorieResultAllRemoved =>
+      pseudoLocalize(_inner.calorieResultAllRemoved);
+
+  @override
+  String get calorieRemoveItem => pseudoLocalize(_inner.calorieRemoveItem);
+
+  @override
+  String get calorieMealLogged => pseudoLocalize(_inner.calorieMealLogged);
+
+  @override
+  String get calorieLogFailed => pseudoLocalize(_inner.calorieLogFailed);
+
+  @override
+  String get calorieManualTitle => pseudoLocalize(_inner.calorieManualTitle);
+
+  @override
+  String get calorieManualName => pseudoLocalize(_inner.calorieManualName);
+
+  @override
+  String get calorieManualPortion =>
+      pseudoLocalize(_inner.calorieManualPortion);
+
+  @override
+  String get calorieManualSave => pseudoLocalize(_inner.calorieManualSave);
+
+  @override
+  String get calorieManualIncomplete =>
+      pseudoLocalize(_inner.calorieManualIncomplete);
+
+  @override
   String retrospectiveSummary(String workouts, String minutes, String reps) =>
       pseudoLocalize(_inner.retrospectiveSummary(workouts, minutes, reps));
 
@@ -6847,8 +7056,24 @@ class PseudoAppLocalizations extends AppLocalizations {
   String paywallPerMonthEquivalent(String price) =>
       pseudoLocalize(_inner.paywallPerMonthEquivalent(price));
 
+  @override
+  String calorieKcalValue(int kcal) =>
+      pseudoLocalize(_inner.calorieKcalValue(kcal));
+
+  @override
+  String calorieScansLeft(int remaining, int limit) =>
+      pseudoLocalize(_inner.calorieScansLeft(remaining, limit));
+
+  @override
+  String calorieScansExhausted(int limit) =>
+      pseudoLocalize(_inner.calorieScansExhausted(limit));
+
+  @override
+  String calorieQuotaTitle(int limit) =>
+      pseudoLocalize(_inner.calorieQuotaTitle(limit));
+
   /// Number of members this wrapper covers. The test suite asserts
   /// it still matches the generated class, so a new ARB key cannot
   /// slip past pseudo mode unnoticed.
-  static const int coveredMembers = 1919;
+  static const int coveredMembers = 1986;
 }

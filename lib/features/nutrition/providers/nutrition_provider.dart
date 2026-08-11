@@ -13,6 +13,7 @@ import '../domain/models/recipe.dart';
 import '../domain/services/next_best_meal_service.dart';
 import '../domain/services/nutrition_calculator_service.dart';
 import 'daily_menu_provider.dart';
+import '../../calories/providers/calorie_providers.dart';
 
 /// Stateless macro engine — wrapped in a plain [Provider] because it
 /// holds no per-user state and its output depends only on the inputs
@@ -260,6 +261,34 @@ final consumedMacrosProvider = Provider<MacroTarget>((ref) {
     carbs += meal.recipe.carbs;
     fat += meal.recipe.fat;
   }
+
+  // Meals logged in the calorie tracker count too, and this line is the
+  // reason the two halves of the Nutrition tab agree.
+  //
+  // Until the tracker shipped, "consumed" could only mean a planned meal
+  // the user ticked off, so this provider summed exactly that. Putting
+  // the tracker in front of the recipe catalogue made the gap visible:
+  // one tab showed 320 kcal eaten on the Calories segment and 0 on the
+  // Recipes segment, for the same day, a tap apart. Found on a device
+  // walk, not in a test — nothing was wrong with either number on its
+  // own, only with the two of them being adjacent.
+  //
+  // It also makes the downstream advice correct rather than merely
+  // consistent: [remainingMacrosProvider] feeds the coach banner and the
+  // next-best-meal recommender, and a recommender that believes you have
+  // eaten nothing will happily suggest a full extra meal.
+  //
+  // A user who both ticks a planned meal AND logs the same food twice
+  // does get counted twice. That is the honest reading of what they did,
+  // it is visible to them in the meal list, and it is deletable there.
+  final logged = ref.watch(dailyMealsProvider).value;
+  if (logged != null) {
+    calories += logged.kcal;
+    protein += logged.proteinG;
+    carbs += logged.carbsG;
+    fat += logged.fatG;
+  }
+
   return MacroTarget(
     calories: calories,
     protein: protein,
