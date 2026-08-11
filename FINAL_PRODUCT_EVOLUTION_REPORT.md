@@ -210,13 +210,29 @@ Redmi Note 8 (Android 11), against production Supabase.
 
 ## 10. CI
 
-Green on every commit in the programme. All 9 gates: format, env-secret
-guard, analyze, hardcoded strings, ARB coverage, recipe translation audit,
+**Green on `main` at `baa6979`.** All 9 gates: format, env-secret guard,
+analyze, hardcoded strings, ARB coverage, recipe translation audit,
 pseudo-localisations, directional layout, tests + coverage.
 
-Two gates caught real defects during this work and both were fixed rather
-than suppressed: a `Positioned(left:)` in the barcode overlay, and the
-Open Food Facts protocol constants.
+**Two commits in this programme went red and are red in history.**
+`3bda53d` and `6bb9c45` both failed on the same defect, and it was mine:
+the EXIF test cross-checks the stripper against a JPEG ImageMagick wrote,
+and guarded for ImageMagick's absence with
+`if (made.exitCode != 0) markTestSkipped`. That is the wrong shape —
+`Process.run` raises `ProcessException` when the executable cannot be
+found, so the guard never executed on a machine without ImageMagick. It
+passed locally for precisely the reason it failed on CI: this machine has
+ImageMagick and the runner does not. A guard that only runs on machines
+that don't need it is not a guard.
+
+Fixed in `baa6979` and verified in both directions rather than assumed —
+with the binary renamed to something nonexistent the suite reports
+`+6 ~1` and passes; with it restored the test actually runs and reports
+`+7`. The release artifacts were then rebuilt from the green commit.
+
+Two gates also caught real defects during this work, and both were fixed
+rather than suppressed: a `Positioned(left:)` in the barcode overlay, and
+the Open Food Facts protocol constants.
 
 ---
 
@@ -272,8 +288,9 @@ Open Food Facts protocol constants.
 | | |
 | --- | --- |
 | version | **1.0.0+40** |
-| APK | `build/app/outputs/flutter-apk/app-release.apk` (162.7 MB) |
-| **AAB** | **`build/app/outputs/bundle/release/app-release.aab` (133.0 MB)** |
+| built from | `baa6979` (CI green) |
+| APK | `build/app/outputs/flutter-apk/app-release.apk` — 155.2 MiB |
+| **AAB** | **`build/app/outputs/bundle/release/app-release.aab` — 126.9 MiB** |
 | tests | 1551 passing |
 | gates | 9 / 9 green |
 | migrations | 001–028, applied |
