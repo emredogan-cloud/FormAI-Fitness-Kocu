@@ -120,17 +120,26 @@ void main() {
       addTearDown(() => tmp.delete(recursive: true));
       final path = '${tmp.path}/probe.jpg';
 
-      final made = await Process.run('convert', [
-        '-size',
-        '32x32',
-        'xc:red',
-        '-set',
-        'comment',
-        'formai-test-comment',
-        'jpeg:$path',
-      ]);
+      // `Process.run` THROWS when the binary is absent — it does not
+      // return a non-zero exit code. Guarding only on exitCode passed
+      // locally and turned CI red, because the runner has no ImageMagick.
+      ProcessResult made;
+      try {
+        made = await Process.run('convert', [
+          '-size',
+          '32x32',
+          'xc:red',
+          '-set',
+          'comment',
+          'formai-test-comment',
+          'jpeg:$path',
+        ]);
+      } on ProcessException {
+        markTestSkipped('ImageMagick not installed on this machine');
+        return;
+      }
       if (made.exitCode != 0) {
-        markTestSkipped('ImageMagick not available');
+        markTestSkipped('ImageMagick present but failed: ${made.stderr}');
         return;
       }
 
@@ -145,7 +154,13 @@ void main() {
       // by our own parser agreeing with itself.
       final out = '${tmp.path}/stripped.jpg';
       await File(out).writeAsBytes(stripped);
-      final identify = await Process.run('identify', ['-format', '%wx%h', out]);
+      ProcessResult identify;
+      try {
+        identify = await Process.run('identify', ['-format', '%wx%h', out]);
+      } on ProcessException {
+        markTestSkipped('ImageMagick identify not installed');
+        return;
+      }
       expect(identify.exitCode, 0,
           reason: 'stripped output failed to decode: ${identify.stderr}');
       expect(identify.stdout.toString().trim(), '32x32');
